@@ -21,7 +21,7 @@ A game-agnostic JRPG engine extracted from a Pokémon Red/Blue reimplementation.
   - `dotzuki-web` / `dotzuki-runner-web` — WASM bridges for editor layout preview / playtest
   - `dotzuki-runner` — zero-Rust project runtime (`dotzuki-editor.json` manifest + DSL + maps)
   - `dotzuki-cli` — the `dotzuki` binary: `dotzuki new` / `dotzuki check` / `dotzuki run`
-- **Engine demo examples** (`examples/`) — `firered` (GBA-style 16-color rendering) and `minimon` (battle system authored entirely in RON rules). Both are engine-only, proving the engine isn't game-locked.
+- **Engine demo examples** (`examples/`) — `minimon` (battle system authored entirely in RON rules). It is engine-only, proving the engine isn't game-locked.
 - **Tools** (`tools/`) — `dotzuki-editor` (game-agnostic Vue/Vite editor + AI Story Designer + in-editor Play), `asset-converter`, DSL editor extensions.
 
 ## Using the engine from a game repo
@@ -49,7 +49,6 @@ cargo run --release --bin dotzuki -- new demo && cd demo && cargo run --release 
 
 ```
 crates/              # game-agnostic engine (see above)
-examples/firered/    # GBA-style 16-color rendering demo
 examples/minimon/    # RON-rules-only battle demo
 tools/dotzuki-editor/   # Vue/Vite editor (pnpm install && pnpm dev)
 dotzuki-template/       # cargo-generate starter for new games

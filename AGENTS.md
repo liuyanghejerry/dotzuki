@@ -31,7 +31,6 @@ crates/                          # Game-AGNOSTIC engine
 ├── dotzuki-tui/                    # Generic terminal shell (ratatui)
 └── dotzuki-web/                    # Generic WASM layout-preview bridge
 examples/
-├── firered/                     # GBA-style 16-color rendering demo (engine-only)
 └── minimon/                     # Cross-gen battle POC, pure RON rules
 tools/dotzuki-editor/               # Game-agnostic Vue/Vite editor + AI Story Designer
                                  #   + in-editor Play activity (WASM dotzuki-runner)

@@ -6,7 +6,7 @@
 //! game can drive: it owns tile position, smooth pixel interpolation, facing, and the
 //! walk-cycle animation state, asking the map only [`OverworldCollision::is_blocked`].
 //!
-//! It returns *indices*, never pixels — the consumer's renderer is free (wuxia/firered
+//! It returns *indices*, never pixels — the consumer's renderer is free (wuxia/minimon
 //! blit a full-color [`crate`]-external `WalkSprite`; pokered keeps its GB-OAM painter).
 //! NPC occupancy and warps stay caller-side: fold NPCs into `is_blocked`, and check
 //! warps against the tile [`OverworldActor::update`] reports a step completed on.

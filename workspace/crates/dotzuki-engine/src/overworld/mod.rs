@@ -3,7 +3,7 @@
 //! - **[`actor`] — simple, render- & map-agnostic.** `OverworldActor` + the tiny
 //!   `OverworldCollision` trait (`is_blocked(i32, i32)`): held-direction → tile step
 //!   → walk animation, and nothing else. For lightweight, non-Game-Boy games whose
-//!   maps aren't block/tileset based — e.g. the firered demo and the wuxia example,
+//!   maps aren't block/tileset based — e.g. the wuxia game and the minimon example,
 //!   which plug in their own render backend (GB tiles vs a full-colour sprite sheet).
 //!   The actor returns frame *indices*, never pixels.
 //!

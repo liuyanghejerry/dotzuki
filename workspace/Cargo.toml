@@ -16,8 +16,6 @@ members = [
     "crates/dotzuki-audio",
     "crates/dotzuki-web",
     "crates/dotzuki-app",
-    "examples/firered/crates/firered-data",
-    "examples/firered/crates/firered-app",
     "examples/minimon",
     "run-wasm",
 ]
