@@ -1,7 +1,7 @@
 {
   "name": "vscode-ron-rules-dsl",
   "displayName": "RON Rules DSL",
-  "description": "Syntax highlighting for RON Rules DSL (.ron) — jrpg-engine battle rules definition language",
+  "description": "Syntax highlighting for RON Rules DSL (.ron) — dotzuki-engine battle rules definition language",
   "version": "0.1.0",
   "publisher": "pokered",
   "license": "MIT",

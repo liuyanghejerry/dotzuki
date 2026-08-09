@@ -10,7 +10,7 @@
 //!   (`apply_stage`: `+n` ⇒ `×(2+n)/2`, `-n` ⇒ `×2/(2+n)`).
 
 use super::*;
-use jrpg_engine::battle::stack::EffectHost;
+use dotzuki_engine::battle::stack::EffectHost;
 
 /// A defender whose Def (50) differs from its SpD (100) so a physical move and a
 /// special move of equal power deal **different** damage.
@@ -152,7 +152,7 @@ fn both_abilities_collected_on_one_try_boost_in_order() {
     // and *fires* TryBoost via the driver) — so the veto is present on the foe's
     // boost dispatch, hosted on the TARGET (cross-source collection across
     // battlers, the prefix-synthesis path of design §2.2).
-    hs.sort_by(jrpg_engine::battle::stack::compare);
+    hs.sort_by(dotzuki_engine::battle::stack::compare);
     let orders: Vec<u32> = hs.iter().map(|h| h.order).collect();
     assert_eq!(orders, vec![5], "Clear Body (order 5) collected on the foe's TryBoost");
     // And it is hosted on the TARGET (the foe), proving cross-battler collection.

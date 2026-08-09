@@ -2,7 +2,7 @@
   "name": "jrpg-tools",
   "private": true,
   "version": "0.0.0",
-  "description": "Shared workspace for the jrpg-editor tool suite",
+  "description": "Shared workspace for the dotzuki-editor tool suite",
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^24.12.0",

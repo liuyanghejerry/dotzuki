@@ -5,7 +5,7 @@ This supersedes the earlier sketch `06-effect-stack-design.md`; it incorporates 
 critique's corrections (RNG-shape shim, typed effect state, same-side split-borrow body, honest
 parity oracle, comparator scoping).
 
-**Decision (already made):** re-found the `jrpg-engine` battle system on a **Showdown-style
+**Decision (already made):** re-found the `dotzuki-engine` battle system on a **Showdown-style
 event/effect-stack** (pattern C). Effects — moves, statuses, abilities, items, field conditions —
 **subscribe to events**; handlers stay **native Rust**. This is **explicitly NOT a bytecode VM**
 (pattern D): no mini-language, no interpreter, no opcode table.
@@ -38,7 +38,7 @@ draw order behind interpreter control flow. (3) We already have ~13k LOC of corr
 *re-encoding* all of it into a new language for zero fidelity benefit. (4) We have no
 hot-reload/sandbox requirement — the only thing a VM buys — so its entire cost is dead weight.
 
-The project already has scripting (Boa/JS for **map events**, `jrpg-engine-script`). Battles are
+The project already has scripting (Boa/JS for **map events**, `dotzuki-engine-script`). Battles are
 deliberately *not* routed through it: per-frame battle math through a JS bridge would wreck both
 determinism and performance. Pattern C keeps battle logic native; pattern D would be a second,
 worse scripting layer competing with the one we have.
@@ -56,7 +56,7 @@ comparator and the parity tests reviewable. For "pokered + maybe one more game" 
 trade — an open bus is over-engineering. Every kind maps 1:1 to a pokered call site.
 
 ```rust
-// crates/jrpg-engine/src/battle/stack/event.rs
+// crates/dotzuki-engine/src/battle/stack/event.rs
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Event {
     BeforeTurn,                                   // after speed-sort settled
@@ -372,7 +372,7 @@ effect mid-fold — adds queue into `ctx.effects` and take effect next event). T
 
 ## 4. Determinism & parity
 
-Randomness flows **only** through the existing `BattleRng` trait (`rng.rs`); `jrpg-engine` never
+Randomness flows **only** through the existing `BattleRng` trait (`rng.rs`); `dotzuki-engine` never
 links `rand` (transitively either). Draws happen at **fixed points in a fixed order**, so a battle
 is reproducible from `(seed, teams, ordered choices)`. The canonical draw order **equals pokered's
 `MoveRandoms` field order** (`move_execution.rs:29`), per mover:
@@ -430,7 +430,7 @@ slice swap. Replay = snapshot/restore RNG state (`ScriptedRng` is already `Clone
 
 ## 5. Reused vs retired from the current engine battle module
 
-| Item (engine `crates/jrpg-engine/src/battle/`) | Verdict | Why |
+| Item (engine `crates/dotzuki-engine/src/battle/`) | Verdict | Why |
 |---|---|---|
 | `BattleRng` + `ScriptedRng` (`rng.rs`) | **REUSE verbatim** | the determinism contract; the stack routes every draw through it. `consumed()`/`Clone` are the parity + replay primitives. |
 | `BattlerState<P>`, `BattleState<P>` (two party Vecs) | **REUSE** (extend) | pure state shape, no control-flow opinion; the stack mutates these same structs. Add an `EffectState` arena alongside (volatile counters not currently modeled). |

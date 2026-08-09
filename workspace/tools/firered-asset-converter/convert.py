@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FireRed → jrpg-engine asset extractor.
+"""FireRed → dotzuki-engine asset extractor.
 
 Reproduces the *data* the GBA had so the Rust runtime can re-run the original
 FireRed overworld compositing pipeline (indexed 4bpp tiles + 13 BG palette banks
@@ -224,7 +224,7 @@ def cmd_extract(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="FireRed asset extractor for jrpg-engine")
+    ap = argparse.ArgumentParser(description="FireRed asset extractor for dotzuki-engine")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     ex = sub.add_parser("extract", help="extract one map's raw render data")

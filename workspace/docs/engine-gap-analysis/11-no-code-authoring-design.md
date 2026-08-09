@@ -7,11 +7,11 @@
 > MoveTypeIsDefenderType, TargetHasStatus, LevelGE`), plus `FractionOf::LastDamage`
 > and the `DamageValue` / `HitCount` / `FinalHitRider` support enums. **For the
 > current, authoritative vocabulary see [`../BATTLE_ENGINE_GUIDE.md`](../BATTLE_ENGINE_GUIDE.md)
-> §5.1** (kept in sync with `crates/jrpg-rules/src/model.rs`); this doc is the
+> §5.1** (kept in sync with `crates/dotzuki-rules/src/model.rs`); this doc is the
 > design rationale, not the live reference.
 
 > **Scope.** How a developer defines **moves / abilities / items / weather +
-> a battle ruleset** for `jrpg_engine::battle::stack` **without writing Rust** —
+> a battle ruleset** for `dotzuki_engine::battle::stack` **without writing Rust** —
 > as declarative *data* bound to a closed vocabulary of engine-shipped effect
 > primitives. This is the lead-architect synthesis of three competing designs
 > (declarative-data, embedded-script, hybrid) plus the adversarial critique; it
@@ -31,7 +31,7 @@
 > called out and marked **ENGINE-WORK** in §2.2, and the recommended first
 > deliverable needs **none** of it.
 
-Legend: **[ENGINE-WORK]** = a change inside `crates/jrpg-engine`. **[AUTHORING-WORK]**
+Legend: **[ENGINE-WORK]** = a change inside `crates/dotzuki-engine`. **[AUTHORING-WORK]**
 = game-side / data-side only, no engine edit. The recommended POC (§6) is
 **100% [AUTHORING-WORK]**.
 
@@ -287,7 +287,7 @@ effects are addressed by `EffectId` and live state is in the engine's
 in-flight battle state.
 
 ### 4.3 The Boa boundary — why the existing script infra is *not* reused
-The in-repo Boa integration (overworld map scripts, `jrpg-engine-script`) is
+The in-repo Boa integration (overworld map scripts, `dotzuki-engine-script`) is
 **async by construction**: `await game.showText(...)` mints a `JsPromise`, stores
 a `PendingResolve`, and `ScriptEngine::tick()` resolves it on a **later frame**.
 `run_event` is the opposite — a **synchronous re-entrant fold that must return
@@ -382,5 +382,5 @@ vocabulary genuinely can't reach a mechanic; everything else is data.
 - [`11-no-code-effect-authoring-design.md`](./11-no-code-effect-authoring-design.md) — the parallel *hybrid* design (declarative primitives + JS escape hatch in one schema); this doc is the lead-architect pick of declarative-data-first.
 - Code (read, not modified): [`examples/minimon/src/lib.rs`](../../examples/minimon/src/lib.rs),
   [`examples/minimon/src/tests.rs`](../../examples/minimon/src/tests.rs),
-  [`crates/jrpg-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/jrpg-engine/src/battle/stack/),
-  [`crates/jrpg-engine/src/battle/rng.rs`](../../crates/jrpg-engine/src/battle/rng.rs).
+  [`crates/dotzuki-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/dotzuki-engine/src/battle/stack/),
+  [`crates/dotzuki-engine/src/battle/rng.rs`](../../crates/dotzuki-engine/src/battle/rng.rs).

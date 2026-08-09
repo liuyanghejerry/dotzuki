@@ -1,9 +1,9 @@
 packages:
-  - 'jrpg-editor'
+  - 'dotzuki-editor'
 
 # pnpm 10 blocks dependency build scripts by default. These fetch platform
 # binaries in their postinstall (Electron: the app binary; esbuild: its native
-# compiler) and must be allowed to run, or the jrpg-editor Electron build breaks.
+# compiler) and must be allowed to run, or the dotzuki-editor Electron build breaks.
 onlyBuiltDependencies:
   - electron
   - esbuild

@@ -1,0 +1,59 @@
+// rules.ron — battle rules in the dotzuki-rules vocabulary.
+// stats = the manifest battle.stats keys; resources = the battle.resource
+// field name; types = the records' element strings. The effects below are
+// LIVE: venom-sting's hooks run through the effect stack (30% poison on
+// hit), and poison's Residual hook chips 1/8 max HP after each of the
+// afflicted combatant's actions. Aria's ability (intimidate) fires on
+// switch-in, Bryn's held item (leftovers) heals him after each of his
+// actions, and a scene can arm the sandstorm weather with
+// game.setWeather("sandstorm") before game.startBattle(...).
+Ruleset(
+    stats: ["hp", "attack", "defense", "speed"],
+    types: ["Fire", "Ice", "Lightning", "Light", "Dark", "None"],
+    resources: ["mp"],
+    type_chart: [
+        ( atk: "Fire",      def: "Ice",   mult: [2, 1] ),
+        ( atk: "Ice",       def: "Fire",  mult: [2, 1] ),
+        ( atk: "Light",     def: "Dark",  mult: [2, 1] ),
+        ( atk: "Dark",      def: "Light", mult: [2, 1] ),
+        ( atk: "Lightning", def: "Light", mult: [1, 2] ),
+    ],
+    effects: [
+        // venom-sting takes over the spells table record of the same id:
+        // 15 power, and a 30% chance to poison the target on hit.
+        Effect(id: "venom-sting", kind: Move, power: 15, accuracy: 100, type: "None", hooks: [
+            Hook(on: "DamagingHit", chance: [30, 100], do: [
+                InflictStatus(status: "poison", target: Target),
+            ]),
+        ]),
+        // poison: chips 1/8 of the holder's max HP after each of its actions.
+        Effect(id: "poison", kind: Status, hooks: [
+            Hook(on: "Residual", do: [
+                DamageFraction(num: 1, den: 8, of: MaxHp, target: Target),
+            ]),
+        ]),
+        // intimidate (Aria's ability): −1 attack stage to the foe at battle
+        // start and on every switch-in of the ACTIVE combatant.
+        Effect(id: "intimidate", kind: Ability, hooks: [
+            Hook(on: "SwitchIn", do: [
+                Boost(stat: "attack", stages: -1, target: Foe),
+            ]),
+        ]),
+        // leftovers (Bryn's held item): heal 1/16 max HP after each of the
+        // holder's actions. Held items are persistent — never consumed.
+        Effect(id: "leftovers", kind: Item, hooks: [
+            Hook(on: "Residual", do: [
+                HealFraction(num: 1, den: 16, of: MaxHp, target: Target),
+            ]),
+        ]),
+        // sandstorm weather: chips 1/16 max HP off every combatant each round
+        // while active. Battle-local: a scene arms it with
+        // game.setWeather("sandstorm") before game.startBattle(...) (and
+        // game.clearWeather() cancels it); it ends with the battle.
+        Effect(id: "sandstorm", kind: Weather, hooks: [
+            Hook(on: "FieldResidual", do: [
+                DamageFraction(num: 1, den: 16, of: MaxHp, target: Target),
+            ]),
+        ]),
+    ],
+)

@@ -65,3 +65,7 @@ Pods/
 /.sisyphus/
 /.opencode/
 /.codegraph/
+
+# Local agent/tooling state (not part of the engine)
+/workspace/.sisyphus/
+/workspace/.codegraph/

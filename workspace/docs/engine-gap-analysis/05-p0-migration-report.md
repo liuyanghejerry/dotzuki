@@ -5,10 +5,10 @@
 A dedicated fix pass closed out the "Problems / nits surfaced by the reviews"
 section. Branch `feature/p0-engine-migration`; five commits since baseline
 `2c65f92c`; tree clean. Forced/uncached verification (`touch` changed files →
-rebuild): `cargo build --workspace` exit 0; **`jrpg-engine` 292 pass / 0 fail**
+rebuild): `cargo build --workspace` exit 0; **`dotzuki-engine` 292 pass / 0 fail**
 (lib unittests; +2 doc/integration pass), **`pokered-core` 1821 pass / 0 fail**
-(summed over all binaries; +17 over the 1804 baseline). `jrpg-engine` still links
-no `rand` (`cargo tree -p jrpg-engine -i rand` finds nothing) and the changed
+(summed over all binaries; +17 over the 1804 baseline). `dotzuki-engine` still links
+no `rand` (`cargo tree -p dotzuki-engine -i rand` finds nothing) and the changed
 engine modules carry zero Pokémon identifiers outside `#[cfg(test)]` (only an
 illustrative "Pokédex id" doc comment in `party/mod.rs`).
 
@@ -55,10 +55,10 @@ DONE-vs-STAGED accounting, drawn from five adversarial reviews of the landed cod
 
 | Check | Result |
 |---|---|
-| `jrpg-engine` tests | **290 pass / 0 fail** (original baseline) → **292 pass / 0 fail** after fix pass |
+| `dotzuki-engine` tests | **290 pass / 0 fail** (original baseline) → **292 pass / 0 fail** after fix pass |
 | `pokered-core` tests | **1802 pass / 0 fail** (original baseline) → **1821 pass / 0 fail** after fix pass |
 | Workspace build | **clean (exit 0)** |
-| `jrpg-engine` links `rand` | **No — not even transitively** (`cargo tree -p jrpg-engine` shows no `rand`; `Cargo.toml` = `serde`/`thiserror`/`image` only). RNG flows through the `BattleRng` trait. |
+| `dotzuki-engine` links `rand` | **No — not even transitively** (`cargo tree -p dotzuki-engine` shows no `rand`; `Cargo.toml` = `serde`/`thiserror`/`image` only). RNG flows through the `BattleRng` trait. |
 | Pokémon identifiers in the new engine modules | **Zero** in production code (grep confirms no `Species`/`MoveId`/Pokémon types; the only `Potion`/`Antidote`/`Gen-1` hits are in `#[cfg(test)]` mocks or doc comments). |
 
 The ~1800 pokered tests stay green **because nothing in the hot path moved** — i.e.
@@ -70,7 +70,7 @@ now flows through the new layer.
 ## Per-system breakdown
 
 ### P0a — Party / monster model · commit `792c8410`
-**New engine module(s):** `crates/jrpg-engine/src/party/` — `monster.rs`
+**New engine module(s):** `crates/dotzuki-engine/src/party/` — `monster.rs`
 (`Monster`, `MonsterStatus`, `recalc_stats`, `gain_exp`), `party.rs`
 (`Party::new(capacity)`, `BoxStore::new(box_count, box_capacity)`), `mod.rs`
 (traits), `tests.rs`.
@@ -112,7 +112,7 @@ addressed** in this pass.
 **Verdict: FIXED (was SOUND-WITH-NITS).**
 
 ### P0b — Battle turn-execution driver · commit `60c9477a`
-**New engine module(s):** `crates/jrpg-engine/src/battle/driver.rs` (`BattleDriver`,
+**New engine module(s):** `crates/dotzuki-engine/src/battle/driver.rs` (`BattleDriver`,
 `execute_turn`, `BattlerRef`, `BattleEnd`), `battle/rng.rs` (`BattleRng` trait,
 `ScriptedRng` test double), `battle/mod.rs` (hooks). 3 files, +1248 lines, 0 in
 `examples/`.
@@ -150,7 +150,7 @@ still runs through `battle/turn_order.rs` / `engine.rs` / `turn.rs` (untouched).
 still staged).**
 
 ### P0c — Battle AI driver · commit `9b6d561e`
-**New engine module(s):** `crates/jrpg-engine/src/battle/ai.rs` (327L) + `mod.rs`
+**New engine module(s):** `crates/dotzuki-engine/src/battle/ai.rs` (327L) + `mod.rs`
 (+2). 4 files, +616 lines, additive.
 **Key traits/types:** **brand-new** `BattleAiProvider` trait (`ai.rs:42-72`,
 `score_action -> i32`, `legal_actions -> Vec<BattleAction>`) — NOT a modification of
@@ -185,7 +185,7 @@ defect): `BattleAiProvider: BattleProvider` still forces 5 unused stubs — docu
 **Verdict: FIXED (was SOUND-WITH-NITS).**
 
 ### P0d — Wild encounter + handoff · commit `829b0800`
-**New engine module(s):** `crates/jrpg-engine/src/overworld/encounter.rs`
+**New engine module(s):** `crates/dotzuki-engine/src/overworld/encounter.rs`
 (`EncounterEngine::on_step`, `EncounterProvider`, `EncounterStep`, `EncounterMode`,
 `EncounterContext`).
 **Key traits/types:** `EncounterProvider` (new trait, required `roll_encounter` /
@@ -230,7 +230,7 @@ default — same effective behavior it always had, no regression).
 **Verdict: FIXED (repel bug live + water/cave parity; fishing unreachable, staged).**
 
 ### P0e — Item-effect + bag/shop driver · commit `4413363f`
-**New engine module(s):** `crates/jrpg-engine/src/items/use_driver.rs` (`use_item`,
+**New engine module(s):** `crates/dotzuki-engine/src/items/use_driver.rs` (`use_item`,
 `buy`, `sell`, `UsageContext`, `ItemUseResult`, `ShopError`, `ShopReceipt`) +
 `items/mod.rs` trait additions. 4 files, +1195 / −0; only pokered change is one line
 `pub mod use_engine;`.

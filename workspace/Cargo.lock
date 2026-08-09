@@ -1037,6 +1037,189 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotzuki-app"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-renderer",
+ "notify",
+]
+
+[[package]]
+name = "dotzuki-audio"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.13.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dotzuki-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "dotzuki-app",
+ "dotzuki-engine-dsl",
+ "dotzuki-rules",
+ "dotzuki-runner",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dotzuki-engine"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "dotzuki-engine-dsl"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "dotzuki-engine-script",
+ "insta",
+ "miette",
+ "serde",
+ "serde_json",
+ "sourcemap",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "dotzuki-engine-script"
+version = "0.1.0"
+dependencies = [
+ "boa_engine",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "dotzuki-engine-tiled"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dotzuki-renderer"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "error-iter",
+ "getrandom 0.2.17",
+ "image",
+ "log",
+ "pixels",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "winit",
+ "winit_input_helper",
+]
+
+[[package]]
+name = "dotzuki-rules"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-engine",
+ "dotzuki-rules-macro",
+ "notify",
+ "ron",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "dotzuki-rules-macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "ron",
+ "serde",
+ "syn 2.0.118",
+]
+
+[[package]]
+name = "dotzuki-runner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cpal",
+ "dotzuki-app",
+ "dotzuki-audio",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-engine-script",
+ "dotzuki-engine-tiled",
+ "dotzuki-renderer",
+ "dotzuki-rules",
+ "dotzuki-ui",
+ "image",
+ "log",
+ "notify",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dotzuki-runner-web"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "console_error_panic_hook",
+ "dotzuki-engine",
+ "dotzuki-renderer",
+ "dotzuki-runner",
+ "image",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "dotzuki-tui"
+version = "0.1.0"
+dependencies = [
+ "crossterm",
+ "dotzuki-renderer",
+ "ratatui",
+]
+
+[[package]]
+name = "dotzuki-ui"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-engine",
+ "dotzuki-renderer",
+]
+
+[[package]]
+name = "dotzuki-web"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "dotzuki-audio",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-renderer",
+ "dotzuki-ui",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "downcast-rs"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1153,11 +1336,11 @@ name = "firered-app"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "dotzuki-app",
+ "dotzuki-engine",
+ "dotzuki-renderer",
  "env_logger",
  "firered-data",
- "jrpg-app",
- "jrpg-engine",
- "jrpg-renderer",
  "log",
 ]
 
@@ -1165,8 +1348,8 @@ dependencies = [
 name = "firered-data"
 version = "0.1.0"
 dependencies = [
- "jrpg-engine",
- "jrpg-renderer",
+ "dotzuki-engine",
+ "dotzuki-renderer",
  "serde",
  "serde_json",
 ]
@@ -1956,189 +2139,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jrpg-app"
-version = "0.1.0"
-dependencies = [
- "jrpg-renderer",
- "notify",
-]
-
-[[package]]
-name = "jrpg-audio"
-version = "0.1.0"
-dependencies = [
- "bitflags 2.13.0",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jrpg-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "jrpg-app",
- "jrpg-engine-dsl",
- "jrpg-rules",
- "jrpg-runner",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jrpg-engine"
-version = "0.1.0"
-dependencies = [
- "image",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "jrpg-engine-dsl"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "insta",
- "jrpg-engine-script",
- "miette",
- "serde",
- "serde_json",
- "sourcemap",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "jrpg-engine-script"
-version = "0.1.0"
-dependencies = [
- "boa_engine",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "jrpg-engine-tiled"
-version = "0.1.0"
-dependencies = [
- "jrpg-engine",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jrpg-renderer"
-version = "0.1.0"
-dependencies = [
- "error-iter",
- "getrandom 0.2.17",
- "image",
- "jrpg-engine",
- "jrpg-engine-dsl",
- "log",
- "pixels",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "winit",
- "winit_input_helper",
-]
-
-[[package]]
-name = "jrpg-rules"
-version = "0.1.0"
-dependencies = [
- "jrpg-engine",
- "jrpg-rules-macro",
- "notify",
- "ron",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "jrpg-rules-macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "ron",
- "serde",
- "syn 2.0.118",
-]
-
-[[package]]
-name = "jrpg-runner"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cpal",
- "image",
- "jrpg-app",
- "jrpg-audio",
- "jrpg-engine",
- "jrpg-engine-dsl",
- "jrpg-engine-script",
- "jrpg-engine-tiled",
- "jrpg-renderer",
- "jrpg-rules",
- "jrpg-ui",
- "log",
- "notify",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jrpg-runner-web"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "console_error_panic_hook",
- "image",
- "jrpg-engine",
- "jrpg-renderer",
- "jrpg-runner",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "jrpg-tui"
-version = "0.1.0"
-dependencies = [
- "crossterm",
- "jrpg-renderer",
- "ratatui",
-]
-
-[[package]]
-name = "jrpg-ui"
-version = "0.1.0"
-dependencies = [
- "jrpg-engine",
- "jrpg-renderer",
-]
-
-[[package]]
-name = "jrpg-web"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "jrpg-audio",
- "jrpg-engine",
- "jrpg-engine-dsl",
- "jrpg-renderer",
- "jrpg-ui",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "js-sys"
 version = "0.3.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2381,8 +2381,8 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 name = "minimon"
 version = "0.1.0"
 dependencies = [
- "jrpg-engine",
- "jrpg-rules",
+ "dotzuki-engine",
+ "dotzuki-rules",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 # Battle Engine Developer Guide — authoring on the effect-stack
 
-> **Scope.** This guide covers **`jrpg_engine::battle::stack`** — the
+> **Scope.** This guide covers **`dotzuki_engine::battle::stack`** — the
 > Showdown-style **effect-stack** battle engine — and how to build a
 > Gen-1-to-Gen-6-*like* battle system on it **without forking the engine**.
 >
@@ -19,9 +19,9 @@
 > an **MP resource** with move costs ([§6](#6-resources-mpsp--move-costs)), and the
 > same ruleset re-homed to **`rules.ron`** for no-code authoring
 > ([`examples/minimon/rules.ron`](../examples/minimon/rules.ron),
-> [§5](#5-no-code-authoring-with-rulesron-the-jrpg-rules-loader)) — with **zero
-> engine edits**, depending on `jrpg-engine` (and, for the data path,
-> `jrpg-rules`) only.
+> [§5](#5-no-code-authoring-with-rulesron-the-dotzuki-rules-loader)) — with **zero
+> engine edits**, depending on `dotzuki-engine` (and, for the data path,
+> `dotzuki-rules`) only.
 >
 > Design background: §06
 > [`06-battle-engine-effect-stack-design.md`](./engine-gap-analysis/06-battle-engine-effect-stack-design.md)
@@ -39,7 +39,7 @@
 2. [Core concepts](#2-core-concepts)
 3. [Tutorial: stand up a minimal ruleset (the minimon walkthrough)](#3-tutorial-stand-up-a-minimal-ruleset-the-minimon-walkthrough)
 4. [Type effectiveness (相克 / type charts)](#4-type-effectiveness-相克--type-charts)
-5. [No-code authoring with `rules.ron` (the jrpg-rules loader)](#5-no-code-authoring-with-rulesron-the-jrpg-rules-loader)
+5. [No-code authoring with `rules.ron` (the dotzuki-rules loader)](#5-no-code-authoring-with-rulesron-the-dotzuki-rules-loader)
 6. [Resources (MP/SP) & move costs](#6-resources-mpsp--move-costs)
 7. [Cookbook: cross-gen mechanics → effect-stack recipes](#7-cookbook-cross-gen-mechanics--effect-stack-recipes)
 8. [Determinism & testing](#8-determinism--testing)
@@ -73,7 +73,7 @@ and takes a number back.
 ### What lives where
 
 ```
-jrpg_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
+dotzuki_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
 ├── event       Event enum, RelayVar, HandlerResult, Effect/EventHook, HandlerFn
 ├── ctx         EffectProvider (the trait you implement), BattleCtx, EffectState,
 │               EffectHost, MoveContext
@@ -81,7 +81,7 @@ jrpg_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
 ├── driver      StackDriver (a built-in turn sequence), FirstMover, StackTurnResult
 └── authoring   the `effect!` macro
 
-jrpg_engine::battle                BattleProvider (supertrait), BattleState,
+dotzuki_engine::battle                BattleProvider (supertrait), BattleState,
 │                                  BattlerState, BattlerRef, BattleAction, EnumMap
 └── rng         BattleRng trait, ScriptedRng
 
@@ -207,7 +207,7 @@ pub enum   EffectType { Move, Status, Condition }
 ```
 
 The ergonomic way to author one is the **`effect!` macro** (re-exported at the
-crate root as `jrpg_engine::effect`):
+crate root as `dotzuki_engine::effect`):
 
 ```rust
 // Syntax: effect!(<id expr>, <EffectType expr>, { <Event> [(<order>)] => <fn path>, ... })
@@ -569,7 +569,7 @@ stack with **zero engine edits**. Its only dependency is the engine:
 ```toml
 # examples/minimon/Cargo.toml
 [dependencies]
-jrpg-engine = { path = "../../crates/jrpg-engine" }
+dotzuki-engine = { path = "../../crates/dotzuki-engine" }
 ```
 
 ### Step 1 — Define the id enums (the 6-stat split shape)
@@ -956,7 +956,7 @@ EventHook {
 The same chart is expressible **without Rust** in `rules.ron` as a `type_chart:`
 list of `( atk:, def:, mult: [n, d] )` rows, applied by the `ApplyTypeChart`
 primitive op on an `Effectiveness` hook (`rules.ron:39-54`, see
-[§5](#5-no-code-authoring-with-rulesron-the-jrpg-rules-loader)):
+[§5](#5-no-code-authoring-with-rulesron-the-dotzuki-rules-loader)):
 
 ```ron
 type_chart: [
@@ -986,9 +986,9 @@ native const-chart path and the RON data path produce **identical** numbers.
 
 ---
 
-## 5. No-code authoring with `rules.ron` (the jrpg-rules loader)
+## 5. No-code authoring with `rules.ron` (the dotzuki-rules loader)
 
-[`crates/jrpg-rules`](../crates/jrpg-rules/src/) is a thin authoring layer over
+[`crates/dotzuki-rules`](../crates/dotzuki-rules/src/) is a thin authoring layer over
 the effect stack: it parses a `rules.ron` file into runtime `Effect`s so you can
 add **moves, abilities, items, types, and resource costs with zero Rust**. It is
 **Option A** — a single `interpret()` fn keyed by `EffectId`, registered as the
@@ -1309,7 +1309,7 @@ Tackle and Ember return `NO_COST`. The asserted outcomes (`tests.rs`):
 > tests above exercise the native `Battle` path; the `data_mode` flag
 > (`lib.rs:404`) makes the native `move_cost` return `NO_COST` so the data driver
 > supplies the cost from `rules.ron` instead. Design background: §13
-> [`13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-jrpg-battle-concepts-audit.md).
+> [`13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md).
 
 ---
 
@@ -1337,7 +1337,7 @@ whose handlers **subscribe to event(s) Y**, **do Z**, **ordered via `order=N`**.
 | **Multi-turn / locked move** (Thrash / Hyper Beam) | a battler volatile (`effect_for_volatile`) + `forced_action` | volatile listens on `BeforeMove`/`End`; the lock is `forced_action` | A volatile set on a prior turn makes `forced_action(effects, actor, chosen)` return `Some(locked_move)`, hijacking this turn's input. `BeforeMove` gates (recharge skip); `End` fires Thrash self-confuse. | n/a (a seam, not a fold) |
 | **Type chart / effectiveness** (相克) | the action (`effect_for_move`) | `Effectiveness` | Recover the move's element from `source_effect`, read defender type(s), fold the chart **product** into ONE rational, `Set(relay.scale(num, den))`. Integer-only; 0× = immune. Stay in the `Damage` lane. See [§4](#4-type-effectiveness-相克--type-charts). | `100` (after `ModifyDamage`) |
 | **Resource cost** (MP / SP / mana) | the actor (`move_cost` hook) | gate at `BeforeMove` (engine `StackDriver`) | Return `&[(resource_id, amount)]` from `move_cost`; the gate prevents the move if unpayable, else deducts. Pure arithmetic, no rng, inert with `&[]`. Or in data, a `cost:` field / `PayResource` op. See [§6](#6-resources-mpsp--move-costs). | n/a (a gate, not a fold) |
-| **No-code authoring** (moves/abilities/items/types/costs in RON) | the `jrpg-rules` loader (`interpret` keyed by `EffectId`) | any event a `Hook(on: …)` names | Write an `EffectRecord` in `rules.ron` with hooks whose `do:` is a list of closed primitive `Op`s; the loader registers each as an `Effect` calling `interpret`. Dual-mode baked / hot-reload. See [§5](#5-no-code-authoring-with-rulesron-the-jrpg-rules-loader). | per-hook `order:` |
+| **No-code authoring** (moves/abilities/items/types/costs in RON) | the `dotzuki-rules` loader (`interpret` keyed by `EffectId`) | any event a `Hook(on: …)` names | Write an `EffectRecord` in `rules.ron` with hooks whose `do:` is a list of closed primitive `Op`s; the loader registers each as an `Effect` calling `interpret`. Dual-mode baked / hot-reload. See [§5](#5-no-code-authoring-with-rulesron-the-dotzuki-rules-loader). | per-hook `order:` |
 | **Non-volatile status residual** (burn / poison chip) | the actor's status (`effect_for_status`) | `Residual` | `take_damage((max_hp/16).max(1))` on `host`; no rng; self-guard a 0-HP host. The driver's per-mover residual fires `effect_for_status` **then** each live volatile's `effect_for_volatile` in arena-id order. Skip the flat chip when a volatile owns the tick (e.g. a badly-poisoned ramp). | `10` (before leech) |
 | **Pre-move "cannot act" gate** (sleep / freeze / paralysis / confusion) | a `BeforeMove` hook (in pokered: on every move effect; or aggregate from status/volatile in your driver) | `BeforeMove` | Read the actor's status / volatile; return `Fail` to abort (draw the status's rng byte **only when present**). `run_event` short-circuits on the first `Fail`, so set each gate's `order` to the original draw sequence (e.g. confusion `70` < paralysis `90`). The driver then logs `Blocked` (§2.11) so the frontend can show the reason. | per-status `order` |
 | **Turn narration** (battle text / animation) | n/a — call `execute_turn_logged` | — (consumes the `TurnLog`) | Walk the returned `TurnLog<P>` and map each `TurnEvent` to your frontend (a text line, an HP-bar drain, a faint anim). Re-derive presentation game-side (effectiveness wording, the `Blocked` reason). Additive: `execute_turn` is unchanged. See [§2.11](#211-narrating-a-turn--the-turnlog). | n/a |
@@ -1400,7 +1400,7 @@ in what order, without running the fold:
 ```rust
 let mut hs = Vec::new();
 collect_handlers(&ctx, provider, None, Event::TryBoost, BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut hs);
-hs.sort_by(jrpg_engine::battle::stack::compare);
+hs.sort_by(dotzuki_engine::battle::stack::compare);
 let orders: Vec<u32> = hs.iter().map(|h| h.order).collect();
 assert_eq!(orders, vec![5]);                 // Clear Body (order 5) collected on the foe's TryBoost
 assert_eq!(hs[0].target, BattlerRef::OPPONENT);   // hosted on the TARGET (cross-battler collection)
@@ -1415,7 +1415,7 @@ distinct run draws **zero** (`speed_tiebreak_draws_only_on_tie`), and that crit
 is drawn before accuracy (`crit_is_drawn_before_accuracy`). Run the suites:
 
 ```bash
-cargo test -p jrpg-engine            # engine: comparator, pair_mut, multi-source, forced_action
+cargo test -p dotzuki-engine            # engine: comparator, pair_mut, multi-source, forced_action
 cargo test -p minimon                # the 5-system authoring proof + controls
 ```
 
@@ -1424,7 +1424,7 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 ## 9. Honest limits & roadmap
 
 **Proven** — single-battle (1v1), authored end-to-end in `examples/minimon` with
-**zero `jrpg-engine` edits** beyond the additive/defaulted seams; verdict
+**zero `dotzuki-engine` edits** beyond the additive/defaulted seams; verdict
 **GO-WITH-NITS** in
 [`10-generalization-result.md`](./engine-gap-analysis/10-generalization-result.md):
 
@@ -1450,13 +1450,13 @@ inert; all three authored end-to-end in minimon and proven by parity tests):
   Outcomes `(160, 80, 40, 0)` asserted. See [§4](#4-type-effectiveness-相克--type-charts)
   and §12
   [`12-typechart-ron-design.md`](./engine-gap-analysis/12-typechart-ron-design.md).
-- **No-code RON authoring (dual-mode).** ✅ The `jrpg-rules` loader parses
+- **No-code RON authoring (dual-mode).** ✅ The `dotzuki-rules` loader parses
   `rules.ron` into runtime `Effect`s via a single `interpret()` keyed by
   `EffectId` (Option A, zero engine change) over a closed primitive-op vocabulary,
   with load-time validation and a **baked (`include_str!`, release) /
   hot-reload-from-disk (the `hot-reload` cargo feature, dev)** source-of-truth that
   guarantees baked==disk parity and safe reload-between-turns. See
-  [§5](#5-no-code-authoring-with-rulesron-the-jrpg-rules-loader) and §11
+  [§5](#5-no-code-authoring-with-rulesron-the-dotzuki-rules-loader) and §11
   [`11-no-code-authoring-design.md`](./engine-gap-analysis/11-no-code-authoring-design.md),
   §14 [`14-ron-loader-result.md`](./engine-gap-analysis/14-ron-loader-result.md).
 - **MP / resources & move costs.** ✅ A P-independent `u16`-keyed `ResourcePool`
@@ -1465,7 +1465,7 @@ inert; all three authored end-to-end in minimon and proven by parity tests):
   rng; inert with empty cost/pool), plus a RON `cost:` field + `PayResource`
   primitive + `LoadError::UnknownResource`. See [§6](#6-resources-mpsp--move-costs)
   and §13
-  [`13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-jrpg-battle-concepts-audit.md).
+  [`13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md).
 - **Turn narration — the `TurnLog`.** ✅ `StackDriver::execute_turn_logged` returns
   a generic `TurnLog<P>` of `TurnEvent`s (move used / miss / **blocked** / crit /
   damage / heal / status / stat-change / faint) for a frontend to render. Additive
@@ -1527,11 +1527,11 @@ sketch is optimistic on this point; see the "one nit" in §10.
 - [`engine-gap-analysis/10-generalization-result.md`](./engine-gap-analysis/10-generalization-result.md) — the GO-WITH-NITS result (proven vs follow-up).
 - [`engine-gap-analysis/11-no-code-authoring-design.md`](./engine-gap-analysis/11-no-code-authoring-design.md) — the no-code RON authoring design (Option A, the closed op vocabulary, dual-mode).
 - [`engine-gap-analysis/12-typechart-ron-design.md`](./engine-gap-analysis/12-typechart-ron-design.md) — the type-chart / `Effectiveness`-fold design.
-- [`engine-gap-analysis/13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-jrpg-battle-concepts-audit.md) — the JRPG-concepts audit (MP/resources & move costs).
+- [`engine-gap-analysis/13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md) — the JRPG-concepts audit (MP/resources & move costs).
 - [`engine-gap-analysis/14-ron-loader-result.md`](./engine-gap-analysis/14-ron-loader-result.md) — the RON-loader result.
 - Code: [`examples/minimon/src/lib.rs`](../examples/minimon/src/lib.rs),
   [`examples/minimon/src/tests.rs`](../examples/minimon/src/tests.rs),
   [`examples/minimon/rules.ron`](../examples/minimon/rules.ron),
-  [`crates/jrpg-rules/src/`](../crates/jrpg-rules/src/),
-  [`crates/jrpg-engine/src/battle/stack/`](../crates/jrpg-engine/src/battle/stack/),
-  [`crates/jrpg-engine/src/battle/rng.rs`](../crates/jrpg-engine/src/battle/rng.rs).
+  [`crates/dotzuki-rules/src/`](../crates/dotzuki-rules/src/),
+  [`crates/dotzuki-engine/src/battle/stack/`](../crates/dotzuki-engine/src/battle/stack/),
+  [`crates/dotzuki-engine/src/battle/rng.rs`](../crates/dotzuki-engine/src/battle/rng.rs).

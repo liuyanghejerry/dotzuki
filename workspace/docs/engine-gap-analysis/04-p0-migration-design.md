@@ -2,17 +2,17 @@
 
 **Role of this doc:** the single, authoritative, *implementation-ordered* plan for
 lifting all P0 systems out of `examples/pokered/crates/pokered-core` into the
-game-agnostic `jrpg-engine`, incorporating the corrections raised by the
+game-agnostic `dotzuki-engine`, incorporating the corrections raised by the
 adversarial critiques. Companion docs: `00-SUMMARY.md`, `01-engine-inventory.md`,
 `02-pokered-inventory.md`, `03-firered-systems.md`.
 
 ## Non-negotiable architecture rules (carried from CLAUDE.md)
 
-1. **`jrpg-engine` stays 100% game-agnostic.** No Pokémon concrete types ever
+1. **`dotzuki-engine` stays 100% game-agnostic.** No Pokémon concrete types ever
    land in the engine. Everything game-specific is an *associated type* on a
    provider trait, exactly like the existing `GameData` master trait and
    `BattleProvider`/`ItemProvider`/`ShopProvider` pattern (see
-   `crates/jrpg-engine/src/lib.rs` and `src/battle/mod.rs`).
+   `crates/dotzuki-engine/src/lib.rs` and `src/battle/mod.rs`).
 2. **`pokered-core` is pure logic, no I/O.** Lifted drivers must remain
    deterministic and unit-testable; RNG enters only through an injected trait.
 3. **Gen-1 quirks are injected, never baked.** The engine driver must give the
@@ -71,13 +71,13 @@ Today the engine only has bare `Species`/`Move`/`Item` IDs (`GameData`) and a
 model into its own engine module so all P0 systems share one type.
 
 ### New / changed engine files
-- **NEW** `crates/jrpg-engine/src/party/mod.rs` — module root, re-exports.
-- **NEW** `crates/jrpg-engine/src/party/monster.rs` — `MonsterInstance`, `MonsterProvider`.
-- **NEW** `crates/jrpg-engine/src/party/party.rs` — `Party<P>` container.
-- **NEW** `crates/jrpg-engine/src/party/experience.rs` — generic EXP/level driver.
-- **NEW** `crates/jrpg-engine/src/party/evolution.rs` — generic evolution driver.
-- **CHANGED** `crates/jrpg-engine/src/lib.rs` — `pub mod party;` + re-exports.
-- **CHANGED** `crates/jrpg-engine/src/battle/mod.rs` — `BattlerState<P>` gains
+- **NEW** `crates/dotzuki-engine/src/party/mod.rs` — module root, re-exports.
+- **NEW** `crates/dotzuki-engine/src/party/monster.rs` — `MonsterInstance`, `MonsterProvider`.
+- **NEW** `crates/dotzuki-engine/src/party/party.rs` — `Party<P>` container.
+- **NEW** `crates/dotzuki-engine/src/party/experience.rs` — generic EXP/level driver.
+- **NEW** `crates/dotzuki-engine/src/party/evolution.rs` — generic evolution driver.
+- **CHANGED** `crates/dotzuki-engine/src/lib.rs` — `pub mod party;` + re-exports.
+- **CHANGED** `crates/dotzuki-engine/src/battle/mod.rs` — `BattlerState<P>` gains
   `From<&MonsterInstance<P>>` so battle borrows the persistent model (no schema
   fork). This is additive; existing `BattlerState` fields are unchanged.
 
@@ -224,9 +224,9 @@ status-tick scheduler** (`01-engine-inventory.md` §1.9). pokered's
 effects, and every quirk stay in the provider.
 
 ### New / changed engine files
-- **NEW** `crates/jrpg-engine/src/battle/driver.rs` — the turn engine.
-- **NEW** `crates/jrpg-engine/src/battle/rng.rs` — `BattleRng` trait (no `rand`).
-- **CHANGED** `crates/jrpg-engine/src/battle/mod.rs` — `pub mod driver; pub mod rng;`
+- **NEW** `crates/dotzuki-engine/src/battle/driver.rs` — the turn engine.
+- **NEW** `crates/dotzuki-engine/src/battle/rng.rs` — `BattleRng` trait (no `rand`).
+- **CHANGED** `crates/dotzuki-engine/src/battle/mod.rs` — `pub mod driver; pub mod rng;`
   and extend `BattleProvider` with sequencing hooks (additive; defaults provided
   so existing impls/tests compile unchanged).
 
@@ -351,8 +351,8 @@ Engine has a bare `BattleAI` trait; the real scorer lives in
 Gen-1 scoring tables and known AI bugs in the provider.
 
 ### New / changed engine files
-- **NEW** `crates/jrpg-engine/src/battle/ai.rs` — AI driver scaffold.
-- **CHANGED** `crates/jrpg-engine/src/battle/mod.rs` — `pub mod ai;`; extend the
+- **NEW** `crates/dotzuki-engine/src/battle/ai.rs` — AI driver scaffold.
+- **CHANGED** `crates/dotzuki-engine/src/battle/mod.rs` — `pub mod ai;`; extend the
   existing `BattleAI` trait with a scorer method (additive, defaulted).
 
 ### Public Rust signatures to add
@@ -405,8 +405,8 @@ state machine; the encounter rate tables and Gen-1 encounter quirks live in a
 provider.
 
 ### New / changed engine files
-- **NEW** `crates/jrpg-engine/src/overworld/encounter.rs` — encounter state machine.
-- **CHANGED** `crates/jrpg-engine/src/overworld/mod.rs` — `pub mod encounter;`.
+- **NEW** `crates/dotzuki-engine/src/overworld/encounter.rs` — encounter state machine.
+- **CHANGED** `crates/dotzuki-engine/src/overworld/mod.rs` — `pub mod encounter;`.
 - (Consumes `party::Party`, `battle::BattleState`, and `BattleRng` — no new deps.)
 
 ### Public Rust signatures to add
@@ -470,9 +470,9 @@ application or use-flow** (`01-engine-inventory.md` §1.9). C6: dispatch an opaq
 `ItemEffectId` to provider callbacks; no concrete item effects in the engine.
 
 ### New / changed engine files
-- **CHANGED** `crates/jrpg-engine/src/items.rs` — add effect-dispatch driver +
+- **CHANGED** `crates/dotzuki-engine/src/items.rs` — add effect-dispatch driver +
   `UsageContext`; extend `ItemProvider` (additive, defaulted).
-- **NEW** `crates/jrpg-engine/src/items/effect.rs` *(split items.rs into a module
+- **NEW** `crates/dotzuki-engine/src/items/effect.rs` *(split items.rs into a module
   dir, or add inline)* — `ItemEffectId`, `ItemUseResult`, `apply_item`.
 
 ### Public Rust signatures to add
@@ -567,8 +567,8 @@ where I: ItemProvider, M: crate::party::MonsterProvider;
       `apply_effect`, `use_item`).
 - [ ] **15. Implement apply_effect in pokered**; route field then battle use-item
       call sites; delete dead dispatch.
-- [ ] **16. Sweep.** Confirm no Pokémon concrete type appears in `jrpg-engine`
-      (`grep -ri "pokemon\|species name\|Potion\|Charizard"` over `crates/jrpg-engine/src` returns nothing meaningful). Full suite green. Update `00-SUMMARY.md` status.
+- [ ] **16. Sweep.** Confirm no Pokémon concrete type appears in `dotzuki-engine`
+      (`grep -ri "pokemon\|species name\|Potion\|Charizard"` over `crates/dotzuki-engine/src` returns nothing meaningful). Full suite green. Update `00-SUMMARY.md` status.
 
 ---
 
@@ -592,7 +592,7 @@ engine driver:
 | Encounter rates, grass/water/fishing slots, repel, first-step quirk | `EncounterProvider::roll_encounter` |
 | Item heal/cure/evo/Rare-Candy/repel numbers, ball shake checks, item bugs | `ItemProvider::apply_effect` |
 
-## Keeping jrpg-engine game-agnostic (guardrails)
+## Keeping dotzuki-engine game-agnostic (guardrails)
 
 - The engine adds **only**: containers (`MonsterInstance`, `Party`,
   `BattleState` extensions), **sequencers** (`BattleDriver`, `BattleAi`,

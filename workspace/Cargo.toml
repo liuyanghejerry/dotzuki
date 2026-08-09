@@ -1,21 +1,21 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/jrpg-engine",
-    "crates/jrpg-rules",
-    "crates/jrpg-rules-macro",
-    "crates/jrpg-engine-tiled",
-    "crates/jrpg-engine-dsl",
-    "crates/jrpg-engine-script",
-    "crates/jrpg-cli",
-    "crates/jrpg-runner",
-    "crates/jrpg-runner-web",
-    "crates/jrpg-renderer",
-    "crates/jrpg-tui",
-    "crates/jrpg-ui",
-    "crates/jrpg-audio",
-    "crates/jrpg-web",
-    "crates/jrpg-app",
+    "crates/dotzuki-engine",
+    "crates/dotzuki-rules",
+    "crates/dotzuki-rules-macro",
+    "crates/dotzuki-engine-tiled",
+    "crates/dotzuki-engine-dsl",
+    "crates/dotzuki-engine-script",
+    "crates/dotzuki-cli",
+    "crates/dotzuki-runner",
+    "crates/dotzuki-runner-web",
+    "crates/dotzuki-renderer",
+    "crates/dotzuki-tui",
+    "crates/dotzuki-ui",
+    "crates/dotzuki-audio",
+    "crates/dotzuki-web",
+    "crates/dotzuki-app",
     "examples/firered/crates/firered-data",
     "examples/firered/crates/firered-app",
     "examples/minimon",
@@ -25,7 +25,7 @@ members = [
 # cargo-generate starter template: its Cargo.toml uses {{project-name}}
 # placeholders and must not be parsed as a workspace package (which also
 # breaks consumers that fetch this repo as a git dependency).
-exclude = ["jrpg-template"]
+exclude = ["dotzuki-template"]
 
 [workspace.package]
 version = "0.1.0"

@@ -277,7 +277,7 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
       将编译后的 JSON 直接嵌入生成的 <code>ui_layouts_gen.rs</code> 文件，以 <code>&amp;'static str</code> 形式存在。
       <code>schema.rs</code> 通过 <code>include!()</code> 包含该文件。运行时，菜单代码调用
       <code>get_screen_v2_json()</code> 获取 JSON 字符串，用 <code>serde_json::from_str()</code>
-      反序列化为 <code>ScreenLayout</code> 结构体（定义在 <code>jrpg-renderer/layout_engine/types.rs</code>）。
+      反序列化为 <code>ScreenLayout</code> 结构体（定义在 <code>dotzuki-renderer/layout_engine/types.rs</code>）。
       v1 路径更激进：build.rs 直接生成具名 Rust 结构体（如 <code>DialogDefaultLayout</code>），编译期零成本。
     </div>
   </div>
@@ -635,7 +635,7 @@ product_card = <span class="c-prop">container</span> {
       </div>
       <div>
         <div style="color:var(--text-dim);margin-bottom:.25rem">📦 最终产物 (Rust 嵌入)</div>
-        <div class="pp-code"><span style="color:#7ee787">// jrpg-engine-dsl/build.rs 生成</span>
+        <div class="pp-code"><span style="color:#7ee787">// dotzuki-engine-dsl/build.rs 生成</span>
 <span style="color:#7ee787">// embedded_scenes.rs</span>
 <span style="color:#ff7b72">static</span> SCENE_0: &amp;<span style="color:#ff7b72">str</span> =
     <span style="color:#d2a8ff">include_str!</span>(<span style="color:#a5d6ff">r"OUT_DIR/PalletTown.js"</span>);
@@ -664,7 +664,7 @@ product_card = <span class="c-prop">container</span> {
       <code>@if (getFlag("X")) { ... }</code> → <code>if (game.getFlag("X")) { ... }</code>（函数自动加 <code>game.</code> 前缀）；
       <code>giveItem("X",1)</code> → <code>await game["giveItem"]("X",1)</code>（所有命令自动 await 并走 <code>game[name]()</code> 动态分发）。
       字符串中的 <code>{variable}</code> → JS 模板字面量 <code>${...}</code>。<br><br>
-      <strong style="color:var(--scene)">JS 到 Rust</strong>：<code>jrpg-engine-dsl/build.rs</code> 将编译后的 JS 写入 <code>OUT_DIR/</code>，
+      <strong style="color:var(--scene)">JS 到 Rust</strong>：<code>dotzuki-engine-dsl/build.rs</code> 将编译后的 JS 写入 <code>OUT_DIR/</code>，
       生成 <code>embedded_scenes.rs</code> 通过 <code>include_str!()</code> 嵌入每个 JS 文件。
       运行时，<code>loader.rs</code> 调用 <code>load_embedded_scenes()</code> 将 JS 源码注册到场景系统中，
       当玩家触发对话时，Boa JS 引擎执行对应场景的 JS 函数。
@@ -1149,7 +1149,7 @@ delay(10)  <span class="c-cmt">// 等待 10 帧</span></div>
     · <span style="color:var(--scene)">📜</span> <a href="../docs/FULL_DSL.md">Scene 语法</a>
     · <a href="../docs/DSL_MAPPING.md">编译契约</a>
     · <a href="../docs/DSL_UNIFIED_DESIGN.md">统一设计</a>
-    · <code>jrpg-engine-dsl</code>
+    · <code>dotzuki-engine-dsl</code>
   </p>
 </footer>
 

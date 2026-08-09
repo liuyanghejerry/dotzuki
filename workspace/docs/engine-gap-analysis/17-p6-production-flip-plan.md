@@ -11,10 +11,10 @@ This doc supersedes blueprint `15` §4's sketch with what the build actually rev
 
 ## 1. What is DONE and PROVEN (all green, on `feature/p0-engine-migration`)
 
-The pokered Gen-1 battle **logic** is fully reproduced on the `jrpg-engine`
+The pokered Gen-1 battle **logic** is fully reproduced on the `dotzuki-engine`
 effect-stack and proven equivalent to the legacy oracle, test-side:
 
-- **Engine** (`jrpg-engine`, 328/0): the effect-stack (`StackDriver`), the closed
+- **Engine** (`dotzuki-engine`, 328/0): the effect-stack (`StackDriver`), the closed
   `Event` model, the `EffectState` arena, the `forced_action` seam, the **`TurnLog`**
   (`execute_turn_logged`) with `MoveUsed / Missed / Blocked / Crit / Damaged /
   Healed / StatusInflicted / StatusCured / StatChanged / Fainted` — all additive +

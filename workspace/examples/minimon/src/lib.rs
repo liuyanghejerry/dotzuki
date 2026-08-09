@@ -1,6 +1,6 @@
 //! # minimon — the cross-gen authoring proof (design 09 §6)
 //!
-//! A *tiny mock game* built **entirely on `jrpg-engine`'s effect-stack** that
+//! A *tiny mock game* built **entirely on `dotzuki-engine`'s effect-stack** that
 //! proves a developer can author a Gen-1-to-Gen-6-LIKE battle system with **no
 //! engine edits** beyond the Phase-1 additive seams (the broadened [`Event`]
 //! taxonomy, the four defaulted resolvers, [`EffectHost`], and the `effect!`
@@ -31,16 +31,16 @@
 //! `unsafe`. This mirrors exactly how the engine's own `StackDriver` re-enters
 //! dispatch, and is the §4/§6.2 "Authoring" axis the proof must satisfy.
 
-use jrpg_engine::battle::rng::ScriptedRng;
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::battle::stack::{
     collect_handlers, run_event, run_event_checked, BattleCtx, EffectProvider, EffectState,
     EffectType, Effect, EffectId, Event, EventHook, HandlerResult, MoveContext, RelayVar,
 };
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EffectResult, EnumMap,
     MoveEffect,
 };
-use jrpg_engine::effect;
+use dotzuki_engine::effect;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. The game's data model — a 6-stat Gen-4 shape (proves the split is invisible
@@ -284,7 +284,7 @@ pub enum Resource {
 
 impl Resource {
     /// The opaque engine resource id for this kind (the id stored in
-    /// [`ResourcePool`](jrpg_engine::battle::ResourcePool) /
+    /// [`ResourcePool`](dotzuki_engine::battle::ResourcePool) /
     /// [`BattleProvider::move_cost`]).
     pub const fn id(self) -> u16 {
         match self {
@@ -1151,7 +1151,7 @@ pub fn battler(
 
 /// The DATA path (Phase 2): minimon's five systems re-expressed in
 /// [`rules.ron`](../../rules.ron) and driven through the game-agnostic
-/// `jrpg-rules` loader, with a [`DataBattle`](data::DataBattle) driver that
+/// `dotzuki-rules` loader, with a [`DataBattle`](data::DataBattle) driver that
 /// mirrors the native [`Battle`]. The parity tests prove the two paths produce
 /// byte-identical `BattleState` and identical `ScriptedRng` draws.
 pub mod data;

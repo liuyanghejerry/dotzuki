@@ -1,0 +1,21 @@
+[workspace]
+
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2021"
+description = "A JRPG game built with dotzuki-engine"
+
+[dependencies]
+dotzuki-engine = { path = "../crates/dotzuki-engine" }
+dotzuki-engine-tiled = { path = "../crates/dotzuki-engine-tiled" }
+dotzuki-engine-script = { path = "../crates/dotzuki-engine-script" }
+dotzuki-engine-dsl = { path = "../crates/dotzuki-engine-dsl" }
+
+pixels = "0.15"
+winit = "0.30"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"

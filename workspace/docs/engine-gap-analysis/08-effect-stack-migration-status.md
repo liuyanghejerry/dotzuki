@@ -4,7 +4,7 @@
 Branch `feature/p0-engine-migration`. Independently audited at HEAD `79582431`.
 
 This is the honest whole-migration status for the Showdown-style effect-stack re-founding of
-`jrpg-engine`'s battle system (pattern C, design [`06-battle-engine-effect-stack-design.md`](06-battle-engine-effect-stack-design.md)).
+`dotzuki-engine`'s battle system (pattern C, design [`06-battle-engine-effect-stack-design.md`](06-battle-engine-effect-stack-design.md)).
 The vertical-slice POC ([`07-effect-stack-poc-result.md`](07-effect-stack-poc-result.md)) returned
 GO; slices 1–7 then carried out the strangler plan (design §7). **Read the "Remaining work" section
 before treating any of this as production-ready** — the stack is parity-proven in a *test harness
@@ -15,9 +15,9 @@ production loop has NOT been swapped.
 
 ## 1. What the effect-stack engine now is
 
-A new **additive sibling** module `crates/jrpg-engine/src/battle/stack/` (files `event.rs`, `ctx.rs`,
+A new **additive sibling** module `crates/dotzuki-engine/src/battle/stack/` (files `event.rs`, `ctx.rs`,
 `dispatch.rs`, `driver.rs`, `mod.rs`). It is 100% game-agnostic: zero Pokémon types, links no `rand`
-(`cargo tree -i rand` in jrpg-engine → none), no `if gen==1`. All randomness flows only through the
+(`cargo tree -i rand` in dotzuki-engine → none), no `if gen==1`. All randomness flows only through the
 existing `BattleRng` trait.
 
 ### Event model (`event.rs`)
@@ -201,14 +201,14 @@ the 88-test harness) before any production call-site swap.
 Forced/uncached, from actual output at HEAD `79582431`:
 
 - `cargo build --workspace` → **exit 0**.
-- `cargo test -p jrpg-engine` → **301 lib + 2 doctest, 0 failed** (engine untouched since the POC;
+- `cargo test -p dotzuki-engine` → **301 lib + 2 doctest, 0 failed** (engine untouched since the POC;
   byte-identical to parent — the 301+2 split is the actual unchanged total, not a regression vs the
   earlier "303" baseline reference).
 - `cargo test -p pokered-core` → **1907 passed, 0 failed** (across all test binaries).
 - Stack parity subset → **88 tests, identical green 3× default-parallel AND `--test-threads=1`**.
 - slice-7 additions → **16 tests** (incl. a 1000-seed determinism fuzz that randomly attaches a
   secondary).
-- **Agnosticism:** `jrpg-engine` links **no `rand`**, contains **no Pokémon types** in production
+- **Agnosticism:** `dotzuki-engine` links **no `rand`**, contains **no Pokémon types** in production
   (the only identifiers in the stack module are `TSpecies`/`TMove`/`TProvider` test fixtures under
   `#[cfg(test)]` — a generic mock game, not real Pokémon types), and has **no `if gen==1`**.
 

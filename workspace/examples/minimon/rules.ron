@@ -1,6 +1,6 @@
 // rules.ron — minimon's battle ruleset, authored as DATA against the closed
 // no-code vocabulary (doc 11 §1.1, doc 12 §2). This is the SINGLE source of
-// truth that the dual-mode `jrpg_rules::RuleSource` loads either BAKED
+// truth that the dual-mode `dotzuki_rules::RuleSource` loads either BAKED
 // (include_str!, release) or from DISK (dev, hot-reloaded). The minimon parity
 // test (`tests::data_parity`) drives the SAME battle scenarios through (a) the
 // native-Rust minimon effects (the oracle, lib.rs) and (b) these data-loaded

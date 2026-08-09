@@ -4,8 +4,8 @@
 //! 4-bit color indices to RGBA values. These palettes emulate
 //! the visual style of Pokémon FireRed/LeafGreen on the GBA.
 
-use jrpg_engine::render::Rgba;
-pub use jrpg_renderer::palette::{GbaColor, Palette};
+use dotzuki_engine::render::Rgba;
+pub use dotzuki_renderer::palette::{GbaColor, Palette};
 
 /// Helper to create a 16-color GBA palette from an array.
 pub fn make_palette(colors: [Rgba; 16]) -> Palette<GbaColor> {

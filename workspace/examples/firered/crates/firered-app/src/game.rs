@@ -1,6 +1,6 @@
 //! Faithful FireRed overworld renderer for Pallet Town.
 //!
-//! Reproduces `pokefirered`'s metatile compositing pipeline on the jrpg-engine
+//! Reproduces `pokefirered`'s metatile compositing pipeline on the dotzuki-engine
 //! framebuffer. Each 16×16 metatile is two 2×2-tile layers; the player sprite
 //! composites *between* them so it walks behind tree canopies and roof tops
 //! (the `DrawMetatile` bottom/middle/top BG split, collapsed into three
@@ -12,12 +12,12 @@ use firered_data::{
     FireRedMap, LayerType, TileEntry, GBA_SCREEN_HEIGHT, GBA_SCREEN_WIDTH, METATILE,
     PLAYER_FRAME_H, PLAYER_FRAME_W,
 };
-use jrpg_engine::camera::{Camera, Vec2};
-use jrpg_engine::overworld::actor::{OverworldActor, OverworldCollision};
-use jrpg_engine::overworld::types::Direction;
-use jrpg_engine::render::{FrameBuffer, Rgba};
-use jrpg_renderer::input::{GbButton, InputState};
-use jrpg_renderer::window::GameLoop;
+use dotzuki_engine::camera::{Camera, Vec2};
+use dotzuki_engine::overworld::actor::{OverworldActor, OverworldCollision};
+use dotzuki_engine::overworld::types::Direction;
+use dotzuki_engine::render::{FrameBuffer, Rgba};
+use dotzuki_renderer::input::{GbButton, InputState};
+use dotzuki_renderer::window::GameLoop;
 
 const SCREEN_W: i32 = GBA_SCREEN_WIDTH as i32;
 const SCREEN_H: i32 = GBA_SCREEN_HEIGHT as i32;

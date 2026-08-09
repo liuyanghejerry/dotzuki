@@ -1,0 +1,35 @@
+[package]
+name = "dotzuki-renderer"
+version.workspace = true
+edition.workspace = true
+description = "A general-purpose JRPG renderer built from Game Boy tile rendering principles"
+repository = "https://github.com/your-org/pokered-rust"
+license.workspace = true
+
+[features]
+default = ["gpu"]
+framebuffer = []
+gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
+# PNG sprite-sheet loading for WalkSprite (dotzuki_renderer::walk_sprite). Decoupled
+# from `gpu` so a framebuffer-only consumer can still load character art.
+image-assets = ["dep:image"]
+
+[dependencies]
+dotzuki-engine = { path = "../dotzuki-engine" }
+log = "0.4"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+pixels = { version = "=0.15.0", optional = true }
+winit = { version = "0.30", optional = true }
+winit_input_helper = { version = "0.17", optional = true }
+image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+error-iter = { version = "0.4", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+
+[dev-dependencies]
+# Round-trip tests compile the pokered `.gui` DSL layouts and verify they
+# deserialize into the matching element params (guards against codegen drift).
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl" }

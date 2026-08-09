@@ -4,7 +4,7 @@
 > immune* multipliers across attacker-type → defender-type — authorable
 > **entirely as data in `rules.ron`, with zero game-author Rust**, by firing the
 > already-declared-but-currently-inert `Event::Effectiveness`
-> ([`event.rs:68`](../../crates/jrpg-engine/src/battle/stack/event.rs)) and
+> ([`event.rs:68`](../../crates/dotzuki-engine/src/battle/stack/event.rs)) and
 > folding an **integer-rational** multiplier through the existing
 > `RelayVar::scale(num, den)` pattern (`event.rs:207`). **No float ever touches
 > the stack path.** The worked example is a 5-element 金木水火土 (Metal / Wood /
@@ -23,7 +23,7 @@
 > Read §1.1 (primitive vocabulary), §2.2 (Option A loader bridge), and §3
 > (Event/RelayVar/ordering mapping) of that doc first.
 
-Legend: **[ENGINE-WORK]** = a one-time change inside `crates/jrpg-engine`.
+Legend: **[ENGINE-WORK]** = a one-time change inside `crates/dotzuki-engine`.
 **[AUTHORING-WORK]** = game-side / RON-data only, no engine edit. The goal: after
 a small fixed amount of [ENGINE-WORK], the *entire* 金木水火土 relation — the
 wheel, every multiplier, and per-move types — is **100% [AUTHORING-WORK]**.
@@ -56,7 +56,7 @@ There are **two** code paths that resolve a damaging move, and they are
 **separate**:
 
 1. **The engine driver** — `Driver::resolve_action`
-   ([`driver.rs:119-189`](../../crates/jrpg-engine/src/battle/stack/driver.rs)),
+   ([`driver.rs:119-189`](../../crates/dotzuki-engine/src/battle/stack/driver.rs)),
    reached only through `execute_turn` (the only callers are the engine's own
    `stack/mod.rs:495,513`).
 2. **minimon's own driver** — `Battle::fire_move`
@@ -518,11 +518,11 @@ the post-chart min-damage and the immunity (zero vs miss) semantics explicitly**
 - [`11-no-code-authoring-design.md`](./11-no-code-authoring-design.md) — the
   declarative-data + closed-primitive + `interpret` bridge this rides on.
 - Code (read, **not modified**):
-  [`crates/jrpg-engine/src/battle/stack/event.rs`](../../crates/jrpg-engine/src/battle/stack/event.rs)
+  [`crates/dotzuki-engine/src/battle/stack/event.rs`](../../crates/dotzuki-engine/src/battle/stack/event.rs)
   (`Event::Effectiveness`, `RelayVar::scale`, `HandlerResult`),
-  [`.../stack/driver.rs`](../../crates/jrpg-engine/src/battle/stack/driver.rs)
+  [`.../stack/driver.rs`](../../crates/dotzuki-engine/src/battle/stack/driver.rs)
   (`resolve_action`, the insertion site 173-188, the crit-draw-order guard),
-  [`.../stack/dispatch.rs`](../../crates/jrpg-engine/src/battle/stack/dispatch.rs)
+  [`.../stack/dispatch.rs`](../../crates/dotzuki-engine/src/battle/stack/dispatch.rs)
   (`run_event` inertness, `Fail` → `Bool(false)` at 294),
   [`examples/minimon/src/lib.rs`](../../examples/minimon/src/lib.rs)
   (`fire_move` 690-721 — the path the POC drives; `calculate_damage` 232-248;

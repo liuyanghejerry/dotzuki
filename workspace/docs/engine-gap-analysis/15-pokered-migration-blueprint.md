@@ -9,8 +9,8 @@
 > **P7 is therefore dropped**; the migration ends at P6. The script design (`16`) is preserved but unadopted.
 
 **Status:** DESIGN / BLUEPRINT. No code changes. Decision-oriented; approve before any work.
-**Scope:** Migrate the pokered Gen-1 single battle onto the `jrpg-engine` effect-stack
-(`battle::stack` / `StackDriver`) and author its moves in the `jrpg-rules` RON DSL,
+**Scope:** Migrate the pokered Gen-1 single battle onto the `dotzuki-engine` effect-stack
+(`battle::stack` / `StackDriver`) and author its moves in the `dotzuki-rules` RON DSL,
 while the legacy `apply_move_effect` dispatcher stays the green parity oracle through every phase.
 **Predecessors:** see `06` (effect-stack design + 30-quirk bug catalog), `11`/`14` (RON loader),
 `12` (type chart). This doc supersedes their migration-sequencing notes for the *pokered* swap.
@@ -237,27 +237,27 @@ reactive effect with **no MoveEffect-driven parity test** — the thinnest ice w
 
 ## 3. Vocabulary-expansion spec (deduplicated, for bucket B)
 
-All additions are **additive and defaulted**; **none touch `jrpg-engine` core types** except the two explicit
-engine *seams* flagged below. New ops/predicates live in `jrpg-rules` (game-agnostic infra: `model.rs` enum +
+All additions are **additive and defaulted**; **none touch `dotzuki-engine` core types** except the two explicit
+engine *seams* flagged below. New ops/predicates live in `dotzuki-rules` (game-agnostic infra: `model.rs` enum +
 `interp.rs` arm + `registry.rs::validate_op`, sometimes a `RuleBindings` method). New state lives game-side as
 `P::EffectStateKind` variants (opaque to the engine — zero engine change).
 
-### New DSL predicates (`jrpg-rules`)
+### New DSL predicates (`dotzuki-rules`)
 | Predicate | What it does | Seam | Effort |
 |---|---|---|---|
-| `MoveTypeIsDefenderType` | Gen-1 burn/freeze/para self-type immunity quirk (`status_effects.rs:85/110/135`) | jrpg-rules | S |
-| `HasVolatile(kind, sel)` | volatile presence (Substitute block, Leech Seed already-seeded) | jrpg-rules | S |
-| `TargetHasStatus(status)` | Dream Eater sleep gate | jrpg-rules | S |
-| `LevelGE` | OHKO atk-lvl ≥ def-lvl gate | jrpg-rules | S |
+| `MoveTypeIsDefenderType` | Gen-1 burn/freeze/para self-type immunity quirk (`status_effects.rs:85/110/135`) | dotzuki-rules | S |
+| `HasVolatile(kind, sel)` | volatile presence (Substitute block, Leech Seed already-seeded) | dotzuki-rules | S |
+| `TargetHasStatus(status)` | Dream Eater sleep gate | dotzuki-rules | S |
+| `LevelGE` | OHKO atk-lvl ≥ def-lvl gate | dotzuki-rules | S |
 
-### New DSL ops (`jrpg-rules`)
+### New DSL ops (`dotzuki-rules`)
 | Op | What it does | Seam | Effort |
 |---|---|---|---|
-| `SetVolatile(kind, sel)` / `ClearVolatile(kind, sel)` | Flinch/Confusion set; Explode clear-Seeded | jrpg-rules (+state) | M |
-| `SetHp(sel, value)` | Explode (0), OHKO (0) | jrpg-rules | S |
-| `DamageCurrentHpFraction(sel, n, d)` | Super Fang `curHP/2` (today `DamageFraction` scales the relay, not target curHP) | jrpg-rules | S |
-| `SetDamage(expr)` | Special/fixed damage {level, const, `rng·1.5·lvl`}, bypass type chart | jrpg-rules | M |
-| `StatusWithDuration(status, dur_expr)` | Sleep `(rng&7).max(1)` turns | jrpg-rules (+state) | M |
+| `SetVolatile(kind, sel)` / `ClearVolatile(kind, sel)` | Flinch/Confusion set; Explode clear-Seeded | dotzuki-rules (+state) | M |
+| `SetHp(sel, value)` | Explode (0), OHKO (0) | dotzuki-rules | S |
+| `DamageCurrentHpFraction(sel, n, d)` | Super Fang `curHP/2` (today `DamageFraction` scales the relay, not target curHP) | dotzuki-rules | S |
+| `SetDamage(expr)` | Special/fixed damage {level, const, `rng·1.5·lvl`}, bypass type chart | dotzuki-rules | M |
+| `StatusWithDuration(status, dur_expr)` | Sleep `(rng&7).max(1)` turns | dotzuki-rules (+state) | M |
 | `RepeatHits(count_expr)` | Multi-hit loop (2-5 dist, exactly-2, Twineedle final-hit hook) | **ENGINE SEAM** | L |
 
 ### New game-side `EffectStateKind` variants (zero engine change)

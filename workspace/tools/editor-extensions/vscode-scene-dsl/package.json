@@ -3,7 +3,7 @@
   "displayName": "Scene DSL Support",
   "description": "Syntax highlighting for JRPG Engine Scene DSL (.scene) files",
   "version": "0.1.0",
-  "publisher": "jrpg-engine",
+  "publisher": "dotzuki-engine",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"

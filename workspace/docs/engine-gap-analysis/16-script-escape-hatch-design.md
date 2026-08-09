@@ -52,7 +52,7 @@ returning a `HandlerResult` NOW.** The fold's only call site is
 short-circuits. There is **no point at which the fold can yield and resume later**.
 
 **(2) The in-repo Boa integration is ASYNC by construction and CANNOT be reused as-is**
-(`11 §4.3`). `jrpg-engine-script` is built for map cutscenes: an awaited host call
+(`11 §4.3`). `dotzuki-engine-script` is built for map cutscenes: an awaited host call
 (`await game.showText(...)`) mints a `JsPromise`, stores a `PendingResolve`, and
 `ScriptEngine::tick()` resolves it on a **later frame**. That is the exact opposite of a
 synchronous re-entrant fold that must return a verdict in the same call. The async
@@ -94,7 +94,7 @@ enum HandlerImpl<P> {
 - The **declarative** path already collapses to `Native(interpret::<P>)` keyed by `EffectId`
   (`11 §2.2 Option A`) — no engine change. A **script** hook collapses to
   `Script{module,func}` resolved through the same `EffectId` keying.
-- The `jrpg-rules` loader maps a data hook to one `interpret()` fn keyed by `EffectId`; a
+- The `dotzuki-rules` loader maps a data hook to one `interpret()` fn keyed by `EffectId`; a
   **script** hook maps to a `Script` `HandlerImpl` instead — same loader, same `EffectId`
   space, same collector, same comparator sort (`order → priority → speed → sub_order →
   effect_order`). A scripted effect interleaves with native + data effects under the *one*
@@ -402,6 +402,6 @@ authored without Rust.
   this completes: the revised end-state table (data / primitive / native-state-slot / script
   split) and **P7**, the script-escape-hatch phase.
 - Code (read, not modified):
-  [`crates/jrpg-engine/src/battle/stack/{dispatch,event,ctx,authoring}.rs`](../../crates/jrpg-engine/src/battle/stack/),
-  [`crates/jrpg-engine/src/battle/rng.rs`](../../crates/jrpg-engine/src/battle/rng.rs) (`BattleRng`/`ScriptedRng`),
-  [`crates/jrpg-engine-script/`](../../crates/jrpg-engine-script/) (the **async** overworld Boa — the deliberate non-reuse).
+  [`crates/dotzuki-engine/src/battle/stack/{dispatch,event,ctx,authoring}.rs`](../../crates/dotzuki-engine/src/battle/stack/),
+  [`crates/dotzuki-engine/src/battle/rng.rs`](../../crates/dotzuki-engine/src/battle/rng.rs) (`BattleRng`/`ScriptedRng`),
+  [`crates/dotzuki-engine-script/`](../../crates/dotzuki-engine-script/) (the **async** overworld Boa — the deliberate non-reuse).

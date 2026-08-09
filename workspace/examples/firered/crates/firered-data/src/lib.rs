@@ -1,7 +1,7 @@
 //! FireRed/LeafGreen color palette data for GBA-style rendering.
 //!
 //! This crate provides GBA-style 16-color palettes that demonstrate
-//! the color rendering capabilities of the jrpg-engine framework.
+//! the color rendering capabilities of the dotzuki-engine framework.
 //! Unlike the pokered example which uses 4-shade DMG palettes,
 //! this crate defines full 16-color palettes for backgrounds,
 //! sprites, and UI elements.
@@ -14,10 +14,10 @@ pub use firered_map::{
     PLAYER_FRAME_H, PLAYER_FRAME_W, PLAYER_FRAMES, TILE,
 };
 
-use jrpg_engine::palette::PaletteTrait;
+use dotzuki_engine::palette::PaletteTrait;
 
-pub use jrpg_renderer::palette::GbaColor;
-pub type GbaPalette = jrpg_renderer::palette::Palette<GbaColor>;
+pub use dotzuki_renderer::palette::GbaColor;
+pub type GbaPalette = dotzuki_renderer::palette::Palette<GbaColor>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
@@ -101,7 +101,7 @@ impl FireRedPaletteId {
 
 /// FireRed UI colors — used for menus, dialogs, text boxes.
 pub mod ui_colors {
-    use jrpg_engine::render::Rgba;
+    use dotzuki_engine::render::Rgba;
 
     pub const TEXT_WHITE: Rgba = Rgba::rgb(0xF8, 0xF8, 0xF8);
     pub const TEXT_LIGHT: Rgba = Rgba::rgb(0xC0, 0xC8, 0xD0);

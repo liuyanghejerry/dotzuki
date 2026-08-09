@@ -1,0 +1,36 @@
+[package]
+name = "dotzuki-runner"
+version.workspace = true
+edition.workspace = true
+description = "Generic runtime that boots a zero-Rust jrpg game project (manifest, DSL, maps)"
+license.workspace = true
+
+[features]
+default = ["gpu", "watch"]
+# Windowed/GPU renderer bits (pixels/winit) — native play; off for WASM.
+gpu = ["dotzuki-renderer/gpu"]
+# notify-based hot reload (`jrpg run --watch`) — native only.
+watch = ["dep:notify"]
+
+[dependencies]
+dotzuki-engine = { path = "../dotzuki-engine" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl" }
+dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled" }
+dotzuki-rules = { path = "../dotzuki-rules" }
+dotzuki-renderer = { path = "../dotzuki-renderer", default-features = false, features = ["image-assets"] }
+dotzuki-ui = { path = "../dotzuki-ui" }
+dotzuki-audio = { path = "../dotzuki-audio", features = ["serde"] }
+# Native audio output (same version as wuxia-app). The APU renders samples on
+# cpal's callback thread; no device (CI/headless/wasm's Null host) ⇒
+# RunnerAudio stays silent.
+cpal = "0.15"
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+log = "0.4"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dotzuki-app = { path = "../dotzuki-app" }
+notify = { workspace = true, optional = true }

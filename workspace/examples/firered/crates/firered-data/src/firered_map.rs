@@ -16,7 +16,7 @@
 //! Assets are produced by `tools/firered-asset-converter/convert.py` and embedded
 //! via `include_bytes!`, so this crate performs no I/O.
 
-use jrpg_engine::render::Rgba;
+use dotzuki_engine::render::Rgba;
 
 // ── dimensions / constants (Pallet Town) ───────────────────────────────────
 

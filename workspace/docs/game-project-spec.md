@@ -1,28 +1,28 @@
-# Game Project Spec — zero-Rust jrpg-engine projects
+# Game Project Spec — zero-Rust dotzuki-engine projects
 
 A **game project** is a plain directory of DSL, data, and asset files plus a
-single manifest, `.jrpg-editor.json`. There is no Cargo workspace, no
+single manifest, `.dotzuki-editor.json`. There is no Cargo workspace, no
 `package.json`, no build system inside a game project: the engine binary and
 the editor consume the directory as-is.
 
 This spec is the contract between the tools that create, edit, and run such
 projects. The reference implementation of the layout is the editor's
-scaffolder (`tools/jrpg-editor/server/scaffold.ts`); the `jrpg` CLI
-(`crates/jrpg-cli`) produces the same layout.
+scaffolder (`tools/dotzuki-editor/server/scaffold.ts`); the `jrpg` CLI
+(`crates/dotzuki-cli`) produces the same layout.
 
 ## Consumers
 
 | Consumer | What it does with a game project |
 |----------|----------------------------------|
-| **jrpg-editor** (`tools/jrpg-editor`) | Reads and writes everything: manifest, data tables, maps, scenes, gfx. |
-| **`jrpg` CLI** (`crates/jrpg-cli`) | `jrpg new` scaffolds a project; `jrpg check` compile-checks its DSL files. |
-| **`jrpg run`** (`crates/jrpg-cli` + `crates/jrpg-runner`) | Boots the project and plays it: overworld, dialogue scenes, warps (see below). |
+| **dotzuki-editor** (`tools/dotzuki-editor`) | Reads and writes everything: manifest, data tables, maps, scenes, gfx. |
+| **`jrpg` CLI** (`crates/dotzuki-cli`) | `jrpg new` scaffolds a project; `jrpg check` compile-checks its DSL files. |
+| **`jrpg run`** (`crates/dotzuki-cli` + `crates/dotzuki-runner`) | Boots the project and plays it: overworld, dialogue scenes, warps (see below). |
 
 ## Directory layout
 
 ```
 my-game/
-├── .jrpg-editor.json     # project manifest — the only config file
+├── .dotzuki-editor.json     # project manifest — the only config file
 ├── README.md             # human notes; free-form
 ├── data/                 # dataRoot — game data
 │   ├── maps/             # map definitions + per-map script .scene files
@@ -47,7 +47,7 @@ my-game/
 - `assets/scenes/` — story scenes written in the Game DSL. This is the
   default **scene directory** (`game.scenesDir`); see below.
 
-Scaffolders create at minimum: `.jrpg-editor.json`, `README.md`, `data/maps/`,
+Scaffolders create at minimum: `.dotzuki-editor.json`, `README.md`, `data/maps/`,
 `data/tiles/`, `gfx/`, `assets/scenes/main.scene`. Templates with data tables
 additionally create one `data/<table.dir>/` per table. The **editor's
 scaffolder** additionally seeds starter content so a fresh project is
@@ -69,7 +69,7 @@ project can fight via `@command("startBattle", "slime")` (wild) or
 with zero setup.
 `jrpg new` emits the minimal skeleton only.
 
-## Manifest schema (`.jrpg-editor.json`)
+## Manifest schema (`.dotzuki-editor.json`)
 
 Top-level object:
 
@@ -138,7 +138,7 @@ specified below.
 
 `jrpg run <dir>` boots a playable instance of the project (windowed;
 `--headless [--frames N] [--screenshot out.png]` for CI/smoke tests). It is
-implemented by the `jrpg-runner` crate; this section is the behavioral
+implemented by the `dotzuki-runner` crate; this section is the behavioral
 contract.
 
 **Boot.** The manifest is loaded, all DSL dirs are compiled (any diagnostic
@@ -262,7 +262,7 @@ heal. There is no heal-point system yet: the respawn is always the entry
 spawn.
 
 **Audio.** `playMusic`/`playSound`/`stopMusic`/`fadeOutMusic` play tracks
-from `data/audio/**/*.json` (jrpg-audio `TrackDef` format; `music/` + `sfx/`
+from `data/audio/**/*.json` (dotzuki-audio `TrackDef` format; `music/` + `sfx/`
 subdirs are a convention — the tree is loaded recursively). The id a scene
 passes is the track's `id` field; unknown ids warn once and continue. Audio
 is fully optional: no `data/audio/` dir means every command is a silent
@@ -275,7 +275,7 @@ load at boot).
 4 facings × 5 frames) when present; otherwise a procedural placeholder person
 is drawn. NPCs always render as id-colored placeholders in this version.
 
-**Save/load.** The game saves to `<project>/.jrpg-save.json` (override with
+**Save/load.** The game saves to `<project>/.dotzuki-save.json` (override with
 `--save-file`) — versioned JSON: `{version, map, player: {x, y, facing, level?},
 flags, lang, party?, inventory?, money?}` (v3; `party`/`inventory` appear
 once a battle has completed — see the battle chapter; party members may
@@ -354,7 +354,7 @@ the defaults shown):
 - `resource` names the record field holding the MP pool; absent ⇒ no
   resource gate (every skill is free).
 - `rules` (project-root-relative, default `data/rules.ron`) is parsed with
-  the jrpg-rules `Ruleset` model **only when the file exists**. Its
+  the dotzuki-rules `Ruleset` model **only when the file exists**. Its
   `type_chart` feeds the effectiveness multiplier, and — when it declares
   `effects` — those records are **live**: `kind: Move` records take
   over matching skills and `kind: Status` records define statuses, executed
@@ -482,8 +482,8 @@ record > table record > built-in category**. Skills with NO matching RON
 record behave exactly as v1, even in a project whose rules file has effects.
 
 **RON effect hooks (v2-a).** Hooks are authored in the rules file's
-`effects` records with the jrpg-rules closed `Op`/`Predicate` vocabulary
-(`workspace/crates/jrpg-rules/src/model.rs` — `Boost`, `InflictStatus`,
+`effects` records with the dotzuki-rules closed `Op`/`Predicate` vocabulary
+(`workspace/crates/dotzuki-rules/src/model.rs` — `Boost`, `InflictStatus`,
 `DamageFraction`, `HealFraction`, `ScaleRelay`, `VetoIf`, `ApplyTypeChart`,
 `PayResource`, `InflictVolatile`, `SetHp`, `SetDamage`, `RepeatHits`,
 `RemoveStatus`, and the `HasType`/`TargetHasStatus`/`SourceHasStatus`/
@@ -619,7 +619,7 @@ always respawns at the entry spawn).
 ## What `jrpg check` compiles
 
 `jrpg check <dir>` loads the manifest, collects every directory that may hold
-DSL files, and runs `jrpg_engine_dsl::compiler::compile_dirs` over them (in
+DSL files, and runs `dotzuki_engine_dsl::compiler::compile_dirs` over them (in
 memory, no artifacts written). The directory set is:
 
 1. the scene directory (`game.scenesDir`, default `assets/scenes`, rel.
@@ -638,7 +638,7 @@ referenced table ids (party/enemies/encounters/skills/items) must exist in the d
 activity's `config.tables[]`, the referenced stat/skill fields and the items
 `healField` must exist in the table schemas, an `encounters` block's table
 must declare an `enemies` field, and the rules file (when
-present on disk) must parse as a jrpg-rules `Ruleset` AND compile against
+present on disk) must parse as a dotzuki-rules `Ruleset` AND compile against
 the closed vocabulary — an unknown event, op, or stat/type/resource/status
 name in a hook is a diagnostic, exactly as it would be a boot-time error at
 battle start.
@@ -648,13 +648,13 @@ Record JSONs are not loaded — the manifest's table definitions suffice.
 ## Editor playtest (WASM runner)
 
 The editor's `play` activity runs the same `RunnerGame` **in the browser** via
-`crates/jrpg-runner-web` (wasm-bindgen), so playtesting needs no Rust
+`crates/dotzuki-runner-web` (wasm-bindgen), so playtesting needs no Rust
 toolchain. The contract with the runner:
 
 - **Bundle.** `GET /api/play/bundle` returns the whole project as
   `{ files: { "<project-relative posix path>": "<base64>" }, projectRoot }`,
   excluding `node_modules`/`.git`/`target`/`dist`, `*.bak` and dotfiles other
-  than `.jrpg-editor.json` (16 MB/file, 64 MB total caps). Paths keep the
+  than `.dotzuki-editor.json` (16 MB/file, 64 MB total caps). Paths keep the
   `data/maps/<id>/script.scene` shape the runner's scene↔map matching expects.
 - **Boot.** The bundle feeds `vfs::MemoryFiles` and
   `LoadedProject::load_with_files` — the exact boot path of `jrpg run`,
@@ -667,7 +667,7 @@ toolchain. The contract with the runner:
   (`RunnerGame::render_audio`, 44.1 kHz stereo f32); the page drains it via
   `take_audio()` into a WebAudio queue (`usePlayAudio`). Same sequencer/fade
   path as native, just a pull model instead of the callback thread.
-- **Saves.** `export_save()`/`import_save(json)` replace `.jrpg-save.json`;
+- **Saves.** `export_save()`/`import_save(json)` replace `.dotzuki-save.json`;
   the editor persists them to `localStorage`. `export_save` returns nothing
   while a scene/battle/shop/warp transition is suspended — the editor simply
   retries on its interval.
@@ -681,7 +681,7 @@ the same code.
 
 ## Compatibility rules
 
-- **`.jrpg-editor.json` is the only manifest.** No tool may require a second
+- **`.dotzuki-editor.json` is the only manifest.** No tool may require a second
   config file in a game project.
 - **Unknown keys are tolerated.** Readers must ignore keys they do not know
   (top-level, per-activity, and inside `config`); a tool that rewrites the

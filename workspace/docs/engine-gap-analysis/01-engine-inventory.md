@@ -4,18 +4,18 @@ Read-only inventory of the game-agnostic engine in workspace. Goal: catalog
 what the ENGINE provides today, how complete each subsystem is (real vs
 scaffold/stub), and what a reusable JRPG/Pokemon-like engine still lacks.
 
-Scope: jrpg-engine, jrpg-engine-tiled, jrpg-engine-script in depth; platform
+Scope: dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script in depth; platform
 shells (pokered-web/android/ios/debug-server) briefly; other jrpg-* crates
 surveyed.
 
-Stale-doc notes: CLAUDE.md references crates/jrpg-template which does NOT exist
-(template is jrpg-template/ at workspace root). Crates CLAUDE.md calls pokered-*
+Stale-doc notes: CLAUDE.md references crates/dotzuki-template which does NOT exist
+(template is dotzuki-template/ at workspace root). Crates CLAUDE.md calls pokered-*
 (renderer, ui, audio, app, tui) are now jrpg-*. The web/android/ios/debug-server
 shells are still pokered-*.
 
 ---
 
-## 1. crates/jrpg-engine -- core engine crate
+## 1. crates/dotzuki-engine -- core engine crate
 
 Deps: serde, serde_json, bytemuck, log, thiserror, image (for save_png). No
 Pokemon data, no GPU/windowing, no async.
@@ -125,14 +125,14 @@ menu/mod.rs (923): REAL generic menu. MenuInput/MenuAction/MenuOption; layout
 MenuProvider; MenuSystem<M> (cursor w/ disabled-skip, scroll, open/close,
 handle_input, render via Painter); ~20 tests w/ recording painter. Note: one
 `unsafe std::mem::zeroed()` to default current_menu (foot-gun if MenuId not
-zeroable). Pokemon-specific screens still live in jrpg-ui.
+zeroable). Pokemon-specific screens still live in dotzuki-ui.
 
 CORRECTION: these three are NOT empty scaffolds -- ~2,500 lines of real, tested
 code. The gap is "abstractions without engine-level drivers/data" (sec 6).
 
 ---
 
-## 2. crates/jrpg-engine-tiled (1303) -- Tiled map parsing
+## 2. crates/dotzuki-engine-tiled (1303) -- Tiled map parsing
 Single lib.rs. Parses Tiled JSON (.tmx-as-JSON) into engine types: parse_tmx ->
 TmxMap; gid_to_tilemap_entry/clean_gid (H/V flips; diagonal ignored);
 tmx_to_map_state -> MapRenderState; TileProperties + configurable PropertyConfig
@@ -142,7 +142,7 @@ XML .tmx), targets GB-flavoured model.
 
 ---
 
-## 3. crates/jrpg-engine-script -- Boa JS scripting
+## 3. crates/dotzuki-engine-script -- Boa JS scripting
 Files: lib.rs(48), engine.rs(1123), command.rs(142), cutscene.rs(279),
 api_registrar.rs(33), loader.rs(386), config.rs(92), game_api.rs(1, re-export).
 Has DESIGN.md. Boa pure-Rust JS (ES modules).
@@ -194,18 +194,18 @@ game-agnostic; a new game needs them rewritten.
 ---
 
 ## 5. Other game-agnostic crates (survey)
-- jrpg-renderer (large): fonts, textboxes/windows, sprites, tilemap drawing,
+- dotzuki-renderer (large): fonts, textboxes/windows, sprites, tilemap drawing,
   battle scene + animations, mon_icon, party_hp_bar, transitions, input, full
   declarative JSON layout engine (border/divider/flex_list/group/image/list/
   text/tile + registry/deserialize). Real, partly Pokemon-flavoured.
-- jrpg-ui (large): bag, battle menus, dialog, flex_menu, mart, naming_screen,
+- dotzuki-ui (large): bag, battle menus, dialog, flex_menu, mart, naming_screen,
   oak_speech, options, party_list, pokedex, save_menu, stats_screen, yes_no.
   Several widgets Pokemon-specific (pokedex/oak_speech/mart).
-- jrpg-audio: GB APU emulation (4 channels) + sequencer. GB-only, no general
+- dotzuki-audio: GB APU emulation (4 channels) + sequencer. GB-only, no general
   sample/stream mixer.
-- jrpg-app: native app harness (+ hot_reload, render_helpers).
-- jrpg-tui: terminal frontend.
-- jrpg-web: renamed/generic web entry.
+- dotzuki-app: native app harness (+ hot_reload, render_helpers).
+- dotzuki-tui: terminal frontend.
+- dotzuki-web: renamed/generic web entry.
 
 ---
 
@@ -218,7 +218,7 @@ Real abstractions, no engine-level driver/data:
 2. Item-effect dispatch + bag wiring -- Inventory/ItemProvider/ShopProvider
    exist; effect catalogue and bag<->battle/overworld integration are the game.
 3. Menu screens -- MenuSystem is a generic list-menu only; richer screens live
-   in jrpg-ui (Pokemon-specific).
+   in dotzuki-ui (Pokemon-specific).
 
 Genuinely absent (no module):
 4. Creature/party/stats/leveling model -- no creature instance with stats/level/
@@ -240,7 +240,7 @@ Surf), palette::SgbPaletteId (PAL_* + per-species mon palettes), icon::IconKind,
 and several ScriptCommand variants (heal/animateHealingMachine/openShop/
 showPokedexEntry/givePokemon).
 
-Stale docs: crates/jrpg-template does not exist (it's jrpg-template/ at root);
+Stale docs: crates/dotzuki-template does not exist (it's dotzuki-template/ at root);
 CLAUDE.md lists renderer/ui/audio/app/tui as pokered-* (now jrpg-*).
 
 ---
@@ -250,7 +250,7 @@ A strong overworld + scripting + presentation engine with real (but driver-less)
 RPG-rules abstractions. Solid/reusable: tile/metatile/tilemap, tested overworld
 grid + NPC/sprite movement + collisions + warps, camera, trigger manager, save
 framework, dialog engine, Tiled importer, Boa async-JS bridge, and high-level
-jrpg-renderer/jrpg-ui. The supposed "empty scaffolds" battle/items/menu are
+dotzuki-renderer/dotzuki-ui. The supposed "empty scaffolds" battle/items/menu are
 ~2,500 lines of real, tested abstractions; what they lack is an engine-level
 driver/data layer (no turn executor, no creature/party/leveling/EXP model, no
 economy/quest systems, no format-agnostic audio/palette/GPU). Notable Pokemon

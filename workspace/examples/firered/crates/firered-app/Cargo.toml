@@ -6,9 +6,9 @@ description = "FireRed/LeafGreen color demo app — showcases GBA-style 16-color
 
 [dependencies]
 firered-data = { path = "../firered-data" }
-jrpg-engine = { path = "../../../../crates/jrpg-engine" }
-jrpg-renderer = { path = "../../../../crates/jrpg-renderer" }
-jrpg-app = { path = "../../../../crates/jrpg-app" }
+dotzuki-engine = { path = "../../../../crates/dotzuki-engine" }
+dotzuki-renderer = { path = "../../../../crates/dotzuki-renderer" }
+dotzuki-app = { path = "../../../../crates/dotzuki-app" }
 log = "0.4"
 env_logger = "0.11"
 clap = { version = "4", features = ["derive"] }

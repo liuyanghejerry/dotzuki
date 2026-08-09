@@ -20,10 +20,10 @@ Two phases on `feature/p0-engine-migration` build the loader:
 | commit | what |
 |---|---|
 | `50907df0` | engine fires `Event::Effectiveness` in the stack driver (inert no-op with no subscriber); the `Event::Effectiveness` *seam* itself predates this — it was a subscription seam already in the P0 effect-stack (`event.rs`, commit `4f3b5ff2`). |
-| `cc6a6147` (P1) | `jrpg-rules` crate: RON loader + closed primitive interpreter bridge. |
-| `7b3814ac` (P2) | dual-mode (`hot-reload` dev / baked release) `RuleSource`; minimon `rules.ron` 金木水火土 parity + mutation/reload tests. **Touches zero `crates/jrpg-engine` files.** |
+| `cc6a6147` (P1) | `dotzuki-rules` crate: RON loader + closed primitive interpreter bridge. |
+| `7b3814ac` (P2) | dual-mode (`hot-reload` dev / baked release) `RuleSource`; minimon `rules.ron` 金木水火土 parity + mutation/reload tests. **Touches zero `crates/dotzuki-engine` files.** |
 
-New game-side crate `crates/jrpg-rules` (deps = `jrpg-engine`, `serde`, `ron`,
+New game-side crate `crates/dotzuki-rules` (deps = `dotzuki-engine`, `serde`, `ron`,
 `thiserror`, and `notify` *optional* behind `hot-reload`). It pulls in **no**
 pokered / minimon code and references **no** concrete game type — it is a
 consumer of the engine's closed primitive vocabulary, and it amortizes content;
@@ -37,7 +37,7 @@ op-lists), loaded by `examples/minimon/src/data.rs`.
 
 ## 2. The dual-mode mechanism (one rules.ron, two access modes)
 
-`jrpg_rules::RuleSource` (`crates/jrpg-rules/src/source.rs`) yields the **same**
+`dotzuki_rules::RuleSource` (`crates/dotzuki-rules/src/source.rs`) yields the **same**
 `Ruleset` two ways through one `Ruleset::from_ron`:
 
 * **Baked (RELEASE, default)** — `RuleSource::baked(include_str!("../rules.ron"))`.
@@ -51,14 +51,14 @@ op-lists), loaded by `examples/minimon/src/data.rs`.
   watcher (parent-dir watch, replace-on-save tolerant) and signals an edit so the
   game re-`load()`s + `install_compiled()` (swaps the registry) **between turns**.
 
-Feature gating: `jrpg-rules` `default = []` (= baked, no `notify`),
+Feature gating: `dotzuki-rules` `default = []` (= baked, no `notify`),
 `hot-reload = ["dep:notify"]`. minimon mirrors it: `default = []`,
-`hot-reload = ["jrpg-rules/hot-reload"]`. `RULES_RON_BAKED =
+`hot-reload = ["dotzuki-rules/hot-reload"]`. `RULES_RON_BAKED =
 include_str!("../rules.ron")` and `RULES_RON_PATH = env!CARGO_MANIFEST_DIR +
 "/rules.ron"` point at the **same** file.
 
 **Builds verified both ways (forced, exit 0):** `cargo build --workspace`
-(baked default), `cargo build -p jrpg-rules --features hot-reload`,
+(baked default), `cargo build -p dotzuki-rules --features hot-reload`,
 `cargo build -p minimon --features hot-reload`.
 
 **Dual-mode equality test (`baked_and_disk_yield_identical_ruleset`):** loads the
@@ -124,7 +124,7 @@ the `notify` watcher, reloads) — both pass.
 
 ## 5. Determinism
 
-Structural, not incidental. The interpreter (`crates/jrpg-rules/src/interp.rs`)
+Structural, not incidental. The interpreter (`crates/dotzuki-rules/src/interp.rs`)
 has **one** source of entropy: `ctx.rng.chance(num, den)` (a `BattleRng` trait
 object). The chance gate is drawn **unconditionally** per hook, so the draw count
 and order are a pure function of the op-list, independent of any branch outcome —
@@ -190,10 +190,10 @@ The audit reproduced every load-bearing claim from `ACTUAL` committed code:
   the engine arena, not the data.
 * **Deterministic** — sole entropy `ctx.rng`, drawn unconditionally; zero draws on
   the chart path on both modes; no clock / no draw-order `HashMap` iteration.
-* **Engine-agnostic + green + disciplined** — `jrpg-engine` untouched in P2 (no
-  `rand`, no game types); `jrpg-rules` deps = `jrpg-engine` only (+ serde/ron/
-  thiserror, optional notify); `cargo build --workspace` exit 0; jrpg-engine
-  **318/0**, jrpg-rules **24/0** (both modes), minimon **31/0** default / **32/0**
+* **Engine-agnostic + green + disciplined** — `dotzuki-engine` untouched in P2 (no
+  `rand`, no game types); `dotzuki-rules` deps = `dotzuki-engine` only (+ serde/ron/
+  thiserror, optional notify); `cargo build --workspace` exit 0; dotzuki-engine
+  **318/0**, dotzuki-rules **24/0** (both modes), minimon **31/0** default / **32/0**
   hot-reload, pokered-core **1907/0**; the **88** stack-parity tests green parallel
   3× AND single-thread (identical); tree clean (excl png/lock); exactly one commit
   since P1, trailer present.

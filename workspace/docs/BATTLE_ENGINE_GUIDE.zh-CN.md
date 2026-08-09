@@ -2,7 +2,7 @@
 
 *本文档是 [BATTLE_ENGINE_GUIDE.md](BATTLE_ENGINE_GUIDE.md) 的简体中文翻译。代码、标识符与文件路径保持原文。*
 
-> **范围。** 本指南覆盖 **`jrpg_engine::battle::stack`** —— 这是一个
+> **范围。** 本指南覆盖 **`dotzuki_engine::battle::stack`** —— 这是一个
 > Showdown 风格的 **effect-stack（效果栈）** 战斗引擎 —— 以及如何在它之上构建一个
 > Gen-1-to-Gen-6-*类似的* 战斗系统，且 **无需 fork 引擎**。
 >
@@ -20,8 +20,8 @@
 > 一项带招式开销的 **MP 资源**（[§6](#6-资源mpsp与招式开销)），以及把同一套规则集
 > 重新落地到 **`rules.ron`** 以便无代码编写
 > （[`examples/minimon/rules.ron`](../examples/minimon/rules.ron)、
-> [§5](#5-用-rulesron-无代码编写jrpg-rules-加载器)）—— 且 **零引擎改动**，仅依赖
-> `jrpg-engine`（数据路径还会用到 `jrpg-rules`）。
+> [§5](#5-用-rulesron-无代码编写dotzuki-rules-加载器)）—— 且 **零引擎改动**，仅依赖
+> `dotzuki-engine`（数据路径还会用到 `dotzuki-rules`）。
 >
 > 设计背景：§06
 > [`06-battle-engine-effect-stack-design.md`](./engine-gap-analysis/06-battle-engine-effect-stack-design.md)
@@ -39,7 +39,7 @@
 2. [核心概念](#2-核心概念)
 3. [教程：搭建一个最小规则集（minimon 演练）](#3-教程搭建一个最小规则集minimon-演练)
 4. [属性相克（相克 / type charts）](#4-属性相克相克--type-charts)
-5. [用 `rules.ron` 无代码编写（jrpg-rules 加载器）](#5-用-rulesron-无代码编写jrpg-rules-加载器)
+5. [用 `rules.ron` 无代码编写（dotzuki-rules 加载器）](#5-用-rulesron-无代码编写dotzuki-rules-加载器)
 6. [资源（MP/SP）与招式开销](#6-资源mpsp与招式开销)
 7. [菜谱：跨世代机制 → effect-stack 配方](#7-菜谱跨世代机制--effect-stack-配方)
 8. [确定性与测试](#8-确定性与测试)
@@ -71,7 +71,7 @@ hazard 系统**。它们每一个都只是 *某处托管的一个 `Effect`*（�
 ### 各部分位于何处
 
 ```
-jrpg_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
+dotzuki_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
 ├── event       Event enum, RelayVar, HandlerResult, Effect/EventHook, HandlerFn
 ├── ctx         EffectProvider (the trait you implement), BattleCtx, EffectState,
 │               EffectHost, MoveContext
@@ -79,7 +79,7 @@ jrpg_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
 ├── driver      StackDriver (a built-in turn sequence), FirstMover, StackTurnResult
 └── authoring   the `effect!` macro
 
-jrpg_engine::battle                BattleProvider (supertrait), BattleState,
+dotzuki_engine::battle                BattleProvider (supertrait), BattleState,
 │                                  BattlerState, BattlerRef, BattleAction, EnumMap
 └── rng         BattleRng trait, ScriptedRng
 
@@ -202,7 +202,7 @@ pub enum   EffectType { Move, Status, Condition }
 ```
 
 编写一个 `Effect` 最符合人体工学的方式是 **`effect!` 宏**（在 crate 根部以
-`jrpg_engine::effect` 重导出）：
+`dotzuki_engine::effect` 重导出）：
 
 ```rust
 // Syntax: effect!(<id expr>, <EffectType expr>, { <Event> [(<order>)] => <fn path>, ... })
@@ -550,7 +550,7 @@ phys/special split + Intimidate + Clear Body + Leftovers + Sandstorm —— 且 
 ```toml
 # examples/minimon/Cargo.toml
 [dependencies]
-jrpg-engine = { path = "../../crates/jrpg-engine" }
+dotzuki-engine = { path = "../../crates/dotzuki-engine" }
 ```
 
 ### Step 1 —— 定义 id 枚举（6 属性分裂形态）
@@ -932,7 +932,7 @@ EventHook {
 同一张相克表 **无需 Rust** 即可在 `rules.ron` 中以 `type_chart:`
 的 `( atk:, def:, mult: [n, d] )` 行列表来表达，由 `Effectiveness` hook 上的
 `ApplyTypeChart` 原语 op 应用（`rules.ron:39-54`，见
-[§5](#5-用-rulesron-无代码编写jrpg-rules-加载器)）：
+[§5](#5-用-rulesron-无代码编写dotzuki-rules-加载器)）：
 
 ```ron
 type_chart: [
@@ -962,9 +962,9 @@ assert_eq!((super_eff, neutral, resisted, immune), (160, 80, 40, 0));
 
 ---
 
-## 5. 用 `rules.ron` 无代码编写（jrpg-rules 加载器）
+## 5. 用 `rules.ron` 无代码编写（dotzuki-rules 加载器）
 
-[`crates/jrpg-rules`](../crates/jrpg-rules/src/) 是 effect-stack 之上一层薄薄的
+[`crates/dotzuki-rules`](../crates/dotzuki-rules/src/) 是 effect-stack 之上一层薄薄的
 编写层：它把一个 `rules.ron` 文件解析为运行时的 `Effect`，于是你可以
 **零 Rust** 地新增 **招式、特性、道具、属性与资源开销**。它就是
 **Option A** —— 一个以 `EffectId` 为键的 `interpret()` 单函数，被注册为每个生成的
@@ -1308,7 +1308,7 @@ Tackle 与 Ember 返回 `NO_COST`。断言的结果（`tests.rs`）：
 | **多回合 / 锁定招式**（Thrash / Hyper Beam） | 一个参战者 volatile（`effect_for_volatile`）+ `forced_action` | volatile 监听 `BeforeMove`/`End`；锁定是 `forced_action` | 在前一回合设置的一个 volatile 让 `forced_action(effects, actor, chosen)` 返回 `Some(locked_move)`，劫持本回合的输入。`BeforeMove` 做门控（跳过 recharge）；`End` 触发 Thrash 的自我混乱。 | n/a（一个接缝，不是 fold） |
 | **相克表 / 属性相克**（相克） | 该动作（`effect_for_move`） | `Effectiveness` | 从 `source_effect` 恢复招式的元素，读取防御方属性，把相克表 **乘积** 折叠进一个有理数，`Set(relay.scale(num, den))`。仅整数；0× = 免疫。停留在 `Damage` 车道。参见 [§4](#4-属性相克相克--type-charts)。 | `100`（在 `ModifyDamage` 之后） |
 | **资源开销**（MP / SP / mana） | 该 actor（`move_cost` hook） | 在 `BeforeMove` 处门控（引擎 `StackDriver`） | 从 `move_cost` 返回 `&[(resource_id, amount)]`；若支付不起，门控阻止招式，否则扣除。纯算术，无 rng，`&[]` 时惰性。或者在数据中，用一个 `cost:` 字段 / `PayResource` op。参见 [§6](#6-资源mpsp与招式开销)。 | n/a（一个门控，不是 fold） |
-| **无代码编写**（在 RON 中写招式/特性/道具/属性/开销） | `jrpg-rules` 加载器（以 `EffectId` 为键的 `interpret`） | 任何 `Hook(on: …)` 命名的事件 | 在 `rules.ron` 中写一个 `EffectRecord`，其 hook 的 `do:` 是一份闭合原语 `Op` 列表；加载器把每个注册为一个调用 `interpret` 的 `Effect`。双模式 烘焙 / 热重载。参见 [§5](#5-用-rulesron-无代码编写jrpg-rules-加载器)。 | 逐 hook 的 `order:` |
+| **无代码编写**（在 RON 中写招式/特性/道具/属性/开销） | `dotzuki-rules` 加载器（以 `EffectId` 为键的 `interpret`） | 任何 `Hook(on: …)` 命名的事件 | 在 `rules.ron` 中写一个 `EffectRecord`，其 hook 的 `do:` 是一份闭合原语 `Op` 列表；加载器把每个注册为一个调用 `interpret` 的 `Effect`。双模式 烘焙 / 热重载。参见 [§5](#5-用-rulesron-无代码编写dotzuki-rules-加载器)。 | 逐 hook 的 `order:` |
 | **非易变状态的回合末伤害**（烧伤/中毒 chip） | 该 actor 的状态（`effect_for_status`） | `Residual` | 对 `host` `take_damage((max_hp/16).max(1))`；无 rng；对 0 血宿主自我守卫。driver 的逐 mover residual 先触发 `effect_for_status`，**再**按 arena id 顺序触发每个易变状态的 `effect_for_volatile`。当某个易变状态拥有该 tick 时（如剧毒递增），跳过这次平摊 chip。 | `10`（在寄生种子之前） |
 | **行动前"无法行动"门控**（睡眠/冰冻/麻痹/混乱） | 一个 `BeforeMove` hook（pokered 里：挂在每个招式 effect 上；或在你的 driver 里从状态/易变状态聚合） | `BeforeMove` | 读取 actor 的状态/易变状态；返回 `Fail` 以中止（**仅在该状态存在时** 抽取其 rng 字节）。`run_event` 在第一个 `Fail` 处短路，所以把各门控的 `order` 设为原始抽取顺序（如混乱 `70` < 麻痹 `90`）。driver 随后记录 `Blocked`（§2.11），让前端能显示原因。 | 逐状态 `order` |
 | **回合叙述**（战斗文本/动画） | n/a —— 调用 `execute_turn_logged` | —（消费 `TurnLog`） | 遍历返回的 `TurnLog<P>`，把每个 `TurnEvent` 映射到你的前端（一行文本、一次血条下降、一段濒死动画）。在游戏侧重新推导呈现（克制文案、`Blocked` 原因）。增量：`execute_turn` 不变。参见 [§2.11](#211-叙述一个回合--turnlog)。 | n/a |
@@ -1370,7 +1370,7 @@ assert_eq!(b.battler_ref(BattlerRef::PLAYER).hp, 94);   // 88 would mean wrong o
 ```rust
 let mut hs = Vec::new();
 collect_handlers(&ctx, provider, None, Event::TryBoost, BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut hs);
-hs.sort_by(jrpg_engine::battle::stack::compare);
+hs.sort_by(dotzuki_engine::battle::stack::compare);
 let orders: Vec<u32> = hs.iter().map(|h| h.order).collect();
 assert_eq!(orders, vec![5]);                 // Clear Body (order 5) collected on the foe's TryBoost
 assert_eq!(hs[0].target, BattlerRef::OPPONENT);   // hosted on the TARGET (cross-battler collection)
@@ -1385,7 +1385,7 @@ handler 段抽取 **恰好一个** 字节、而一个互异（distinct）的段�
 （`crit_is_drawn_before_accuracy`）。运行这些测试套件：
 
 ```bash
-cargo test -p jrpg-engine            # engine: comparator, pair_mut, multi-source, forced_action
+cargo test -p dotzuki-engine            # engine: comparator, pair_mut, multi-source, forced_action
 cargo test -p minimon                # the 5-system authoring proof + controls
 ```
 
@@ -1394,7 +1394,7 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 ## 9. 诚实的局限与路线图
 
 **已证明** —— 单场战斗（1v1），在 `examples/minimon` 中端到端编写，
-**除加性/带默认实现的接缝之外零 `jrpg-engine` 改动**；结论为
+**除加性/带默认实现的接缝之外零 `dotzuki-engine` 改动**；结论为
 **GO-WITH-NITS**，见
 [`10-generalization-result.md`](./engine-gap-analysis/10-generalization-result.md)：
 
@@ -1420,13 +1420,13 @@ cargo test -p minimon                # the 5-system authoring proof + controls
   结果 `(160, 80, 40, 0)` 已断言。参见 [§4](#4-属性相克相克--type-charts)
   与 §12
   [`12-typechart-ron-design.md`](./engine-gap-analysis/12-typechart-ron-design.md)。
-- **无代码 RON 编写（双模式）。** ✅ `jrpg-rules` 加载器经由一个以
+- **无代码 RON 编写（双模式）。** ✅ `dotzuki-rules` 加载器经由一个以
   `EffectId` 为键的 `interpret()` 单函数（Option A，零引擎改动），在一套闭合原语 op 词汇表之上，
   把 `rules.ron` 解析为运行时的 `Effect`，
   带加载期校验，以及一个 **烘焙（`include_str!`，发布版）/
   从磁盘热重载（`hot-reload` cargo 特性，dev）** 的真相来源，
   它保证 baked==disk 一致以及回合之间安全重载。参见
-  [§5](#5-用-rulesron-无代码编写jrpg-rules-加载器) 与 §11
+  [§5](#5-用-rulesron-无代码编写dotzuki-rules-加载器) 与 §11
   [`11-no-code-authoring-design.md`](./engine-gap-analysis/11-no-code-authoring-design.md)、
   §14 [`14-ron-loader-result.md`](./engine-gap-analysis/14-ron-loader-result.md)。
 - **MP / 资源与招式开销。** ✅ `BattlerState` 上一个与 P 无关、以 `u16` 为键的
@@ -1498,6 +1498,6 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 - 代码：[`examples/minimon/src/lib.rs`](../examples/minimon/src/lib.rs)、
   [`examples/minimon/src/tests.rs`](../examples/minimon/src/tests.rs)、
   [`examples/minimon/rules.ron`](../examples/minimon/rules.ron)、
-  [`crates/jrpg-rules/src/`](../crates/jrpg-rules/src/)、
-  [`crates/jrpg-engine/src/battle/stack/`](../crates/jrpg-engine/src/battle/stack/)、
-  [`crates/jrpg-engine/src/battle/rng.rs`](../crates/jrpg-engine/src/battle/rng.rs)。
+  [`crates/dotzuki-rules/src/`](../crates/dotzuki-rules/src/)、
+  [`crates/dotzuki-engine/src/battle/stack/`](../crates/dotzuki-engine/src/battle/stack/)、
+  [`crates/dotzuki-engine/src/battle/rng.rs`](../crates/dotzuki-engine/src/battle/rng.rs)。

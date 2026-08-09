@@ -2,7 +2,7 @@
 
 *本文档是 [11-no-code-authoring-design.md](11-no-code-authoring-design.md) 的简体中文翻译。代码、标识符与文件路径保持原文。*
 
-> **范围。** 开发者如何**无需编写 Rust** 即可为 `jrpg_engine::battle::stack` 定义
+> **范围。** 开发者如何**无需编写 Rust** 即可为 `dotzuki_engine::battle::stack` 定义
 > **招式 / 特性 / 道具 / 天气 + 一套战斗规则集（ruleset）**——以声明式*数据*的形式，
 > 绑定到一组由引擎随附的、封闭的效果原语词表。这是对三个相互竞争的设计方案
 > （声明式数据、内嵌脚本、混合方案）外加对抗性评审的首席架构师综合定论；它
@@ -19,7 +19,7 @@
 > 那处*增量式*引擎接缝已被指出并在 §2.2 标记为 **ENGINE-WORK**，而推荐的首个交付物
 > 对它**毫无需求**。
 
-图例：**[ENGINE-WORK]** = 在 `crates/jrpg-engine` 内部的改动。**[AUTHORING-WORK]**
+图例：**[ENGINE-WORK]** = 在 `crates/dotzuki-engine` 内部的改动。**[AUTHORING-WORK]**
 = 仅游戏侧 / 数据侧，无需引擎编辑。推荐的 POC（§6）是 **100% [AUTHORING-WORK]**。
 
 ---
@@ -253,7 +253,7 @@ fn interpret<P: EffectProvider + ?Sized>(
 （`ctx.rs:236`）而非数据里，所以重载不会使进行中的战斗状态失效。
 
 ### 4.3 Boa 边界 — 为何不复用既有脚本基础设施
-仓库内的 Boa 集成（大地图地图脚本，`jrpg-engine-script`）在**构造上是异步的**：
+仓库内的 Boa 集成（大地图地图脚本，`dotzuki-engine-script`）在**构造上是异步的**：
 `await game.showText(...)` 铸造一个 `JsPromise`，存储一个 `PendingResolve`，由
 `ScriptEngine::tick()` 在**之后某一帧**解析它。`run_event` 恰恰相反——一个**同步的、
 可再入的折叠，必须当场返回 `HandlerResult`**（`dispatch.rs:285-297`）。因此那条异步的
@@ -334,5 +334,5 @@ Boa 门面接在基于索引的 `HandlerImpl` 枚举 + 带默认实现的 `scrip
 - [`11-no-code-effect-authoring-design.md`](./11-no-code-effect-authoring-design.md) — 并行的*混合*设计（在同一套 schema 中声明式原语 + JS 逃生舱）;本文是首席架构师对“声明式数据优先”的选择。
 - 代码（只读，未修改）：[`examples/minimon/src/lib.rs`](../../examples/minimon/src/lib.rs)、
   [`examples/minimon/src/tests.rs`](../../examples/minimon/src/tests.rs)、
-  [`crates/jrpg-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/jrpg-engine/src/battle/stack/)、
-  [`crates/jrpg-engine/src/battle/rng.rs`](../../crates/jrpg-engine/src/battle/rng.rs)。
+  [`crates/dotzuki-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/dotzuki-engine/src/battle/stack/)、
+  [`crates/dotzuki-engine/src/battle/rng.rs`](../../crates/dotzuki-engine/src/battle/rng.rs)。

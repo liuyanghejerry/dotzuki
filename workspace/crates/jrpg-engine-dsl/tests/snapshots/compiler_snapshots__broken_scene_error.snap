@@ -1,8 +1,0 @@
----
-source: crates/jrpg-engine-dsl/tests/compiler_snapshots.rs
-assertion_line: 132
-expression: result
----
-Err(
-    "1:21: Expected directive name after '@'",
-)

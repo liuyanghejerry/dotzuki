@@ -1,0 +1,9 @@
+[package]
+name = "dotzuki-engine-tiled"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+dotzuki-engine = { path = "../dotzuki-engine" }

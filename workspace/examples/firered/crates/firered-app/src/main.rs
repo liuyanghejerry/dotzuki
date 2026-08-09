@@ -4,11 +4,11 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use firered_data::{GBA_SCREEN_HEIGHT, GBA_SCREEN_WIDTH};
-use jrpg_app::{run, GameWindowConfig};
-use jrpg_engine::render::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
-use jrpg_renderer::input::{GbButton, InputState};
-use jrpg_renderer::window::GameLoop;
+use dotzuki_app::{run, GameWindowConfig};
+use dotzuki_engine::render::{FrameBuffer, Rgba};
+use dotzuki_engine::render_config::RenderConfig;
+use dotzuki_renderer::input::{GbButton, InputState};
+use dotzuki_renderer::window::GameLoop;
 
 use crate::game::FireRedGame;
 

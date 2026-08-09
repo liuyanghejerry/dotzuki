@@ -5,8 +5,8 @@ edition.workspace = true
 description = "FireRed/LeafGreen color palette data for GBA-style rendering"
 
 [dependencies]
-jrpg-engine = { path = "../../../../crates/jrpg-engine" }
-jrpg-renderer = { path = "../../../../crates/jrpg-renderer" }
+dotzuki-engine = { path = "../../../../crates/dotzuki-engine" }
+dotzuki-renderer = { path = "../../../../crates/dotzuki-renderer" }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 

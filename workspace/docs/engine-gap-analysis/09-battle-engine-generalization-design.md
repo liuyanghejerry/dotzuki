@@ -1,4 +1,4 @@
-# Battle Engine Generalization — `jrpg-engine::battle::stack` as a Multi-Gen Authoring Surface
+# Battle Engine Generalization — `dotzuki-engine::battle::stack` as a Multi-Gen Authoring Surface
 
 **Status:** design + critique-incorporated. Specifies engine work vs example/authoring work. The
 existing `battle::stack` module and its slices 1–7 (docs
@@ -25,7 +25,7 @@ FireRed / Gen 4/5/6** — a clean, general authoring surface, *not* a byte-ident
 
 **Constraints (unchanged, non-negotiable):**
 
-1. `jrpg-engine` stays **100% game-agnostic** — no Pokémon concrete types (species/move/item/ability
+1. `dotzuki-engine` stays **100% game-agnostic** — no Pokémon concrete types (species/move/item/ability
    stay associated types on `BattleProvider`/`EffectProvider`); **no `rand`** (RNG only via the
    `BattleRng` trait).
 2. Any **new method on an existing engine trait MUST be defaulted**, so every existing game/test
@@ -339,7 +339,7 @@ types in mod.rs stay as inert UI-projection data or are demoted).
 
 - **(E)** `EffectHost` widening; the four defaulted resolvers (§2.4); the new events (§1).
 - **(A)** every actual ability/item/weather `Effect` const + its `HandlerFn`s, and the game's
-  resolver impls — all in the example game crate, never in `jrpg-engine`.
+  resolver impls — all in the example game crate, never in `dotzuki-engine`.
 
 ---
 
@@ -348,7 +348,7 @@ types in mod.rs stay as inert UI-projection data or are demoted).
 **The real second gap.** Today a `HandlerFn` is a free `fn` with a 5-arg signature, and the only ones
 that exist are buried in pokered's `#[cfg(test)]` parity harness. A developer building a new game has
 **no ergonomic, documented way to author an effect.** This section is **authoring/example work** (it
-can ship as helpers in a thin `jrpg-engine::battle::stack::authoring` module that adds *no new engine
+can ship as helpers in a thin `dotzuki-engine::battle::stack::authoring` module that adds *no new engine
 concept* — just constructors and typed relay accessors — plus templates in the example game).
 
 ### 4.1 The authoring helpers (thin, engine-side but concept-free)
@@ -512,8 +512,8 @@ pokered code. It does **not** chase byte-parity — its assertions are hand-writ
 | Axis | GO | NO-GO (re-open the design) |
 |---|---|---|
 | **Authoring** | each of the 5 systems is expressed as a `const Effect` + zero-capture `fn`s using the §4 helpers, with **no engine edit** beyond the §2.4 defaulted resolvers + §1 events + §3.1 `EffectHost` | authoring a single ability/item/weather requires a new *non-defaulted* engine method, a closure-capturing handler, or an `if gen`/`if ability==` branch in the engine |
-| **Agnosticism** | `jrpg-engine` still links **no `rand`** and contains **no `minimon`/Pokémon concrete type** outside `#[cfg(test)]`; the new events/resolvers name nothing game-specific | any concrete game type or `rand` leaks into engine non-test code |
-| **Non-breaking** | the existing Gen-1 slices (88 stack-parity tests) + `jrpg-engine` (301) + `pokered-core` (1907) stay **green unchanged** — proving every new event/resolver/`EffectHost` change is additive+defaulted | any pre-existing test needs editing to compile/pass ⇒ a seam wasn't defaulted |
+| **Agnosticism** | `dotzuki-engine` still links **no `rand`** and contains **no `minimon`/Pokémon concrete type** outside `#[cfg(test)]`; the new events/resolvers name nothing game-specific | any concrete game type or `rand` leaks into engine non-test code |
+| **Non-breaking** | the existing Gen-1 slices (88 stack-parity tests) + `dotzuki-engine` (301) + `pokered-core` (1907) stay **green unchanged** — proving every new event/resolver/`EffectHost` change is additive+defaulted | any pre-existing test needs editing to compile/pass ⇒ a seam wasn't defaulted |
 | **Borrow** | multi-source `collect_handlers` + the fold compile with the §2.3 snapshot+re-check strategy, **no `RefCell`/`Rc`**, only the existing one cross-side `unsafe` | multi-source collection forces interior mutability or a second `unsafe` |
 | **Generality** | Intimidate, Clear Body's veto, Leftovers' ordering, and Sandstorm's chip+boost all produce the hand-specified outcomes, with abilities on *both* battlers firing on one event in comparator order | a cross-gen interaction (cross-battler ability react, field-hosted residual, stat-fold layering) can't be expressed without an engine special-case |
 

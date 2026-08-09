@@ -52,7 +52,7 @@ design that takes the strengths of each and drops their weaknesses.
    (`pokered-data::scene_loader`) with a `.js` fallback and hot-reload
    (inherited from the stories cutover).
 
-5. **The editor edits the DSL directly.** `crates/jrpg-web` exposes a
+5. **The editor edits the DSL directly.** `crates/dotzuki-web` exposes a
    `compile_scene` WASM bridge; the pokered-editor adds a CodeMirror linter
    (inline compile errors) and a live compiled-JS preview pane.
 
@@ -63,7 +63,7 @@ design that takes the strengths of each and drops their weaknesses.
   `@trigger` from `script_config.json` (full npc/sign/coord binding incl.
   toggle/script/hidden, all coord tiles), injects `no_talk` storylines for
   toggled objects with no dialogue handler.
-- `crates/jrpg-engine-dsl/src/bin/gen_map_config.rs` — regenerate
+- `crates/dotzuki-engine-dsl/src/bin/gen_map_config.rs` — regenerate
   `script_config.json` from the `.scene`.
 
 ## Verification
@@ -76,9 +76,9 @@ design that takes the strengths of each and drops their weaknesses.
   map-entry-script regression; see below).
 - 0 `@speaker("System")` remain (the `System:` regression is gone from content
   *and* codegen; `test_speaker_empty_name_no_prefix`).
-- `cargo test -p jrpg-engine-dsl` is fully green (lib 225, codegen 31,
+- `cargo test -p dotzuki-engine-dsl` is fully green (lib 225, codegen 31,
   integration 17, build 4, error-quality 14, snapshots 8, config round-trip 2).
-- `cargo build` of `jrpg-engine-dsl`, `pokered-data`, `pokered-app`, `jrpg-web`
+- `cargo build` of `dotzuki-engine-dsl`, `pokered-data`, `pokered-app`, `dotzuki-web`
   all pass. Editor: `vue-tsc --noEmit` + `npm run build` pass; WASM bridge
   exercised end-to-end in Node.
 
@@ -99,7 +99,7 @@ design that takes the strengths of each and drops their weaknesses.
   committed (the tests couldn't gate anything in CI). Added `!*.snap` to
   re-include the references (pending `*.snap.new` stays ignored), refreshed the
   3 stale snapshots to current codegen (`storyline_main`, `let gold`), and
-  committed all 8 references. `cargo test -p jrpg-engine-dsl` is green.
+  committed all 8 references. `cargo test -p dotzuki-engine-dsl` is green.
 - **Condition/argument calls were not namespaced — FIXED.** A call inside an
   `@if` condition or a command argument (`getFlag(...)`) compiled to a *bare*
   `getFlag(...)`. Since all APIs live on the `game` object (no bare globals),

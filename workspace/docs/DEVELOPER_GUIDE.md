@@ -1,6 +1,6 @@
-# jrpg-engine 开发者指南
+# dotzuki-engine 开发者指南
 
-> **jrpg-engine** 是一个通用的 JRPG 游戏引擎框架，基于 Game Boy 瓦片渲染原理构建，用 Rust 编写。它提供了地图系统、回合制战斗、物品管理、存档、对话引擎、菜单系统等完整的 JRPG 核心功能。
+> **dotzuki-engine** 是一个通用的 JRPG 游戏引擎框架，基于 Game Boy 瓦片渲染原理构建，用 Rust 编写。它提供了地图系统、回合制战斗、物品管理、存档、对话引擎、菜单系统等完整的 JRPG 核心功能。
 
 ---
 
@@ -30,20 +30,20 @@
 ```
 workspace/
 ├── Cargo.toml                      # Workspace 根配置
-├── jrpg-template/                  # cargo-generate 模板，用于快速创建新游戏
+├── dotzuki-template/                  # cargo-generate 模板，用于快速创建新游戏
 │   ├── assets/                     # 地图、瓦片集、脚本
 │   └── src/main.rs                 # 游戏主循环
 │
 ├── crates/
-│   ├── jrpg-engine/                # 🎯 核心引擎 —— 所有 trait 定义与通用类型
-│   ├── jrpg-engine-tiled/          # 🗺️ Tiled .tmx JSON 解析器
-│   ├── jrpg-engine-script/         # 📜 JS 脚本引擎 (Boa)
-│   ├── jrpg-renderer/              # 🎨 现代像素字体渲染、UI DSL 布局引擎
-│   ├── jrpg-ui/                    # 🖼️ 可复用的 JRPG UI 组件库
-│   ├── jrpg-tui/                   # 🖥️ 终端 UI 后端
-│   ├── jrpg-audio/                 # 🔊 音频引擎
-│   ├── jrpg-web/                   # 🌐 WebAssembly 构建
-│   └── jrpg-app/                   # 🚀 桌面可执行程序入口
+│   ├── dotzuki-engine/                # 🎯 核心引擎 —— 所有 trait 定义与通用类型
+│   ├── dotzuki-engine-tiled/          # 🗺️ Tiled .tmx JSON 解析器
+│   ├── dotzuki-engine-script/         # 📜 JS 脚本引擎 (Boa)
+│   ├── dotzuki-renderer/              # 🎨 现代像素字体渲染、UI DSL 布局引擎
+│   ├── dotzuki-ui/                    # 🖼️ 可复用的 JRPG UI 组件库
+│   ├── dotzuki-tui/                   # 🖥️ 终端 UI 后端
+│   ├── dotzuki-audio/                 # 🔊 音频引擎
+│   ├── dotzuki-web/                   # 🌐 WebAssembly 构建
+│   └── dotzuki-app/                   # 🚀 桌面可执行程序入口
 │
 └── examples/
     └── pokered/                    # Pokémon Red/Blue 重写（引擎的参考实现）
@@ -58,11 +58,11 @@ workspace/
 
 ### 1.2 核心理念
 
-jrpg-engine 遵循以下设计原则：
+dotzuki-engine 遵循以下设计原则：
 
 - **Provider 模式**：游戏数据通过 trait 提供，引擎本身不包含任何具体游戏数据
 - **泛型关联类型**：所有标识符类型（地图 ID、物品 ID、怪物 ID）都是泛型参数，由实现者定义
-- **零平台依赖**：引擎核心（`jrpg-engine`）无 I/O、无 GPU、无平台调用
+- **零平台依赖**：引擎核心（`dotzuki-engine`）无 I/O、无 GPU、无平台调用
 - **可组合 trait**：各系统 trait 独立，不需要全部实现即可编译最小 JRPG
 
 ### 1.3 快速架构决策
@@ -82,18 +82,18 @@ jrpg-engine 遵循以下设计原则：
 
 ## 2. 快速开始
 
-### 2.1 使用 jrpg-template 创建新项目
+### 2.1 使用 dotzuki-template 创建新项目
 
 ```bash
 git clone https://github.com/your-org/pokered-rust.git
 cd workspace
 
 # 方式一：使用 cargo-generate
-cargo generate --path ./jrpg-template --name my-jrpg
+cargo generate --path ./dotzuki-template --name my-jrpg
 cd my-jrpg
 
 # 方式二：手动复制
-cp -r jrpg-template my-jrpg
+cp -r dotzuki-template my-jrpg
 cd my-jrpg
 # 编辑 Cargo.toml，将 {{project-name}} 替换为 my-jrpg
 
@@ -104,7 +104,7 @@ cargo run --release
 
 ```
 my-jrpg/
-├── Cargo.toml             # 依赖 jrpg-engine, jrpg-engine-tiled, jrpg-engine-script
+├── Cargo.toml             # 依赖 dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script
 ├── src/
 │   └── main.rs            # 游戏主循环：加载地图、渲染图层、处理输入、摄像机跟随
 ├── assets/
@@ -141,7 +141,7 @@ my-jrpg/
 `GameData` 是引擎的核心 trait，所有游戏数据子系统通过它提供：
 
 ```rust
-use jrpg_engine::GameData;
+use dotzuki_engine::GameData;
 
 struct MyGameData;
 
@@ -175,7 +175,7 @@ impl GameData for MyGameData {
 
 ### 4.1 地图数据模型
 
-地图系统使用以下核心类型（定义在 `jrpg_engine::overworld::types`）：
+地图系统使用以下核心类型（定义在 `dotzuki_engine::overworld::types`）：
 
 ```rust
 // 地图数据
@@ -195,15 +195,15 @@ pub struct MapData<M: MapTrait, T: TilesetTrait, Mus> {
 
 ### 4.2 使用 Tiled 创建地图
 
-推荐使用 [Tiled](https://www.mapeditor.org/) 编辑器创建地图，通过 `jrpg-engine-tiled` crate 自动解析：
+推荐使用 [Tiled](https://www.mapeditor.org/) 编辑器创建地图，通过 `dotzuki-engine-tiled` crate 自动解析：
 
 ```toml
 [dependencies]
-jrpg-engine-tiled = { path = "../crates/jrpg-engine-tiled" }
+dotzuki-engine-tiled = { path = "../crates/dotzuki-engine-tiled" }
 ```
 
 ```rust
-use jrpg_engine_tiled::parse_tiled_json;
+use dotzuki_engine_tiled::parse_tiled_json;
 
 let tmx_json = std::fs::read_to_string("assets/my_map.tmx")?;
 let map_data: MapData<MyMapId, MyTilesetId, MyMusicId> = parse_tiled_json(&tmx_json)?;
@@ -239,7 +239,7 @@ let warp = WarpPoint::new(
 
 ### 4.5 碰撞系统
 
-碰撞类型定义在 `jrpg_engine::tile_meta::CollisionType`：
+碰撞类型定义在 `dotzuki_engine::tile_meta::CollisionType`：
 
 ```rust
 pub enum CollisionType {
@@ -272,7 +272,7 @@ impl TileMetadata<MyTileMeta> for MyTileMetaProvider {
 Metatile（元瓦片）是引擎对 Game Boy "方块"概念的泛化。一个 metatile 由 N×N 个瓦片组成（支持 2×2、3×3、4×4 等任意尺寸）：
 
 ```rust
-use jrpg_engine::metatile::{MetatileDef, MetatileRegistry, MetatileCell, TriggerDef, TriggerType};
+use dotzuki_engine::metatile::{MetatileDef, MetatileRegistry, MetatileCell, TriggerDef, TriggerType};
 
 // 创建一个 4×4 的 metatile（Game Boy 标准）
 let mut mt = MetatileDef::new((4, 4));
@@ -297,7 +297,7 @@ let block_index = registry.add_def(mt); // 地图方块数据引用此索引
 ### 4.7 摄像机系统
 
 ```rust
-use jrpg_engine::camera::{Camera, Vec2, Rect};
+use dotzuki_engine::camera::{Camera, Vec2, Rect};
 
 let mut cam = Camera::new(160.0, 144.0); // Game Boy 屏幕尺寸
 cam.clamp_to_bounds(Rect::new(0.0, 0.0, 2048.0, 2048.0)); // 世界边界
@@ -318,7 +318,7 @@ let screen_pos = cam.world_to_screen(Vec2::new(npc_x, npc_y));
 ### 5.1 NPC 定义
 
 ```rust
-use jrpg_engine::overworld::types::{NpcDefinition, NpcMovementType, Direction};
+use dotzuki_engine::overworld::types::{NpcDefinition, NpcMovementType, Direction};
 
 let npc = NpcDefinition::new(
     1,                          // sprite_id: 精灵 ID
@@ -342,7 +342,7 @@ let npc = NpcDefinition::new(
 ### 5.3 NPC 运行时状态
 
 ```rust
-use jrpg_engine::overworld::npc_movement::NpcRuntimeState;
+use dotzuki_engine::overworld::npc_movement::NpcRuntimeState;
 
 // 每帧更新 NPC 移动
 update_npc_movement(npc_state, map_data, tile_metadata, &mut event_flags);
@@ -357,7 +357,7 @@ start_scripted_move(npc_state, Direction::Up, 3); // 向上移动 3 格
 ### 5.4 NPC 交互
 
 ```rust
-use jrpg_engine::overworld::npc_interaction::{try_interact, InteractionResult, check_line_of_sight};
+use dotzuki_engine::overworld::npc_interaction::{try_interact, InteractionResult, check_line_of_sight};
 
 // 尝试与 NPC 交互
 let result = try_interact(npc_state, &player, &event_flags, &map_data);
@@ -381,7 +381,7 @@ let sight = check_line_of_sight(npc_state, &player);
 战斗系统的核心是 `BattleProvider` trait。你需要为你的游戏实现这个 trait：
 
 ```rust
-use jrpg_engine::battle::{BattleProvider, BattlerState, BattleState, DamageResult,
+use dotzuki_engine::battle::{BattleProvider, BattlerState, BattleState, DamageResult,
     MoveEffect, EffectResult, Weather, Terrain, EnumMap};
 
 impl BattleProvider for MyBattleProvider {
@@ -553,7 +553,7 @@ if provider.check_faint(battle.active_opponent().unwrap()) {
 - **自动分发**：根据 Unicode 码位自动选择拉丁/CJK 渲染路径
 
 ```rust
-use jrpg_renderer::embedded_font;
+use dotzuki_renderer::embedded_font;
 
 // 绘制中文字符
 embedded_font::draw_char(framebuffer, '你', x, y, color);
@@ -573,11 +573,11 @@ let width = embedded_font::text_width("你好");
 要添加新的中文字符：
 
 1. **确保 BDF 字体文件包含该字符**
-   - 字体位置：`crates/jrpg-renderer/fonts/fusion-pixel-10px-monospaced-zh_hans.bdf`（24,794 个字形）
+   - 字体位置：`crates/dotzuki-renderer/fonts/fusion-pixel-10px-monospaced-zh_hans.bdf`（24,794 个字形）
 
 2. **在 build.rs 的 CJK 字形列表中添加字符**
    ```rust
-   // crates/jrpg-renderer/build.rs
+   // crates/dotzuki-renderer/build.rs
    const CJK_CHARS: &str = "\
       你好世界欢迎来到宝可梦游戏\
       训练师战斗背包存档\
@@ -588,7 +588,7 @@ let width = embedded_font::text_width("你好");
 
 3. **重新构建**
    ```bash
-   cargo build -p jrpg-renderer
+   cargo build -p dotzuki-renderer
    ```
 
 ### 7.4 多语言数据管理
@@ -639,7 +639,7 @@ let painter = FrameBufferPainter::new(framebuffer)
 
 ### 7.7 JS 脚本中的多语言支持
 
-在使用 `jrpg-engine-script` 时，可通过 `game.t()` 实现双语文本：
+在使用 `dotzuki-engine-script` 时，可通过 `game.t()` 实现双语文本：
 
 ```javascript
 // game.t(en, zh) 根据当前语言返回对应文本
@@ -671,7 +671,7 @@ const choice = await game.showTextChoice(
 实现 `TextProvider` 来定义你的游戏字符编码：
 
 ```rust
-use jrpg_engine::text::{TextProvider, ControlAction, DialogState, TileBuffer, TextStream};
+use dotzuki_engine::text::{TextProvider, ControlAction, DialogState, TileBuffer, TextStream};
 
 impl TextProvider for MyTextProvider {
     type Char = MyChar;  // 你的字符类型（可以是枚举）
@@ -712,7 +712,7 @@ impl TextProvider for MyTextProvider {
 ### 8.2 DialogEngine —— 逐字打字效果
 
 ```rust
-use jrpg_engine::text::DialogEngine;
+use dotzuki_engine::text::DialogEngine;
 
 let provider = MyTextProvider;
 let mut engine = DialogEngine::new(provider);
@@ -763,7 +763,7 @@ pub enum DialogMode {
 ### 9.1 MenuProvider trait
 
 ```rust
-use jrpg_engine::menu::{MenuProvider, MenuOption, MenuLayout};
+use dotzuki_engine::menu::{MenuProvider, MenuOption, MenuLayout};
 
 impl MenuProvider for MyMenuProvider {
     type MenuId = MyMenuId;
@@ -783,7 +783,7 @@ impl MenuProvider for MyMenuProvider {
 ### 9.2 MenuSystem —— 菜单控制器
 
 ```rust
-use jrpg_engine::menu::{MenuSystem, MenuInput, MenuAction};
+use dotzuki_engine::menu::{MenuSystem, MenuInput, MenuAction};
 
 let provider = MyMenuProvider { /* ... */ };
 let mut menu = MenuSystem::new(&provider);
@@ -809,7 +809,7 @@ menu.render(&mut painter);
 ### 9.3 菜单选项
 
 ```rust
-use jrpg_engine::menu::MenuOption;
+use dotzuki_engine::menu::MenuOption;
 
 let options = vec![
     MenuOption::new("新游戏"),              // 可选的正常选项
@@ -821,7 +821,7 @@ let options = vec![
 ### 9.4 菜单布局与样式
 
 ```rust
-use jrpg_engine::menu::{BorderStyle, CursorStyle, CursorAnchor, MenuConfig, EdgeInsets};
+use dotzuki_engine::menu::{BorderStyle, CursorStyle, CursorAnchor, MenuConfig, EdgeInsets};
 
 // 边框样式（9格边框）
 let border = BorderStyle {
@@ -846,7 +846,7 @@ let config = MenuConfig::new(area, Some(border), content, cursor);
 ### 10.1 ItemProvider trait
 
 ```rust
-use jrpg_engine::items::{ItemProvider, ItemResult, Inventory};
+use dotzuki_engine::items::{ItemProvider, ItemResult, Inventory};
 
 impl ItemProvider for MyItemProvider {
     type Item = MyItem;
@@ -872,7 +872,7 @@ impl ItemProvider for MyItemProvider {
 ### 10.2 背包管理
 
 ```rust
-use jrpg_engine::items::Inventory;
+use dotzuki_engine::items::Inventory;
 
 let mut bag = Inventory::new();
 
@@ -890,7 +890,7 @@ bag.remove(&Potion, 1); // 使用 1 个
 ### 10.3 商店系统
 
 ```rust
-use jrpg_engine::items::ShopProvider;
+use dotzuki_engine::items::ShopProvider;
 
 impl ShopProvider for MyShopProvider {
     type Item = MyItem;
@@ -929,7 +929,7 @@ pub enum BagCategory {
 ### 11.1 SaveData trait
 
 ```rust
-use jrpg_engine::save::{SaveData, SaveManager, SaveStorage, SaveSlot, SaveError};
+use dotzuki_engine::save::{SaveData, SaveManager, SaveStorage, SaveSlot, SaveError};
 
 impl SaveData for MySave {
     fn serialize(&self) -> Vec<u8> {
@@ -957,7 +957,7 @@ impl SaveData for MySave {
 ### 11.2 使用 SaveManager
 
 ```rust
-use jrpg_engine::save::{SaveManager, SaveSlot, InMemoryStorage};
+use dotzuki_engine::save::{SaveManager, SaveSlot, InMemoryStorage};
 
 // 创建存档管理器（使用内存存储——生产环境应实现文件存储）
 let storage = Box::new(InMemoryStorage::new());
@@ -1025,8 +1025,8 @@ impl SaveStorage for FileStorage {
 触发器系统允许你在特定瓦片上绑定脚本函数：
 
 ```rust
-use jrpg_engine::trigger_manager::{TriggerManager, Trigger};
-use jrpg_engine::metatile::TriggerType;
+use dotzuki_engine::trigger_manager::{TriggerManager, Trigger};
+use dotzuki_engine::metatile::TriggerType;
 
 let mut trigger_mgr = TriggerManager::new();
 
@@ -1082,7 +1082,7 @@ if input.a {
 
 ### 12.5 JS 脚本引擎
 
-使用 `jrpg-engine-script` 来执行 JavaScript 地图脚本：
+使用 `dotzuki-engine-script` 来执行 JavaScript 地图脚本：
 
 ```javascript
 // assets/script.js
@@ -1106,7 +1106,7 @@ export async function onInteract(facingX, facingY) {
 ### 12.6 事件标志
 
 ```rust
-use jrpg_engine::overworld::event_flags::EventFlags;
+use dotzuki_engine::overworld::event_flags::EventFlags;
 
 let mut flags = EventFlags::new();
 
@@ -1131,7 +1131,7 @@ flags.reset("defeated_gym_leader");
 帧缓冲区是渲染的核心数据结构：
 
 ```rust
-use jrpg_engine::render::FrameBuffer;
+use dotzuki_engine::render::FrameBuffer;
 
 // 创建帧缓冲（160×144 像素 = Game Boy 分辨率）
 let mut fb = FrameBuffer::default();
@@ -1148,7 +1148,7 @@ const TILE_SIZE: usize = 8;  // 瓦片尺寸
 ### 13.2 Rgba 颜色
 
 ```rust
-use jrpg_engine::render::Rgba;
+use dotzuki_engine::render::Rgba;
 
 let red = Rgba { r: 255, g: 0, b: 0, a: 255 };
 let blue = Rgba { r: 0, g: 0, b: 255, a: 255 };
@@ -1160,7 +1160,7 @@ let transparent = Rgba { r: 0, g: 0, b: 0, a: 0 };
 Painter 是渲染的抽象接口，支持像素渲染和录制回放：
 
 ```rust
-use jrpg_engine::render::{Painter, TilePos, TileRect, InkColor, Ui, Frame};
+use dotzuki_engine::render::{Painter, TilePos, TileRect, InkColor, Ui, Frame};
 
 // 使用 Painter
 fn draw_scene<P: Painter>(painter: &mut P) {
@@ -1176,7 +1176,7 @@ fn draw_scene<P: Painter>(painter: &mut P) {
 ### 13.4 瓦片坐标系统
 
 ```rust
-use jrpg_engine::render::{TilePos, TileRect};
+use dotzuki_engine::render::{TilePos, TileRect};
 
 let pos = TilePos::new(5, 3);       // 第 5 列，第 3 行
 let rect = TileRect::new(0, 12, 20, 6);  // (x, y, w, h)
@@ -1185,8 +1185,8 @@ let rect = TileRect::new(0, 12, 20, 6);  // (x, y, w, h)
 ### 13.5 地图图层渲染
 
 ```rust
-use jrpg_engine::render::{MapLayer, MapRenderState, BlendMode};
-use jrpg_engine::tilemap::Tilemap;
+use dotzuki_engine::render::{MapLayer, MapRenderState, BlendMode};
+use dotzuki_engine::tilemap::Tilemap;
 
 // 创建地图图层
 let mut state = MapRenderState::new();
@@ -1211,8 +1211,8 @@ assert_eq!(state.visible_layer_count(), 2);
 新的 Tilemap 支持 16 位元数据，替代传统 Game Boy 的 1 字节瓦片索引：
 
 ```rust
-use jrpg_engine::tilemap::{Tilemap, TilemapEntry};
-use jrpg_engine::tile_meta::CollisionType;
+use dotzuki_engine::tilemap::{Tilemap, TilemapEntry};
+use dotzuki_engine::tile_meta::CollisionType;
 
 let mut tm = Tilemap::new(32, 32);
 
@@ -1237,7 +1237,7 @@ let tm = Tilemap::from_gb_tilemap(&gb_data, 32, 32);
 ### 13.7 色板系统
 
 ```rust
-use jrpg_engine::palette::{PaletteTrait, PaletteProvider, SgbColor, SgbPaletteId};
+use dotzuki_engine::palette::{PaletteTrait, PaletteProvider, SgbColor, SgbPaletteId};
 
 impl PaletteTrait for MyPaletteId {}
 
@@ -1254,7 +1254,7 @@ impl PaletteProvider<MyPaletteId> for MyPaletteProvider {
 ### 13.8 色板交换（Palette Swap）
 
 ```rust
-use jrpg_engine::palette_swap::{PaletteSwapManager, PaletteSwap};
+use dotzuki_engine::palette_swap::{PaletteSwapManager, PaletteSwap};
 
 let mut manager = PaletteSwapManager::new();
 
@@ -1274,7 +1274,7 @@ manager.apply(palette_group, &mut colors);
 ### 13.9 RenderConfig
 
 ```rust
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 
 // Game Boy 标准分辨率
 let config = RenderConfig::default();  // 160×144
@@ -1393,7 +1393,7 @@ let config = RenderConfig::new(320, 240);
 ### 14.4 颜色常量
 
 ```rust
-use jrpg_engine::render::InkColor;
+use dotzuki_engine::render::InkColor;
 
 InkColor::White      // 白色
 InkColor::LightGray  // 浅灰
@@ -1408,8 +1408,8 @@ InkColor::Black      // 黑色
 ### A. 项目依赖关系图
 
 ```
-jrpg-app / jrpg-tui / jrpg-web
-├── jrpg-engine        (核心 trait 和类型)
+dotzuki-app / dotzuki-tui / dotzuki-web
+├── dotzuki-engine        (核心 trait 和类型)
 │   ├── render/        (Rgba, FrameBuffer, Painter, geometry)
 │   ├── overworld/     (地图、NPC、碰撞、移动)
 │   ├── battle/        (战斗抽象)
@@ -1426,17 +1426,17 @@ jrpg-app / jrpg-tui / jrpg-web
 │   ├── camera/        (摄像机)
 │   ├── tilemap/       (瓦片地图)
 │   └── map/           (地图)
-├── jrpg-engine-tiled  (Tiled .tmx 解析)
-├── jrpg-engine-script (JS 脚本执行)
-├── jrpg-renderer      (现代字体渲染)
-├── jrpg-ui            (UI 组件库)
-└── jrpg-audio         (音频引擎)
+├── dotzuki-engine-tiled  (Tiled .tmx 解析)
+├── dotzuki-engine-script (JS 脚本执行)
+├── dotzuki-renderer      (现代字体渲染)
+├── dotzuki-ui            (UI 组件库)
+└── dotzuki-audio         (音频引擎)
 ```
 
 ### B. 学习路径建议
 
 1. **第一天**：阅读本文档，理解整体架构
-2. **第二天**：使用 `jrpg-template` 创建第一个项目，运行示例
+2. **第二天**：使用 `dotzuki-template` 创建第一个项目，运行示例
 3. **第三天**：用 Tiled 设计自己的地图
 4. **第四天**：实现 `TextProvider`，添加对话
 5. **第五天**：实现 `BattleProvider`，创建简单战斗

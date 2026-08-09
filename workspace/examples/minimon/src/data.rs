@@ -1,5 +1,5 @@
 //! The DATA path (doc 11 §6 POC, Phase 2): drive minimon's five systems from the
-//! authored [`rules.ron`](../../rules.ron) via the game-agnostic `jrpg-rules`
+//! authored [`rules.ron`](../../rules.ron) via the game-agnostic `dotzuki-rules`
 //! loader, instead of the native-Rust `&'static Effect`s in [`crate`] (the
 //! oracle). The parity tests (`tests::data_parity`) prove the two paths produce
 //! **byte-identical** `BattleState` and identical `ScriptedRng` draw counts.
@@ -31,13 +31,13 @@
 
 use std::cell::RefCell;
 
-use jrpg_engine::battle::rng::ScriptedRng;
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::battle::stack::{
     collect_handlers, run_event, run_event_checked, BattleCtx, Effect, EffectState, Event,
     MoveContext, RelayVar,
 };
-use jrpg_engine::battle::{BattleProvider, BattleState, BattlerRef, BattlerState};
-use jrpg_rules::{CompiledRuleset, RuleBindings, RuleSource, Ruleset, RulesHost, RulesProvider};
+use dotzuki_engine::battle::{BattleProvider, BattleState, BattlerRef, BattlerState};
+use dotzuki_rules::{CompiledRuleset, RuleBindings, RuleSource, Ruleset, RulesHost, RulesProvider};
 
 use crate::{MType, MinimonProvider, Move, Stat, Status};
 
@@ -270,7 +270,7 @@ pub fn load_ruleset(hot: bool) -> RuleSource {
 /// Compile a [`Ruleset`] into minimon's registry (the names→indices binding +
 /// status vocabulary). Validates every name against the closed vocabulary NOW; an
 /// unknown name is a load error, never a battle-time surprise (doc 11 §4.2).
-pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, jrpg_rules::LoadError> {
+pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, dotzuki_rules::LoadError> {
     CompiledRuleset::compile::<MinimonProvider, MinimonBindings>(
         ruleset,
         DATA_ID_BASE,
@@ -282,7 +282,7 @@ pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, jrpg_rules::LoadErr
 /// Convenience: build the dual-mode source, load, compile, and install in one
 /// step (the common startup path). Returns the [`RuleSource`] so the caller can
 /// keep it to [`poll_changed`](RuleSource::poll_changed) for hot-reload.
-pub fn boot(hot: bool) -> Result<RuleSource, jrpg_rules::LoadError> {
+pub fn boot(hot: bool) -> Result<RuleSource, dotzuki_rules::LoadError> {
     let source = load_ruleset(hot);
     let ruleset = source.load()?;
     let compiled = compile(&ruleset)?;
@@ -699,7 +699,7 @@ mod data_tests {
         TACKLE, TORRENT,
     };
     use crate::Battle; // the native oracle
-    use jrpg_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::rng::ScriptedRng;
 
     /// Install the canonical compiled ruleset on the current thread (idempotent).
     fn install_canonical() {

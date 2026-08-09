@@ -56,11 +56,11 @@ jobs:
         working-directory: workspace
         run: cargo test --workspace
 
-  build-jrpg-editor:
+  build-dotzuki-editor:
     runs-on: self-hosted
     permissions:
       contents: read
-    name: Build jrpg-editor
+    name: Build dotzuki-editor
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,21 +75,21 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install jrpg-editor dependencies
-        working-directory: workspace/tools/jrpg-editor
+      - name: Install dotzuki-editor dependencies
+        working-directory: workspace/tools/dotzuki-editor
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
         # pnpm-lock.yaml is gitignored, so resolve straight from package.json.
         run: pnpm install --no-frozen-lockfile
 
       - name: Type check
-        working-directory: workspace/tools/jrpg-editor
+        working-directory: workspace/tools/dotzuki-editor
         run: npx vue-tsc --noEmit
 
       - name: Test
-        working-directory: workspace/tools/jrpg-editor
+        working-directory: workspace/tools/dotzuki-editor
         run: npx vitest run
 
       - name: Build
-        working-directory: workspace/tools/jrpg-editor
+        working-directory: workspace/tools/dotzuki-editor
         run: pnpm run build

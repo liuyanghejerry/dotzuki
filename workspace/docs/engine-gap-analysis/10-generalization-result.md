@@ -2,7 +2,7 @@
 
 **Verdict: GO-WITH-NITS — the engine generalizes.** A developer can author Gen-1-to-Gen-6-LIKE
 battle systems (physical/special split, abilities + an ability veto, held-item residual ordering,
-field-hosted weather with stat-fold layering) entirely on `jrpg-engine`'s effect-stack **with zero
+field-hosted weather with stat-fold layering) entirely on `dotzuki-engine`'s effect-stack **with zero
 engine edits** beyond the Phase-1 additive/defaulted seams. The single nit is a *documentation*
 correction to the design's §4.2b sketch (re-entrant dispatch is a driver pattern, not a handler
 pattern); it is borrow-correct and additive, not a kill signal.
@@ -17,9 +17,9 @@ commit, built on Phase-1 engine commit `4f3b5ff2`). This is the answer to design
 
 | Axis | Verdict | Evidence |
 |---|---|---|
-| **Authoring** | **GO** | All 5 systems (split, Intimidate, Clear Body veto, Leftovers, Sandstorm) are authored in `examples/minimon` as `const`/`static Effect`s of **zero-capture `fn`s** via the §4 `effect!` macro / `EventHook`. `git show --stat HEAD` touches **only** `examples/minimon/{Cargo.toml,src/lib.rs,src/tests.rs}` + workspace `Cargo.toml`/`Cargo.lock` — **no `crates/jrpg-engine` file**. `git diff --quiet HEAD~1 -- crates/jrpg-engine` ⇒ engine **byte-identical**. No new non-defaulted engine method; no `if gen==N` / `if ability==` in the engine. |
-| **Agnosticism** | **GO** | `examples/minimon/Cargo.toml` `[dependencies]` = `jrpg-engine` **only**. `cargo tree -p minimon` ⇒ `minimon → jrpg-engine` (plus jrpg-engine's own `image`/`serde`/`thiserror`); **no pokered/pokered-core/pokered-data, no `rand`**. The only `pokered`/`rand`/`RefCell`/`Rc`/`unsafe` strings in `examples/minimon/src` are **doc comments**. Engine still links no `rand` (absent from `crates/jrpg-engine/Cargo.toml`) and names **no `minimon`/Pokémon concrete type** in non-test code. |
-| **Non-breaking** | **GO** | The 88 stack-parity slices stay green **unchanged**: `88 passed / 0 failed` in 3× parallel runs AND `--test-threads=1`, identical. `jrpg-engine` `311 passed / 0 failed` (+3 doctests) and `pokered-core` `1907 passed / 0 failed` — both unchanged (the existing game compiled against an untouched engine, proving every Phase-1 resolver/event/`EffectHost` seam is additive+defaulted). `cargo build --workspace` exit 0. |
+| **Authoring** | **GO** | All 5 systems (split, Intimidate, Clear Body veto, Leftovers, Sandstorm) are authored in `examples/minimon` as `const`/`static Effect`s of **zero-capture `fn`s** via the §4 `effect!` macro / `EventHook`. `git show --stat HEAD` touches **only** `examples/minimon/{Cargo.toml,src/lib.rs,src/tests.rs}` + workspace `Cargo.toml`/`Cargo.lock` — **no `crates/dotzuki-engine` file**. `git diff --quiet HEAD~1 -- crates/dotzuki-engine` ⇒ engine **byte-identical**. No new non-defaulted engine method; no `if gen==N` / `if ability==` in the engine. |
+| **Agnosticism** | **GO** | `examples/minimon/Cargo.toml` `[dependencies]` = `dotzuki-engine` **only**. `cargo tree -p minimon` ⇒ `minimon → dotzuki-engine` (plus dotzuki-engine's own `image`/`serde`/`thiserror`); **no pokered/pokered-core/pokered-data, no `rand`**. The only `pokered`/`rand`/`RefCell`/`Rc`/`unsafe` strings in `examples/minimon/src` are **doc comments**. Engine still links no `rand` (absent from `crates/dotzuki-engine/Cargo.toml`) and names **no `minimon`/Pokémon concrete type** in non-test code. |
+| **Non-breaking** | **GO** | The 88 stack-parity slices stay green **unchanged**: `88 passed / 0 failed` in 3× parallel runs AND `--test-threads=1`, identical. `dotzuki-engine` `311 passed / 0 failed` (+3 doctests) and `pokered-core` `1907 passed / 0 failed` — both unchanged (the existing game compiled against an untouched engine, proving every Phase-1 resolver/event/`EffectHost` seam is additive+defaulted). `cargo build --workspace` exit 0. |
 | **Borrow** | **GO** | minimon handlers all take `&mut BattleCtx`, never a borrowed battler/effect ref, never `&P`. Multi-source collection uses the collect-then-fold owned snapshot (`collect_handlers` → `run_event`/`run_event_checked`) + per-step liveness re-check. **No new `RefCell`/`Rc`/`unsafe`** in either phase; the battle stack still has exactly **one** `unsafe` block (`ctx.rs:345`, the cross-side `pair_mut`), **unchanged** across both phases (`git diff 4f3b5ff2~1 HEAD` shows no `+/-` line touching it). |
 | **Generality** | **GO** | All 9 hand-derived outcome tests hold (no parity oracle): split 80(phys) vs 40(special); Intimidate drops foe Atk −1 → its move deals 52 (< 80); Clear Body keeps Atk 0 → full 80; both abilities collected on **one** `TryBoost` in comparator order (`orders == [5]`, target = foe — cross-battler collection); Leftovers nets 94 (chip 12 then heal 6) vs 88 chip-only (proves cross-source `order`); Sandstorm chips Normal→94 / Rock immune at 100, Rock SpD ×1.5 100→150 (ModifyStat→WeatherModifyStat layering); weather-off control no-op; field-hosted witness (`EffectHost::Field`). **Mutation-check below** proves these assert real behavior. |
 
@@ -48,12 +48,12 @@ The veto is load-bearing: the test asserts the real Clear Body behavior, not a c
 
 - `cargo build --workspace` → **exit 0**
 - `cargo test -p minimon` → **9 passed / 0 failed** (+ 0 doctests)
-- `cargo test -p jrpg-engine` → **311 passed / 0 failed** (+ 3 doctests; 7 pre-existing `ignored`)
+- `cargo test -p dotzuki-engine` → **311 passed / 0 failed** (+ 3 doctests; 7 pre-existing `ignored`)
 - `cargo test -p pokered-core` → **1907 passed / 0 failed**
 - `cargo test -p pokered-core --lib stack` → **88 passed / 0 failed**, identical across 3× parallel
   AND `--test-threads=1`
 
-Note on baselines: the hard-constraint floor cites `jrpg-engine 303`; that is the *pre-P0b*
+Note on baselines: the hard-constraint floor cites `dotzuki-engine 303`; that is the *pre-P0b*
 baseline. Phase 1 (engine commit `4f3b5ff2`, audited all-PASS) added 8 engine tests additively
 (303 → 311); Phase 2 left the engine **byte-identical** at 311. No regression — the floor rose by
 additive Phase-1 tests, not by edits in Phase 2.
