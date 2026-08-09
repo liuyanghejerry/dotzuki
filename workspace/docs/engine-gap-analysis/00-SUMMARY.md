@@ -5,8 +5,7 @@ engine and (b) useful for a developer who wants to build their own Pokémon-like
 game on top of `dotzuki-engine`?
 
 See companion docs: [`01-engine-inventory.md`](01-engine-inventory.md),
-[`02-pokered-inventory.md`](02-pokered-inventory.md),
-[`03-firered-systems.md`](03-firered-systems.md).
+[`02-pokered-inventory.md`](02-pokered-inventory.md).
 
 ## Executive summary
 

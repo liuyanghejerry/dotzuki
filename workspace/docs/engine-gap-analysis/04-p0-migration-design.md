@@ -4,7 +4,7 @@
 lifting all P0 systems out of `examples/pokered/crates/pokered-core` into the
 game-agnostic `dotzuki-engine`, incorporating the corrections raised by the
 adversarial critiques. Companion docs: `00-SUMMARY.md`, `01-engine-inventory.md`,
-`02-pokered-inventory.md`, `03-firered-systems.md`.
+`02-pokered-inventory.md`.
 
 ## Non-negotiable architecture rules (carried from CLAUDE.md)
 
