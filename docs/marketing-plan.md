@@ -13,7 +13,7 @@
 
 | 层 | 内容 | 收费方式 | 作用 |
 |----|------|---------|------|
-| **开源层** | dotzuki-engine 核心 crate + jrpg CLI(new/check/run)+ 基础 DSL | 免费开源 | 获客、建立信任、社区口碑 |
+| **开源层** | dotzuki-engine 核心 crate + dotzuki CLI(new/check/run)+ 基础 DSL | 免费开源 | 获客、建立信任、社区口碑 |
 | **商业授权层** | 商业使用授权(闭源发布权)、编辑器套件 Pro 功能、平台 shell(Android/iOS)正式支持、优先技术支持 | 按席位/项目授权 或 收入分成,二选一报价 | 主要收入 |
 | **SaaS 定制层** | 承接客户定制化诉求:托管编辑器与云编译、定制功能开发、素材/剧情 AI 生成额度、私有化部署、陪跑式接入服务 | 订阅制 + 项目制定制报价 | 高客单、粘性与续费 |
 
@@ -28,7 +28,7 @@
 
 支撑这句话的三个事实(全部可被现场演示验证,不夸大):
 
-1. **零代码做游戏**:`jrpg new` 脚手架 → `.scene/.gui/.theme` DSL + RON 战斗规则 → `jrpg run` 直接玩。wuxia 项目即实证。
+1. **零代码做游戏**:`dotzuki new` 脚手架 → `.scene/.gui/.theme` DSL + RON 战斗规则 → `dotzuki run` 直接玩。wuxia 项目即实证。
 2. **引擎能力上限已被压测**:pokered 用同一套引擎复刻了 Pokémon Red 的完整逻辑(248 张地图、151 物种、战斗效果栈、跨平台),4,400+ 测试。
 3. **全平台一套工程**:native / WASM 浏览器 / Android / iOS / 终端 TUI,同一份游戏数据。
 
@@ -111,7 +111,7 @@ wuxia 是原创 IP、零 Rust 代码的完整游戏项目,是**唯一可以无�
 | 渠道 | 打法 | 节奏 |
 |------|------|------|
 | **Hacker News / r/rust** | "Show HN: We reimplemented Pokémon Red's logic in Rust to prove our JRPG engine" | 发布周 1 次,备好 FAQ |
-| **crates.io** | `cargo install jrpg` 一条命令可装 | 发布周 |
+| **crates.io** | `cargo install dotzuki` 一条命令可装 | 发布周 |
 | **英文官网/文档** | 落地页 + quickstart,不做持续运营 | 一次投入 |
 
 ---
@@ -140,7 +140,7 @@ wuxia 是原创 IP、零 Rust 代码的完整游戏项目,是**唯一可以无�
 - [ ] 官网落地页(中英双语):定位语 + WASM 在线试玩 + 两个案例卡片 + **三层定价页**(开源/授权/SaaS 定制)+ waitlist
 - [ ] wuxia 3 分钟实机演示视频(中文配音 + 英文字幕)
 - [ ] pokered 技术案例页(注意 §2 的 IP 边界,素材重绘)
-- [ ] 文档站整理:quickstart(jrpg new → run 五分钟路径)必须无坑,中英各一版
+- [ ] 文档站整理:quickstart(dotzuki new → run 五分钟路径)必须无坑,中英各一版
 - [ ] 授权与 SaaS 定制的书面边界定义 + 法务审阅
 
 ### 阶段 1:国内首发 + 海外探针(第 4-6 周)
@@ -163,7 +163,7 @@ wuxia 是原创 IP、零 Rust 代码的完整游戏项目,是**唯一可以无�
 内容曝光(B站/知乎/HN/博客)
   → 官网访问
     → 在线试玩(WASM,零摩擦)     ← 关键转化点:玩过和没玩过是两个量级
-      → cargo install jrpg / 下载编辑器(开源层)
+      → cargo install dotzuki / 下载编辑器(开源层)
         → waitlist / 联系我们
           → 1v1 demo → 商业授权成交
             → 定制诉求 → SaaS 订阅/定制项目
@@ -184,7 +184,7 @@ wuxia 是原创 IP、零 Rust 代码的完整游戏项目,是**唯一可以无�
 
 ## 9. 需要补做的资产清单(工程侧配合)
 
-- [ ] **wuxia 官方 demo 包**:确认 wuxia 可一键 `jrpg run` 跑起来,作为对外演示基准
+- [ ] **wuxia 官方 demo 包**:确认 wuxia 可一键 `dotzuki run` 跑起来,作为对外演示基准
 - [ ] **在线试玩页**:pokered-web 已有 WASM 能力,需一个去掉调试入口、带品牌页的精简版;wuxia 也出一个 WASM 试玩
 - [ ] **三层定价页**:开源范围说明、授权报价入口、SaaS 定制服务说明(文案与法务共同确认)
 - [ ] **官网**(可用 dotzuki-web 的布局预览能力自证,自己用自己的引擎做官网叙事页是加分项)

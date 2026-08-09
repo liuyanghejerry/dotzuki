@@ -1,4 +1,4 @@
-//! File watching for `jrpg run --watch`: [`ProjectWatcher`].
+//! File watching for `dotzuki run --watch`: [`ProjectWatcher`].
 //!
 //! Watches the project's data/gfx/scene directories recursively and reports
 //! changed `.scene`/`.json`/`.png`/`.tmx` files. Same notify version and

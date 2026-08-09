@@ -9,11 +9,11 @@ import { loadConfig, resolveDataPath, getProjectRoot } from '../projectConfig'
 // `__dirname` isn't defined in ESM. Vite shimmed `__dirname` for the inline config;
 // the extracted /wasm handler resolves crates/dotzuki-web/pkg relative to it just as the
 // original did (`<editor-root>/../../crates/dotzuki-web/pkg`).
-// JRPG_EDITOR_ROOT lets a host (e.g. the bundled Electron production server, where
+// DOTZUKI_EDITOR_ROOT lets a host (e.g. the bundled Electron production server, where
 // import.meta.url no longer lives at server/api/routes/) pin the editor root so the
 // /wasm preview package still resolves. Unset (Vite dev) → original reconstruction.
-const __dirname = process.env.JRPG_EDITOR_ROOT
-  ? path.resolve(process.env.JRPG_EDITOR_ROOT)
+const __dirname = process.env.DOTZUKI_EDITOR_ROOT
+  ? path.resolve(process.env.DOTZUKI_EDITOR_ROOT)
   : path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..')
 
 export function registerContent(server: any) {
@@ -115,17 +115,17 @@ export function registerContent(server: any) {
   //    `npm run build:wasm` into crates/dotzuki-web/pkg). Fixed to the repo,
   //    independent of PROJECT_ROOT. In a packaged Electron app the repo isn't
   //    present, so the app ships the pkg as an extraResource and points here
-  //    via JRPG_WASM_ROOT (see electron/main.cjs).
+  //    via DOTZUKI_WASM_ROOT (see electron/main.cjs).
   //    Files not found in dotzuki-web/pkg fall back to the dotzuki-runner-web pkg
   //    (`pnpm build:wasm-runner` → crates/dotzuki-runner-web/pkg; packaged app:
-  //    JRPG_RUNNER_WASM_ROOT) so the playtest activity can load WasmRunner. ──
+  //    DOTZUKI_RUNNER_WASM_ROOT) so the playtest activity can load WasmRunner. ──
   server.middlewares.use('/wasm', (req, res, next) => {
     try {
-      const wasmRoot = process.env.JRPG_WASM_ROOT
-        ? path.resolve(process.env.JRPG_WASM_ROOT)
+      const wasmRoot = process.env.DOTZUKI_WASM_ROOT
+        ? path.resolve(process.env.DOTZUKI_WASM_ROOT)
         : path.resolve(__dirname, '../../crates/dotzuki-web/pkg')
-      const runnerRoot = process.env.JRPG_RUNNER_WASM_ROOT
-        ? path.resolve(process.env.JRPG_RUNNER_WASM_ROOT)
+      const runnerRoot = process.env.DOTZUKI_RUNNER_WASM_ROOT
+        ? path.resolve(process.env.DOTZUKI_RUNNER_WASM_ROOT)
         : path.resolve(__dirname, '../../crates/dotzuki-runner-web/pkg')
       const rel = decodeURIComponent(parseUrl(req).pathname.replace('/wasm', ''))
       for (const rootDir of [wasmRoot, runnerRoot]) {

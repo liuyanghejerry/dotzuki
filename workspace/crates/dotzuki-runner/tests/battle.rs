@@ -173,7 +173,7 @@ fn battle_section_parses_and_resolves_tables() {
     assert_eq!(project.table_dir("spells"), Some(root.join("data/spells")));
     assert_eq!(project.table_dir("nope"), None);
 
-    // The data-table schema is visible (jrpg check validates against it).
+    // The data-table schema is visible (dotzuki check validates against it).
     let heroes = project.manifest().data_table("heroes").unwrap();
     assert!(heroes.fields.iter().any(|f| f == "atk"));
 }

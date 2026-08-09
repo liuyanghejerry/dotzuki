@@ -15,5 +15,5 @@ A JRPG project created with the JRPG Editor.
 ## Editing
 
 Reopen this folder from the editor's welcome screen (**Open Project**), or
-start the editor with `JRPG_PROJECT_ROOT=<this folder>`. The in-editor AI
+start the editor with `DOTZUKI_PROJECT_ROOT=<this folder>`. The in-editor AI
 assistant (✨) can help sketch characters, quests and scenes.

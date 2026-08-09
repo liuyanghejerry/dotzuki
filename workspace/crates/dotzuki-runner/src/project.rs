@@ -68,7 +68,7 @@ impl LoadedProject {
     ///
     /// The DSL is compiled in memory; any compiler diagnostic (unreadable
     /// file, compile failure, route conflict) aborts the load with an error
-    /// listing every diagnostic — the same bar `jrpg check` enforces.
+    /// listing every diagnostic — the same bar `dotzuki check` enforces.
     ///
     /// # Errors
     ///
@@ -348,7 +348,7 @@ impl LoadedProject {
 /// Source paths are project-relative POSIX paths — the same shape
 /// `compile_dirs` produces for a relative project root, and what the
 /// runtime's scene ↔ map matching expects. Unreadable/non-UTF-8 files
-/// become diagnostics (the same bar `jrpg check` enforces).
+/// become diagnostics (the same bar `dotzuki check` enforces).
 fn compile_project_dsl(files: &dyn ProjectFiles, manifest: &Manifest) -> CompileReport {
     let mut dsl_files: Vec<(String, String, String)> = Vec::new();
     let mut read_errors: Vec<String> = Vec::new();

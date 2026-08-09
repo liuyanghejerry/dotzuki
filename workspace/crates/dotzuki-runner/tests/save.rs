@@ -1,4 +1,4 @@
-//! Integration tests for `jrpg run` save/load against the committed fixture
+//! Integration tests for `dotzuki run` save/load against the committed fixture
 //! project (`tests/fixtures/demo/`), driven windowless through the public
 //! `RunnerGame` API with tempdir fixture copies.
 //!

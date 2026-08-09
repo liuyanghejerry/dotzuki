@@ -9,9 +9,9 @@ import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-// JRPG_E2E_FIXTURE selects the fixture project (a dir under e2e/fixtures);
+// DOTZUKI_E2E_FIXTURE selects the fixture project (a dir under e2e/fixtures);
 // the play-activity spec uses the runner-ready "playable-game" fixture.
-const fixtureName = process.env.JRPG_E2E_FIXTURE ?? 'demo-game'
+const fixtureName = process.env.DOTZUKI_E2E_FIXTURE ?? 'demo-game'
 const fixture = path.join(root, 'e2e', 'fixtures', fixtureName)
 const scratch = path.join(root, 'e2e', '.scratch', fixtureName)
 const port = Number(process.env.E2E_PORT ?? 5199)
@@ -23,7 +23,7 @@ console.log(`[e2e] fixture copied to ${scratch}`)
 const viteBin = path.join(root, 'node_modules', '.bin', 'vite')
 const child = spawn(viteBin, ['--port', String(port), '--strictPort'], {
   cwd: root,
-  env: { ...process.env, JRPG_PROJECT_ROOT: scratch },
+  env: { ...process.env, DOTZUKI_PROJECT_ROOT: scratch },
   stdio: 'inherit',
 })
 

@@ -2,7 +2,7 @@
 // Project create/scaffold tests — drive the real route handlers through a
 // minimal mock of the connect `server.middlewares.use` surface, with the
 // project root pinned to a fresh temp dir per test (setProjectRootDir, not
-// JRPG_PROJECT_ROOT, which projectConfig reads only once at module load).
+// DOTZUKI_PROJECT_ROOT, which projectConfig reads only once at module load).
 // ───────────────────────────────────────────────────────────────────────────
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import fs from 'fs'
@@ -86,7 +86,7 @@ function assertRecordMatchesSchema(rec: any, table: any) {
 }
 
 describe('POST /api/project/create', () => {
-  it.each(['empty', 'wuxia', 'jrpg'])('scaffolds the %s template by id', async (id) => {
+  it.each(['empty', 'wuxia', 'dotzuki'])('scaffolds the %s template by id', async (id) => {
     const res = await createProject({ name: 'My Game', template: id, dir: `game-${id}` })
     expect(res.status).toBe(200)
     const target = path.join(ROOT, `game-${id}`)
@@ -114,7 +114,7 @@ describe('POST /api/project/create', () => {
     expect(fs.existsSync(path.join(target, 'gfx'))).toBe(true)
   })
 
-  it.each(['empty', 'wuxia', 'jrpg'])('scaffolds the StartTown demo map for %s', async (id) => {
+  it.each(['empty', 'wuxia', 'dotzuki'])('scaffolds the StartTown demo map for %s', async (id) => {
     const res = await createProject({ name: 'Demo', template: id, dir: `demo-${id}` })
     expect(res.status).toBe(200)
     const mapDir = path.join(ROOT, `demo-${id}`, 'data', 'maps', 'StartTown')
@@ -156,7 +156,7 @@ describe('POST /api/project/create', () => {
     expect(tilesetRef.tileIds).toEqual(lib.tiles.map((t: any) => t.id))
   })
 
-  it.each(['empty', 'wuxia', 'jrpg'])('returns the complete written file list for %s', async (id) => {
+  it.each(['empty', 'wuxia', 'dotzuki'])('returns the complete written file list for %s', async (id) => {
     const res = await createProject({ name: 'Files', template: id, dir: `files-${id}` })
     expect(res.status).toBe(200)
     const body = res.json()
@@ -180,7 +180,7 @@ describe('POST /api/project/create', () => {
   })
 
   it('jrpg template seeds sample records that satisfy their table schemas', async () => {
-    const res = await createProject({ name: 'Jrpg', template: 'jrpg', dir: 'jrpg-rec' })
+    const res = await createProject({ name: 'Jrpg', template: 'dotzuki', dir: 'jrpg-rec' })
     expect(res.status).toBe(200)
     const target = path.join(ROOT, 'jrpg-rec')
     const cfg = readConfig(target)
@@ -204,13 +204,13 @@ describe('POST /api/project/create', () => {
   })
 
   it('jrpg template is battle-ready: battle section, skills, spells, rules.ron', async () => {
-    const res = await createProject({ name: 'Battle', template: 'jrpg', dir: 'jrpg-battle' })
+    const res = await createProject({ name: 'Battle', template: 'dotzuki', dir: 'jrpg-battle' })
     expect(res.status).toBe(200)
     const target = path.join(ROOT, 'jrpg-battle')
     const cfg = readConfig(target)
 
     // Manifest battle section wires the declared tables (defaults cover the
-    // stat/skill field names — `jrpg check` validates these against schemas).
+    // stat/skill field names — `dotzuki check` validates these against schemas).
     expect(cfg.battle).toMatchObject({
       party: { table: 'heroes' },
       enemies: { table: 'monsters' },
@@ -321,7 +321,7 @@ describe('POST /api/project/create', () => {
     }
   })
 
-  it.each(['wuxia', 'jrpg'])('seeds the story bible for %s', async (id) => {
+  it.each(['wuxia', 'dotzuki'])('seeds the story bible for %s', async (id) => {
     const res = await createProject({ name: 'Story', template: id, dir: `story-${id}` })
     expect(res.status).toBe(200)
     const storiesDir = path.join(ROOT, `story-${id}`, 'data', 'stories')
@@ -416,7 +416,7 @@ describe('GET /api/project/templates', () => {
 
     const zh = await call(server.routes, '/api/project/templates', mockReq('GET', undefined, '/?lang=zh'))
     const zhList = zh.json()
-    expect(zhList.map((t: any) => t.id)).toEqual(['empty', 'wuxia', 'jrpg'])
+    expect(zhList.map((t: any) => t.id)).toEqual(['empty', 'wuxia', 'dotzuki'])
     expect(zhList[0].name).toBe('空白项目')
 
     const en = await call(server.routes, '/api/project/templates', mockReq('GET'))

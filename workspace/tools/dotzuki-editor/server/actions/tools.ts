@@ -554,7 +554,7 @@ function scaffoldTool(tool: any, z: any, impl: ReturnType<typeof proposeToolImpl
     inputSchema: z.object({
       name: z.string(),
       dir: z.string().optional(),
-      templateId: z.enum(['empty', 'wuxia', 'jrpg']),
+      templateId: z.enum(['empty', 'wuxia', 'dotzuki']),
       summary: z.string().optional(),
     }),
     execute: impl.draft_project_scaffold,

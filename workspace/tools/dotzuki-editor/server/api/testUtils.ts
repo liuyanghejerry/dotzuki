@@ -5,7 +5,7 @@
 // mock of `server.middlewares.use`, no real HTTP server needed.
 //
 // The project root is pinned to a fresh temp dir per test via
-// `setProjectRootDir` (the JRPG_PROJECT_ROOT env var is read only once at
+// `setProjectRootDir` (the DOTZUKI_PROJECT_ROOT env var is read only once at
 // module load, so tests must not rely on it).
 // ───────────────────────────────────────────────────────────────────────────
 import { afterEach, beforeEach } from 'vitest'

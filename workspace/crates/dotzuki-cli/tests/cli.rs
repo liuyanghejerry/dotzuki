@@ -1,4 +1,4 @@
-//! End-to-end tests for the `jrpg` binary: scaffold a project into a temp
+//! End-to-end tests for the `dotzuki` binary: scaffold a project into a temp
 //! dir, then compile-check it. Uses only std (no assert_cmd/tempfile — the
 //! workspace has no such dev-dependency convention).
 
@@ -32,11 +32,11 @@ impl Drop for TestDir {
     }
 }
 
-fn jrpg(args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_jrpg"))
+fn dotzuki(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_dotzuki"))
         .args(args)
         .output()
-        .expect("failed to run jrpg binary")
+        .expect("failed to run dotzuki binary")
 }
 
 fn stdout(out: &Output) -> String {
@@ -49,10 +49,10 @@ fn stderr(out: &Output) -> String {
 
 /// Scaffold a default project named `name` under `parent`; asserts success.
 fn scaffold(parent: &Path, name: &str) -> PathBuf {
-    let out = jrpg(&["new", name, "--dir", parent.to_str().unwrap()]);
+    let out = dotzuki(&["new", name, "--dir", parent.to_str().unwrap()]);
     assert!(
         out.status.success(),
-        "jrpg new failed: {}",
+        "dotzuki new failed: {}",
         stderr(&out)
     );
     parent.join(name)
@@ -135,7 +135,7 @@ fn new_creates_expected_tree_and_manifest() {
 #[test]
 fn new_honors_title_override() {
     let tmp = TestDir::new("title");
-    let out = jrpg(&[
+    let out = dotzuki(&[
         "new",
         "my-game",
         "--dir",
@@ -155,7 +155,7 @@ fn new_honors_title_override() {
 fn new_rejects_non_slug_names() {
     let tmp = TestDir::new("slug");
     for bad in ["My Game", "Bad", "bad_name", ""] {
-        let out = jrpg(&["new", bad, "--dir", tmp.path().to_str().unwrap()]);
+        let out = dotzuki(&["new", bad, "--dir", tmp.path().to_str().unwrap()]);
         assert!(!out.status.success(), "expected failure for '{}'", bad);
         assert!(stderr(&out).contains("invalid project name"), "{}", bad);
     }
@@ -168,7 +168,7 @@ fn new_rejects_non_empty_target() {
     fs::create_dir_all(&target).unwrap();
     fs::write(target.join("keep.txt"), "occupied").unwrap();
 
-    let out = jrpg(&["new", "my-game", "--dir", tmp.path().to_str().unwrap()]);
+    let out = dotzuki(&["new", "my-game", "--dir", tmp.path().to_str().unwrap()]);
     assert!(!out.status.success());
     assert!(stderr(&out).contains("already exists and is not empty"));
     assert_eq!(fs::read_to_string(target.join("keep.txt")).unwrap(), "occupied");
@@ -187,7 +187,7 @@ fn check_passes_on_fresh_project() {
     let tmp = TestDir::new("checkok");
     let project = scaffold(tmp.path(), "my-game");
 
-    let out = jrpg(&["check", project.to_str().unwrap()]);
+    let out = dotzuki(&["check", project.to_str().unwrap()]);
     assert!(out.status.success(), "{}", stderr(&out));
     let text = stdout(&out);
     assert!(text.contains("1 scene(s)"), "{}", text);
@@ -197,7 +197,7 @@ fn check_passes_on_fresh_project() {
 #[test]
 fn check_fails_without_manifest() {
     let tmp = TestDir::new("nomanifest");
-    let out = jrpg(&["check", tmp.path().to_str().unwrap()]);
+    let out = dotzuki(&["check", tmp.path().to_str().unwrap()]);
     assert!(!out.status.success());
     assert!(stderr(&out).contains("No .dotzuki-editor.json found"));
 }
@@ -212,7 +212,7 @@ fn check_reports_dsl_errors_with_exit_1() {
     )
     .unwrap();
 
-    let out = jrpg(&["check", project.to_str().unwrap()]);
+    let out = dotzuki(&["check", project.to_str().unwrap()]);
     assert_eq!(out.status.code(), Some(1));
     let combined = format!("{}{}", stdout(&out), stderr(&out));
     assert!(combined.contains("broken.scene"), "{}", combined);

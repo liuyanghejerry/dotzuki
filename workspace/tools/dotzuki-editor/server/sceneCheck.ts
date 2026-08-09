@@ -36,11 +36,11 @@ export interface SceneCheckResult {
 const CAP = 9000
 
 // The editor root (tools/dotzuki-editor/) — reconstructed from this module's URL
-// (Vite dev), or pinned via JRPG_EDITOR_ROOT by the bundled Electron production
+// (Vite dev), or pinned via DOTZUKI_EDITOR_ROOT by the bundled Electron production
 // server where import.meta.url no longer lives at server/. Same convention as
 // the /wasm route in api/routes/content.ts.
-const EDITOR_ROOT = process.env.JRPG_EDITOR_ROOT
-  ? path.resolve(process.env.JRPG_EDITOR_ROOT)
+const EDITOR_ROOT = process.env.DOTZUKI_EDITOR_ROOT
+  ? path.resolve(process.env.DOTZUKI_EDITOR_ROOT)
   : path.resolve(fileURLToPath(import.meta.url), '..', '..')
 
 interface WasmSceneCompiler {
@@ -60,8 +60,8 @@ interface WasmCompileFail {
 let wasmCompiler: WasmSceneCompiler | null | undefined
 
 function wasmNodeRoot(): string {
-  return process.env.JRPG_WASM_NODE_ROOT
-    ? path.resolve(process.env.JRPG_WASM_NODE_ROOT)
+  return process.env.DOTZUKI_WASM_NODE_ROOT
+    ? path.resolve(process.env.DOTZUKI_WASM_NODE_ROOT)
     : path.resolve(EDITOR_ROOT, '../../crates/dotzuki-web/pkg-node')
 }
 
@@ -81,7 +81,7 @@ async function loadWasmCompiler(): Promise<WasmSceneCompiler | null> {
   return wasmCompiler
 }
 
-/** Test hook: drop the cached WASM compiler so a test can re-point JRPG_WASM_NODE_ROOT. */
+/** Test hook: drop the cached WASM compiler so a test can re-point DOTZUKI_WASM_NODE_ROOT. */
 export function _resetWasmCompilerForTests(): void {
   wasmCompiler = undefined
 }

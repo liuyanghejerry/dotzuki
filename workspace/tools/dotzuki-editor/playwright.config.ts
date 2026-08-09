@@ -5,7 +5,7 @@ const playPort = Number(process.env.E2E_PLAY_PORT ?? 5200)
 
 // E2E suite for the dotzuki-editor SPA + its Vite-dev API surface. The webServer
 // (e2e/serve.mjs) copies e2e/fixtures/demo-game to a scratch dir and starts
-// Vite with JRPG_PROJECT_ROOT pointing at that copy, so mutations made by
+// Vite with DOTZUKI_PROJECT_ROOT pointing at that copy, so mutations made by
 // tests never touch the repo. A second server on playPort serves
 // e2e/fixtures/playable-game for the Play-activity spec (play.spec.ts drives
 // it via an absolute URL, not baseURL). Browsers come from the local
@@ -38,7 +38,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: `JRPG_E2E_FIXTURE=playable-game E2E_PORT=${playPort} node e2e/serve.mjs`,
+      command: `DOTZUKI_E2E_FIXTURE=playable-game E2E_PORT=${playPort} node e2e/serve.mjs`,
       port: playPort,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

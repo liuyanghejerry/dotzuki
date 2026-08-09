@@ -1,4 +1,4 @@
-//! Integration tests for `jrpg run --watch` hot reload against the committed
+//! Integration tests for `dotzuki run --watch` hot reload against the committed
 //! fixture project (`tests/fixtures/demo/`). The reload *logic* is driven
 //! directly through [`RunnerGame::reload_scenes`] /
 //! [`RunnerGame::reload_current_map`] after overwriting fixture files in a

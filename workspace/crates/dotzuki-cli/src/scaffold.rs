@@ -1,10 +1,10 @@
-//! `jrpg new` — lay out a fresh zero-Rust game project.
+//! `dotzuki new` — lay out a fresh zero-Rust game project.
 //!
 //! The layout mirrors the editor's scaffolder
 //! (`tools/dotzuki-editor/server/scaffold.ts`, "empty" template) plus the `game`
 //! section from `docs/game-project-spec.md`, so projects round-trip: the
-//! editor opens `jrpg new` output, and editor-wizard projects pass
-//! `jrpg check`.
+//! editor opens `dotzuki new` output, and editor-wizard projects pass
+//! `dotzuki check`.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,7 @@ fn readme(title: &str) -> String {
     format!(
         r#"# {title}
 
-A JRPG project created with `jrpg new`.
+A JRPG project created with `dotzuki new`.
 
 ## Layout
 
@@ -47,11 +47,11 @@ A JRPG project created with `jrpg new`.
 ## Editing
 
 Reopen this folder from the editor's welcome screen (**Open Project**), or
-start the editor with `JRPG_PROJECT_ROOT=<this folder>`.
+start the editor with `DOTZUKI_PROJECT_ROOT=<this folder>`.
 
 ## Checking
 
-Run `jrpg check <this folder>` to compile-check every DSL file in the project.
+Run `dotzuki check <this folder>` to compile-check every DSL file in the project.
 "#
     )
 }
@@ -171,7 +171,7 @@ pub fn run(name: &str, parent: Option<&Path>, title: Option<&str>) -> Result<Pat
     println!("  data/maps/  data/tiles/  gfx/");
     println!("  assets/scenes/main.scene");
     println!("  README.md");
-    println!("Next: open the folder in dotzuki-editor, or run `jrpg check {}`.", target.display());
+    println!("Next: open the folder in dotzuki-editor, or run `dotzuki check {}`.", target.display());
 
     Ok(target)
 }

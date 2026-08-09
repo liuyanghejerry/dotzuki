@@ -7,7 +7,7 @@ the editor consume the directory as-is.
 
 This spec is the contract between the tools that create, edit, and run such
 projects. The reference implementation of the layout is the editor's
-scaffolder (`tools/dotzuki-editor/server/scaffold.ts`); the `jrpg` CLI
+scaffolder (`tools/dotzuki-editor/server/scaffold.ts`); the `dotzuki` CLI
 (`crates/dotzuki-cli`) produces the same layout.
 
 ## Consumers
@@ -15,8 +15,8 @@ scaffolder (`tools/dotzuki-editor/server/scaffold.ts`); the `jrpg` CLI
 | Consumer | What it does with a game project |
 |----------|----------------------------------|
 | **dotzuki-editor** (`tools/dotzuki-editor`) | Reads and writes everything: manifest, data tables, maps, scenes, gfx. |
-| **`jrpg` CLI** (`crates/dotzuki-cli`) | `jrpg new` scaffolds a project; `jrpg check` compile-checks its DSL files. |
-| **`jrpg run`** (`crates/dotzuki-cli` + `crates/dotzuki-runner`) | Boots the project and plays it: overworld, dialogue scenes, warps (see below). |
+| **`dotzuki` CLI** (`crates/dotzuki-cli`) | `dotzuki new` scaffolds a project; `dotzuki check` compile-checks its DSL files. |
+| **`dotzuki run`** (`crates/dotzuki-cli` + `crates/dotzuki-runner`) | Boots the project and plays it: overworld, dialogue scenes, warps (see below). |
 
 ## Directory layout
 
@@ -54,8 +54,8 @@ scaffolder** additionally seeds starter content so a fresh project is
 immediately explorable: a `data/maps/StartTown/` demo map with a procedurally
 generated tileset (`tileset.png`) and a per-map `script.scene`, a seeded
 shared tile library under `data/tiles/`, the `data/stories/` bible skeleton,
-and — for the game templates (`jrpg`, `wuxia`) — sample table records plus a
-seeded story character and quest. The `jrpg` template is also **battle-ready**
+and — for the game templates (`dotzuki`, `wuxia`) — sample table records plus a
+seeded story character and quest. The `dotzuki` template is also **battle-ready**
 and **shop-ready**: its manifest carries a `battle` section (heroes vs.
 monsters with the spells table — both seeded heroes form the switchable
 party — plus an `items` block with 3 Potions, an `encounters` block with the
@@ -67,7 +67,7 @@ project can fight via `@command("startBattle", "slime")` (wild) or
 `@command("startBattle", "bug-catcher")` (trainer), and open a Buy/Sell shop
 (the seeded Potion costs 20) via `@command("openShop", ["potion"])`
 with zero setup.
-`jrpg new` emits the minimal skeleton only.
+`dotzuki new` emits the minimal skeleton only.
 
 ## Manifest schema (`.dotzuki-editor.json`)
 
@@ -111,7 +111,7 @@ The scaffolded `story` activity uses `storiesDir: "stories"`,
 
 ### The `game` section
 
-Optional. `jrpg new` writes it; the editor reads and writes projects that
+Optional. `dotzuki new` writes it; the editor reads and writes projects that
 lack it without complaint.
 
 ```json
@@ -129,20 +129,20 @@ lack it without complaint.
 
 Derivation rules a consumer applies, in order: resolve `scenesDir`
 (`game.scenesDir` or the default), scan it for `.scene` files, and take
-`entryScene` from `game.entryScene` or the first discovered scene. `jrpg new`
+`entryScene` from `game.entryScene` or the first discovered scene. `dotzuki new`
 writes `"entryScene": "main"` matching the scaffolded `main.scene`, so a
-fresh project is already consistent. How `jrpg run` consumes both keys is
+fresh project is already consistent. How `dotzuki run` consumes both keys is
 specified below.
 
-## What `jrpg run` does
+## What `dotzuki run` does
 
-`jrpg run <dir>` boots a playable instance of the project (windowed;
+`dotzuki run <dir>` boots a playable instance of the project (windowed;
 `--headless [--frames N] [--screenshot out.png]` for CI/smoke tests). It is
 implemented by the `dotzuki-runner` crate; this section is the behavioral
 contract.
 
 **Boot.** The manifest is loaded, all DSL dirs are compiled (any diagnostic
-fails the boot with the same message list `jrpg check` prints), and compiled
+fails the boot with the same message list `dotzuki check` prints), and compiled
 scenes are registered by their `game_scene` name. Entry resolution:
 
 - With maps: spawn on `game.entryMap` (or `--map`), else the first map
@@ -333,7 +333,7 @@ the defaults shown):
   `config.tables[]` (their `dir`s hold the records). A battle needs both;
   a referenced id that names no declared table is a boot-time error *when a
   battle actually starts* (projects that never battle are unaffected) — and a
-  `jrpg check` diagnostic regardless.
+  `dotzuki check` diagnostic regardless.
 - `encounters` (optional) names an **encounter table**: its records describe
   enemy parties and trainer battles — `{ "id": "gym-leader-1", "name":
   "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }`.
@@ -363,7 +363,7 @@ the defaults shown):
   held items and scene-armed weather (see **Abilities, held items &
   weather** below). A rules file that fails to parse *or compile* (unknown
   event/op/stat/type/resource/status name in a hook) is a boot-time error at
-  battle start and a `jrpg check` diagnostic.
+  battle start and a `dotzuki check` diagnostic.
 - `items` (optional) arms the battle **Item menu**: `table` names the items
   table, `healField` (default `"healHp"`) the record field whose positive
   number makes an item battle-usable (the heal amount), and `starting` the
@@ -616,9 +616,9 @@ Later PRs:
 `StackDriver` migration, a heal-point system (the whiteout
 always respawns at the entry spawn).
 
-## What `jrpg check` compiles
+## What `dotzuki check` compiles
 
-`jrpg check <dir>` loads the manifest, collects every directory that may hold
+`dotzuki check <dir>` loads the manifest, collects every directory that may hold
 DSL files, and runs `dotzuki_engine_dsl::compiler::compile_dirs` over them (in
 memory, no artifacts written). The directory set is:
 
@@ -657,7 +657,7 @@ toolchain. The contract with the runner:
   than `.dotzuki-editor.json` (16 MB/file, 64 MB total caps). Paths keep the
   `data/maps/<id>/script.scene` shape the runner's scene↔map matching expects.
 - **Boot.** The bundle feeds `vfs::MemoryFiles` and
-  `LoadedProject::load_with_files` — the exact boot path of `jrpg run`,
+  `LoadedProject::load_with_files` — the exact boot path of `dotzuki run`,
   minus the disk. `RunnerOptions` force `watch=false`, headless (no audio
   device), `pcm_audio=true` and no disk saves.
 - **Frames.** The page calls `tick(input_bitmask)` at ~59.7 Hz and blits the
@@ -672,7 +672,7 @@ toolchain. The contract with the runner:
   while a scene/battle/shop/warp transition is suspended — the editor simply
   retries on its interval.
 
-Differences from native `jrpg run`: no file watching (the
+Differences from native `dotzuki run`: no file watching (the
 editor's **Restart** button re-fetches the bundle and reboots, restoring the
 save), audio output goes through the browser's `AudioContext` instead of a
 cpal device, and battle RNG is seeded without wall-clock time. Everything
@@ -688,18 +688,18 @@ the same code.
   manifest should preserve them. The same holds for the per-map
   `objects.json` sidecar: the editor passes keys it does not know (e.g. a
   hand-authored `encounters` block) through untouched.
-- **Sidecar precedence is `objects.json` over `map.json`.** `jrpg new` and
+- **Sidecar precedence is `objects.json` over `map.json`.** `dotzuki new` and
   older projects scaffold `map.json`, but once the editor saves a map's
   entities it writes `objects.json`, which then shadows `map.json` (the
   runner reads `objects.json` first and only falls back). Known current
   behavior, recorded here — not changed.
 - **The `game` section is optional.** The editor fully supports projects
   without it; CLI consumers apply the defaults above.
-- **Round-trip guarantee.** `jrpg new` output opens in the editor unchanged,
-  and an editor-wizard project passes `jrpg check`. Both scaffolders emit the
+- **Round-trip guarantee.** `dotzuki new` output opens in the editor unchanged,
+  and an editor-wizard project passes `dotzuki check`. Both scaffolders emit the
   same layout, the same seven activities (maps, scripts, play, data, story,
   assets, tiles) with the same config shapes, and structurally equal starter
-  scenes. The intentional differences: the `game` section (only `jrpg new`
+  scenes. The intentional differences: the `game` section (only `dotzuki new`
   writes it), and the starter *content* — the editor's scaffolder seeds the
   demo map, tile library, sample records, and story bible described above,
-  while `jrpg new` emits the minimal skeleton.
+  while `dotzuki new` emits the minimal skeleton.

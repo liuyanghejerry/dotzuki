@@ -56,7 +56,7 @@ has a **directory name** field (defaulting to a slug of the game name) with a
 full-path preview, and the Electron app adds a native **Browse…** picker. The
 server scaffolds the project in a subdirectory of its project root
 (`GET /api/project/root`), refusing a non-empty target with **409**. When the
-editor is started from its own repo without `JRPG_PROJECT_ROOT`, that root
+editor is started from its own repo without `DOTZUKI_PROJECT_ROOT`, that root
 defaults to `~/jrpg-projects`, so new projects land in
 `~/jrpg-projects/<name>` instead of inside the editor checkout. On success
 the panel summarizes what was scaffolded and you can jump straight into the
@@ -136,15 +136,15 @@ npx vite --config ../path/to/dotzuki-editor/vite.config.ts
 
 Or run `pnpm dev` from `tools/dotzuki-editor/` itself. The dev server listens on **http://localhost:5174**.
 
-### From the command line: `jrpg` CLI
+### From the command line: `dotzuki` CLI
 
-The [`jrpg` CLI](../../crates/dotzuki-cli/) scaffolds, checks, and *plays* game
+The [`dotzuki` CLI](../../crates/dotzuki-cli/) scaffolds, checks, and *plays* game
 projects without the editor:
 
 ```bash
-jrpg new my-game --title "My Game"   # scaffold the same zero-Rust layout
-jrpg check ./my-game                 # compile-check all DSL files, exit 1 on diagnostics
-jrpg run ./my-game                   # play it — windowed, or --headless --screenshot out.png
+dotzuki new my-game --title "My Game"   # scaffold the same zero-Rust layout
+dotzuki check ./my-game                 # compile-check all DSL files, exit 1 on diagnostics
+dotzuki run ./my-game                   # play it — windowed, or --headless --screenshot out.png
                                      #   --watch hot-reloads scenes and the current map on save
 ```
 
@@ -160,7 +160,7 @@ chapter): the whole party table fights (switching included), battle-usable
 items come from the `items` block, and skills can be authored as `rules.ron`
 `kind: Move`/`Status` effect records whose hooks run through the engine's
 effect stack (e.g. the seeded `venom-sting` → 30% poison, `poison` → 1/8
-max-HP residual chip); `jrpg check` fully compile-validates the hooks.
+max-HP residual chip); `dotzuki check` fully compile-validates the hooks.
 An optional `encounters` block arms enemy parties and trainer battles:
 `startBattle` resolves encounter records first (an ordered enemy queue —
 faint → send-out, EXP sums — with a trainer flag that blocks the Run root
@@ -240,14 +240,14 @@ built `dist/` on one local HTTP origin (the renderer talks to relative
 > is served from `crates/dotzuki-web/pkg`. `pnpm electron:build` stages that pkg
 > into `dist-electron/wasm-pkg` (via `electron/stage-resources.mjs`) and ships
 > it as an `extraResources` entry (→ `Resources/wasm-pkg`); the packaged app
-> points its `/wasm` route there through `JRPG_WASM_ROOT`. Run `pnpm build:wasm`
+> points its `/wasm` route there through `DOTZUKI_WASM_ROOT`. Run `pnpm build:wasm`
 > **before** packaging so the pkg exists — otherwise packaging still succeeds,
 > just without the preview. Dev and `electron:preview` read the in-repo pkg
 > directly.
 >
 > The same applies to the `play` activity's runner bundle
 > (`crates/dotzuki-runner-web/pkg`, built by `pnpm build:wasm-runner`, staged to
-> `dist-electron/wasm-runner-pkg`, located via `JRPG_RUNNER_WASM_ROOT`). The
+> `dist-electron/wasm-runner-pkg`, located via `DOTZUKI_RUNNER_WASM_ROOT`). The
 > `/wasm` middleware serves `dotzuki-runner-web/pkg` as a fallback for filenames
 > not found in `dotzuki-web/pkg`.
 
@@ -309,7 +309,7 @@ per test, no real HTTP server).
 
 E2E specs live in `e2e/*.spec.ts`. The Playwright `webServer` (`e2e/serve.mjs`)
 copies `e2e/fixtures/demo-game/` to a gitignored scratch dir and starts the
-Vite dev server with `JRPG_PROJECT_ROOT` pointing at that copy, so tests may
+Vite dev server with `DOTZUKI_PROJECT_ROOT` pointing at that copy, so tests may
 create/edit/delete project data freely. A second server (default port 5200)
 serves `e2e/fixtures/playable-game/` — a scaffolded StartTown project — for
 `play.spec.ts`, which boots the WASM runner in the browser (needs
@@ -334,7 +334,7 @@ serially (`workers: 1`) because they share one dev server and scratch project.
 
 The `play` activity runs the project **inside the editor** — no Rust toolchain,
 no external terminal. It boots the WASM build of `dotzuki-runner`
-(`crates/dotzuki-runner-web`, the same `RunnerGame` that powers `jrpg run`) on a
+(`crates/dotzuki-runner-web`, the same `RunnerGame` that powers `dotzuki run`) on a
 canvas: walk, talk to NPCs, battle, shop, save.
 
 - **Build the bundle first**: `pnpm build:wasm-runner` (wasm-pack →

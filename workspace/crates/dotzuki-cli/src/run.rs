@@ -1,4 +1,4 @@
-//! `jrpg run` — boot a zero-Rust game project and play it.
+//! `dotzuki run` — boot a zero-Rust game project and play it.
 //!
 //! Window mode (default) opens a 320×240 (scaled) winit/pixels window via
 //! `dotzuki_app`; `--headless` drives the game windowless for CI smoke tests,
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use dotzuki_runner::{run_headless, HeadlessOptions, LoadedProject, RunnerGame, RunnerOptions};
 
-/// CLI arguments for `jrpg run`.
+/// CLI arguments for `dotzuki run`.
 pub struct RunArgs {
     /// Project root containing `.dotzuki-editor.json`.
     pub dir: PathBuf,

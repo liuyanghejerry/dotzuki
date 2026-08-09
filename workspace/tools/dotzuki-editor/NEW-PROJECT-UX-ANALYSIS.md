@@ -12,14 +12,14 @@
 
 1. **WelcomeScreen**（`src/components/WelcomeScreen.vue`）：两张卡片 —— Create New Game（打开向导）/ Open Project（手输路径文本框，浏览器里无浏览按钮）+ 最近项目列表（localStorage）。
 2. **CreateGameWizard**（`src/components/CreateGameWizard.vue`）：3 步 —— ① 起名 ② 选模板（拉 `/api/project/templates`，3 个模板）③ Review → `POST /api/project/create`。
-3. **服务端**（`server/api/routes/project.ts:153`）：在 `getProjectRoot()`（= `JRPG_PROJECT_ROOT || process.cwd()`，`server/api/projectConfig.ts:5`）**原地铺开**：`.dotzuki-editor.json`、`Cargo.toml`、`src/main.rs`（拷自 `workspace/dotzuki-template`）、`assets/`、`data/`、`gfx/`。
+3. **服务端**（`server/api/routes/project.ts:153`）：在 `getProjectRoot()`（= `DOTZUKI_PROJECT_ROOT || process.cwd()`，`server/api/projectConfig.ts:5`）**原地铺开**：`.dotzuki-editor.json`、`Cargo.toml`、`src/main.rs`（拷自 `workspace/dotzuki-template`）、`assets/`、`data/`、`gfx/`。
 
 ## 问题清单（按严重度）
 
 ### 🔴 P0 — 向导创建 100% 失败（硬阻断 bug）
 
 - 客户端发送的是模板 **name**：`CreateGameWizard.vue:99` `selectedTemplate = tpl.name` → `:329` payload `template: selectedTemplate.value`（值为 `"Empty Project"` 等）。
-- 服务端按 **id** 匹配：`project.ts:215` `templates.find(t => t.id === template)`（id 为 `empty` / `wuxia` / `jrpg`）。
+- 服务端按 **id** 匹配：`project.ts:215` `templates.find(t => t.id === template)`（id 为 `empty` / `wuxia` / `dotzuki`）。
 - 已用 node 实测验证：三个模板全部 NO MATCH → 400 `Unknown template: Empty Project`。模板拉取失败时的 fallback 同样用 name，也失败。
 - **新人走主路径必然卡死在最后一步。**
 
@@ -54,7 +54,7 @@
 
 1. `CreateGameWizard.vue`：`selectedTemplate` 存 `tpl.id`（显示仍用 name），fallback 模板补 `id` 字段。
 2. 顺手修 `summaryScaffold` bullet 渲染缺失。
-3. 验证：起 dev server 对 `/api/project/create` 发一次真实 POST（用临时 `JRPG_PROJECT_ROOT`，验证后清理）。
+3. 验证：起 dev server 对 `/api/project/create` 发一次真实 POST（用临时 `DOTZUKI_PROJECT_ROOT`，验证后清理）。
 
 ### 系统性改善（最小修复 + 以下）
 
@@ -75,7 +75,7 @@
 另注两项超出原建议范围的方向性改动：
 
 - **AI 创设路径**：助手新增三个 PROPOSE 工具 —— `draft_project_scaffold`（无工程也可用，产结构化方案卡，Apply 即建工程并自动续聊引导）、`propose_project_config`（改 `.dotzuki-editor.json`）、`propose_map_create`（建完整地图）；无工程时欢迎屏第三张卡内嵌聊天，provider profile 兜底存 `~/.dotzuki-editor/providers.json`（API key 仍只在浏览器 localStorage）。
-- **零 Rust 工程方向**：新工程不再生成 Cargo.toml/src/main.rs，布局规范化为 `workspace/docs/game-project-spec.md`；新增 `workspace/crates/dotzuki-cli`（`jrpg new` scaffold / `jrpg check` 编译检查，经 `dotzuki-engine-dsl` 新增的运行时编译 API `compiler::compile_dirs`），引擎朝二进制壳（jrpg CLI）方向发行。
+- **零 Rust 工程方向**：新工程不再生成 Cargo.toml/src/main.rs，布局规范化为 `workspace/docs/game-project-spec.md`；新增 `workspace/crates/dotzuki-cli`（`dotzuki new` scaffold / `dotzuki check` 编译检查，经 `dotzuki-engine-dsl` 新增的运行时编译 API `compiler::compile_dirs`），引擎朝二进制壳（jrpg CLI）方向发行。
 
 ## 第二轮:新手体验深化(2026-07-25)
 
@@ -83,9 +83,9 @@
 
 - **脚手架空壳 → 已修**:所有模板现在都带示例内容 —— StartTown 示范地图(程序生成的 16 图块 starter tileset,`tileset.png` 放地图目录,地图编辑器直接可渲染;同时种子共享图块库 `data/tiles/`)、碰撞层、per-map `script.scene`。
 - **starter scene 不可见 → 已修(替代路径)**:示范地图的 `script.scene` 位于 `data/maps/`,Scripts 面板开箱即有内容;`main.scene` 仍在 `assets/scenes/`(spec 的 game.scenesDir),其注释不再指向编辑器不可见的路径。遗留:编辑器仍无展示 `assets/scenes/` 的面板(script 活动只认第一个 script 活动的单一 scriptsDir)——未来可考虑 script 路由合并多目录。
-- **Story 等主打活动不可发现 → 已修**:脚手架清单加入 `story` 活动(全模板),jrpg/wuxia 模板种子一个角色 + 一个任务(双语);`jrpg new`(dotzuki-cli)同步补齐 story 活动与 stories 目录,保持 spec 往返一致。
-- **浏览器端项目建进编辑器仓库 → 已修**:cwd 是编辑器仓库自身(按 package.json name 检测)且无 `JRPG_PROJECT_ROOT` 时,默认项目根改为 `~/jrpg-projects`;cwd 含 `.dotzuki-editor.json` 或其他目录时行为不变。
+- **Story 等主打活动不可发现 → 已修**:脚手架清单加入 `story` 活动(全模板),jrpg/wuxia 模板种子一个角色 + 一个任务(双语);`dotzuki new`(dotzuki-cli)同步补齐 story 活动与 stories 目录,保持 spec 往返一致。
+- **浏览器端项目建进编辑器仓库 → 已修**:cwd 是编辑器仓库自身(按 package.json name 检测)且无 `DOTZUKI_PROJECT_ROOT` 时,默认项目根改为 `~/jrpg-projects`;cwd 含 `.dotzuki-editor.json` 或其他目录时行为不变。
 - **创建后引导 → 增强**:向导成功面板列出种子内容分组(地图/记录/场景/故事/图块)+ 本地化「第一步」提示;新增教程 `docs/first-game.md`(15 分钟上手);README Quick Start 修正漂移并链接教程。
-- **验证**:473 单元测试全绿(新增 scaffold/starter-content/projectConfig 用例);三个模板脚手架产物均通过真实 `jrpg check`(exit 0);`vue-tsc -b` 干净。
+- **验证**:473 单元测试全绿(新增 scaffold/starter-content/projectConfig 用例);三个模板脚手架产物均通过真实 `dotzuki check`(exit 0);`vue-tsc -b` 干净。
 
-仍未解决(下一轮候选):**`jrpg run` 不存在** —— 游戏无法从编辑器运行/试玩(spec 标注 future,需要通用 GameData provider + runner,工程量大);Scripts 面板不能浏览 `assets/scenes/`;场景编辑只有 lint 没有真实编译诊断(dotzuki-web WASM 的 `compile_scene` 可接入 ScriptActivity);浏览器端 Open Project 仍只能手输路径。
+仍未解决(下一轮候选):**`dotzuki run` 不存在** —— 游戏无法从编辑器运行/试玩(spec 标注 future,需要通用 GameData provider + runner,工程量大);Scripts 面板不能浏览 `assets/scenes/`;场景编辑只有 lint 没有真实编译诊断(dotzuki-web WASM 的 `compile_scene` 可接入 ScriptActivity);浏览器端 Open Project 仍只能手输路径。

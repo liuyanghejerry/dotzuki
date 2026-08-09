@@ -1,4 +1,4 @@
-//! Save/load for `jrpg run`: [`GameSave`], a versioned JSON snapshot.
+//! Save/load for `dotzuki run`: [`GameSave`], a versioned JSON snapshot.
 //!
 //! The save lives at `<project>/.dotzuki-save.json` (a dotfile in the project
 //! dir; override with `--save-file`). It captures only *stable* overworld
@@ -90,7 +90,7 @@ fn is_zero(v: &u32) -> bool {
     *v == 0
 }
 
-/// A `jrpg run` save file.
+/// A `dotzuki run` save file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameSave {
     /// Format version; must be `<=` [`SAVE_VERSION`] to load (v1/v2 files

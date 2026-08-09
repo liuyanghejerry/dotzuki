@@ -23,26 +23,26 @@ const EDITOR_ROOT = path.resolve(__dirname, '..')
 
 // Pin the editor root so bundled route handlers resolve scaffolding templates
 // regardless of where the bundle physically lives.
-if (!process.env.JRPG_EDITOR_ROOT) process.env.JRPG_EDITOR_ROOT = EDITOR_ROOT
+if (!process.env.DOTZUKI_EDITOR_ROOT) process.env.DOTZUKI_EDITOR_ROOT = EDITOR_ROOT
 
 // The WASM layout-preview pkg lives in the repo (crates/dotzuki-web/pkg) in dev and
 // preview, but a packaged app has no repo — it ships the pkg as an extraResource
 // (Resources/wasm-pkg). Point the /wasm route there. Unpackaged runs leave this
 // unset so the route falls back to the in-repo path.
-if (app.isPackaged && !process.env.JRPG_WASM_ROOT) {
-  process.env.JRPG_WASM_ROOT = path.join(process.resourcesPath, 'wasm-pkg')
+if (app.isPackaged && !process.env.DOTZUKI_WASM_ROOT) {
+  process.env.DOTZUKI_WASM_ROOT = path.join(process.resourcesPath, 'wasm-pkg')
 }
 
 // Same story for the playtest runner pkg (crates/dotzuki-runner-web), shipped as
 // Resources/wasm-runner-pkg; the /wasm route falls back to it.
-if (app.isPackaged && !process.env.JRPG_RUNNER_WASM_ROOT) {
-  process.env.JRPG_RUNNER_WASM_ROOT = path.join(process.resourcesPath, 'wasm-runner-pkg')
+if (app.isPackaged && !process.env.DOTZUKI_RUNNER_WASM_ROOT) {
+  process.env.DOTZUKI_RUNNER_WASM_ROOT = path.join(process.resourcesPath, 'wasm-runner-pkg')
 }
 
 // And the nodejs-target dotzuki-web pkg (crates/dotzuki-web/pkg-node), shipped as
 // Resources/wasm-node-pkg; sceneCheck's compile layer loads it from there.
-if (app.isPackaged && !process.env.JRPG_WASM_NODE_ROOT) {
-  process.env.JRPG_WASM_NODE_ROOT = path.join(process.resourcesPath, 'wasm-node-pkg')
+if (app.isPackaged && !process.env.DOTZUKI_WASM_NODE_ROOT) {
+  process.env.DOTZUKI_WASM_NODE_ROOT = path.join(process.resourcesPath, 'wasm-node-pkg')
 }
 
 /** @type {import('http').Server extends any ? any : never} */
@@ -55,13 +55,13 @@ let win = null
 async function startProdServer() {
   const serverPath = path.join(EDITOR_ROOT, 'dist-electron', 'api-server.mjs')
   const { startApiServer } = await import(pathToFileURL(serverPath).href)
-  const projectRoot = process.env.JRPG_PROJECT_ROOT || process.cwd()
+  const projectRoot = process.env.DOTZUKI_PROJECT_ROOT || process.cwd()
   apiServer = await startApiServer({
     projectRoot,
     staticDir: path.join(EDITOR_ROOT, 'dist'),
     host: '127.0.0.1',
-    // Ephemeral by default; JRPG_PORT pins it (handy for debugging/automation).
-    port: Number(process.env.JRPG_PORT) || 0,
+    // Ephemeral by default; DOTZUKI_PORT pins it (handy for debugging/automation).
+    port: Number(process.env.DOTZUKI_PORT) || 0,
   })
   return apiServer.url
 }

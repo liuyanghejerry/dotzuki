@@ -422,8 +422,8 @@ const STORY_QUEST = {
 
 const STORY_GRAPH = { edges: [] }
 
-// Battle rules for the jrpg template (parsed by `jrpg run` via dotzuki-rules;
-// `jrpg check` validates the full closed vocabulary). Beyond the type chart,
+// Battle rules for the jrpg template (parsed by `dotzuki run` via dotzuki-rules;
+// `dotzuki check` validates the full closed vocabulary). Beyond the type chart,
 // the `effects` records are LIVE: a `kind: Move` record takes over the skill
 // of the same id (its hooks run through the engine's effect stack), a
 // `kind: Status` record defines a status for `InflictStatus` ops, a
@@ -540,7 +540,7 @@ export function starterFiles(templateId: string, dataRoot: string): StarterFile[
       { rel: at('stories', 'graph.json'), content: JSON.stringify(STORY_GRAPH, null, 2) },
     )
     // The jrpg template's manifest battle section points at data/rules.ron.
-    if (templateId === 'jrpg') {
+    if (templateId === 'dotzuki') {
       files.push({ rel: at('rules.ron'), content: RULES_RON })
     }
   }

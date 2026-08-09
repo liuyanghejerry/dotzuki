@@ -71,10 +71,10 @@ module.exports = {
     'package.json',
   ],
   // The WASM layout-preview pkg rides alongside the app (Resources/wasm-pkg),
-  // not inside the asar — the /wasm route reads it via JRPG_WASM_ROOT. Same for
-  // the playtest runner pkg (Resources/wasm-runner-pkg ← JRPG_RUNNER_WASM_ROOT)
+  // not inside the asar — the /wasm route reads it via DOTZUKI_WASM_ROOT. Same for
+  // the playtest runner pkg (Resources/wasm-runner-pkg ← DOTZUKI_RUNNER_WASM_ROOT)
   // and the nodejs-target scene-compile pkg (Resources/wasm-node-pkg ←
-  // JRPG_WASM_NODE_ROOT, read by sceneCheck's compile layer).
+  // DOTZUKI_WASM_NODE_ROOT, read by sceneCheck's compile layer).
   extraResources: [
     { from: 'dist-electron/wasm-pkg', to: 'wasm-pkg' },
     { from: 'dist-electron/wasm-runner-pkg', to: 'wasm-runner-pkg' },

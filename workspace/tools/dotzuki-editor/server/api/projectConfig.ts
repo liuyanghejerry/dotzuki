@@ -19,7 +19,7 @@ function looksLikeEditorRepo(cwd: string): boolean {
 
 /**
  * Compute the project root at startup:
- * - JRPG_PROJECT_ROOT always wins (the Electron shell sets it explicitly).
+ * - DOTZUKI_PROJECT_ROOT always wins (the Electron shell sets it explicitly).
  * - A cwd holding a `.dotzuki-editor.json` is a game project — keep it.
  * - A cwd that is the editor's own repo falls back to ~/jrpg-projects so new
  *   projects are not scaffolded inside the editor repo. The directory is
@@ -28,7 +28,7 @@ function looksLikeEditorRepo(cwd: string): boolean {
  * - Any other cwd keeps the historical behavior (cwd is the root).
  */
 export function defaultProjectRoot(env: NodeJS.ProcessEnv, cwd: string, homedir: string): string {
-  if (env.JRPG_PROJECT_ROOT) return env.JRPG_PROJECT_ROOT
+  if (env.DOTZUKI_PROJECT_ROOT) return env.DOTZUKI_PROJECT_ROOT
   if (fs.existsSync(path.join(cwd, '.dotzuki-editor.json'))) return cwd
   if (looksLikeEditorRepo(cwd)) return path.join(homedir, 'jrpg-projects')
   return cwd

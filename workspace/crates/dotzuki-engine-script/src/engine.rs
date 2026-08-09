@@ -250,11 +250,11 @@ impl ScriptEngine {
     }
 
     pub fn load_script(&mut self, source: &str) -> Result<(), ScriptEngineError> {
-        log::info!(target: "jrpg::overworld", "[ScriptEngine] load_script: {} bytes", source.len());
+        log::info!(target: "dotzuki::overworld", "[ScriptEngine] load_script: {} bytes", source.len());
         let src = Source::from_reader(source.as_bytes(), Some(Path::new("script.mjs")));
         let module = Module::parse(src, None, &mut self.context)
             .map_err(|e| {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Module parse failed: {}", e);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Module parse failed: {}", e);
                 ScriptEngineError::JsError(e.to_string())
             })?;
 
@@ -267,17 +267,17 @@ impl ScriptEngine {
 
         match promise.state() {
             PromiseState::Fulfilled(_) => {
-                log::info!(target: "jrpg::overworld", "[ScriptEngine] Module evaluated OK");
+                log::info!(target: "dotzuki::overworld", "[ScriptEngine] Module evaluated OK");
             }
             PromiseState::Rejected(err) => {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Module evaluation rejected: {:?}", err);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Module evaluation rejected: {:?}", err);
                 return Err(ScriptEngineError::JsError(format!(
                     "Module evaluation failed: {:?}",
                     err
                 )));
             }
             PromiseState::Pending => {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Module evaluation stuck pending");
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Module evaluation stuck pending");
                 return Err(ScriptEngineError::JsError(
                     "Module evaluation stuck in pending state".to_string(),
                 ));
@@ -291,7 +291,7 @@ impl ScriptEngine {
                 let has = m.get_value(js_string!(*name), &mut self.context)
                     .map(|v| v.is_callable())
                     .unwrap_or(false);
-                log::info!(target: "jrpg::overworld", "[ScriptEngine] Export check: {} = {}", name, has);
+                log::info!(target: "dotzuki::overworld", "[ScriptEngine] Export check: {} = {}", name, has);
             }
         }
 
@@ -303,11 +303,11 @@ impl ScriptEngine {
         name: &str,
         source: &str,
     ) -> Result<(), ScriptEngineError> {
-        log::info!(target: "jrpg::overworld", "[ScriptEngine] load_shared_module '{}': {} bytes", name, source.len());
+        log::info!(target: "dotzuki::overworld", "[ScriptEngine] load_shared_module '{}': {} bytes", name, source.len());
         let src = Source::from_reader(source.as_bytes(), Some(Path::new(name)));
         let module = Module::parse(src, None, &mut self.context)
             .map_err(|e| {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Shared module parse failed: {}", e);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Shared module parse failed: {}", e);
                 ScriptEngineError::JsError(e.to_string())
             })?;
 
@@ -320,20 +320,20 @@ impl ScriptEngine {
 
         match promise.state() {
             PromiseState::Fulfilled(_) => {
-                log::info!(target: "jrpg::overworld", "[ScriptEngine] Shared module '{}' evaluated OK", name);
+                log::info!(target: "dotzuki::overworld", "[ScriptEngine] Shared module '{}' evaluated OK", name);
                 if let Ok(val) = module.get_value(js_string!("talkNurse"), &mut self.context) {
-                    log::info!(target: "jrpg::overworld", "[ScriptEngine] Shared module talkNurse callable: {}", val.is_callable());
+                    log::info!(target: "dotzuki::overworld", "[ScriptEngine] Shared module talkNurse callable: {}", val.is_callable());
                 }
             }
             PromiseState::Rejected(err) => {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Shared module '{}' rejected: {:?}", name, err);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Shared module '{}' rejected: {:?}", name, err);
                 return Err(ScriptEngineError::JsError(format!(
                     "Shared module evaluation failed: {:?}",
                     err
                 )));
             }
             PromiseState::Pending => {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Shared module '{}' stuck pending", name);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Shared module '{}' stuck pending", name);
                 return Err(ScriptEngineError::JsError(
                     "Shared module evaluation stuck in pending state".to_string(),
                 ));
@@ -355,7 +355,7 @@ impl ScriptEngine {
             .resolved_fn_name(fn_name)
             .unwrap_or_else(|| fn_name.to_string());
         let fn_name = resolved.as_str();
-        log::info!(target: "jrpg::overworld", "[ScriptEngine] call_function: {}", fn_name);
+        log::info!(target: "dotzuki::overworld", "[ScriptEngine] call_function: {}", fn_name);
         let module = self
             .current_module
             .as_ref()
@@ -364,32 +364,32 @@ impl ScriptEngine {
         let func = module
             .get_value(js_string!(fn_name), &mut self.context)
             .map_err(|e| {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] get_value error for {}: {}", fn_name, e);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] get_value error for {}: {}", fn_name, e);
                 ScriptEngineError::JsError(e.to_string())
             })?;
 
         if func.is_undefined() || func.is_null() {
-            log::warn!(target: "jrpg::overworld", "[ScriptEngine] Function '{}' is undefined or null", fn_name);
+            log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Function '{}' is undefined or null", fn_name);
             return Err(ScriptEngineError::FunctionNotFound(fn_name.to_string()));
         }
 
         let func_obj = func
             .as_callable()
             .ok_or_else(|| {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Function '{}' is not callable", fn_name);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Function '{}' is not callable", fn_name);
                 ScriptEngineError::FunctionNotFound(fn_name.to_string())
             })?;
 
-        log::info!(target: "jrpg::overworld", "[ScriptEngine] Calling function '{}'...", fn_name);
+        log::info!(target: "dotzuki::overworld", "[ScriptEngine] Calling function '{}'...", fn_name);
         let result = func_obj
             .call(&JsValue::undefined(), args, &mut self.context);
         
         match result {
             Ok(_) => {
-                log::info!(target: "jrpg::overworld", "[ScriptEngine] Function '{}' call succeeded", fn_name);
+                log::info!(target: "dotzuki::overworld", "[ScriptEngine] Function '{}' call succeeded", fn_name);
             }
             Err(e) => {
-                log::warn!(target: "jrpg::overworld", "[ScriptEngine] Function '{}' call failed: {}", fn_name, e);
+                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Function '{}' call failed: {}", fn_name, e);
                 return Err(ScriptEngineError::JsError(e.to_string()));
             }
         }
@@ -398,7 +398,7 @@ impl ScriptEngine {
 
         self.state = EngineState::Running;
         let cmd = self.check_pending_command()?;
-        log::info!(target: "jrpg::overworld", "[ScriptEngine] After call_function '{}': pending_command = {:?}", fn_name, cmd.is_some());
+        log::info!(target: "dotzuki::overworld", "[ScriptEngine] After call_function '{}': pending_command = {:?}", fn_name, cmd.is_some());
         Ok(cmd)
     }
 

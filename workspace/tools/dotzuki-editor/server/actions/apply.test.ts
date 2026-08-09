@@ -132,7 +132,7 @@ describe('applyChange — project kinds', () => {
   })
 
   const scaffoldTarget = { kind: 'project-scaffold', dir: 'ai-game', name: 'AI Game', path: 'ai-game' } as const
-  const scaffoldPayload = JSON.stringify({ name: 'AI Game', dir: 'ai-game', templateId: 'jrpg', dataRoot: './data', gfxRoot: './gfx' })
+  const scaffoldPayload = JSON.stringify({ name: 'AI Game', dir: 'ai-game', templateId: 'dotzuki', dataRoot: './data', gfxRoot: './gfx' })
 
   it('scaffolds a project, switches the editor root, and reverts by deleting the new dir', () => {
     const p = createProjectContext(ROOT)

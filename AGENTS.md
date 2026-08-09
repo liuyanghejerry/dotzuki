@@ -18,8 +18,8 @@ crates/                          # Game-AGNOSTIC engine
 ├── dotzuki-engine-script/          # Boa-based async JS scripting engine
 ├── dotzuki-engine-dsl/             # Game DSL compiler (.scene/.gui/.theme/.style)
 │   │                            #   + runtime compile API (compiler::compile_dirs)
-├── dotzuki-cli/                    # `jrpg` bin: scaffold (jrpg new), compile-check
-│   │                            #   (jrpg check) & play (jrpg run) zero-Rust projects
+├── dotzuki-cli/                    # `dotzuki` bin: scaffold (dotzuki new), compile-check
+│   │                            #   (dotzuki check) & play (dotzuki run) zero-Rust projects
 ├── dotzuki-runner/                 # Zero-Rust project runtime: manifest model,
 │   │                            #   project/DSL loading, maps/collision/tilesets,
 │   │                            #   RunnerGame & headless driver
@@ -40,12 +40,12 @@ tools/editor-extensions/         # VSCode DSL syntax highlighting
 dotzuki-template/                   # cargo-generate starter template for new games
 ```
 
-New game projects are **zero-Rust**: a `.dotzuki-editor.json` manifest plus a data/DSL/assets layout (see `docs/game-project-spec.md`), scaffolded by `jrpg new` (dotzuki-cli) or the dotzuki-editor Create wizard.
+New game projects are **zero-Rust**: a `.dotzuki-editor.json` manifest plus a data/DSL/assets layout (see `docs/game-project-spec.md`), scaffolded by `dotzuki new` (dotzuki-cli) or the dotzuki-editor Create wizard.
 
 ## Build System (Rust)
 - **Toolchain**: Rust 1.70+ (stable), wasm32-unknown-unknown target for WebAssembly
 - **Build**: `cargo build` / `cargo build --release` from `workspace/`
-- **Run**: `cargo run --release --bin jrpg` (dotzuki-cli)
+- **Run**: `cargo run --release --bin dotzuki` (dotzuki-cli)
 - **Tests**: `cargo test` (engine + demo examples)
 
 ## Workspace

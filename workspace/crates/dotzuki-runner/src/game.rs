@@ -1,4 +1,4 @@
-//! The `jrpg run` game runtime: [`RunnerGame`].
+//! The `dotzuki run` game runtime: [`RunnerGame`].
 //!
 //! [`RunnerGame`] boots a [`LoadedProject`] into a playable game with **zero
 //! game-specific code**: an overworld driven by the generic
@@ -940,7 +940,7 @@ impl RunnerGame {
                     cmd = self.signal(&mut engine, CommandResult::Void);
                 }
                 Some(ScriptCommand::FadeScreen { fade_type }) => {
-                    log::info!("fadeScreen({fade_type}) (cosmetic in jrpg run v1)");
+                    log::info!("fadeScreen({fade_type}) (cosmetic in dotzuki run v1)");
                     self.flash = FLASH_FRAMES;
                     cmd = self.signal(&mut engine, CommandResult::Void);
                 }

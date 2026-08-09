@@ -793,10 +793,10 @@ export function setProjectRoot(root: string): ProjectContext {
 
 /**
  * The shared ProjectContext for the dev server's current project. Defaults to
- * JRPG_PROJECT_ROOT / cwd, matching how vite.config.ts derives PROJECT_ROOT at
+ * DOTZUKI_PROJECT_ROOT / cwd, matching how vite.config.ts derives PROJECT_ROOT at
  * startup; updated by setProjectRoot on a project switch.
  */
 export function getProjectContext(): ProjectContext {
-  if (!_current) _current = new ProjectContext(process.env.JRPG_PROJECT_ROOT || process.cwd())
+  if (!_current) _current = new ProjectContext(process.env.DOTZUKI_PROJECT_ROOT || process.cwd())
   return _current
 }

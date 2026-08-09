@@ -1,4 +1,4 @@
-//! Audio playback for `jrpg run`: [`RunnerAudio`].
+//! Audio playback for `dotzuki run`: [`RunnerAudio`].
 //!
 //! Backs the scene commands `PlayMusic` / `PlaySound` / `StopMusic` /
 //! `FadeOutMusic`. Tracks are dotzuki-audio [`TrackDef`](dotzuki_audio::format::TrackDef)

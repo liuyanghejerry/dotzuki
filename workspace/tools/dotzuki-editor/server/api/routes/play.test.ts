@@ -132,7 +132,7 @@ describe('collectProjectFiles (size caps via options)', () => {
 // ───────────────────────────────────────────────────────────────────────────
 // /wasm fallback — the playtest runner pkg (dotzuki-runner-web) is served by the
 // /wasm middleware in content.ts when a file isn't in dotzuki-web/pkg. Env roots
-// (JRPG_WASM_ROOT / JRPG_RUNNER_WASM_ROOT) pin both dirs to temp fixtures so
+// (DOTZUKI_WASM_ROOT / DOTZUKI_RUNNER_WASM_ROOT) pin both dirs to temp fixtures so
 // the test doesn't depend on a wasm-pack build.
 // ───────────────────────────────────────────────────────────────────────────
 import { Writable } from 'stream'
@@ -174,10 +174,10 @@ describe('GET /wasm/* runner-pkg fallback', () => {
   it('serves files missing from dotzuki-web/pkg out of the runner pkg', async () => {
     const webDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-wasm-web-'))
     const runnerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-wasm-runner-'))
-    const prevWeb = process.env.JRPG_WASM_ROOT
-    const prevRunner = process.env.JRPG_RUNNER_WASM_ROOT
-    process.env.JRPG_WASM_ROOT = webDir
-    process.env.JRPG_RUNNER_WASM_ROOT = runnerDir
+    const prevWeb = process.env.DOTZUKI_WASM_ROOT
+    const prevRunner = process.env.DOTZUKI_RUNNER_WASM_ROOT
+    process.env.DOTZUKI_WASM_ROOT = webDir
+    process.env.DOTZUKI_RUNNER_WASM_ROOT = runnerDir
     try {
       fs.writeFileSync(path.join(webDir, 'dotzuki_web.js'), '// web')
       fs.writeFileSync(path.join(runnerDir, 'dotzuki_runner_web.js'), '// runner')
@@ -204,10 +204,10 @@ describe('GET /wasm/* runner-pkg fallback', () => {
       expect(d.nextCalled).toBe(true)
       expect(d.res.status).toBe(0)
     } finally {
-      if (prevWeb === undefined) delete process.env.JRPG_WASM_ROOT
-      else process.env.JRPG_WASM_ROOT = prevWeb
-      if (prevRunner === undefined) delete process.env.JRPG_RUNNER_WASM_ROOT
-      else process.env.JRPG_RUNNER_WASM_ROOT = prevRunner
+      if (prevWeb === undefined) delete process.env.DOTZUKI_WASM_ROOT
+      else process.env.DOTZUKI_WASM_ROOT = prevWeb
+      if (prevRunner === undefined) delete process.env.DOTZUKI_RUNNER_WASM_ROOT
+      else process.env.DOTZUKI_RUNNER_WASM_ROOT = prevRunner
       fs.rmSync(webDir, { recursive: true, force: true })
       fs.rmSync(runnerDir, { recursive: true, force: true })
     }

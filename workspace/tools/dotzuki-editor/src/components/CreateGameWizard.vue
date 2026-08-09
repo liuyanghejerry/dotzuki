@@ -420,7 +420,7 @@ async function fetchTemplates() {
     templates.value = [
       { id: 'empty', name: t('templates.empty.name'), description: t('templates.empty.desc'), icon: 'blank' },
       { id: 'wuxia', name: t('templates.wuxia.name'), description: t('templates.wuxia.desc'), icon: 'sword' },
-      { id: 'jrpg', name: t('templates.jrpg.name'), description: t('templates.jrpg.desc'), icon: 'star' },
+      { id: 'dotzuki', name: t('templates.jrpg.name'), description: t('templates.jrpg.desc'), icon: 'star' },
     ]
     selectedTemplate.value = templates.value[0].id
   } finally {

@@ -203,7 +203,7 @@ describe('project-level propose tools', () => {
     const { ctx, events } = makeCtx()
     const cs = new ChangeSet()
     const res = await proposeToolImpls(ctx, cs).draft_project_scaffold({
-      name: 'My Game', dir: 'my-game', templateId: 'jrpg', summary: 'classic JRPG start',
+      name: 'My Game', dir: 'my-game', templateId: 'dotzuki', summary: 'classic JRPG start',
     })
     expect(res).toMatchObject({ ok: true })
     expect(cs.proposals.length).toBe(1)
@@ -212,7 +212,7 @@ describe('project-level propose tools', () => {
     expect(prop.title).toBe('Create project "My Game"')
     expect(prop.before).toBeNull()
     const payload = JSON.parse(prop.after)
-    expect(payload).toMatchObject({ name: 'My Game', dir: 'my-game', templateId: 'jrpg', dataRoot: './data', gfxRoot: './gfx' })
+    expect(payload).toMatchObject({ name: 'My Game', dir: 'my-game', templateId: 'dotzuki', dataRoot: './data', gfxRoot: './gfx' })
     expect(payload.activities.map((a: any) => a.id)).toEqual(['maps', 'scripts', 'play', 'data', 'story', 'assets', 'tiles'])
     expect(events.some(e => e.type === 'proposal')).toBe(true)
     // propose ≠ apply: nothing was scaffolded on disk

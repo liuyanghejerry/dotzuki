@@ -1,4 +1,4 @@
-//! `jrpg check` — compile every DSL file in a game project (in memory) and
+//! `dotzuki check` — compile every DSL file in a game project (in memory) and
 //! report diagnostics. Exit code 0 when clean, 1 when any diagnostic fires.
 //!
 //! When the manifest carries a `battle` section, it is validated too: the

@@ -31,11 +31,11 @@ fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let manifest_path = Path::new(&manifest_dir);
 
-    // Extra search dirs from JRPG_DSL_DIRS (":"-separated absolute paths)
+    // Extra search dirs from DOTZUKI_DSL_DIRS (":"-separated absolute paths)
     // take precedence over the built-in monorepo locations.
-    println!("cargo:rerun-if-env-changed=JRPG_DSL_DIRS");
+    println!("cargo:rerun-if-env-changed=DOTZUKI_DSL_DIRS");
     let search_dirs = compiler::merge_search_dirs(
-        env::var("JRPG_DSL_DIRS").ok().as_deref(),
+        env::var("DOTZUKI_DSL_DIRS").ok().as_deref(),
         manifest_path,
     );
 

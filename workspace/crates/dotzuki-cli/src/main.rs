@@ -12,7 +12,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    name = "jrpg",
+    name = "dotzuki",
     version,
     about = "dotzuki-engine game project tool — scaffold, check and run zero-Rust game projects"
 )]

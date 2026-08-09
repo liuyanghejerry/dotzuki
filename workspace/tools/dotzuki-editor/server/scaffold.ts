@@ -99,7 +99,7 @@ const WUXIA_TABLES: TemplateTable[] = [
     ] },
 ]
 
-const JRPG_TABLES: TemplateTable[] = [
+const DOTZUKI_TABLES: TemplateTable[] = [
   { id: 'heroes', label: 'Heroes', dir: 'heroes', icon: 'user', idField: 'id',
     fields: [
       { key: 'id', type: 'string', label: 'ID', required: true },
@@ -190,14 +190,14 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     assets: { roots: ['gfx'], extensions: ['.png', '.jpg', '.gif'] },
   },
   {
-    id: 'jrpg',
+    id: 'dotzuki',
     name: { en: 'Generic JRPG', zh: '经典 JRPG' },
     description: {
       en: 'Classic turn-based RPG with heroes, monsters, spells, and equipment.',
       zh: '传统回合制 RPG，包含英雄、怪物、魔法、装备。',
     },
     icon: 'star',
-    tables: JRPG_TABLES,
+    tables: DOTZUKI_TABLES,
     map: { mapsDir: 'maps', tileSize: 16, blockSize: 4 },
     assets: { roots: ['gfx'], extensions: ['.png', '.jpg', '.gif'] },
     // Battle-ready out of the box: Aria + Bryn (the whole heroes table is
@@ -227,7 +227,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
       },
     },
     // Shop-ready too: 100 G starting money (the seeded Potion costs 20 G) —
-    // `@command("openShop", ["potion"])` opens a Buy/Sell shop in `jrpg run`
+    // `@command("openShop", ["potion"])` opens a Buy/Sell shop in `dotzuki run`
     // (selling pays half the record price, floored).
     shop: { currency: 'G', startMoney: 100 },
   },
@@ -299,7 +299,7 @@ A JRPG project created with the JRPG Editor.
 ## Editing
 
 Reopen this folder from the editor's welcome screen (**Open Project**), or
-start the editor with \`JRPG_PROJECT_ROOT=<this folder>\`. The in-editor AI
+start the editor with \`DOTZUKI_PROJECT_ROOT=<this folder>\`. The in-editor AI
 assistant (✨) can help sketch characters, quests and scenes.
 `
 }
@@ -340,7 +340,7 @@ export function scaffoldProject(targetDir: string, opts: ScaffoldOptions): Scaff
     gfxRoot,
     activities: activitiesFor(tpl),
     // Optional manifest `battle` section (jrpg template) — validated by
-    // `jrpg check`, consumed by `jrpg run`. Same for the `shop` section.
+    // `dotzuki check`, consumed by `dotzuki run`. Same for the `shop` section.
     ...(tpl.battle ? { battle: tpl.battle } : {}),
     ...(tpl.shop ? { shop: tpl.shop } : {}),
   }

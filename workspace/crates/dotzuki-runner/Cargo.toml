@@ -9,7 +9,7 @@ license.workspace = true
 default = ["gpu", "watch"]
 # Windowed/GPU renderer bits (pixels/winit) — native play; off for WASM.
 gpu = ["dotzuki-renderer/gpu"]
-# notify-based hot reload (`jrpg run --watch`) — native only.
+# notify-based hot reload (`dotzuki run --watch`) — native only.
 watch = ["dep:notify"]
 
 [dependencies]

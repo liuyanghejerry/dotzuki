@@ -19,9 +19,9 @@ describe('defaultProjectRoot', () => {
     fs.rmSync(homedir, { recursive: true, force: true })
   })
 
-  it('JRPG_PROJECT_ROOT always wins', () => {
+  it('DOTZUKI_PROJECT_ROOT always wins', () => {
     fs.writeFileSync(path.join(cwd, '.dotzuki-editor.json'), '{}')
-    expect(defaultProjectRoot({ JRPG_PROJECT_ROOT: '/elsewhere' }, cwd, homedir)).toBe('/elsewhere')
+    expect(defaultProjectRoot({ DOTZUKI_PROJECT_ROOT: '/elsewhere' }, cwd, homedir)).toBe('/elsewhere')
   })
 
   it('cwd with a .dotzuki-editor.json manifest wins over the editor-repo fallback', () => {

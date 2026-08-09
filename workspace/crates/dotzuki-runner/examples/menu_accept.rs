@@ -15,7 +15,7 @@
 //! cargo run -p dotzuki-runner --example menu_accept -- <project-dir> [shot-dir]
 //! ```
 //!
-//! The project is expected to be a scaffolded `jrpg` template with the
+//! The project is expected to be a scaffolded `dotzuki` template with the
 //! acceptance patch applied (Shopkeeper at (13,10), Hermit at (11,10), an
 //! overwhelming Slime — see the feature branch's acceptance notes).
 

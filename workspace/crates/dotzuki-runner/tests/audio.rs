@@ -1,4 +1,4 @@
-//! Integration tests for `jrpg run` audio playback. CI has no audio device,
+//! Integration tests for `dotzuki run` audio playback. CI has no audio device,
 //! so these cover everything testable without one: library loading from a
 //! fixture `data/audio/` tree, unknown-id handling, silent-mode no-panics
 //! (missing dir / device disallowed), and scene audio commands resolving

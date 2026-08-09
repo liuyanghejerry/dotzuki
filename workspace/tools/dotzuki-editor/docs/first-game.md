@@ -1,7 +1,7 @@
 # Your First Game in 15 Minutes
 
 A guided tour from an empty machine to a JRPG project you can click around in —
-no Rust, no code required. You can even **play** what you built: `jrpg run`
+no Rust, no code required. You can even **play** what you built: `dotzuki run`
 boots your project in a window (overworld, dialogue, warps).
 
 ## 1. Start the editor
@@ -15,7 +15,7 @@ pnpm dev          # http://localhost:5174
 Started from the editor's own repo like this, new projects are created under
 **`~/jrpg-projects/<your-game>`** by default — nothing is written into the
 editor repository. To put projects elsewhere, start the server with
-`JRPG_PROJECT_ROOT=/path/to/projects pnpm dev`.
+`DOTZUKI_PROJECT_ROOT=/path/to/projects pnpm dev`.
 
 ## 2. Create the project
 
@@ -49,7 +49,7 @@ A new project is not an empty shell. You get:
 
 1. **Change the welcome line.** Scripts tab → `StartTown/script.scene` → edit
    the dialogue inside `@speaker("Guide")`. The scene compiles with the same
-   DSL `jrpg check` validates.
+   DSL `dotzuki check` validates.
 2. **Reshape the town.** Maps tab → StartTown → pick tiles from the library
    and paint. Widen the pond, add a second house, move the garden.
 3. **Add a character.** Story tab → new character, or Data tab → new record in
@@ -62,7 +62,7 @@ A new project is not an empty shell. You get:
    @command("startBattle", "slime")
    ```
 
-   `jrpg run` suspends the scene, drops into a battle — Aria (your first
+   `dotzuki run` suspends the scene, drops into a battle — Aria (your first
    `heroes` record) against the Slime — then resumes the scene with the
    result. Combat is fully data-driven: stats come from the record fields,
    skills from the `spells` table, and type effectiveness from
@@ -82,25 +82,25 @@ A new project is not an empty shell. You get:
 
 ## 5. Play it
 
-The `jrpg` CLI boots your project in a window — walk around StartTown with
+The `dotzuki` CLI boots your project in a window — walk around StartTown with
 the arrow keys, talk with **Z** (the A button), warp between maps:
 
 ```bash
-jrpg run ~/jrpg-projects/<your-game>
+dotzuki run ~/jrpg-projects/<your-game>
 ```
 
 For CI or a quick smoke test, `--headless` runs frames without a window and
 can dump a screenshot:
 
 ```bash
-jrpg run ~/jrpg-projects/<your-game> --headless --frames 240 --screenshot shot.png
+dotzuki run ~/jrpg-projects/<your-game> --headless --frames 240 --screenshot shot.png
 ```
 
 Also compile-check every DSL file after edits — it exits non-zero and prints
 diagnostics when a `.scene`/`.gui` file is broken:
 
 ```bash
-jrpg check ~/jrpg-projects/<your-game>
+dotzuki check ~/jrpg-projects/<your-game>
 ```
 
 (In-editor, the Scripts tab's 🔍 lint catches dangling flags and unknown
@@ -112,7 +112,7 @@ jrpg check ~/jrpg-projects/<your-game>
   (`propose_map_create`), edit the manifest, refine characters, and generate
   `.scene` implementations for quests. See `docs/AI_AGENT_FRAMEWORK.md`.
 - **Reference layouts** — `workspace/docs/game-project-spec.md` is the
-  contract for what a game project contains, including the full `jrpg run`
+  contract for what a game project contains, including the full `dotzuki run`
   behavior (entry resolution, scene dispatch, supported commands).
 - **Current limits** — every `rules.ron` effect kind
   IS data-driven (`kind: Move`/`Status` hooks — the seeded

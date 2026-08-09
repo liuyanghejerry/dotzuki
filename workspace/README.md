@@ -20,7 +20,7 @@ A game-agnostic JRPG engine extracted from a Pokémon Red/Blue reimplementation.
   - `dotzuki-tui` — generic terminal shell (ratatui)
   - `dotzuki-web` / `dotzuki-runner-web` — WASM bridges for editor layout preview / playtest
   - `dotzuki-runner` — zero-Rust project runtime (`dotzuki-editor.json` manifest + DSL + maps)
-  - `dotzuki-cli` — the `jrpg` binary: `jrpg new` / `jrpg check` / `jrpg run`
+  - `dotzuki-cli` — the `dotzuki` binary: `dotzuki new` / `dotzuki check` / `dotzuki run`
 - **Engine demo examples** (`examples/`) — `firered` (GBA-style 16-color rendering) and `minimon` (battle system authored entirely in RON rules). Both are engine-only, proving the engine isn't game-locked.
 - **Tools** (`tools/`) — `dotzuki-editor` (game-agnostic Vue/Vite editor + AI Story Designer + in-editor Play), `asset-converter`, DSL editor extensions.
 
@@ -42,7 +42,7 @@ No crates.io publishing is planned at this stage.
 cd workspace
 cargo build          # or cargo build --release
 cargo test           # engine + examples tests
-cargo run --release --bin jrpg -- new demo && cd demo && cargo run --release --bin jrpg -- run
+cargo run --release --bin dotzuki -- new demo && cd demo && cargo run --release --bin dotzuki -- run
 ```
 
 ## Layout

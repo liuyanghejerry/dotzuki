@@ -90,7 +90,7 @@ pub fn find_search_dirs(manifest_path: &Path) -> Vec<PathBuf> {
 
     // The `examples/*/assets` and `dotzuki-template/assets` entries below are
     // generic search dirs shared by every game project. Games that need extra
-    // dirs (e.g. their own data tree) inject them via `JRPG_DSL_DIRS`.
+    // dirs (e.g. their own data tree) inject them via `DOTZUKI_DSL_DIRS`.
     let template_dir = manifest_path
         .join("..")
         .join("dotzuki-template")
@@ -107,7 +107,7 @@ pub fn find_search_dirs(manifest_path: &Path) -> Vec<PathBuf> {
     dirs
 }
 
-/// Merge extra search dirs (a `:`-separated list such as the `JRPG_DSL_DIRS`
+/// Merge extra search dirs (a `:`-separated list such as the `DOTZUKI_DSL_DIRS`
 /// environment variable) with the built-in `find_search_dirs` results.
 /// Extra dirs come first; duplicates are removed preserving order.
 pub fn merge_search_dirs(extra: Option<&str>, manifest_path: &Path) -> Vec<PathBuf> {

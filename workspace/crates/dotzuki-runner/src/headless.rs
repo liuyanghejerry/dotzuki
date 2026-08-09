@@ -1,6 +1,6 @@
 //! Headless driver for [`RunnerGame`] — run frames without a window.
 //!
-//! Used by `jrpg run --headless` (CI smoke tests, screenshot harnesses) and
+//! Used by `dotzuki run --headless` (CI smoke tests, screenshot harnesses) and
 //! by the integration tests. The driver synthesises an [`InputState`] per
 //! frame (auto-pressing A on a configurable cadence so dialogue advances),
 //! updates the game, then renders the final frame into a [`FrameBuffer`]

@@ -82,7 +82,7 @@ impl ScriptLoader {
 
         let shared_dir = dir.join("shared");
         if shared_dir.is_dir() {
-            log::info!(target: "jrpg::overworld", "[ScriptLoader] Loading shared modules from {:?}", shared_dir);
+            log::info!(target: "dotzuki::overworld", "[ScriptLoader] Loading shared modules from {:?}", shared_dir);
             for entry in fs::read_dir(&shared_dir)
                 .map_err(|e| ScriptLoaderError::IoError(shared_dir.to_string_lossy().to_string(), e))?
             {
@@ -93,7 +93,7 @@ impl ScriptLoader {
                     if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
                         if let Ok(content) = fs::read_to_string(&path) {
                             let key = format!("shared/{}", name);
-                            log::info!(target: "jrpg::overworld", "[ScriptLoader] Registered shared module: {} ({} bytes)", key, content.len());
+                            log::info!(target: "dotzuki::overworld", "[ScriptLoader] Registered shared module: {} ({} bytes)", key, content.len());
                             self.scripts.insert(key, content);
                         }
                     }

@@ -408,7 +408,7 @@ pub fn ron_moves(ruleset: &Ruleset, resource: Option<&str>) -> HashMap<String, R
         .collect()
 }
 
-/// Full closed-vocabulary validation of a `rules.ron` text (the `jrpg check`
+/// Full closed-vocabulary validation of a `rules.ron` text (the `dotzuki check`
 /// path): parse + compile. Returns one diagnostic per problem (empty = clean).
 pub fn validate_ruleset(rules_text: &str) -> Vec<String> {
     match Ruleset::from_ron(rules_text) {

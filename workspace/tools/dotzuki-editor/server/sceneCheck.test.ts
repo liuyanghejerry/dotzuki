@@ -14,8 +14,8 @@ import { checkScene, _resetWasmCompilerForTests } from './sceneCheck'
 /** True when the dotzuki-web WASM nodejs pkg (dotzuki_web.js) is present on disk. */
 function isWasmPkgAvailable(): boolean {
   const editorRoot = path.resolve(fileURLToPath(import.meta.url), '..', '..')
-  const wasmRoot = process.env.JRPG_WASM_NODE_ROOT
-    ? path.resolve(process.env.JRPG_WASM_NODE_ROOT)
+  const wasmRoot = process.env.DOTZUKI_WASM_NODE_ROOT
+    ? path.resolve(process.env.DOTZUKI_WASM_NODE_ROOT)
     : path.resolve(editorRoot, '../../crates/dotzuki-web/pkg-node')
   return fs.existsSync(path.join(wasmRoot, 'dotzuki_web.js'))
 }
@@ -36,12 +36,12 @@ beforeAll(() => {
 })
 afterAll(() => { try { fs.rmSync(ROOT, { recursive: true, force: true }) } catch { /* ignore */ } })
 
-// The WASM compiler singleton + JRPG_WASM_NODE_ROOT are process-global; reset
+// The WASM compiler singleton + DOTZUKI_WASM_NODE_ROOT are process-global; reset
 // both after every test so a failure-mocking test can't leak into the next.
-const SAVED_WASM_ROOT = process.env.JRPG_WASM_NODE_ROOT
+const SAVED_WASM_ROOT = process.env.DOTZUKI_WASM_NODE_ROOT
 afterEach(() => {
-  if (SAVED_WASM_ROOT === undefined) delete process.env.JRPG_WASM_NODE_ROOT
-  else process.env.JRPG_WASM_NODE_ROOT = SAVED_WASM_ROOT
+  if (SAVED_WASM_ROOT === undefined) delete process.env.DOTZUKI_WASM_NODE_ROOT
+  else process.env.DOTZUKI_WASM_NODE_ROOT = SAVED_WASM_ROOT
   _resetWasmCompilerForTests()
 })
 
@@ -91,7 +91,7 @@ describe('checkScene — WASM compile layer (default)', () => {
 
 describe('checkScene — lint fallback (WASM pkg unavailable)', () => {
   it('degrades to lint when the WASM pkg cannot be loaded, and labels it', async () => {
-    process.env.JRPG_WASM_NODE_ROOT = path.join(os.tmpdir(), 'jrpg-no-such-wasm-pkg')
+    process.env.DOTZUKI_WASM_NODE_ROOT = path.join(os.tmpdir(), 'jrpg-no-such-wasm-pkg')
     _resetWasmCompilerForTests()
     writeConfig({ ext: '.scene' })
     const p = createProjectContext(ROOT)
@@ -110,7 +110,7 @@ describe('checkScene — scene.checkCmd (project compiler, priority over WASM)',
   it('runs a configured scene.checkCmd against the draft (real compile path)', async () => {
     // Point the WASM loader at a bogus root: if checkCmd did not take priority,
     // the check would degrade to lint and the assertions below would fail.
-    process.env.JRPG_WASM_NODE_ROOT = path.join(os.tmpdir(), 'jrpg-no-such-wasm-pkg')
+    process.env.DOTZUKI_WASM_NODE_ROOT = path.join(os.tmpdir(), 'jrpg-no-such-wasm-pkg')
     _resetWasmCompilerForTests()
     // Portable stand-in for a compiler: fail iff the draft contains FAILMARK.
     writeConfig({ ext: '.scene', checkCmd: "sh -c '! grep -q FAILMARK {file}'" })

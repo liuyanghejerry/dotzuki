@@ -7,7 +7,7 @@
   "description": "Game-agnostic editor for dotzuki-engine — configure via .dotzuki-editor.json in your project",
   "scripts": {
     "dev": "vite",
-    "demo": "JRPG_PROJECT_ROOT=$(pwd)/test-project vite",
+    "demo": "DOTZUKI_PROJECT_ROOT=$(pwd)/test-project vite",
     "build:wasm": "cd ../../crates/dotzuki-web && wasm-pack build --target web --out-dir pkg --dev && wasm-pack build --target nodejs --out-dir pkg-node --dev",
     "build:wasm-runner": "cd ../../crates/dotzuki-runner-web && wasm-pack build --target web --out-dir pkg --dev",
     "build": "vue-tsc -b && vite build",
@@ -16,7 +16,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "electron:dev": "node electron/dev.mjs",
-    "electron:demo": "JRPG_PROJECT_ROOT=$(pwd)/test-project node electron/dev.mjs",
+    "electron:demo": "DOTZUKI_PROJECT_ROOT=$(pwd)/test-project node electron/dev.mjs",
     "build:renderer": "vite build",
     "build:server": "node electron/build-server.mjs",
     "build:resources": "node electron/stage-resources.mjs",

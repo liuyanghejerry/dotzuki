@@ -1,4 +1,4 @@
-//! The generic, data-driven battle system for `jrpg run` (parties + items).
+//! The generic, data-driven battle system for `dotzuki run` (parties + items).
 //!
 //! A project opts in with a top-level `battle` section in its
 //! `.dotzuki-editor.json` (see [`crate::manifest::BattleSection`] and
@@ -108,7 +108,7 @@
 //! `startBattle("x")` resolves in this order: an encounter record `x` (when
 //! the block is set) → a single enemy record `x` (implicitly wild, v1
 //! behavior) → the first enemy record + a warning. Unknown enemy ids INSIDE
-//! an encounter record are a clear error at battle start (and a `jrpg check`
+//! an encounter record are a clear error at battle start (and a `dotzuki check`
 //! schema diagnostic covers the block itself). In an encounter battle the
 //! enemy side is a QUEUE: the active enemy faints → the next is sent out
 //! (narrated `"Foe sent out Bat!"`, a fresh combatant with its own stats and
@@ -799,7 +799,7 @@ impl BattleSetup {
         // The rules file contributes the type chart and — when it declares
         // `effects` — the compiled RON hook registry (v2-a). It is parsed
         // only when it exists; a malformed registry is a boot-time
-        // error at battle start (and a `jrpg check` diagnostic).
+        // error at battle start (and a `dotzuki check` diagnostic).
         let rules_rel = section.rules.as_deref().unwrap_or(DEFAULT_RULES_FILE);
         let rules_rel = join_path("", rules_rel);
         let mut ron = None;

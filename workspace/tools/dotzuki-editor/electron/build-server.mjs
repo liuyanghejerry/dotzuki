@@ -21,7 +21,7 @@ await build({
   logLevel: 'info',
   // No banner: the bundle is pure ESM with node_modules external, so Node
   // provides import.meta.url natively. The route modules that need a directory
-  // path declare their own `__dirname` (JRPG_EDITOR_ROOT-aware) — injecting a
+  // path declare their own `__dirname` (DOTZUKI_EDITOR_ROOT-aware) — injecting a
   // top-level `const __dirname` here would collide with those declarations.
 })
 

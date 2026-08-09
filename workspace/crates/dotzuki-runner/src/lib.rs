@@ -21,7 +21,7 @@
 //! - [`headless`] — [`headless::run_headless`]: a windowless frame driver
 //!   with auto-A input and PNG screenshots (native only);
 //! - [`watch`] — [`watch::ProjectWatcher`]: notify-based file watching for
-//!   `jrpg run --watch` hot reload (feature `watch`);
+//!   `dotzuki run --watch` hot reload (feature `watch`);
 //! - [`vfs`] — [`vfs::ProjectFiles`]: the virtual file system every project
 //!   read goes through ([`vfs::DiskFiles`] native, [`vfs::MemoryFiles`] for
 //!   the WASM shell);
