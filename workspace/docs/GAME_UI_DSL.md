@@ -27,7 +27,7 @@
 - 响应式设计和断点系统
 - 动画和过渡效果
 - 九宫格图片资源系统
-- 主题和样式复用
+- `.gui` 内的内联 `@theme`/`@style` 块（`.theme`/`.style` 独立文件已实现，见 §十六）
 
 ### 1.3 双语文本（i18n）— `@t`
 
@@ -512,6 +512,12 @@ screen Party {
 ---
 
 ## 七、全局定义
+
+> **分界说明：** 自本章起为旧版全文（含全局定义、组件系统、Flex、i18n、
+> RTL、条件渲染、响应式、动画、事件等章节），其子节编号沿用旧版的
+> `4.x`–`12.x`。这些章节描述的是完整愿景语法，**多数为 proposal**——已实现
+> 范围以 §1.1–§五、§十三–§十六为准；`@theme`/`@style`/`@variables` 的当前
+> 编译契约见 DSL_MAPPING.md（Entry 9/10）。旧版章节保留作为语法参考。
 
 ### 4.1 变量定义
 
@@ -1508,17 +1514,18 @@ screen FantasyShop {
 
 ### 未实现（Proposal）
 
+> **核对（2026-08）：** 下表沿用旧版标注，与当前实现有出入。`@if/@else`、
+> `@each`、`@theme`、`@style`、`@variables`、`@atlas` 均已实现（见 §1.1、
+> DSL_MAPPING.md），已从下表中移除；`@t` 内联双语已实现（§1.3），`t()`
+> 运行时翻译函数仍为 proposal。按钮的 `on_click` 已实现（§5.8），其余通用
+> `on_*` 事件仍为 proposal。
+
 | 类别         | 语法元素                  | 示例                                  |
 | ------------ | ------------------------- | ------------------------------------- |
-| **条件**     | `@if/@else`               | `@if (logged_in) { ... }`             |
-| **循环**     | `@each`                   | `@each item in items { ... }`         |
 | **翻译**     | `t()`                     | `"{t('key')}"`                        |
 | **方向**     | `dir`, `@rtl/@ltr`        | `dir="rtl"`, `@rtl { ... }`           |
 | **响应式**   | `@media`                  | `@media (min_width=768) { }`          |
-| **主题**     | `@theme`                  | `@theme dark { ... }`                 |
-| **样式**     | `@style`                  | `@style card { ... }`                 |
-| **变量**     | `@variables`              | `@variables { gold = 500 }`           |
-| **资源**     | `@resources`, `@atlas`    | `@atlas "name" { ... }`               |
+| **资源**     | `@resources`              | `@resources { ... }`                  |
 | **事件**     | `on_*`                    | `on_click = "handler"`                |
 | **动画**     | `@keyframes`, `animation` | `animation = "pulse" { ... }`         |
 

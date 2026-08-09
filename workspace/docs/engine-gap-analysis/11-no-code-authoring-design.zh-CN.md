@@ -331,7 +331,8 @@ Boa 门面接在基于索引的 `HandlerImpl` 枚举 + 带默认实现的 `scrip
   **原生 `fn` 指针**内容创作指南。
 - [`09-battle-engine-generalization-design.md`](./09-battle-engine-generalization-design.md)、
   [`10-generalization-result.md`](./10-generalization-result.md) — 系统即效果 + GO-WITH-NITS 结论。
-- [`11-no-code-effect-authoring-design.md`](./11-no-code-effect-authoring-design.md) — 并行的*混合*设计（在同一套 schema 中声明式原语 + JS 逃生舱）;本文是首席架构师对“声明式数据优先”的选择。
+- 并行的*混合*设计（在同一套 schema 中声明式原语 + JS 逃生舱）曾被考虑，最终
+  未采纳，选择了本文档记载的"声明式数据优先"方案。
 - 代码（只读，未修改）：[`examples/minimon/src/lib.rs`](../../examples/minimon/src/lib.rs)、
   [`examples/minimon/src/tests.rs`](../../examples/minimon/src/tests.rs)、
   [`crates/dotzuki-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/dotzuki-engine/src/battle/stack/)、

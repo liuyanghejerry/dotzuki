@@ -1,5 +1,11 @@
 # dotzuki-engine 开发者指南
 
+> **状态：遗留文档。** 本文档描述的是 effect-stack 出现前的 **legacy
+> `Provider` API** 路径（地图 / NPC / 物品 / 存档 / 渲染）。其中的战斗章节
+> （§6）不覆盖 `battle::stack`——战斗请见
+> [`BATTLE_ENGINE_GUIDE.md`](./BATTLE_ENGINE_GUIDE.md)。文中引用的 pokered
+> 参考实现已随仓库拆分迁出，仅作历史参照。
+
 > **dotzuki-engine** 是一个通用的 JRPG 游戏引擎框架，基于 Game Boy 瓦片渲染原理构建，用 Rust 编写。它提供了地图系统、回合制战斗、物品管理、存档、对话引擎、菜单系统等完整的 JRPG 核心功能。
 
 ---
@@ -46,14 +52,7 @@ workspace/
 │   └── dotzuki-app/                   # 🚀 桌面可执行程序入口
 │
 └── examples/
-    └── pokered/                    # Pokémon Red/Blue 重写（引擎的参考实现）
-        └── crates/
-            ├── pokered-core/       # 游戏逻辑
-            ├── pokered-data/       # 游戏数据（151种精灵、招式、地图等）
-            ├── pokered-renderer/   # 图形渲染
-            ├── pokered-ui/         # UI 组件
-            ├── pokered-audio/      # 音频
-            └── pokered-app/        # 桌面程序入口
+    └── minimon/                    # 跨世代战斗 POC（纯 RON 规则，证明引擎非游戏锁定）
 ```
 
 ### 1.2 核心理念
@@ -66,6 +65,11 @@ dotzuki-engine 遵循以下设计原则：
 - **可组合 trait**：各系统 trait 独立，不需要全部实现即可编译最小 JRPG
 
 ### 1.3 快速架构决策
+
+> 注：下表"参考示例"列的 `pokered-core` / `pokered-data` 参考实现已随仓库
+> 拆分迁至 pokered 游戏仓库。当前引擎内的参考示例为 `examples/minimon`
+> （战斗 effect-stack，见 BATTLE_ENGINE_GUIDE.md）与 `dotzuki-runner`
+> （零代码运行时，见 game-project-spec.md）。
 
 | 你想做什么 | 需要实现的 trait | 参考示例 |
 |-----------|-----------------|---------|
@@ -82,21 +86,20 @@ dotzuki-engine 遵循以下设计原则：
 
 ## 2. 快速开始
 
-### 2.1 使用 dotzuki-template 创建新项目
+### 2.1 创建新项目
+
+引擎仓本身不作为游戏仓使用；游戏通过 Cargo **git 依赖**（tag 固定）消费
+`dotzuki-*` crate。两种启动方式：
+
+- **零代码路径（推荐）**：`dotzuki new my-game` 生成
+  `.dotzuki-editor.json` + DSL / 数据 / 资源目录，`dotzuki run` 直接运行
+  （见 [`game-project-spec.md`](./game-project-spec.md)）。
+- **Rust 路径**：用本仓的 `dotzuki-template` 生成手写 `main.rs` 的游戏：
 
 ```bash
-git clone https://github.com/your-org/pokered-rust.git
 cd workspace
-
-# 方式一：使用 cargo-generate
 cargo generate --path ./dotzuki-template --name my-jrpg
 cd my-jrpg
-
-# 方式二：手动复制
-cp -r dotzuki-template my-jrpg
-cd my-jrpg
-# 编辑 Cargo.toml，将 {{project-name}} 替换为 my-jrpg
-
 cargo run --release
 ```
 
@@ -122,15 +125,18 @@ my-jrpg/
 4. **替换资源**：放入 `assets/` 目录
 5. **自定义 main.rs**：调整 `tiled_gid_to_tileset_idx` 映射关系
 
-### 2.4 操作键位
+### 2.4 操作键位（`dotzuki run` 标准键位）
 
 | 按键 | 功能 |
 |------|------|
-| 方向键 | 移动玩家（每次一格） |
-| Z / Enter | 确认 / 交互（A 键） |
-| X / Backspace | 取消 / 跑步（B 键） |
-| Return / Space | 打开菜单（Start） |
-| Escape | 退出 |
+| 方向键 / WASD | 移动玩家（每次一格） |
+| Z | 确认 / 交互（A 键） |
+| X | 取消 / 跑步（B 键） |
+| Enter / Space | 打开菜单（Start） |
+| Backspace / 右 Shift | Select |
+
+> 键位映射见 `dotzuki-renderer/src/input.rs`。`dotzuki-template` 自带的最小
+> `main.rs` 键位不同（仅方向键 + Space 触发对话 + Escape 退出）。
 
 ---
 
@@ -593,7 +599,8 @@ let width = embedded_font::text_width("你好");
 
 ### 7.4 多语言数据管理
 
-参考 `pokered-data/src/lang_data.rs` 的模式：
+按语言返回对应文本（原 pokered 参考实现中该模式位于 `lang_data.rs`，已随
+拆分迁出；以下为等价示例）：
 
 ```rust
 // 根据语言返回对应文本
@@ -619,14 +626,15 @@ fn species_name(species: SpeciesId, is_zh: bool) -> &'static str {
 引擎内置拼音输入法支持，用于命名界面：
 
 ```rust
-use pokered_data::pinyin_dict::lookup_pinyin;
+use /* 你的游戏 crate */ pinyin_dict::lookup_pinyin;
 
 // 查找拼音对应的候选汉字
 let candidates: Vec<char> = lookup_pinyin("ni");   // → ['你', '尼', '泥', ...]
 let candidates: Vec<char> = lookup_pinyin("hao");  // → ['好', '号', '毫', ...]
 ```
 
-拼音字典包含 400+ 条记录，位于 `pokered-data/src/pinyin_dict.rs`。
+拼音字典示例包含 400+ 条记录；原实现（`pokered-data/src/pinyin_dict.rs`）已随
+拆分迁至 pokered 仓库。
 
 ### 7.6 语言感知渲染
 
@@ -1445,9 +1453,9 @@ dotzuki-app / dotzuki-tui / dotzuki-web
 
 ### C. 相关文档
 
-- `AGENTS.md` — 项目总览与目录映射
-- `CLAUDE.md` — 开发者指南（Rust 项目）
+- [`README.md`](./README.md)（`workspace/docs/`）— 文档索引与读者指南
+- [`game-project-spec.md`](./game-project-spec.md) — 零代码游戏项目规范
+- [`BATTLE_ENGINE_GUIDE.md`](./BATTLE_ENGINE_GUIDE.md) — 战斗 effect-stack 指南
 - [GAME_UI_DSL.md](./GAME_UI_DSL.md) — UI DSL 语法规范（已实现）
 - [FULL_DSL.md](./FULL_DSL.md) — DSL 完整语法参考
 - [DSL_MAPPING.md](./DSL_MAPPING.md) — DSL 编译契约
-- [RUNNING.md](./RUNNING.md) — 运行说明

@@ -154,7 +154,7 @@ via `dotzuki-engine-dsl`'s runtime `compile_dirs` API. `run` (via the
 `dotzuki-runner` crate) boots the entry map — overworld walking, NPC dialogue
 and choices, warps, music/SFX from `data/audio/**/*.json`, save/load at
 `<project>/.dotzuki-save.json` — with the exact behavior specified in
-[docs/game-project-spec.md](../../docs/game-project-spec.md#what-jrpg-run-does).
+[docs/game-project-spec.md](../../docs/game-project-spec.md#what-dotzuki-run-does).
 Battles run when the manifest has a `battle` section (see the spec's battle
 chapter): the whole party table fights (switching included), battle-usable
 items come from the `items` block, and skills can be authored as `rules.ron`

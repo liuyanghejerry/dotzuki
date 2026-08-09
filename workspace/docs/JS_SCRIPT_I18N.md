@@ -2,7 +2,9 @@
 
 ## Overview
 
-Map scripts in `crates/pokered-data/maps/*/script.js` use the `game` global object to interact with the game engine. The following i18n APIs are available for supporting multiple languages.
+Scripts authored through the DSL (`@run { ... }` blocks, `.scene`) or hand-written
+JS use the `game` global object to interact with the game engine. The following
+i18n APIs are available for supporting multiple languages.
 
 ## API
 

@@ -60,4 +60,15 @@ docs/                # repo-level docs (split record, marketing notes)
 AGENTS.md            # developer guide for AI agents
 ```
 
+## Documentation
+
+- **[`workspace/docs/README.md`](workspace/docs/README.md) — documentation index**
+  (reader guide + status of every engine doc). Start here.
+- Quickstart (zero-Rust, 5 minutes): [`workspace/docs/QUICKSTART.md`](workspace/docs/QUICKSTART.md)
+- CLI reference (`dotzuki new` / `check` / `run`): [`workspace/docs/CLI_REFERENCE.md`](workspace/docs/CLI_REFERENCE.md)
+- Game project spec (zero-Rust `.dotzuki-editor.json` projects): [`workspace/docs/game-project-spec.md`](workspace/docs/game-project-spec.md)
+- Battle engine guide (effect-stack + `rules.ron`): [`workspace/docs/BATTLE_ENGINE_GUIDE.md`](workspace/docs/BATTLE_ENGINE_GUIDE.md) / [`.zh-CN.md`](workspace/docs/BATTLE_ENGINE_GUIDE.zh-CN.md)
+- DSL docs: [`workspace/docs/GAME_UI_DSL.md`](workspace/docs/GAME_UI_DSL.md), [`workspace/docs/DSL_MAPPING.md`](workspace/docs/DSL_MAPPING.md)
+- Editor guide: [`workspace/tools/dotzuki-editor/README.md`](workspace/tools/dotzuki-editor/README.md) + [quickstart](workspace/tools/dotzuki-editor/docs/first-game.md)
+
 See `AGENTS.md` for the full developer guide.

@@ -555,8 +555,8 @@ Two design rules that keep the engine game-agnostic:
   about.
 
 A game-side **translator** turns the log into whatever the frontend consumes (text
-lines, an animation queue). See §7 for the recipe and the pokered case study in
-[`POKERED_BATTLE_ON_ENGINE.md`](./POKERED_BATTLE_ON_ENGINE.md).
+lines, an animation queue). See §7 for the recipe; the pokered case study lives in
+the pokered game repository (post-split) rather than in this repo.
 
 ---
 
@@ -1472,8 +1472,8 @@ inert; all three authored end-to-end in minimon and proven by parity tests):
   + defaulted: `execute_turn` is the no-log path and is byte-identical (recorded by
   a structural snapshot+diff at the existing event sites). The engine reports
   structural truth; the game re-derives presentation. See
-  [§2.11](#211-narrating-a-turn--the-turnlog) and the pokered case study in
-  [`POKERED_BATTLE_ON_ENGINE.md`](./POKERED_BATTLE_ON_ENGINE.md).
+  [§2.11](#211-narrating-a-turn--the-turnlog); the pokered case study lives in
+  the pokered game repository (post-split).
 
 **Still pending** (data model gaps, not regressions):
 
