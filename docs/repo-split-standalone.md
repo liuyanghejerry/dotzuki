@@ -62,10 +62,12 @@ jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", ta
 ## 待办(review 后)
 
 - [x] 游戏仓 GitHub 命名与推送:pokered → `liuyanghejerry/open-pokered`,wuxia 改名 star-heir → `liuyanghejerry/star-heir`(2026-08-09 已推 master)。
-- [ ] 确定引擎仓的 GitHub 命名并建仓,替换两个游戏仓 Cargo.toml 里的 `file:///...` 引擎 URL 并 `cargo update`。
+- [x] 引擎仓建仓:无历史快照 → `liuyanghejerry/dotzuki`(**私有**),tag `v0.1.0` 已推;两个游戏仓的引擎依赖已切到 `ssh://git@github.com/liuyanghejerry/dotzuki.git`(tag 不变)并 `cargo update` 重锁。
+- [ ] **CI 拉取私有引擎依赖**:dotzuki 为私有仓,游戏仓 GitHub Actions 需配置认证(deploy key 或 `CARGO_NET_GIT_FETCH_WITH_CLI` + token),否则 cargo 无法 fetch。
 - [ ] 引擎仓 CI 在新 runner 上跑通(当前 main.yml 为精简版,需真实 GitHub 环境验证)。
 - [x] pokered 布局预览 wasm 的产物分发——已由 `crates/pokered-layout-preview`(仓内 crate,editor 直接 `wasm-pack` 构建)解决,见 Follow-up 第 3 条。
 - [ ] 两份调研文档(`docs/opensource-split-plan.md`、`research/wuxia-standalone` 分支的 `docs/jrpg-engine-separation-plan.md`)如需要可归档到引擎仓。
+- [ ] 旧 monorepo(`liuyanghejerry/pokered`)的去向:PR #162(引擎化分支)与 dotzuki 快照并存,需确认是合并 PR 保历史,还是弃用旧仓。
 
 ## Follow-up(review 后第一轮修正,2026-08-09)
 
