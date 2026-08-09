@@ -1,0 +1,16 @@
+{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 30,
+  "mp": 0,
+  "atk": 8,
+  "def": 4,
+  "spd": 3,
+  "element": "None",
+  "exp": 8,
+  "gold": 4,
+  "skills": [
+    "tackle",
+    "venom-sting"
+  ]
+}

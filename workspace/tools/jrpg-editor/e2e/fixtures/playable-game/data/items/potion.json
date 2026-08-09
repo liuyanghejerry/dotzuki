@@ -1,0 +1,9 @@
+{
+  "id": "potion",
+  "name": "Potion",
+  "type": "Potion",
+  "healHp": 50,
+  "effect": "Restores 50 HP",
+  "value": 50,
+  "price": 20
+}

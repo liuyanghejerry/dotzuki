@@ -1,0 +1,16 @@
+{
+  "id": "bryn",
+  "name": "Bryn",
+  "job": "Mage",
+  "hp": 80,
+  "mp": 60,
+  "atk": 14,
+  "def": 12,
+  "spd": 10,
+  "element": "Fire",
+  "skills": [
+    "fire-bolt",
+    "slash"
+  ],
+  "heldItem": "leftovers"
+}

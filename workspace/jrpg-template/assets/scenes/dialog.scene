@@ -1,0 +1,22 @@
+game_scene DialogDemo {
+    @storylines {
+        @speaker("NPC") {
+            "Hello there!"
+            "Welcome to the world of JRPG!"
+            "Press SPACE to trigger this dialogue."
+        }
+        @choice {
+            @option("Who are you?") {
+                @speaker("NPC") {
+                    "I'm just a simple NPC."
+                    "My purpose is to guide you."
+                }
+            }
+            @option("Goodbye!") {
+                @speaker("NPC") {
+                    "Farewell, adventurer!"
+                }
+            }
+        }
+    }
+}

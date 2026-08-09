@@ -1,0 +1,41 @@
+game_scene ShopScene {
+    @variables {
+        gold = 500
+        item_count = 0
+    }
+    
+    @storylines {
+        @speaker("Shopkeeper") {
+            "Welcome to the shop!"
+            "We have fine wares today."
+        }
+        @choice {
+            @option("Buy Potion (200g)") {
+                @if (gold >= 200) {
+                    gold = gold - 200
+                    item_count = item_count + 1
+                    @speaker("Shopkeeper") {
+                        "Thank you for your purchase!"
+                    }
+                } @else {
+                    @speaker("Shopkeeper") {
+                        "Not enough gold!"
+                    }
+                }
+            }
+            @option("Leave") {
+                @speaker("Shopkeeper") {
+                    "Come back anytime!"
+                }
+            }
+        }
+    }
+    
+    ui {
+        panel {
+            title = text("Shop")
+            items_label = text("Gold: {gold}")
+            buy_button = button("Buy") { on_click = "buy_item" }
+        }
+    }
+}

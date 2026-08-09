@@ -1,0 +1,39 @@
+game_scene PokeCenterHeal {
+  @storyline("nurse_heal") {
+    @trigger(map = "PokeCenter", npc = "Nurse Joy")
+    @speaker("Nurse Joy") {
+      "Welcome to the POKEMON CENTER!"
+      "We heal your POKEMON back to"
+      "perfect health!"
+      "Shall we heal your POKEMON?"
+    }
+
+    @choice {
+      @option("Yes") {
+        @speaker("Nurse Joy") {
+          "OK, we will need your POKEMON."
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("Nurse Joy") {
+          "Thank you for waiting."
+          "Your POKEMON are fully healed!"
+        }
+      }
+      @option("No") {
+        @speaker("Nurse Joy") {
+          "No problem! Come back anytime"
+          "if your POKEMON need rest."
+        }
+      }
+    }
+
+    @speaker("Nurse Joy") {
+      "We hope to see you again!"
+    }
+  }
+}

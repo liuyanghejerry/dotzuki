@@ -1,0 +1,16 @@
+[package]
+name = "jrpg-audio"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bitflags = "2"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+default = []
+# Enables the declarative, file-based audio format (`format`) and the
+# directory loader (`library`). Off by default so the game runtime — which
+# feeds byte streams to the sequencer directly — stays dependency-light.
+serde = ["dep:serde", "dep:serde_json"]

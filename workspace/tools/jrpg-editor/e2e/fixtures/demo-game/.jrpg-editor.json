@@ -1,0 +1,67 @@
+{
+  "name": "e2e-demo-game",
+  "dataRoot": "./data",
+  "activities": [
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "characters",
+            "label": "Characters",
+            "dir": "characters",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "element", "type": "select", "label": "Element",
+                "options": ["Metal", "Wood", "Water", "Fire", "Earth"] },
+              { "key": "hp", "type": "number", "label": "HP", "default": 100 },
+              { "key": "description", "type": "string", "label": "Description" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "price", "type": "number", "label": "Price", "default": 0 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "scriptsDir": "scripts",
+        "extension": ".scene"
+      }
+    },
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps",
+        "tileSize": 16,
+        "blockSize": 4
+      }
+    }
+  ]
+}

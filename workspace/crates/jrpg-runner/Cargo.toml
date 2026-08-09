@@ -1,0 +1,36 @@
+[package]
+name = "jrpg-runner"
+version.workspace = true
+edition.workspace = true
+description = "Generic runtime that boots a zero-Rust jrpg game project (manifest, DSL, maps)"
+license.workspace = true
+
+[features]
+default = ["gpu", "watch"]
+# Windowed/GPU renderer bits (pixels/winit) — native play; off for WASM.
+gpu = ["jrpg-renderer/gpu"]
+# notify-based hot reload (`jrpg run --watch`) — native only.
+watch = ["dep:notify"]
+
+[dependencies]
+jrpg-engine = { path = "../jrpg-engine" }
+jrpg-engine-script = { path = "../jrpg-engine-script" }
+jrpg-engine-dsl = { path = "../jrpg-engine-dsl" }
+jrpg-engine-tiled = { path = "../jrpg-engine-tiled" }
+jrpg-rules = { path = "../jrpg-rules" }
+jrpg-renderer = { path = "../jrpg-renderer", default-features = false, features = ["image-assets"] }
+jrpg-ui = { path = "../jrpg-ui" }
+jrpg-audio = { path = "../jrpg-audio", features = ["serde"] }
+# Native audio output (same version as wuxia-app). The APU renders samples on
+# cpal's callback thread; no device (CI/headless/wasm's Null host) ⇒
+# RunnerAudio stays silent.
+cpal = "0.15"
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+log = "0.4"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+jrpg-app = { path = "../jrpg-app" }
+notify = { workspace = true, optional = true }

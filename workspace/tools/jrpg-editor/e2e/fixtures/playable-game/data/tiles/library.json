@@ -1,0 +1,84 @@
+{
+  "tiles": [
+    {
+      "id": "t0001",
+      "name": "grass",
+      "source": "starter"
+    },
+    {
+      "id": "t0002",
+      "name": "flowers",
+      "source": "starter"
+    },
+    {
+      "id": "t0003",
+      "name": "path",
+      "source": "starter"
+    },
+    {
+      "id": "t0004",
+      "name": "water",
+      "source": "starter"
+    },
+    {
+      "id": "t0005",
+      "name": "tree",
+      "source": "starter"
+    },
+    {
+      "id": "t0006",
+      "name": "rock",
+      "source": "starter"
+    },
+    {
+      "id": "t0007",
+      "name": "sand",
+      "source": "starter"
+    },
+    {
+      "id": "t0008",
+      "name": "bush",
+      "source": "starter"
+    },
+    {
+      "id": "t0009",
+      "name": "wall",
+      "source": "starter"
+    },
+    {
+      "id": "t0010",
+      "name": "roof",
+      "source": "starter"
+    },
+    {
+      "id": "t0011",
+      "name": "door",
+      "source": "starter"
+    },
+    {
+      "id": "t0012",
+      "name": "window",
+      "source": "starter"
+    },
+    {
+      "id": "t0013",
+      "name": "fence",
+      "source": "starter"
+    },
+    {
+      "id": "t0014",
+      "name": "sign",
+      "source": "starter"
+    },
+    {
+      "id": "t0015",
+      "name": "wood",
+      "source": "starter"
+    },
+    {
+      "id": "t0016",
+      "name": "flower",
+      "source": "starter"
+    }
+  ]
+}

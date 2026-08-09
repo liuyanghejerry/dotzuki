@@ -1,0 +1,54 @@
+// oak_parcel.scene — Oak's Parcel cross-map quest
+//
+// This quest spans two maps (OaksLab → ViridianMart → OaksLab).
+// Each storyline has a @trigger that controls when it activates.
+// The "after" chain links them into a single narrative flow.
+
+game_scene OakParcelQuest {
+  @storyline("oak_ask") {
+    @trigger(map = "OaksLab", npc = "Oak", after = "oaks_lab_intro")
+    @speaker("Oak") {
+      "I need you to go get my parcel"
+      "from the VIRIDIAN MART."
+    }
+    setFlag("OAK_ASKED_FOR_PARCEL")
+  }
+
+  @storyline("mart_pickup") {
+    @trigger(map = "ViridianMart", onEnter = true, after = "oak_ask")
+    @speaker("Clerk") {
+      "Hey! You came from PALLET TOWN?"
+      "You know PROF. OAK, right?"
+      "His order came in. Will you take it to him?"
+    }
+    @choice {
+      @option("Yes") {
+        giveItem("OAKS_PARCEL", 1)
+        setFlag("GOT_OAKS_PARCEL")
+        @speaker("Clerk") {
+          "OK! Please deliver it to OAK!"
+        }
+      }
+      @option("No") {
+        @speaker("Clerk") {
+          "Oh... well, please come back!"
+        }
+      }
+    }
+  }
+
+  @storyline("oak_delivery") {
+    @trigger(map = "OaksLab", npc = "Oak", after = "mart_pickup")
+    @speaker("Oak") {
+      "Oh! That's my parcel!"
+      "Thank you!"
+    }
+    removeItem("OAKS_PARCEL", 1)
+    setFlag("OAK_GOT_PARCEL")
+    @speaker("Oak") {
+      "Now, as promised, here is something"
+      "special for you!"
+    }
+    // Starter Pokémon scene would continue here
+  }
+}

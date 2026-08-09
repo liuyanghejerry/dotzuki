@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-rust-workspace:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            libasound2-dev \
+            libudev-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            workspace/target
+          key: ci-cargo-${{ hashFiles('workspace/Cargo.lock', 'workspace/Cargo.toml', 'workspace/crates/*/Cargo.toml', 'workspace/examples/*/crates/*/Cargo.toml', 'workspace/examples/minimon/Cargo.toml', 'workspace/run-wasm/Cargo.toml') }}
+          restore-keys: |
+            ci-cargo-
+            ci-cargo-
+
+      - name: Build workspace
+        working-directory: workspace
+        run: cargo build --workspace
+
+      - name: Test workspace
+        working-directory: workspace
+        run: cargo test --workspace
+
+  build-jrpg-editor:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    name: Build jrpg-editor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install jrpg-editor dependencies
+        working-directory: workspace/tools/jrpg-editor
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+        # pnpm-lock.yaml is gitignored, so resolve straight from package.json.
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Type check
+        working-directory: workspace/tools/jrpg-editor
+        run: npx vue-tsc --noEmit
+
+      - name: Test
+        working-directory: workspace/tools/jrpg-editor
+        run: npx vitest run
+
+      - name: Build
+        working-directory: workspace/tools/jrpg-editor
+        run: pnpm run build

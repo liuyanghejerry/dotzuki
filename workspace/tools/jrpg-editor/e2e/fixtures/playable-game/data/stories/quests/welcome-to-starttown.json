@@ -1,0 +1,46 @@
+{
+  "id": "welcome-to-starttown",
+  "title": {
+    "en": "Welcome to StartTown",
+    "zh": "初临起始镇"
+  },
+  "type": "main",
+  "summary": "Elder Mira greets the player and shows them around their new home town.",
+  "giver": "elder-mira",
+  "characters": [
+    "elder-mira"
+  ],
+  "maps": [
+    "StartTown"
+  ],
+  "objectives": [
+    {
+      "id": "meet-elder",
+      "text": {
+        "en": "Meet Elder Mira by the crossroads.",
+        "zh": "在十字路口与米拉长老见面。"
+      },
+      "doneFlag": "met_elder_mira"
+    },
+    {
+      "id": "explore-town",
+      "text": {
+        "en": "Look around StartTown.",
+        "zh": "四处看看起始镇。"
+      },
+      "doneFlag": "explored_starttown"
+    }
+  ],
+  "requires": [],
+  "sets": [
+    "quest_welcome_started"
+  ],
+  "rewards": [],
+  "implementedBy": [
+    {
+      "scene": "StartTown",
+      "storyline": "StartTown"
+    }
+  ],
+  "status": "drafted"
+}

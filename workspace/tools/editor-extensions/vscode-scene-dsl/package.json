@@ -1,0 +1,36 @@
+{
+  "name": "vscode-scene-dsl",
+  "displayName": "Scene DSL Support",
+  "description": "Syntax highlighting for JRPG Engine Scene DSL (.scene) files",
+  "version": "0.1.0",
+  "publisher": "jrpg-engine",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "scene",
+        "aliases": [
+          "Scene DSL",
+          "scene"
+        ],
+        "extensions": [
+          ".scene"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "scene",
+        "scopeName": "source.scene",
+        "path": "./syntaxes/scene.tmLanguage.json"
+      }
+    ]
+  }
+}

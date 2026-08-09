@@ -1,0 +1,10 @@
+{
+  "id": "venom-sting",
+  "name": "Venom Sting",
+  "type": "Attack",
+  "element": "None",
+  "power": 15,
+  "mpCost": 0,
+  "target": "SingleEnemy",
+  "description": "A weak jab that may poison (rules.ron hook)."
+}

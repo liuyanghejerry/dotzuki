@@ -1,0 +1,37 @@
+game_scene PewterGym {
+  @storyline("brock_battle") {
+    @trigger(map = "PewterGym", npc = "Brock")
+    @speaker("Brock") {
+      "I'm BROCK!"
+      "I'm PEWTER's GYM LEADER!"
+      ""
+      "I believe in rock hard defense"
+      "and determination!"
+      ""
+      "That's why my POKEMON are all"
+      "the rock-type!"
+      ""
+      "Do you still want to challenge me?"
+      "Fine then! Show me your best!"
+    }
+
+    startGymBattle("BROCK", 1)
+
+    @speaker("Brock") {
+      "I took you for granted."
+      "As proof of your victory, here's"
+      "the BOULDERBADGE!"
+    }
+
+    giveItem("TM_34", 1)
+    giveBadge("BOULDERBADGE")
+
+    @speaker("System") {
+      "<PLAYER> received TM34!"
+      ""
+      "TM34 is BIDE!"
+      "Your POKEMON will absorb damage"
+      "in battle then pay it back double!"
+    }
+  }
+}

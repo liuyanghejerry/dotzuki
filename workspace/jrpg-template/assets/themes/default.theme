@@ -1,0 +1,15 @@
+@theme default {
+    primary = "#c9a03d"
+    background = "#1a1a2e"
+    surface = "#16213e"
+    text = "#eeeeee"
+    text_muted = "#888888"
+}
+
+@theme fantasy {
+    primary = "#ff6600"
+    background = "#2e1a0e"
+    surface = "#1a0e08"
+    text = "#ffeecc"
+    text_muted = "#aa8866"
+}

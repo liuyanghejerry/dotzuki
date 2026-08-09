@@ -1,0 +1,29 @@
+[package]
+name = "minimon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Cross-gen authoring proof: a tiny Gen-1-to-6-LIKE battle system built entirely on jrpg-engine's effect-stack — phys/special split + ability + item + weather, with NO engine edits."
+
+# HARD CONSTRAINT (design 09 §6.2 Agnosticism axis): this crate depends on the
+# game-agnostic engine ONLY (plus the equally game-agnostic `jrpg-rules` loader).
+# It pulls in ZERO pokered / pokered-core / pokered-data code and references ZERO
+# Pokémon concrete type. It also links no `rand` (randomness flows through
+# jrpg-engine's BattleRng). The proof is that a developer can author a whole
+# cross-gen battle system on the engine's public stack surface with nothing else.
+[dependencies]
+jrpg-engine = { path = "../../crates/jrpg-engine" }
+# The game-agnostic no-code RON loader (Phase 1) + dual-mode sourcing (Phase 2).
+# minimon is the CONSUMER game: it authors a rules.ron, implements the game
+# binding (names ↔ its concrete Stat/Status/Type), and proves the data-driven
+# effects are byte-identical to the native-Rust oracle in this same crate.
+# `jrpg-rules` itself depends on the engine ONLY (no pokered/minimon, no `rand`),
+# so depending on it keeps minimon's "engine-only" agnosticism proof intact.
+jrpg-rules = { path = "../../crates/jrpg-rules" }
+
+[features]
+# Propagate the dual-mode flag: OFF (default) ⇒ BAKED rules.ron (include_str!,
+# zero file IO); ON ⇒ DEV hot-reload (read + watch rules.ron on disk, rebuild the
+# registry between turns). Both modes drive the SAME rules.ron.
+default = []
+hot-reload = ["jrpg-rules/hot-reload"]

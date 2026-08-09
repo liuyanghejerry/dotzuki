@@ -1,0 +1,14 @@
+[package]
+name = "firered-app"
+version.workspace = true
+edition.workspace = true
+description = "FireRed/LeafGreen color demo app — showcases GBA-style 16-color rendering"
+
+[dependencies]
+firered-data = { path = "../firered-data" }
+jrpg-engine = { path = "../../../../crates/jrpg-engine" }
+jrpg-renderer = { path = "../../../../crates/jrpg-renderer" }
+jrpg-app = { path = "../../../../crates/jrpg-app" }
+log = "0.4"
+env_logger = "0.11"
+clap = { version = "4", features = ["derive"] }

@@ -1,0 +1,29 @@
+# Build artifacts
+/target/
+jrpg-template/target/
+tools/asset-converter/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+/compare_output
+*.log
+Pokemon - Red Version (USA, Europe) (SGB Enhanced).zip
+
+# jrpg-editor: local AI provider profiles (no API keys, machine-local) — not versioned
+.jrpg-editor.providers.json
+
+# pnpm workspace
+tools/node_modules/
+tools/pnpm-lock.yaml
+

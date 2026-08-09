@@ -1,0 +1,9 @@
+[package]
+name = "jrpg-app"
+version.workspace = true
+edition.workspace = true
+description = "A generic desktop app crate wrapping jrpg-renderer's game loop"
+
+[dependencies]
+jrpg-renderer = { path = "../jrpg-renderer" }
+notify = "6"

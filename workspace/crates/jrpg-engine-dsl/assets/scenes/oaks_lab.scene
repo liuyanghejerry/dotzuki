@@ -1,0 +1,44 @@
+game_scene OaksLabIntro {
+  @storyline("oaks_lab_intro") {
+    @trigger(map = "OaksLab", npc = "Oak")
+    fadeScreen("out")
+    warpTo("OaksLab", "2", "6")
+    fadeScreen("in")
+
+    @speaker("Oak") {
+      "Hello there, young trainer!"
+      "The world of POKEMON is vast and full"
+      "of wonderful creatures waiting to be"
+      "discovered."
+      ""
+      "Before you go, choose a partner!"
+    }
+
+    @choice {
+      @option("CHARMANDER") {
+        givePokemon("CHARMANDER", 5)
+        @speaker("Oak") {
+          "CHARMANDER is a fire type!"
+          "It will be a loyal companion."
+        }
+      }
+      @option("SQUIRTLE") {
+        givePokemon("SQUIRTLE", 5)
+        @speaker("Oak") {
+          "SQUIRTLE is a water type!"
+          "It will be a loyal companion."
+        }
+      }
+      @option("BULBASAUR") {
+        givePokemon("BULBASAUR", 5)
+        @speaker("Oak") {
+          "BULBASAUR is a grass type!"
+          "It will be a loyal companion."
+        }
+      }
+    }
+
+    setFlag("HIDE_OAK_LAB_STARTER")
+    delay(30)
+  }
+}

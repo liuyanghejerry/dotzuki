@@ -1,0 +1,16 @@
+// intro.scene — opening scene of the demo game.
+game_scene Intro {
+    @storyline("main") {
+        @trigger(map = "HomeTown", npc = 1)
+        @if (getFlag("EVENT_MET_AUNT_LIN")) {
+            @speaker("Aunt Lin") {
+                "Safe travels, Chen Mo."
+            }
+        } @else {
+            @speaker("Aunt Lin") {
+                "You grew up here, child. Do come back."
+            }
+            setFlag("EVENT_MET_AUNT_LIN")
+        }
+    }
+}

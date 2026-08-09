@@ -1,0 +1,9 @@
+[
+  {
+    "id": "repro-proxy-pe",
+    "kind": "gemini",
+    "baseURL": "https://generativelanguage.googleapis.com",
+    "model": "gemini-2.5-flash-image",
+    "proxyUrl": "http://127.0.0.1:9085"
+  }
+]

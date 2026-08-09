@@ -1,0 +1,21 @@
+[workspace]
+
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2021"
+description = "A JRPG game built with jrpg-engine"
+
+[dependencies]
+jrpg-engine = { path = "../crates/jrpg-engine" }
+jrpg-engine-tiled = { path = "../crates/jrpg-engine-tiled" }
+jrpg-engine-script = { path = "../crates/jrpg-engine-script" }
+jrpg-engine-dsl = { path = "../crates/jrpg-engine-dsl" }
+
+pixels = "0.15"
+winit = "0.30"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"

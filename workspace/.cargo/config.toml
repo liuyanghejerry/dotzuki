@@ -1,0 +1,9 @@
+# Use Apple's libclang for bindgen (coreaudio-sys).
+# Homebrew LLVM's libclang may have broken dylib paths.
+[env]
+LIBCLANG_PATH = "/Library/Developer/CommandLineTools/usr/lib"
+
+# WASM dev server helper. Consumers of the engine (e.g. a game repo with
+# `cargo run-wasm -p <game>-web`) add their own Android/iOS linker config.
+[alias]
+run-wasm = "run --release --package run-wasm --"
