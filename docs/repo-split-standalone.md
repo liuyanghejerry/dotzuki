@@ -76,3 +76,10 @@ dotzuki-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2",
 3. **pokered 专属预览代码回归 pokered 仓**:dotzuki-web 的 `render_layout`(160×144 固定画布 + 每菜单 mock 数据)+ `preview_elements`(`custom:hp_bar`)+ DSL 编译桥迁入 pokered 新 crate `crates/pokered-layout-preview`(git 依赖引擎,wasm-pack 出 `pkg/`);pokered-editor 的 `useWasmPreview.ts`/`pokeredRoutes.ts`/`package.json build:wasm` 同步指向新 crate。dotzuki-web 只保留通用的 `render_gui`(空 custom-element registry)+ DSL 编译桥 + 音频。
 4. **引擎仓 `workspace/Cargo.toml` 增加 `exclude = ["dotzuki-template"]`**(模板 `{{project-name}}` 占位包名)。注意:cargo 对**无根 Cargo.toml 的 git 依赖仓**会递归扫描所有 manifest,该错误仍以非致命噪音形式打印(build/test/update 均成功);如需彻底消除,得给模板换合法包名 + cargo-generate placeholders 配置,或给引擎仓加根 Cargo.toml。
 5. tag `v0.1.0` 前移至上述提交,两个游戏仓 `cargo update` 重锁(引擎 rev `ca37b896`)。
+
+## 品牌更名:jrpg-* → dotzuki-*(2026-08-09,v0.2.0)
+
+- 引擎仓 15 个 crate、`tools/dotzuki-editor`、`dotzuki-template` 及全部 `jrpg_*` Rust 标识符改名;tag `v0.2.0`(破坏性更名)。
+- 文件契约同步更名:项目清单 `.jrpg-editor.json` → `.dotzuki-editor.json`(runner `MANIFEST_FILE`、CLI scaffold、editor、e2e/test fixture 同步),默认存档 `.jrpg-save.json` → `.dotzuki-save.json`。
+- 保留未改:`jrpg` CLI bin 名、`JRPG_*` 环境变量、`jrpg::overworld` log target(无连字符前缀;改了会让消费方静默失效)。
+- 游戏仓适配:open-pokered `7518550`、star-heir `8067161`(依赖名/标识符/tag 升级 v0.2.0,清单文件改名)。
