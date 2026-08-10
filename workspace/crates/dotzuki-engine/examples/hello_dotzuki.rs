@@ -595,7 +595,7 @@ fn main() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Integration tests — cargo test --example hello_jrpg
+// Integration tests — cargo test --example hello_dotzuki
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[cfg(test)]

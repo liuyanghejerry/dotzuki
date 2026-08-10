@@ -71,7 +71,7 @@ test.describe('play activity (wasm runner)', () => {
     // Save export runs on an interval and lands in localStorage.
     await page.waitForTimeout(2500)
     const saveKeys = await page.evaluate(() =>
-      Object.keys(localStorage).filter(k => k.startsWith('jrpg-play-save')),
+      Object.keys(localStorage).filter(k => k.startsWith('dotzuki-play-save')),
     )
     expect(saveKeys.length).toBeGreaterThan(0)
 

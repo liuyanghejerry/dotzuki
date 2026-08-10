@@ -57,8 +57,8 @@ full-path preview, and the Electron app adds a native **Browse…** picker. The
 server scaffolds the project in a subdirectory of its project root
 (`GET /api/project/root`), refusing a non-empty target with **409**. When the
 editor is started from its own repo without `DOTZUKI_PROJECT_ROOT`, that root
-defaults to `~/jrpg-projects`, so new projects land in
-`~/jrpg-projects/<name>` instead of inside the editor checkout. On success
+defaults to `~/dotzuki-projects`, so new projects land in
+`~/dotzuki-projects/<name>` instead of inside the editor checkout. On success
 the panel summarizes what was scaffolded and you can jump straight into the
 editor or hand off to the AI assistant. Returning users also get recent
 projects and an open-by-path row on the welcome screen.
@@ -345,7 +345,7 @@ canvas: walk, talk to NPCs, battle, shop, save.
   (`tick(input_bitmask) → 320×240 RGBA` → `putImageData`).
 - **Controls**: Arrows/WASD move, Z = A, X = B, Enter/Space = Start,
   Backspace/Right Shift = Select.
-- **Saves** persist to `localStorage` (`jrpg-play-save:<projectRoot>`) and are
+- **Saves** persist to `localStorage` (`dotzuki-play-save:<projectRoot>`) and are
   restored on the next boot; **Clear save** wipes them, **Restart** re-fetches
   the bundle and reboots — the poor-man's hot reload after editing content.
 - **Audio**: `data/audio/` tracks play through WebAudio — the runner renders

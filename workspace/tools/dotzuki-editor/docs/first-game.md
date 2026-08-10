@@ -13,7 +13,7 @@ pnpm dev          # http://localhost:5174
 ```
 
 Started from the editor's own repo like this, new projects are created under
-**`~/jrpg-projects/<your-game>`** by default — nothing is written into the
+**`~/dotzuki-projects/<your-game>`** by default — nothing is written into the
 editor repository. To put projects elsewhere, start the server with
 `DOTZUKI_PROJECT_ROOT=/path/to/projects pnpm dev`.
 
@@ -86,21 +86,21 @@ The `dotzuki` CLI boots your project in a window — walk around StartTown with
 the arrow keys, talk with **Z** (the A button), warp between maps:
 
 ```bash
-dotzuki run ~/jrpg-projects/<your-game>
+dotzuki run ~/dotzuki-projects/<your-game>
 ```
 
 For CI or a quick smoke test, `--headless` runs frames without a window and
 can dump a screenshot:
 
 ```bash
-dotzuki run ~/jrpg-projects/<your-game> --headless --frames 240 --screenshot shot.png
+dotzuki run ~/dotzuki-projects/<your-game> --headless --frames 240 --screenshot shot.png
 ```
 
 Also compile-check every DSL file after edits — it exits non-zero and prints
 diagnostics when a `.scene`/`.gui` file is broken:
 
 ```bash
-dotzuki check ~/jrpg-projects/<your-game>
+dotzuki check ~/dotzuki-projects/<your-game>
 ```
 
 (In-editor, the Scripts tab's 🔍 lint catches dangling flags and unknown
