@@ -1,7 +1,7 @@
 # dotzuki — a generic JRPG game engine in Rust
 
 [![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
 A game-agnostic JRPG engine extracted from a Pokémon Red/Blue reimplementation. This repository is **engine-only**: the games that drove the design (pokered, wuxia) live in their own repositories and consume the engine as Cargo **git dependencies** (tag-pinned).
 
@@ -60,15 +60,19 @@ docs/                # repo-level docs (split record, marketing notes)
 AGENTS.md            # developer guide for AI agents
 ```
 
-## Documentation
-
-- **[`workspace/docs/README.md`](workspace/docs/README.md) — documentation index**
-  (reader guide + status of every engine doc). Start here.
-- Quickstart (zero-Rust, 5 minutes): [`workspace/docs/QUICKSTART.md`](workspace/docs/QUICKSTART.md)
-- CLI reference (`dotzuki new` / `check` / `run`): [`workspace/docs/CLI_REFERENCE.md`](workspace/docs/CLI_REFERENCE.md)
-- Game project spec (zero-Rust `.dotzuki-editor.json` projects): [`workspace/docs/game-project-spec.md`](workspace/docs/game-project-spec.md)
-- Battle engine guide (effect-stack + `rules.ron`): [`workspace/docs/BATTLE_ENGINE_GUIDE.md`](workspace/docs/BATTLE_ENGINE_GUIDE.md) / [`.zh-CN.md`](workspace/docs/BATTLE_ENGINE_GUIDE.zh-CN.md)
-- DSL docs: [`workspace/docs/GAME_UI_DSL.md`](workspace/docs/GAME_UI_DSL.md), [`workspace/docs/DSL_MAPPING.md`](workspace/docs/DSL_MAPPING.md)
-- Editor guide: [`workspace/tools/dotzuki-editor/README.md`](workspace/tools/dotzuki-editor/README.md) + [quickstart](workspace/tools/dotzuki-editor/docs/first-game.md)
-
 See `AGENTS.md` for the full developer guide.
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
