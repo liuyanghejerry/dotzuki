@@ -60,6 +60,56 @@ jobs:
         working-directory: workspace
         run: cargo test --workspace
 
+  coverage:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    name: Coverage (cargo-llvm-cov)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            libasound2-dev \
+            libudev-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Run coverage
+        # Summary table goes to the job log; the lcov report is uploaded as
+        # an artifact for inspection.
+        working-directory: workspace
+        run: |
+          cargo llvm-cov --workspace --lcov --output-path lcov.info
+          cargo llvm-cov report --summary-only
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: workspace/lcov.info
+          retention-days: 30
+
   build-dotzuki-editor:
     runs-on: self-hosted
     permissions:
