@@ -128,13 +128,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
+          cache-dependency-path: workspace/tools/pnpm-lock.yaml
 
       - name: Install dotzuki-editor dependencies
-        working-directory: workspace/tools/dotzuki-editor
+        # Install from the pnpm workspace root — that is where the committed
+        # lockfile lives.
+        working-directory: workspace/tools
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-        # pnpm-lock.yaml is gitignored, so resolve straight from package.json.
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         working-directory: workspace/tools/dotzuki-editor
