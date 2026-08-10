@@ -41,7 +41,7 @@ A new project is not an empty shell. You get:
 |-----|------------------------|
 | **Maps** | **StartTown** — a small demo town (pond, house, plaza, flower garden) with its own starter tileset. Paint tiles, edit collision, place entities. |
 | **Scripts** | `StartTown/script.scene` — the map's welcome dialogue in the Game DSL. Edit a line, save, done. |
-| **Data** | Sample records: a hero (*Aria*), a monster (*Slime*), a *Potion* (jrpg template). Add your own rows; the form is generated from the table schema. |
+| **Data** | Sample records: a hero (*Aria*), a monster (*Slime*), a *Potion* (dotzuki template). Add your own rows; the form is generated from the table schema. |
 | **Story** | A seeded narrative bible: *Elder Mira* (character) and the *Welcome to StartTown* quest, linked to the map's scene. This is the Story Designer — bible, quest graph, consistency checks. |
 | **Tiles** | The shared tile library, pre-seeded with the 16 starter tiles. |
 
@@ -55,7 +55,7 @@ A new project is not an empty shell. You get:
 3. **Add a character.** Story tab → new character, or Data tab → new record in
    `heroes`. The AI assistant (✨) can flesh out personalities, quests, and
    whole scenes from a one-line brief.
-4. **Start a battle** (jrpg template). Add one line to `StartTown/script.scene`
+4. **Start a battle** (dotzuki template). Add one line to `StartTown/script.scene`
    after the welcome dialogue:
 
    ```

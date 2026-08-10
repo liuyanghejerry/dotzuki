@@ -171,7 +171,7 @@ view, bag with usable heal items, save), `openShop` in a scene opens a
 Buy/Sell shop against the player's money (manifest `shop` section; selling
 pays `floor(price / 2)`), and a
 lost battle triggers a game-over whiteout (party healed, back to the entry
-spawn). With a `battle.levels` block (seeded in the jrpg template) wins pay
+spawn). With a `battle.levels` block (seeded in the dotzuki template) wins pay
 EXP from the enemies' `exp` fields, party members level up on an 8·L³ curve
 (+5% stat growth per level, heal-the-delta on level-up), and level/exp
 persist in the save. Abilities, held items and weather are data-driven too:

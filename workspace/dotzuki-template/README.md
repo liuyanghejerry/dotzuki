@@ -29,17 +29,17 @@ zero-Rust path is `dotzuki new my-game` + `dotzuki run` — see
 generate a project from this template:
 
 ```bash
-cargo generate --path ./dotzuki-template --name my-jrpg
-cd my-jrpg
+cargo generate --path ./dotzuki-template --name my-game
+cd my-game
 cargo run --release
 ```
 
 Or generate without `cargo-generate`:
 
 ```bash
-cp -r dotzuki-template my-jrpg
-cd my-jrpg
-# Replace {{project-name}} in Cargo.toml with my-jrpg
+cp -r dotzuki-template my-game
+cd my-game
+# Replace {{project-name}} in Cargo.toml with my-game
 cargo run --release
 ```
 
@@ -59,7 +59,7 @@ cargo run --release
 ## Project Structure
 
 ```
-my-jrpg/
+my-game/
 ├── Cargo.toml         # Depends on dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script, dotzuki-engine-dsl
 ├── src/
 │   └── main.rs        # Game loop: load map, render layers, handle input, camera follow

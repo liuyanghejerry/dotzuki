@@ -98,15 +98,15 @@ dotzuki-engine 遵循以下设计原则：
 
 ```bash
 cd workspace
-cargo generate --path ./dotzuki-template --name my-jrpg
-cd my-jrpg
+cargo generate --path ./dotzuki-template --name my-game
+cd my-game
 cargo run --release
 ```
 
 ### 2.2 模板项目结构
 
 ```
-my-jrpg/
+my-game/
 ├── Cargo.toml             # 依赖 dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script
 ├── src/
 │   └── main.rs            # 游戏主循环：加载地图、渲染图层、处理输入、摄像机跟随

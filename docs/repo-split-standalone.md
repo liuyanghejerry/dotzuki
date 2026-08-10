@@ -6,7 +6,7 @@
 
 | 仓库 | 位置 | 分支/提交 | 内容 |
 |---|---|---|---|
-| **jrpg 引擎(本仓库)** | `/Users/liuyanghe02/develop/dotzuki`(无历史快照;源分支 `feat/standalone-repos-split` 在旧 monorepo worktree) | `master`,tag `v0.1.0` | 15 个 `dotzuki-*` crate + `firered`/`minimon` 示例 + `dotzuki-editor` + `dotzuki-template` + 引擎 docs |
+| **dotzuki 引擎(本仓库,原 jrpg 引擎)** | `/Users/liuyanghe02/develop/dotzuki`(无历史快照;源分支 `feat/standalone-repos-split` 在旧 monorepo worktree) | `master`,tag `v0.1.0` | 15 个 `dotzuki-*` crate + `firered`/`minimon` 示例 + `dotzuki-editor` + `dotzuki-template` + 引擎 docs |
 | **pokered** | `/Users/liuyanghe02/develop/open-pokered` | `master`,初始提交 `14c80f5`(无历史) | 8 游戏 crate + 5 平台壳 + `scene_apply` bin + pokered-editor + android/ios + scripts/docs/CI |
 | **wuxia** | `/Users/liuyanghe02/develop/star-heir` | `master`,初始提交 `4563400`(无历史) | `starheir-app`/`starheir-data`/`starheir-battle-proto` + `scene-check` bin + 全量 data/docs/.claude |
 
@@ -81,5 +81,5 @@ dotzuki-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2",
 
 - 引擎仓 15 个 crate、`tools/dotzuki-editor`、`dotzuki-template` 及全部 `jrpg_*` Rust 标识符改名;tag `v0.2.0`(破坏性更名)。
 - 文件契约同步更名:项目清单 `.jrpg-editor.json` → `.dotzuki-editor.json`(runner `MANIFEST_FILE`、CLI scaffold、editor、e2e/test fixture 同步),默认存档 `.jrpg-save.json` → `.dotzuki-save.json`。
-- 保留未改:`jrpg` CLI bin 名、`JRPG_*` 环境变量、`jrpg::overworld` log target(无连字符前缀;改了会让消费方静默失效)。
+- 保留未改:`jrpg` CLI bin 名、`JRPG_*` 环境变量、`jrpg::overworld` log target(无连字符前缀;改了会让消费方静默失效)。**后续(v0.3.0,2026-08-09):这三者也已更名** —— bin `jrpg` → `dotzuki`、`JRPG_*` → `DOTZUKI_*`、log target `jrpg::overworld` → `dotzuki::overworld`(消费方已同步适配)。
 - 游戏仓适配:open-pokered `7518550`、star-heir `8067161`(依赖名/标识符/tag 升级 v0.2.0,清单文件改名)。

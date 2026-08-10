@@ -1279,7 +1279,7 @@ Tackle 与 Ember 返回 `NO_COST`。断言的结果（`tests.rs`）：
 > **免费**（跳过门控）。上面断言的 minimon 测试演练的是原生的 `Battle`
 > 路径；`data_mode` 标志（`lib.rs:404`）让原生的 `move_cost` 返回 `NO_COST`，
 > 这样数据驱动器就改从 `rules.ron` 提供开销。设计背景：§13
-> [`13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md)。
+> [`13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md)。
 
 ---
 
@@ -1434,7 +1434,7 @@ cargo test -p minimon                # the 5-system authoring proof + controls
   rng；空开销/空资源池时惰性），外加一个 RON `cost:` 字段 + `PayResource`
   原语 + `LoadError::UnknownResource`。参见 [§6](#6-资源mpsp与招式开销)
   与 §13
-  [`13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md)。
+  [`13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md)。
 - **回合叙述 —— `TurnLog`。** ✅ `StackDriver::execute_turn_logged` 返回一个通用的
   `TurnLog<P>`，内含一串 `TurnEvent`（招式使用 / 未中 / **被阻止** / 会心 / 伤害 /
   治疗 / 状态 / 能力变化 / 濒死），供前端渲染。增量 + 默认惰性：`execute_turn` 就是
@@ -1492,7 +1492,7 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 - [`engine-gap-analysis/10-generalization-result.md`](./engine-gap-analysis/10-generalization-result.md) —— GO-WITH-NITS 结论（已证明 vs 后续）。
 - [`engine-gap-analysis/11-no-code-authoring-design.md`](./engine-gap-analysis/11-no-code-authoring-design.md) —— 无代码 RON 编写设计（Option A、闭合 op 词汇表、双模式）。
 - [`engine-gap-analysis/12-typechart-ron-design.md`](./engine-gap-analysis/12-typechart-ron-design.md) —— 相克表 / `Effectiveness`-折叠设计。
-- [`engine-gap-analysis/13-jrpg-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md) —— JRPG 概念审计（MP/资源与招式开销）。
+- [`engine-gap-analysis/13-dotzuki-battle-concepts-audit.md`](./engine-gap-analysis/13-dotzuki-battle-concepts-audit.md) —— JRPG 概念审计（MP/资源与招式开销）。
 - [`engine-gap-analysis/14-ron-loader-result.md`](./engine-gap-analysis/14-ron-loader-result.md) —— RON 加载器结果。
 - 代码：[`examples/minimon/src/lib.rs`](../examples/minimon/src/lib.rs)、
   [`examples/minimon/src/tests.rs`](../examples/minimon/src/tests.rs)、
