@@ -60,9 +60,9 @@ per-file cap 16 MB, total 64 MB). The page then drives:
 |---|---|
 | `new(filesJson, saveJson?)` | Boot with the bundled files; optionally import a save |
 | `tick(inputBitmask)` | Advance one frame; returns the RGBA frame buffer |
-| `takeAudio()` | Pull generated stereo samples (`f32`, interleaved) |
+| `take_audio()` | Pull generated stereo samples (`f32`, interleaved) |
 | `width()` / `height()` | Frame size (320×240) |
-| `exportSave()` / `importSave(json)` | Save export/import (e.g. into `localStorage`) |
+| `export_save()` / `import_save(json)` | Save export/import (e.g. into `localStorage`) |
 
 The input bitmask is the GB button mask used by `dotzuki_renderer::input`
 (Up/Down/Left/Right/A/B/Start/Select). The editor's
