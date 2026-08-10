@@ -339,7 +339,7 @@ export function scaffoldProject(targetDir: string, opts: ScaffoldOptions): Scaff
     dataRoot,
     gfxRoot,
     activities: activitiesFor(tpl),
-    // Optional manifest `battle` section (jrpg template) — validated by
+    // Optional manifest `battle` section (dotzuki template) — validated by
     // `dotzuki check`, consumed by `dotzuki run`. Same for the `shop` section.
     ...(tpl.battle ? { battle: tpl.battle } : {}),
     ...(tpl.shop ? { shop: tpl.shop } : {}),

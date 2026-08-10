@@ -298,7 +298,7 @@ describe('story-tool gating (no story activity configured)', () => {
       fs.mkdirSync(path.dirname(abs), { recursive: true })
       fs.writeFileSync(abs, content, 'utf-8')
     }
-    // Same shape as a scaffolded wuxia/jrpg template project: data tables and
+    // Same shape as a scaffolded wuxia/dotzuki template project: data tables and
     // maps, but NO story activity — story tools must not be registered.
     bareWrite('.dotzuki-editor.json', JSON.stringify({
       name: 'B', dataRoot: '.', activities: [
