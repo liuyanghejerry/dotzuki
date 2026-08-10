@@ -132,10 +132,10 @@ impl<I: Copy + Eq + Hash + Debug> ItemUseResult<I> {
 ///
 /// Returns [`ItemUseResult::Failed`] without touching `target` if the item is
 /// not owned or is not usable in `ctx`.
-pub fn use_item<I, M>(
+pub fn use_item<const N: usize, I, M>(
     provider: &I,
     monster_provider: &M,
-    inv: &mut Inventory<I::Item>,
+    inv: &mut Inventory<I::Item, N>,
     item: I::Item,
     ctx: UsageContext,
     target: Option<&mut MonsterInstance<M>>,
@@ -218,10 +218,10 @@ pub struct ShopReceipt {
 /// can hold the goods, then adds the item and deducts money. On any error
 /// nothing is mutated (no money lost, no item added). Prices and Gen-1
 /// quirks come from the [`ShopProvider`](super::ShopProvider).
-pub fn buy<S>(
+pub fn buy<const N: usize, S>(
     provider: &S,
     shop_id: &S::ShopId,
-    inv: &mut Inventory<S::Item>,
+    inv: &mut Inventory<S::Item, N>,
     money: &mut u32,
     item: S::Item,
     quantity: u32,
@@ -257,10 +257,10 @@ where
 /// Bookkeeping only: verifies the shop will buy the item and the player owns
 /// enough, then removes the item and credits money. On any error nothing is
 /// mutated.
-pub fn sell<S>(
+pub fn sell<const N: usize, S>(
     provider: &S,
     shop_id: &S::ShopId,
-    inv: &mut Inventory<S::Item>,
+    inv: &mut Inventory<S::Item, N>,
     money: &mut u32,
     item: S::Item,
     quantity: u32,
@@ -529,8 +529,8 @@ mod tests {
         }
     }
 
-    fn stock(item: Item, qty: u32) -> Inventory<Item> {
-        let mut inv = Inventory::new();
+    fn stock(item: Item, qty: u32) -> Inventory<Item, 64> {
+        let mut inv = Inventory::<Item, 64>::new();
         inv.add(item, qty).unwrap();
         inv
     }
@@ -580,7 +580,7 @@ mod tests {
     #[test]
     fn use_item_rejects_not_owned_without_touching_target() {
         let game = Game;
-        let mut inv: Inventory<Item> = Inventory::new(); // empty
+        let mut inv: Inventory<Item, 64> = Inventory::new(); // empty
         let mut m = mon(10, MonsterStatus::Poison, 10);
         let mut rng = SeqRng::new(&[0]);
         let r = use_item(
@@ -601,7 +601,7 @@ mod tests {
         let game = Game;
         let mut inv = stock(Item::XAttack, 5); // battle-only
         let mut rng = SeqRng::new(&[0]);
-        let r = use_item::<Game, MockMon>(
+        let r = use_item(
             &game,
             &MockMon,
             &mut inv,
@@ -619,7 +619,7 @@ mod tests {
         let game = Game;
         let mut inv = stock(Item::Ball, 5);
         let mut rng = SeqRng::new(&[0]); // even -> Caught
-        let r = use_item::<Game, MockMon>(
+        let r = use_item(
             &game,
             &MockMon,
             &mut inv,
@@ -637,7 +637,7 @@ mod tests {
         let game = Game;
         let mut inv = stock(Item::Ball, 5);
         let mut rng = SeqRng::new(&[1]); // odd -> Failed
-        let r = use_item::<Game, MockMon>(
+        let r = use_item(
             &game,
             &MockMon,
             &mut inv,
@@ -707,7 +707,7 @@ mod tests {
             }
         }
         let game = Plain;
-        let mut inv = Inventory::new();
+        let mut inv = Inventory::<u8, 64>::new();
         inv.add(7u8, 2).unwrap();
         let mut m = mon(10, MonsterStatus::Healthy, 10);
         let mut rng = SeqRng::new(&[0]);
@@ -730,7 +730,7 @@ mod tests {
     #[test]
     fn buy_deducts_money_and_adds_item() {
         let game = Game;
-        let mut inv = Inventory::new();
+        let mut inv = Inventory::<Item, 64>::new();
         let mut money = 1000u32;
         let r = buy(&game, &0u8, &mut inv, &mut money, Item::Potion, 2).unwrap();
         assert_eq!(r.total, 600); // 300 * 2
@@ -741,7 +741,7 @@ mod tests {
     #[test]
     fn buy_fails_when_broke_and_changes_nothing() {
         let game = Game;
-        let mut inv = Inventory::new();
+        let mut inv = Inventory::<Item, 64>::new();
         let mut money = 100u32;
         let err = buy(&game, &0u8, &mut inv, &mut money, Item::Potion, 1).unwrap_err();
         assert_eq!(err, ShopError::NotEnoughMoney);
@@ -753,7 +753,7 @@ mod tests {
     fn buy_fails_when_inventory_full_and_keeps_money() {
         let game = Game;
         // One slot only, already occupied by another item.
-        let mut inv = Inventory::with_capacity(1, 99);
+        let mut inv = Inventory::<Item, 1>::with_capacity(99);
         inv.add(Item::Antidote, 1).unwrap();
         let mut money = 1000u32;
         let err = buy(&game, &0u8, &mut inv, &mut money, Item::Potion, 1).unwrap_err();
@@ -765,7 +765,7 @@ mod tests {
     #[test]
     fn buy_fails_at_per_slot_cap_and_keeps_money() {
         let game = Game;
-        let mut inv = Inventory::with_capacity(20, 99);
+        let mut inv = Inventory::<Item, 20>::with_capacity(99);
         inv.add(Item::Potion, 99).unwrap(); // slot already at cap
         let mut money = 1000u32;
         let err = buy(&game, &0u8, &mut inv, &mut money, Item::Potion, 1).unwrap_err();

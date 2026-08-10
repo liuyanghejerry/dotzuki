@@ -5,7 +5,7 @@
 //! tile-to-colour callback, then composites all layers bottom-to-top onto a
 //! single output framebuffer.
 
-use crate::{DirtyRegion, FrameBuffer, TILE_SIZE};
+use crate::{FbSurface, FrameBuffer, DirtyRegion, TILE_SIZE};
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render::{BlendMode, MapLayer};
 use dotzuki_engine::tilemap::TilemapEntry;
@@ -77,7 +77,7 @@ impl Default for LayerTileCache {
 /// When a layer has `no_animation: true` and `cache` is provided, pre-rendered
 /// RGBA tiles are used instead of calling `tile_color` for every pixel.
 pub fn render_layers<F>(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     layers: &[MapLayer],
     camera_x: i32,
     camera_y: i32,
@@ -95,7 +95,7 @@ pub fn render_layers<F>(
 /// Full-colour games whose tiles are not 8×8 (e.g. wuxia's 16×16 tiles) call
 /// this so the grid step and flip maths match their tile size.
 pub fn render_layers_sized<F>(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     layers: &[MapLayer],
     camera_x: i32,
     camera_y: i32,
@@ -114,7 +114,7 @@ pub fn render_layers_sized<F>(
 /// Like [`render_layers`] but accepts an optional [`LayerTileCache`] for
 /// accelerating `no_animation` layers.
 pub fn render_layers_with_cache<F>(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     layers: &[MapLayer],
     camera_x: i32,
     camera_y: i32,
@@ -138,7 +138,7 @@ pub fn render_layers_with_cache<F>(
 /// path is used instead. (wuxia's static maps render fine without the cache;
 /// the full-colour `tile_color` closure is a cheap array index.)
 pub fn render_layers_with_cache_sized<F>(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     layers: &[MapLayer],
     camera_x: i32,
     camera_y: i32,
@@ -193,7 +193,7 @@ pub fn render_layers_with_cache_sized<F>(
 /// When `cache` is provided and `layer.no_animation` is true, pre-rendered
 /// RGBA tiles are used instead of calling `tile_color` per pixel.
 fn render_single_layer<F>(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     layer: &MapLayer,
     camera_x: i32,
     camera_y: i32,
@@ -263,58 +263,79 @@ fn effective_pixel(px: u8, py: u8, entry: &TilemapEntry, tile_size: u32) -> (u8,
 
 /// Composite `src` onto `dst` in-place using the given blend mode and
 /// overall layer opacity.
-fn composite_onto(dst: &mut FrameBuffer, src: &FrameBuffer, opacity: f32, blend_mode: BlendMode) {
-    assert_eq!(dst.width, src.width);
-    assert_eq!(dst.height, src.height);
+///
+/// `dst` may be any [`FbSurface`] (the RGBA engine buffer or the indexed
+/// facade); source pixels blend against the destination's current color and
+/// are written back through the surface. The intermediate temp buffer stays
+/// an RGBA [`FrameBuffer`].
+///
+/// Invariant: on an indexed destination, `get_pixel` reads through the
+/// *display* palette while `set_pixel` quantizes through the *base* palette,
+/// so compositing must only run while the display palette is the base
+/// palette — a fade/flash palette active here would shift indices on
+/// round-trip. Not reachable today; documented as a constraint.
+fn composite_onto(dst: &mut impl FbSurface, src: &FrameBuffer, opacity: f32, blend_mode: BlendMode) {
+    let (w, h) = (dst.width(), dst.height());
+    assert_eq!(w, src.width);
+    assert_eq!(h, src.height);
 
-    let len = dst.data.len();
-    for i in (0..len).step_by(4) {
-        let sr = src.data[i] as f32;
-        let sg = src.data[i + 1] as f32;
-        let sb = src.data[i + 2] as f32;
-        let sa = src.data[i + 3] as f32;
+    for y in 0..h {
+        for x in 0..w {
+            let off = ((y * w + x) * 4) as usize;
+            let sr = src.data[off] as f32;
+            let sg = src.data[off + 1] as f32;
+            let sb = src.data[off + 2] as f32;
+            let sa = src.data[off + 3] as f32;
 
-        let dr = dst.data[i] as f32;
-        let dg = dst.data[i + 1] as f32;
-        let db = dst.data[i + 2] as f32;
-        let _da = dst.data[i + 3] as f32;
+            let d = dst.get_pixel(x, y).unwrap_or(Rgba::TRANSPARENT);
+            let dr = d.r as f32;
+            let dg = d.g as f32;
+            let db = d.b as f32;
+            let da = d.a as f32;
 
-        // Effective source alpha = pixel alpha * layer opacity.
-        let src_alpha = (sa / 255.0) * opacity;
+            // Effective source alpha = pixel alpha * layer opacity.
+            let src_alpha = (sa / 255.0) * opacity;
 
-        let (out_r, out_g, out_b, out_a) = match blend_mode {
-            BlendMode::Normal => {
-                let a = src_alpha;
-                let inv_a = 1.0 - a;
-                let r = sr * a + dr * inv_a;
-                let g = sg * a + dg * inv_a;
-                let b = sb * a + db * inv_a;
-                let a_out = sa * opacity + _da * (1.0 - src_alpha);
-                (r, g, b, a_out)
-            }
-            BlendMode::Additive => {
-                let r = (dr + sr * src_alpha).min(255.0);
-                let g = (dg + sg * src_alpha).min(255.0);
-                let b = (db + sb * src_alpha).min(255.0);
-                (r, g, b, 255.0)
-            }
-            BlendMode::Multiply => {
-                let inv_opacity = 1.0 - opacity;
-                // lerp between original dst and multiplied result based on opacity.
-                let r_mul = sr * dr / 255.0;
-                let g_mul = sg * dg / 255.0;
-                let b_mul = sb * db / 255.0;
-                let r = dr * inv_opacity + r_mul * opacity;
-                let g = dg * inv_opacity + g_mul * opacity;
-                let b = db * inv_opacity + b_mul * opacity;
-                (r, g, b, 255.0)
-            }
-        };
+            let (out_r, out_g, out_b, out_a) = match blend_mode {
+                BlendMode::Normal => {
+                    let a = src_alpha;
+                    let inv_a = 1.0 - a;
+                    let r = sr * a + dr * inv_a;
+                    let g = sg * a + dg * inv_a;
+                    let b = sb * a + db * inv_a;
+                    let a_out = sa * opacity + da * (1.0 - src_alpha);
+                    (r, g, b, a_out)
+                }
+                BlendMode::Additive => {
+                    let r = (dr + sr * src_alpha).min(255.0);
+                    let g = (dg + sg * src_alpha).min(255.0);
+                    let b = (db + sb * src_alpha).min(255.0);
+                    (r, g, b, 255.0)
+                }
+                BlendMode::Multiply => {
+                    let inv_opacity = 1.0 - opacity;
+                    // lerp between original dst and multiplied result based on opacity.
+                    let r_mul = sr * dr / 255.0;
+                    let g_mul = sg * dg / 255.0;
+                    let b_mul = sb * db / 255.0;
+                    let r = dr * inv_opacity + r_mul * opacity;
+                    let g = dg * inv_opacity + g_mul * opacity;
+                    let b = db * inv_opacity + b_mul * opacity;
+                    (r, g, b, 255.0)
+                }
+            };
 
-        dst.data[i] = out_r.clamp(0.0, 255.0) as u8;
-        dst.data[i + 1] = out_g.clamp(0.0, 255.0) as u8;
-        dst.data[i + 2] = out_b.clamp(0.0, 255.0) as u8;
-        dst.data[i + 3] = out_a.clamp(0.0, 255.0) as u8;
+            dst.set_pixel(
+                x,
+                y,
+                Rgba::new(
+                    out_r.clamp(0.0, 255.0) as u8,
+                    out_g.clamp(0.0, 255.0) as u8,
+                    out_b.clamp(0.0, 255.0) as u8,
+                    out_a.clamp(0.0, 255.0) as u8,
+                ),
+            );
+        }
     }
 }
 

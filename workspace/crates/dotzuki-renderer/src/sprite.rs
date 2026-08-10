@@ -15,7 +15,7 @@
 
 use crate::palette::{ColorIndex, GbaColor, GbColor, Palette};
 use crate::tile::{TileFormat, TileSet, TILE_PIXELS};
-use crate::FrameBuffer;
+use crate::FbSurface;
 
 /// OAM attribute flags.
 pub const OAM_PRIORITY: u8 = 0x80; // bit 7: behind BG
@@ -117,7 +117,7 @@ impl SpriteLayer {
     ///   This buffer stores the BG color index (0-3) for each pixel.
     pub fn render(
         &self,
-        fb: &mut FrameBuffer,
+        fb: &mut impl FbSurface,
         tileset: &TileSet,
         obp0: &Palette,
         obp1: &Palette,
@@ -143,7 +143,7 @@ impl Default for SpriteLayer {
 /// - [`TileFormat::Gb2bpp`]: existing GB path with [`GbColor`] palette lookup (unchanged).
 /// - [`TileFormat::Gba4bpp`]: uses [`GbaColor`] palette lookup (accesses `palette.colors` directly).
 fn render_sprite(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     tileset: &TileSet,
     obp0: &Palette,
     obp1: &Palette,

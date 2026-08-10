@@ -737,7 +737,19 @@ pub fn generate_embedded_module(
 /// Used at runtime for hot-reload: when a `.scene` file changes,
 /// the engine can re-compile it on the fly and feed the resulting
 /// JS to the Boa script engine without needing a build step.
-pub fn compile_scene_to_js(source: &str, file_path: &str) -> Result<String, String> {
+/// Parse and validate a `.scene` source file into its AST ([`ast::GameScene`]),
+/// running the same lexer/parser/semantic-validation pipeline as
+/// [`compile_scene_to_js`]. This is the entry point for the native AST
+/// interpreter (`crate::interpreter`) and for build-time AST embedding.
+pub fn compile_scene_to_ast(source: &str, file_path: &str) -> Result<ast::GameScene, String> {
+    let doc = parse_scene_document(source, file_path)?;
+    match doc {
+        ast::Document::Scene(scene) => Ok(scene),
+        _ => Err("only .scene files are supported by this function".to_string()),
+    }
+}
+
+fn parse_scene_document(source: &str, file_path: &str) -> Result<ast::Document, String> {
     let tokens = lexer::Lexer::new(source, file_path)
         .tokenize()
         .map_err(|errors| {
@@ -752,7 +764,11 @@ pub fn compile_scene_to_js(source: &str, file_path: &str) -> Result<String, Stri
         return Err(semantic_errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; "));
     }
 
-    let doc = doc.ok_or_else(|| "parser returned no document".to_string())?;
+    doc.ok_or_else(|| "parser returned no document".to_string())
+}
+
+pub fn compile_scene_to_js(source: &str, file_path: &str) -> Result<String, String> {
+    let doc = parse_scene_document(source, file_path)?;
     match doc {
         ast::Document::Scene(scene) => {
             let mut sm = sourcemap::SourceMapBuilder::new(file_path, &format!("{}.js", scene.name));

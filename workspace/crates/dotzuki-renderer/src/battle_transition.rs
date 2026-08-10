@@ -105,6 +105,136 @@ pub struct BattleTransitionState {
     spiral_y: i16,
 }
 
+/// Minimal tile-level framebuffer view used by transition wipes.
+///
+/// Implemented for the engine's RGBA [`FrameBuffer`] and for the packed
+/// indexed [`crate::IndexedFrameBuffer`]; both layouts store an 8×8 tile
+/// contiguously, so a tile copy is a small memcpy.
+pub trait TransitionFb {
+    /// (width, height) in pixels.
+    fn size(&self) -> (usize, usize);
+    /// Fill the 8×8 tile at tile coordinates (`tx`, `ty`) with black.
+    /// Out-of-bounds tiles are clamped to the visible area.
+    fn tile_black(&mut self, tx: usize, ty: usize);
+    /// Copy the 8×8 tile at tile coordinates (`stx`, `sty`) of `src` into
+    /// tile (`tx`, `ty`) of `self`. Out-of-bounds areas are clamped.
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize);
+}
+
+impl TransitionFb for FrameBuffer {
+    fn size(&self) -> (usize, usize) {
+        (self.width as usize, self.height as usize)
+    }
+    fn tile_black(&mut self, tx: usize, ty: usize) {
+        let (w, h) = self.size();
+        let px = tx * TILE_SIZE as usize;
+        let py = ty * TILE_SIZE as usize;
+        for dy in 0..TILE_SIZE as usize {
+            let y = py + dy;
+            if y >= h {
+                break;
+            }
+            for dx in 0..TILE_SIZE as usize {
+                let x = px + dx;
+                if x >= w {
+                    break;
+                }
+                let off = (y * w + x) * 4;
+                self.data[off] = 0;
+                self.data[off + 1] = 0;
+                self.data[off + 2] = 0;
+            }
+        }
+    }
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        let (w, h) = self.size();
+        let px = tx * TILE_SIZE as usize;
+        let py = ty * TILE_SIZE as usize;
+        let spx = stx * TILE_SIZE as usize;
+        let spy = sty * TILE_SIZE as usize;
+        for dy in 0..TILE_SIZE as usize {
+            let y = py + dy;
+            let sy = spy + dy;
+            if y >= h || sy >= h {
+                break;
+            }
+            for dx in 0..TILE_SIZE as usize {
+                let x = px + dx;
+                let sx = spx + dx;
+                if x >= w || sx >= w {
+                    break;
+                }
+                let off = (y * w + x) * 4;
+                let soff = (sy * w + sx) * 4;
+                self.data[off..off + 4].copy_from_slice(&src.data[soff..soff + 4]);
+            }
+        }
+    }
+}
+
+impl<C: crate::palette::ColorIndex> TransitionFb for crate::IndexedFrameBuffer<C> {
+    fn size(&self) -> (usize, usize) {
+        (self.width(), self.height())
+    }
+    fn tile_black(&mut self, tx: usize, ty: usize) {
+        // Index 3 is black (GbColor::Black); the palette maps it to the
+        // darkest shade at present time.
+        self.fill_rect(
+            (tx * TILE_SIZE as usize) as u32,
+            (ty * TILE_SIZE as usize) as u32,
+            TILE_SIZE,
+            TILE_SIZE,
+            C::from_u8(3),
+        );
+    }
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        let bits = crate::index_bits::<C>();
+        let gpr = (self.width() + 7) / 8;
+        let (w, h) = self.size();
+        let px = tx * TILE_SIZE as usize;
+        let py = ty * TILE_SIZE as usize;
+        let spx = stx * TILE_SIZE as usize;
+        let spy = sty * TILE_SIZE as usize;
+        for dy in 0..TILE_SIZE as usize {
+            let y = py + dy;
+            let sy = spy + dy;
+            if y >= h || sy >= h {
+                break;
+            }
+            for dx in 0..TILE_SIZE as usize {
+                let x = px + dx;
+                let sx = spx + dx;
+                if x >= w || sx >= w {
+                    break;
+                }
+                // Packed layout: per row, bytes run `gpr * bits` per
+                // row-group; a pixel spans one bit per plane byte.
+                let doff = (y * gpr + x / 8) * bits;
+                let soff = (sy * gpr + sx / 8) * bits;
+                let bit_shift = 7 - (x % 8);
+                let sbit_shift = 7 - (sx % 8);
+                let dst = self.packed_mut();
+                for plane in 0..bits {
+                    let sb = (src.packed()[soff + plane] >> sbit_shift) & 1;
+                    dst[doff + plane] = (dst[doff + plane] & !(1 << bit_shift)) | (sb << bit_shift);
+                }
+            }
+        }
+    }
+}
+
+impl<C: crate::palette::ColorIndex> TransitionFb for crate::RgbaIndexedFrameBuffer<C> {
+    fn size(&self) -> (usize, usize) {
+        (self.width() as usize, self.height() as usize)
+    }
+    fn tile_black(&mut self, tx: usize, ty: usize) {
+        self.indexed_mut().tile_black(tx, ty);
+    }
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        self.indexed_mut().tile_copy(tx, ty, src.indexed(), stx, sty);
+    }
+}
+
 impl BattleTransitionState {
     pub fn new(kind: BattleTransitionKind, width_tiles: usize, height_tiles: usize) -> Self {
         let w = width_tiles;
@@ -164,11 +294,11 @@ impl BattleTransitionState {
     /// Render the transition onto `dest_fb`.
     /// `source_fb` is the overworld frame to wipe away.
     /// Returns true when the screen is fully blacked (for downstream silhouette slide).
-    pub fn render(&self, source_fb: &FrameBuffer, dest_fb: &mut FrameBuffer) -> bool {
-        let tile_px = TILE_SIZE as usize;
-        let fb_w = dest_fb.width() as usize;
-        let fb_h = dest_fb.height() as usize;
-
+    ///
+    /// Generic over [`TransitionFb`]: the RGBA engine buffer and the packed
+    /// 2bpp indexed buffer both implement it (tile-granular copies, so the
+    /// indexed variant moves 16 bytes per tile instead of 256).
+    pub fn render<F: TransitionFb>(&self, source_fb: &F, dest_fb: &mut F) -> bool {
         for ty in 0..self.height_tiles {
             for tx in 0..self.width_tiles {
                 let idx = ty * self.width_tiles + tx;
@@ -176,35 +306,10 @@ impl BattleTransitionState {
                 // Copy-based transitions (Shrink/Split) redirect this tile to
                 // a shifted source tile; wipe transitions use the identity.
                 let (stx, sty) = self.src[idx];
-                let spx = stx as usize * tile_px;
-                let spy = sty as usize * tile_px;
-                let px = tx * tile_px;
-                let py = ty * tile_px;
-                for dy in 0..tile_px {
-                    let sy = py + dy;
-                    if sy >= fb_h {
-                        break;
-                    }
-                    let ssy = spy + dy;
-                    for dx in 0..tile_px {
-                        let sx = px + dx;
-                        if sx >= fb_w {
-                            break;
-                        }
-                        let off = (sy * fb_w + sx) * 4;
-                        if black {
-                            dest_fb.data[off] = 0;
-                            dest_fb.data[off + 1] = 0;
-                            dest_fb.data[off + 2] = 0;
-                        } else {
-                            let ssx = spx + dx;
-                            if ssy < fb_h && ssx < fb_w {
-                                let soff = (ssy * fb_w + ssx) * 4;
-                                dest_fb.data[off..off + 4]
-                                    .copy_from_slice(&source_fb.data[soff..soff + 4]);
-                            }
-                        }
-                    }
+                if black {
+                    dest_fb.tile_black(tx, ty);
+                } else {
+                    dest_fb.tile_copy(tx, ty, source_fb, stx as usize, sty as usize);
                 }
             }
         }

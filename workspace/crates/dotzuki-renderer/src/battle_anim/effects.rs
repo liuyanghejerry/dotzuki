@@ -15,7 +15,8 @@
 use crate::palette::{GbColor, Palette};
 use crate::sprite::{SpriteLayer, SpriteOamEntry, OAM_X_FLIP};
 use crate::tile::{TileSet, TILE_PIXELS};
-use crate::{FrameBuffer, Rgba, TILE_SIZE};
+use crate::indexed_framebuffer::RgbaIndexedFrameBuffer;
+use crate::{Rgba, TILE_SIZE};
 
 use super::types::ANIM_BASE_TILE_ID;
 use super::AnimEffect;
@@ -178,78 +179,51 @@ const SCREEN_SHAKE_HEIGHT: u32 = 12 * TILE_SIZE;
 
 // ─── Shade remap helpers ─────────────────────────────────────────────
 
-/// Map an RGB pixel to a GB shade index 0..=3 (0 = lightest), matching the
-/// grayscale palette the frontends render with.
-fn shade_of(r: u8, g: u8, b: u8) -> u8 {
-    let lum = (r as u32 * 30 + g as u32 * 59 + b as u32 * 11) / 100;
-    if lum >= 192 {
-        0
-    } else if lum >= 96 {
-        1
-    } else if lum >= 48 {
-        2
-    } else {
-        3
-    }
-}
-
-const SHADE_VALUES: [u8; 4] = [255, 170, 85, 0];
-
 /// Apply a DMG palette map (shade → shade) to the whole framebuffer,
-/// e.g. rBGP = $6f for `AnimationDarkScreenPalette`.
-fn remap_shades(fb: &mut FrameBuffer, map: &[u8; 4]) {
-    for px in fb.data.chunks_exact_mut(4) {
-        let shade = shade_of(px[0], px[1], px[2]);
-        let v = SHADE_VALUES[map[shade as usize] as usize & 3];
-        px[0] = v;
-        px[1] = v;
-        px[2] = v;
-    }
+/// e.g. rBGP = $6f for `AnimationDarkScreenPalette`. On the indexed
+/// framebuffer this is a display-palette remap — the GB-hardware way.
+fn remap_shades(fb: &mut RgbaIndexedFrameBuffer, map: &[u8; 4]) {
+    fb.remap_shades(map);
 }
 
 /// Shift a horizontal strip of the framebuffer sideways, filling the exposed
-/// edge with white. Used for the SCX-based shakes.
-fn shift_rows_h(fb: &mut FrameBuffer, y_end: u32, dx: i32) {
+/// edge with white. Used for the SCX-based shakes. Operates on the packed
+/// 2bpp indices (cloned cheaply — 5.7 KiB), so the result is identical to
+/// the old per-pixel RGBA shift.
+fn shift_rows_h(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dx: i32) {
     if dx == 0 {
         return;
     }
-    let w = fb.width() as usize;
-    let src = fb.data.clone();
+    let w = fb.width() as i32;
+    let src = fb.indexed().clone();
     for y in 0..y_end.min(fb.height()) {
-        for x in 0..w as i32 {
+        for x in 0..w {
             let sx = x - dx;
-            let off = (y as usize * w + x as usize) * 4;
-            if sx >= 0 && sx < w as i32 {
-                let soff = (y as usize * w + sx as usize) * 4;
-                fb.data[off..off + 4].copy_from_slice(&src[soff..soff + 4]);
+            let color = if sx >= 0 && sx < w {
+                src.get_pixel(sx as u32, y).unwrap_or(GbColor::White)
             } else {
-                fb.data[off] = 255;
-                fb.data[off + 1] = 255;
-                fb.data[off + 2] = 255;
-            }
+                GbColor::White
+            };
+            fb.set_pixel_index(x as u32, y, color);
         }
     }
 }
 
 /// Shift the top strip of the framebuffer vertically, filling with white.
-fn shift_rows_v(fb: &mut FrameBuffer, y_end: u32, dy: i32) {
+fn shift_rows_v(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dy: i32) {
     if dy == 0 {
         return;
     }
-    let w = fb.width() as usize;
-    let src = fb.data.clone();
+    let src = fb.indexed().clone();
     for y in 0..y_end.min(fb.height()) as i32 {
         let sy = y - dy;
-        for x in 0..w {
-            let off = (y as usize * w + x) * 4;
-            if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
-                let soff = (sy as usize * w + x) * 4;
-                fb.data[off..off + 4].copy_from_slice(&src[soff..soff + 4]);
+        for x in 0..fb.width() as i32 {
+            let color = if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
+                src.get_pixel(x as u32, sy as u32).unwrap_or(GbColor::White)
             } else {
-                fb.data[off] = 255;
-                fb.data[off + 1] = 255;
-                fb.data[off + 2] = 255;
-            }
+                GbColor::White
+            };
+            fb.set_pixel_index(x as u32, y as u32, color);
         }
     }
 }
@@ -1089,7 +1063,7 @@ impl BattleEffects {
     /// Call after the background/HUD is drawn but BEFORE the mon sprites,
     /// so only the HUD (and background rows 0..7) shakes — the original
     /// protects the player back pic by copying it to OAM first.
-    pub fn apply_enemy_hud_shake(&self, fb: &mut FrameBuffer) {
+    pub fn apply_enemy_hud_shake(&self, fb: &mut RgbaIndexedFrameBuffer) {
         let dx = self.enemy_hud_shake_offset();
         if dx != 0 {
             shift_rows_h(fb, HUD_SHAKE_HEIGHT, dx);
@@ -1098,7 +1072,7 @@ impl BattleEffects {
 
     /// Full-screen post effects: screen shake, wavy screen, palette tint,
     /// screen flash. Call once the scene is fully drawn.
-    pub fn apply_screen_effects(&self, fb: &mut FrameBuffer) {
+    pub fn apply_screen_effects(&self, fb: &mut RgbaIndexedFrameBuffer) {
         if let Some(shake) = self.shake {
             let (dx, dy) = shake.offset();
             shift_rows_h(fb, SCREEN_SHAKE_HEIGHT, dx);
@@ -1109,7 +1083,7 @@ impl BattleEffects {
             // AnimationWavyScreen: per-scanline SCX from WAVY_LINE_OFFSETS;
             // the table start advances one entry per frame.
             let w = fb.width() as usize;
-            let src = fb.data.clone();
+            let src = fb.indexed().clone();
             let start = (self.wave_frame - 1) as usize;
             for y in 0..fb.height() as usize {
                 let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
@@ -1118,9 +1092,10 @@ impl BattleEffects {
                 }
                 for x in 0..w as i32 {
                     let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
-                    let soff = (y * w + sx) * 4;
-                    let doff = (y * w + x as usize) * 4;
-                    fb.data[doff..doff + 4].copy_from_slice(&src[soff..soff + 4]);
+                    let color = src
+                        .get_pixel(sx as u32, y as u32)
+                        .unwrap_or(GbColor::White);
+                    fb.set_pixel_index(x as u32, y as u32, color);
                 }
             }
         }
@@ -1133,7 +1108,7 @@ impl BattleEffects {
             Some(Flash::Short { frame }) => {
                 if frame < 2 {
                     // rBGP = %00011011: inverted colors.
-                    remap_shades(fb, &[3, 2, 1, 0].map(|s| 3 - s));
+                    remap_shades(fb, &[3, 2, 1, 0]);
                 } else {
                     // rBGP = 0: white out.
                     fb.clear(Rgba::WHITE);
@@ -1160,7 +1135,7 @@ impl BattleEffects {
     /// [`ANIM_BASE_TILE_ID`]).
     pub fn render_objects(
         &self,
-        fb: &mut FrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer,
         ts0: &TileSet,
         ts1: &TileSet,
         pal: &Palette,
@@ -1248,7 +1223,7 @@ impl BattleEffects {
     /// the asm (mon pic tiles are column-major, tile = col*7 + row):
     ///   - enemy turn (facing down): tiles [0,1;2,3] at (col 2, row 4)
     ///   - player turn (facing up):  tiles [4,5;6,7] at (col 3, row 4)
-    pub fn draw_substitute(fb: &mut FrameBuffer, rect: MonRect, doll: &TileSet, pal: &Palette, side: MonSide) {
+    pub fn draw_substitute(fb: &mut RgbaIndexedFrameBuffer, rect: MonRect, doll: &TileSet, pal: &Palette, side: MonSide) {
         let (base_tile, dx, dy) = match side {
             MonSide::Enemy => (0usize, 2 * TILE_SIZE, 4 * TILE_SIZE),
             MonSide::Player => (4, 3 * TILE_SIZE, 4 * TILE_SIZE),
@@ -1266,7 +1241,7 @@ impl BattleEffects {
     /// Draw the minimize blob (`MinimizedMonSprite`) over a mon pic rect.
     /// Placement from the asm: wTempPic + (7*3+4) tiles + TILE_SIZE/4 →
     /// (col 3, row 4) + 2 px, i.e. pic-relative (24, 34); color index 3.
-    pub fn draw_minimized(fb: &mut FrameBuffer, rect: MonRect, pal: &Palette) {
+    pub fn draw_minimized(fb: &mut RgbaIndexedFrameBuffer, rect: MonRect, pal: &Palette) {
         let color = pal.color(GbColor::from_u8(3));
         let ox = rect.x + 3 * TILE_SIZE as i32;
         let oy = rect.y + 4 * TILE_SIZE as i32 + 2;
@@ -1288,7 +1263,7 @@ impl BattleEffects {
     /// alternating the anchored side). Nearest-neighbor scale; color 0 is
     /// transparent like the normal mon blit.
     pub fn draw_squished(
-        fb: &mut FrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1333,7 +1308,7 @@ impl BattleEffects {
     /// tile-id lists — a crop, not a scale). Color 0 is transparent like the
     /// normal mon blit.
     pub fn draw_mon_rows(
-        fb: &mut FrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1365,7 +1340,7 @@ impl BattleEffects {
     /// Draw one 8×8 tile with all four shades opaque (the substitute doll
     /// replaces the mon pic area, whose background was blanked).
     fn draw_tile_opaque(
-        fb: &mut FrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer,
         tile: &crate::tile::Tile,
         x: i32,
         y: i32,
@@ -1393,8 +1368,8 @@ mod tests {
     use crate::tile::Tile;
     use crate::RenderConfig;
 
-    fn fb() -> FrameBuffer {
-        FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
+    fn fb() -> RgbaIndexedFrameBuffer {
+        RgbaIndexedFrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
     }
 
     fn apply(fx: &mut BattleEffects, effect: AnimEffect) -> u8 {

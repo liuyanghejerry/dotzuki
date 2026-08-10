@@ -6,7 +6,7 @@
 //! All text rendering funnels through `draw_text()` which auto-dispatches
 //! Latin vs CJK based on character codepoint.
 
-use crate::FrameBuffer;
+use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
 
 /// Default line height in pixels (Fusion Pixel 10px baseline-to-baseline).
@@ -113,7 +113,7 @@ const GLYPH_CURSOR_DOWN: [u8; 8] = [
 
 // ── Public Drawing API ────────────────────────────────────────────
 
-fn draw_glyph_pixel(x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) {
+fn draw_glyph_pixel(x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
     if x < fb.width() && y < fb.height() {
         fb.set_pixel(x, y, color);
     }
@@ -121,7 +121,7 @@ fn draw_glyph_pixel(x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) {
 
 /// Draw a single character at pixel (x, y). Returns advance width for cursor positioning.
 /// Latin (half-width): returns 5. CJK (full-width): returns 10. Unknown: returns 0.
-pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) -> u32 {
+pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
     let fb_h = fb.height();
     // Fallback for cursor arrows (not in BDF)
     if ch == '▶' {
@@ -173,7 +173,7 @@ pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) ->
 
 /// Draw text at pixel (x, y). Auto-dispatches Latin (5px half-width) vs CJK (10px full-width).
 /// Cursor position is tracked in pixels. Text wraps at framebuffer width.
-pub fn draw_text(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) {
+pub fn draw_text(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
     let fb_w = fb.width();
     for ch in text.chars() {
         if x >= fb_w {
@@ -185,7 +185,7 @@ pub fn draw_text(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut FrameBuff
 }
 
 /// Fill a `scale × scale` block of one glyph pixel (clipped to the framebuffer).
-fn fill_glyph_block(x: i32, y: i32, scale: u32, color: Rgba, fb: &mut FrameBuffer) {
+fn fill_glyph_block(x: i32, y: i32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
     for dy in 0..scale as i32 {
         let py = y + dy;
         if py < 0 || py >= fb.height() as i32 {
@@ -204,7 +204,7 @@ fn fill_glyph_block(x: i32, y: i32, scale: u32, color: Rgba, fb: &mut FrameBuffe
 /// Draw a single character scaled by an integer factor: every source glyph pixel
 /// becomes a `scale × scale` block. `scale == 1` is identical to [`draw_char`].
 /// Returns the *scaled* advance width (`char_advance(ch) * scale`).
-pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &mut FrameBuffer) -> u32 {
+pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
     let scale = scale.max(1);
     if scale == 1 {
         return draw_char(ch, x, y, color, fb);
@@ -243,7 +243,7 @@ pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &
 /// Draw text scaled by an integer factor (see [`draw_char_scaled`]). Advances the
 /// cursor by the scaled per-glyph width. No wrapping (a title/heading is a single
 /// measured line — use [`measure_text_scaled`] to centre it).
-pub fn draw_text_scaled(text: &str, mut x: u32, y: u32, scale: u32, color: Rgba, fb: &mut FrameBuffer) {
+pub fn draw_text_scaled(text: &str, mut x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
     for ch in text.chars() {
         x += draw_char_scaled(ch, x, y, scale, color, fb);
     }
@@ -345,7 +345,7 @@ pub mod box_tiles {
     }
 }
 
-pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &mut FrameBuffer) {
+pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &mut impl FbSurface) {
     let fb_h = fb.height();
     let fb_w = fb.width();
     for row in 0..8u32 {
@@ -364,7 +364,7 @@ pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &m
     }
 }
 
-pub fn fill_tile(x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) {
+pub fn fill_tile(x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
     let fb_h = fb.height();
     let fb_w = fb.width();
     for row in 0..8u32 {
@@ -393,7 +393,7 @@ pub fn draw_box_tile(
     y: u32,
     color: Rgba,
     bg: Rgba,
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
 ) {
     let fb_h = fb.height();
     let fb_w = fb.width();
@@ -420,6 +420,7 @@ pub fn draw_box_tile(
 
 #[cfg(test)]
 mod tests {
+    use crate::FrameBuffer;
     use super::*;
     use dotzuki_engine::render_config::RenderConfig;
 

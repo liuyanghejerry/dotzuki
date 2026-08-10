@@ -1,6 +1,6 @@
 use crate::palette::Palette;
 use crate::tile::TileSet;
-use crate::{FrameBuffer, TILE_SIZE};
+use crate::{FbSurface, TILE_SIZE};
 
 /// A tile buffer representing the screen-space tilemap.
 /// Width and height are in tiles; dynamically allocated.
@@ -53,7 +53,7 @@ impl ScreenTileBuffer {
         self.tiles[..count].copy_from_slice(&data[..count]);
     }
 
-    pub fn render(&self, fb: &mut FrameBuffer, tileset: &TileSet, palette: &Palette) {
+    pub fn render(&self, fb: &mut impl FbSurface, tileset: &TileSet, palette: &Palette) {
         let fb_w = fb.width();
         let fb_h = fb.height();
         for ty in 0..self.height_tiles {
@@ -80,7 +80,7 @@ impl ScreenTileBuffer {
 
     pub fn render_region(
         &self,
-        fb: &mut FrameBuffer,
+        fb: &mut impl FbSurface,
         tileset: &TileSet,
         palette: &Palette,
         tx_start: u32,

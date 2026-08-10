@@ -1942,6 +1942,8 @@ impl RunnerGame {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl dotzuki_app::GameLoop for RunnerGame {
+    type Fb = FrameBuffer;
+
     fn update(&mut self, input: &InputState) {
         RunnerGame::update(self, input);
     }

@@ -10,10 +10,8 @@ use winit::event_loop::EventLoop;
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
-use dotzuki_engine::render_config::RenderConfig;
-
 use crate::input::InputState;
-use crate::{FrameBuffer, Rgba};
+use crate::FbSurface;
 
 /// Original Game Boy VBlank frequency: 4194304 Hz / 70224 cycles ≈ 59.7275 Hz
 const FRAME_DURATION: Duration = Duration::from_nanos(16_742_706); // 1e9 / 59.7275
@@ -31,8 +29,13 @@ pub struct GameWindowConfig {
 }
 
 pub trait GameLoop {
+    /// The framebuffer type the game draws into: either the engine's RGBA
+    /// [`FrameBuffer`] (true-color games) or the indexed
+    /// [`crate::RgbaIndexedFrameBuffer`] (fixed-palette games).
+    type Fb: FbSurface;
+
     fn update(&mut self, input: &InputState);
-    fn draw(&mut self, frame_buffer: &mut FrameBuffer);
+    fn draw(&mut self, frame_buffer: &mut Self::Fb);
     fn should_exit(&self) -> bool {
         false
     }
@@ -83,7 +86,7 @@ pub fn run<G: GameLoop + 'static>(
         PixelsBuilder::new(fb_width, fb_height, surface_texture).build()?
     };
 
-    let mut frame_buffer = FrameBuffer::new(RenderConfig::new(fb_width, fb_height), Rgba::BLACK);
+    let mut frame_buffer = G::Fb::new_screen(fb_width, fb_height);
     let mut input = InputState::new();
     let mut next_frame_time = Instant::now();
 
@@ -95,7 +98,7 @@ pub fn run<G: GameLoop + 'static>(
             }
             WindowEvent::RedrawRequested => {
                 game.draw(&mut frame_buffer);
-                pixels.frame_mut().copy_from_slice(&frame_buffer.data);
+                frame_buffer.present_into(pixels.frame_mut());
                 if let Err(err) = pixels.render() {
                     log_error("pixels.render", err);
                     elwt.exit();
