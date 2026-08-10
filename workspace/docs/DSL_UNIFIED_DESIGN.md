@@ -1,5 +1,13 @@
 # Unified Game DSL — Fused Design
 
+> **Status: historical design doc.** This was an internal design record from the
+> DSL migration branches (pokered-era). **Do not use it as a reference for the
+> current DSL.** Its claim that "`@run` was removed from the corpus" describes
+> the pokered migration state *at that time*; the engine still supports `@run`
+> as a first-class escape hatch today, alongside `@if`/`@else` and `@command`
+> (see [`DSL_MAPPING.md`](./DSL_MAPPING.md) §3 / Entry 12 / Entry 14 for the
+> current, code-verified contract).
+
 This branch fuses the two earlier migration attempts
 (`feat/dsl-scene-migration` and `feat/migrate-pokered-stories-to-dsl`) into one
 design that takes the strengths of each and drops their weaknesses.

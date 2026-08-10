@@ -75,7 +75,7 @@
 另注两项超出原建议范围的方向性改动：
 
 - **AI 创设路径**：助手新增三个 PROPOSE 工具 —— `draft_project_scaffold`（无工程也可用，产结构化方案卡，Apply 即建工程并自动续聊引导）、`propose_project_config`（改 `.dotzuki-editor.json`）、`propose_map_create`（建完整地图）；无工程时欢迎屏第三张卡内嵌聊天，provider profile 兜底存 `~/.dotzuki-editor/providers.json`（API key 仍只在浏览器 localStorage）。
-- **零 Rust 工程方向**：新工程不再生成 Cargo.toml/src/main.rs，布局规范化为 `workspace/docs/game-project-spec.md`；新增 `workspace/crates/dotzuki-cli`（`dotzuki new` scaffold / `dotzuki check` 编译检查，经 `dotzuki-engine-dsl` 新增的运行时编译 API `compiler::compile_dirs`），引擎朝二进制壳（jrpg CLI）方向发行。
+- **零 Rust 工程方向**：新工程不再生成 Cargo.toml/src/main.rs，布局规范化为 `workspace/docs/game-project-spec.md`；新增 `workspace/crates/dotzuki-cli`（`dotzuki new` scaffold / `dotzuki check` 编译检查，经 `dotzuki-engine-dsl` 新增的运行时编译 API `compiler::compile_dirs`），引擎朝二进制壳（dotzuki CLI）方向发行。
 
 ## 第二轮:新手体验深化(2026-07-25)
 
@@ -83,8 +83,8 @@
 
 - **脚手架空壳 → 已修**:所有模板现在都带示例内容 —— StartTown 示范地图(程序生成的 16 图块 starter tileset,`tileset.png` 放地图目录,地图编辑器直接可渲染;同时种子共享图块库 `data/tiles/`)、碰撞层、per-map `script.scene`。
 - **starter scene 不可见 → 已修(替代路径)**:示范地图的 `script.scene` 位于 `data/maps/`,Scripts 面板开箱即有内容;`main.scene` 仍在 `assets/scenes/`(spec 的 game.scenesDir),其注释不再指向编辑器不可见的路径。遗留:编辑器仍无展示 `assets/scenes/` 的面板(script 活动只认第一个 script 活动的单一 scriptsDir)——未来可考虑 script 路由合并多目录。
-- **Story 等主打活动不可发现 → 已修**:脚手架清单加入 `story` 活动(全模板),jrpg/wuxia 模板种子一个角色 + 一个任务(双语);`dotzuki new`(dotzuki-cli)同步补齐 story 活动与 stories 目录,保持 spec 往返一致。
-- **浏览器端项目建进编辑器仓库 → 已修**:cwd 是编辑器仓库自身(按 package.json name 检测)且无 `DOTZUKI_PROJECT_ROOT` 时,默认项目根改为 `~/jrpg-projects`;cwd 含 `.dotzuki-editor.json` 或其他目录时行为不变。
+- **Story 等主打活动不可发现 → 已修**:脚手架清单加入 `story` 活动(全模板),dotzuki/wuxia 模板种子一个角色 + 一个任务(双语);`dotzuki new`(dotzuki-cli)同步补齐 story 活动与 stories 目录,保持 spec 往返一致。
+- **浏览器端项目建进编辑器仓库 → 已修**:cwd 是编辑器仓库自身(按 package.json name 检测)且无 `DOTZUKI_PROJECT_ROOT` 时,默认项目根改为 `~/dotzuki-projects`;cwd 含 `.dotzuki-editor.json` 或其他目录时行为不变。
 - **创建后引导 → 增强**:向导成功面板列出种子内容分组(地图/记录/场景/故事/图块)+ 本地化「第一步」提示;新增教程 `docs/first-game.md`(15 分钟上手);README Quick Start 修正漂移并链接教程。
 - **验证**:473 单元测试全绿(新增 scaffold/starter-content/projectConfig 用例);三个模板脚手架产物均通过真实 `dotzuki check`(exit 0);`vue-tsc -b` 干净。
 

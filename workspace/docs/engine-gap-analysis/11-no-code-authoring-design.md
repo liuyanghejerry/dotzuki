@@ -379,7 +379,9 @@ vocabulary genuinely can't reach a mechanic; everything else is data.
   **native-`fn`-pointer** authoring guide this layer sits on top of.
 - [`09-battle-engine-generalization-design.md`](./09-battle-engine-generalization-design.md),
   [`10-generalization-result.md`](./10-generalization-result.md) — systems-as-effects + the GO-WITH-NITS result.
-- [`11-no-code-effect-authoring-design.md`](./11-no-code-effect-authoring-design.md) — the parallel *hybrid* design (declarative primitives + JS escape hatch in one schema); this doc is the lead-architect pick of declarative-data-first.
+- The parallel *hybrid* design (declarative primitives + JS escape hatch in one
+  schema) was considered and rejected in favor of the declarative-data-first pick
+  documented in this file.
 - Code (read, not modified): [`examples/minimon/src/lib.rs`](../../examples/minimon/src/lib.rs),
   [`examples/minimon/src/tests.rs`](../../examples/minimon/src/tests.rs),
   [`crates/dotzuki-engine/src/battle/stack/{event,dispatch,ctx,authoring}.rs`](../../crates/dotzuki-engine/src/battle/stack/),

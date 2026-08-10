@@ -90,7 +90,7 @@ const statusText = computed(() => {
 let runner: WasmRunner | null = null
 let ctx: CanvasRenderingContext2D | null = null
 let bundleFiles: Record<string, string> | null = null
-/** localStorage key for the save — per project root (`jrpg-play-save:<root>`). */
+/** localStorage key for the save — per project root (`dotzuki-play-save:<root>`). */
 let saveKey = ''
 
 let rafId = 0
@@ -210,7 +210,7 @@ async function boot(refreshBundle: boolean, keepSave: boolean) {
     if (refreshBundle || !bundleFiles) {
       const bundle = await loadBundle()
       bundleFiles = bundle.files
-      saveKey = `jrpg-play-save:${bundle.projectRoot}`
+      saveKey = `dotzuki-play-save:${bundle.projectRoot}`
     }
     const save = keepSave && saveKey ? localStorage.getItem(saveKey) : null
     runner = await createRunner(bundleFiles!, save)

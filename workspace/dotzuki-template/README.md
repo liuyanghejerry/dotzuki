@@ -23,27 +23,27 @@ Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cp
 
 ## Quick Start
 
-Clone the workspace and create your game in 3 steps:
+This template is the **Rust (hand-written `main.rs`) path**. The recommended
+zero-Rust path is `dotzuki new my-game` + `dotzuki run` — see
+[`game-project-spec.md`](../docs/game-project-spec.md). For the Rust path,
+generate a project from this template:
 
 ```bash
-git clone https://github.com/your-org/pokered-rust.git
-cd workspace
-
-cargo generate --path ./dotzuki-template --name my-jrpg
-cd my-jrpg
+cargo generate --path ./dotzuki-template --name my-game
+cd my-game
 cargo run --release
 ```
 
 Or generate without `cargo-generate`:
 
 ```bash
-cp -r dotzuki-template my-jrpg
-cd my-jrpg
-# Replace {{project-name}} in Cargo.toml with my-jrpg
+cp -r dotzuki-template my-game
+cd my-game
+# Replace {{project-name}} in Cargo.toml with my-game
 cargo run --release
 ```
 
-## Controls
+## Controls (template's minimal `main.rs` mapping)
 
 | Key | Action |
 |-----|--------|
@@ -51,10 +51,15 @@ cargo run --release
 | Space | Trigger DSL dialogue scene |
 | Escape | Quit |
 
+> This is the template's own minimal input mapping. The zero-Rust `dotzuki run`
+> path uses engine-standard keys instead (Arrows/WASD move, `Z` = A, `X` = B,
+> `Enter`/`Space` = Start menu, `Backspace` = Select) — see
+> [`game-project-spec.md`](../docs/game-project-spec.md).
+
 ## Project Structure
 
 ```
-my-jrpg/
+my-game/
 ├── Cargo.toml         # Depends on dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script, dotzuki-engine-dsl
 ├── src/
 │   └── main.rs        # Game loop: load map, render layers, handle input, camera follow

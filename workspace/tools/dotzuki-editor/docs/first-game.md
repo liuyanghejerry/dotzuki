@@ -13,7 +13,7 @@ pnpm dev          # http://localhost:5174
 ```
 
 Started from the editor's own repo like this, new projects are created under
-**`~/jrpg-projects/<your-game>`** by default — nothing is written into the
+**`~/dotzuki-projects/<your-game>`** by default — nothing is written into the
 editor repository. To put projects elsewhere, start the server with
 `DOTZUKI_PROJECT_ROOT=/path/to/projects pnpm dev`.
 
@@ -41,7 +41,7 @@ A new project is not an empty shell. You get:
 |-----|------------------------|
 | **Maps** | **StartTown** — a small demo town (pond, house, plaza, flower garden) with its own starter tileset. Paint tiles, edit collision, place entities. |
 | **Scripts** | `StartTown/script.scene` — the map's welcome dialogue in the Game DSL. Edit a line, save, done. |
-| **Data** | Sample records: a hero (*Aria*), a monster (*Slime*), a *Potion* (jrpg template). Add your own rows; the form is generated from the table schema. |
+| **Data** | Sample records: a hero (*Aria*), a monster (*Slime*), a *Potion* (dotzuki template). Add your own rows; the form is generated from the table schema. |
 | **Story** | A seeded narrative bible: *Elder Mira* (character) and the *Welcome to StartTown* quest, linked to the map's scene. This is the Story Designer — bible, quest graph, consistency checks. |
 | **Tiles** | The shared tile library, pre-seeded with the 16 starter tiles. |
 
@@ -55,7 +55,7 @@ A new project is not an empty shell. You get:
 3. **Add a character.** Story tab → new character, or Data tab → new record in
    `heroes`. The AI assistant (✨) can flesh out personalities, quests, and
    whole scenes from a one-line brief.
-4. **Start a battle** (jrpg template). Add one line to `StartTown/script.scene`
+4. **Start a battle** (dotzuki template). Add one line to `StartTown/script.scene`
    after the welcome dialogue:
 
    ```
@@ -86,21 +86,21 @@ The `dotzuki` CLI boots your project in a window — walk around StartTown with
 the arrow keys, talk with **Z** (the A button), warp between maps:
 
 ```bash
-dotzuki run ~/jrpg-projects/<your-game>
+dotzuki run ~/dotzuki-projects/<your-game>
 ```
 
 For CI or a quick smoke test, `--headless` runs frames without a window and
 can dump a screenshot:
 
 ```bash
-dotzuki run ~/jrpg-projects/<your-game> --headless --frames 240 --screenshot shot.png
+dotzuki run ~/dotzuki-projects/<your-game> --headless --frames 240 --screenshot shot.png
 ```
 
 Also compile-check every DSL file after edits — it exits non-zero and prints
 diagnostics when a `.scene`/`.gui` file is broken:
 
 ```bash
-dotzuki check ~/jrpg-projects/<your-game>
+dotzuki check ~/dotzuki-projects/<your-game>
 ```
 
 (In-editor, the Scripts tab's 🔍 lint catches dangling flags and unknown

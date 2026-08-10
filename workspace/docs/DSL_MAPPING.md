@@ -132,7 +132,7 @@ branch (no index check needed). For 3+ options, each non-final option gets an
 
 ---
 
-### 3. @if / @else Conditional (⚠️ Deprecated — use @run)
+### 3. @if / @else Conditional
 
 Source: FULL_DSL.md SS7.3
 
@@ -159,16 +159,12 @@ map to `else if (cond)` in JS. Single `@if` without `@else` maps to a standalone
 `if` block. Variables in conditions resolve from the scene's `@variables` scope
 or from game state via `game.getFlag()`.
 
-> **⚠️ Deprecation note:** As of the `@run` block addition (Entry 14), `@if`/`@else`
-> is deprecated for new code. Use `@run { if (...) { ... } else { ... } }` instead.
-> The `@if` parser remains functional for backward compatibility with existing
-> `.scene` files but will not receive new features.
->
-> **Exception:** `@if`/`@else` is still required when you need to wrap DSL-native
-> blocks like `@speaker` or `@choice` inside a conditional, since these blocks
-> cannot appear inside raw JS `@run { ... }` blocks. In this case, keep the
-> outer `@if`/`@else` as the conditional wrapper and use `@run` for the
-> imperative command sequences inside each branch.
+> **Relationship to `@run` (Entry 14):** `@if`/`@else` and `@run` are both
+> current, coexisting syntaxes — neither is deprecated. Use `@if`/`@else`
+> whenever a branch wraps DSL-native blocks like `@speaker` or `@choice` (they
+> cannot appear inside raw JS `@run { ... }` blocks). Use `@run { ... }` when
+> you need full JavaScript control flow (complex conditions, loops, arbitrary
+> statements). An `@if`/`@else` branch may itself contain `@run` blocks.
 
 ---
 
@@ -468,12 +464,12 @@ entirely.
 
 ---
 
-## Command Syntax — Calling Game API Functions (Entry 12) (⚠️ Deprecated — use @run)
+## Command Syntax — Calling Game API Functions (Entry 12)
 
-> **⚠️ Deprecation note:** As of the `@run` block addition (Entry 14), bare
-> command statements (`command(args)`) and `@command(...)` are deprecated for
-> new code. Use `@run { await game.command(args); }` instead. The old syntax
-> remains supported for backward compatibility with existing `.scene` files.
+> **Relationship to `@run` (Entry 14):** bare command statements, `@command(...)`
+> and `@run` coexist — none is deprecated. Bare commands / `@command` are the
+> DSL-native way to call `game.*` APIs; `@run { await game.command(args); }` is
+> the equivalent for when you are already inside a raw-JS block.
 
 Two equivalent syntaxes exist for calling game API functions from within
 `@storylines` blocks.
@@ -538,7 +534,7 @@ Arguments can be:
 | 1 | `@speaker` | JS | `game.showText()` — player-initiated talk (fixed meaning) | FULL_DSL SS7.1 |
 | 1a | `@say` | JS | `game.showText()` — cutscene speech in auto-triggered storylines | FULL_DSL SS7.1 |
 | 2 | `@choice @option` | JS | `game.showChoice()` + if/else | FULL_DSL SS7.2 |
-| 3 | `@if/@else` (deprecated) | JS | `if`/`else` statement | FULL_DSL SS7.3 |
+| 3 | `@if/@else` | JS | `if`/`else` statement | FULL_DSL SS7.3 |
 | 4 | Nested control flow | JS | Preserved nesting | FULL_DSL SS7.2, SS7.3 |
 | 5 | `@variables` | JS | `let`/`const` declarations | FULL_DSL SS3.1, GAME_UI_DSL SS4.1 |
 | 6 | `{expression}` binding | JS | Template literal `${}` | FULL_DSL SS3.3, GAME_UI_DSL SS3.3 |
@@ -547,7 +543,7 @@ Arguments can be:
 | 9 | `@theme` | JSON | Tokens map by name | FULL_DSL SS3.3, GAME_UI_DSL SS4.2 |
 | 10 | `@style inheritance` | JSON | `__extends` merge reference | FULL_DSL SS3.4, GAME_UI_DSL SS4.3 |
 | 11 | `@atlas` with slice | JSON | `nineSlice` expansion | FULL_DSL SS3.5, GAME_UI_DSL SS4.5 |
-| 12 | `@command` / bare call (deprecated) | JS | `game["name"]()` | FULL_DSL SS7.4 |
+| 12 | `@command` / bare call | JS | `game["name"]()` | FULL_DSL SS7.4 |
 | 13 | `@storyline` + `@trigger` | JS + JSON | Named storylines with routing table | FULL_DSL SS6 |
 | 14 | `@run { ... }` | JS | Raw JS passthrough (Boa) | — |
 
@@ -671,14 +667,19 @@ The compiler checks for conflicting storylines at build time:
 - Different maps → no conflict
 - Connected by `after` chain → no conflict
 
-### Example: Cross-Map Quest (Oak's Parcel)
+### Example: Cross-Map Quest
 
-See `assets/scenes/oak_parcel.scene` for a complete example spanning
-OaksLab → ViridianMart → OaksLab with three sequential storylines.
+Three sequential `@storyline` blocks chained by `after` can span several maps
+(e.g. a fetch quest walking map A → map B → map A). The complete worked example
+(`oak_parcel.scene`) moved to the pokered game repository with the repo split.
 
 ---
 
 ## Entry 14: `@run { ... }` — Raw JavaScript Blocks
+
+`@run` is the **bounded escape hatch** for raw JavaScript. It *complements* —
+rather than replaces — `@if`/`@else`, `@command` and bare command calls, all of
+which remain current, first-class syntax (see §3 and Entry 12).
 
 ### Design Rationale
 
@@ -786,5 +787,6 @@ When migrating existing `.scene` files, use these mappings:
 
 ### Example: Real-World Migration
 
-See `examples/pokered/crates/pokered-data/maps/PalletTown/script.scene` for a
-complete migration from old `@if`/bare-command syntax to `@run` blocks.
+The pallet-town migration (old `@if`/bare-command syntax → `@run` blocks) is
+documented in `DSL_UNIFIED_DESIGN.md`; the worked `.scene` file itself moved to
+the pokered game repository with the repo split.

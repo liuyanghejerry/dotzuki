@@ -31,9 +31,9 @@ describe('defaultProjectRoot', () => {
     expect(defaultProjectRoot({}, cwd, homedir)).toBe(cwd)
   })
 
-  it('falls back to ~/jrpg-projects when cwd is the editor repo itself', () => {
+  it('falls back to ~/dotzuki-projects when cwd is the editor repo itself', () => {
     fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ name: 'dotzuki-editor' }))
-    expect(defaultProjectRoot({}, cwd, homedir)).toBe(path.join(homedir, 'jrpg-projects'))
+    expect(defaultProjectRoot({}, cwd, homedir)).toBe(path.join(homedir, 'dotzuki-projects'))
   })
 
   it('keeps cwd for any other directory without a manifest', () => {

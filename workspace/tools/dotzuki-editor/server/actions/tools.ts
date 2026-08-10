@@ -550,7 +550,7 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
 /** Shared draft_project_scaffold tool definition (in-project + creation mode). */
 function scaffoldTool(tool: any, z: any, impl: ReturnType<typeof proposeToolImpls>, note: string) {
   return tool({
-    description: 'Draft scaffolding a NEW dotzuki-editor project (used in creation mode when no project is open, or to spin up a sibling project). `name` = display name, `dir` = folder slug (lowercase letters/digits/dashes; derived from the name when omitted) or absolute path, `templateId` = one of "empty" | "wuxia" | "jrpg", `summary` = a short rationale for the review card. The result is pure editor content: .dotzuki-editor.json + data/ (maps, tables, tiles) + gfx/ + assets/scenes/main.scene — no Rust workspace, no build step.' + note,
+    description: 'Draft scaffolding a NEW dotzuki-editor project (used in creation mode when no project is open, or to spin up a sibling project). `name` = display name, `dir` = folder slug (lowercase letters/digits/dashes; derived from the name when omitted) or absolute path, `templateId` = one of "empty" | "wuxia" | "dotzuki", `summary` = a short rationale for the review card. The result is pure editor content: .dotzuki-editor.json + data/ (maps, tables, tiles) + gfx/ + assets/scenes/main.scene — no Rust workspace, no build step.' + note,
     inputSchema: z.object({
       name: z.string(),
       dir: z.string().optional(),

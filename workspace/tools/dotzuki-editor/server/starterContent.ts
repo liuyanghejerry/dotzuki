@@ -319,12 +319,12 @@ game_scene StartTown {
 }
 `
 
-// ── Sample data records (jrpg + wuxia templates) ─────────────────────────────
+// ── Sample data records (dotzuki + wuxia templates) ──────────────────────────
 
 /** Records seeded per template, keyed by their table dir. Must satisfy the
  *  table schemas in scaffold.ts (all `required` fields; selects use `options`). */
 const SAMPLE_RECORDS: Record<string, Record<string, Record<string, unknown>[]>> = {
-  jrpg: {
+  dotzuki: {
     heroes: [{
       id: 'aria', name: 'Aria', job: 'Warrior',
       hp: 120, mp: 30, atk: 24, def: 18, spd: 12, element: 'Light',
@@ -422,7 +422,7 @@ const STORY_QUEST = {
 
 const STORY_GRAPH = { edges: [] }
 
-// Battle rules for the jrpg template (parsed by `dotzuki run` via dotzuki-rules;
+// Battle rules for the dotzuki template (parsed by `dotzuki run` via dotzuki-rules;
 // `dotzuki check` validates the full closed vocabulary). Beyond the type chart,
 // the `effects` records are LIVE: a `kind: Move` record takes over the skill
 // of the same id (its hooks run through the engine's effect stack), a
@@ -539,7 +539,7 @@ export function starterFiles(templateId: string, dataRoot: string): StarterFile[
       { rel: at('stories', 'quests', 'welcome-to-starttown.json'), content: JSON.stringify(STORY_QUEST, null, 2) },
       { rel: at('stories', 'graph.json'), content: JSON.stringify(STORY_GRAPH, null, 2) },
     )
-    // The jrpg template's manifest battle section points at data/rules.ron.
+    // The dotzuki template's manifest battle section points at data/rules.ron.
     if (templateId === 'dotzuki') {
       files.push({ rel: at('rules.ron'), content: RULES_RON })
     }
