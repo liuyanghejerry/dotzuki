@@ -63,4 +63,3 @@ not user documentation — they are kept for design history.
 - [`/README.md`](../../README.md) — repo landing page: what the engine is, crate list, git-dependency usage, build
 - [`/AGENTS.md`](../../AGENTS.md) — orientation for AI agents working on the engine
 - [`dotzuki-template/README.md`](../dotzuki-template/README.md) — cargo-generate Rust template (legacy main.rs path; the zero-Rust path is `dotzuki new` + game-project-spec)
-- [`docs/`](../../docs/) (repo root) — non-engineering docs: [`repo-split-standalone.md`](../../docs/repo-split-standalone.md)
