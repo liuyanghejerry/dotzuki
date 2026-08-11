@@ -12,7 +12,7 @@ description = "No-code RON authoring loader + closed primitive interpreter for d
 # CONSUMER of the closed primitive vocabulary; it amortizes content, it does NOT
 # extend mechanics.
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.0" }
 serde = { workspace = true }
 ron = { workspace = true }
 thiserror = { workspace = true }

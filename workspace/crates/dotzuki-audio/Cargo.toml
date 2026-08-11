@@ -2,6 +2,7 @@
 name = "dotzuki-audio"
 version.workspace = true
 edition.workspace = true
+description = "Audio abstraction layer for the dotzuki JRPG engine (GB-style sound)"
 
 [dependencies]
 bitflags = "2"

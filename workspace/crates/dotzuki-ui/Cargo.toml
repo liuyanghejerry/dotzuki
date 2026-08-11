@@ -6,5 +6,5 @@ license.workspace = true
 description = "Generic JRPG UI widget library — dialog, yes/no, flex menu widgets using the Painter trait"
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine" }
-dotzuki-renderer = { path = "../dotzuki-renderer" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.0" }
