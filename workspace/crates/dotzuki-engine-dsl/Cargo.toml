@@ -2,9 +2,10 @@
 name = "dotzuki-engine-dsl"
 version.workspace = true
 edition.workspace = true
+description = "Game DSL compiler (.scene/.gui/.theme/.style) plus a native AST interpreter for the dotzuki JRPG engine"
 
 [dependencies]
-dotzuki-engine-script = { path = "../dotzuki-engine-script" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.1.0" }
 sourcemap = "9.3.2"
 serde = { workspace = true }
 serde_json = { workspace = true }

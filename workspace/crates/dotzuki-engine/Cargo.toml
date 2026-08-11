@@ -3,7 +3,7 @@ name = "dotzuki-engine"
 version.workspace = true
 edition.workspace = true
 description = "A general-purpose JRPG game engine built from Game Boy tile rendering principles"
-repository = "https://github.com/your-org/pokered-rust"
+repository = "https://github.com/liuyanghejerry/dotzuki"
 license.workspace = true
 documentation = "https://docs.rs/dotzuki-engine"
 
