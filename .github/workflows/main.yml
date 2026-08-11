@@ -41,16 +41,13 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo registry & build
-        uses: actions/cache@v4
+        # rust-cache uses its own key namespace and prunes the target dir
+        # before saving; the old actions/cache entries (ci-cargo-*) were
+        # created by the self-hosted runner and grew to multiple GB, which
+        # stalled the restore step on GitHub-hosted runners.
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            workspace/target
-          key: ci-cargo-${{ hashFiles('workspace/Cargo.lock', 'workspace/Cargo.toml', 'workspace/crates/*/Cargo.toml', 'workspace/examples/*/crates/*/Cargo.toml', 'workspace/examples/minimon/Cargo.toml', 'workspace/run-wasm/Cargo.toml') }}
-          restore-keys: |
-            ci-cargo-
-            ci-cargo-
+          workspaces: workspace
 
       - name: Build workspace
         working-directory: workspace
