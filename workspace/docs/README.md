@@ -48,7 +48,6 @@ background and design rationale; **do not use them as an API reference**.
 | [`DEVELOPER_GUIDE.md`](./DEVELOPER_GUIDE.md) | Broad engine guide (architecture, maps, NPCs, items, save, rendering) built around the **legacy** `Provider`/`battle::driver` path. Battle section predates the effect stack — see the battle guide instead. Contains pre-split (`pokered`) references. |
 | [`FULL_DSL.md`](./FULL_DSL.md) | Full-vision DSL overview; status table marks what is implemented vs proposed. Historical — the implemented surface lives in GAME_UI_DSL.md and DSL_MAPPING.md. |
 | [`DSL_UNIFIED_DESIGN.md`](./DSL_UNIFIED_DESIGN.md) | Internal design doc from the DSL migration branches (`.scene` as binding truth, first-class `@if`). Historical — contradicts DSL_MAPPING on `@if`/`@run`; code supports both today. |
-| [`DSL_TRANSLATION_GUIDE.md`](./DSL_TRANSLATION_GUIDE.md) | Workflow prompt for migrating pokered disassembly → `.scene`. pokered-specific; not useful for new games. |
 | [`JS_SCRIPT_I18N.md`](./JS_SCRIPT_I18N.md) | `game.lang()`/`game.t()`/`@t` usage in JS. Example paths are pre-split (`pokered-data`); API surface is still valid. |
 | [`dsl-demo.html`](./dsl-demo.html) | Standalone syntax-highlighting demo page for the DSL. |
 
