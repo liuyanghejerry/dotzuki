@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-rust-workspace:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -41,16 +41,13 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo registry & build
-        uses: actions/cache@v4
+        # rust-cache uses its own key namespace and prunes the target dir
+        # before saving; the old actions/cache entries (ci-cargo-*) were
+        # created by the self-hosted runner and grew to multiple GB, which
+        # stalled the restore step on GitHub-hosted runners.
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            workspace/target
-          key: ci-cargo-${{ hashFiles('workspace/Cargo.lock', 'workspace/Cargo.toml', 'workspace/crates/*/Cargo.toml', 'workspace/examples/*/crates/*/Cargo.toml', 'workspace/examples/minimon/Cargo.toml', 'workspace/run-wasm/Cargo.toml') }}
-          restore-keys: |
-            ci-cargo-
-            ci-cargo-
+          workspaces: workspace
 
       - name: Build workspace
         working-directory: workspace
@@ -60,8 +57,58 @@ jobs:
         working-directory: workspace
         run: cargo test --workspace
 
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Coverage (cargo-llvm-cov)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            libasound2-dev \
+            libudev-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Run coverage
+        # Summary table goes to the job log; the lcov report is uploaded as
+        # an artifact for inspection.
+        working-directory: workspace
+        run: |
+          cargo llvm-cov --workspace --lcov --output-path lcov.info
+          cargo llvm-cov report --summary-only
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: workspace/lcov.info
+          retention-days: 30
+
   build-dotzuki-editor:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     name: Build dotzuki-editor
@@ -78,13 +125,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
+          cache-dependency-path: workspace/tools/pnpm-lock.yaml
 
       - name: Install dotzuki-editor dependencies
-        working-directory: workspace/tools/dotzuki-editor
+        # Install from the pnpm workspace root — that is where the committed
+        # lockfile lives.
+        working-directory: workspace/tools
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-        # pnpm-lock.yaml is gitignored, so resolve straight from package.json.
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         working-directory: workspace/tools/dotzuki-editor

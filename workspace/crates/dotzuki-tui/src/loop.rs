@@ -5,7 +5,7 @@ use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
-use dotzuki_renderer::{FrameBuffer, RenderConfig, Rgba};
+use dotzuki_renderer::FbSurface;
 
 use crate::input::InputState;
 use crate::terminal::TerminalGuard;
@@ -44,7 +44,7 @@ pub fn run<T: TuiGame>(
     terminal.clear()?;
 
     let mut input = InputState::new();
-    let mut fb = FrameBuffer::new(RenderConfig::new(fb_width, fb_height), Rgba::WHITE);
+    let mut fb = T::Fb::new_screen(fb_width, fb_height);
     let mut last_frame = Instant::now();
 
     loop {

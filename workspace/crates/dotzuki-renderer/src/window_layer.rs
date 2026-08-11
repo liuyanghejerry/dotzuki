@@ -13,7 +13,7 @@ use crate::tile::TileSet;
 use crate::tilemap::BG_MAP_PIXEL_HEIGHT;
 use crate::tilemap::BG_MAP_PIXEL_WIDTH;
 use dotzuki_engine::tilemap::Tilemap;
-use crate::{FrameBuffer, TILE_SIZE};
+use crate::{FbSurface, TILE_SIZE};
 
 /// Window layer state.
 #[derive(Debug, Clone)]
@@ -54,7 +54,7 @@ impl WindowLayer {
     /// Render the window layer on top of the existing framebuffer content.
     /// Only renders pixels where the window is visible (at and below WY,
     /// at and right of WX-7).
-    pub fn render(&self, fb: &mut FrameBuffer, tileset: &TileSet, palette: &Palette) {
+    pub fn render(&self, fb: &mut impl FbSurface, tileset: &TileSet, palette: &Palette) {
         if !self.enabled {
             return;
         }
@@ -72,7 +72,7 @@ impl WindowLayer {
     /// Render a single scanline of the window layer.
     pub fn render_scanline(
         &self,
-        fb: &mut FrameBuffer,
+        fb: &mut impl FbSurface,
         tileset: &TileSet,
         palette: &Palette,
         screen_y: u32,

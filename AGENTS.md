@@ -62,7 +62,7 @@ cargo build --release
 - **Generic associated types**: All identifier types (Map, Item, Species, etc.) are generic parameters on the `GameData` trait
 - **Zero platform deps**: `dotzuki-engine` has no I/O, GPU, or platform calls
 - **Battle = effect stack**: live battle turns run through `dotzuki_engine::battle::stack::StackDriver`
-- **DSL for scripts/UI**: `.scene` files (Game DSL) compile to JS; `.gui` layouts compile to JSON; `@t("en","中文")` provides bilingual text. Games embed their own compiled scenes via `compiler::compile_dirs` / `loader::register_compiled` — the engine never probes a game's data directory
+- **DSL for scripts/UI**: `.scene` files (Game DSL) compile to JS; `.gui` layouts compile to JSON; `@t("en","中文")` provides bilingual text. Games embed their own compiled scenes via `compiler::compile_dirs` / `loader::register_compiled` — the engine never probes a game's data directory. `dotzuki-engine-dsl` also ships a **native AST interpreter** (`interpreter.rs`) that executes `.scene` storylines with no JavaScript engine, mirroring the Boa runtime protocol 1:1; it is the canonical scene semantics for games that adopt it (Boa becomes a dev fallback via their `script-boa`-style feature)
 - **Consumption by games**: games reference engine crates via git deps (same repo, tag-pinned). Keep every `dotzuki-*` crate resolvable from the workspace; never hardcode a game's paths back into the engine
 
 ## Known Gotchas

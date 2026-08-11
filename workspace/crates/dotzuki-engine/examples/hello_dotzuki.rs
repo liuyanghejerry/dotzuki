@@ -759,7 +759,7 @@ mod tests {
 
     #[test]
     fn test_inventory_ops() {
-        let mut inv: Inventory<ItemKind> = Inventory::new();
+        let mut inv: Inventory<ItemKind, 64> = Inventory::new();
         inv.add(ItemKind::Potion, 5);
         assert!(inv.contains(&ItemKind::Potion, 3));
         assert!(!inv.contains(&ItemKind::Potion, 6));

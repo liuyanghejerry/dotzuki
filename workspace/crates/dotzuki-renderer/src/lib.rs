@@ -10,6 +10,7 @@ pub mod battle_scene;
 pub mod battle_transition;
 pub mod charmap;
 pub mod embedded_font;
+pub mod indexed_framebuffer;
 pub mod layer_renderer;
 pub mod input;
 pub mod layout;
@@ -33,6 +34,10 @@ pub mod transition;
 pub mod window;
 pub mod window_layer;
 
+pub use indexed_framebuffer::{
+    DefaultPalette, FbSurface, IndexedFrameBuffer, RgbaIndexedFrameBuffer, SCREEN_HEIGHT,
+    SCREEN_WIDTH, index_bits, packed_len, quantize,
+};
 pub use dotzuki_engine::render::{DirtyRegion, FrameBuffer, Rgba, BYTES_PER_PIXEL, TILE_SIZE};
 pub use dotzuki_engine::render_config::RenderConfig;
 

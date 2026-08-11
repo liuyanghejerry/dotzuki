@@ -14,7 +14,7 @@ use crate::battle_scene::{
 use crate::palette::{GbColor, Palette};
 use crate::asset_provider::ResourceProvider;
 use crate::tile::{TileSet, TILE_PIXELS};
-use crate::FrameBuffer;
+use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
 
 const TILESET_BASE: u8 = 0x62;
@@ -67,7 +67,7 @@ fn load_tileset(provider: &mut dyn ResourceProvider) -> Result<&'static TileSet,
 }
 
 fn blit_tile(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     tileset: &TileSet,
     index: usize,
     x: u32,
@@ -113,7 +113,7 @@ fn segment_tile(remaining: &mut u32) -> u8 {
 ///
 /// `x_px, y_px` is the top-left pixel of the `HP:` label tile.
 pub fn draw_party_hp_bar(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     provider: &mut dyn ResourceProvider,
     x_px: u32,
     y_px: u32,

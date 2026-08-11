@@ -12,5 +12,6 @@ pub mod compiler;
 pub mod config_gen;
 pub mod conflict;
 pub mod error;
+pub mod interpreter;
 pub mod loader;
 pub mod bridge;

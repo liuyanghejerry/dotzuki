@@ -1,10 +1,10 @@
-use dotzuki_renderer::FrameBuffer;
+use dotzuki_renderer::FbSurface;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
 use ratatui::widgets::Widget;
 
-/// Renders a [`FrameBuffer`] as half-block characters (▀) in the terminal.
+/// Renders any [`FbSurface`] framebuffer as half-block characters (▀) in the terminal.
 ///
 /// Each terminal cell represents 2 vertical pixels:
 /// - Top pixel → foreground color of `▀`
@@ -21,9 +21,9 @@ use ratatui::widgets::Widget;
 /// };
 /// frame.render_widget(widget, area);
 /// ```
-pub struct HalfblockImage<'a> {
+pub struct HalfblockImage<'a, F: FbSurface> {
     /// The framebuffer to render.
-    pub fb: &'a FrameBuffer,
+    pub fb: &'a F,
     /// Integer scale factor: how many frame pixels map to one terminal cell width.
     pub scale: u32,
     /// Terminal cell width:height ratio (e.g., 0.5 means cells are half as wide as tall).
@@ -31,11 +31,11 @@ pub struct HalfblockImage<'a> {
     pub cell_ratio: f64,
 }
 
-impl Widget for HalfblockImage<'_> {
+impl<F: FbSurface> Widget for HalfblockImage<'_, F> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let cols_per_px = 1.0 / self.cell_ratio;
-        let img_cols = (self.fb.width as f64 * self.scale as f64 * cols_per_px).ceil() as u16;
-        let img_rows = ((self.fb.height * self.scale) / 2) as u16;
+        let img_cols = (self.fb.width() as f64 * self.scale as f64 * cols_per_px).ceil() as u16;
+        let img_rows = ((self.fb.height() * self.scale) / 2) as u16;
 
         let offset_x = (area.width.saturating_sub(img_cols)) / 2;
         let offset_y = (area.height.saturating_sub(img_rows)) / 2;
@@ -54,7 +54,6 @@ impl Widget for HalfblockImage<'_> {
 
         let fb_width = self.fb.width();
         let fb_height = self.fb.height();
-        let data = &self.fb.data;
 
         for cy in 0..draw_rows as u32 {
             for cx in 0..draw_cols as u32 {
@@ -64,19 +63,15 @@ impl Widget for HalfblockImage<'_> {
                 let src_top_y = ((cy * 2) / self.scale).min(fb_height - 1);
                 let src_bot_y = ((cy * 2 + 1) / self.scale).min(fb_height - 1);
 
-                // Direct indexed access for performance (avoiding per-pixel get_pixel overhead)
-                let top_off = ((src_top_y * fb_width + src_x) * 4) as usize;
-                let bot_off = ((src_bot_y * fb_width + src_x) * 4) as usize;
-
-                let (tr, tg, tb) = (data[top_off], data[top_off + 1], data[top_off + 2]);
-                let (br, bg, bb) = (data[bot_off], data[bot_off + 1], data[bot_off + 2]);
+                let top = self.fb.pixel_rgba(src_x, src_top_y);
+                let bot = self.fb.pixel_rgba(src_x, src_bot_y);
 
                 let px = area.x + offset_x + cx as u16;
                 let py = area.y + offset_y + cy as u16;
                 if let Some(cell) = buf.cell_mut((px, py)) {
                     cell.set_char('▀')
-                        .set_fg(Color::Rgb(tr, tg, tb))
-                        .set_bg(Color::Rgb(br, bg, bb));
+                        .set_fg(Color::Rgb(top.r, top.g, top.b))
+                        .set_bg(Color::Rgb(bot.r, bot.g, bot.b));
                 }
             }
         }

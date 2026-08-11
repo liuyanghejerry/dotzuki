@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use crate::palette::{GbColor, Palette};
 use crate::asset_provider::ResourceProvider;
 use crate::tile::{TileSet, TILE_PIXELS};
-use crate::FrameBuffer;
+use crate::FbSurface;
 
 pub use dotzuki_engine::icon::IconKind;
 
@@ -139,7 +139,7 @@ pub fn load_mon_icon_tiles(
 }
 
 pub fn draw_mon_icon(
-    fb: &mut FrameBuffer,
+    fb: &mut impl FbSurface,
     tiles: &TileSet,
     x: u32,
     y: u32,
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn draw_mon_icon_respects_transparent_color0() {
-        let mut fb = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::BLACK);
+        let mut fb = crate::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::BLACK);
         let ts = TileSet::blank(4);
         draw_mon_icon(&mut fb, &ts, 0, 0, &crate::palette::GRAYSCALE_SPRITE_PALETTE);
         // All blank tiles should be transparent (color 0), so framebuffer stays black

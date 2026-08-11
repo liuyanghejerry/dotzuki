@@ -78,60 +78,71 @@ pub enum AddError {
 /// `Copy + Eq + Hash + Debug`.  Items with the same identity are stacked
 /// into a single slot — no duplicate entries.
 ///
-/// `max_slots` and `max_per_slot` are optional capacity limits.  When set
-/// to `None` (the default, via [`new`](Inventory::new)) the inventory is
+/// The const parameter `N` is the **fixed slot capacity**: the inventory is
+/// stored inline in an array of `N` slots (zero heap allocation) and can hold
+/// at most `N` distinct items.  `max_per_slot` is an optional quantity cap;
+/// when `None` (the default, via [`new`](Inventory::new)) quantities are
 /// effectively unlimited.
+///
+/// Occupied slots are kept contiguous at the front of the backing array, so
+/// removal shifts subsequent slots left — identical ordering semantics to the
+/// former `Vec`-backed implementation.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Inventory<I: Copy + Eq + Hash + Debug> {
-    /// Item slots as `(item, quantity)` pairs.
-    pub items: Vec<(I, u32)>,
-    /// Maximum number of distinct item slots (`None` = unlimited).
-    pub max_slots: Option<usize>,
+pub struct Inventory<I: Copy + Eq + Hash + Debug, const N: usize> {
+    /// Fixed-capacity slot storage; occupied slots live at `items[..len]`.
+    items: [Option<(I, u32)>; N],
+    /// Number of occupied slots (contiguous prefix of `items`).
+    len: usize,
     /// Maximum quantity per slot (`None` = unlimited).
-    pub max_per_slot: Option<u32>,
+    max_per_slot: Option<u32>,
 }
 
-/// Convenience alias for a simple unbounded inventory.
+/// Convenience alias for a large-capacity inventory.
 ///
-/// Equivalent to [`Inventory<I>`] without any capacity limits.  This alias
-/// exists for forward-compatibility: in the future a second generic
-/// parameter may be added to `Inventory` for tag/kind filtering, and
-/// `SimpleInventory` will expand to `Inventory<I, ()>` so that existing
-/// usage continues to compile.
-pub type SimpleInventory<I> = Inventory<I>;
+/// `N = 256` is effectively unbounded for any real DOTZUKI item table.  This
+/// alias exists for forward-compatibility: if a second generic parameter is
+/// ever added to `Inventory` for tag/kind filtering, `SimpleInventory` will
+/// expand to `Inventory<I, 256, ()>` so that existing usage keeps compiling.
+pub type SimpleInventory<I> = Inventory<I, 256>;
 
-impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
-    /// Create an empty inventory with no capacity limits.
+impl<I: Copy + Eq + Hash + Debug, const N: usize> Inventory<I, N> {
+    /// Create an empty inventory with `N` slots and no per-slot quantity cap.
     pub fn new() -> Self {
         Self {
-            items: Vec::new(),
-            max_slots: None,
+            items: [None; N],
+            len: 0,
             max_per_slot: None,
         }
     }
 
-    /// Create an empty inventory with the given capacity limits.
-    ///
-    /// * `max_slots` — maximum number of distinct item slots.
-    /// * `max_per_slot` — maximum quantity per slot.
-    pub fn with_capacity(max_slots: usize, max_per_slot: u32) -> Self {
+    /// Create an empty inventory with `N` slots and the given per-slot
+    /// quantity cap.
+    pub fn with_capacity(max_per_slot: u32) -> Self {
         Self {
-            items: Vec::new(),
-            max_slots: Some(max_slots),
+            items: [None; N],
+            len: 0,
             max_per_slot: Some(max_per_slot),
         }
     }
 
     /// Number of distinct item slots (not total item count).
     pub fn count(&self) -> usize {
-        self.items.len()
+        self.len
+    }
+
+    /// Returns `true` if the inventory holds no items.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// Maximum number of distinct item slots (`N`).
+    pub fn capacity(&self) -> usize {
+        N
     }
 
     /// Returns `true` if the inventory holds at least `quantity` of `item`.
     pub fn contains(&self, item: &I, quantity: u32) -> bool {
-        self.items
-            .iter()
-            .any(|(i, q)| i == item && *q >= quantity)
+        self.iter().any(|(i, q)| i == item && *q >= quantity)
     }
 
     /// Add `quantity` copies of `item`.
@@ -155,17 +166,20 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
             return Err(AddError::PerSlotCapReached(self.max_per_slot.unwrap()));
         }
         // If the item does not already exist, check the slot cap.
-        let exists = self.items.iter().any(|(i, _)| *i == item);
+        let exists = self.iter().any(|(i, _)| *i == item);
         if !exists && self.is_full() {
             return Err(AddError::InventoryFull);
         }
-        for (existing, qty) in self.items.iter_mut() {
-            if *existing == item {
-                *qty = qty.saturating_add(quantity);
-                return Ok(());
+        for slot in &mut self.items[..self.len] {
+            if let Some((existing, qty)) = slot {
+                if *existing == item {
+                    *qty = qty.saturating_add(quantity);
+                    return Ok(());
+                }
             }
         }
-        self.items.push((item, quantity));
+        self.items[self.len] = Some((item, quantity));
+        self.len += 1;
         Ok(())
     }
 
@@ -173,17 +187,20 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
     /// Returns `true` if the removal succeeded (item found and quantity
     /// sufficient).
     pub fn remove(&mut self, item: &I, quantity: u32) -> bool {
-        if let Some(pos) = self.items.iter().position(|(i, _)| i == item) {
-            let current = self.items[pos].1;
-            if current < quantity {
-                return false;
+        for i in 0..self.len {
+            if let Some((existing, qty)) = &mut self.items[i] {
+                if existing == item {
+                    if *qty < quantity {
+                        return false;
+                    }
+                    if *qty == quantity {
+                        self.remove_at(i);
+                    } else {
+                        *qty -= quantity;
+                    }
+                    return true;
+                }
             }
-            if current == quantity {
-                self.items.remove(pos);
-            } else {
-                self.items[pos].1 -= quantity;
-            }
-            return true;
         }
         false
     }
@@ -192,8 +209,7 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
 
     /// Quantity of `item` in the inventory (0 if not owned).
     pub fn quantity(&self, item: &I) -> u32 {
-        self.items
-            .iter()
+        self.iter()
             .find(|(i, _)| i == item)
             .map(|(_, q)| *q)
             .unwrap_or(0)
@@ -201,18 +217,14 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
 
     /// Returns `true` if the inventory has reached its slot limit.
     pub fn is_full(&self) -> bool {
-        match self.max_slots {
-            Some(limit) => self.items.len() >= limit,
-            None => false,
-        }
+        self.len >= N
     }
 
     /// Returns `true` if adding `add_quantity` of `item` would exceed the
     /// per-slot quantity cap.
     pub fn would_exceed_per_slot_cap(&self, item: &I, add_quantity: u32) -> bool {
-        let cap = match self.max_per_slot {
-            Some(cap) => cap,
-            None => return false,
+        let Some(cap) = self.max_per_slot else {
+            return false;
         };
         let current = self.quantity(item);
         current.saturating_add(add_quantity) > cap
@@ -223,15 +235,17 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
     where
         F: Fn(&I) -> bool,
     {
-        self.items.iter().filter(|(i, _)| pred(i)).collect()
+        self.iter().filter(|(i, _)| pred(i)).collect()
     }
 
     /// Sort slots by a custom comparator.
-    pub fn sort_by<F>(&mut self, cmp: F)
+    pub fn sort_by<F>(&mut self, mut cmp: F)
     where
         F: FnMut(&(I, u32), &(I, u32)) -> Ordering,
     {
-        self.items.sort_by(cmp);
+        self.items[..self.len].sort_by(|a, b| {
+            cmp(a.as_ref().unwrap(), b.as_ref().unwrap())
+        });
     }
 
     /// Sort slots by item name, using the provided `name_fn` to extract a
@@ -240,21 +254,76 @@ impl<I: Copy + Eq + Hash + Debug> Inventory<I> {
     where
         F: Fn(&I) -> &str,
     {
-        self.items.sort_by(|a, b| name_fn(&a.0).cmp(name_fn(&b.0)));
+        self.items[..self.len].sort_by(|a, b| {
+            name_fn(&a.as_ref().unwrap().0).cmp(name_fn(&b.as_ref().unwrap().0))
+        });
     }
 
-    /// Consume the inventory and return the inner `Vec`.
+    /// Consume the inventory and return its occupied slots as a `Vec`.
     pub fn into_inner(self) -> Vec<(I, u32)> {
-        self.items
+        self.items.iter().flatten().copied().collect()
     }
 
     /// Iterate over all `(item, quantity)` entries.
     pub fn iter(&self) -> impl Iterator<Item = &(I, u32)> {
-        self.items.iter()
+        self.items[..self.len].iter().filter_map(Option::as_ref)
+    }
+
+    /// Mutably iterate over all `(item, quantity)` entries.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut (I, u32)> {
+        self.items[..self.len].iter_mut().filter_map(Option::as_mut)
+    }
+
+    /// The `(item, quantity)` entry at `index`, if occupied.
+    pub fn get(&self, index: usize) -> Option<&(I, u32)> {
+        self.items.get(index).and_then(Option::as_ref)
+    }
+
+    /// Mutable access to the `(item, quantity)` entry at `index`.
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut (I, u32)> {
+        self.items.get_mut(index).and_then(Option::as_mut)
+    }
+
+    /// Append a new slot at the end (caller must ensure `!is_full()`).
+    /// Per-slot quantities are not merged or capped here.
+    pub fn push_slot(&mut self, item: I, quantity: u32) -> Result<(), AddError> {
+        if self.is_full() {
+            return Err(AddError::InventoryFull);
+        }
+        self.items[self.len] = Some((item, quantity));
+        self.len += 1;
+        Ok(())
+    }
+
+    /// Remove the slot at `index`, shifting subsequent slots left.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds (not an occupied slot).
+    pub fn remove_at(&mut self, index: usize) {
+        assert!(index < self.len, "inventory slot index out of bounds");
+        self.items.copy_within(index + 1..self.len, index);
+        self.items[self.len - 1] = None;
+        self.len -= 1;
+    }
+
+    /// Swap the two slots at `a` and `b` (both must be occupied).
+    ///
+    /// # Panics
+    ///
+    /// Panics if either index is out of bounds.
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.items.swap(a, b);
+    }
+
+    /// Remove all items.
+    pub fn clear(&mut self) {
+        self.items.fill(None);
+        self.len = 0;
     }
 }
 
-impl<I: Copy + Eq + Hash + Debug> Default for Inventory<I> {
+impl<I: Copy + Eq + Hash + Debug, const N: usize> Default for Inventory<I, N> {
     fn default() -> Self {
         Self::new()
     }
@@ -717,7 +786,7 @@ mod tests {
 
     #[test]
     fn inventory_add_and_remove() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -740,7 +809,7 @@ mod tests {
 
     #[test]
     fn inventory_stacks_same_item() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -755,7 +824,7 @@ mod tests {
 
     #[test]
     fn inventory_remove_insufficient_quantity() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -770,7 +839,7 @@ mod tests {
 
     #[test]
     fn inventory_remove_nonexistent_item() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -784,7 +853,7 @@ mod tests {
 
     #[test]
     fn inventory_new_is_unlimited() {
-        let inv: Inventory<MockItem> = Inventory::new();
+        let inv: Inventory<MockItem, 8> = Inventory::new();
         assert!(!inv.is_full());
         let potion = MockItem {
             name: "Potion",
@@ -796,7 +865,7 @@ mod tests {
 
     #[test]
     fn inventory_with_capacity_rejects_overfill() {
-        let mut inv = Inventory::with_capacity(2, 10);
+        let mut inv = Inventory::<MockItem, 2>::with_capacity(10);
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -820,7 +889,7 @@ mod tests {
 
     #[test]
     fn inventory_with_capacity_rejects_per_slot_overflow() {
-        let mut inv = Inventory::with_capacity(10, 5);
+        let mut inv = Inventory::<MockItem, 10>::with_capacity(5);
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -834,7 +903,7 @@ mod tests {
 
     #[test]
     fn inventory_quantity() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -848,7 +917,7 @@ mod tests {
 
     #[test]
     fn inventory_add_zero_is_ok() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -860,7 +929,7 @@ mod tests {
 
     #[test]
     fn inventory_filter() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         inv.add(
             MockItem {
                 name: "Potion",
@@ -895,7 +964,7 @@ mod tests {
 
     #[test]
     fn inventory_sort_by_name() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let antidote = MockItem {
             name: "Antidote",
             price: 200,
@@ -917,14 +986,14 @@ mod tests {
         inv.add(potion, 1).unwrap();
 
         inv.sort_by_name(|i| i.name);
-        assert_eq!(inv.items[0].0.name, "Antidote");
-        assert_eq!(inv.items[1].0.name, "Elixir");
-        assert_eq!(inv.items[2].0.name, "Potion");
+        assert_eq!(inv.get(0).unwrap().0.name, "Antidote");
+        assert_eq!(inv.get(1).unwrap().0.name, "Elixir");
+        assert_eq!(inv.get(2).unwrap().0.name, "Potion");
     }
 
     #[test]
     fn inventory_sort_by_price() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         inv.add(
             MockItem {
                 name: "Potion",
@@ -954,14 +1023,14 @@ mod tests {
         .unwrap();
 
         inv.sort_by(|a, b| a.0.price.cmp(&b.0.price));
-        assert_eq!(inv.items[0].0.name, "Antidote");
-        assert_eq!(inv.items[1].0.name, "Potion");
-        assert_eq!(inv.items[2].0.name, "Elixir");
+        assert_eq!(inv.get(0).unwrap().0.name, "Antidote");
+        assert_eq!(inv.get(1).unwrap().0.name, "Potion");
+        assert_eq!(inv.get(2).unwrap().0.name, "Elixir");
     }
 
     #[test]
     fn inventory_into_inner() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -977,7 +1046,7 @@ mod tests {
 
     #[test]
     fn inventory_iter() {
-        let mut inv: Inventory<MockItem> = Inventory::new();
+        let mut inv: Inventory<MockItem, 8> = Inventory::new();
         inv.add(
             MockItem {
                 name: "Potion",
@@ -1015,7 +1084,7 @@ mod tests {
 
     #[test]
     fn inventory_is_full_false_when_under_cap() {
-        let mut inv = Inventory::with_capacity(3, 99);
+        let mut inv = Inventory::<MockItem, 3>::with_capacity(99);
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -1028,7 +1097,7 @@ mod tests {
 
     #[test]
     fn inventory_is_full_true_at_cap() {
-        let mut inv = Inventory::with_capacity(2, 99);
+        let mut inv = Inventory::<MockItem, 2>::with_capacity(99);
         let potion = MockItem {
             name: "Potion",
             price: 300,
@@ -1046,7 +1115,7 @@ mod tests {
 
     #[test]
     fn inventory_would_exceed_per_slot_cap() {
-        let mut inv = Inventory::with_capacity(10, 5);
+        let mut inv = Inventory::<MockItem, 10>::with_capacity(5);
         let potion = MockItem {
             name: "Potion",
             price: 300,
