@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-rust-workspace:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -61,7 +61,7 @@ jobs:
         run: cargo test --workspace
 
   coverage:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     name: Coverage (cargo-llvm-cov)
@@ -111,7 +111,7 @@ jobs:
           retention-days: 30
 
   build-dotzuki-editor:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     name: Build dotzuki-editor
