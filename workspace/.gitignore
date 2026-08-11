@@ -18,7 +18,6 @@ Thumbs.db
 
 /compare_output
 *.log
-Pokemon - Red Version (USA, Europe) (SGB Enhanced).zip
 
 # dotzuki-editor: local AI provider profiles (no API keys, machine-local) — not versioned
 .dotzuki-editor.providers.json

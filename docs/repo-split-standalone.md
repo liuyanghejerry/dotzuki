@@ -6,9 +6,9 @@
 
 | 仓库 | 位置 | 分支/提交 | 内容 |
 |---|---|---|---|
-| **dotzuki 引擎(本仓库,原 jrpg 引擎)** | `/Users/liuyanghe02/develop/dotzuki`(无历史快照;源分支 `feat/standalone-repos-split` 在旧 monorepo worktree) | `master`,tag `v0.1.0` | 15 个 `dotzuki-*` crate + `firered`/`minimon` 示例 + `dotzuki-editor` + `dotzuki-template` + 引擎 docs |
-| **pokered** | `/Users/liuyanghe02/develop/open-pokered` | `master`,初始提交 `14c80f5`(无历史) | 8 游戏 crate + 5 平台壳 + `scene_apply` bin + pokered-editor + android/ios + scripts/docs/CI |
-| **wuxia** | `/Users/liuyanghe02/develop/star-heir` | `master`,初始提交 `4563400`(无历史) | `starheir-app`/`starheir-data`/`starheir-battle-proto` + `scene-check` bin + 全量 data/docs/.claude |
+| **dotzuki 引擎(本仓库,原 jrpg 引擎)** | `~/develop/dotzuki`(无历史快照;源分支 `feat/standalone-repos-split` 在旧 monorepo worktree) | `master`,tag `v0.1.0` | 15 个 `dotzuki-*` crate + `firered`/`minimon` 示例 + `dotzuki-editor` + `dotzuki-template` + 引擎 docs |
+| **pokered** | `~/develop/open-pokered` | `master`,初始提交 `14c80f5`(无历史) | 8 游戏 crate + 5 平台壳 + `scene_apply` bin + pokered-editor + android/ios + scripts/docs/CI |
+| **wuxia** | `~/develop/star-heir` | `master`,初始提交 `4563400`(无历史) | `starheir-app`/`starheir-data`/`starheir-battle-proto` + `scene-check` bin + 全量 data/docs/.claude |
 
 两个游戏仓库均为**快照新建**(无历史),初始提交即全部内容。
 
@@ -17,7 +17,7 @@
 游戏仓库的 Cargo.toml 以 **git 依赖 + tag** 消费引擎 crate:
 
 ```toml
-dotzuki-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+dotzuki-engine = { git = "file:///path/to/engine-checkout", tag = "v0.1.0" }
 ```
 
 - Cargo 在引擎 git 仓库的 workspace 内按包名查找,15 个 `dotzuki-*` crate(含收编为 member 的 `dotzuki-app`)都可被直接依赖;同一 (repo, rev) 共享一次检出,`Cargo.lock` 钉死 commit。

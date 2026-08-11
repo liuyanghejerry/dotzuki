@@ -14,7 +14,7 @@
 > is edited here. Every proposed engine change is **additive + defaulted +
 > game-agnostic** (no Pokémon types, no element literals, no `if-gen` branches) +
 > **determinism-safe** (RNG only via `BattleRng`). All paths are absolute under
-> `/Users/liuyanghe02/develop/pokered/workspace/`.
+> `~/develop/pokered/workspace/`.
 >
 > **Companion docs.** Builds directly on
 > [`11-no-code-authoring-design.md`](./11-no-code-authoring-design.md) — the

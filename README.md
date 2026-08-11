@@ -28,13 +28,14 @@ A game-agnostic JRPG engine extracted from a Pokémon Red/Blue reimplementation.
 
 ```toml
 [dependencies]
-dotzuki-engine = { git = "<engine-repo-url>", tag = "v0.3.0" }
-dotzuki-engine-dsl = { git = "<engine-repo-url>", tag = "v0.3.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.3.0" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.3.0" }
 ```
 
 All `dotzuki-*` crates are resolvable from the same git repository (Cargo finds
 them by name in the workspace). Upgrade = bump the tag + `cargo update`.
-No crates.io publishing is planned at this stage.
+Publishing to crates.io is planned; every crate already carries the metadata
+(`description` / `repository` / `license`) required by `cargo publish`.
 
 ## Building
 
