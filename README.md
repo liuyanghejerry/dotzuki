@@ -57,7 +57,7 @@ workspace/           # Cargo workspace root
 ├── tools/           # dotzuki-editor (Vue/Vite), asset-converter, editor-extensions
 ├── docs/            # engine docs (battle engine, DSL specs, game-project spec)
 └── dotzuki-template/  # cargo-generate starter for new games
-docs/                # repo-level docs (split record, marketing notes)
+docs/                # repo-level docs (split record)
 AGENTS.md            # developer guide for AI agents
 ```
 
