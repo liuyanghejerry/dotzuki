@@ -74,5 +74,5 @@ cargo build --release
 ## Files at This Level (repo root)
 - `AGENTS.md` — This file. Project orientation for AI agents.
 - `workspace/` — Cargo workspace root with all engine crates.
-- `docs/` — Engine docs (battle engine guide, DSL specs, game-project spec).
+- `workspace/docs/` — Engine docs (battle engine guide, DSL specs, game-project spec).
 - `scripts/` — Removed with the pokered split; game-specific scripts live in the game repos.
