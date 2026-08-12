@@ -1,0 +1,16 @@
+{
+  "name": "StartTown",
+  "width": 24,
+  "height": 20,
+  "tileset": "",
+  "music": "",
+  "warps": [],
+  "signs": [
+    {
+      "x": 13,
+      "y": 9,
+      "text": "StartTown — population: you (for now)"
+    }
+  ],
+  "npcs": []
+}

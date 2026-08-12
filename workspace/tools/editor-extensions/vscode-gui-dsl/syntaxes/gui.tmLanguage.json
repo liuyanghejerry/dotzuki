@@ -1,0 +1,189 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "GUI DSL",
+  "scopeName": "source.gui",
+  "fileTypes": ["gui"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#screen-declaration" },
+    { "include": "#component-declaration" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.double-slash.gui",
+      "match": "//.*$"
+    },
+
+    "screen-declaration": {
+      "name": "meta.screen.gui",
+      "begin": "\\b(screen)\\s+([A-Za-z_]\\w*)\\s*\\{",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.gui" },
+        "2": { "name": "entity.name.type.gui" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.block.end.gui" }
+      },
+      "patterns": [
+        { "include": "#block-contents" }
+      ]
+    },
+
+    "component-declaration": {
+      "name": "meta.component.gui",
+      "begin": "\\b(component)\\s+([A-Za-z_]\\w*)\\s*\\{",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.gui" },
+        "2": { "name": "entity.name.type.gui" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.block.end.gui" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#component-prop-decl" }
+      ]
+    },
+
+    "component-prop-decl": {
+      "name": "meta.component-property.gui",
+      "match": "\\b([A-Za-z_]\\w*)\\s*(:)\\s*(expr)\\s+(required)\\b",
+      "captures": {
+        "1": { "name": "variable.other.property.gui" },
+        "2": { "name": "keyword.operator.gui" },
+        "3": { "name": "storage.type.gui" },
+        "4": { "name": "storage.modifier.gui" }
+      }
+    },
+
+    "block-contents": {
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#at-decorator" },
+        { "include": "#known-element-block" },
+        { "include": "#custom-element-block" },
+        { "include": "#property-line" }
+      ]
+    },
+
+    "element-contents": {
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#at-decorator" },
+        { "include": "#known-element-block" },
+        { "include": "#custom-element-block" },
+        { "include": "#property-line" }
+      ]
+    },
+
+    "property-line": {
+      "patterns": [
+        { "include": "#struct-value" },
+        { "include": "#array-value" },
+        { "include": "#string-value" },
+        { "include": "#boolean-value" },
+        { "include": "#numeric-value" },
+        { "include": "#property-assignment" }
+      ]
+    },
+
+    "property-assignment": {
+      "match": "\\b([A-Za-z_]\\w*)\\s*(=)\\s*",
+      "captures": {
+        "1": { "name": "variable.other.property.gui" },
+        "2": { "name": "keyword.operator.gui" }
+      }
+    },
+
+    "string-value": {
+      "name": "string.quoted.double.gui",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "variable.other.template.gui",
+          "match": "\\{[^}\"]+\\}"
+        }
+      ]
+    },
+
+    "numeric-value": {
+      "name": "constant.numeric.gui",
+      "match": "\\b\\d+\\b"
+    },
+
+    "boolean-value": {
+      "name": "constant.language.boolean.gui",
+      "match": "\\b(true|false)\\b"
+    },
+
+    "struct-value": {
+      "name": "meta.struct.gui",
+      "begin": "\\{",
+      "end": "\\}",
+      "patterns": [
+        { "include": "#string-value" },
+        { "include": "#numeric-value" },
+        { "include": "#boolean-value" },
+        { "include": "#struct-value" },
+        {
+          "name": "variable.other.property.gui",
+          "match": "\\b([A-Za-z_]\\w*)\\b(?=\\s*:)"
+        }
+      ]
+    },
+
+    "array-value": {
+      "name": "meta.array.gui",
+      "begin": "\\[",
+      "end": "\\]",
+      "patterns": [
+        { "include": "#struct-value" },
+        { "include": "#string-value" },
+        { "include": "#numeric-value" },
+        { "include": "#boolean-value" }
+      ]
+    },
+
+    "at-decorator": {
+      "name": "keyword.other.decorator.gui",
+      "match": "@t\\b"
+    },
+
+    "known-element-block": {
+      "name": "meta.element.gui",
+      "comment": "Matches known element types (panel, text, tile, cursor, container, list, flex_list) with optional arguments containing up to 2 levels of nested parens (e.g. @t(...)).",
+      "begin": "\\b(panel|text|tile|cursor|container|list|flex_list)\\b\\s*(?:\\((@t\\b\\s*)?[^()]*(?:\\([^)]*\\)[^()]*)*\\))?\\s*\\{",
+      "beginCaptures": {
+        "1": { "name": "support.type.gui" },
+        "2": { "name": "keyword.other.decorator.gui" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.block.end.gui" }
+      },
+      "patterns": [
+        { "include": "#element-contents" }
+      ]
+    },
+
+    "custom-element-block": {
+      "name": "meta.custom-element.gui",
+      "comment": "Matches custom component names (anything not in the known types list) with optional arguments.",
+      "begin": "\\b([A-Za-z_]\\w*)\\b\\s*(?:\\((@t\\b\\s*)?[^()]*(?:\\([^)]*\\)[^()]*)*\\))?\\s*\\{",
+      "beginCaptures": {
+        "1": { "name": "entity.name.type.gui" },
+        "2": { "name": "keyword.other.decorator.gui" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.block.end.gui" }
+      },
+      "patterns": [
+        { "include": "#element-contents" }
+      ]
+    }
+  }
+}

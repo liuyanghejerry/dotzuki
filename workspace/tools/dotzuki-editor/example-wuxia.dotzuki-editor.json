@@ -1,0 +1,129 @@
+{
+  "name": "wuxia-game",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps",
+        "tileSize": 16,
+        "blockSize": 4
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "scriptsDir": "maps",
+        "extension": ".js"
+      }
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "characters",
+            "label": "Characters",
+            "dir": "characters",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "sect", "type": "select", "label": "Sect",
+                "options": ["Shaolin", "Wudang", "Emei", "Gaibang", "Mojiao", "Sanxian"],
+                "required": true },
+              { "key": "hp", "type": "number", "label": "HP", "default": 100 },
+              { "key": "neigong", "type": "number", "label": "Internal Energy", "default": 50 },
+              { "key": "waigong", "type": "number", "label": "External Power", "default": 50 },
+              { "key": "shenfa", "type": "number", "label": "Agility", "default": 50 },
+              { "key": "element", "type": "select", "label": "Element",
+                "options": ["Metal", "Wood", "Water", "Fire", "Earth"],
+                "required": true },
+              { "key": "description", "type": "string", "label": "Description" }
+            ]
+          },
+          {
+            "id": "skills",
+            "label": "Skills",
+            "dir": "skills",
+            "icon": "sword",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "type", "type": "select", "label": "Type",
+                "options": ["Internal", "External", "Lightness", "Hardness", "Special"] },
+              { "key": "element", "type": "select", "label": "Element",
+                "options": ["Metal", "Wood", "Water", "Fire", "Earth", "None"] },
+              { "key": "power", "type": "number", "label": "Power", "default": 0 },
+              { "key": "cost", "type": "number", "label": "Qi Cost", "default": 0 },
+              { "key": "accuracy", "type": "number", "label": "Accuracy", "default": 100 },
+              { "key": "target", "type": "select", "label": "Target",
+                "options": ["Self", "SingleEnemy", "AllEnemies", "SingleAlly", "AllAllies"] },
+              { "key": "description", "type": "string", "label": "Description" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "category", "type": "select", "label": "Category",
+                "options": ["Medicine", "Weapon", "Manual", "Material", "Key", "Other"] },
+              { "key": "effect", "type": "string", "label": "Effect" },
+              { "key": "value", "type": "number", "label": "Value", "default": 0 },
+              { "key": "price", "type": "number", "label": "Price", "default": 0 },
+              { "key": "description", "type": "string", "label": "Description" }
+            ]
+          },
+          {
+            "id": "status",
+            "label": "Status Effects",
+            "dir": "status",
+            "icon": "alert",
+            "idField": "id",
+            "fields": [
+              { "key": "id", "type": "string", "label": "ID", "required": true },
+              { "key": "name", "type": "string", "label": "Name", "required": true },
+              { "key": "type", "type": "select", "label": "Type",
+                "options": ["Buff", "Debuff", "Damage", "Control"] },
+              { "key": "duration", "type": "number", "label": "Duration (turns)", "default": 3 },
+              { "key": "statAffected", "type": "string", "label": "Stat Affected" },
+              { "key": "modifier", "type": "number", "label": "Modifier %", "default": 0 },
+              { "key": "description", "type": "string", "label": "Description" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "assets",
+      "type": "assets",
+      "label": "Assets",
+      "icon": "image",
+      "enabled": true,
+      "config": {
+        "roots": ["gfx/tilesets", "gfx/sprites", "gfx/ui"],
+        "extensions": [".png", ".jpg", ".gif"]
+      }
+    }
+  ]
+}

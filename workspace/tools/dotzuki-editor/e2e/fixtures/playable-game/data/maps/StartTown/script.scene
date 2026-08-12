@@ -1,0 +1,13 @@
+// script.scene — StartTown's map script, written in the jrpg Game DSL.
+// It shows up in the Scripts pane (per-map scenes live next to their map).
+
+game_scene StartTown {
+    @storylines {
+        @command("playMusic", "TownTheme")
+        @speaker("Guide") {
+            "Welcome to StartTown!"
+            "This little demo map is yours to reshape — paint it in the Maps pane."
+            "Ask the AI assistant (✨) to grow the story from here."
+        }
+    }
+}

@@ -1,0 +1,9 @@
+[package]
+name = "dotzuki-app"
+version.workspace = true
+edition.workspace = true
+description = "A generic desktop app crate wrapping dotzuki-renderer's game loop"
+
+[dependencies]
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.0" }
+notify = "6"

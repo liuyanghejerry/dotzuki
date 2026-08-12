@@ -1,0 +1,16 @@
+[package]
+name = "dotzuki-engine"
+version.workspace = true
+edition.workspace = true
+description = "A general-purpose JRPG game engine built from Game Boy tile rendering principles"
+repository = "https://github.com/liuyanghejerry/dotzuki"
+license.workspace = true
+documentation = "https://docs.rs/dotzuki-engine"
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[features]
+default = []

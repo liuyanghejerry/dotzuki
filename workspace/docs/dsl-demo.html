@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game DSL — GUI 排版 + Scene 对话 双系统详解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#2a3550;--text:#e2e8f0;--text-dim:#8892a4;--gb-bg:#0f380f;--gb-dark:#306230;--gb-mid:#8bac0f;--gb-light:#9bbc0f;--gb-bright:#d0f0c0;--gui:#60a5fa;--gui-dim:#3b82f6;--gui-bg:rgba(96,165,250,.08);--scene:#f472b6;--scene-dim:#ec4899;--scene-bg:rgba(244,114,182,.08);--code-bg:#0d1117;font-size:15px}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh}
+
+/* ── Header ── */
+.app-header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0a0e1a,#111827);border-bottom:1px solid var(--border);padding:0 2rem;backdrop-filter:blur(12px)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.header-inner h1{font-family:'Press Start 2P',monospace;font-size:.7rem;letter-spacing:1px}
+.header-inner h1 .gui-label{color:var(--gui)}
+.header-inner h1 .scene-label{color:var(--scene)}
+.header-inner h1 .sep{color:var(--text-dim);font-size:.5rem}
+.header-nav{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center}
+.header-nav .ng{display:flex;gap:.25rem;align-items:center}
+.header-nav .ngl{font-size:.55rem;color:var(--text-dim);padding:0 .3rem;font-family:'JetBrains Mono',monospace}
+.header-nav a{font-size:.6rem;padding:.25rem .5rem;border-radius:4px;color:var(--text-dim);text-decoration:none;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.header-nav a.gui{color:var(--gui)}.header-nav a.gui:hover,.header-nav a.gui.active{color:#fff;background:var(--gui-bg)}
+.header-nav a.scene{color:var(--scene)}.header-nav a.scene:hover,.header-nav a.scene.active{color:#fff;background:var(--scene-bg)}
+
+/* ── Hero ── */
+.hero{max-width:1400px;margin:0 auto;padding:4rem 2rem 3rem;text-align:center}
+.hero h2{font-family:'Press Start 2P',monospace;font-size:1.1rem;color:var(--gb-mid);margin-bottom:1rem;line-height:1.6}
+.hero p{color:var(--text-dim);max-width:800px;margin:0 auto;font-size:.95rem}
+.hero-badge{display:inline-flex;gap:.5rem;padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:1.5rem}
+.hero-badge .bg{background:var(--gui-bg);color:var(--gui);border:1px solid rgba(96,165,250,.3);padding:.15rem .5rem;border-radius:999px}
+.hero-badge .bs{background:var(--scene-bg);color:var(--scene);border:1px solid rgba(244,114,182,.3);padding:.15rem .5rem;border-radius:999px}
+
+/* ── Section Divider ── */
+.sd{max-width:1400px;margin:0 auto 2rem;padding:0 2rem}
+.sdi{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;border-radius:12px}
+.sdi.g{background:var(--gui-bg);border:1px solid rgba(96,165,250,.2)}
+.sdi.s{background:var(--scene-bg);border:1px solid rgba(244,114,182,.2)}
+.sdi .ic{font-size:1.5rem}.sdi h3{font-size:1.1rem;font-weight:700}.sdi .sub{font-size:.8rem;color:var(--text-dim);margin-top:.15rem}.sdi .ar{font-size:1.2rem;color:var(--text-dim)}
+
+/* ── Step ── */
+.step{max-width:1400px;margin:0 auto 4rem;padding:0 2rem;scroll-margin-top:80px}
+.sh{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.sn{font-family:'Press Start 2P',monospace;font-size:.7rem;min-width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sn.g{background:var(--gui-bg);color:var(--gui);border:1px solid rgba(96,165,250,.3)}
+.sn.s{background:var(--scene-bg);color:var(--scene);border:1px solid rgba(244,114,182,.3)}
+.st{font-size:1.2rem;font-weight:700}
+.st .t{display:inline-block;font-size:.55rem;padding:.1rem .4rem;border-radius:4px;vertical-align:middle;margin-left:.5rem;font-family:'JetBrains Mono',monospace;font-weight:400}
+.st .t.g{background:var(--gui-bg);color:var(--gui);border:1px solid rgba(96,165,250,.3)}
+.st .t.s{background:var(--scene-bg);color:var(--scene);border:1px solid rgba(244,114,182,.3)}
+.sdsc{color:var(--text-dim);font-size:.85rem}
+
+/* ── Grids ── */
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem}
+@media(max-width:960px){.dg{grid-template-columns:1fr}}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:640px){.cg{grid-template-columns:1fr}}
+
+/* ── Code Panel ── */
+.cp{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cph{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--text-dim)}
+.cph .ll{display:flex;align-items:center;gap:.4rem}
+.cph .ll .dot{width:8px;height:8px;border-radius:50%}.cph .ll .dot.g{background:var(--gui)}.cph .ll .dot.s{background:var(--scene)}
+.cpy{background:none;border:1px solid var(--border);color:var(--text-dim);padding:.15rem .5rem;border-radius:4px;cursor:pointer;font-size:.6rem;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.cpy:hover{color:var(--gb-mid);border-color:var(--gb-mid)}
+.cb{padding:1.2rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;color:#c9d1d9;white-space:pre}
+.c-kw{color:#ff7b72}.c-str{color:#a5d6ff}.c-cmt{color:#8b949e;font-style:italic}.c-num{color:#79c0ff}.c-prop{color:#d2a8ff}.c-fn{color:#d2a8ff}.c-tag{color:#7ee787}.c-var{color:#ffa657}
+
+/* ── Render Panel ── */
+.rp{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rph{padding:.6rem 1rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--text-dim)}
+
+/* ── GB Screen ── */
+.gb-s{width:min(480px,calc(100vw - 3rem));aspect-ratio:20/18;margin:1.5rem auto;background:var(--gb-bg);border-radius:8px;position:relative;overflow:hidden;image-rendering:pixelated;box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 0 0 2px #2a3550,0 4px 24px rgba(0,0,0,.4)}
+.gb-s .tg{position:absolute;inset:0;opacity:.06;pointer-events:none;background-image:repeating-linear-gradient(90deg,transparent,transparent calc(100%/20 - 1px),var(--gb-light) calc(100%/20 - 1px),var(--gb-light) calc(100%/20)),repeating-linear-gradient(0deg,transparent,transparent calc(100%/18 - 1px),var(--gb-light) calc(100%/18 - 1px),var(--gb-light) calc(100%/18))}
+.gb-t{position:absolute;font-family:'Press Start 2P',monospace;font-size:6.5px;line-height:1.7;color:var(--gb-light);letter-spacing:.3px;white-space:pre-wrap;word-break:break-word;overflow:hidden;z-index:2}
+.gb-i{position:absolute;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gb-light);z-index:2}
+.gb-c{position:absolute;z-index:3;animation:blink .6s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.gb-a{position:absolute;border:1px solid var(--gb-dark);border-radius:2px;background:rgba(48,98,48,.2);display:flex;align-items:center;justify-content:center;font-size:20px;z-index:2}
+.tc{display:inline-block;width:4px;height:9px;background:var(--gb-light);animation:blink .6s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+.ir{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:var(--gb-dark);border:none;border-radius:4px;color:var(--gb-bright);font-family:'Press Start 2P',monospace;font-size:.5rem;cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--gb-mid);color:var(--gb-bg)}.btn:active{transform:scale(.95)}
+.btn.s{background:transparent;border:1px solid var(--gb-dark);color:var(--gb-mid)}
+
+/* ── Explanation ── */
+.ex{margin-top:1rem;padding:1rem 1.2rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:.88rem;color:var(--text);line-height:1.8}
+.ex strong{color:var(--gb-mid)}
+.ex code{background:rgba(139,172,15,.1);padding:.1rem .4rem;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gb-mid)}
+.ex code.g{background:var(--gui-bg);color:var(--gui)}
+.ex code.s{background:var(--scene-bg);color:var(--scene)}
+.ex .h{display:inline-block;background:rgba(139,172,15,.1);border:1px solid rgba(139,172,15,.2);border-radius:4px;padding:.5rem .8rem;margin:.3rem 0;font-size:.78rem;font-family:'JetBrains Mono',monospace;line-height:1.5}
+.ex .h.g{border-color:rgba(96,165,250,.2)}.ex .h.s{border-color:rgba(244,114,182,.2)}
+
+/* ── Arch Cards ── */
+.ac{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-top:1.5rem}
+.ac2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+@media(max-width:640px){.ac2{grid-template-columns:1fr}}
+/* ── Pipeline ── */
+.pp{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;padding:1rem;font-size:.7rem;font-family:'JetBrains Mono',monospace}
+.pp .ps{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;text-align:center;min-width:60px}
+.pp .ps .pi{font-size:1.1rem;display:block;margin-bottom:.15rem}
+.pp .ps .pl{font-size:.6rem;color:var(--text-dim)}
+.pp .ps.g{border-color:rgba(96,165,250,.3)}.pp .ps.s{border-color:rgba(244,114,182,.3)}
+.pp .pa{color:var(--text-dim);font-size:1rem}
+.pp-code{background:var(--code-bg);border-radius:6px;padding:.5rem .8rem;font-size:.65rem;line-height:1.5;margin:.3rem 0}
+.pp-label{font-size:.65rem;color:var(--text-dim);text-align:center;margin-bottom:.5rem}
+
+.ac{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+.ac .ic{font-size:1.5rem;margin-bottom:.4rem}
+.ac h4{font-size:.85rem;margin-bottom:.25rem}
+.ac h4.g{color:var(--gui)}.ac h4.s{color:var(--scene)}
+.ac p{font-size:.72rem;color:var(--text-dim)}
+.arw{text-align:center;color:var(--text-dim);font-size:1.5rem;padding:.25rem 0}
+
+/* ── Tables ── */
+.stb{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:1rem}
+.stb table{width:100%;border-collapse:collapse;font-size:.78rem}
+.stb th{padding:.7rem 1rem;text-align:left;border-bottom:2px solid var(--border);font-family:'JetBrains Mono',monospace}
+.stb th.g{color:var(--gui)}.stb th.s{color:var(--scene)}
+.stb td{padding:.55rem 1rem;border-bottom:1px solid var(--border)}
+.stb td:nth-child(1){font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.stb tr:last-child td{border-bottom:none}
+.tg{display:inline-block;padding:.05rem .35rem;border-radius:3px;font-size:.65rem;font-family:'JetBrains Mono',monospace}
+.tg.g{background:var(--gui-bg);color:var(--gui)}.tg.s{background:var(--scene-bg);color:var(--scene)}
+
+/* ── Footer ── */
+.ft{text-align:center;padding:2rem;border-top:1px solid var(--border);color:var(--text-dim);font-size:.72rem}
+.ft a{color:var(--gb-mid);text-decoration:none}
+
+/* ── Animations ── */
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.step{animation:fu .4s ease-out}
+</style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <h1>
+      <span class="gui-label">GUI</span>
+      <span class="sep">·</span>
+      <span class="scene-label">Scene</span>
+      <span style="color:var(--gb-mid);font-size:.5rem;margin-left:.4rem">DSL</span>
+    </h1>
+    <nav class="header-nav">
+      <span class="ngl">GUI</span>
+      <span class="ng">
+        <a href="#g1" class="gui">01</a>
+        <a href="#g2" class="gui">02</a>
+        <a href="#g3" class="gui">03</a>
+        <a href="#g4" class="gui">04</a>
+        <a href="#g5" class="gui">05</a>
+        <a href="#g6" class="gui">06</a>
+      </span>
+      <span class="ngl">Scene</span>
+      <span class="ng">
+        <a href="#s1" class="scene">01</a>
+        <a href="#s2" class="scene">02</a>
+        <a href="#s3" class="scene">03</a>
+        <a href="#s4" class="scene">04</a>
+        <a href="#s5" class="scene">05</a>
+        <a href="#s6" class="scene">06</a>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="bg">🎨 GUI DSL</span>
+    <span style="color:var(--text-dim)">+</span>
+    <span class="bs">📜 Scene DSL</span>
+  </div>
+  <h2>两套 DSL，各司其职</h2>
+  <p>
+    本项目包含<strong>两套独立的声明式 DSL</strong>：
+    <strong style="color:var(--gui)">GUI DSL</strong> 负责<em>排版布局</em>（<code>.gui</code> 文件 → JSON），
+    <strong style="color:var(--scene)">Scene DSL</strong> 负责<em>对话脚本</em>（<code>.scene</code> 文件 → JavaScript）。
+    它们语法不同、编译产物不同、职责完全不同，在运行时配合呈现完整的游戏体验。
+  </p>
+</section>
+
+<!-- ════════════════════════════════════════════
+     PART 1: GUI DSL
+     ════════════════════════════════════════════ -->
+<div class="sd">
+  <div class="sdi g">
+    <span class="ic">🎨</span>
+    <div>
+      <h3 style="color:var(--gui)">GUI DSL — 排版布局系统</h3>
+      <div class="sub"><code>.gui</code> 文件 · <code>screen</code> 顶级构造 · 编译为 Schema v2 JSON · 定义"界面长什么样"</div>
+    </div>
+    <span class="ar">→</span>
+  </div>
+</div>
+
+<!-- ═══ GUI 编译流水线 ═══ -->
+<div style="max-width:1400px;margin:-1.5rem auto 1rem;padding:0 2rem">
+  <div style="background:var(--gui-bg);border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:1rem 1.5rem">
+    <div class="pp-label">🔧 GUI DSL 编译流水线</div>
+    <div class="pp">
+      <div class="ps g"><span class="pi">📄</span><span class="pl">.gui 源文件</span></div>
+      <span class="pa">→</span>
+      <div class="ps g"><span class="pi">🔍</span><span class="pl">Lexer 词法分析</span></div>
+      <span class="pa">→</span>
+      <div class="ps g"><span class="pi">🌳</span><span class="pl">Parser 语法分析</span></div>
+      <span class="pa">→</span>
+      <div class="ps g"><span class="pi">📦</span><span class="pl">AST 抽象语法树</span></div>
+      <span class="pa">→</span>
+      <div class="ps g"><span class="pi">⚙️</span><span class="pl">Codegen 代码生成</span></div>
+      <span class="pa">→</span>
+      <div class="ps g" style="border-color:var(--gui)"><span class="pi">📋</span><span class="pl" style="color:var(--gui);font-weight:700">Schema v2 JSON</span></div>
+      <span class="pa">→</span>
+      <div class="ps g" style="border-color:var(--gb-mid)"><span class="pi">🦀</span><span class="pl" style="color:var(--gb-mid);font-weight:700">Rust 源码</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-top:.5rem;font-size:.7rem">
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📥 输入 (.gui)</div>
+        <div class="pp-code"><span style="color:#7ee787">screen</span> <span style="color:#ffa657">Dialog</span> {
+  <span style="color:#d2a8ff">panel</span> {
+    <span style="color:#d2a8ff">rect</span> = {<span style="color:#d2a8ff">tx</span>: 0, <span style="color:#d2a8ff">ty</span>: 12,
+            <span style="color:#d2a8ff">tw</span>: 20, <span style="color:#d2a8ff">th</span>: 6}
+    <span style="color:#d2a8ff">text</span>(<span style="color:#a5d6ff">"{text}"</span>) { <span style="color:#d2a8ff">wrap</span> = <span style="color:#a5d6ff">"word"</span> }
+  }
+}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📤 中间输出 (JSON)</div>
+        <div class="pp-code">{<span style="color:#a5d6ff">"schema_version"</span>: 2,
+  <span style="color:#a5d6ff">"screen"</span>: <span style="color:#a5d6ff">"Dialog"</span>,
+  <span style="color:#a5d6ff">"elements"</span>: [{
+    <span style="color:#a5d6ff">"type"</span>: <span style="color:#a5d6ff">"border"</span>,
+    <span style="color:#a5d6ff">"rect"</span>: {<span style="color:#a5d6ff">"tx"</span>:0,<span style="color:#a5d6ff">"ty"</span>:12,
+              <span style="color:#a5d6ff">"tw"</span>:20,<span style="color:#a5d6ff">"th"</span>:6},
+    <span style="color:#a5d6ff">"children"</span>: [{
+      <span style="color:#a5d6ff">"type"</span>: <span style="color:#a5d6ff">"text"</span>,
+      <span style="color:#a5d6ff">"value"</span>: <span style="color:#a5d6ff">"{text}"</span>,
+      <span style="color:#a5d6ff">"wrap"</span>: <span style="color:#a5d6ff">"word"</span>
+    }]
+  }]
+}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📦 最终产物 (Rust)</div>
+        <div class="pp-code"><span style="color:#7ee787">// build.rs 生成: ui_layouts_gen.rs</span>
+<span style="color:#d2a8ff">pub fn</span> <span style="color:#ffa657">get_screen_v2_json</span>(
+    screen: &amp;<span style="color:#ff7b72">str</span>
+) -> <span style="color:#ff7b72">Option</span>&lt;&amp;<span style="color:#ff7b72">static str</span>&gt; {
+    <span style="color:#ff7b72">match</span> screen {
+        <span style="color:#a5d6ff">"main"</span> => <span style="color:#ff7b72">Some</span>(<span style="color:#a5d6ff">r#"{...JSON嵌入在此...}"#</span>),
+        <span style="color:#a5d6ff">"dialog"</span> => <span style="color:#ff7b72">Some</span>(<span style="color:#a5d6ff">r#"{...}"#</span>),
+        _ => <span style="color:#ff7b72">None</span>,
+    }
+}
+
+<span class="c-cmt">// 运行时 serde 反序列化</span>
+<span style="color:#ff7b72">let</span> json = <span style="color:#d2a8ff">get_screen_v2_json</span>(<span style="color:#a5d6ff">"dialog"</span>);
+<span style="color:#ff7b72">let</span> layout: <span style="color:#d2a8ff">ScreenLayout</span> =
+    <span style="color:#d2a8ff">serde_json</span>::<span style="color:#d2a8ff">from_str</span>(json);</div>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--text-dim);margin-top:.5rem;line-height:1.6">
+      <strong style="color:var(--gui)">关键转换</strong>：
+      <code>screen</code> → JSON 根对象；<code>panel</code> → <code>{"type": "border"}</code> 含 children 数组；
+      <code>text("内容")</code> → <code>{"type": "text", "value": "内容"}</code>；
+      <code>rect = {tx, ty, tw, th}</code> → 瓦片坐标对象；
+      <code>@t("en","中文")</code> → <code>{"en": "...", "zh": "..."}</code> 多语言值。<br><br>
+      <strong style="color:var(--gui)">JSON 到 Rust</strong>：<code>build.rs</code> 中的 <code>generate_ui_layouts()</code>
+      将编译后的 JSON 直接嵌入生成的 <code>ui_layouts_gen.rs</code> 文件，以 <code>&amp;'static str</code> 形式存在。
+      <code>schema.rs</code> 通过 <code>include!()</code> 包含该文件。运行时，菜单代码调用
+      <code>get_screen_v2_json()</code> 获取 JSON 字符串，用 <code>serde_json::from_str()</code>
+      反序列化为 <code>ScreenLayout</code> 结构体（定义在 <code>dotzuki-renderer/layout_engine/types.rs</code>）。
+      v1 路径更激进：build.rs 直接生成具名 Rust 结构体（如 <code>DialogDefaultLayout</code>），编译期零成本。
+    </div>
+  </div>
+</div>
+
+<!-- G1 -->
+<section class="step" id="g1">
+  <div class="sh">
+    <div class="sn g">G1</div>
+    <div><div class="st">瓦片坐标系统 <span class="t g">.gui</span></div><div class="sdsc">一切布局的基石 — 20×18 网格 + rect 定位</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>dialog.gui</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// 坐标系: 20 列 × 18 行, 每格 = 8×8 像素</span>
+<span class="c-cmt">// tx = 列, ty = 行, tw = 宽, th = 高 (单位: 瓦片)</span>
+
+<span class="c-kw">screen</span> Dialog {
+  <span class="c-prop">panel</span> {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 12,
+            <span class="c-prop">tw</span>: 20, <span class="c-prop">th</span>: 6}
+    <span class="c-prop">style</span> = <span class="c-str">"default"</span>
+    <span class="c-prop">text</span>(<span class="c-str">"{text}"</span>) {
+      <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 13,
+              <span class="c-prop">tw</span>: 18, <span class="c-prop">th</span>: 4}
+      <span class="c-prop">wrap</span> = <span class="c-str">"word"</span>
+    }
+  }
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 瓦片网格 + 对话框定位</div><div id="gg1" class="gb-s"></div></div>
+      <div class="ex">
+        <strong>GUI DSL 的核心坐标系统</strong>：所有组件通过 <code class="g">rect</code> 属性在 <strong>20×18 网格</strong>上做绝对定位。
+        <div class="h g">rect = {tx: 0, ty: 12, tw: 20, th: 6}</div>
+        <code>tx/ty</code> = 左上角瓦片坐标，<code>tw/th</code> = 宽/高（瓦片数）。
+        每个瓦片对应 8×8 像素，总分辨率 160×144。对话框固定在底部 6 行，文字向内缩进 1 格。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G2 -->
+<section class="step" id="g2">
+  <div class="sh">
+    <div class="sn g">G2</div>
+    <div><div class="st">组件系统 <span class="t g">.gui</span></div><div class="sdsc">16 种内置组件 + 自定义组件声明</div></div>
+  </div>
+  <div class="cg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>所有组件类型</span></div>
+        <div class="cb" style="font-size:.72rem"><span class="c-cmt">// ── 容器类 ──</span>
+<span class="c-prop">panel</span>     GB 风格边框的面板 (style="default")
+<span class="c-prop">container</span> 无边框容器, 可做 clip
+
+<span class="c-cmt">// ── 内容类 ──</span>
+<span class="c-prop">text</span>()    文本 (wrap/align/color/font/line_spacing)
+<span class="c-prop">button</span>()  按钮 (on_click 绑定)
+<span class="c-prop">tile</span>(n)   单个 GB 瓦片 (flip_x/y, palette)
+<span class="c-prop">image</span>()   图像 (slice 九宫格)
+<span class="c-prop">divider</span>  分隔线 (水平/垂直, repeat)
+
+<span class="c-cmt">// ── 列表类 ──</span>
+<span class="c-prop">list</span>      滚动列表 (source, cursor, max_visible)
+<span class="c-prop">flex_list</span> 弹性多列列表 (item_layout)
+
+<span class="c-cmt">// ── 光标 ──</span>
+<span class="c-prop">cursor</span>    选择指示 ▶︎ (1-D 列表 / 2-D 网格)
+
+<span class="c-cmt">// ── 图元 ──</span>
+<span class="c-prop">bracket</span>   括号框
+<span class="c-prop">pixel_rect</span> 像素矩形
+
+<span class="c-cmt">// ── 输入 ──</span>
+<span class="c-prop">input</span>     输入框
+<span class="c-prop">dropdown</span>  下拉选择器
+
+<span class="c-cmt">// ── 自定义 ──</span>
+<span class="c-prop">component</span> 声明自定义组件 (如 hp_bar)</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 多组件组合</div><div id="gg2" class="gb-s"></div></div>
+      <div class="ex">
+        <strong>16 种内置组件</strong>，分 5 大类。<code class="g">panel</code> 是带 GB 边框的面板，
+        <code class="g">container</code> 是无边框容器。<code class="g">list</code> + <code class="g">cursor</code>
+        实现菜单列表。<code class="g">component</code> 声明让游戏侧注册自定义元素（如 HP 条），
+        编译器会校验 prop 类型和必填项。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G3 -->
+<section class="step" id="g3">
+  <div class="sh">
+    <div class="sn g">G3</div>
+    <div><div class="st">文本排版属性 <span class="t g">.gui</span></div><div class="sdsc">换行、对齐、颜色、行间距、字体、模板变量</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>text 组件完整属性</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-prop">text</span>(<span class="c-str">"显示内容"</span>) {
+  <span class="c-prop">rect</span>  = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 0, <span class="c-prop">tw</span>: 20, <span class="c-prop">th</span>: 4}
+  <span class="c-prop">align</span> = <span class="c-str">"center"</span>     <span class="c-cmt">// left | center | right</span>
+  <span class="c-prop">color</span> = <span class="c-str">"Black"</span>      <span class="c-cmt">// Black | DarkGray | LightGray | White | #rrggbb</span>
+  <span class="c-prop">font</span>  = <span class="c-str">"pk_glyph"</span>   <span class="c-cmt">// 字体名称</span>
+  <span class="c-prop">wrap</span>  = <span class="c-str">"word"</span>       <span class="c-cmt">// 单词换行</span>
+  <span class="c-prop">line_spacing</span> = 1       <span class="c-cmt">// 行间距 (瓦片数)</span>
+}
+
+<span class="c-cmt">// \n 手动换行 + wrap 自动折行</span>
+<span class="c-prop">text</span>(<span class="c-str">"Line 1\nLine 2\nLine 3"</span>) {
+  <span class="c-prop">rect</span>  = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 5, <span class="c-prop">tw</span>: 18, <span class="c-prop">th</span>: 4}
+  <span class="c-prop">wrap</span> = <span class="c-str">"word"</span>
+}
+
+<span class="c-cmt">// 模板变量: {variable} 运行时绑定</span>
+<span class="c-prop">text</span>(<span class="c-str">"{player_name}"</span>) {
+  <span class="c-prop">rect</span>  = {<span class="c-prop">tx</span>: 5, <span class="c-prop">ty</span>: 2, <span class="c-prop">tw</span>: 7, <span class="c-prop">th</span>: 1}
+  <span class="c-prop">color</span> = <span class="c-str">"White"</span>
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 文字排版</div><div id="gg3" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="g">text</code> 是最常用的组件。支持 <strong>4 阶灰度</strong>颜色
+        （Black/DarkGray/LightGray/White，对应 GB 的调色板）、
+        三种对齐方式、单词换行 <code>wrap = "word"</code>、
+        行间距 <code>line_spacing</code>、以及 <code>{变量}</code> 运行时数据绑定。
+        <br><br>
+        <strong style="color:var(--gui)">编译原理</strong>：GUI DSL 编译器将每个 <code>text(...)</code>
+        解析为 AST 的 <code>UiComponent::Text</code> 节点，所有属性（wrap, align, color 等）
+        抽取到 <code>ComponentProps</code> 结构体。Codegen 遍历 AST，将每个组件输出为
+        <code>{"type": "text", "value": "...", "wrap": "word", ...}</code> JSON 对象。
+        <code>panel</code> 中的子组件递归输出为 <code>"children": [...]</code> 嵌套数组。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G4 -->
+<section class="step" id="g4">
+  <div class="sh">
+    <div class="sn g">G4</div>
+    <div><div class="st">双语文本 i18n <span class="t g">.gui</span></div><div class="sdsc">@t("en", "中文") — 同一布局服务多语言</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>mart_buy.gui</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// @t("英文", "中文") 编译为 {"en":"...", "zh":"..."}</span>
+
+screen MartBuy {
+  <span class="c-prop">panel</span> {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 0, <span class="c-prop">tw</span>: 18, <span class="c-prop">th</span>: 15}
+    <span class="c-prop">style</span> = <span class="c-str">"default"</span>
+  }
+
+  <span class="c-prop">flex_list</span>(<span class="c-str">"{shop_items}"</span>) {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 1, <span class="c-prop">tw</span>: 16, <span class="c-prop">th</span>: 13}
+    <span class="c-prop">item_layout</span> = [
+      {<span class="c-prop">field</span>: <span class="c-str">"name"</span>,  <span class="c-prop">width</span>: 13, <span class="c-prop">align</span>: <span class="c-str">"left"</span>}
+      {<span class="c-prop">field</span>: <span class="c-str">"price"</span>, <span class="c-prop">width</span>: 3,  <span class="c-prop">align</span>: <span class="c-str">"right"</span>, <span class="c-prop">prefix</span>: <span class="c-str">"$"</span>}
+    ]
+    <span class="c-prop">cursor</span> = {<span class="c-prop">tile</span>: 223, <span class="c-prop">position</span>: <span class="c-str">"left"</span>}
+  }
+
+  <span class="c-cmt">// 双语 + 模板变量混用</span>
+  <span class="c-prop">text</span>(<span class="c-fn">@t</span>(<span class="c-str">"MONEY ${balance}"</span>,
+              <span class="c-str">"金钱 ${balance}"</span>)) {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 16, <span class="c-prop">tw</span>: 16, <span class="c-prop">th</span>: 1}
+  }
+}</div>
+      </div>
+      <div class="ir">
+        <button class="btn" onclick="swGL('en')">🇬🇧 ENGLISH</button>
+        <button class="btn s" onclick="swGL('zh')">🇨🇳 中文</button>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — <span id="glb">English</span></div><div id="gg4" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="g">@t("English", "中文")</code> 是 GUI DSL 的<strong>内联国际化</strong>语法。
+        编译为语言索引对象：<code>{"en": "MONEY $500", "zh": "金钱 $500"}</code>。
+        渲染器根据当前语言自动选择，未提供的语言回退到英文。
+        支持与 <code>{模板变量}</code> 混用。35 个 .gui 文件中多个已采用此模式。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G5 -->
+<section class="step" id="g5">
+  <div class="sh">
+    <div class="sn g">G5</div>
+    <div><div class="st">列表 & 光标系统 <span class="t g">.gui</span></div><div class="sdsc">list / flex_list 菜单 + cursor 1-D / 2-D 网格</div></div>
+  </div>
+  <div class="cg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>main.gui + battle_main.gui</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── list: 主菜单滚动列表 ──</span>
+screen Main {
+  <span class="c-prop">panel</span> {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 0, <span class="c-prop">tw</span>: 13, <span class="c-prop">th</span>: 9}
+    <span class="c-prop">style</span> = <span class="c-str">"default"</span>
+  }
+  <span class="c-prop">list</span> {
+    <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 2, <span class="c-prop">tw</span>: 11, <span class="c-prop">th</span>: 6}
+    <span class="c-prop">source</span> = <span class="c-str">"{items}"</span>
+    <span class="c-prop">item_template</span> = {<span class="c-prop">height</span>: 1, <span class="c-prop">gap</span>: 1}
+    <span class="c-prop">cursor</span> = {<span class="c-prop">tile</span>: 223}
+    <span class="c-prop">max_visible</span> = 3
+  }
+}
+
+<span class="c-cmt">// ── cursor: 2×2 网格 (战斗菜单) ──</span>
+<span class="c-prop">cursor</span> {
+  <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 9, <span class="c-prop">ty</span>: 14, <span class="c-prop">tw</span>: 1, <span class="c-prop">th</span>: 1}
+  <span class="c-prop">col_step</span> = 6
+  <span class="c-prop">row_step</span> = 2
+  <span class="c-prop">col</span> = <span class="c-str">"{bcol}"</span>
+  <span class="c-prop">row</span> = <span class="c-str">"{brow}"</span>
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 列表 + 战斗菜单</div><div id="gg5" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="g">list</code> 用 <code>source</code> + <code>item_template</code> 渲染可滚动列表。
+        <code class="g">flex_list</code> 支持多列布局（名称左对齐、价格右对齐，带 <code>prefix</code>）。
+        <code class="g">cursor</code> 支持 <strong>1-D 列表</strong>（仅 <code>row_step</code>）
+        和 <strong>2-D 网格</strong>（<code>col_step</code> + <code>row_step</code>），
+        位置通过 <code>{bcol}</code>/<code>{brow}</code> 运行时绑定。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G6 -->
+<section class="step" id="g6">
+  <div class="sh">
+    <div class="sn g">G6</div>
+    <div><div class="st">主题 & 样式系统 <span class="t g">.theme / .style</span></div><div class="sdsc">@theme 颜色令牌 + @style 复用（含继承链）</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>default.theme + shop.style</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── @theme: 颜色令牌 ──</span>
+<span class="c-tag">@theme</span> fantasy {
+  <span class="c-prop">primary</span>    = <span class="c-str">"#c9a03d"</span>
+  <span class="c-prop">background</span> = <span class="c-str">"#1a1a2e"</span>
+  <span class="c-prop">surface</span>    = <span class="c-str">"#16213e"</span>
+  <span class="c-prop">text</span>       = <span class="c-str">"#eeeeee"</span>
+}
+
+<span class="c-cmt">// 引用: @theme.token</span>
+
+<span class="c-cmt">// ── @style: 可复用样式 (支持继承) ──</span>
+<span class="c-tag">@style</span> card {
+  <span class="c-prop">padding</span>    = 12
+  <span class="c-prop">display</span>   = <span class="c-str">"flex"</span>
+  <span class="c-prop">gap</span>       = 8
+  <span class="c-prop">background</span> = <span class="c-str">"@theme.surface"</span>
+}
+
+<span class="c-cmt">// 继承: @style child : parent</span>
+<span class="c-tag">@style</span> card_hover : card {
+  <span class="c-prop">background</span> = <span class="c-str">"@theme.primary"</span>
+}
+
+<span class="c-cmt">// 使用 @style</span>
+product_card = <span class="c-prop">container</span> {
+  <span class="c-tag">@style</span> card
+  <span class="c-prop">text</span>(<span class="c-str">"{item.name}"</span>) { ... }
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 主题配色</div><div id="gg6" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="g">@theme</code> 定义<strong>颜色令牌</strong>，通过 <code>@theme.token</code> 引用。
+        <code class="g">@style</code> 定义<strong>可复用样式块</strong>，支持<strong>继承链</strong>
+        （<code>@style child : parent</code> 实现样式扩展）。同一个游戏可以定义多套主题
+        （暗色/亮色/奇幻），通过一行 <code>theme = "fantasy"</code> 切换全局视觉。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     PART 2: Scene DSL
+     ════════════════════════════════════════════ -->
+<div class="sd" style="margin-top:3rem">
+  <div class="sdi s">
+    <span class="ic">📜</span>
+    <div>
+      <h3 style="color:var(--scene)">Scene DSL — 对话脚本系统</h3>
+      <div class="sub"><code>.scene</code> 文件 · <code>game_scene</code> 顶级构造 · 编译为 JavaScript · 定义"剧情怎么走"</div>
+    </div>
+    <span class="ar">→</span>
+  </div>
+</div>
+
+<!-- ═══ Scene 编译流水线 ═══ -->
+<div style="max-width:1400px;margin:-1.5rem auto 1rem;padding:0 2rem">
+  <div style="background:var(--scene-bg);border:1px solid rgba(244,114,182,.2);border-radius:10px;padding:1rem 1.5rem">
+    <div class="pp-label">🔧 Scene DSL 编译流水线</div>
+    <div class="pp">
+      <div class="ps s"><span class="pi">📄</span><span class="pl">.scene 源文件</span></div>
+      <span class="pa">→</span>
+      <div class="ps s"><span class="pi">🔍</span><span class="pl">Lexer 词法分析</span></div>
+      <span class="pa">→</span>
+      <div class="ps s"><span class="pi">🌳</span><span class="pl">Parser 语法分析</span></div>
+      <span class="pa">→</span>
+      <div class="ps s"><span class="pi">📦</span><span class="pl">AST 抽象语法树</span></div>
+      <span class="pa">→</span>
+      <div class="ps s"><span class="pi">⚙️</span><span class="pl">Codegen 代码生成</span></div>
+      <span class="pa">→</span>
+      <div class="ps s" style="border-color:var(--scene)"><span class="pi">⚡</span><span class="pl" style="color:var(--scene);font-weight:700">JavaScript</span></div>
+      <span class="pa">→</span>
+      <div class="ps s" style="border-color:var(--gb-mid)"><span class="pi">🦀</span><span class="pl" style="color:var(--gb-mid);font-weight:700">Rust 嵌入</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-top:.5rem;font-size:.7rem">
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📥 输入 (.scene)</div>
+        <div class="pp-code"><span style="color:#ff7b72">game_scene</span> <span style="color:#ffa657">StartTown</span> {
+  <span style="color:#7ee787">@storyline</span>(<span style="color:#a5d6ff">"talkProf"</span>) {
+    <span style="color:#7ee787">@trigger</span>(<span style="color:#d2a8ff">map</span>=<span style="color:#a5d6ff">"StartTown"</span>,
+             <span style="color:#d2a8ff">npc</span>=1)
+    <span style="color:#7ee787">@speaker</span>(<span style="color:#a5d6ff">"PROF"</span>) {
+      <span style="color:#a5d6ff">"Hey! Wait!"</span>
+    }
+  }
+}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📤 中间输出 (JS)</div>
+        <div class="pp-code"><span style="color:#ff7b72">async</span> <span style="color:#ff7b72">function</span> <span style="color:#d2a8ff">storyline_main</span>() {
+  <span style="color:#ff7b72">const</span> __st = <span style="color:#ffa657">runtime</span>;
+  <span style="color:#ff7b72">const</span> __s = __st.<span style="color:#d2a8ff">statements</span>;
+
+  <span style="color:#7ee787">// @storyline("talkProf")</span>
+  __s[<span style="color:#a5d6ff">"talkProf"</span>] = <span style="color:#ff7b72">async</span> () => {
+    <span style="color:#ff7b72">await</span> <span style="color:#ffa657">game</span>.<span style="color:#d2a8ff">showText</span>(<span style="color:#a5d6ff">"PROF: Hey! Wait!"</span>);
+  };
+}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);margin-bottom:.25rem">📦 最终产物 (Rust 嵌入)</div>
+        <div class="pp-code"><span style="color:#7ee787">// dotzuki-engine-dsl/build.rs 生成</span>
+<span style="color:#7ee787">// embedded_scenes.rs</span>
+<span style="color:#ff7b72">static</span> SCENE_0: &amp;<span style="color:#ff7b72">str</span> =
+    <span style="color:#d2a8ff">include_str!</span>(<span style="color:#a5d6ff">r"OUT_DIR/StartTown.js"</span>);
+<span style="color:#ff7b72">static</span> SCENE_1: &amp;<span style="color:#ff7b72">str</span> =
+    <span style="color:#d2a8ff">include_str!</span>(<span style="color:#a5d6ff">r"OUT_DIR/ProfLab.js"</span>);
+
+<span style="color:#d2a8ff">pub fn</span> <span style="color:#ffa657">load_embedded_scenes</span>(
+    reg: &amp;<span style="color:#ff7b72">mut impl</span> <span style="color:#d2a8ff">DslSceneRegistrar</span>
+) {
+    reg.<span style="color:#d2a8ff">register_scene</span>(
+        <span style="color:#a5d6ff">"StartTown"</span>, SCENE_0);
+    reg.<span style="color:#d2a8ff">register_scene</span>(
+        <span style="color:#a5d6ff">"ProfLab"</span>, SCENE_1);
+}
+
+<span style="color:#7ee787">// 运行时: Boa 引擎执行</span>
+<span style="color:#ff7b72">let</span> js = <span style="color:#d2a8ff">load_embedded_scenes</span>(&amp;<span style="color:#ff7b72">mut</span> registrar);
+<span style="color:#ff7b72">let</span> result = engine.<span style="color:#d2a8ff">evaluate</span>(js);</div>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--text-dim);margin-top:.5rem;line-height:1.6">
+      <strong style="color:var(--scene)">关键转换</strong>：
+      <code>@speaker("Name") { "text" }</code> → <code>await game.showText("Name: text")</code>（自动加名字前缀）；
+      <code>@speaker("") { "text" }</code> → <code>await game.showText("text")</code>（旁白，无前缀）；
+      <code>@choice { @option("A"){...} @option("B"){...} }</code> → <code>const c = await game.showChoice(["A","B"]); if (c===0){...} else {...}</code>；
+      <code>@if (getFlag("X")) { ... }</code> → <code>if (game.getFlag("X")) { ... }</code>（函数自动加 <code>game.</code> 前缀）；
+      <code>giveItem("X",1)</code> → <code>await game["giveItem"]("X",1)</code>（所有命令自动 await 并走 <code>game[name]()</code> 动态分发）。
+      字符串中的 <code>{variable}</code> → JS 模板字面量 <code>${...}</code>。<br><br>
+      <strong style="color:var(--scene)">JS 到 Rust</strong>：<code>dotzuki-engine-dsl/build.rs</code> 将编译后的 JS 写入 <code>OUT_DIR/</code>，
+      生成 <code>embedded_scenes.rs</code> 通过 <code>include_str!()</code> 嵌入每个 JS 文件。
+      运行时，<code>loader.rs</code> 调用 <code>load_embedded_scenes()</code> 将 JS 源码注册到场景系统中，
+      当玩家触发对话时，Boa JS 引擎执行对应场景的 JS 函数。
+    </div>
+  </div>
+</div>
+
+<!-- S1 -->
+<section class="step" id="s1">
+  <div class="sh">
+    <div class="sn s">S1</div>
+    <div><div class="st">场景结构 <span class="t s">.scene</span></div><div class="sdsc">game_scene — 一个 .scene 文件 = 一个游戏场景</div></div>
+  </div>
+  <div class="cg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot s"></span>ProfLab/script.scene</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// game_scene: 顶层容器, 一个 .scene = 一个完整场景</span>
+<span class="c-kw">game_scene</span> ProfLab {
+
+  <span class="c-cmt">// 1. 场景数据</span>
+  <span class="c-tag">@variables</span> { starter_choice = <span class="c-kw">null</span> }
+
+  <span class="c-cmt">// 2. 进入场景时触发</span>
+  <span class="c-tag">@load</span> {
+    <span class="c-tag">@if</span> (getFlag(<span class="c-str">"EVENT_PROF_APPEARED"</span>)) {
+      showObject(<span class="c-str">"PROF_LAB_OBJ_5"</span>)
+      moveNpc(<span class="c-str">"PROF_LAB_OBJ_8"</span>, [[5,9],[5,7]])
+    }
+  }
+
+  <span class="c-cmt">// 3. 故事线 + 触发器</span>
+  <span class="c-tag">@storyline</span>(<span class="c-str">"talkProf"</span>) {
+    <span class="c-tag">@trigger</span>(<span class="c-prop">map</span> = <span class="c-str">"ProfLab"</span>, <span class="c-prop">npc</span> = 5)
+    <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) { <span class="c-str">"Hello!"</span> }
+  }
+
+  <span class="c-cmt">// 4. 内联 UI (复用 GUI DSL 组件语法)</span>
+  <span class="c-kw">ui</span> {
+    <span class="c-prop">panel</span> {
+      <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 12,
+              <span class="c-prop">tw</span>: 20, <span class="c-prop">th</span>: 6}
+      <span class="c-prop">text</span>(<span class="c-str">"{text}"</span>) {
+        <span class="c-prop">wrap</span> = <span class="c-str">"word"</span>
+      }
+    }
+  }
+}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div style="background:var(--scene-bg);border:1px solid rgba(244,114,182,.2);border-radius:10px;padding:1.2rem">
+        <h4 style="color:var(--scene);font-size:.85rem;margin-bottom:.8rem">📐 Scene DSL 编译流程</h4>
+        <div class="ac2" style="margin-top:0">
+          <div style="background:var(--surface2);border-radius:8px;padding:.8rem;text-align:center;font-size:.72rem">
+            <div style="font-size:1.3rem;margin-bottom:.3rem">📜</div>
+            <strong style="color:var(--scene)">.scene 文件</strong><br>
+            <span style="color:var(--text-dim)">game_scene { }</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:.8rem;text-align:center;font-size:.72rem">
+            <div style="font-size:1.3rem;margin-bottom:.3rem">⚡</div>
+            <strong style="color:var(--scene)">JavaScript</strong><br>
+            <span style="color:var(--text-dim)">Boa 引擎执行<br>game.* API</span>
+          </div>
+        </div>
+      </div>
+      <div class="ex" style="margin-top:0">
+        <code class="s">game_scene</code> 是 Scene DSL 的顶级容器。内含 <code>@variables</code>（数据）、
+        <code>@load</code>（进入场景触发）、<code>@storyline</code>（故事线 + <code>@trigger</code> 绑定）、
+        以及 <code>ui { }</code>（内联 UI 布局——复用 GUI DSL 组件语法）。
+        编译输出为 <strong>JavaScript</strong>，由 Boa JS 引擎执行。全游戏共 <strong>248 个 .scene 文件</strong>。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S2 -->
+<section class="step" id="s2">
+  <div class="sh">
+    <div class="sn s">S2</div>
+    <div><div class="st">触发器系统 <span class="t s">.scene</span></div><div class="sdsc">@trigger — 故事线绑定到 NPC / 路牌 / 坐标</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot s"></span>三种触发类型</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── NPC 对话触发 ──</span>
+<span class="c-tag">@trigger</span>(<span class="c-prop">map</span>    = <span class="c-str">"StartTown"</span>,
+         <span class="c-prop">npc</span>     = 1,
+         <span class="c-prop">toggle</span>  = <span class="c-str">"START_TOWN_OBJ_1"</span>,
+         <span class="c-prop">hidden</span>  = <span class="c-kw">true</span>)
+
+<span class="c-cmt">// ── 路牌触发 ──</span>
+<span class="c-tag">@trigger</span>(<span class="c-prop">map</span>  = <span class="c-str">"StartTown"</span>,
+         <span class="c-prop">sign</span>  = 1)
+
+<span class="c-cmt">// ── 坐标触发 (玩家踩到某格) ──</span>
+<span class="c-tag">@trigger</span>(<span class="c-prop">map</span>  = <span class="c-str">"StartTown"</span>,
+         <span class="c-prop">name</span>  = <span class="c-str">"northExit1"</span>)
+
+<span class="c-cmt">// ── 一条故事线共享多个触发 ──</span>
+<span class="c-tag">@storyline</span>(<span class="c-str">"talkDex"</span>) {
+  <span class="c-tag">@trigger</span>(<span class="c-prop">map</span>=<span class="c-str">"ProfLab"</span>, <span class="c-prop">npc</span>=6,
+           <span class="c-prop">toggle</span>=<span class="c-str">"PROF_LAB_OBJ_6"</span>)
+  <span class="c-tag">@trigger</span>(<span class="c-prop">map</span>=<span class="c-str">"ProfLab"</span>, <span class="c-prop">npc</span>=7,
+           <span class="c-prop">toggle</span>=<span class="c-str">"PROF_LAB_OBJ_7"</span>)
+  <span class="c-tag">@speaker</span>(<span class="c-str">""</span>) {
+    <span class="c-str">"It's encyclopedia-\nlike, but blank!"</span>
+  }
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 触发 NPC 对话</div><div id="gs2" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="s">@trigger</code> 将故事线绑定到游戏世界的具体对象。
+        支持 <strong>3 种触发类型</strong>：<code>npc</code>（与 NPC 对话）、
+        <code>sign</code>（查看路牌）、<code>name</code>（坐标触发）。
+        一条故事线可以有多个 <code>@trigger</code>，绑定到不同对象但共享同一段对话。
+        <code>toggle</code> 控制 NPC 显隐，<code>hidden</code> 表示初始隐藏。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S3 -->
+<section class="step" id="s3">
+  <div class="sh">
+    <div class="sn s">S3</div>
+    <div><div class="st">说话人系统 <span class="t s">.scene</span></div><div class="sdsc">@speaker — 角色对话 vs 旁白形式，多段连珠</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot s"></span>script.scene — 对话写法</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── 带名字的说话人 ──</span>
+<span class="c-cmt">// 编译: await game.showText("PROF: Hey! Wait!")</span>
+<span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+  <span class="c-str">"Hey! Wait!\nDon't go out!"</span>
+}
+
+<span class="c-cmt">// ── 旁白形式 (空名字 = 无前缀) ──</span>
+<span class="c-cmt">// 编译: await game.showText("It's a signpost.")</span>
+<span class="c-cmt">// 绝不带 "System: " 前缀!</span>
+<span class="c-tag">@speaker</span>(<span class="c-str">""</span>) {
+  <span class="c-str">"It's a signpost.\nSTART TOWN"</span>
+}
+
+<span class="c-cmt">// ── 多段对话连续 ──</span>
+<span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) { <span class="c-str">"Hello!"</span> }
+<span class="c-tag">@speaker</span>(<span class="c-str">""</span>)   { <span class="c-str">"<RIVAL>: Hey!"</span> }
+<span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) { <span class="c-str">"Be patient!"</span> }
+
+<span class="c-cmt">// ── 剧情台词 @say: 剧情中 NPC 交错连续说话 ──</span>
+<span class="c-cmt">// 编译: await game.showText("PROF: Follow me!")</span>
+<span class="c-tag">@say</span>(<span class="c-str">"PROF"</span>) {
+  <span class="c-str">"Follow me!"</span>
+}
+
+<span class="c-cmt">// ── @t 双语对话 ──</span>
+<span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+  <span class="c-fn">@t</span>(<span class="c-str">"Hello!"</span>, <span class="c-str">"你好！"</span>)
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 说话人 + 旁白</div><div id="gs3" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="s">@speaker("名字")</code> 在文本前自动添加 <strong>"名字: "</strong> 前缀。
+        <code class="s">@speaker("")</code>（空字符串）是<strong>旁白形式</strong>，编译为纯 <code>game.showText()</code>，<em>不加任何前缀</em>。
+        这曾是一个历史坑点——如果占位符用了 <code>"System"</code>，<code>"System: "</code> 前缀会泄漏到文本框。本项目有专门的
+        回归测试 <code>test_speaker_empty_name_no_prefix</code> 防止复现。
+        <br><br>
+        <strong style="color:var(--scene)">语义固定</strong>：<code class="s">@speaker</code> 只表达
+        <strong>玩家主动对话</strong>（NPC talk 触发、按 A 推进）；
+        剧情中 NPC 交错连续说话用 <code class="s">@say("名字")</code>。
+        两者编译产物相同（<code>game.showText</code>），区别在语义——剧情台词不会
+        被误写成主动对话,反之亦然。
+        <br><br>
+        <strong style="color:var(--scene)">编译原理</strong>：Parser 将 <code>@speaker</code> 解析为
+        <code>StoryStmt::Speaker { name: Expression, texts: Vec&lt;LocalizedText&gt; }</code> 节点
+        （<code>@say</code> 为 <code>StoryStmt::Say</code>）。
+        Codegen 中的 <code>compile_speaker()</code> 函数（<code>js_storyline.rs</code>，约 70 行）
+        拼接名字和正文：名字非空时输出 <code>await game.showText("Name: text")</code>，
+        空名字时直接输出 <code>await game.showText("text")</code>。
+        多条文本用 <code>\n</code> 连接，<code>@t</code> 双语文本调用 <code>game.t()</code>。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S4 -->
+<section class="step" id="s4">
+  <div class="sh">
+    <div class="sn s">S4</div>
+    <div><div class="st">选择 & 条件分支 <span class="t s">.scene</span></div><div class="sdsc">@choice/@option + @if/@else — 剧情分叉</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot s"></span>script.scene — 分支逻辑</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── @choice: 对话选项 ──</span>
+<span class="c-cmt">// 编译为: const choice = await game.showChoice(["YES","NO"])</span>
+<span class="c-tag">@choice</span> {
+  <span class="c-tag">@option</span>(<span class="c-str">"YES"</span>) {
+    giveMonster(<span class="c-str">"FLAMBIT"</span>, 5)
+    setFlag(<span class="c-str">"EVENT_GOT_STARTER"</span>)
+  }
+  <span class="c-tag">@option</span>(<span class="c-str">"NO"</span>) { }
+}
+
+<span class="c-cmt">// ── @if/@else: 基于游戏状态的条件对话 ──</span>
+<span class="c-tag">@if</span> (getFlag(<span class="c-str">"EVENT_GOT_STARTER"</span>)) {
+  <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+    <span class="c-str">"Raise your MONSTER!"</span>
+  }
+} <span class="c-tag">@else</span> <span class="c-tag">@if</span> (<span class="c-fn">hasItem</span>(<span class="c-str">"PROF_PARCEL"</span>)) {
+  <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+    <span class="c-str">"You have something\nfor me?"</span>
+  }
+  takeItem(<span class="c-str">"PROF_PARCEL"</span>, 1)
+} <span class="c-tag">@else</span> {
+  <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+    <span class="c-str">"Be patient, <RIVAL>!"</span>
+  }
+}</div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 渲染预览 — 选择分支</div><div id="gs4" class="gb-s"></div></div>
+      <div class="ex">
+        <code class="s">@choice</code> + <code class="s">@option</code> 编译为 <code>game.showChoice()</code> + if/else 链。
+        每个选项后可以跟任意复杂的嵌套逻辑。<br><br>
+        <strong style="color:var(--scene)">编译原理</strong>：Parser 将 <code>@choice</code> 解析为
+        <code>StoryStmt::Choice { options: Vec&lt;ChoiceOption&gt; }</code>。
+        每个 <code>@option</code> 的 label 和 body 分别存储。Codegen 输出：
+        <div class="h s" style="font-size:.68rem">
+const __choice = await game.showChoice(["YES","NO"]);<br>
+if (__choice === 0) { /* YES 分支 */ } else { /* NO 分支 */ }
+        </div>
+        <code class="s">@if/@else</code> 根据游戏状态（Flag、物品、变量比较）选择不同对话。
+        同一个 NPC 随剧情推进会说出完全不同的话。条件支持 <code>getFlag()</code>、
+        <code>hasItem()</code>、比较运算、<code>&& || !</code> 逻辑组合。所有函数调用自动添加 <code>game.</code> 前缀。
+        Parser 将 <code>@if</code> 解析为 <code>StoryStmt::If { condition, then_branch, else_branch }</code>，
+        Codegen 递归编译条件表达式和分支语句体。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S5 -->
+<section class="step" id="s5">
+  <div class="sh">
+    <div class="sn s">S5</div>
+    <div><div class="st">命令系统 <span class="t s">.scene</span></div><div class="sdsc">50+ game.* API 命令 — 物品、战斗、场景、NPC、音效</div></div>
+  </div>
+  <div class="dg">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot s"></span>常用命令分类</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// ── 物品 ──</span>
+giveItem(<span class="c-str">"POTION"</span>, 1)
+takeItem(<span class="c-str">"PROF_PARCEL"</span>, 1)
+giveMonster(<span class="c-str">"FLAMBIT"</span>, 5)
+openShop(<span class="c-str">"MART_DEFAULT"</span>)
+
+<span class="c-cmt">// ── 战斗 ──</span>
+result = startBattle(<span class="c-str">"OPP_RIVAL1"</span>)
+heal()
+
+<span class="c-cmt">// ── 场景 ──</span>
+warpTo(<span class="c-str">"StartTown"</span>, 5, 6)
+setFlag(<span class="c-str">"EVENT_GOT_STARTER"</span>)
+resetFlag(<span class="c-str">"EVENT_XXX"</span>)
+
+<span class="c-cmt">// ── NPC 动画 ──</span>
+moveNpc(<span class="c-str">"PROF_LAB_OBJ_5"</span>, [[5,9],[5,8]])
+facePlayer(<span class="c-str">"up"</span>)
+showObject(<span class="c-str">"START_TOWN_OBJ_1"</span>)
+followNpc(<span class="c-str">"PROF_LAB_OBJ_1"</span>, 12, 11)
+
+<span class="c-cmt">// ── 音效 ──</span>
+playMusic(<span class="c-str">"MUSIC_MEET_PROF"</span>)
+playSound(<span class="c-str">"SFX_GET_KEY_ITEM"</span>)
+delay(10)  <span class="c-cmt">// 等待 10 帧</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="rp"><div class="rph">📺 完整流程 — ProfLab 开场动画</div><div id="gs5" class="gb-s"></div></div>
+      <div class="ex">
+        所有命令编译为 <code>game["命令名"](参数)</code> 调用，<strong>自动 <code>await</code></strong>。
+        共 <strong>50+ 命令</strong>，涵盖物品、战斗、场景切换、NPC 动画、音频、标志位控制等。
+        右侧展示的是 ProfLab 开场动画的实际效果：Prof 说话 → 选择初始怪物 → 宿敌战 → 获得 DEX，
+        全部由 Scene DSL 的若干 <code>@storyline</code> + <code>@speaker</code> + <code>@choice</code> + 命令编排。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S6 -->
+<section class="step" id="s6">
+  <div class="sh">
+    <div class="sn s">S6</div>
+    <div><div class="st">两套 DSL 协同工作 <span class="t s">.scene</span> + <span class="t g">.gui</span></div><div class="sdsc">GUI 排布 → Scene 填充 → 运行时合成</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:1.5rem">
+    <div>
+      <div class="cp">
+        <div class="cph"><span class="ll"><span class="dot g"></span>dialog.gui (GUI DSL — 定义"长什么样")</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+        <div class="cb"><span class="c-cmt">// 编译为 schema v2 JSON → 渲染器消费</span>
+<span class="c-kw">screen</span> Dialog {
+  <span class="c-prop">panel</span> {
+    <span class="c-prop">rect</span>  = {<span class="c-prop">tx</span>: 0, <span class="c-prop">ty</span>: 12,
+            <span class="c-prop">tw</span>: 20, <span class="c-prop">th</span>: 6}
+    <span class="c-prop">style</span> = <span class="c-str">"default"</span>
+    <span class="c-prop">text</span>(<span class="c-str">"{text}"</span>) {
+      <span class="c-prop">rect</span>  = {<span class="c-prop">tx</span>: 1, <span class="c-prop">ty</span>: 13,
+              <span class="c-prop">tw</span>: 18, <span class="c-prop">th</span>: 4}
+      <span class="c-prop">wrap</span> = <span class="c-str">"word"</span>
+    }
+    <span class="c-prop">tile</span>(31) {
+      <span class="c-prop">rect</span> = {<span class="c-prop">tx</span>: 18, <span class="c-prop">ty</span>: 16,
+              <span class="c-prop">tw</span>: 1, <span class="c-prop">th</span>: 1}
+    }
+  }
+}</div>
+      </div>
+      <div style="margin-top:1rem">
+        <div class="cp">
+          <div class="cph"><span class="ll"><span class="dot s"></span>script.scene (Scene DSL — 定义"说什么")</span><button class="cpy" onclick="cpy(this)">COPY</button></div>
+          <div class="cb"><span class="c-cmt">// 编译为 JavaScript → Boa 引擎执行</span>
+<span class="c-tag">@storyline</span>(<span class="c-str">"talkProf"</span>) {
+  <span class="c-tag">@trigger</span>(<span class="c-prop">map</span>=<span class="c-str">"ProfLab"</span>, <span class="c-prop">npc</span>=5)
+
+  <span class="c-tag">@if</span> (getFlag(<span class="c-str">"EVENT_GOT_DEX"</span>)) {
+    <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+      <span class="c-str">"How is your\nDEX coming?"</span>
+    }
+  } <span class="c-tag">@else</span> <span class="c-tag">@if</span> (hasItem(<span class="c-str">"PROF_PARCEL"</span>)) {
+    <span class="c-tag">@speaker</span>(<span class="c-str">"PROF"</span>) {
+      <span class="c-str">"You have something\nfor me?"</span>
+    }
+    takeItem(<span class="c-str">"PROF_PARCEL"</span>, 1)
+    giveMonster(<span class="c-str">"DEX"</span>, 1)
+  }
+}</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem">
+        <h3 style="color:var(--gb-mid);font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:1rem">🔗 运行时协作流程</h3>
+        <div style="display:flex;flex-direction:column;gap:.8rem">
+          <div class="ac2" style="margin-top:0">
+            <div class="ac" style="margin-top:0"><div class="ic">🎨</div><h4 class="g">GUI DSL</h4><p><code>.gui</code> → JSON<br>定义位置、边框、文字区域、光标</p></div>
+            <div class="ac" style="margin-top:0"><div class="ic">📜</div><h4 class="s">Scene DSL</h4><p><code>.scene</code> → JS<br>定义谁说话、说什么、选什么</p></div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:1rem;font-size:.75rem">
+            <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0">
+              <span style="color:var(--gui);font-weight:700">①</span>
+              <span>玩家走到 NPC 面前按 A 键</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0">
+              <span style="color:var(--scene);font-weight:700">②</span>
+              <span>Boa 引擎执行该 NPC 的 <code>talk</code> 函数<br><span style="color:var(--text-dim)">（来自 .scene 编译的 JS）</span></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0">
+              <span style="color:var(--gui);font-weight:700">③</span>
+              <span>渲染器加载 <code>dialog.gui</code> 编译的 JSON 布局</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0">
+              <span style="color:var(--gb-mid);font-weight:700">④</span>
+              <span><code>game.showText("PROF: ...")</code> 将文本填入对话框</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rp" style="margin-top:1rem">
+        <div class="rph">📺 最终呈现 — GUI + Scene 合成的对话框</div>
+        <div id="gs6" class="gb-s"></div>
+      </div>
+      <div class="ex" style="margin-top:1rem">
+        <strong>对话框的诞生过程：</strong><br>
+        <strong style="color:var(--gui)">GUI DSL</strong> 产出 <strong>Schema v2 JSON</strong> — 对话框"长什么样"（位置、边框、文字区域、光标）<br>
+        <strong style="color:var(--scene)">Scene DSL</strong> 产出 <strong>JavaScript</strong> — 对话框"说什么"（谁说话、什么内容、有什么选项）<br>
+        <strong>运行时</strong>：Boa 执行 JS → 调用 <code>game.showText()</code> → 渲染器将文本填入 JSON 布局 → 屏幕显示
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SPEC TABLES ═══════ -->
+<section class="step" style="margin-bottom:2rem">
+  <div class="sh">
+    <div class="sn" style="background:var(--surface2);color:var(--gb-mid);border:1px solid var(--border)">✓</div>
+    <div><div class="st">完整语法速查</div><div class="sdsc">两套 DSL 关键词分类汇总</div></div>
+  </div>
+
+  <div class="stb">
+    <table>
+      <thead>
+        <tr><th class="g" colspan="4">🎨 GUI DSL — <code>.gui</code> / <code>.theme</code> / <code>.style</code> · 编译 → JSON</th></tr>
+        <tr style="border-bottom:2px solid var(--border);color:var(--text-dim)">
+          <th style="padding:.5rem 1rem;text-align:left">关键词</th>
+          <th style="padding:.5rem 1rem;text-align:left">用途</th>
+          <th style="padding:.5rem 1rem;text-align:left">关键属性</th>
+          <th style="padding:.5rem 1rem;text-align:left">示例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tg g">screen</span></td><td>UI 布局根节点</td><td>name, theme, components</td><td><code>screen Dialog { ... }</code></td></tr>
+        <tr><td><span class="tg g">panel</span></td><td>带边框面板</td><td>rect, style</td><td><code>panel { rect = {tx:0, ty:12, tw:20, th:6} }</code></td></tr>
+        <tr><td><span class="tg g">container</span></td><td>无边框容器</td><td>rect, clip, visible</td><td><code>container { rect = {...} }</code></td></tr>
+        <tr><td><span class="tg g">text</span></td><td>文本组件</td><td>rect, align, color, wrap, font, line_spacing</td><td><code>text("Hi") { wrap = "word" }</code></td></tr>
+        <tr><td><span class="tg g">button</span></td><td>按钮</td><td>rect, on_click</td><td><code>button("OK") { on_click = "handler" }</code></td></tr>
+        <tr><td><span class="tg g">tile</span></td><td>瓦片渲染</td><td>rect, tile_id, flip_x/y, palette, repeat</td><td><code>tile(31) { rect = {...} }</code></td></tr>
+        <tr><td><span class="tg g">divider</span></td><td>分隔线</td><td>tiles, repeat, orientation</td><td><code>divider { tiles = [122]; repeat = 17 }</code></td></tr>
+        <tr><td><span class="tg g">list</span></td><td>滚动列表</td><td>source, item_template, cursor, max_visible</td><td><code>list { source = "{items}" }</code></td></tr>
+        <tr><td><span class="tg g">flex_list</span></td><td>弹性列表</td><td>source, item_layout, gap, cursor</td><td><code>flex_list("{items}") { item_layout = [...] }</code></td></tr>
+        <tr><td><span class="tg g">cursor</span></td><td>选择光标 ▶</td><td>rect, col/row_step, col/row, glyph</td><td><code>cursor { col_step=6; row_step=2 }</code></td></tr>
+        <tr><td><span class="tg g">image</span></td><td>图像</td><td>rect, slice</td><td><code>image("sprite.png") { slice = "..." }</code></td></tr>
+        <tr><td><span class="tg g">bracket</span></td><td>括号框</td><td>rect</td><td><code>bracket { rect = {...} }</code></td></tr>
+        <tr><td><span class="tg g">pixel_rect</span></td><td>像素矩形</td><td>rect</td><td><code>pixel_rect { rect = {...} }</code></td></tr>
+        <tr><td><span class="tg g">component</span></td><td>自定义组件声明</td><td>props (int/string/bool/color/expr)</td><td><code>component hp_bar { current: expr required }</code></td></tr>
+        <tr><td><span class="tg g">@t</span></td><td>双语文本</td><td>—</td><td><code>@t("FIGHT","战斗")</code></td></tr>
+        <tr><td><span class="tg g">@theme</span></td><td>颜色主题</td><td>name, tokens</td><td><code>@theme dark { primary = "#..." }</code></td></tr>
+        <tr><td><span class="tg g">@style</span></td><td>样式复用</td><td>extends, properties</td><td><code>@style card_hover : card { ... }</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stb" style="margin-top:1.5rem">
+    <table>
+      <thead>
+        <tr><th class="s" colspan="4">📜 Scene DSL — <code>.scene</code> · 编译 → JavaScript (Boa 引擎)</th></tr>
+        <tr style="border-bottom:2px solid var(--border);color:var(--text-dim)">
+          <th style="padding:.5rem 1rem;text-align:left">关键词</th>
+          <th style="padding:.5rem 1rem;text-align:left">用途</th>
+          <th style="padding:.5rem 1rem;text-align:left">编译产物</th>
+          <th style="padding:.5rem 1rem;text-align:left">示例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tg s">game_scene</span></td><td>场景定义</td><td>JS 模块</td><td><code>game_scene ProfLab { ... }</code></td></tr>
+        <tr><td><span class="tg s">@storyline</span></td><td>故事线</td><td>async 函数</td><td><code>@storyline("talkProf") { ... }</code></td></tr>
+        <tr><td><span class="tg s">@trigger</span></td><td>绑定到 NPC/路牌/坐标</td><td>config 条目</td><td><code>@trigger(map="X", npc=5)</code></td></tr>
+        <tr><td><span class="tg s">@load</span></td><td>进入场景触发</td><td>onLoad 函数</td><td><code>@load { setFlag("EVENT_X") }</code></td></tr>
+        <tr><td><span class="tg s">@speaker</span></td><td>角色说话（自动加名字前缀）</td><td>game.showText("Name: text")</td><td><code>@speaker("PROF") { "Hello!" }</code></td></tr>
+        <tr><td><span class="tg s">@speaker("")</span></td><td>旁白（无前缀）</td><td>game.showText("text")</td><td><code>@speaker("") { "Sign text" }</code></td></tr>
+        <tr><td><span class="tg s">@choice</span></td><td>选择分支</td><td>showChoice + if/else</td><td><code>@choice { @option("A"){...} }</code></td></tr>
+        <tr><td><span class="tg s">@if/@else</span></td><td>条件分支</td><td>JS if/else</td><td><code>@if (getFlag("X")) { ... }</code></td></tr>
+        <tr><td><span class="tg s">@variables</span></td><td>场景变量</td><td>JS let 声明</td><td><code>@variables { gold = 500 }</code></td></tr>
+        <tr><td><span class="tg s">@run</span></td><td>原生 JS 逃逸</td><td>原样输出</td><td><code>@run { /* raw JS */ }</code></td></tr>
+        <tr><td><span class="tg s">setFlag / resetFlag</span></td><td>标志位操作</td><td>game.setFlag()</td><td><code>setFlag("EVENT_GOT_STARTER")</code></td></tr>
+        <tr><td><span class="tg s">giveItem / takeItem</span></td><td>物品操作</td><td>game.giveItem()</td><td><code>giveItem("POTION", 1)</code></td></tr>
+        <tr><td><span class="tg s">giveMonster</span></td><td>给予怪物</td><td>game.giveMonster()</td><td><code>giveMonster("FLAMBIT", 5)</code></td></tr>
+        <tr><td><span class="tg s">startBattle</span></td><td>开始战斗</td><td>game.startBattle()</td><td><code>result = startBattle("OPP_RIVAL1")</code></td></tr>
+        <tr><td><span class="tg s">warpTo</span></td><td>场景切换</td><td>game.warpTo()</td><td><code>warpTo("StartTown", 5, 6)</code></td></tr>
+        <tr><td><span class="tg s">moveNpc / movePlayer</span></td><td>移动 NPC/玩家</td><td>game.moveNpc()</td><td><code>moveNpc("OBJ", [[x,y]])</code></td></tr>
+        <tr><td><span class="tg s">playMusic / playSound</span></td><td>播放音效</td><td>game.playMusic()</td><td><code>playMusic("MUSIC_PROF_LAB")</code></td></tr>
+        <tr><td><span class="tg s">showObject / hideObject</span></td><td>NPC 显隐</td><td>game.showObject()</td><td><code>showObject("START_TOWN_OBJ_1")</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem">
+    <h4 style="font-size:.9rem;margin-bottom:.8rem">📦 项目资产规模</h4>
+    <div class="ac2" style="margin-top:0">
+      <div class="ac" style="margin-top:0"><strong style="color:var(--gui);font-size:1.2rem">248</strong><p style="font-size:.72rem">.scene 文件</p></div>
+      <div class="ac" style="margin-top:0"><strong style="color:var(--scene);font-size:1.2rem">35</strong><p style="font-size:.72rem">.gui 布局文件</p></div>
+      <div class="ac" style="margin-top:0"><strong style="color:var(--gb-mid);font-size:1.2rem">4,400+</strong><p style="font-size:.72rem">自动化测试</p></div>
+      <div class="ac" style="margin-top:0"><strong style="color:var(--gb-bright);font-size:1.2rem">2</strong><p style="font-size:.72rem">套独立 DSL</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="ft">
+  <p>Game DSL — <strong>GUI DSL</strong> (<span style="color:var(--gui)">.gui/.theme/.style → JSON</span>) + <strong>Scene DSL</strong> (<span style="color:var(--scene)">.scene → JS</span>)</p>
+  <p style="margin-top:.3rem">
+    <span style="color:var(--gui)">🎨</span> <a href="../docs/GAME_UI_DSL.md">GUI 规范</a>
+    · <span style="color:var(--scene)">📜</span> <a href="../docs/FULL_DSL.md">Scene 语法</a>
+    · <a href="../docs/DSL_MAPPING.md">编译契约</a>
+    · <a href="../docs/DSL_UNIFIED_DESIGN.md">统一设计</a>
+    · <code>dotzuki-engine-dsl</code>
+  </p>
+</footer>
+
+<script>
+/* ══ Config ══ */
+const C={bg:'#0f380f',dark:'#306230',mid:'#8bac0f',light:'#9bbc0f',bright:'#d0f0c0',white:'#e0f8d0'};
+const CX=20,RY=18;
+
+/* ══ Helpers ══ */
+function clr(id){const e=document.getElementById(id);e.innerHTML='';e.style.position='relative';return e}
+function grd(e){const d=document.createElement('div');d.className='tg';e.appendChild(d)}
+function tr(tx,ty,tw,th){return{left:(tx/CX*100)+'%',top:(ty/RY*100)+'%',width:(tw/CX*100)+'%',height:(th/RY*100)+'%'}}
+
+function pnl(e,tx,ty,tw,th,o={}){
+  const r=tr(tx,ty,tw,th),d=document.createElement('div');
+  d.style=`position:absolute;left:${r.left};top:${r.top};width:${r.width};height:${r.height};border:2px solid ${C.dark};background:${C.bg};border-radius:2px;z-index:${o.z||1}`;
+  const i=document.createElement('div');i.style='position:absolute;inset:2px;border:1px solid '+C.mid+';pointer-events:none';
+  d.appendChild(i);e.appendChild(d);return d
+}
+
+function txt(e,tx,ty,tw,th,s,o={}){
+  const r=tr(tx,ty,tw,th),d=document.createElement('div');
+  const cm={dim:C.dark,mid:C.mid,light:C.light,bright:C.bright,white:C.white};
+  d.style=`position:absolute;left:${r.left};top:${r.top};width:${r.width};height:${r.height};font-family:'Press Start 2P',monospace;font-size:6.5px;line-height:${o.ls||1.7};color:${cm[o.c||'mid']||C.mid};letter-spacing:.3px;white-space:pre-wrap;word-break:break-word;overflow:hidden;text-align:${o.align||'left'};z-index:2`;
+  if(o.tw){d.dataset.tw=1;d.dataset.tx=s}
+  d.textContent=s;e.appendChild(d);return d
+}
+
+function til(e,tx,ty,tw,th,ch,o={}){
+  const r=tr(tx,ty,tw||1,th||1),d=document.createElement('div');
+  d.style=`position:absolute;left:${r.left};top:${r.top};width:${r.width};height:${r.height};display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:${o.fs||'9px'};color:${C[o.c||'light']};z-index:2`;
+  d.textContent=ch;e.appendChild(d);return d
+}
+
+function cur(e,tx,ty,o={}){return til(e,tx,ty,1,1,'▶',{c:o.c||'light',fs:'8px'})}
+
+function ava(e,tx,ty,tw,th,em){
+  const r=tr(tx,ty,tw,th),d=document.createElement('div');
+  d.style=`position:absolute;left:${r.left};top:${r.top};width:${r.width};height:${r.height};border:1px solid ${C.dark};border-radius:2px;background:rgba(48,98,48,.2);display:flex;align-items:center;justify-content:center;font-size:${Math.min(tw,th)*4}px;z-index:2`;
+  d.textContent=em;e.appendChild(d);return d
+}
+
+function fg(e,c){const d=document.createElement('div');d.style=`position:absolute;inset:0;background:${c};z-index:0`;e.appendChild(d)}
+
+async function tw(e,sp){
+  const a=[...e.querySelectorAll('[data-tw="1"]')];
+  for(const d of a){
+    let i=0,s=d.dataset.tx;d.textContent='';
+    const cu=document.createElement('span');cu.className='tc';d.appendChild(cu);
+    await new Promise(r=>{function tk(){if(i<s.length){cu.before(s[i]);i++;setTimeout(tk,sp||40)}else{cu.remove();r()}}tk()})
+  }
+}
+
+function cpy(b){
+  const c=b.closest('.cp').querySelector('.cb');
+  navigator.clipboard.writeText(c.textContent).then(()=>{b.textContent='COPIED!';setTimeout(()=>b.textContent='COPY',1500)})
+}
+
+/* ══ Render Funcs ══ */
+
+function rG1(){
+  const g=clr('gg1');grd(g);
+  for(let x=0;x<CX;x++)for(let y=0;y<RY;y++){if(x%5===0&&y%5===0){const r=tr(x,y,1,1),d=document.createElement('div');d.style=`position:absolute;left:${r.left};top:${r.top};width:${r.width};height:${r.height};font-size:4px;color:${C.mid};display:flex;align-items:center;justify-content:center;z-index:1`;d.textContent=`${x},${y}`;g.appendChild(d)}}
+  pnl(g,0,12,20,6);txt(g,1,13,18,4,'Welcome to the\nworld of MONSTER!',{c:'light',tw:true});til(g,18,16,1,1,'▶')
+}
+
+function rG2(){
+  const g=clr('gg2');grd(g);
+  pnl(g,0,0,13,9);
+  txt(g,1,1,11,1,'MONSTER',{c:'light'});txt(g,1,3,11,1,'ITEM',{c:'light'});txt(g,1,5,11,1,'SAVE',{c:'light'});cur(g,0,1);
+  pnl(g,0,10,20,4,{z:0});txt(g,1,11,18,1,'FIGHT    MON',{c:'light'});txt(g,1,12,18,1,'ITEM    RUN',{c:'light'});
+  pnl(g,0,15,20,3,{z:0});txt(g,1,16,18,1,'Yes / No ?',{c:'light',tw:true})
+}
+
+function rG3(){
+  const g=clr('gg3');grd(g);pnl(g,0,0,20,18);
+  txt(g,0,1,20,2,'MONSTER RED',{c:'bright',align:'center'});
+  txt(g,1,5,18,5,'Line 1: Hello!\nLine 2: This is\na dialog box.\nLine 4: Spaced!',{c:'light',ls:1.7,tw:true});
+  txt(g,1,14,18,1,'Press A to continue',{c:'dim'});
+  txt(g,0,16,20,1,'[align:center]   [color:white]',{c:'dim',align:'center'})
+}
+
+const g4d={en:{txt:'TEXT SPEED',fig:'FIGHT',itm:'ITEM',run:'RUN',can:'CANCEL',mon:'MONEY $500'},zh:{txt:'文字速度',fig:'战斗',itm:'道具',run:'逃跑',can:'取消',mon:'金钱 $500'}};
+function rG4(l){
+  const d=g4d[l||'en'];const g=clr('gg4');grd(g);
+  pnl(g,0,0,8,3);txt(g,1,1,6,1,d.txt,{c:'light'});
+  pnl(g,0,3,20,12);
+  (l==='zh'?[['伤药','$300'],['解毒药','$100'],['怪物球','$200'],['离洞绳','$550'],['除虫喷雾','$350']]:[['POTION','$300'],['ANTIDOTE','$100'],['BALL','$200'],['ESCAPE ROPE','$550'],['REPEL','$350']]).forEach((it,i)=>{if(i<5){txt(g,2,4+i*2,12,1,it[0],{c:'light'});txt(g,13,4+i*2,4,1,it[1],{c:'mid'})}});
+  cur(g,1,4);
+  pnl(g,0,15,18,3);txt(g,1,16,16,1,d.mon,{c:'mid'});til(g,18,16,1,1,'▶');
+  document.getElementById('glb').textContent=l==='zh'?'中文':'English'
+}
+function swGL(l){rG4(l)}
+
+function rG5(){
+  const g=clr('gg5');grd(g);
+  pnl(g,0,0,13,9);txt(g,1,1,11,1,'MONSTER',{c:'light'});txt(g,1,3,11,1,'ITEM',{c:'light'});txt(g,1,5,11,1,'SAVE',{c:'light'});txt(g,1,7,11,1,'EXIT',{c:'light'});cur(g,0,1);
+  pnl(g,0,10,20,8);pnl(g,8,12,12,6,{z:3});
+  txt(g,10,14,5,1,'FIGHT',{c:'light'});til(g,16,14,1,1,'MO');til(g,17,14,1,1,'N');
+  txt(g,10,16,4,1,'ITEM',{c:'light'});txt(g,16,16,3,1,'RUN',{c:'light'});cur(g,9,14);
+  txt(g,1,11,7,1,'Wild MONSTER!',{c:'light',tw:true})
+}
+
+function rG6(){
+  const g=clr('gg6');grd(g);fg(g,'#1a1a2e');
+  pnl(g,2,2,16,6);txt(g,3,3,12,1,'GOLDEN ITEM',{c:'bright'});txt(g,3,5,12,2,'A mythical sword\nof legends',{c:'mid',tw:true});
+  pnl(g,2,10,16,6);txt(g,3,12,12,1,'PRICE: 999 GOLD',{c:'bright'});
+  txt(g,0,0,10,1,'@theme fantasy',{c:'dim'})
+}
+
+function rS2(){const g=clr('gs2');grd(g);pnl(g,0,12,20,6);txt(g,1,13,18,4,'PROF: How is your\nDEX coming?',{c:'light',tw:true});til(g,18,16,1,1,'▶')}
+function rS3(){const g=clr('gs3');grd(g);pnl(g,0,12,20,6);txt(g,1,13,18,4,'PROF: Hey! Wait!\nDon\'t go out!',{c:'light',tw:true});til(g,18,16,1,1,'▶');pnl(g,4,2,12,3);txt(g,5,3,10,1,'It\'s a signpost',{c:'dim'});txt(g,5,4,10,1,'START TOWN',{c:'mid'})}
+function rS4(){const g=clr('gs4');grd(g);pnl(g,0,12,20,6);txt(g,1,13,18,2,'So! You want the\nfire MONSTER?',{c:'light',tw:true});pnl(g,11,8,9,6);txt(g,13,10,5,1,'YES',{c:'light'});txt(g,13,12,5,1,'NO',{c:'light'});cur(g,12,10);txt(g,0,0,18,1,'FLAG: EVENT_GOT_STARTER = false',{c:'dim'})}
+function rS5(){const g=clr('gs5');grd(g);pnl(g,0,12,20,6);txt(g,1,13,18,4,'PROF: So! You want\nthe fire MONSTER,\nFLAMBIT?',{c:'light',tw:true});til(g,18,16,1,1,'▶');txt(g,0,0,12,1,'Stage: Choose Starter',{c:'dim'});txt(g,0,2,20,1,'giveMonster("FLAMBIT",5)',{c:'dim'});txt(g,0,3,20,1,'startBattle("OPP_RIVAL1")',{c:'dim'})}
+function rS6(){const g=clr('gs6');grd(g);pnl(g,0,12,20,6);txt(g,1,13,18,4,'PROF: How is your\nDEX coming?\n\nHere, let me take\na look!',{c:'light',tw:true});til(g,18,16,1,1,'▶');txt(g,0,0,20,1,'dialog.gui ❘ @speaker("PROF")',{c:'dim',align:'center'})}
+
+/* ══ Init ══ */
+document.addEventListener('DOMContentLoaded',()=>{
+  rG1();rG2();rG3();rG4('en');rG5();rG6();rS2();rS3();rS4();rS5();rS6();
+  const ids=['gg1','gg2','gg3','gg5','gg6','gs2','gs3','gs4','gs5','gs6'];
+  ids.forEach((id,i)=>{setTimeout(()=>{const e=document.getElementById(id);if(e)tw(e,35)},600+i*400)});
+  const lks=document.querySelectorAll('.header-nav a');
+  const ob=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;lks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id))}})},{threshold:.3});
+  document.querySelectorAll('.step').forEach(s=>ob.observe(s))
+});
+</script>
+</body>
+</html>

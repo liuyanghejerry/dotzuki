@@ -1,0 +1,25 @@
+{
+  "id": "elder-mira",
+  "name": {
+    "en": "Elder Mira",
+    "zh": "米拉长老"
+  },
+  "role": "mentor",
+  "tags": [
+    "guide",
+    "starttown"
+  ],
+  "appearance": "A silver-haired elder in a travel-worn cloak, leaning on a carved staff.",
+  "personality": "Warm, patient, and fond of pointing newcomers toward their first step.",
+  "backstory": "She founded StartTown decades ago and has greeted every traveller since.",
+  "motivation": "Wants every new arrival to find their footing before the road calls them.",
+  "speechStyle": "Gentle, unhurried, with the occasional proverb.",
+  "relationships": [],
+  "engine": {
+    "npcs": [],
+    "dataRef": null,
+    "spriteAsset": null
+  },
+  "spriteSpec": null,
+  "status": "drafted"
+}

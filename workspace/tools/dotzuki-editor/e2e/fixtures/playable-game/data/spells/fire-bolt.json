@@ -1,0 +1,10 @@
+{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "Attack",
+  "element": "Fire",
+  "power": 55,
+  "mpCost": 8,
+  "target": "SingleEnemy",
+  "description": "Hurls a bolt of flame. Strong against Ice."
+}

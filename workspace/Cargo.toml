@@ -1,0 +1,47 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/dotzuki-engine",
+    "crates/dotzuki-rules",
+    "crates/dotzuki-rules-macro",
+    "crates/dotzuki-engine-tiled",
+    "crates/dotzuki-engine-dsl",
+    "crates/dotzuki-engine-script",
+    "crates/dotzuki-cli",
+    "crates/dotzuki-runner",
+    "crates/dotzuki-runner-web",
+    "crates/dotzuki-renderer",
+    "crates/dotzuki-tui",
+    "crates/dotzuki-ui",
+    "crates/dotzuki-audio",
+    "crates/dotzuki-web",
+    "crates/dotzuki-app",
+    "examples/minimon",
+    "run-wasm",
+]
+
+# cargo-generate starter template: its Cargo.toml uses {{project-name}}
+# placeholders and must not be parsed as a workspace package (which also
+# breaks consumers that fetch this repo as a git dependency).
+exclude = ["dotzuki-template"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ron = "0.8"
+bincode = "1"
+thiserror = "2"
+miette = { version = "7", features = ["fancy"] }
+anyhow = "1"
+tracing = "0.1"
+notify = "6"
+rand = "0.8"
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
+num-derive = "0.4"
+num-traits = "0.2"

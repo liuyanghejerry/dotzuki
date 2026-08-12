@@ -1,0 +1,9 @@
+{
+  "id": "bug-catcher",
+  "name": "Bug Catcher",
+  "enemies": [
+    "slime"
+  ],
+  "trainer": true,
+  "money": 32
+}

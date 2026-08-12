@@ -1,0 +1,9 @@
+{
+  "id": "leftovers",
+  "name": "Leftovers",
+  "type": "Equipment",
+  "healHp": 0,
+  "effect": "Holder restores 1/16 max HP after each of its actions (rules.ron hook).",
+  "value": 100,
+  "price": 50
+}

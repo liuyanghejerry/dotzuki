@@ -1,0 +1,71 @@
+# node dependencies
+node_modules/
+
+# compiled objects
+*.o
+
+# compiled graphics
+*.1bpp
+*.2bpp
+*.pic
+
+# compiled roms
+*.gbc
+*.gb
+*.patch
+
+# map/sym build artifacts
+*.map
+*.sym
+
+# tool binaries
+*.exe
+
+# precompiled python
+*.pyc
+*$py.class
+
+# save game files
+*.sgm
+*.sav
+*.rtc
+*.sn*
+*.sa*
+
+# insta snapshot references: the save-state `*.sn*` above also matches `*.snap`,
+# so re-include committed snapshot references. Pending `*.snap.new` stays ignored
+# (it ends in `.new`, so this negation doesn't touch it).
+!*.snap
+
+# AI session artifacts
+**/.sisyphus/evidence/
+**/.sisyphus/notepads/
+**/boulder.json
+**/.playwright-mcp/
+*.sg1
+
+# opencode
+.opencode/
+.codegraph/
+.omo/
+
+# iOS build artifacts
+DerivedData/
+*.app
+*.ipa
+*.xcworkspace
+xcuserdata/
+Pods/
+.build/
+**/*.xcodeproj/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Local agent/tooling state (not part of the engine)
+/.sisyphus/
+/.opencode/
+/.codegraph/
+
+# Local agent/tooling state (not part of the engine)
+/workspace/.sisyphus/
+/workspace/.codegraph/
+/workspace/.jrpg-editor.image-providers.json

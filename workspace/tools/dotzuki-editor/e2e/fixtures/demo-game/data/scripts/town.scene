@@ -1,0 +1,9 @@
+// town.scene — ambient HomeTown dialogue.
+game_scene HomeTownAmbience {
+    @storyline("ambient") {
+        @trigger(map = "HomeTown", npc = 2)
+        @speaker("Villager") {
+            "The well in the square is older than the town itself."
+        }
+    }
+}

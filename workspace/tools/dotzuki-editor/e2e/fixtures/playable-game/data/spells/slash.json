@@ -1,0 +1,10 @@
+{
+  "id": "slash",
+  "name": "Slash",
+  "type": "Attack",
+  "element": "None",
+  "power": 40,
+  "mpCost": 0,
+  "target": "SingleEnemy",
+  "description": "A reliable basic strike."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "aria",
+  "name": "Aria",
+  "job": "Warrior",
+  "hp": 120,
+  "mp": 30,
+  "atk": 24,
+  "def": 18,
+  "spd": 12,
+  "element": "Light",
+  "skills": [
+    "slash",
+    "fire-bolt"
+  ],
+  "ability": "intimidate"
+}

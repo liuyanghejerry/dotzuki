@@ -1,0 +1,36 @@
+{
+  "name": "vscode-gui-dsl",
+  "displayName": "GUI DSL Syntax Highlighting",
+  "description": "Syntax highlighting for the JRPG engine GUI DSL (.gui files)",
+  "version": "0.1.0",
+  "publisher": "dotzuki-engine",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "gui",
+        "aliases": [
+          "GUI DSL",
+          "gui"
+        ],
+        "extensions": [
+          ".gui"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "gui",
+        "scopeName": "source.gui",
+        "path": "./syntaxes/gui.tmLanguage.json"
+      }
+    ]
+  }
+}

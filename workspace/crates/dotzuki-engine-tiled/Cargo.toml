@@ -1,0 +1,10 @@
+[package]
+name = "dotzuki-engine-tiled"
+version.workspace = true
+edition.workspace = true
+description = "Tiled .tmx (JSON) loader producing dotzuki engine types"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.0" }

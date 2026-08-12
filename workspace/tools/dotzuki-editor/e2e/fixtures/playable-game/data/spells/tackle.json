@@ -1,0 +1,10 @@
+{
+  "id": "tackle",
+  "name": "Tackle",
+  "type": "Attack",
+  "element": "None",
+  "power": 30,
+  "mpCost": 0,
+  "target": "SingleEnemy",
+  "description": "A full-body lunge."
+}
