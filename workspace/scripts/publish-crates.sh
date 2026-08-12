@@ -35,8 +35,13 @@
 #                         credentials are used when this is unset.
 #   RELEASE_TAG           Expected release tag (e.g. "v0.1.0"). When set, the
 #                         version it names must equal the workspace version.
-#   PUBLISH_DELAY         Seconds to sleep between publishes (default 15; kept
-#                         small enough to stay under crates.io rate limits).
+#   PUBLISH_DELAY         Seconds to sleep between publishes (default 15).
+#   PUBLISH_MAX_RETRIES   Max 429-retry attempts per crate (default 40).
+#
+# Rate limits: crates.io allows a burst of 5 NEW crate publishes, then one new
+# crate every 10 minutes. The script handles the HTTP 429 rejections itself —
+# it reads the "try again after" hint and sleeps until then — so a first
+# release of many crates completes unattended, just slowly.
 #
 # Exit status: 0 = published/skipped cleanly, non-zero = failure (fix and
 # re-run; already-published crates are skipped on the next attempt).
@@ -180,6 +185,33 @@ PUBLISH_FLAGS=(--registry crates-io --locked)
 # crates.io API requires a User-Agent; identify this release tooling.
 UA="dotzuki-release (github.com/liuyanghejerry/dotzuki)"
 DELAY="${PUBLISH_DELAY:-15}"
+MAX_RETRIES="${PUBLISH_MAX_RETRIES:-40}"
+
+# crates.io rate limits NEW crate publishes: a burst of 5, then one every 10
+# minutes (see https://crates.io/docs/rate-limits). `cargo publish` surfaces
+# the rejection as HTTP 429 with a "Please try again after <timestamp> GMT"
+# hint — parse it and sleep until then instead of failing the release.
+rate_limit_wait() {
+    # $1: log file containing the cargo publish error.
+    local retry_at
+    retry_at="$(sed -n 's/.*Please try again after \([^.]*\) GMT.*/\1/p' "$1" | head -1)"
+    if [[ -n "$retry_at" ]]; then
+        local wait_secs
+        wait_secs="$(python3 - "$retry_at" <<'PY'
+import sys, time
+from datetime import datetime, timezone
+t = datetime.strptime(sys.argv[1].strip(), "%a, %d %b %Y %H:%M:%S")
+t = t.replace(tzinfo=timezone.utc)
+wait = int(t.timestamp() - time.time()) + 5
+print(max(wait, 5))
+PY
+)"
+        echo "    rate-limited by crates.io; waiting ${wait_secs}s (until ${retry_at} GMT)"
+        sleep "$wait_secs"
+        return 0
+    fi
+    return 1
+}
 
 published=0
 skipped=0
@@ -188,14 +220,47 @@ for ((i = 0; i < total; i++)); do
     crate="${PUBLISH_ORDER[$i]}"
     echo "==> [$((i + 1))/$total] $crate $VERSION"
 
-    status="$(curl -sSL -A "$UA" -o /dev/null -w '%{http_code}' \
-        "https://crates.io/api/v1/crates/$crate/$VERSION")"
+    # API existence check; tolerate brief 429s from the API itself.
+    status=""
+    for _ in 1 2 3; do
+        status="$(curl -sSL -A "$UA" -o /dev/null -w '%{http_code}' \
+            "https://crates.io/api/v1/crates/$crate/$VERSION")"
+        [[ "$status" != "429" ]] && break
+        echo "    crates.io API rate-limited (429); backing off 60s"
+        sleep 60
+    done
+
     if [[ "$status" == "200" ]]; then
         echo "    already on crates.io — skipping"
         skipped=$((skipped + 1))
     elif [[ "$status" == "404" ]]; then
-        cargo publish -p "$crate" "${PUBLISH_FLAGS[@]}"
-        published=$((published + 1))
+        attempt=0
+        while true; do
+            attempt=$((attempt + 1))
+            log="$(mktemp)"
+            if cargo publish -p "$crate" "${PUBLISH_FLAGS[@]}" >"$log" 2>&1; then
+                rm -f "$log"
+                published=$((published + 1))
+                break
+            fi
+            if [[ $attempt -lt $MAX_RETRIES ]]; then
+                if rate_limit_wait "$log"; then
+                    rm -f "$log"
+                    echo "    retrying $crate (attempt $((attempt + 1)))"
+                    continue
+                fi
+                if grep -q 'Too Many Requests' "$log"; then
+                    rm -f "$log"
+                    echo "    rate-limited (429) without a retry hint; waiting 600s"
+                    sleep 600
+                    continue
+                fi
+            fi
+            cat "$log" >&2
+            rm -f "$log"
+            echo "ERROR: failed to publish $crate $VERSION — aborting." >&2
+            exit 1
+        done
     else
         echo "ERROR: crates.io returned HTTP $status for $crate $VERSION — aborting." >&2
         exit 1
