@@ -28,8 +28,8 @@ A game-agnostic JRPG engine written from scratch in Rust — an original, indepe
 
 ```toml
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.3.0" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.3.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
 ```
 
 All `dotzuki-*` crates are resolvable from the same git repository (Cargo finds
