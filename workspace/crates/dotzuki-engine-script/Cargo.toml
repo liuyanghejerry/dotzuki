@@ -3,6 +3,8 @@ name = "dotzuki-engine-script"
 version.workspace = true
 edition.workspace = true
 description = "Boa-based async JavaScript scripting runtime for the dotzuki JRPG engine"
+license.workspace = true
+repository.workspace = true
 
 [features]
 ## Embed JS/JSON scripts into the binary via `include_str!`.

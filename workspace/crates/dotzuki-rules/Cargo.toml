@@ -3,6 +3,7 @@ name = "dotzuki-rules"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "No-code RON authoring loader + closed primitive interpreter for dotzuki-engine's battle effect-stack. Parses a rules.ron into runtime Effects dispatched through ONE zero-capture interpreter-bridge fn keyed by source_effect (doc 11 Option A — zero engine change)."
 
 # HARD CONSTRAINT (doc 11 §0, §6): this crate depends on the game-agnostic

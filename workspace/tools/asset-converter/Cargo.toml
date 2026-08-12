@@ -5,6 +5,8 @@ name = "asset-converter"
 version = "0.1.0"
 edition = "2021"
 description = "Convert Game Boy 2bpp tilesets to RGBA tilesets with Tiled .tsx output"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/liuyanghejerry/dotzuki"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

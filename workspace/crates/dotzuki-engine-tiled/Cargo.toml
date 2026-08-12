@@ -3,6 +3,8 @@ name = "dotzuki-engine-tiled"
 version.workspace = true
 edition.workspace = true
 description = "Tiled .tmx (JSON) loader producing dotzuki engine types"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }

@@ -3,6 +3,8 @@ name = "dotzuki-cli"
 version.workspace = true
 edition.workspace = true
 description = "dotzuki CLI: scaffold (dotzuki new), compile-check (dotzuki check) and play (dotzuki run) zero-Rust JRPG projects"
+license.workspace = true
+repository.workspace = true
 
 [[bin]]
 name = "dotzuki"

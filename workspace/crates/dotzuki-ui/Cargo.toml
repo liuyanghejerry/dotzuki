@@ -3,6 +3,7 @@ name = "dotzuki-ui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Generic JRPG UI widget library — dialog, yes/no, flex menu widgets using the Painter trait"
 
 [dependencies]

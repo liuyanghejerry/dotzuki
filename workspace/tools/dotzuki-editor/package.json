@@ -5,6 +5,7 @@
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Game-agnostic editor for dotzuki-engine — configure via .dotzuki-editor.json in your project",
+  "license": "MIT OR Apache-2.0",
   "scripts": {
     "dev": "vite",
     "demo": "DOTZUKI_PROJECT_ROOT=$(pwd)/test-project vite",

@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "Generic runtime that boots a zero-Rust jrpg game project (manifest, DSL, maps)"
 license.workspace = true
+repository.workspace = true
 
 [features]
 default = ["gpu", "watch"]

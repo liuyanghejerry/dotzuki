@@ -3,6 +3,7 @@ name = "minimon"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Cross-gen authoring proof: a tiny Gen-1-to-6-LIKE battle system built entirely on dotzuki-engine's effect-stack — phys/special split + ability + item + weather, with NO engine edits."
 
 # HARD CONSTRAINT (design 09 §6.2 Agnosticism axis): this crate depends on the

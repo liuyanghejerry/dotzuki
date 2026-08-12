@@ -3,6 +3,8 @@ name = "dotzuki-app"
 version.workspace = true
 edition.workspace = true
 description = "A generic desktop app crate wrapping dotzuki-renderer's game loop"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.0" }

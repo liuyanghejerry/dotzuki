@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 description = "wasm-bindgen shell that embeds dotzuki-runner's RunnerGame in the browser editor for in-page playtests"
 license.workspace = true
+repository.workspace = true
 
 # rlib is included alongside cdylib so the wrapper can be unit-tested
 # natively (`cargo test -p dotzuki-runner-web`); wasm-pack still consumes the cdylib.

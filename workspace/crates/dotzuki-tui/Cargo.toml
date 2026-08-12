@@ -3,7 +3,7 @@ name = "dotzuki-tui"
 version.workspace = true
 edition.workspace = true
 description = "A generic terminal TUI shell for JRPG games — ratatui halfblock rendering"
-repository = "https://github.com/your-org/jrpg"
+repository.workspace = true
 license.workspace = true
 
 [dependencies]

@@ -3,6 +3,8 @@ name = "dotzuki-web"
 version.workspace = true
 edition.workspace = true
 description = "WASM layout-preview bridge for the dotzuki JRPG engine"
+license.workspace = true
+repository.workspace = true
 
 # rlib is included alongside cdylib so the audio-render logic can be unit-tested
 # natively (`cargo test -p dotzuki-web`); wasm-pack still consumes the cdylib.

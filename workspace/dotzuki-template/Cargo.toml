@@ -5,6 +5,7 @@ name = "{{project-name}}"
 version = "0.1.0"
 edition = "2021"
 description = "A JRPG game built with dotzuki-engine"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 dotzuki-engine = { path = "../crates/dotzuki-engine" }
