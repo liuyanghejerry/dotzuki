@@ -57,6 +57,26 @@ jobs:
         working-directory: workspace
         run: cargo test --workspace
 
+  package-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Package check (crates.io release gate)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # Runs scripts/publish-crates.sh --check: the version-consistency gate
+      # plus `cargo package` for every publishable crate. Catches manifest
+      # drift (missing dep versions, out-of-sync workspace version) on PRs
+      # instead of mid-release.
+      - name: Check crates package cleanly
+        working-directory: workspace
+        run: bash scripts/publish-crates.sh --check
+
   coverage:
     runs-on: ubuntu-latest
     permissions:

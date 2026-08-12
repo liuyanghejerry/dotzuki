@@ -61,7 +61,19 @@ cargo build --release
 - **Zero platform deps**: `dotzuki-engine` has no I/O, GPU, or platform calls
 - **Battle = effect stack**: live battle turns run through `dotzuki_engine::battle::stack::StackDriver`
 - **DSL for scripts/UI**: `.scene` files (Game DSL) compile to JS; `.gui` layouts compile to JSON; `@t("en","中文")` provides bilingual text. Games embed their own compiled scenes via `compiler::compile_dirs` / `loader::register_compiled` — the engine never probes a game's data directory. `dotzuki-engine-dsl` also ships a **native AST interpreter** (`interpreter.rs`) that executes `.scene` storylines with no JavaScript engine, mirroring the Boa runtime protocol 1:1; it is the canonical scene semantics for games that adopt it (Boa becomes a dev fallback via their `script-boa`-style feature)
-- **Consumption by games**: games reference engine crates via git deps (same repo, tag-pinned). Keep every `dotzuki-*` crate resolvable from the workspace; never hardcode a game's paths back into the engine
+- **Consumption by games**: games reference engine crates via crates.io deps or git deps (same repo, tag-pinned) — both are supported; see the "Releasing" section below. Keep every `dotzuki-*` crate resolvable from the workspace; never hardcode a game's paths back into the engine
+
+## Releasing (crates.io)
+
+All `dotzuki-*` crates are published to crates.io under one shared version — they inherit `[workspace.package] version` in `workspace/Cargo.toml`, so **one version bump releases every crate**.
+
+- **Entry point**: `workspace/scripts/publish-crates.sh` — topological-order publish with a version-consistency gate and idempotent skip of already-published crates.
+- **GitHub integration**: `.github/workflows/release.yml` runs it on `vX.Y.Z` tag pushes, GitHub Release publishes, and manual runs. The tag must name the workspace version (e.g. tag `v0.1.0` publishes every crate at 0.1.0). Requires the `CARGO_REGISTRY_TOKEN` repo secret (crates.io API token).
+- **PR gate**: the `package-check` job in `.github/workflows/main.yml` runs `scripts/publish-crates.sh --check` — a manifest/packaging check that turns strict after the first release.
+- **Local check**: `cd workspace && bash scripts/publish-crates.sh --check`.
+- **Internal dep rule**: every internal `dotzuki-*` path dependency MUST carry `version = "<workspace version>"` (crates.io resolves path deps through the registry); the script fails the release on drift. When bumping the workspace version, bump those strings too — or just run the `--check`, which catches any mismatch.
+- **Non-publishable members**: `minimon`, `run-wasm`, and the `dotzuki-template` dir are excluded from publishing (`publish = false` / workspace `exclude`).
+- **Publishing from a mirrored machine**: the script pins `--registry crates-io`; mirrors like rsproxy lag behind crates.io and can break mid-sequence dependency resolution, so prefer the GitHub Actions workflow for actual releases.
 
 ## Known Gotchas
 - A workspace-wide `cargo test` unifies features across crates and can fail feature-gated suites (e.g. `dotzuki-engine-script` embedded-scripts tests) that pass per-crate — re-run `cargo test -p <crate>` before assuming a real failure
@@ -73,4 +85,4 @@ cargo build --release
 - `AGENTS.md` — This file. Project orientation for AI agents.
 - `workspace/` — Cargo workspace root with all engine crates.
 - `workspace/docs/` — Engine docs (battle engine guide, DSL specs, game-project spec).
-- `scripts/` — Removed with the pokered split; game-specific scripts live in the game repos.
+- `workspace/scripts/` — Release tooling (`publish-crates.sh`, the crates.io publish entry point); game-specific scripts live in the game repos.

@@ -19,9 +19,9 @@ dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.1.0" }
 dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.1.0" }
 dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.1.0" }
 dotzuki-rules = { path = "../dotzuki-rules", version = "0.1.0" }
-dotzuki-renderer = { path = "../dotzuki-renderer", default-features = false, features = ["image-assets"] }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.0", default-features = false, features = ["image-assets"] }
 dotzuki-ui = { path = "../dotzuki-ui", version = "0.1.0" }
-dotzuki-audio = { path = "../dotzuki-audio", features = ["serde"] }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.1.0", features = ["serde"] }
 # Native audio output (same version as wuxia-app). The APU renders samples on
 # cpal's callback thread; no device (CI/headless/wasm's Null host) ⇒
 # RunnerAudio stays silent.

@@ -26,16 +26,33 @@ A game-agnostic JRPG engine written from scratch in Rust — an original, indepe
 
 ## Using the engine from a game repo
 
+Prefer crates.io (all `dotzuki-*` crates are published there):
+
+```toml
+[dependencies]
+dotzuki-engine = "0.1"
+dotzuki-engine-dsl = "0.1"
+```
+
+Or pin a git tag (all crates are resolvable from the same repository — Cargo
+finds them by name in the workspace):
+
 ```toml
 [dependencies]
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
 ```
 
-All `dotzuki-*` crates are resolvable from the same git repository (Cargo finds
-them by name in the workspace). Upgrade = bump the tag + `cargo update`.
-Publishing to crates.io is planned; every crate already carries the metadata
-(`description` / `repository` / `license`) required by `cargo publish`.
+Upgrade = bump the version/tag + `cargo update`.
+
+## Releasing
+
+Every `dotzuki-*` crate shares one version (`[workspace.package] version` in
+`workspace/Cargo.toml`). A `vX.Y.Z` tag (or a GitHub Release) triggers
+`.github/workflows/release.yml`, which runs `workspace/scripts/publish-crates.sh`
+— topological-order publish with an idempotent skip of already-published
+versions. Requires the `CARGO_REGISTRY_TOKEN` Actions secret; see
+`AGENTS.md` → "Releasing (crates.io)" for the full rules.
 
 ## Building
 

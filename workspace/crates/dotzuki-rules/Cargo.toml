@@ -17,7 +17,7 @@ dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.0" }
 serde = { workspace = true }
 ron = { workspace = true }
 thiserror = { workspace = true }
-dotzuki-rules-macro = { path = "../dotzuki-rules-macro", optional = true }
+dotzuki-rules-macro = { path = "../dotzuki-rules-macro", version = "0.1.0", optional = true }
 # Hot-reload (DEV only): the `notify`-based file watcher behind the `hot-reload`
 # feature. OFF by default ⇒ the BAKED path (zero file IO; `include_str!`) is the
 # default build. Both modes yield the SAME runtime ruleset (doc 11 §4.2): the
