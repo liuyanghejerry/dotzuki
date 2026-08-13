@@ -5,7 +5,9 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-Canonical definitions of dotzuki terms. Link to an entry here the first time you use a term in a document (doc-standard §4.2); this page is the only authoritative term list (doc-standard §11.4).
+Canonical definitions of dotzuki terms. Link to an entry here the first time
+you use a term in a document (doc-standard §4.2); this page is the only
+authoritative term list (doc-standard §11.4).
 
 ## Project & authoring
 
@@ -23,7 +25,8 @@ Canonical definitions of dotzuki terms. Link to an entry here the first time you
 - **Game DSL** — the declarative language for scenes and UI: `.scene`
   (storylines), `.gui` (layouts), `.theme` / `.style` (colors & styles).
 - **`@t("en", "中文")`** — bilingual text syntax; compiles to per-locale
-  values selected by the runtime language. See [the i18n guide](../how-to/i18n.md).
+  values, and the runtime language selects the value. See
+  [the i18n guide](../how-to/i18n.md).
 - **RON** — the Rusty Object Notation config format used for battle rules
   (`rules.ron`).
 
@@ -45,7 +48,7 @@ Canonical definitions of dotzuki terms. Link to an entry here the first time you
 - **Boa** — the JavaScript engine behind `dotzuki-engine-script`; the DSL's
   native AST interpreter mirrors its runtime protocol and is the canonical
   scene semantics.
-- **`TrackDef` / `AudioCommand`** — the JSON audio track schema and its 21
+- **`TrackDef` / `AudioCommand`** — the JSON audio track schema and its 22
   channel commands. See [audio commands](./audio-commands.md).
 - **save version** — the version stamp inside `.dotzuki-save.json`; older
   saves load on newer engines, newer saves are refused by older engines. See

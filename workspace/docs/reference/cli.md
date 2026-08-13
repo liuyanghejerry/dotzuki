@@ -20,7 +20,7 @@ cargo build --release --bin dotzuki
 ```
 
 The binary is `target/release/dotzuki`. All commands take a project path; the
-project layout is defined by the manifest, not by the CLI.
+manifest, not the CLI, defines the project layout.
 
 ## Subcommands
 
@@ -37,7 +37,7 @@ Scaffolds a new project. `name` must be a slug: `[a-z0-9][a-z0-9-]*`.
 | Flag | Default | Meaning |
 |---|---|---|
 | `--dir <parent>` | current directory | Parent directory the new project is created in |
-| `--title <name>` | the slug | Display name stored in the manifest (`game` section) |
+| `--title <name>` | the slug | Display name stored in the manifest root `name` field |
 
 Generated layout: `.dotzuki-editor.json` + `data/` (maps, tiles,
 stories/characters/quests/arcs), `gfx/`, `assets/scenes/main.scene`, README —

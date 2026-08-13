@@ -158,6 +158,7 @@ vetoable, so the handler records *intent* (a sentinel in the per-action scratch)
 and the driver fires the real `TryBoost`:
 
 ```rust
+<!-- not verified: elided parameters, illustrative only -->
 fn intimidate_switch_in<P: EffectProvider + ?Sized>(ctx: &mut BattleCtx<'_, P>, ..) -> HandlerResult {
     ctx.mv.damage = INTIMIDATE_PENDING;   // 0xABCD — a boost request is pending
     HandlerResult::Unchanged
@@ -173,6 +174,7 @@ pub static INTIMIDATE: Effect<MinimonProvider> = Effect {
 delta returns `Fail`, which folds to `Bool(false)` so the driver skips the boost:
 
 ```rust
+<!-- not verified: elided parameters, illustrative only -->
 fn clear_body_try_boost<P: EffectProvider + ?Sized>(_c: &mut BattleCtx<'_, P>, relay: RelayVar, ..) -> HandlerResult {
     if relay.as_int() < 0 { HandlerResult::Fail } else { HandlerResult::Unchanged }
 }
@@ -187,6 +189,7 @@ pub static CLEAR_BODY: Effect<MinimonProvider> = Effect {
 Cross-source ordering is exactly what the `order` tier exists for:
 
 ```rust
+<!-- not verified: elided parameters, illustrative only -->
 fn leftovers_residual<P: EffectProvider<Stat = Stat> + ?Sized>(ctx: &mut BattleCtx<'_, P>, _r, host, ..) -> HandlerResult {
     let amt = (ctx.battler(host).max_hp / 16).max(1);
     ctx.battler_mut(host).heal(amt);
@@ -204,6 +207,7 @@ pub static POISON_EFFECT: Effect<MinimonProvider> = effect!(EffectId(0xC1), Effe
 `WeatherModifyStat` layers a ×1.5 SpD boost onto the relay *after* `ModifyStat`:
 
 ```rust
+<!-- not verified: elided parameters, illustrative only -->
 fn sandstorm_spd_boost<P: ...>(ctx, relay, target, ..) -> HandlerResult {
     if ctx.battler(target).species.mtype == MType::Rock {
         return HandlerResult::Set(relay.scale(3, 2));     // ×1.5 SpD

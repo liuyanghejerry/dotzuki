@@ -51,12 +51,12 @@ into JSON for the renderer. This reference tracks the current codegen
 - Syntax: `@style <name> { <prop> = <value>; ... }`.
 - Inheritance uses the colon form `@style <child> : <parent> { ... }` (there is
   no `extends` keyword).
-- Inheritance chains are resolved at compile time: child properties override
-  parent properties. The card example compiles to:
+- The compiler resolves inheritance chains: child properties override parent
+  properties. The card example compiles to:
 
 ```json
 [
-  { "name": "card", "properties": { ... } },
+  { "name": "card", "properties": { "border": "rounded", "padding": 12, "background": "@theme.surface" } },
   {
     "name": "card_hover",
     "extends": "card",
@@ -79,4 +79,4 @@ This page and the [codegen contract](./codegen.md) are authoritative.
 
 > Note: the legacy GAME_UI_DSL document (§4.2/4.3) sketched a broader
 > theme/style vision; the inline-`@theme`-in-`.gui` part remains a proposal
-> (see `archive/game-ui-dsl.md`).
+> (see [the archived GAME_UI_DSL document](../../archive/game-ui-dsl.md)).
