@@ -1,0 +1,130 @@
+# AI documentation gate, powered by Clausura
+# (https://github.com/liuyanghejerry/Clausura).
+#
+# Every docs change is reviewed against workspace/docs/doc-standard.md by a
+# bounded LLM agent (skill: .clausura/skills/docs-review/SKILL.md), and the
+# findings are evaluated by deterministic gating rules (.clausura.yaml):
+# any error-severity violation fails the check.
+#
+# Configuration (repo settings):
+#   secrets.CLAUSURA_API_KEY   LLM API key. Missing -> the gate is skipped
+#                              with a warning (never blocks).
+#   vars.CLAUSURA_MODEL        Optional model override (default in .clausura.yaml).
+#
+# Escape hatch: label a PR `docs-ai-skip` to bypass the gate entirely.
+# The meta-docs (doc-standard.md / doc-outline.md) are exempt from review —
+# they are the ruleset, not user-facing pages (doc-standard §6.5).
+#
+# NOTE: we deliberately do NOT use the liuyanghejerry/Clausura@v1 composite
+# action here. It always exports its `model`/`vendor` inputs as env vars,
+# and an empty-but-set CLAUSURA_MODEL/CLAUSURA_VENDOR overrides the values
+# from .clausura.yaml (the empty vendor resolves to api.openai.com). The
+# step below unsets empty overrides before running so the YAML config wins.
+
+name: docs-ai-review
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'workspace/docs/**'
+      - 'README.md'
+      - '.clausura.yaml'
+      - '.clausura/**'
+      - '.github/workflows/docs-review.yml'
+  pull_request:
+    paths:
+      - 'workspace/docs/**'
+      - 'README.md'
+      - '.clausura.yaml'
+      - '.clausura/**'
+      - '.github/workflows/docs-review.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-ai-review-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # Labels only exist on pull_request events; contains() on an empty list
+    # is false, so pushes run normally.
+    if: ${{ github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'docs-ai-skip') }}
+    permissions:
+      contents: read
+      security-events: write # SARIF upload to code scanning
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history so the agent's git_diff tool can diff against the
+          # merge-base of the PR.
+          fetch-depth: 0
+
+      - name: Check API key configured
+        id: key
+        env:
+          KEY: ${{ secrets.CLAUSURA_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare review diff
+        # Deterministic change set: diff from the PR base / pre-push commit
+        # against HEAD, written where the review skill expects it. Prevents
+        # the agent from guessing the diff base (which burned its iteration
+        # budget on the first live run).
+        if: steps.key.outputs.configured == 'true'
+        env:
+          REVIEW_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          BASE="${REVIEW_BASE:-origin/master}"
+          MB="$(git merge-base "$BASE" HEAD 2>/dev/null || true)"
+          [ -n "$MB" ] && BASE="$MB"
+          mkdir -p .clausura/context
+          {
+            echo "# Changed documentation files (review scope)"
+            git diff --name-only "$BASE" HEAD -- workspace/docs README.md
+            echo
+            echo "# Unified diff (base $BASE)"
+            git diff --unified=3 "$BASE" HEAD -- workspace/docs README.md
+          } | head -c 60000 > .clausura/context/review-diff.txt
+          echo "review diff bytes: $(wc -c < .clausura/context/review-diff.txt)"
+
+      - name: Install Clausura
+        if: steps.key.outputs.configured == 'true'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/liuyanghejerry/Clausura/main/install.sh | bash
+          # install.sh prefers /usr/local/bin and falls back to ~/.local/bin;
+          # make sure the fallback location is on PATH.
+          export PATH="$HOME/.local/bin:$PATH"
+          clausura --version
+
+      - name: Run docs gate (Clausura)
+        if: steps.key.outputs.configured == 'true'
+        env:
+          CLAUSURA_API_KEY: ${{ secrets.CLAUSURA_API_KEY }}
+          CLAUSURA_MODEL: ${{ vars.CLAUSURA_MODEL }}
+        run: |
+          # Unset empty overrides: Clausura treats a set-but-empty env var as
+          # an override, which would blank out the model/vendor from YAML.
+          [ -n "$CLAUSURA_MODEL" ] || unset CLAUSURA_MODEL
+          clausura run --config .clausura.yaml
+
+      - name: Upload SARIF findings
+        # always(): keep the audit trail even when the gate fails.
+        # continue-on-error: code scanning may be disabled on the repo.
+        if: ${{ always() && steps.key.outputs.configured == 'true' }}
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: clausura-output.sarif
+
+      - name: Notice (gate not enabled)
+        if: steps.key.outputs.configured == 'false'
+        run: |
+          echo "::warning::docs-ai-review is disabled: set the CLAUSURA_API_KEY repo secret to enable the AI gate."

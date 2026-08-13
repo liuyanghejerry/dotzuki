@@ -69,3 +69,7 @@ Pods/
 /workspace/.sisyphus/
 /workspace/.codegraph/
 /workspace/.jrpg-editor.image-providers.json
+
+# Clausura AI gate runtime state (config + skill are committed)
+/.clausura/archives/
+clausura-output.sarif

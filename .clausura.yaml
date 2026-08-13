@@ -1,0 +1,49 @@
+# Clausura configuration — dotzuki documentation gate.
+# See https://github.com/liuyanghejerry/Clausura for the full schema.
+# The gate reviews docs changes against workspace/docs/doc-standard.md
+# (injected via the `docs-review` skill) and fails on error-severity
+# findings. API key comes from the CLAUSURA_API_KEY env var / CI secret.
+
+version: "1"
+task:
+  name: docs-review
+
+  # Default provider: DeepSeek V4 Flash (Clausura built-in `deepseek`
+  # shorthand -> https://api.deepseek.com/v1). Override in CI via the
+  # CLAUSURA_MODEL env var (vars.CLAUSURA_MODEL).
+  model: deepseek-v4-flash
+  vendor: deepseek
+
+  # The review ruleset: .clausura/skills/docs-review/SKILL.md loads
+  # workspace/docs/doc-standard.md as the authoritative checklist.
+  skill_prompts:
+    - docs-review
+  prompt_template: |
+    You are the dotzuki documentation gate. Follow the attached skill:
+    review only the changed documentation files (find them with git_diff),
+    judge them against workspace/docs/doc-standard.md, and report findings
+    with the exact rule_id defined in the skill.
+
+  token_budget: 32000
+  timeout_secs: 600
+  # Headroom over the default 10: the review reads the injected diff, the
+  # standard, and pages through changed files — a clean stop needs a few
+  # more tool rounds than a plain code review.
+  max_iterations: 15
+  ambiguity_policy: fail_closed
+  on_incomplete: fail
+
+  # Deterministic gating: the LLM only produces findings; these rules decide
+  # whether the check passes. Errors block, warnings are logged up to a
+  # threshold.
+  gating:
+    - rule: docs-standard
+      description: Block on any error-level violation of the doc standard
+      min_severity: error
+      max_findings: 0
+      action: fail
+    - rule: docs-standard
+      description: Warn when warnings exceed the threshold
+      min_severity: warning
+      max_findings: 15
+      action: warn
