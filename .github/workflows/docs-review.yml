@@ -6,6 +6,13 @@
 # findings are evaluated by deterministic gating rules (.clausura.yaml):
 # any error-severity violation fails the check.
 #
+# The review runs as a MATRIX over the docs areas (tutorials / how-to /
+# reference / explanation / release-notes / root): each area gets its own
+# bounded diff and its own agent run. A single 60KB diff exhausted the
+# agent's context budget on the first large PR (exit 2 via
+# on_incomplete=fail), so per-area chunking keeps every run small enough to
+# finish cleanly. Areas with no changes skip with a green check.
+#
 # Configuration (repo settings):
 #   secrets.CLAUSURA_API_KEY   LLM API key. Missing -> the gate is skipped
 #                              with a warning (never blocks).
@@ -51,6 +58,16 @@ jobs:
     # Labels only exist on pull_request events; contains() on an empty list
     # is false, so pushes run normally.
     if: ${{ github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'docs-ai-skip') }}
+    # Per-area cancel scope: a new push cancels the same area's stale leg
+    # without cancelling the other areas' legs. Matrix context is available
+    # at job level, not at workflow level.
+    concurrency:
+      group: docs-ai-review-${{ github.event.pull_request.number || github.run_id }}-${{ matrix.area }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false # one area failing must not cancel the others
+      matrix:
+        area: [ tutorials, how-to, reference, explanation, release-notes, root ]
     permissions:
       contents: read
       security-events: write # SARIF upload to code scanning
@@ -58,8 +75,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # Full history so the agent's git_diff tool can diff against the
-          # merge-base of the PR.
+          # Full history so the diff below can use the merge-base.
           fetch-depth: 0
 
       - name: Check API key configured
@@ -73,11 +89,8 @@ jobs:
             echo "configured=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Prepare review diff
-        # Deterministic change set: diff from the PR base / pre-push commit
-        # against HEAD, written where the review skill expects it. Prevents
-        # the agent from guessing the diff base (which burned its iteration
-        # budget on the first live run).
+      - name: Prepare review diff (${{ matrix.area }})
+        id: prepare
         if: steps.key.outputs.configured == 'true'
         env:
           REVIEW_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -86,17 +99,24 @@ jobs:
           MB="$(git merge-base "$BASE" HEAD 2>/dev/null || true)"
           [ -n "$MB" ] && BASE="$MB"
           mkdir -p .clausura/context
-          {
-            echo "# Changed documentation files (review scope)"
-            git diff --name-only "$BASE" HEAD -- workspace/docs README.md
-            echo
-            echo "# Unified diff (base $BASE)"
-            git diff --unified=3 "$BASE" HEAD -- workspace/docs README.md
-          } | head -c 60000 > .clausura/context/review-diff.txt
-          echo "review diff bytes: $(wc -c < .clausura/context/review-diff.txt)"
+          if [ "${{ matrix.area }}" = "root" ]; then
+            # Index pages at both levels; the meta-docs are exempt and stay out.
+            git diff --unified=3 "$BASE" HEAD -- workspace/docs/README.md README.md > .clausura/context/review-diff.txt
+          else
+            git diff --unified=3 "$BASE" HEAD -- "workspace/docs/${{ matrix.area }}" > .clausura/context/review-diff.txt
+          fi
+          # Cap at 50KB; the skill pages through truncation with offset/limit.
+          head -c 51200 .clausura/context/review-diff.txt > .clausura/context/review-diff.tmp
+          mv .clausura/context/review-diff.tmp .clausura/context/review-diff.txt
+          if [ -s .clausura/context/review-diff.txt ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "area=${{ matrix.area }} diff bytes: $(wc -c < .clausura/context/review-diff.txt)"
 
       - name: Install Clausura
-        if: steps.key.outputs.configured == 'true'
+        if: steps.prepare.outputs.has_changes == 'true'
         run: |
           curl -fsSL https://raw.githubusercontent.com/liuyanghejerry/Clausura/main/install.sh | bash
           # install.sh prefers /usr/local/bin and falls back to ~/.local/bin;
@@ -105,7 +125,7 @@ jobs:
           clausura --version
 
       - name: Run docs gate (Clausura)
-        if: steps.key.outputs.configured == 'true'
+        if: steps.prepare.outputs.has_changes == 'true'
         env:
           CLAUSURA_API_KEY: ${{ secrets.CLAUSURA_API_KEY }}
           CLAUSURA_MODEL: ${{ vars.CLAUSURA_MODEL }}
@@ -118,7 +138,7 @@ jobs:
       - name: Upload SARIF findings
         # always(): keep the audit trail even when the gate fails.
         # continue-on-error: code scanning may be disabled on the repo.
-        if: ${{ always() && steps.key.outputs.configured == 'true' }}
+        if: ${{ always() && steps.prepare.outputs.has_changes == 'true' }}
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v4
         with:
