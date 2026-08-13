@@ -249,7 +249,7 @@ pub fn switch_in(&mut self, who: BattlerRef) {
     }
 }
 
-pub fn try_boost(&mut self, target, source: BattlerRef, _stat: Stat, delta: i64) -> bool {
+pub fn try_boost(&mut self, target: BattlerRef, source: BattlerRef, _stat: Stat, delta: i64) -> bool {
     let provider = &self.provider;
     let mut ctx = BattleCtx { state: &mut self.state, effects: &mut self.effects,
                               mv: &mut self.mv, rng: &mut self.rng };
