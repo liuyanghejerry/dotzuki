@@ -88,8 +88,10 @@ jobs:
           [ -n "$MB" ] && BASE="$MB"
           git diff --name-only "$BASE" HEAD -- workspace/docs README.md > /tmp/changed.txt || true
           # Review scope: markdown under workspace/docs plus the root README.
-          # The meta-docs are exempt (they are the ruleset).
-          grep -E '\.md$' /tmp/changed.txt | grep -vE '^workspace/docs/(doc-standard|doc-outline)\.md$' > /tmp/scope.txt || true
+          # Exempt: the meta-docs (they are the ruleset) and archive/ (historical,
+          # not maintained — reviewing moved legacy content produces false
+          # positives against rules it predates).
+          grep -E '\.md$' /tmp/changed.txt | grep -vE '^workspace/docs/(doc-standard|doc-outline)\.md$|^workspace/docs/archive/' > /tmp/scope.txt || true
           COUNT="$(wc -l < /tmp/scope.txt | tr -d ' ')"
           FILES="$(jq -Rsc '{files: split("\n")[:-1]}' /tmp/scope.txt)"
           echo "count=$COUNT" >> "$GITHUB_OUTPUT"
