@@ -176,6 +176,13 @@
    - [ ] 若新增/改名页面，索引页与 `SUMMARY.md` 已同步
    - [ ] 术语首现已链接 glossary（未收录则补录）
 4. 术语表（`explanation/glossary.md`）是术语的唯一权威；新增公共术语必须先在 glossary 定义。
+5. **CI 门禁（Clausura）**：`.github/workflows/docs-review.yml` 在每个触及
+   `workspace/docs/**`、根 `README.md` 或 Clausura 配置的 PR/推送中运行
+   [Clausura](https://github.com/liuyanghejerry/Clausura) 评审——审查 skill
+   （`.clausura/skills/docs-review/SKILL.md`）把本规范注入为唯一核对清单，
+   `error` 级发现项按 `.clausura.yaml` 的 gating 规则阻断合并；`warning`
+   只告警不阻断。紧急豁免：给 PR 打 `docs-ai-skip` 标签。门禁需仓库 secret
+   `CLAUSURA_API_KEY` 才启用，未配置时静默跳过并告警。
 
 ## 12. 索引页规则
 
