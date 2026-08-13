@@ -325,7 +325,7 @@ Accessors:
 ```rust
 fn battler(&self, r: BattlerRef)            -> &BattlerState<P>;
 fn battler_mut(&mut self, r: BattlerRef)    -> &mut BattlerState<P>;
-fn pair_mut(&mut self, a, b: BattlerRef) -> (&mut BattlerState<P>, &mut BattlerState<P>); // two disjoint refs
+fn pair_mut(&mut self, a: BattlerRef, b: BattlerRef) -> (&mut BattlerState<P>, &mut BattlerState<P>); // two disjoint refs
 fn effect(&self, id: EffectId)              -> Option<&EffectState<P>>;      // binary search
 fn effect_mut(&mut self, id: EffectId)      -> Option<&mut EffectState<P>>;
 ```
@@ -479,8 +479,9 @@ fn collect_handlers<P>(ctx: &BattleCtx<P>, provider: &P, src_eff: Option<&'stati
 // Sort by compare, RNG-permute ties, then fold the relay through each handler:
 fn run_event<P>(ctx: &mut BattleCtx<P>, hs: Vec<CollectedHandler<P>>, relay: RelayVar,
                 fast_exit: bool) -> RelayVar;
-fn run_event_checked<P>(...) -> RelayVar;   // + a per-step liveness re-check (skip a dead target)
-fn compare<P>(a, b: &CollectedHandler<P>) -> Ordering;
+fn run_event_checked<P: EffectProvider + ?Sized>(ctx: &mut BattleCtx<'_, P>, mut hs: Vec<CollectedHandler<P>>,
+                                               mut relay: RelayVar, fast_exit: bool) -> RelayVar;   // + a per-step liveness re-check (skip a dead target)
+fn compare<P: EffectProvider + ?Sized>(a: &CollectedHandler<P>, b: &CollectedHandler<P>) -> Ordering;
 ```
 
 - `collect_handlers` takes only `&BattleCtx` (shared) and fills an **owned** `Vec`
