@@ -13,9 +13,8 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 
 1. 变更集来源（按顺序尝试）：
    a. 读取 `.clausura/context/review-diff.txt`——CI 已预先写入本次
-      PR/推送相对基准的 diff，**每次运行只覆盖一个文档区域**
-      （tutorials / how-to / reference / explanation / release-notes / root），
-      上限 50KB（被截断时用 offset/limit 翻页读完；文件末尾未到完整
+      PR/推送相对基准的 diff，**每次运行只覆盖一个变更文件**，上限
+      50KB（被截断时用 offset/limit 翻页读完；文件末尾未到完整
       结尾即视为截断）。
    b. 该文件不存在或为空时：用 `git_diff` 工具指定 base 为
       `origin/master`（PR）或 `HEAD~1`（单提交推送），再按需翻页。
@@ -39,7 +38,9 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 - `severity`：`error` 或 `warning`
 - `message`：文件路径 + 规范章节号（如 §4）+ 一句话问题描述
 - `evidence`：**必填**，违规原文摘录（≤40 字），放在这里而不是 message 里
-- `location`：可选，能定位到 file/line 时就填
+- `location`：可选，**必须是对象**（Clausura 的 Location 结构），格式：
+  `{"file": "<路径>", "line_start": N, "line_end": N, "column_start": 1, "column_end": 1}`；
+  **不能是字符串**。拿不准行号时整个字段省略，不要编造
 
 没有确凿证据时不得报告。
 
