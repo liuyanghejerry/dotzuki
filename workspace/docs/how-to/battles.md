@@ -489,28 +489,31 @@ The top-level shape is
 (`EffectKind { Move, Status, Ability, Item, Weather }`, `model.rs:184-196`),
 optional `category`/`power`/`type`/`accuracy`/`cost`, and a list of hooks. Every
 hook's `do:` is a list drawn from the **closed primitive op vocabulary**
-(`enum Op`, `model.rs:319`) — this closed set is the entire expressiveness
-budget. It grew from the original 12 to **16 ops** as the pokered Gen-1 migration
-needed more primitives (`SetHp`, `SetDamage`, `DamageCurrentHpFraction`,
-`RepeatHits`) — all still closed and game-agnostic:
+(`enum Op`, `crates/dotzuki-rules/src/model.rs:396`) — this closed set is the
+entire expressiveness budget. It grew from the original 12 to **18 ops** as
+the pokered Gen-1 migration needed more primitives (`SetHp`, `SetDamage`,
+`DamageCurrentHpFraction`, `RepeatHits`, `InflictVolatile`, `RemoveStatus`) —
+all still closed and game-agnostic:
 
 ```rust
-pub enum Op {                                        // model.rs:319
+pub enum Op {                                        // dotzuki-rules/src/model.rs:396
     DealMoveDamage,                                  // ModifyDamage marker (provider number)
-    DamageFraction { num, den, of, target, unless }, // chip a fraction (recoil, sandstorm)
-    HealFraction   { num, den, of, target, unless }, // heal a fraction (drain, Recover, Leftovers)
-    InflictStatus  { status, target },               // on-hit non-volatile status
-    Boost          { stat, stages, target },          // stat-stage delta
-    ScaleRelay     { num, den, when },               // rational relay scale (weather, item)
-    SetRelay(i64), AddRelay(i64), ClampRelay { lo, hi },
-    VetoIf         { cond, silent },                 // Fail when cond holds (Clear Body / Mist)
+    DamageFraction { num: u32, den: u32, of: FractionOf, target: Selector, unless: Option<Predicate> },
+    HealFraction   { num: u32, den: u32, of: FractionOf, target: Selector, unless: Option<Predicate> },
+    InflictStatus  { status: String, target: Selector, amount: AmountSpec },
+    InflictVolatile { kind: String, target: Selector, amount: AmountSpec },
+    Boost          { stat: String, stages: i8, target: Selector },
+    ScaleRelay     { num: u32, den: u32, when: Vec<Predicate> },
+    SetRelay(i64), AddRelay(i64), ClampRelay { lo: i64, hi: i64 },
+    VetoIf         { cond: Predicate, silent: bool },   // Fail when cond holds (Clear Body / Mist)
     ApplyTypeChart,                                  // fold the dual-type product into the relay
-    PayResource    { resource, amount, target },     // MP/SP cost gate (Fail if unpayable)
+    PayResource    { resource: String, amount: u16, target: Selector }, // MP/SP cost gate
     // ── added by the pokered Gen-1 migration (still closed, still game-agnostic) ──
-    SetHp          { target, value, when },          // absolute HP set (OHKO / Explode)
-    SetDamage      { value, of },                    // fixed / level / rng damage, bypass the chart
-    DamageCurrentHpFraction { num, den, target },    // % of CURRENT hp (Super Fang)
-    RepeatHits     { count, target, final_hit },     // Gen-1 multi-hit loop (game-side, no engine seam)
+    SetHp          { target: Selector, value: u16, when: Vec<Predicate> }, // absolute HP set
+    SetDamage      { value: DamageValue, of: Selector }, // fixed / level / rng damage
+    DamageCurrentHpFraction { num: u32, den: u32, target: Selector }, // % of CURRENT hp
+    RepeatHits     { count: HitCount, target: Selector, final_hit: FinalHitRider },
+    RemoveStatus   { target: Selector },
 }
 ```
 
