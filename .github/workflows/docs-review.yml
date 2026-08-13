@@ -49,7 +49,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: docs-ai-review-${{ github.event.pull_request.number || github.run_id }}-${{ matrix.area }}
+  group: docs-ai-review-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -58,6 +58,12 @@ jobs:
     # Labels only exist on pull_request events; contains() on an empty list
     # is false, so pushes run normally.
     if: ${{ github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'docs-ai-skip') }}
+    # Per-area cancel scope: a new push cancels the same area's stale leg
+    # without cancelling the other areas' legs. Matrix context is available
+    # at job level, not at workflow level.
+    concurrency:
+      group: docs-ai-review-${{ github.event.pull_request.number || github.run_id }}-${{ matrix.area }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false # one area failing must not cancel the others
       matrix:
