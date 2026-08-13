@@ -9,7 +9,7 @@ Five minutes from `dotzuki new` to a playable bilingual scene, using the CLI onl
 
 This is the **CLI-only** path (no editor, no Rust). It produces the same
 project layout as the editor's Create wizard. For the editor path see
-[`tools/dotzuki-editor/docs/first-game.md`](../../tools/dotzuki-editor/docs/first-game.md).
+[the editor tutorial](./editor-first-game.md).
 
 **Prerequisite:** a `dotzuki` binary (build once: `cargo build --release --bin
 dotzuki` from the workspace root — the binary is `target/release/dotzuki`).

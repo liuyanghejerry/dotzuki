@@ -62,7 +62,7 @@
 ### 4.2 交叉引用
 
 - 链接一律使用相对路径；引用其他文档时写其路径而非口头描述。
-- 首次提及术语时链接到 `explanation/glossary.md` 的对应条目（术语表未收录时先补录）。
+- 首次提及术语时链接到 `reference/glossary.md` 的对应条目（术语表未收录时先补录）。
 
 ## 5. 新鲜度三态
 
@@ -175,7 +175,7 @@
    - [ ] 示例已按 §9 验证
    - [ ] 若新增/改名页面，索引页与 `SUMMARY.md` 已同步
    - [ ] 术语首现已链接 glossary（未收录则补录）
-4. 术语表（`explanation/glossary.md`）是术语的唯一权威；新增公共术语必须先在 glossary 定义。
+4. 术语表（`reference/glossary.md`）是术语的唯一权威；新增公共术语必须先在 glossary 定义。
 5. **CI 门禁（Clausura）**：`.github/workflows/docs-review.yml` 在每个触及
    `workspace/docs/**`、根 `README.md` 或 Clausura 配置的 PR/推送中运行
    [Clausura](https://github.com/liuyanghejerry/Clausura) 评审——审查 skill

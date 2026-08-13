@@ -1,8 +1,14 @@
 # Your First Game in 15 Minutes
 
-A guided tour from an empty machine to a JRPG project you can click around in —
-no Rust, no code required. You can even **play** what you built: `dotzuki run`
-boots your project in a window (overworld, dialogue, warps).
+> - **Audience**: game authors
+> - **Type**: tutorial
+> - **Status**: active
+> - **Last verified**: v0.1.0
+
+A guided tour from an empty machine to a JRPG project you can click around in — no Rust, no code required.
+
+You can even **play** what you built: `dotzuki run` boots your project in a
+window (overworld, dialogue, warps).
 
 ## 1. Start the editor
 
@@ -110,20 +116,21 @@ dotzuki check ~/dotzuki-projects/<your-game>
 
 - **AI-assisted building** — the assistant can draft maps
   (`propose_map_create`), edit the manifest, refine characters, and generate
-  `.scene` implementations for quests. See `docs/AI_AGENT_FRAMEWORK.md`.
-- **Reference layouts** — `workspace/docs/game-project-spec.md` is the
-  contract for what a game project contains, including the full `dotzuki run`
+  `.scene` implementations for quests. See
+  [the AI agent framework](../../tools/dotzuki-editor/docs/AI_AGENT_FRAMEWORK.md).
+- **Project contract** — [the project manifest](../reference/project-manifest.md)
+  defines what a game project contains, including the full `dotzuki run`
   behavior (entry resolution, scene dispatch, supported commands).
-- **Current limits** — every `rules.ron` effect kind
-  IS data-driven (`kind: Move`/`Status` hooks — the seeded
-  `venom-sting` + `poison` show the shape — plus `kind: Ability`/`Item`/
-  `Weather`: Aria's seeded `intimidate` drops the foe's attack on switch-in,
-  Bryn's `leftovers` heal him after his actions, and a scene can arm the
-  seeded `sandstorm` with `game.setWeather("sandstorm")` before
-  `startBattle`); held items are never consumed, weather is battle-local
-  (scene-armed only), and a lost battle heals the
-  party and returns you to the entry map's spawn (no heal-point system yet).
-  Everything else is in: enemy parties (the `encounters` table — queued
-  send-outs, summed EXP), trainer battles (Run blocked, money on a win), a
-  wild-only Run action (the scene sees a third outcome, `"run"`), and shop
-  selling at half price.
+- **Current limits** — every `rules.ron` effect kind IS data-driven
+  (`kind: Move`/`Status` hooks — the seeded `venom-sting` + `poison` show the
+  shape — plus `kind: Ability`/`Item`/`Weather`: Aria's seeded `intimidate`
+  drops the foe's attack on switch-in, Bryn's `leftovers` heal him after his
+  actions, and a scene can arm the seeded `sandstorm` with
+  `game.setWeather("sandstorm")` before `startBattle`); held items are never
+  consumed, weather is battle-local (scene-armed only), and a lost battle
+  heals the party and returns you to the entry map's spawn (no heal-point
+  system yet). Everything else is in: enemy parties (the `encounters` table —
+  queued send-outs, summed EXP), trainer battles (Run blocked, money on a
+  win), a wild-only Run action (the scene sees a third outcome, `"run"`), and
+  shop selling at half price. See [the battle rules reference](../reference/battle-rules.md)
+  for the rule formats.

@@ -8,7 +8,7 @@
 Package, ship and upgrade a zero-Rust game project.
 
 How to package, ship and upgrade a **zero-Rust game project** built with
-dotzuki. This complements [`game-project-spec.md`](./game-project-spec.md)
+dotzuki. This complements [the project manifest & layout](../reference/project-manifest.md)
 (project contract) and [the CLI reference](../reference/cli.md) (tooling).
 
 ## What a game project is
@@ -29,7 +29,7 @@ dotzuki run <project-dir>
 
 Delivery checklist:
 
-- Run [`dotzuki check`](./CLI_REFERENCE.md) on the final tree — a clean exit is
+- Run [`dotzuki check`](../reference/cli.md) on the final tree — a clean exit is
   the only build check that exists.
 - The project carries its own `dotzuki` version requirement implicitly: run it
   with a `dotzuki` binary whose engine version matches what the project was
@@ -46,7 +46,7 @@ dotzuki run . --headless --map StartTown --screenshot shot.png --save
 ```
 
 `--headless` never opens an audio device or window; `--screenshot` dumps the
-real rendered final frame. See [`CLI_REFERENCE.md`](./CLI_REFERENCE.md).
+real rendered final frame. See [`CLI_REFERENCE.md`](../reference/cli.md).
 
 ## 3. Playable demo in a web page (WASM)
 
