@@ -73,3 +73,6 @@ Pods/
 # Clausura AI gate runtime state (config + skill are committed)
 /.clausura/archives/
 clausura-output.sarif
+
+# mdBook build output (docs site is built in CI)
+/workspace/docs/book/

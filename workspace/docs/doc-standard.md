@@ -108,7 +108,7 @@
 2. 翻译版后缀固定为 `-zh-CN`（插在扩展名之前）。
 3. 目录名即层名：`tutorials/`、`how-to/`、`reference/`、`explanation/`、
    `release-notes/`、`archive/`。
-4. 站点入口页为 `docs/index.md`（由现 `docs/README.md` 迁移而来）。
+4. 站点入口页为 `docs/index.md`。
 
 ## 8. 写作风格
 
