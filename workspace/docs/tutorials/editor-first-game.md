@@ -5,7 +5,8 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-A guided tour from an empty machine to a JRPG project you can click around in — no Rust, no code required.
+A guided tour from an empty machine to a JRPG project you can click around
+in — no Rust, no code required.
 
 You can even **play** what you built: `dotzuki run` boots your project in a
 window (overworld, dialogue, warps).
@@ -77,7 +78,7 @@ A new project is not an empty shell. You get:
    status record's `Residual` hook chips 1/8 max HP per action, all without
    a line of Rust. Add a monster row, teach it `tackle`, and it's
    immediately fightable. Capture the outcome with
-   `@let result = startBattle("slime")` + `@if`.
+   `result = startBattle("slime")` + `@if`.
 
    Or fight the seeded **trainer**: `@command("startBattle", "bug-catcher")`
    reads the `encounters` table — an ordered enemy party (they come out one
@@ -126,7 +127,7 @@ dotzuki check ~/dotzuki-projects/<your-game>
   shape — plus `kind: Ability`/`Item`/`Weather`: Aria's seeded `intimidate`
   drops the foe's attack on switch-in, Bryn's `leftovers` heal him after his
   actions, and a scene can arm the seeded `sandstorm` with
-  `game.setWeather("sandstorm")` before `startBattle`); held items are never
+  `setWeather("sandstorm")` before `startBattle`); held items are never
   consumed, weather is battle-local (scene-armed only), and a lost battle
   heals the party and returns you to the entry map's spawn (no heal-point
   system yet). Everything else is in: enemy parties (the `encounters` table —
