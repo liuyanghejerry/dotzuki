@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The publish script verifies each packaged crate by building it, and the
       # default `gpu` feature pulls in winit/pixels — same native deps as CI.
