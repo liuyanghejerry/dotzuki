@@ -16,7 +16,7 @@ Item menu. Free-text `effect` fields on item records are **display-only**.
 | Field | Type | Default | Meaning |
 |-------|------|---------|---------|
 | `id` | string | — | Record id: the inventory key and the id scenes pass to `openShop`. |
-| `healField` | number | — | A positive number makes the item battle-usable: the heal amount. |
+| `healHp` (column named by the manifest `healField`, default `"healHp"`) | number | — | A positive number makes the item battle-usable: the heal amount. |
 | `price` | number | `0` | Shop Buy price; Sell pays `floor(price / 2)`. |
 | `effect` | string | — | Free-text, display-only. |
 
