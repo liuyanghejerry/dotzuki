@@ -27,11 +27,18 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 
 ## 发现项格式
 
-所有发现项统一使用同一个 rule_id，severity 用 `error` 或 `warning`：
+所有发现项统一使用同一个 rule_id，severity 用 `error` 或 `warning`。
+**Clausura 的 Finding schema 强制要求 `evidence` 字段**——缺字段会导致整次
+运行判为 agent error（exit 2），而不是门禁判定。每个发现项必须包含：
 
-- rule_id: `docs-standard`
-- message 中必须包含：文件路径、规范章节号（如 §4）、违规原文摘录（≤40 字）。
-  没有确凿证据时不得报告。
+- `id`：一个 UUID v4 字符串（如 `b4f97e92-6f59-47d9-b2fc-e722db374e86`）
+- `rule_id`：`docs-standard`
+- `severity`：`error` 或 `warning`
+- `message`：文件路径 + 规范章节号（如 §4）+ 一句话问题描述
+- `evidence`：**必填**，违规原文摘录（≤40 字），放在这里而不是 message 里
+- `location`：可选，能定位到 file/line 时就填
+
+没有确凿证据时不得报告。
 
 ### error（阻断合并）判定标准
 

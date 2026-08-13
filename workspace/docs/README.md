@@ -10,7 +10,7 @@ dependencies; most game authors never touch Rust. Pick your path below.
 
 ## Documentation system
 
-The documentation system itself is defined in two meta-documents:
+Two meta-documents define the documentation system:
 
 - [`doc-standard.md`](./doc-standard.md) — writing & structure standard: the
   four-layer model (tutorial / how-to / reference / explanation), required
