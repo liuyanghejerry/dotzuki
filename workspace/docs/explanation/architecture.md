@@ -5,7 +5,8 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-How the engine crates, the runner, the CLI and the editor fit together, and how a zero-Rust project flows from DSL files to a running game.
+How the engine crates, the runner, the CLI and the editor fit together, and
+how a zero-Rust project flows from DSL files to a running game.
 
 This page replaces the legacy `archive/developer-guide-legacy.md` as the
 current-architecture walkthrough.
@@ -39,10 +40,11 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 `.scene` / `.gui` / `.theme` / `.style` files compile through
 `dotzuki-engine-dsl`:
 
-- `.scene` → JavaScript executed by Boa (`dotzuki-engine-script`); the crate
-  also ships a native AST interpreter (`interpreter.rs`) that executes scenes
-  with no JS engine and mirrors the Boa runtime protocol 1:1 — it is the
-  canonical scene semantics (Boa is a dev fallback behind a feature).
+- `.scene` → JavaScript consumed by `dotzuki-engine-script` (Boa-based);
+  `dotzuki-engine-dsl` also ships a native AST interpreter
+  (`crates/dotzuki-engine-dsl/src/interpreter.rs`) that executes scenes with
+  no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
+  scene semantics (see `AGENTS.md` for the interpreter-vs-Boa policy).
 - `.gui` → JSON consumed by the renderer layout engine.
 - `.theme` / `.style` → JSON token/stylesheet files (see
   [the theme & style reference](../reference/dsl/theme-style.md)).
