@@ -11,9 +11,13 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 
 ## 审查流程
 
-1. 用 `git_diff` 找出本次变更涉及的文档文件。**只审查** `workspace/docs/**`
-   与根 `README.md`；豁免文件：`doc-standard.md`、`doc-outline.md`、
-   `.clausura/` 下的任何文件。
+1. 变更集来源（按顺序尝试）：
+   a. 读取 `.clausura/context/review-diff.txt`——CI 已预先写入本次
+      PR/推送相对基准的 diff（被截断时用 offset/limit 翻页读完）。
+   b. 该文件不存在或为空时：用 `git_diff` 工具指定 base 为
+      `origin/master`（PR）或 `HEAD~1`（单提交推送），再按需翻页。
+   变更集内**只审查** `workspace/docs/**` 与根 `README.md`；豁免文件：
+   `doc-standard.md`、`doc-outline.md`、`.clausura/` 下的任何文件。
 2. 用 `read_file` 完整读取 `workspace/docs/doc-standard.md`，把它当作逐条
    核对清单执行。
 3. 对每个变更文件逐条核对规范章节（§1 至 §12），**只报告变更行引入的问题**。

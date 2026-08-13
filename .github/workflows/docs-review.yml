@@ -73,6 +73,28 @@ jobs:
             echo "configured=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Prepare review diff
+        # Deterministic change set: diff from the PR base / pre-push commit
+        # against HEAD, written where the review skill expects it. Prevents
+        # the agent from guessing the diff base (which burned its iteration
+        # budget on the first live run).
+        if: steps.key.outputs.configured == 'true'
+        env:
+          REVIEW_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          BASE="${REVIEW_BASE:-origin/master}"
+          MB="$(git merge-base "$BASE" HEAD 2>/dev/null || true)"
+          [ -n "$MB" ] && BASE="$MB"
+          mkdir -p .clausura/context
+          {
+            echo "# Changed documentation files (review scope)"
+            git diff --name-only "$BASE" HEAD -- workspace/docs README.md
+            echo
+            echo "# Unified diff (base $BASE)"
+            git diff --unified=3 "$BASE" HEAD -- workspace/docs README.md
+          } | head -c 60000 > .clausura/context/review-diff.txt
+          echo "review diff bytes: $(wc -c < .clausura/context/review-diff.txt)"
+
       - name: Install Clausura
         if: steps.key.outputs.configured == 'true'
         run: |
@@ -98,7 +120,7 @@ jobs:
         # continue-on-error: code scanning may be disabled on the repo.
         if: ${{ always() && steps.key.outputs.configured == 'true' }}
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: clausura-output.sarif
 

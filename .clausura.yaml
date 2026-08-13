@@ -26,6 +26,10 @@ task:
 
   token_budget: 32000
   timeout_secs: 600
+  # Headroom over the default 10: the review reads the injected diff, the
+  # standard, and pages through changed files — a clean stop needs a few
+  # more tool rounds than a plain code review.
+  max_iterations: 15
   ambiguity_policy: fail_closed
   on_incomplete: fail
 
