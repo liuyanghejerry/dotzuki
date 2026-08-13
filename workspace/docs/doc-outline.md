@@ -91,13 +91,13 @@ docs/                              # mdBook src
 │   │   └── codegen.md             # [调和] ← DSL_MAPPING.md × DSL_UNIFIED_DESIGN.md（按代码裁定）
 │   ├── audio-commands.md          # [新建] 21 个 AudioCommand 速查表（自 AUDIO.md 抽出）
 │   ├── cli.md                     # [迁移] ← CLI_REFERENCE.md
+│   ├── glossary.md                # [新建] 术语表（doc-standard §11 的唯一术语权威）
 │   └── rustdoc.md                 # [新建] crate 地图 + docs.rs 门户（供 Rust 开发者）
 ├── explanation/                   # —— 概念层：讲道理 ——
 │   ├── architecture.md            # [新建] 当前架构总览（替代历史 DEVELOPER_GUIDE.md 的定位）
 │   ├── effect-stack.md            # [拆分] ← BATTLE_ENGINE_GUIDE.md 的概念/设计部分
 │   ├── game-data.md               # [新建] GameData GAT 设计：为什么用泛型关联类型
-│   ├── save-compatibility.md      # [拆分] ← game-project-spec.md §Compatibility rules
-│   └── glossary.md                # [新建] 术语表（doc-standard §11 的唯一术语权威）
+│   └── save-compatibility.md      # [拆分] ← game-project-spec.md §Compatibility rules
 ├── release-notes/                 # —— 版本信息 ——
 │   ├── changelog.md               # [新建] 自当前版本起维护
 │   └── migration/                 # [新建] 每版本一篇：vX.Y → vX.Z 升级指南
@@ -105,7 +105,7 @@ docs/                              # mdBook src
     ├── developer-guide-legacy.md  # [迁移] ← DEVELOPER_GUIDE.md
     ├── full-dsl.md                # [迁移] ← FULL_DSL.md
     ├── dsl-unified-design.md      # [迁移] ← DSL_UNIFIED_DESIGN.md（调和后归档）
-    └── js-script-i18n-legacy.md   # [迁移] ← JS_SCRIPT_I18N.md 的过时部分
+    └── game-ui-dsl.md             # [迁移] ← GAME_UI_DSL.md（已实现部分已抽入 reference/dsl/gui.md）
 ```
 
 ### 3.1 迁移映射表（现有文件 → 新位置）
@@ -115,14 +115,14 @@ docs/                              # mdBook src
 | `docs/README.md` | `index.md`（Reader guide 保留，文档状态索引更新） |
 | `docs/QUICKSTART.md` | `tutorials/quickstart.md` |
 | `docs/BATTLE_ENGINE_GUIDE.md` | 拆分为 `how-to/battles.md` + `explanation/effect-stack.md` |
-| `docs/BATTLE_ENGINE_GUIDE.zh-CN.md` | 随英文源拆分后，作为翻译版跟进（`-zh-CN` 后缀规则） |
-| `docs/GAME_UI_DSL.md` | 已实现部分 → `reference/dsl/gui.md`；提案部分归档 |
+| `docs/BATTLE_ENGINE_GUIDE.zh-CN.md` | 已删除：英文源拆分后翻译失效（doc-standard §6 翻译须跟踪源）；需要时按新结构重译 |
+| `docs/GAME_UI_DSL.md` | 已实现部分 → `reference/dsl/gui.md`；原文整体归档为 `archive/game-ui-dsl.md` |
 | `docs/THEME_STYLE_DSL.md` | 补英文源，拆为 `how-to/themes.md` + `reference/dsl/theme-style.md` |
 | `docs/DSL_MAPPING.md` | 与 DSL_UNIFIED_DESIGN 按代码调和 → `reference/dsl/codegen.md` |
 | `docs/DSL_UNIFIED_DESIGN.md` | 同上，调和后 → `archive/dsl-unified-design.md` |
 | `docs/FULL_DSL.md` | `archive/full-dsl.md` |
 | `docs/DEVELOPER_GUIDE.md` | `archive/developer-guide-legacy.md`；现行内容由 `explanation/architecture.md` 承接 |
-| `docs/JS_SCRIPT_I18N.md` | 现行部分 → `how-to/i18n.md`；过时部分归档 |
+| `docs/JS_SCRIPT_I18N.md` | 整体 → `how-to/i18n.md`（全文现行，无需归档拆分） |
 | `docs/AUDIO.md` | `how-to/audio.md` + 抽出 `reference/audio-commands.md` |
 | `docs/CLI_REFERENCE.md` | `reference/cli.md` |
 | `docs/PUBLISHING.md` | `how-to/publishing.md` |

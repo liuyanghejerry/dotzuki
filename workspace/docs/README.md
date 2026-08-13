@@ -4,71 +4,96 @@ This directory is the **entry point for dotzuki's developer documentation**. The
 engine is game-agnostic and consumed by game repositories as Cargo git
 dependencies; most game authors never touch Rust. Pick your path below.
 
-> **How to use this index.** Start from the *Reader guide*. Each document is
-> marked **active** (maintained, reflects current code) or **historical**
-> (predates the current architecture — read for context, not as reference).
-
-## Documentation system
-
-Two meta-documents define the documentation system:
-
-- [`doc-standard.md`](./doc-standard.md) — writing & structure standard: the
-  four-layer model (tutorial / how-to / reference / explanation), required
-  meta headers, freshness states, language policy, style rules, example
-  verification, and code-sync workflow.
-- [`doc-outline.md`](./doc-outline.md) — presentation form (mdBook site,
-  tutorial project, in-editor help) and the target content outline with the
-  migration map from the current flat layout.
-
-The layout below (reader guide, active/historical split) is the **current
-state**; the outline doc describes the target structure and the staged
-migration to it.
-
 ## Reader guide
 
 | You are… | Start here |
 |---|---|
-| Game author, zero Rust, want to build a game **without code** | [`QUICKSTART.md`](./QUICKSTART.md) — the 5-minute CLI path (`dotzuki new` → edit `.scene` → `dotzuki run`). Then [`game-project-spec.md`](./game-project-spec.md) for the full manifest/contract. |
-| Game author using the **dotzuki-editor** (Vue-based editor) | [`../tools/dotzuki-editor/README.md`](../tools/dotzuki-editor/README.md) and [`first-game.md`](../tools/dotzuki-editor/docs/first-game.md) |
-| Authoring **battle rules** (effect-stack, `rules.ron`) | [`BATTLE_ENGINE_GUIDE.md`](./BATTLE_ENGINE_GUIDE.md) (or [`BATTLE_ENGINE_GUIDE.zh-CN.md`](./BATTLE_ENGINE_GUIDE.zh-CN.md)) |
-| Authoring **DSL** (`.scene` scripts, `.gui` UI, `.theme`/`.style`) | [`GAME_UI_DSL.md`](./GAME_UI_DSL.md) for the implemented UI syntax; [`THEME_STYLE_DSL.md`](./THEME_STYLE_DSL.md) for `.theme`/`.style`; see the DSL section below for the scene side |
-| Authoring **maps** (Tiled `.tmx` + tilesets + entities) | `game-project-spec.md` §Maps; map entity sidecar `objects.json` is documented there |
-| Authoring **audio** (`data/audio/*.json` tracks) | [`AUDIO.md`](./AUDIO.md) — `TrackDef` JSON, channels, commands, scene playback |
-| Running / automating projects from the terminal | [`CLI_REFERENCE.md`](./CLI_REFERENCE.md) — `dotzuki new` / `check` / `run` and every flag |
-| Shipping / deploying / upgrading | [`PUBLISHING.md`](./PUBLISHING.md) — project delivery, headless CI, WASM web play, engine upgrades, save compatibility |
-| **Rust developer** extending the engine | [`DEVELOPER_GUIDE.md`](./DEVELOPER_GUIDE.md) (maps/NPCs/items/save — legacy `Provider` API) + `BATTLE_ENGINE_GUIDE.md` (battle stack). Prefer reading the crate source / rustdoc for the current surface. |
+| Game author, zero Rust, want to build a game **without code** | [`tutorials/quickstart.md`](./tutorials/quickstart.md) — the 5-minute CLI path (`dotzuki new` → edit `.scene` → `dotzuki run`). Then [`reference/project-manifest.md`](./reference/project-manifest.md) for the full manifest/contract. |
+| Game author using the **dotzuki-editor** (Vue-based editor) | [`tutorials/editor-first-game.md`](./tutorials/editor-first-game.md) and [`../tools/dotzuki-editor/README.md`](../tools/dotzuki-editor/README.md) |
+| Authoring **battle rules** (effect-stack, `rules.ron`) | [`how-to/battles.md`](./how-to/battles.md) for authoring; [`reference/battle-rules.md`](./reference/battle-rules.md) for the rule formats; [`explanation/effect-stack.md`](./explanation/effect-stack.md) for the model |
+| Authoring **DSL** (`.scene` / `.gui` / `.theme` / `.style`) | [`reference/dsl/scene.md`](./reference/dsl/scene.md), [`reference/dsl/gui.md`](./reference/dsl/gui.md), [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md), [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) |
+| Authoring **maps** (Tiled `.tmx` + tilesets + entities) | [`how-to/maps.md`](./how-to/maps.md); the map entity sidecar `objects.json` is documented there |
+| Authoring **audio** (`data/audio/*.json` tracks) | [`how-to/audio.md`](./how-to/audio.md) for the format, [`reference/audio-commands.md`](./reference/audio-commands.md) for the 22 commands |
+| Writing **bilingual text** | [`how-to/i18n.md`](./how-to/i18n.md) — `game.lang()` / `game.t()` / `@t` |
+| Running / automating projects from the terminal | [`reference/cli.md`](./reference/cli.md) — `dotzuki new` / `check` / `run` and every flag |
+| Shipping / deploying / upgrading | [`how-to/publishing.md`](./how-to/publishing.md) — project delivery, headless CI, WASM web play, engine upgrades, save compatibility |
+| **Rust developer** extending the engine | [`explanation/architecture.md`](./explanation/architecture.md) for the current architecture, [`reference/rustdoc.md`](./reference/rustdoc.md) for the crate map + docs.rs links, [`explanation/game-data.md`](./explanation/game-data.md) for the `GameData` trait |
+| Looking up a term | [`reference/glossary.md`](./reference/glossary.md) — the authoritative term list |
 
-## Active documents
+## Tutorials
 
-| Document | Audience | Covers |
-|---|---|---|
-| [`QUICKSTART.md`](./QUICKSTART.md) | Game authors (CLI path) | 5-minute zero-code tour: `dotzuki new` → edit `.scene` → `check` → `run` |
-| [`CLI_REFERENCE.md`](./CLI_REFERENCE.md) | Game authors, CI | Every `dotzuki` subcommand and flag: `new` / `check` / `run`, headless runs, screenshots, save options, exit codes |
-| [`game-project-spec.md`](./game-project-spec.md) | Game authors, tool implementers | Zero-Rust project manifest (`.dotzuki-editor.json`), directory layout, `dotzuki run`/`check` behavior contract, **data-table record schemas** (combatant/encounter/skill/item/level), battle RON hooks, save compatibility. **The most current spec.** |
-| [`AUDIO.md`](./AUDIO.md) | Game authors | Audio authoring: `data/audio/**/*.json` `TrackDef` format, channels, the 21 `AudioCommand`s, scene playback calls, runtime behavior |
-| [`THEME_STYLE_DSL.md`](./THEME_STYLE_DSL.md) | DSL authors | `.theme` / `.style` file syntax, `@theme` tokens, `@style` colon-inheritance, codegen output shape |
-| [`PUBLISHING.md`](./PUBLISHING.md) | Game authors, CI | Shipping a project, headless smoke tests, WASM web play via `dotzuki-runner-web`, engine upgrades, save versioning |
-| [`BATTLE_ENGINE_GUIDE.md`](./BATTLE_ENGINE_GUIDE.md) | Battle authors (Rust + RON) | `dotzuki_engine::battle::stack` effect-stack engine, event/effect/handler model, RNG determinism, `dotzuki-rules` RON authoring, minimon tutorial, honest limitations |
-| [`BATTLE_ENGINE_GUIDE.zh-CN.md`](./BATTLE_ENGINE_GUIDE.zh-CN.md) | Same (Chinese) | Simplified-Chinese translation of the battle guide (tracked separately) |
-| [`GAME_UI_DSL.md`](./GAME_UI_DSL.md) | DSL authors | Implemented GUI DSL syntax: `.gui` files and `ui {}` blocks, component schema v2, `@t` bilingual text. (Flex/RTL/animation parts are proposals — marked inside.) |
-| [`DSL_MAPPING.md`](./DSL_MAPPING.md) | DSL authors, compiler maintainers | Compilation contract: DSL constructs → emitted JS/JSON. **Note: contradicts DSL_UNIFIED_DESIGN on `@if`/`@run`; being reconciled against the code.** |
-| [`../tools/dotzuki-editor/README.md`](../tools/dotzuki-editor/README.md) | Editor users | Full editor guide: activities (Maps/Scripts/Data/Assets/Tiles/Story/Play), AI Story Designer, animation pipeline, API endpoints |
+| Document | Covers |
+|---|---|
+| [`tutorials/quickstart.md`](./tutorials/quickstart.md) | 5-minute zero-code tour: `dotzuki new` → edit `.scene` → `check` → `run` |
+| [`tutorials/editor-first-game.md`](./tutorials/editor-first-game.md) | 15-minute guided tour of the dotzuki-editor, from an empty machine to a playable project with a battle |
 
-## Historical / context documents
+## How-to guides
 
-These predate the current engine architecture or the repo split. Read them for
-background and design rationale; **do not use them as an API reference**.
+| Document | Covers |
+|---|---|
+| [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx` (JSON) maps, tilesets, elevation, entities and the `objects.json` sidecar |
+| [`how-to/battles.md`](./how-to/battles.md) | Authoring `rules.ron`: the minimon tutorial, type effectiveness, resources & move costs, cookbook, determinism |
+| [`how-to/themes.md`](./how-to/themes.md) | Declaring `.theme` / `.style` files and applying them to UI |
+| [`how-to/audio.md`](./how-to/audio.md) | `TrackDef` JSON tracks, channels, scene playback, authoring notes |
+| [`how-to/i18n.md`](./how-to/i18n.md) | Bilingual text: the `game` i18n API and `@t` syntax |
+| [`how-to/publishing.md`](./how-to/publishing.md) | Shipping a project, headless smoke tests, WASM web play, engine upgrades |
+
+## Reference
+
+| Document | Covers |
+|---|---|
+| [`reference/project-manifest.md`](./reference/project-manifest.md) | Zero-Rust project manifest (`.dotzuki-editor.json`), directory layout, `dotzuki run`/`check` behavior contract, editor playtest |
+| [`reference/battle-rules.md`](./reference/battle-rules.md) | The `battle` manifest section, `rules.ron` hooks, validation contract |
+| [`reference/data-tables/`](./reference/data-tables/combatants.md) | Record schemas: [combatants](./reference/data-tables/combatants.md), [encounters](./reference/data-tables/encounters.md), [skills](./reference/data-tables/skills.md), [items](./reference/data-tables/items.md), [levels](./reference/data-tables/levels.md) |
+| [`reference/dsl/scene.md`](./reference/dsl/scene.md) | `.scene` syntax — verified against the parser/interpreter, every construct cited to its code location |
+| [`reference/dsl/gui.md`](./reference/dsl/gui.md) | Implemented `.gui` / `ui {}` syntax, component schema v2, `@t` |
+| [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md) | `@theme` / `@style` syntax and codegen output |
+| [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) | DSL → JS/JSON compilation contract, reconciled against the code |
+| [`reference/audio-commands.md`](./reference/audio-commands.md) | The 22 `AudioCommand` variants with fields |
+| [`reference/cli.md`](./reference/cli.md) | Every `dotzuki` subcommand and flag, exit codes |
+| [`reference/glossary.md`](./reference/glossary.md) | Canonical term definitions |
+| [`reference/rustdoc.md`](./reference/rustdoc.md) | Crate map + docs.rs links for Rust developers |
+
+## Explanation
+
+| Document | Covers |
+|---|---|
+| [`explanation/architecture.md`](./explanation/architecture.md) | Current architecture: engine crates, runner, CLI, editor, and the DSL-to-game flow |
+| [`explanation/effect-stack.md`](./explanation/effect-stack.md) | The battle effect-stack model, event/handler architecture, RNG determinism, honest limits |
+| [`explanation/game-data.md`](./explanation/game-data.md) | The `GameData` provider trait and its generic associated types |
+| [`explanation/save-compatibility.md`](./explanation/save-compatibility.md) | Save versioning and forward/backward compatibility rules |
+
+## Release notes
+
+- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release
+
+## Archive
+
+Historical documents, kept for context. Their links are not maintained; read
+the active pages above instead.
 
 | Document | What it is |
 |---|---|
-| [`DEVELOPER_GUIDE.md`](./DEVELOPER_GUIDE.md) | Broad engine guide (architecture, maps, NPCs, items, save, rendering) built around the **legacy** `Provider`/`battle::driver` path. Battle section predates the effect stack — see the battle guide instead. Contains pre-split (`pokered`) references. |
-| [`FULL_DSL.md`](./FULL_DSL.md) | Full-vision DSL overview; status table marks what is implemented vs proposed. Historical — the implemented surface lives in GAME_UI_DSL.md and DSL_MAPPING.md. |
-| [`DSL_UNIFIED_DESIGN.md`](./DSL_UNIFIED_DESIGN.md) | Internal design doc from the DSL migration branches (`.scene` as binding truth, first-class `@if`). Historical — contradicts DSL_MAPPING on `@if`/`@run`; code supports both today. |
-| [`JS_SCRIPT_I18N.md`](./JS_SCRIPT_I18N.md) | `game.lang()`/`game.t()`/`@t` usage in JS. Example paths are pre-split (`pokered-data`); API surface is still valid. |
-| [`dsl-demo.html`](./dsl-demo.html) | Standalone syntax-highlighting demo page for the DSL. |
+| [`archive/developer-guide-legacy.md`](./archive/developer-guide-legacy.md) | Pre-split engine guide built around the legacy `Provider` API path; superseded by `explanation/architecture.md` |
+| [`archive/full-dsl.md`](./archive/full-dsl.md) | Full-vision DSL overview with implemented/proposed status; superseded by `reference/dsl/*` |
+| [`archive/dsl-unified-design.md`](./archive/dsl-unified-design.md) | Internal design doc from the DSL migration branches; reconciled into `reference/dsl/codegen.md` |
+| [`archive/game-ui-dsl.md`](./archive/game-ui-dsl.md) | Legacy GUI DSL document mixing implemented syntax with proposals; the implemented surface lives in `reference/dsl/gui.md` |
+
+## Documentation system
+
+- [`doc-standard.md`](./doc-standard.md) — the writing & structure standard this
+  site follows (four-layer model, meta headers, freshness states, language
+  policy, style rules, example verification, code-sync workflow).
+- [`doc-outline.md`](./doc-outline.md) — the target site outline and the
+  migration map that produced this layout.
+- Every page carries a meta header (`Audience` / `Type` / `Status` /
+  `Last verified`); a Clausura AI gate (`.github/workflows/docs-review.yml`)
+  reviews docs changes against `doc-standard.md` on every PR.
 
 ## Related documentation elsewhere in the repo
 
 - [`/README.md`](../../README.md) — repo landing page: what the engine is, crate list, git-dependency usage, build
 - [`/AGENTS.md`](../../AGENTS.md) — orientation for AI agents working on the engine
-- [`dotzuki-template/README.md`](../dotzuki-template/README.md) — cargo-generate Rust template (legacy main.rs path; the zero-Rust path is `dotzuki new` + game-project-spec)
+- [`tools/dotzuki-editor/README.md`](../tools/dotzuki-editor/README.md) — full editor guide; [`AI_AGENT_FRAMEWORK.md`](../tools/dotzuki-editor/docs/AI_AGENT_FRAMEWORK.md) — the editor's AI Story Designer framework
+- [`tools/asset-converter/README.md`](../tools/asset-converter/README.md) — 2bpp → RGBA tileset + Tiled `.tsx` converter
+- [`dotzuki-template/README.md`](../dotzuki-template/README.md) — cargo-generate Rust template (legacy `main.rs` path; the zero-Rust path is `dotzuki new` + project manifest)

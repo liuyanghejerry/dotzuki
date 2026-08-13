@@ -9,7 +9,7 @@ A **game project** is a zero-Rust directory: a `.dotzuki-editor.json` manifest
 plus data, DSL, and asset files — no `Cargo.toml`, no `src/main.rs`. The
 layout is specified in [docs/game-project-spec.md](../../docs/game-project-spec.md).
 There are three ways to create one. New here? Follow the guided tour:
-[**Your First Game in 15 Minutes**](docs/first-game.md).
+[**Your First Game in 15 Minutes**](../../docs/tutorials/editor-first-game.md).
 
 Every scaffolded project comes with **starter content** you can explore right
 away: a demo town map (*StartTown*) with its own procedurally generated

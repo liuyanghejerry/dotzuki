@@ -21,7 +21,7 @@ A game-agnostic JRPG engine written from scratch in Rust — an original, indepe
   - `dotzuki-web` / `dotzuki-runner-web` — WASM bridges for editor layout preview / playtest
   - `dotzuki-runner` — zero-Rust project runtime (`.dotzuki-editor.json` manifest + DSL + maps)
   - `dotzuki-cli` — the `dotzuki` binary: `dotzuki new` / `dotzuki check` / `dotzuki run`
-- **Engine demo example** (`workspace/examples/`) — `minimon` (battle system authored entirely in RON rules). It is engine-only, proving the engine isn't game-locked.
+- **Engine demo example** (`workspace/examples/`) — `minimon` (a tiny Rust battle system built entirely on the effect stack, with a data-driven `rules.ron` counterpart). It is engine-only, proving the engine isn't game-locked.
 - **Tools** (`workspace/tools/`) — `dotzuki-editor` (game-agnostic Vue/Vite editor + AI Story Designer + in-editor Play), `asset-converter`, DSL editor extensions.
 
 ## Using the engine from a game repo
