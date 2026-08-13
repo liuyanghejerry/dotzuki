@@ -8,6 +8,22 @@ dependencies; most game authors never touch Rust. Pick your path below.
 > marked **active** (maintained, reflects current code) or **historical**
 > (predates the current architecture — read for context, not as reference).
 
+## Documentation system
+
+The documentation system itself is defined in two meta-documents:
+
+- [`doc-standard.md`](./doc-standard.md) — writing & structure standard: the
+  four-layer model (tutorial / how-to / reference / explanation), required
+  meta headers, freshness states, language policy, style rules, example
+  verification, and code-sync workflow.
+- [`doc-outline.md`](./doc-outline.md) — presentation form (mdBook site,
+  tutorial project, in-editor help) and the target content outline with the
+  migration map from the current flat layout.
+
+The layout below (reader guide, active/historical split) is the **current
+state**; the outline doc describes the target structure and the staged
+migration to it.
+
 ## Reader guide
 
 | You are… | Start here |
