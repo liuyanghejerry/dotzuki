@@ -5,7 +5,9 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-The 21 `AudioCommand` types that channel command lists may contain, with their fields; see [the audio guide](../how-to/audio.md) for the `TrackDef` format and playback calls.
+The 22 `AudioCommand` variants that channel command lists may contain, with
+their fields; see [the audio guide](../how-to/audio.md) for the `TrackDef`
+format and playback calls.
 
 Commands serialize internally-tagged: `{"type": "<name>", ...}`. This mirrors
 the engine's byte-code channel commands one-to-one. The authoritative schema is

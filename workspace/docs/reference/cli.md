@@ -5,7 +5,8 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-Every `dotzuki` subcommand, flag and exit code for scaffolding, validating and running zero-Rust game projects.
+Every `dotzuki` subcommand, flag and exit code for scaffolding, validating
+and running zero-Rust game projects.
 
 The `dotzuki` binary (`crates/dotzuki-cli`) scaffolds, validates and runs
 **zero-Rust game projects** — plain directories of DSL, data and assets plus a
@@ -40,7 +41,7 @@ Scaffolds a new project. `name` must be a slug: `[a-z0-9][a-z0-9-]*`.
 
 Generated layout: `.dotzuki-editor.json` + `data/` (maps, tiles,
 stories/characters/quests/arcs), `gfx/`, `assets/scenes/main.scene`, README —
-the six editor activities (maps / scripts / play / data / story / assets /
+the seven editor activities (maps / scripts / play / data / story / assets /
 tiles).
 
 ```bash

@@ -5,7 +5,8 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-Why the engine talks to games through a trait with generic associated types, and what a game implements.
+Why the engine talks to games through a trait with generic associated
+types, and what a game implements.
 
 ## The problem
 
@@ -62,9 +63,13 @@ Two shapes of associated type:
 
 A game repo implements `GameData` on its own data struct, implements the
 provider traits for its identifier types, and hands the engine a `&dyn
-GameData`. Zero-Rust projects skip this entirely: `dotzuki-runner` implements
-`GameData` over the project's manifest and data tables (see
-[the project manifest](../reference/project-manifest.md)).
+GameData`. No crate in this repository implements `GameData` — it is the
+contract for consuming games.
+
+Zero-Rust projects skip the trait entirely: `dotzuki-runner` supplies the
+providers the engine stack consumes (the battle providers via a generic
+`BattleProvider`/`EffectProvider` implementation), not a `GameData`
+implementation. See [the project manifest](../reference/project-manifest.md).
 
 ## Related pages
 

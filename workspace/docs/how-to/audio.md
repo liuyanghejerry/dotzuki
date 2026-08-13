@@ -5,7 +5,14 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-Declarative JSON track files describe music and SFX for the four GB hardware channels; the full command list lives in [the audio commands reference](../reference/audio-commands.md).
+Declarative JSON track files describe music and SFX for the four GB hardware
+channels; the 22-command list lives in [the audio commands
+reference](../reference/audio-commands.md).
+
+## Before you start
+
+Read [the audio commands reference](../reference/audio-commands.md) for the
+command vocabulary used below.
 
 `dotzuki run` plays music and sound effects from declarative **JSON track
 files** under `<dataRoot>/audio/`. There is no binary audio format to compile
@@ -13,8 +20,8 @@ to: a track is a `TrackDef` document describing which of the four Game Boy
 hardware channels play which commands, and the runtime sequencer plays it
 directly.
 
-The runtime is backed by `dotzuki-audio` (a game-agnostic GB-APU emulation +
-sequencer). See `crates/dotzuki-audio/src/format.rs` for the authoritative
+`dotzuki-audio` backs the runtime: a game-agnostic GB-APU emulation plus
+sequencer. See `crates/dotzuki-audio/src/format.rs` for the authoritative
 schema.
 
 ## Layout

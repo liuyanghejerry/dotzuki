@@ -8,9 +8,10 @@
 Syntax and compiled output of `@theme` / `@style` blocks; usage patterns live in [the themes & styles how-to](../../how-to/themes.md).
 
 Themes and styles are declared in standalone `.theme` / `.style` files or as
-inline `@theme` / `@style` blocks in `.scene` / `.gui` files, and compiled by
-`dotzuki-engine-dsl` into JSON for the renderer. This reference tracks the
-current codegen (`crates/dotzuki-engine-dsl/src/codegen/json_theme.rs`).
+inline `@theme` / `@style` blocks at the top level of `.scene` files (`.gui`
+files reference styles by name only), and compiled by `dotzuki-engine-dsl`
+into JSON for the renderer. This reference tracks the current codegen
+(`crates/dotzuki-engine-dsl/src/codegen/json_theme.rs`).
 
 ## `@theme` — color themes
 
