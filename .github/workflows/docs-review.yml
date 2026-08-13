@@ -92,6 +92,12 @@ jobs:
           # not maintained — reviewing moved legacy content produces false
           # positives against rules it predates).
           grep -E '\.md$' /tmp/changed.txt | grep -vE '^workspace/docs/(doc-standard|doc-outline)\.md$|^workspace/docs/archive/' > /tmp/scope.txt || true
+          # Deleted files have no content to review; the legs of the changed
+          # files check their referrers (the DSL_MAPPING leg of PR #9 did
+          # catch a dead link in dsl-demo.html this way, so the signal is not
+          # lost — it just lives in the surviving files' reviews).
+          while read -r f; do [ -f "$f" ] && echo "$f"; done < /tmp/scope.txt > /tmp/scope-existing.txt
+          mv /tmp/scope-existing.txt /tmp/scope.txt
           COUNT="$(wc -l < /tmp/scope.txt | tr -d ' ')"
           FILES="$(jq -Rsc '{files: split("\n")[:-1]}' /tmp/scope.txt)"
           echo "count=$COUNT" >> "$GITHUB_OUTPUT"
