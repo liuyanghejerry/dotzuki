@@ -1,8 +1,15 @@
 # Publishing & Upgrading Guide
 
+> - **Audience**: game authors, CI
+> - **Type**: how-to
+> - **Status**: active
+> - **Last verified**: v0.1.0
+
+Package, ship and upgrade a zero-Rust game project.
+
 How to package, ship and upgrade a **zero-Rust game project** built with
 dotzuki. This complements [`game-project-spec.md`](./game-project-spec.md)
-(project contract) and [`CLI_REFERENCE.md`](./CLI_REFERENCE.md) (tooling).
+(project contract) and [the CLI reference](../reference/cli.md) (tooling).
 
 ## What a game project is
 

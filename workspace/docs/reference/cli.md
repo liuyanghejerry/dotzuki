@@ -1,8 +1,15 @@
 # dotzuki CLI Reference
 
+> - **Audience**: game authors, CI
+> - **Type**: reference
+> - **Status**: active
+> - **Last verified**: v0.1.0
+
+Every `dotzuki` subcommand, flag and exit code for scaffolding, validating and running zero-Rust game projects.
+
 The `dotzuki` binary (`crates/dotzuki-cli`) scaffolds, validates and runs
 **zero-Rust game projects** — plain directories of DSL, data and assets plus a
-`.dotzuki-editor.json` manifest (see [`game-project-spec.md`](./game-project-spec.md)).
+`.dotzuki-editor.json` manifest (see [the project manifest](project-manifest.md)).
 
 Build it from the workspace root:
 

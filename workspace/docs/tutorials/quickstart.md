@@ -1,8 +1,15 @@
 # Quickstart — your first zero-Rust game in 5 minutes
 
+> - **Audience**: game authors
+> - **Type**: tutorial
+> - **Status**: active
+> - **Last verified**: v0.1.0
+
+Five minutes from `dotzuki new` to a playable bilingual scene, using the CLI only.
+
 This is the **CLI-only** path (no editor, no Rust). It produces the same
 project layout as the editor's Create wizard. For the editor path see
-[`tools/dotzuki-editor/docs/first-game.md`](../tools/dotzuki-editor/docs/first-game.md).
+[`tools/dotzuki-editor/docs/first-game.md`](../../tools/dotzuki-editor/docs/first-game.md).
 
 **Prerequisite:** a `dotzuki` binary (build once: `cargo build --release --bin
 dotzuki` from the workspace root — the binary is `target/release/dotzuki`).
@@ -50,8 +57,8 @@ game_scene Main {
 ```
 
 `@t("en", "中文")` makes any text bilingual — `dotzuki run --lang zh` switches
-language. See [`GAME_UI_DSL.md`](./GAME_UI_DSL.md) and
-[`DSL_MAPPING.md`](./DSL_MAPPING.md) for the full syntax.
+language. See [the GUI DSL reference](../reference/dsl/gui.md) and [the DSL
+codegen contract](../reference/dsl/codegen.md) for the full syntax.
 
 ## 3. Check it compiles
 
@@ -79,8 +86,8 @@ dotzuki run . --watch      # scenes + map reload as you save files
 
 ## Where to go next
 
-- **Project layout & manifest** — [`game-project-spec.md`](./game-project-spec.md)
-- **All CLI flags** — [`CLI_REFERENCE.md`](./CLI_REFERENCE.md)
-- **Battle rules (`rules.ron`)** — [`BATTLE_ENGINE_GUIDE.md`](./BATTLE_ENGINE_GUIDE.md) §5
-- **Editor with AI Story Designer** — [`../tools/dotzuki-editor/README.md`](../tools/dotzuki-editor/README.md)
-- **Full doc index** — [`README.md`](./README.md)
+- **Project layout & manifest** — [project manifest & layout](../reference/project-manifest.md)
+- **All CLI flags** — [CLI reference](../reference/cli.md)
+- **Battle rules (`rules.ron`)** — [battle rules guide](../how-to/battles.md)
+- **Editor with AI Story Designer** — [editor README](../../tools/dotzuki-editor/README.md)
+- **Full doc index** — [doc index](../README.md)
