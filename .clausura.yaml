@@ -24,12 +24,13 @@ task:
     judge them against workspace/docs/doc-standard.md, and report findings
     with the exact rule_id defined in the skill.
 
-  token_budget: 32000
+  token_budget: 64000
   timeout_secs: 600
   # Headroom over the default 10: the review reads the injected diff, the
-  # standard, and pages through changed files — a clean stop needs a few
-  # more tool rounds than a plain code review.
-  max_iterations: 15
+  # standard, and pages through changed files. Each CI run reviews ONE docs
+  # area (chunked by the workflow), but large areas still page through up to
+  # 50KB of diff, so keep the loop roomy.
+  max_iterations: 25
   ambiguity_policy: fail_closed
   on_incomplete: fail
 

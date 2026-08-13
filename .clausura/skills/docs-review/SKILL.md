@@ -13,7 +13,10 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 
 1. 变更集来源（按顺序尝试）：
    a. 读取 `.clausura/context/review-diff.txt`——CI 已预先写入本次
-      PR/推送相对基准的 diff（被截断时用 offset/limit 翻页读完）。
+      PR/推送相对基准的 diff，**每次运行只覆盖一个文档区域**
+      （tutorials / how-to / reference / explanation / release-notes / root），
+      上限 50KB（被截断时用 offset/limit 翻页读完；文件末尾未到完整
+      结尾即视为截断）。
    b. 该文件不存在或为空时：用 `git_diff` 工具指定 base 为
       `origin/master`（PR）或 `HEAD~1`（单提交推送），再按需翻页。
    变更集内**只审查** `workspace/docs/**` 与根 `README.md`；豁免文件：
