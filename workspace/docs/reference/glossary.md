@@ -53,7 +53,8 @@ authoritative term list (doc-standard §11.4).
 - **save version** — the version stamp inside `.dotzuki-save.json`; older
   saves load on newer engines, newer saves are refused by older engines. See
   [save compatibility](../explanation/save-compatibility.md).
-- **minimon** — the engine demo example (`examples/minimon`): a battle system
-  authored entirely in `rules.ron`, proving the engine is game-agnostic.
+- **minimon** — the engine demo example (`examples/minimon`): a tiny Rust
+  battle system built entirely on the effect stack, with a data-driven
+  `rules.ron` counterpart, proving the engine is game-agnostic.
 - **WASM runner** — `dotzuki-runner-web`, the web build of the runner that
   powers the editor's Play activity and web playtesting.
