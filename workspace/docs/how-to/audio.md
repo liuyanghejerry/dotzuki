@@ -83,7 +83,7 @@ device.
 ### Commands (`AudioCommand`)
 
 Commands serialize internally-tagged: `{"type": "<name>", ...}`. This mirrors
-the engine's byte-code channel commands one-to-one. The full 21-command table
+the engine's byte-code channel commands one-to-one. The full 22-command table
 with field semantics lives in the
 [audio commands reference](../reference/audio-commands.md).
 

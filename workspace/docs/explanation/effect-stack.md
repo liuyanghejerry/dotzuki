@@ -113,7 +113,7 @@ typed [`RelayVar`](#relayvar--the-typed-fold-payload)). A closed enum (not a
 string-keyed bus) keeps the comparator and the parity tests auditable; the open
 tail `Event::Custom(u16)` is the escape hatch so a game is never *blocked*.
 
-The taxonomy is 33 named kinds in 6 groups, plus the legacy `Residual`, plus
+The taxonomy is 31 named kinds in 6 groups, plus the legacy `Residual`, plus
 `Custom`. **Important:** the engine's built-in `StackDriver` today only *fires* a
 subset; the rest are present as **subscription seams** — inert until a driver
 extension fires them. You can fire any of them yourself from your own driver code
@@ -160,6 +160,7 @@ pub enum Event {
     SetWeather,        // veto/replace a weather change (Air Lock)
     FieldResidual,     // field-hosted end-of-turn tick (weather chip, Trick Room countdown)
     SideResidual,      // side-hosted end-of-turn tick (Spikes, Wish, screen countdown)
+    OnMiss,            // accuracy-miss reaction (fired by StackDriver's miss branch; Jump Kick crash)
 
     // ── Legacy (kept for the Gen-1 regression slices) ──
     Residual,          // PER-MOVER end-of-action residual (burn/psn → leech)
@@ -511,13 +512,13 @@ JRPG turn surface, keyed by the engine's existing generic associated types
 (`P::Move` / `P::Status` / `P::Stat`) + `BattlerRef`:
 
 ```rust
-pub enum TurnEvent<P: BattleProvider + ?Sized> {
+pub enum TurnEvent<P: EffectProvider + ?Sized> {
     MoveUsed   { actor: BattlerRef, move_: P::Move },   // passed the gate + cost → executes
     Missed     { actor: BattlerRef },                   // accuracy / immunity miss
     Blocked    { actor: BattlerRef },                   // PREVENTED before it ran (see below)
     Crit       { actor: BattlerRef },                   // landed a critical hit
-    Damaged    { target: BattlerRef, amount: u16 },
-    Healed     { target: BattlerRef, amount: u16 },
+    Damaged    { target: BattlerRef, amount: u16, cause: Option<HpChangeCause<P>> },
+    Healed     { target: BattlerRef, amount: u16, cause: Option<HpChangeCause<P>> },
     StatusInflicted { target: BattlerRef, status: P::Status },
     StatusCured     { target: BattlerRef, status: P::Status },
     StatChanged     { target: BattlerRef, stat: P::Stat, delta: i8 },

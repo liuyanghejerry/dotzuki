@@ -4,7 +4,7 @@ This page teaches battle authors how to build a battle system on
 `dotzuki_engine::battle::stack`: declaring events, effects, and handlers,
 writing `rules.ron`, and validating the result against the minimon example.
 
-> - **Audience**: battle authors (game authors)
+> - **Audience**: game authors, rust developers
 > - **Type**: how-to
 > - **Status**: active
 > - **Last verified**: v0.1.0
@@ -745,6 +745,7 @@ unknown name is `LoadError::UnknownResource` at load (`registry.rs:204`,
 `bindings.pay_resource(...)`) for a `BeforeMove` cost expressed as data:
 
 ```ron
+<!-- not verified: excerpt, not loadable standalone -->
 Effect(id: "move.blade", kind: Move, category: "Physical", power: 80, type: "Metal", accuracy: 100,
     cost: [ Cost(resource: "MP", amount: 3) ],
 ```

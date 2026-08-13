@@ -13,7 +13,7 @@ dependencies; most game authors never touch Rust. Pick your path below.
 | Authoring **battle rules** (effect-stack, `rules.ron`) | [`how-to/battles.md`](./how-to/battles.md) for authoring; [`reference/battle-rules.md`](./reference/battle-rules.md) for the rule formats; [`explanation/effect-stack.md`](./explanation/effect-stack.md) for the model |
 | Authoring **DSL** (`.scene` / `.gui` / `.theme` / `.style`) | [`reference/dsl/scene.md`](./reference/dsl/scene.md), [`reference/dsl/gui.md`](./reference/dsl/gui.md), [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md), [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) |
 | Authoring **maps** (Tiled `.tmx` + tilesets + entities) | [`how-to/maps.md`](./how-to/maps.md); the map entity sidecar `objects.json` is documented there |
-| Authoring **audio** (`data/audio/*.json` tracks) | [`how-to/audio.md`](./how-to/audio.md) for the format, [`reference/audio-commands.md`](./reference/audio-commands.md) for the 21 commands |
+| Authoring **audio** (`data/audio/*.json` tracks) | [`how-to/audio.md`](./how-to/audio.md) for the format, [`reference/audio-commands.md`](./reference/audio-commands.md) for the 22 commands |
 | Writing **bilingual text** | [`how-to/i18n.md`](./how-to/i18n.md) — `game.lang()` / `game.t()` / `@t` |
 | Running / automating projects from the terminal | [`reference/cli.md`](./reference/cli.md) — `dotzuki new` / `check` / `run` and every flag |
 | Shipping / deploying / upgrading | [`how-to/publishing.md`](./how-to/publishing.md) — project delivery, headless CI, WASM web play, engine upgrades, save compatibility |
@@ -49,7 +49,7 @@ dependencies; most game authors never touch Rust. Pick your path below.
 | [`reference/dsl/gui.md`](./reference/dsl/gui.md) | Implemented `.gui` / `ui {}` syntax, component schema v2, `@t` |
 | [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md) | `@theme` / `@style` syntax and codegen output |
 | [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) | DSL → JS/JSON compilation contract, reconciled against the code |
-| [`reference/audio-commands.md`](./reference/audio-commands.md) | The 21 `AudioCommand` types with fields |
+| [`reference/audio-commands.md`](./reference/audio-commands.md) | The 22 `AudioCommand` variants with fields |
 | [`reference/cli.md`](./reference/cli.md) | Every `dotzuki` subcommand and flag, exit codes |
 | [`reference/glossary.md`](./reference/glossary.md) | Canonical term definitions |
 | [`reference/rustdoc.md`](./reference/rustdoc.md) | Crate map + docs.rs links for Rust developers |
