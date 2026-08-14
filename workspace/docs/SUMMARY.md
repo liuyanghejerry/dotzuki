@@ -73,3 +73,8 @@ More translations land as M2.5 batches merge.
 - [音频制作指南](how-to/audio.zh-CN.md)
 - [i18n 指南](how-to/i18n.zh-CN.md)
 - [发布与升级指南](how-to/publishing.zh-CN.md)
+- [项目清单](reference/project-manifest.zh-CN.md)
+- [战斗规则](reference/battle-rules.zh-CN.md)
+- [音频命令](reference/audio-commands.zh-CN.md)
+- [CLI 参考](reference/cli.zh-CN.md)
+- [Rust API](reference/rustdoc.zh-CN.md)
