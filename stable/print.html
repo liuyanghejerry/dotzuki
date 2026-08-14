@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b561ea30.js";
+            window.path_to_searchindex_js = "searchindex-9206c04c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-e61ceb7e.js"></script>
+        <script src="toc-18a383c4.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -227,6 +227,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code> (JSON) maps, tilesets, elevation, entities and the <code>objects.json</code> sidecar</td></tr>
+<tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>Authoring <code>.scene</code> stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>Declaring <code>.theme</code> / <code>.style</code> files and applying them to UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON tracks, channels, scene playback, authoring notes</td></tr>
@@ -1294,6 +1295,153 @@ never rolls, and turning in place is not a step. Absent (or <code>null</code>)
 <p>The encounter record schema lives in
 <a href="#encounter-records">Encounter records</a>; sceneless
 battle outcomes live in <a href="#battles">battle rules</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="scenes"><a class="header" href="#scenes">Scenes</a></h1>
+<p>How to author <code>.scene</code> story files: NPC dialogue, map-entry cutscenes,
+choices, flags, battles from scenes, and the edit-check loop.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>The <a href="#scene-dsl-reference-scene">syntax reference</a> is the authority on every
+construct — this page is the task view: the recipes you reach for while
+building, plus the runner contract that connects them to maps. If you have
+not yet wired a map and its scene, start with
+<a href="#your-first-game--town-battle-story-and-save">Your First Game</a>.</p>
+<h2 id="where-scene-files-live"><a class="header" href="#where-scene-files-live">Where scene files live</a></h2>
+<p>A <a href="#glossary">scene</a> is one <code>game_scene &lt;Name&gt; { ... }</code>
+document in one <code>.scene</code> file. There is no import statement; every file
+compiles on its own. Two places, one rule:</p>
+<ul>
+<li><code>assets/scenes/</code> — the manifest’s <code>game.scenesDir</code> (default), for story
+scenes. <code>game.entryScene</code> names the file used when the project runs
+without maps.</li>
+<li><code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code> — the per-map scene. The runner resolves a
+map’s scene as this exact path, so the placement is the binding. With
+maps present, <code>entryMap</code> wins and the map’s own scene drives play.</li>
+</ul>
+<p>Both compile the same way. A <code>game_scene</code> holds <code>@variables</code>, <code>@storylines</code>
+(the unnamed <code>main</code>), named <code>@storyline("name")</code> blocks, and at most one
+<code>@load</code> (runs when the scene loads); the full block list is in the
+<a href="#scene-dsl-reference-scene">syntax reference</a>.</p>
+<h2 id="npc-dialogue"><a class="header" href="#npc-dialogue">NPC dialogue</a></h2>
+<p>The objects sidecar names the <a href="#glossary">storyline</a> an NPC
+runs: the npc’s <code>talk</code> field is a storyline name, and the scene declares
+that storyline with a <a href="#glossary">trigger</a> route:</p>
+<pre><code class="language-json">"npcs": [{ "id": 1, "name": "Guide", "x": 10, "y": 7,
+           "facing": "down", "sprite": "guide", "talk": "guide_talk" }]
+</code></pre>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "Welcome to Hometown!"
+            "The warp east leads to the Clearing."
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>@speaker(name)</code> marks player-initiated dialogue; the lines join into one
+paged text box with a <code>"Name: "</code> prefix. <code>@speaker("")</code> is the narrator
+form — lines render verbatim, no prefix.</li>
+<li>The runtime match is the npc’s <code>talk</code> field; the <code>@trigger</code>’s <code>npc</code> value
+is the route key in the generated bindings, so keep the two names in
+sync.</li>
+<li>One storyline per NPC is the normal shape; the full trigger key table is
+in the <a href="#scene-dsl-reference-scene">syntax reference</a>.</li>
+</ul>
+<h2 id="a-cutscene-on-map-entry"><a class="header" href="#a-cutscene-on-map-entry">A cutscene on map entry</a></h2>
+<p>Add <code>on_enter = true</code> to a trigger and the runner fires that storyline when
+the map loads; use <a href="#glossary"><code>@say</code></a> for scripted lines:</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @say("Guide") { "Hey! A traveler!" }
+        @say("") { "The Guide walks over to greet you." }
+    }
+}
+</code></pre>
+<p><code>@say</code> and <code>@speaker</code> compile to the same text box — the difference is
+meaning: <code>@say</code> is <a href="#glossary">cutscene speech</a> inside an
+auto-triggered storyline. All of a map’s <code>on_enter</code> storylines run one
+after another when the map loads.</p>
+<h2 id="choices-flags-and-branching"><a class="header" href="#choices-flags-and-branching">Choices, flags, and branching</a></h2>
+<p>Menus are <code>@choice</code> with <code>@option</code> bodies; branch on expressions with
+<code>@if</code> / <code>@else</code>. <a href="#glossary">Flags</a> persist across scenes for
+the session and ride the save:</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @if (getFlag("WON_GUIDE_BATTLE")) {
+            @speaker("Guide") { "You beat the slime!" }
+        } @else {
+            @speaker("Guide") { "Want to try a battle?" }
+            @choice {
+                @option("Let's fight!") {
+                    result = startBattle("slime")
+                    @if (result == "win") {
+                        @speaker("Guide") { "Well fought!" }
+                        setFlag("WON_GUIDE_BATTLE")
+                    } @else {
+                        @speaker("Guide") { "Heal up and try again." }
+                    }
+                }
+                @option("Not yet.") {
+                    @speaker("Guide") { "Come back anytime." }
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>The last <code>@option</code> is the fallback branch of the menu.</li>
+<li>Conditions may call sync queries such as <code>getFlag("X")</code>; keep async
+commands out of conditions.</li>
+<li><code>result = startBattle("id")</code> binds the battle outcome — <code>"win"</code>,
+<code>"lose"</code>, or <code>"run"</code> — so the scene branches on it. Plain assignments
+hoist to the top of the storyline; call-valued ones stay in place.</li>
+</ul>
+<h2 id="battles-from-scenes"><a class="header" href="#battles-from-scenes">Battles from scenes</a></h2>
+<p><code>startBattle(id)</code> starts a battle from a storyline: the id resolves an
+<a href="#glossary">encounter</a> record first (trainer battles
+included), then a single enemy record — a
+<a href="#glossary">wild battle</a>, where Run always succeeds.
+Walk-triggered random battles are different: they are
+<a href="#glossary">sceneless</a>, armed by the map’s <code>encounters</code>
+block, and never resume a scene — see <a href="#maps">Authoring Maps</a> and
+<a href="#battles">Battle Rules</a>.</p>
+<h2 id="bilingual-text"><a class="header" href="#bilingual-text">Bilingual text</a></h2>
+<p>Author dialogue with <a href="#glossary"><code>@t("en", "中文")</code></a> and the
+host picks the variant at runtime from the manifest’s <code>story.locales</code>,
+falling back to <code>en</code>:</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            @t("Welcome to Hometown!", "欢迎来到家乡镇！")
+        }
+    }
+}
+</code></pre>
+<p>The recipe and runtime rules are in <a href="#i18n-guide">Bilingual Text (i18n)</a>.</p>
+<h2 id="the-edit-check-loop"><a class="header" href="#the-edit-check-loop">The edit-check loop</a></h2>
+<ol>
+<li>Write or edit the <code>.scene</code> file.</li>
+<li>Run <code>dotzuki check</code> — it compiles every scene (plus layouts, themes, and
+styles) and prints diagnostics; exit code 0 means the scenes compile.</li>
+<li>Run <code>dotzuki run</code> and walk through the storyline. Branches that walking
+cannot reach (win/lose paths) are easiest to verify with temporary
+flags or triggers.</li>
+</ol>
+<p>Same-(map, npc) routes without an <code>after</code> chain warn as a compile-time
+conflict; see <a href="#scene-dsl-reference-scene">the syntax reference</a> for the
+wording and the full trigger table.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="authoring-battles-on-the-effect-stack"><a class="header" href="#authoring-battles-on-the-effect-stack">Authoring battles on the effect stack</a></h1>
 <p>This page teaches battle authors how to build a battle system on
@@ -10112,6 +10260,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
+<tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>编写 <code>.scene</code> 剧情：NPC 对话、进图过场、选项、flag、场景内战斗</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>声明 <code>.theme</code> / <code>.style</code> 文件并应用到 UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
@@ -11141,6 +11290,117 @@ encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录
 <code>encounters</code> 缺失（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
 <p>encounter 记录的 schema 见 <a href="#encounter-records">Encounter 记录</a>；
 sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="场景"><a class="header" href="#场景">场景</a></h1>
+<p>如何编写 <code>.scene</code> 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。</p>
+<blockquote>
+<p>本文是 <code>how-to/scenes.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p><a href="#scene-dsl-reference-scene">语法参考</a>是每个语法构造的权威——本页是任务视角：编写时随手查阅的配方，外加把它们接到地图上的 runner 契约。如果还没有接好地图与其场景，先从<a href="#your-first-game--town-battle-story-and-save">你的第一个游戏</a>开始。</p>
+<h2 id="场景文件放在哪里"><a class="header" href="#场景文件放在哪里">场景文件放在哪里</a></h2>
+<p>一个<a href="#glossary">场景</a>是一个 <code>.scene</code> 文件里的一个
+<code>game_scene &lt;Name&gt; { ... }</code> 文档。没有 import 语句；每个文件独立编译。两个位置，一条规则：</p>
+<ul>
+<li><code>assets/scenes/</code> —— 清单的 <code>game.scenesDir</code>（默认值），放剧情场景。
+<code>game.entryScene</code> 指定项目无地图运行时使用的文件。</li>
+<li><code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code> —— 逐地图场景。runner 以这个精确路径解析地图的场景，所以位置本身就是绑定。有地图时 <code>entryMap</code> 优先，由地图自己的场景驱动游玩。</li>
+</ul>
+<p>两处编译方式相同。一个 <code>game_scene</code> 包含 <code>@variables</code>、<code>@storylines</code>
+（未命名的 <code>main</code>）、具名 <code>@storyline("name")</code> 块，以及至多一个
+<code>@load</code>（场景加载时运行）；完整块清单见<a href="#scene-dsl-reference-scene">语法参考</a>。</p>
+<h2 id="npc-对话"><a class="header" href="#npc-对话">NPC 对话</a></h2>
+<p>objects 伴生文件为 NPC 指定其运行的<a href="#glossary">剧情线</a>：npc 的 <code>talk</code> 字段是剧情线名，场景用<a href="#glossary">触发器</a>路由声明这条剧情线：</p>
+<pre><code class="language-json">"npcs": [{ "id": 1, "name": "Guide", "x": 10, "y": 7,
+           "facing": "down", "sprite": "guide", "talk": "guide_talk" }]
+</code></pre>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "Welcome to Hometown!"
+            "The warp east leads to the Clearing."
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>@speaker(name)</code> 标记由玩家发起的对话；各行合并为一个分页文本框，带 <code>"Name: "</code> 前缀。<code>@speaker("")</code> 是<a href="#glossary">旁白</a>形式——文本原样渲染，无前缀。</li>
+<li>运行时匹配的是 npc 的 <code>talk</code> 字段；<code>@trigger</code> 的 <code>npc</code> 值是生成绑定里的路由键，两个名字要保持一致。</li>
+<li>一个 NPC 一条剧情线是常规形态；完整的 trigger 键表见<a href="#scene-dsl-reference-scene">语法参考</a>。</li>
+</ul>
+<h2 id="进图过场"><a class="header" href="#进图过场">进图过场</a></h2>
+<p>给 trigger 加 <code>on_enter = true</code>，地图加载时 runner 就会触发该剧情线；脚本化台词用 <a href="#glossary"><code>@say</code></a>：</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @say("Guide") { "Hey! A traveler!" }
+        @say("") { "The Guide walks over to greet you." }
+    }
+}
+</code></pre>
+<p><code>@say</code> 与 <code>@speaker</code> 编译出同一个文本框——区别在含义：<code>@say</code> 是自动触发剧情线里的<a href="#glossary">过场对白</a>。地图的所有 <code>on_enter</code> 剧情线在地图加载时依次运行。</p>
+<h2 id="选项flag-与分支"><a class="header" href="#选项flag-与分支">选项、flag 与分支</a></h2>
+<p>菜单是 <code>@choice</code> 加 <code>@option</code> 块体；用 <code>@if</code> / <code>@else</code> 对表达式分支。<a href="#glossary">flag</a> 在同一会话内跨场景保留，并随存档保存：</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @if (getFlag("WON_GUIDE_BATTLE")) {
+            @speaker("Guide") { "You beat the slime!" }
+        } @else {
+            @speaker("Guide") { "Want to try a battle?" }
+            @choice {
+                @option("Let's fight!") {
+                    result = startBattle("slime")
+                    @if (result == "win") {
+                        @speaker("Guide") { "Well fought!" }
+                        setFlag("WON_GUIDE_BATTLE")
+                    } @else {
+                        @speaker("Guide") { "Heal up and try again." }
+                    }
+                }
+                @option("Not yet.") {
+                    @speaker("Guide") { "Come back anytime." }
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>最后一个 <code>@option</code> 是菜单的回退分支。</li>
+<li>条件可以调用 <code>getFlag("X")</code> 这类同步查询；异步命令不要放进条件。</li>
+<li><code>result = startBattle("id")</code> 绑定战斗结果——<code>"win"</code>、<code>"lose"</code> 或 <code>"run"</code>——场景据此分支。普通赋值提升到剧情线顶部；调用赋值的留在原位。</li>
+</ul>
+<h2 id="场景内战斗"><a class="header" href="#场景内战斗">场景内战斗</a></h2>
+<p><code>startBattle(id)</code> 从剧情线发起一场战斗：id 先解析为 <a href="#glossary">encounter</a> 记录（含 trainer 战斗），再解析为单个敌人记录——即<a href="#glossary">野怪战斗</a>，逃跑必定成功。走路触发的随机战斗则不同：它们是 <a href="#glossary">sceneless 战斗</a>，由地图的 <code>encounters</code> 块武装，永不恢复场景——见<a href="#maps">制作地图</a>与<a href="#battles">战斗规则</a>。</p>
+<h2 id="双语文本"><a class="header" href="#双语文本">双语文本</a></h2>
+<p>用 <a href="#glossary"><code>@t("en", "中文")</code></a> 编写对白，宿主在运行时按清单的 <code>story.locales</code> 选择变体，回退到 <code>en</code>：</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            @t("Welcome to Hometown!", "欢迎来到家乡镇！")
+        }
+    }
+}
+</code></pre>
+<p>配方与运行时规则见<a href="#i18n-guide">i18n 指南</a>。</p>
+<h2 id="编写-检查循环"><a class="header" href="#编写-检查循环">编写-检查循环</a></h2>
+<ol>
+<li>编写或修改 <code>.scene</code> 文件。</li>
+<li>运行 <code>dotzuki check</code> —— 它编译所有场景（以及布局、主题、样式）并输出诊断；退出码 0 表示场景全部通过编译。</li>
+<li>运行 <code>dotzuki run</code> 走一遍剧情线；走路走不到的分支（胜负路径）用临时 flag 或 trigger 验证最方便。</li>
+</ol>
+<p>同一 (map, npc) 路由没有 <code>after</code> 链会在编译期告警为冲突；措辞与完整 trigger 表见<a href="#scene-dsl-reference-scene">语法参考</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="在效果栈上编写战斗"><a class="header" href="#在效果栈上编写战斗">在效果栈上编写战斗</a></h1>
 <blockquote>
