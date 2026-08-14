@@ -1,6 +1,7 @@
 mod check;
 mod run;
 mod scaffold;
+mod templates;
 
 // The manifest model lives in dotzuki-runner (shared with the runtime); this
 // re-export keeps `crate::manifest::…` paths in check/scaffold unchanged.
@@ -33,6 +34,10 @@ enum Commands {
         /// Display name stored in the manifest (default: the slug)
         #[arg(long)]
         title: Option<String>,
+        /// Project template: "empty" (default) or "your-first-game" (the
+        /// tutorial project from docs/tutorials/your-first-game.md)
+        #[arg(long)]
+        template: Option<String>,
     },
     /// Compile-check a project's DSL files and report diagnostics
     Check {
@@ -80,8 +85,13 @@ enum Commands {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Commands::New { name, dir, title } => {
-            scaffold::run(&name, dir.as_deref(), title.as_deref())?;
+        Commands::New {
+            name,
+            dir,
+            title,
+            template,
+        } => {
+            scaffold::run(&name, dir.as_deref(), title.as_deref(), template.as_deref())?;
         }
         Commands::Check { dir } => check::run(&dir)?,
         Commands::Run {

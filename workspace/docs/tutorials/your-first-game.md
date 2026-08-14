@@ -20,6 +20,10 @@ cargo build --release --bin dotzuki
 
 The binary lands at `target/release/dotzuki`.
 
+Shortcut: `dotzuki new <name> --template your-first-game` writes the finished
+project (the same files you will build below) — the tutorial stays the
+step-by-step route.
+
 The goal is the committed project itself: a playable town, a scripted battle, a
 random-encounter clearing, and a save. Every listing below is a copy of that project,
 so every step ends in a state the next one continues from. The two `map.tmx.json`

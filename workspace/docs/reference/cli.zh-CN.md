@@ -41,13 +41,17 @@ cargo build --release --bin dotzuki
 |---|---|---|
 | `--dir <parent>` | 当前目录 | 新项目创建于其中的父目录 |
 | `--title <name>` | 该 slug | 存入项目清单根 `name` 字段的显示名 |
+| `--template <name>` | `empty` | 项目模板：`empty`（编辑器的空布局）或 `your-first-game`（[教程](../tutorials/your-first-game.md)中的教程项目，内嵌于 CLI） |
 
 生成的布局：`.dotzuki-editor.json` + `data/`（maps、tiles、
 stories/characters/quests/arcs）、`gfx/`、`assets/scenes/main.scene`、README
 ——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。
+`--template your-first-game` 改为写出完整教程项目——城镇、空地、脚本战斗、
+随机遇敌与存档——并把项目名代入其清单。
 
 ```bash
 dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 ```
 

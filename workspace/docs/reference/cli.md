@@ -38,14 +38,18 @@ Scaffolds a new project. `name` must be a slug: `[a-z0-9][a-z0-9-]*`.
 |---|---|---|
 | `--dir <parent>` | current directory | Parent directory the new project is created in |
 | `--title <name>` | the slug | Display name stored in the manifest root `name` field |
+| `--template <name>` | `empty` | Project template: `empty` (the editor's empty layout) or `your-first-game` (the tutorial project from [the tutorial](../tutorials/your-first-game.md), embedded in the CLI) |
 
 Generated layout: `.dotzuki-editor.json` + `data/` (maps, tiles,
 stories/characters/quests/arcs), `gfx/`, `assets/scenes/main.scene`, README —
 the seven editor activities (maps / scripts / play / data / story / assets /
-tiles).
+tiles). `--template your-first-game` writes the full tutorial project
+instead — town, clearing, scripted battle, random encounters and save —
+with the project name substituted into its manifest.
 
 ```bash
 dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 ```
 
