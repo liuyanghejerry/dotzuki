@@ -62,7 +62,8 @@
 
 Chinese translations of the English sources above. Each `-zh-CN` page is a
 derived translation — the English source is authoritative (doc-standard §6).
-More translations land as M2.5 batches merge.
+`glossary.md` is inherently bilingual (its Chinese对照 lives inline), and
+archive pages stay English-only (doc-standard §5).
 
 - [简介](index.zh-CN.md)
 - [快速上手](tutorials/quickstart.zh-CN.md)
@@ -86,3 +87,9 @@ More translations land as M2.5 batches merge.
 - [效果栈战斗引擎](explanation/effect-stack.zh-CN.md)
 - [GameData Trait](explanation/game-data.zh-CN.md)
 - [存档兼容](explanation/save-compatibility.zh-CN.md)
+- [Combatant 记录](reference/data-tables/combatants.zh-CN.md)
+- [Encounter 记录](reference/data-tables/encounters.zh-CN.md)
+- [技能记录](reference/data-tables/skills.zh-CN.md)
+- [道具记录](reference/data-tables/items.zh-CN.md)
+- [等级成长](reference/data-tables/levels.zh-CN.md)
+- [变更日志](release-notes/changelog.zh-CN.md)

@@ -39,7 +39,7 @@
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx`（JSON）地图、tilesets、海拔、实体以及 `objects.json` 伴生文件 |
 | [`how-to/battles.md`](./how-to/battles.md) | 编写 `rules.ron`：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性 |
 | [`how-to/themes.md`](./how-to/themes.md) | 声明 `.theme` / `.style` 文件并应用到 UI |
-| [`how-to/audio.md`](./how-to/audio.md) | `TrackDef` JSON 音轨、声道、场景播放、编写要点 |
+| [`how-to/audio.md`](./how-to/audio.md) | `TrackDef` JSON 音轨、通道、场景播放、编写要点 |
 | [`how-to/i18n.md`](./how-to/i18n.md) | 双语文本：`game` i18n API 与 `@t` 语法 |
 | [`how-to/publishing.md`](./how-to/publishing.md) | 发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级 |
 
