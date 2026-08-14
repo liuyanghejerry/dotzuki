@@ -15,7 +15,7 @@ gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:er
 image-assets = ["dep:image"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.0" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.1" }
 log = "0.4"
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -32,4 +32,4 @@ getrandom = { version = "0.2", features = ["js"] }
 [dev-dependencies]
 # Round-trip tests compile the pokered `.gui` DSL layouts and verify they
 # deserialize into the matching element params (guards against codegen drift).
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.1.0" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.1.1" }

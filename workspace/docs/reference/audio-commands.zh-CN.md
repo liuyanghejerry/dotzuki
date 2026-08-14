@@ -38,3 +38,13 @@
 | `sfx_square_note` | `length`，`volume_envelope`，`frequency` | 带显式包络与 11 位频率的 SFX 方波音符 |
 | `sfx_noise_note` | `length`，`volume_envelope`，`noise_params` | 带显式包络的 SFX 噪声音符 |
 | `end_of_data` | — | 结束标记 |
+
+## 文件音轨（可选 `modern-audio`）
+
+在上述 `AudioCommand` 芯片音乐词汇表之外，项目还可以在 `data/audio/` 下提供真实的
+音频文件（`.wav`、`.ogg`、`.flac`、`.mp3`）。场景音轨 id 先按 JSON `TrackDef` 文档
+解析，再按文件音轨解析——文件音轨的键是去掉扩展名的 `audio/` 相对路径（例如
+`data/audio/music/field.ogg` → `playMusic("music/field")`）。
+
+文件音频是构建期选项：需要运行时的 `modern-audio` feature，否则完全不参与编译。
+布局与语义见[音频制作指南](../how-to/audio.md)。

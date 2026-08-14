@@ -24,6 +24,11 @@ pub mod format;
 #[cfg(feature = "serde")]
 pub mod library;
 
+/// Modern file-audio subsystem: streaming WAV/OGG decoding, mixing buses,
+/// DSP effects (requires `modern-audio`; compiled out otherwise).
+#[cfg(feature = "modern-audio")]
+pub mod modern;
+
 #[cfg(test)]
 mod tests;
 

@@ -1,10 +1,18 @@
 //! Audio playback for `dotzuki run`: [`RunnerAudio`].
 //!
 //! Backs the scene commands `PlayMusic` / `PlaySound` / `StopMusic` /
-//! `FadeOutMusic`. Tracks are dotzuki-audio [`TrackDef`](dotzuki_audio::format::TrackDef)
-//! JSON files under `<dataRoot>/audio/` (loaded recursively, so the
-//! `music/` + `sfx/` split is a convention, not a rule); the id a scene
-//! passes to `playMusic`/`playSound` is the track's `id` field.
+//! `FadeOutMusic`. Track ids are looked up in two libraries, in order:
+//!
+//! 1. dotzuki-audio [`TrackDef`](dotzuki_audio::format::TrackDef) JSON files
+//!    under `<dataRoot>/audio/` (loaded recursively, so the `music/` +
+//!    `sfx/` split is a convention, not a rule); the id is the track's
+//!    `id` field;
+//! 2. — with the `modern-audio` feature — real audio files (`*.wav`,
+//!    `*.ogg`, `*.flac`, `*.mp3`) under the same tree; the id is the path
+//!    relative to `audio/` without its extension, e.g. `playMusic("music/town")`
+//!    plays `data/audio/music/town.ogg`. Such tracks stream through the
+//!    dotzuki-audio `modern` mixer (BGM loops, SFX is one-shot), mixed with
+//!    the chiptune APU output.
 //!
 //! Audio is **fully optional**:
 //!
@@ -31,11 +39,12 @@
 //! play commands still create the shared engine (without touching cpal),
 //! and the host pulls samples with [`render_samples`](Self::render_samples),
 //! feeding them to e.g. a WebAudio `AudioBuffer`. Sample generation is the
-//! same `tick_n` + `mix_sample` path the cpal callback uses, and
-//! `update_frame` still advances the sequencer/fade once per video frame,
-//! so music, dedup, and fades behave exactly as on native.
+//! same `tick_n` + `mix_sample` path the cpal callback uses (plus the
+//! modern mixer when enabled), and `update_frame` still advances the
+//! sequencer/fade once per video frame, so music, dedup, and fades behave
+//! exactly as on native.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -46,6 +55,9 @@ use dotzuki_audio::format::TrackDef;
 use dotzuki_audio::library::AudioLibrary;
 use dotzuki_audio::sequencer::Sequencer;
 use dotzuki_audio::CPU_CLOCK_HZ;
+
+#[cfg(feature = "modern-audio")]
+use dotzuki_audio::modern::{Bus as ModernBus, ModernAudio, PlayOptions as ModernPlayOptions};
 
 use crate::vfs::{join_path, DiskFiles, ProjectFiles};
 
@@ -113,6 +125,16 @@ struct Engine {
     /// The music track currently requested, for dedup (don't restart BGM
     /// every frame / every map re-entry).
     current_music: Option<String>,
+    /// Modern file-audio mixer (lazy; `None` until a file track plays).
+    #[cfg(feature = "modern-audio")]
+    modern: Option<ModernAudio>,
+    /// The file-audio track currently requested (dedup like `current_music`).
+    #[cfg(feature = "modern-audio")]
+    modern_music: Option<String>,
+    /// Reusable overlay buffer for the modern mixer (avoids per-callback
+    /// allocation in `render_into`).
+    #[cfg(feature = "modern-audio")]
+    mix_buf: Vec<f32>,
 }
 
 /// Generate stereo samples from the engine into `data` (interleaved L/R,
@@ -126,6 +148,15 @@ fn render_into(e: &mut Engine, data: &mut [f32]) {
         frame[0] = left as f32 / MAX_AMPLITUDE;
         frame[1] = right as f32 / MAX_AMPLITUDE;
     }
+    #[cfg(feature = "modern-audio")]
+    if let Some(modern) = &mut e.modern {
+        e.mix_buf.resize(data.len(), 0.0);
+        e.mix_buf.fill(0.0);
+        modern.render_into(&mut e.mix_buf);
+        for (out, modern_s) in data.iter_mut().zip(e.mix_buf.iter()) {
+            *out += *modern_s;
+        }
+    }
 }
 
 /// Advance the music/SFX sequencer one video frame and step any active fade.
@@ -138,6 +169,19 @@ fn update_engine_frame(e: &mut Engine) {
     if completed {
         e.seq.stop_music();
         e.current_music = None;
+    }
+
+    #[cfg(feature = "modern-audio")]
+    {
+        // A completed chiptune fade also stops modern file music (fades are
+        // issued per-kind by the runner, but a fade that completed here
+        // means the caller wanted silence).
+        if completed {
+            if let Some(modern) = &mut e.modern {
+                modern.stop_music(None);
+            }
+            e.modern_music = None;
+        }
     }
 
     // Advance the sequencer, then stamp master volume onto NR50 (bits
@@ -164,6 +208,12 @@ fn new_engine() -> Arc<Mutex<Engine>> {
         master_volume: FULL_VOLUME,
         fade: Fade::None,
         current_music: None,
+        #[cfg(feature = "modern-audio")]
+        modern: None,
+        #[cfg(feature = "modern-audio")]
+        modern_music: None,
+        #[cfg(feature = "modern-audio")]
+        mix_buf: Vec::new(),
     }))
 }
 
@@ -197,12 +247,24 @@ fn open_stream(engine: Arc<Mutex<Engine>>) -> Option<cpal::Stream> {
     Some(stream)
 }
 
+/// A file-backed audio track (loaded into memory as compressed bytes; the
+/// decoder streams them, so PCM is never fully materialised).
+#[cfg(feature = "modern-audio")]
+struct FileTrack {
+    bytes: Vec<u8>,
+    ext: String,
+}
+
 /// Audio for a [`crate::game::RunnerGame`]: an [`AudioLibrary`] plus a lazily
 /// initialised engine, driven either by a cpal output stream (native) or by
 /// PCM pull-rendering (WASM). Silent by default; every method is a safe
 /// no-op in silent mode.
 pub struct RunnerAudio {
     library: AudioLibrary,
+    /// File-audio tracks keyed by their extension-stripped `audio/`-relative
+    /// path (e.g. `"music/town"`), only with the `modern-audio` feature.
+    #[cfg(feature = "modern-audio")]
+    file_tracks: BTreeMap<String, FileTrack>,
     /// `false` on headless runs — never open a device.
     allow_device: bool,
     /// PCM pull-render mode: play commands create the engine without a
@@ -241,8 +303,22 @@ impl RunnerAudio {
         if !library.is_empty() {
             log::info!("audio: loaded {} track(s) from {prefix}", library.len());
         }
+        #[cfg(feature = "modern-audio")]
+        let file_tracks = load_file_tracks(files, &prefix).unwrap_or_else(|e| {
+            log::warn!("audio: failed to load file tracks from {prefix}: {e:#}");
+            BTreeMap::new()
+        });
+        #[cfg(feature = "modern-audio")]
+        if !file_tracks.is_empty() {
+            log::info!(
+                "audio: loaded {} file track(s) from {prefix}",
+                file_tracks.len()
+            );
+        }
         Self {
             library,
+            #[cfg(feature = "modern-audio")]
+            file_tracks,
             allow_device,
             pcm_render: false,
             engine: None,
@@ -252,14 +328,25 @@ impl RunnerAudio {
         }
     }
 
-    /// Number of loaded tracks (0 ⇒ every command is a silent no-op).
+    /// Number of loaded JSON tracks (0 ⇒ every command is a silent no-op).
     pub fn track_count(&self) -> usize {
         self.library.len()
     }
 
-    /// Whether a track with this id exists (test/debug introspection).
+    /// Whether a track with this id exists in either library (JSON first,
+    /// then files, when the `modern-audio` feature is on).
     pub fn has_track(&self, id: &str) -> bool {
         self.library.get(id).is_some()
+            || {
+                #[cfg(feature = "modern-audio")]
+                {
+                    self.file_tracks.contains_key(id)
+                }
+                #[cfg(not(feature = "modern-audio"))]
+                {
+                    false
+                }
+            }
     }
 
     /// Whether the cpal output stream is live (test/debug introspection).
@@ -294,7 +381,7 @@ impl RunnerAudio {
     }
 
     /// The shared engine, lazily initialised on first use. Returns `None`
-    /// (staying silent) when the library is empty or — outside PCM mode —
+    /// (staying silent) when every library is empty or — outside PCM mode —
     /// the device is disallowed or init has failed before; an init failure
     /// is warned about once. On native the engine and the cpal stream are
     /// created together; in PCM mode the engine stands alone.
@@ -302,7 +389,18 @@ impl RunnerAudio {
         if let Some(engine) = &self.engine {
             return Some(Arc::clone(engine));
         }
-        if self.library.is_empty() {
+        if self.library.is_empty()
+            && {
+                #[cfg(feature = "modern-audio")]
+                {
+                    self.file_tracks.is_empty()
+                }
+                #[cfg(not(feature = "modern-audio"))]
+                {
+                    true
+                }
+            }
+        {
             return None;
         }
         if self.pcm_render {
@@ -350,6 +448,10 @@ impl RunnerAudio {
     /// Start a background-music track by id. No-op if that track is already
     /// the active BGM (re-entering a map doesn't restart its theme). Cancels
     /// any in-progress fade and restores full volume.
+    ///
+    /// JSON [`TrackDef`] tracks take precedence; with the `modern-audio`
+    /// feature, ids that match a file track (extension-stripped
+    /// `audio/`-relative path) play as looping streamed audio instead.
     pub fn play_music(&mut self, id: &str) {
         if !self.has_track(id) {
             self.warn_unknown("music", id);
@@ -359,17 +461,47 @@ impl RunnerAudio {
             return;
         };
         let mut e = engine.lock().unwrap();
-        if e.current_music.as_deref() == Some(id) {
+        if self.library.get(id).is_some() {
+            if e.current_music.as_deref() == Some(id) {
+                return;
+            }
+            e.current_music = Some(id.to_string());
+            e.fade = Fade::None;
+            e.master_volume = FULL_VOLUME;
+            // Existence was checked above; play() only fails on an unknown id.
+            self.library.play(&mut e.seq, id);
             return;
         }
-        e.current_music = Some(id.to_string());
-        e.fade = Fade::None;
-        e.master_volume = FULL_VOLUME;
-        // Existence was checked above; play() only fails on an unknown id.
-        self.library.play(&mut e.seq, id);
+        #[cfg(feature = "modern-audio")]
+        {
+            if e.modern_music.as_deref() == Some(id) {
+                return;
+            }
+            let Some(track) = self.file_tracks.get(id) else {
+                return;
+            };
+            // Replacing a JSON BGM? Stop the chiptune side too, so a single
+            // music command owns the music slot.
+            e.seq.stop_music();
+            e.current_music = None;
+            let modern = e.modern.get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
+            if modern
+                .play_music_bytes(track.bytes.clone(), Some(&track.ext), ModernPlayOptions::default())
+                .is_ok()
+            {
+                e.modern_music = Some(id.to_string());
+            } else {
+                log::warn!("audio: failed to decode music track '{id}'");
+            }
+        }
+        #[cfg(not(feature = "modern-audio"))]
+        {
+            log::warn!("audio: music track '{id}' exists but modern-audio is not enabled");
+        }
     }
 
-    /// Play a one-shot sound effect by id (always retriggers).
+    /// Play a one-shot sound effect by id (always retriggers). JSON tracks
+    /// take precedence; file tracks play as one-shots on the SFX bus.
     pub fn play_sound(&mut self, id: &str) {
         if !self.has_track(id) {
             self.warn_unknown("sfx", id);
@@ -379,10 +511,30 @@ impl RunnerAudio {
             return;
         };
         let mut e = engine.lock().unwrap();
-        self.library.play(&mut e.seq, id);
+        if self.library.get(id).is_some() {
+            self.library.play(&mut e.seq, id);
+            return;
+        }
+        #[cfg(feature = "modern-audio")]
+        {
+            let Some(track) = self.file_tracks.get(id) else {
+                return;
+            };
+            let modern = e.modern.get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
+            if modern
+                .play_sfx_bytes(track.bytes.clone(), Some(&track.ext), ModernPlayOptions::default())
+                .is_err()
+            {
+                log::warn!("audio: failed to decode sfx track '{id}'");
+            }
+        }
+        #[cfg(not(feature = "modern-audio"))]
+        {
+            log::warn!("audio: sfx track '{id}' exists but modern-audio is not enabled");
+        }
     }
 
-    /// Stop all background music immediately.
+    /// Stop all background music immediately (chiptune and file audio).
     pub fn stop_music(&mut self) {
         let Some(engine) = &self.engine else {
             return;
@@ -392,15 +544,32 @@ impl RunnerAudio {
         e.fade = Fade::None;
         e.master_volume = FULL_VOLUME;
         e.current_music = None;
+        #[cfg(feature = "modern-audio")]
+        {
+            if let Some(modern) = &mut e.modern {
+                modern.stop_music(None);
+            }
+            e.modern_music = None;
+        }
     }
 
     /// Begin fading the current music out to silence, then stop it. No-op if
-    /// no music is playing or a fade is already under way.
+    /// no music is playing or a fade is already under way. Fades whichever
+    /// kind of music is actually playing (chiptune fades through the APU
+    /// master volume; file music fades through the modern mixer).
     pub fn fade_out_music(&mut self) {
         let Some(engine) = &self.engine else {
             return;
         };
         let mut e = engine.lock().unwrap();
+        #[cfg(feature = "modern-audio")]
+        if e.modern_music.is_some() {
+            if let Some(modern) = &mut e.modern {
+                modern.stop_music(Some(MODERN_FADE_SECS));
+            }
+            e.modern_music = None;
+            return;
+        }
         if e.current_music.is_none() || matches!(e.fade, Fade::Out { .. }) {
             return;
         }
@@ -410,6 +579,10 @@ impl RunnerAudio {
         };
     }
 }
+
+/// Fade-out duration for modern file music (≈ the chiptune fade's ~1.2 s).
+#[cfg(feature = "modern-audio")]
+const MODERN_FADE_SECS: f32 = 1.2;
 
 /// Load every `*.json` track under `prefix` (recursively) through the VFS
 /// into an [`AudioLibrary`] — the [`ProjectFiles`] counterpart of
@@ -430,9 +603,36 @@ fn load_library(files: &dyn ProjectFiles, prefix: &str) -> anyhow::Result<AudioL
     Ok(lib)
 }
 
+/// File extensions the modern decoder can play.
+#[cfg(feature = "modern-audio")]
+const AUDIO_FILE_EXTS: [&str; 4] = ["wav", "ogg", "flac", "mp3"];
+
+/// Load every playable audio file under `prefix` (recursively) through the
+/// VFS. Track ids are the extension-stripped `prefix`-relative path, e.g.
+/// `"data/audio/music/town.ogg"` → `"music/town"`.
+#[cfg(feature = "modern-audio")]
+fn load_file_tracks(files: &dyn ProjectFiles, prefix: &str) -> anyhow::Result<BTreeMap<String, FileTrack>> {
+    let mut out = BTreeMap::new();
+    for path in files.list(prefix) {
+        let ext = match path.rsplit('.').next() {
+            Some(e) if AUDIO_FILE_EXTS.contains(&e) => e.to_string(),
+            _ => continue,
+        };
+        let bytes = files.read(&path)?;
+        let id = path
+            .strip_prefix(&format!("{prefix}/"))
+            .unwrap_or(&path)
+            .trim_end_matches(&format!(".{ext}"))
+            .to_string();
+        out.insert(id, FileTrack { bytes, ext });
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vfs::MemoryFiles;
 
     /// A minimal valid music track (dotzuki-audio `TrackDef` JSON).
     const THEME_JSON: &str = r#"{
@@ -461,6 +661,8 @@ mod tests {
         library.insert(track);
         RunnerAudio {
             library,
+            #[cfg(feature = "modern-audio")]
+            file_tracks: BTreeMap::new(),
             allow_device: false,
             pcm_render: true,
             engine: None,
@@ -574,5 +776,128 @@ mod tests {
         assert_eq!(e.fade, Fade::None, "fade state machine completed");
         assert!(e.current_music.is_none(), "music stopped after fade-out");
         assert_eq!(e.master_volume, FULL_VOLUME, "volume restored for next track");
+    }
+
+    // ── Modern file audio (feature `modern-audio`) ───────────────────────
+
+    /// A tiny 16-bit PCM mono WAV (the modern file-audio counterpart of
+    /// `THEME_JSON`), so file-track tests never touch the real device.
+    #[cfg(feature = "modern-audio")]
+    fn test_wav_bytes() -> Vec<u8> {
+        let rate = 8000u32;
+        let seconds = 1u32;
+        let samples = rate * seconds;
+        let data_len = samples * 2;
+        let mut wav = Vec::with_capacity(44 + data_len as usize);
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36 + data_len).to_le_bytes());
+        wav.extend_from_slice(b"WAVE");
+        wav.extend_from_slice(b"fmt ");
+        wav.extend_from_slice(&16u32.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&rate.to_le_bytes());
+        wav.extend_from_slice(&(rate * 2).to_le_bytes());
+        wav.extend_from_slice(&2u16.to_le_bytes());
+        wav.extend_from_slice(&16u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&data_len.to_le_bytes());
+        for i in 0..samples {
+            let v = (i as f32 * 2.0 * std::f32::consts::PI * 440.0 / rate as f32).sin();
+            wav.extend_from_slice(&((v * 32000.0) as i16).to_le_bytes());
+        }
+        wav
+    }
+
+    /// A `RunnerAudio` loaded from an in-memory project containing one file
+    /// track at `data/audio/music/town.wav` (PCM render, no device).
+    #[cfg(feature = "modern-audio")]
+    fn file_audio() -> RunnerAudio {
+        use std::collections::HashMap;
+        let mut map = HashMap::new();
+        map.insert(
+            "data/audio/music/town.wav".to_string(),
+            test_wav_bytes(),
+        );
+        let files = MemoryFiles::from(map);
+        let mut audio = RunnerAudio::from_files(&files, "data", false);
+        audio.set_pcm_render(true);
+        audio
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn file_tracks_load_with_path_ids() {
+        let audio = file_audio();
+        assert!(audio.has_track("music/town"), "extension-stripped path id");
+        assert!(!audio.has_track("town"), "no bare filename ids");
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn file_music_plays_and_renders_audio() {
+        let mut audio = file_audio();
+        audio.play_music("music/town");
+        assert!(audio.engine.is_some(), "engine created on play");
+        for _ in 0..3 {
+            audio.update_frame();
+        }
+        let pcm = audio.render_samples(8000);
+        assert_eq!(pcm.len(), 16_000, "stereo: 2 * frames");
+        assert!(
+            pcm.iter().any(|s| *s != 0.0),
+            "file BGM must render non-silent samples"
+        );
+        // Still playing after one full second (loops).
+        let e = audio.engine.as_ref().unwrap().lock().unwrap();
+        assert_eq!(e.modern_music.as_deref(), Some("music/town"));
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn file_music_dedups_and_stops() {
+        let mut audio = file_audio();
+        audio.play_music("music/town");
+        audio.play_music("music/town"); // must not restart
+        {
+            let e = audio.engine.as_ref().unwrap().lock().unwrap();
+            assert_eq!(e.modern_music.as_deref(), Some("music/town"));
+            assert_eq!(e.modern.as_ref().unwrap().active_voices(), 1);
+        } // drop the guard before mutating audio again
+
+        audio.stop_music();
+        let e = audio.engine.as_ref().unwrap().lock().unwrap();
+        assert!(e.modern_music.is_none(), "file BGM slot freed");
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn file_sfx_one_shot_finishes() {
+        let mut audio = file_audio();
+        audio.play_sound("music/town"); // reuse the wav as a one-shot sfx
+        for _ in 0..5 {
+            audio.update_frame();
+        }
+        let e = audio.engine.as_ref().unwrap().lock().unwrap();
+        // SFX plays on its own bus; BGM slot stays empty.
+        assert!(e.modern_music.is_none());
+        assert_eq!(e.modern.as_ref().unwrap().active_voices(), 1);
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn json_track_wins_over_file_track() {
+        use std::collections::HashMap;
+        let mut map = HashMap::new();
+        map.insert("data/audio/theme.json".to_string(), THEME_JSON.as_bytes().to_vec());
+        map.insert("data/audio/theme.wav".to_string(), test_wav_bytes());
+        let files = MemoryFiles::from(map);
+        let mut audio = RunnerAudio::from_files(&files, "data", false);
+        audio.set_pcm_render(true);
+        // Same id "theme" in both libraries → JSON wins.
+        audio.play_music("theme");
+        let e = audio.engine.as_ref().unwrap().lock().unwrap();
+        assert_eq!(e.current_music.as_deref(), Some("theme"), "JSON track played");
+        assert!(e.modern_music.is_none(), "file track not used");
     }
 }

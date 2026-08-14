@@ -10,6 +10,10 @@ repository.workspace = true
 bitflags = "2"
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+# Streaming decoder for the `modern-audio` feature (WAV/OGG/FLAC/MP3).
+# Pure Rust, no native deps; kept optional so the default build stays
+# dependency-light — consumers that never play file audio never build it.
+symphonia = { version = "0.5", optional = true, default-features = false, features = ["pcm", "wav", "ogg", "vorbis", "flac", "mp3"] }
 
 [features]
 default = []
@@ -17,3 +21,8 @@ default = []
 # directory loader (`library`). Off by default so the game runtime — which
 # feeds byte streams to the sequencer directly — stays dependency-light.
 serde = ["dep:serde", "dep:serde_json"]
+# Enables the modern file-audio subsystem (`modern`): streaming WAV/OGG
+# decoding, a BGM/SFX mixing bus with volume/pan/fade, and DSP effects
+# (lowpass, reverb). Off by default — everything behind this feature is
+# compiled out of the crate when disabled, and symphonia is not built.
+modern-audio = ["dep:symphonia"]

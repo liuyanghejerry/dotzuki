@@ -1,10 +1,35 @@
 <template>
   <div class="h-full flex flex-col bg-gray-900 text-gray-100">
+    <!-- Error banner (both edit and file-preview states) -->
+    <div v-if="error || playback.error.value" class="px-4 py-1.5 bg-red-900/40 text-red-300 text-xs shrink-0">
+      {{ error || playback.error.value }}
+    </div>
+
     <!-- Empty state -->
     <div v-if="!current" class="flex-1 flex items-center justify-center text-center px-6">
-      <div>
-        <div class="text-4xl mb-3">🎵</div>
-        <p class="text-sm text-gray-400">{{ $t('audio.selectPrompt') }}</p>
+      <div class="w-full max-w-md space-y-6">
+        <div>
+          <div class="text-4xl mb-3">🎵</div>
+          <p class="text-sm text-gray-400">{{ $t('audio.selectPrompt') }}</p>
+        </div>
+
+        <!-- File audio preview (real WAV/OGG/FLAC/MP3, rendered by the engine) -->
+        <div class="border border-gray-700 rounded bg-gray-850 p-4 text-left">
+          <h3 class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">{{ $t('audio.fileAudio') }}</h3>
+          <p class="text-[11px] text-gray-500 mb-3">{{ $t('audio.fileAudioHint') }}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <label class="px-3 py-1 text-xs rounded bg-gray-700 text-gray-100 hover:bg-gray-600 cursor-pointer">
+              {{ fileAudioName ?? $t('audio.fileAudioPick') }}
+              <input type="file" accept=".wav,.ogg,.flac,.mp3,audio/*" class="hidden" @change="onFilePicked" />
+            </label>
+            <button
+              v-if="fileAudioBytes"
+              class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600 disabled:opacity-40"
+              :disabled="playback.rendering.value"
+              @click="playback.playing.value ? playback.stop() : playback.playFile(fileAudioBytes, fileAudioExt, 10)"
+            >{{ playback.playing.value ? '⏹ ' + $t('audio.stop') : (playback.rendering.value ? $t('audio.rendering') : '▶ ' + $t('audio.play')) }}</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -50,11 +75,6 @@
           :disabled="!dirty || saving"
           @click="save()"
         >{{ saving ? $t('audio.saving') : $t('audio.save') }}</button>
-      </div>
-
-      <!-- Error banner -->
-      <div v-if="error || playback.error.value" class="px-4 py-1.5 bg-red-900/40 text-red-300 text-xs shrink-0">
-        {{ error || playback.error.value }}
       </div>
 
       <!-- Channels -->
@@ -138,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAudioActivity, type AudioCommand } from '@/composables/useAudioActivity'
 import { useAudioPlayback } from '@/composables/useAudioPlayback'
@@ -146,6 +166,22 @@ import { useAudioPlayback } from '@/composables/useAudioPlayback'
 const { t } = useI18n()
 const { current, dirty, saving, error, loadList, save, markDirty } = useAudioActivity()
 const playback = useAudioPlayback()
+
+// ── File audio preview (real WAV/OGG/FLAC/MP3 files) ─────────────────────
+const fileAudioBytes = ref<Uint8Array | null>(null)
+const fileAudioName = ref<string | null>(null)
+const fileAudioExt = ref('')
+
+function onFilePicked(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  fileAudioName.value = file.name
+  fileAudioExt.value = (file.name.split('.').pop() ?? '').toLowerCase()
+  file.arrayBuffer().then(buf => {
+    fileAudioBytes.value = new Uint8Array(buf)
+  })
+}
 
 const HW_CHANNELS = ['pulse1', 'pulse2', 'wave', 'noise'] as const
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']

@@ -50,13 +50,60 @@ pub fn render_audio_pcm(track_json: &str, max_seconds: f32) -> Vec<u8> {
     bytes
 }
 
+/// Render a real audio file (WAV / OGG-Vorbis / FLAC / MP3) to interleaved
+/// stereo `f32` PCM at [`OUTPUT_SAMPLE_RATE`], using the actual
+/// dotzuki-audio modern decoder + mixer. Requires the `modern-audio`
+/// feature; without it the export is absent (the editor hides the file
+/// preview UI accordingly).
+///
+/// * `bytes` — the raw file bytes (as fetched from the project VFS).
+/// * `ext_hint` — file extension without the dot (e.g. `"ogg"`), used only
+///   to speed up container detection.
+/// * `max_seconds` — hard cap on render length (looping music is bounded).
+///
+/// Returns raw little-endian bytes of the `f32` buffer (`[L0, R0, L1, R1, …]`),
+/// or an empty buffer when decoding fails.
+#[cfg(feature = "modern-audio")]
+#[wasm_bindgen]
+pub fn render_file_audio(bytes: &[u8], ext_hint: &str, max_seconds: f32) -> Vec<u8> {
+    use dotzuki_audio::modern::{ModernAudio, PlayOptions};
+
+    let mut audio = ModernAudio::new(OUTPUT_SAMPLE_RATE);
+    let opts = PlayOptions {
+        volume: 1.0,
+        pan: 0.0,
+        fade_in: None,
+        fade_out: None,
+        // Preview a finite slice: no looping, cap the length.
+        loop_audio: false,
+    };
+    let ext = if ext_hint.is_empty() { None } else { Some(ext_hint) };
+    if audio.play_sfx_bytes(bytes.to_vec(), ext, opts).is_err() {
+        crate::log_error("render_file_audio: failed to decode audio file");
+        return Vec::new();
+    }
+    let frames = (max_seconds.max(0.0) * OUTPUT_SAMPLE_RATE as f32) as usize;
+    let mut pcm = vec![0.0f32; frames * 2];
+    audio.render_into(&mut pcm);
+    // Trim trailing silence so the preview buffer matches the real length.
+    if let Some(last) = pcm.iter().rposition(|&s| s.abs() > 1e-5) {
+        pcm.truncate(((last / 2) + 1) * 2);
+    } else {
+        pcm.clear();
+    }
+    let mut bytes_out = Vec::with_capacity(pcm.len() * 4);
+    for s in pcm {
+        bytes_out.extend_from_slice(&s.to_le_bytes());
+    }
+    bytes_out
+}
+
 /// Core render loop, shared by the wasm export and native tests.
 ///
 /// Mirrors the shipping playback path (`pokered-ios`): power on the APU, start
 /// the track on the sequencer, then per 1/60 s frame advance the sequencer and
 /// pull `OUTPUT_SAMPLE_RATE / 60` stereo samples from the APU.
-fn render_track_samples(track: &TrackDef, max_seconds: f32) -> Vec<f32> {
-    let mut seq = Sequencer::new();
+fn render_track_samples(track: &TrackDef, max_seconds: f32) -> Vec<f32> {    let mut seq = Sequencer::new();
     let mut apu = Apu::new();
     // Power on. new() leaves NR50=0x77 / NR51=0xFF, and power_on() preserves
     // them, so master volume and panning are audible; the sequencer rewrites
@@ -133,5 +180,52 @@ mod tests {
     #[test]
     fn bad_json_returns_empty() {
         assert!(render_audio_pcm("not json", 1.0).is_empty());
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn renders_file_audio_to_pcm() {
+        // Minimal 16-bit PCM mono WAV: 1 s, 8 kHz, 440 Hz sine.
+        let rate = 8000u32;
+        let samples = rate;
+        let data_len = samples * 2;
+        let mut wav = Vec::with_capacity(44 + data_len as usize);
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36 + data_len).to_le_bytes());
+        wav.extend_from_slice(b"WAVE");
+        wav.extend_from_slice(b"fmt ");
+        wav.extend_from_slice(&16u32.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&rate.to_le_bytes());
+        wav.extend_from_slice(&(rate * 2).to_le_bytes());
+        wav.extend_from_slice(&2u16.to_le_bytes());
+        wav.extend_from_slice(&16u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&data_len.to_le_bytes());
+        for i in 0..samples {
+            let v = (i as f32 * 2.0 * std::f32::consts::PI * 440.0 / rate as f32).sin();
+            wav.extend_from_slice(&((v * 32000.0) as i16).to_le_bytes());
+        }
+
+        let bytes = render_file_audio(&wav, "wav", 2.0);
+        assert!(!bytes.is_empty(), "WAV must render");
+        assert_eq!(bytes.len() % 4, 0, "f32 buffer is 4-aligned");
+        let pcm: Vec<f32> = bytes
+            .chunks_exact(4)
+            .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
+            .collect();
+        // Trimmed to the real ~1 s length at 48 kHz (plus tiny slack).
+        assert!(pcm.len() / 2 <= 48_000 + 512, "no trailing silence");
+        assert!(
+            pcm.iter().any(|&s| s.abs() > 0.1),
+            "rendered file audio must be audible"
+        );
+    }
+
+    #[cfg(feature = "modern-audio")]
+    #[test]
+    fn render_file_audio_rejects_garbage() {
+        assert!(render_file_audio(b"not audio at all", "wav", 1.0).is_empty());
     }
 }

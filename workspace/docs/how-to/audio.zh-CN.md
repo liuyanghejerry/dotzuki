@@ -97,6 +97,44 @@ data/audio/
 音乐按音轨 id **去重**——用当前正在播放的 id 调用 `playMusic` 不会重启歌曲。渐弱每
 10 个视频帧把主音量降低一档，然后切断音轨。
 
+## 文件音频（WAV / OGG / FLAC / MP3）——可选
+
+除了 JSON `TrackDef` 芯片音乐，运行时还可以播放**真实的音频文件**（WAV、OGG-Vorbis、
+FLAC、MP3），通过引擎的现代混音器流式播放，支持音量/声像/淡入淡出、BGM/SFX 混音总
+线以及每总线 DSP（lowpass、混响）。
+
+这是**构建期的可选能力**：运行时必须用 `modern-audio` feature 编译（游戏在
+`dotzuki-runner` / `dotzuki-web` 依赖上启用）。没有该 feature 时，音频文件会被忽略，
+文件音轨命令保持静默空操作——不编译任何代码，也不构建解码器依赖。
+
+### 目录布局
+
+音频文件可以放在 `<dataRoot>/audio/` 下的任意位置，与 JSON 音轨并存（递归加载）：
+
+```
+data/audio/
+├── music/
+│   ├── town.json          # 芯片音乐 TrackDef（优先查找）
+│   └── field.ogg          # 流式文件音轨
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+```
+
+文件音轨的 **id** 是它相对 `audio/` 的路径去掉扩展名：
+`data/audio/music/field.ogg` → `playMusic("music/field")`。
+
+### 语义
+
+- 文件 BGM 音轨**循环**播放；与 JSON 音轨一样按 id 去重（重复请求正在播放的 id 是空
+  操作），被替换时交叉淡出（`fadeOutMusic` 约 1.2 秒渐弱）。
+- 文件 SFX 音轨在 SFX 总线上播放一次。
+- 与文件音轨同 id 的 JSON `TrackDef` **优先**——JSON 总是先查找。
+- 文件 BGM 与芯片音乐可以同时播放（在输出中混合）；`stopMusic` / `fadeOutMusic`
+  停止当前正在播放的那一种。
+- 文件是**流式**的：压缩字节驻留内存，PCM 按块解码——长 OGG 不会占用完整解码后的
+  内存。
+
 ## 编写要点
 
 - 音乐为四个 GB 通道而写；真实的 GB 音乐从 `pulse1` 起连续使用通道，通道流按 `hw` 索

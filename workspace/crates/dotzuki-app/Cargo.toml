@@ -7,5 +7,5 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.1" }
 notify = "6"

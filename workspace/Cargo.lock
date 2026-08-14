@@ -1069,7 +1069,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-renderer",
  "notify",
@@ -1077,16 +1077,17 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitflags 2.13.0",
  "serde",
  "serde_json",
+ "symphonia",
 ]
 
 [[package]]
 name = "dotzuki-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -1101,7 +1102,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "image",
  "serde",
@@ -1110,7 +1111,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "dotzuki-engine-script",
@@ -1124,7 +1125,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "boa_engine",
  "log",
@@ -1135,7 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-tiled"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "serde",
@@ -1144,7 +1145,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-engine-dsl",
@@ -1162,7 +1163,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-rules-macro",
@@ -1174,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules-macro"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1185,7 +1186,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-runner"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "cpal",
@@ -1207,7 +1208,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-runner-web"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "console_error_panic_hook",
@@ -1221,7 +1222,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-tui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1230,7 +1231,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1238,7 +1239,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-web"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "console_error_panic_hook",
  "dotzuki-audio",
@@ -1274,6 +1275,15 @@ name = "encode_unicode"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
+
+[[package]]
+name = "encoding_rs"
+version = "0.8.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
+dependencies = [
+ "cfg-if",
+]
 
 [[package]]
 name = "env_filter"
@@ -1319,6 +1329,12 @@ name = "error-iter"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8070547d90d1b98debb6626421d742c897942bbb78f047694a5eb769495eccd6"
+
+[[package]]
+name = "extended"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af9673d8203fcb076b19dfd17e38b3d4ae9f44959416ea532ce72415a6020365"
 
 [[package]]
 name = "fallible-iterator"
@@ -2208,6 +2224,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
 name = "leb128"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2400,7 +2422,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "minimon"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-rules",
@@ -3390,7 +3412,7 @@ dependencies = [
 
 [[package]]
 name = "run-wasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cargo-run-wasm",
 ]
@@ -3789,6 +3811,127 @@ name = "supports-unicode"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7401a30af6cb5818bb64852270bb722533397edcfc7344954a38f420819ece2"
+
+[[package]]
+name = "symphonia"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5773a4c030a19d9bfaa090f49746ff35c75dfddfa700df7a5939d5e076a57039"
+dependencies = [
+ "lazy_static",
+ "symphonia-bundle-flac",
+ "symphonia-bundle-mp3",
+ "symphonia-codec-pcm",
+ "symphonia-codec-vorbis",
+ "symphonia-core",
+ "symphonia-format-ogg",
+ "symphonia-format-riff",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-bundle-flac"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c91565e180aea25d9b80a910c546802526ffd0072d0b8974e3ebe59b686c9976"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+ "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-bundle-mp3"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4872dd6bb56bf5eac799e3e957aa1981086c3e613b27e0ac23b176054f7c57ed"
+dependencies = [
+ "lazy_static",
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-codec-pcm"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e89d716c01541ad3ebe7c91ce4c8d38a7cf266a3f7b2f090b108fb0cb031d95"
+dependencies = [
+ "log",
+ "symphonia-core",
+]
+
+[[package]]
+name = "symphonia-codec-vorbis"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f025837c309cd69ffef572750b4a2257b59552c5399a5e49707cc5b1b85d1c73"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-core"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea00cc4f79b7f6bb7ff87eddc065a1066f3a43fe1875979056672c9ef948c2af"
+dependencies = [
+ "arrayvec",
+ "bitflags 1.3.2",
+ "bytemuck",
+ "lazy_static",
+ "log",
+]
+
+[[package]]
+name = "symphonia-format-ogg"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b4955c67c1ed3aa8ae8428d04ca8397fbef6a19b2b051e73b5da8b1435639cb"
+dependencies = [
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+ "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-format-riff"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2d7c3df0e7d94efb68401d81906eae73c02b40d5ec1a141962c592d0f11a96f"
+dependencies = [
+ "extended",
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-metadata"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36306ff42b9ffe6e5afc99d49e121e0bd62fe79b9db7b9681d48e29fa19e6b16"
+dependencies = [
+ "encoding_rs",
+ "lazy_static",
+ "log",
+ "symphonia-core",
+]
+
+[[package]]
+name = "symphonia-utils-xiph"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee27c85ab799a338446b68eec77abf42e1a6f1bb490656e121c6e27bfbab9f16"
+dependencies = [
+ "symphonia-core",
+ "symphonia-metadata",
+]
 
 [[package]]
 name = "syn"

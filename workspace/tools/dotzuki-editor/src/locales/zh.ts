@@ -575,6 +575,9 @@ export default {
     addCommand: '添加',
     removeChannel: '移除',
     addChannel: '添加声道',
+    fileAudio: '文件音频',
+    fileAudioHint: '用真实引擎试听 WAV / OGG / FLAC / MP3 文件。需要启用 modern-audio 的引擎构建。',
+    fileAudioPick: '选择文件',
   },
   story: {
     title: '剧情',

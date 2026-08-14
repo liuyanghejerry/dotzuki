@@ -575,6 +575,9 @@ export default {
     addCommand: 'Add',
     removeChannel: 'Remove',
     addChannel: 'Add channel',
+    fileAudio: 'File audio',
+    fileAudioHint: 'Preview a WAV / OGG / FLAC / MP3 file with the real engine. Requires the engine build with modern-audio.',
+    fileAudioPick: 'Choose file',
   },
   story: {
     title: 'Story',

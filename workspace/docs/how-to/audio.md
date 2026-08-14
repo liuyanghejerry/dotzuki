@@ -103,6 +103,49 @@ Music is **deduplicated** by track id — calling `playMusic` with the currently
 playing id does not restart the song. Fade-outs step the master volume one
 level every 10 video frames before cutting the track.
 
+## File audio (WAV / OGG / FLAC / MP3) — optional
+
+Besides JSON `TrackDef` chiptune, the runtime can play **real audio files**
+(WAV, OGG-Vorbis, FLAC, MP3) streamed through the engine's modern mixer, with
+volume/pan/fade, BGM/SFX mixing buses and per-bus DSP (lowpass, reverb).
+
+This is an **optional, build-time capability**: the runtime must be compiled
+with the `modern-audio` feature (games enable it on their `dotzuki-runner` /
+`dotzuki-web` dependency). Without the feature, audio files are ignored and
+file-track commands stay silent no-ops — nothing is compiled in and no
+decoder dependency is built.
+
+### Layout
+
+Audio files live anywhere under `<dataRoot>/audio/` alongside JSON tracks
+(loaded recursively):
+
+```
+data/audio/
+├── music/
+│   ├── town.json          # chiptune TrackDef (checked first)
+│   └── field.ogg          # streamed file track
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+```
+
+A file track's **id** is its path relative to `audio/` with the extension
+stripped: `data/audio/music/field.ogg` → `playMusic("music/field")`.
+
+### Semantics
+
+- File BGM tracks **loop**; they deduplicate like JSON tracks
+  (`playMusic` with the currently playing id is a no-op) and cross-fade when
+  replaced (`fadeOutMusic` fades them out over ~1.2 s).
+- File SFX tracks play once on the SFX bus.
+- A JSON `TrackDef` whose id collides with a file track **wins** — JSON is
+  always checked first.
+- File BGM and chiptune can play at the same time (they mix in the output);
+  `stopMusic` / `fadeOutMusic` stop whichever is currently playing.
+- Files are **streamed**: the compressed bytes stay in memory and PCM is
+  decoded block-by-block, so a long OGG never occupies fully-decoded RAM.
+
 ## Authoring notes
 
 - Music is written for the four GB channels; real GB music uses channels

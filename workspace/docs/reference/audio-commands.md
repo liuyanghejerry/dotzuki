@@ -37,3 +37,15 @@ the engine's byte-code channel commands one-to-one. The authoritative schema is
 | `sfx_square_note` | `length`, `volume_envelope`, `frequency` | SFX square note with explicit envelope + 11-bit frequency |
 | `sfx_noise_note` | `length`, `volume_envelope`, `noise_params` | SFX noise note with explicit envelope |
 | `end_of_data` | — | Terminator |
+
+## File tracks (optional `modern-audio`)
+
+Beyond the `AudioCommand` chiptune vocabulary above, a project may provide
+real audio files (`.wav`, `.ogg`, `.flac`, `.mp3`) under `data/audio/`. Scene
+track ids resolve against JSON `TrackDef` documents first, then against file
+tracks keyed by their extension-stripped `audio/`-relative path (e.g.
+`data/audio/music/field.ogg` → `playMusic("music/field")`).
+
+File audio is a build-time option: it requires the runtime's `modern-audio`
+feature, and is compiled out entirely otherwise. See
+[the audio authoring guide](../how-to/audio.md) for layout and semantics.
