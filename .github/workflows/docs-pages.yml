@@ -1,0 +1,102 @@
+name: Docs Site (mdBook → GitHub Pages)
+
+# Builds the mdBook site from workspace/docs/ and publishes it to the
+# gh-pages branch. Layout mirrors Godot's versioned docs:
+#   - main push  → https://<user>.github.io/dotzuki/stable/
+#   - tag vX.Y.Z → https://<user>.github.io/dotzuki/vX.Y.Z/  (plus /stable/)
+#   - site root  → meta-refresh redirect to /stable/
+#
+# The repository Settings → Pages must be configured once to publish from
+# the gh-pages branch (root). See doc-outline.md §2.1 for the design.
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+    paths:
+      - "workspace/docs/**"
+      - ".github/workflows/docs-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install mdBook
+        run: |
+          curl -sSL -o /tmp/mdbook.tar.gz \
+            https://github.com/rust-lang/mdBook/releases/download/v0.5.4/mdbook-v0.5.4-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf /tmp/mdbook.tar.gz -C /usr/local/bin
+          mdbook --version
+
+      - name: Build book
+        run: mdbook build workspace/docs
+
+      - name: Prepare root redirect
+        run: |
+          mkdir -p redirect
+          cat > redirect/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta http-equiv="refresh" content="0; url=./stable/">
+            <link rel="canonical" href="./stable/">
+            <title>dotzuki Engine Book</title>
+          </head>
+          <body>
+            <p><a href="./stable/">dotzuki Engine Book</a></p>
+          </body>
+          </html>
+          EOF
+
+      # All three deploys share the gh-pages branch. keep_files: true and
+      # force_orphan: false are required so each destination directory
+      # (root redirect, /stable/, /vX.Y.Z/) survives the other deploys;
+      # this is also what makes the site versioned across tags.
+
+      - name: Deploy site root (redirect)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./redirect
+          keep_files: true
+          force_orphan: false
+          enable_jekyll: false
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Deploy to /stable/
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: workspace/docs/book
+          destination_dir: stable
+          keep_files: true
+          force_orphan: false
+          enable_jekyll: false
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Deploy to /vX.Y.Z/ (tags only)
+        if: github.ref_type == 'tag'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: workspace/docs/book
+          destination_dir: ${{ github.ref_name }}
+          keep_files: true
+          force_orphan: false
+          enable_jekyll: false
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com

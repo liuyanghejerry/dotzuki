@@ -282,7 +282,7 @@ the scene. Item records are read through the `battle.items` table.
 Losing a battle no longer strands the player with a 0-HP
 party: after the scene that received `"lose"` finishes (its own post-lose
 text plays first), the runner runs a **whiteout** — a brief blackout, a
-"<Name> collapsed…" line, then the whole party is healed to full HP/MP
+`<Name> collapsed…` line, then the whole party is healed to full HP/MP
 (status cleared) and the player returns to the **entry map's spawn point**
 (the current map if it is the entry map, otherwise the entry map loads).
 Flags, inventory and money are kept. Map-less (dialogue-only) projects just

@@ -60,7 +60,7 @@ Rust 游戏开发者：
 
 ```
 docs/                              # mdBook src
-├── index.md                       # [迁移] ← docs/README.md（Reader guide + 文档状态索引）
+├── index.md                       # 首页：Reader guide + 文档状态索引（已落地）
 ├── tutorials/                     # —— 教程层：教入门 ——
 │   ├── quickstart.md              # [迁移] ← QUICKSTART.md（校对后原样迁入）
 │   ├── your-first-game.md         # [新建] 端到端教程：城镇→剧情→战斗→存档
@@ -112,7 +112,7 @@ docs/                              # mdBook src
 
 | 现有文件 | 去向 |
 |---|---|
-| `docs/README.md` | `index.md`（Reader guide 保留，文档状态索引更新） |
+| `docs/README.md` | `index.md`（Reader guide 保留，文档状态索引更新）✅ |
 | `docs/QUICKSTART.md` | `tutorials/quickstart.md` |
 | `docs/BATTLE_ENGINE_GUIDE.md` | 拆分为 `how-to/battles.md` + `explanation/effect-stack.md` |
 | `docs/BATTLE_ENGINE_GUIDE.zh-CN.md` | 已删除：英文源拆分后翻译失效（doc-standard §6 翻译须跟踪源）；需要时按新结构重译 |
@@ -141,12 +141,12 @@ docs/                              # mdBook src
 
 ## 4. 迁移里程碑
 
-| 里程碑 | 内容 | 完成判据 |
-|---|---|---|
-| **M0（本分支）** | 订立规范 + 大纲（本文档 + `doc-standard.md`） | 评审通过，合入 master |
-| **M1 站点骨架** | `book.toml` + `SUMMARY.md`（按 §3 生成）+ CI 发布到 GitHub Pages（按 tag 版本化） | 站点可访问、有搜索、无内容变动 |
-| **M2 内容迁移** | 按 §3.1 映射表迁移/拆分现有文档；archive 隔离历史文档；调和 DSL 矛盾（以代码为准） | 所有现有文档就位；索引更新；链接全通 |
-| **M3 新内容补齐** | `your-first-game` 教程项目与页面、`glossary.md`、`architecture.md`、`changelog.md` + 首篇迁移指南 | 教程可逐步复现；术语表覆盖正文术语 |
-| **M4 体验增强** | 编辑器内帮助面板（渲染 reference 页）；`dotzuki new` 教程模板 | zero-Rust 作者全程不离开编辑器 |
+| 里程碑 | 内容 | 完成判据 | 状态 |
+|---|---|---|---|
+| **M0（本分支）** | 订立规范 + 大纲（本文档 + `doc-standard.md`） | 评审通过，合入 master | ✅ 已落地 |
+| **M1 站点骨架** | `book.toml` + `SUMMARY.md`（按 §3 生成）+ CI 发布到 GitHub Pages（按 tag 版本化） | 站点可访问、有搜索、无内容变动 | 🚧 本 PR |
+| **M2 内容迁移** | 按 §3.1 映射表迁移/拆分现有文档；archive 隔离历史文档；调和 DSL 矛盾（以代码为准） | 所有现有文档就位；索引更新；链接全通 | ✅ 已落地（PR #9） |
+| **M3 新内容补齐** | `your-first-game` 教程项目与页面、`glossary.md`、`architecture.md`、`changelog.md` + 首篇迁移指南 | 教程可逐步复现；术语表覆盖正文术语 | 待办 |
+| **M4 体验增强** | 编辑器内帮助面板（渲染 reference 页）；`dotzuki new` 教程模板 | zero-Rust 作者全程不离开编辑器 | 待办 |
 
 每阶段独立 PR，逐段评审；M1–M4 期间原文档保持可读（迁移完成前不做破坏性移动）。
