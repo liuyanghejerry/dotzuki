@@ -39,3 +39,24 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('')).toBe('')
   })
 })
+
+describe('renderMarkdown tables (GFM)', () => {
+  it('renders a header + body table', () => {
+    const md = '| A | B |\n|---|---|\n| 1 | 2 |\n'
+    expect(renderMarkdown(md)).toBe('<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody>\n<tr><td>1</td><td>2</td></tr>\n</tbody></table>')
+  })
+
+  it('escapes cell content and keeps inline formatting', () => {
+    const md = '| X | Y |\n|---|---|\n| <script> | **bold** and `code` |\n'
+    const html = renderMarkdown(md)
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('<strong>bold</strong>')
+    expect(html).toContain('<code>code</code>')
+  })
+
+  it('only treats a dash delimiter row as a table', () => {
+    const md = '| just | text |\n| no dash here |\n'
+    const html = renderMarkdown(md)
+    expect(html).not.toContain('<table>')
+  })
+})

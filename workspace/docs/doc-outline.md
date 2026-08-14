@@ -2,7 +2,7 @@
 
 > 本文档定义文档体系的**呈现形式**（怎么发布、怎么导航、读者走哪条路）和
 > **目标内容大纲**（每页是什么、从哪来）。写作规则见
-> [`doc-standard.md`](./doc-standard.md)。状态：active（M0–M3.5 已落地）。
+> [`doc-standard.md`](./doc-standard.md)。状态：active（M0–M4 已落地）。
 
 ## 1. 对标结论
 
@@ -39,9 +39,10 @@
 
 ### 2.3 编辑器内帮助（对标 RPG Maker 的 F1 / Help → Contents）
 
-- 远期目标：dotzuki-editor 内置帮助面板，渲染 reference 层页面
-  （数据表 schema、DSL 语法、CLI 速查），让 zero-Rust 作者不离开编辑器查文档。
-- 在此之前，编辑器 README 深链到站点的 reference 页面即可。
+- 已落地：dotzuki-editor 顶栏 ❓ 打开帮助面板，内置并渲染 reference 层
+  页面（CLI 速查、项目清单、Scene/GUI DSL、战斗规则、术语表），让
+  zero-Rust 作者不离开编辑器查文档。
+- 编辑器 README 继续深链到站点的 reference 页面。
 
 ### 2.4 读者路径（Reader paths）
 
@@ -154,6 +155,6 @@ docs/                              # mdBook src
 | **M2.5 翻译覆盖** | 存量文档逐篇产出 `-zh-CN` 翻译版；`glossary.md` 补全部术语中文对照；`SUMMARY.md` 加「中文（zh-CN）」分组 | 每篇英文源都有对应翻译版，门禁 §6 校验通过 | ✅ 已落地（PR #16 起逐批合入） |
 | **M3 新内容补齐** | `your-first-game` 教程项目与页面、`glossary.md`、`architecture.md`、`changelog.md` + 首篇迁移指南；新页面中英双语成对产出 | 教程可逐步复现；术语表覆盖正文术语；每个新页面带翻译版 | ✅ 已落地（PR #23 起逐批合入） |
 | **M3.5 how-to 补齐** | `how-to/scenes.md`、`how-to/ui.md`、`how-to/assets.md` 三页（大纲 §3 剩余的 [新建] how-to 页），中英成对、入 SUMMARY 与 index 双语收录、新术语进 glossary | 三页收录于 SUMMARY 主树与中文分组；mdbook build 0 警告；DSL 示例可编译 | ✅ 已落地（PR #26 起逐批合入） |
-| **M4 体验增强** | 编辑器内帮助面板（渲染 reference 页）；`dotzuki new` 教程模板 | zero-Rust 作者全程不离开编辑器 | 待办 |
+| **M4 体验增强** | 编辑器内帮助面板（渲染 reference 页）；`dotzuki new` 教程模板 | zero-Rust 作者全程不离开编辑器 | ✅ 已落地（PR #29 起逐批合入） |
 
 每阶段独立 PR，逐段评审；M1–M4 期间原文档保持可读（迁移完成前不做破坏性移动）。

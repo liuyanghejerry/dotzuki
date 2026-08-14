@@ -5,6 +5,7 @@ export const useEditorStore = defineStore('editor', () => {
   const activeActivity = ref<string>('')
   const sidebarOpen = ref(true)
   const assistantOpen = ref(false)
+  const helpOpen = ref(false)
   const saving = ref(false)
   const lastSaveTime = ref<number | null>(null)
   const pendingCharacterId = ref<string | null>(null)
@@ -21,10 +22,14 @@ export const useEditorStore = defineStore('editor', () => {
     assistantOpen.value = !assistantOpen.value
   }
 
+  function toggleHelp() {
+    helpOpen.value = !helpOpen.value
+  }
+
   function jumpToCharacter(charId: string) {
     pendingCharacterId.value = charId
     activeActivity.value = 'characters'
   }
 
-  return { activeActivity, sidebarOpen, assistantOpen, saving, lastSaveTime, pendingCharacterId, setActivity, toggleSidebar, toggleAssistant, jumpToCharacter }
+  return { activeActivity, sidebarOpen, assistantOpen, helpOpen, saving, lastSaveTime, pendingCharacterId, setActivity, toggleSidebar, toggleAssistant, toggleHelp, jumpToCharacter }
 })
