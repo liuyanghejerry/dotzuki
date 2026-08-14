@@ -83,5 +83,10 @@ export default defineConfig({
     // Don't auto-open a browser tab on start; open http://localhost:5174 yourself
     // (or pass `vite --open` for a one-off). Applies to dev/demo/pokered/wuxia.
     open: false,
+    fs: {
+      // The Help panel bundles `workspace/docs/reference/*.md` via `?raw`
+      // imports; the dev server must be allowed to serve those files.
+      allow: [path.resolve(__dirname, '../../docs')],
+    },
   },
 })

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex flex-col bg-gray-900 text-gray-100">
+  <div class="h-screen relative flex flex-col bg-gray-900 text-gray-100">
     <header class="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
       <div class="flex items-center gap-3">
         <h1 class="text-lg font-bold text-blue-400">{{ $t('app.title') }}</h1>
@@ -23,6 +23,11 @@
           :title="$t('assistant.open')"
           :class="['px-2 py-1 text-sm rounded', editor.assistantOpen ? 'bg-blue-600 text-white' : 'hover:bg-gray-700']"
         >✨</button>
+        <button
+          @click="editor.toggleHelp()"
+          :title="$t('help.open')"
+          :class="['px-2 py-1 text-sm rounded', editor.helpOpen ? 'bg-blue-600 text-white' : 'hover:bg-gray-700']"
+        >❓</button>
       </div>
     </header>
 
@@ -67,6 +72,8 @@
         <AssistantPanel v-show="editor.assistantOpen" />
       </div>
     </template>
+
+    <HelpPanel v-show="editor.helpOpen" />
   </div>
 </template>
 
@@ -79,6 +86,7 @@ import { useEditorStore } from './stores/editor'
 import { useLocalize } from './composables/useLocalize'
 import WelcomeScreen from './components/WelcomeScreen.vue'
 import AssistantPanel from './components/assistant/AssistantPanel.vue'
+import HelpPanel from './components/help/HelpPanel.vue'
 
 const { t, locale: i18nLocale } = useI18n()
 const { localize } = useLocalize()

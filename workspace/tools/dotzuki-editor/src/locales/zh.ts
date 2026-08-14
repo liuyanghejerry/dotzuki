@@ -1,4 +1,9 @@
 export default {
+  help: {
+    title: '帮助',
+    open: '帮助（reference 参考页）',
+    close: '关闭帮助',
+  },
   assistant: {
     title: 'AI 助手',
     open: 'AI 助手',

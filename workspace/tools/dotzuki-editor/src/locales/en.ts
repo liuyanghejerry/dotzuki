@@ -1,4 +1,9 @@
 export default {
+  help: {
+    title: 'Help',
+    open: 'Help (reference pages)',
+    close: 'Close help',
+  },
   assistant: {
     title: 'AI Assistant',
     open: 'AI Assistant',
