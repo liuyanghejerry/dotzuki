@@ -25,7 +25,7 @@ source in `crates/dotzuki-engine-dsl/src/`.
 - The `.scene` runtime binding contract (`script_config.json`) is described
   in [project-manifest.md](../project-manifest.md) (formerly
   `game-project-spec.md`).
-- The docs index ([README.md](../../README.md)) lists this page's place in
+- The docs index ([index.md](../../index.md)) lists this page's place in
   the reference layer.
 
 Every example below compiles under the current compiler; the full
