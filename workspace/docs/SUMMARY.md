@@ -47,6 +47,7 @@
 # Release Notes
 
 - [Changelog](release-notes/changelog.md)
+- [Migrating to v0.1.0](release-notes/migration/v0.1.0.md)
 
 # Archive
 
@@ -95,3 +96,4 @@ archive pages stay English-only (doc-standard §5).
 - [道具记录](reference/data-tables/items.zh-CN.md)
 - [等级成长](reference/data-tables/levels.zh-CN.md)
 - [变更日志](release-notes/changelog.zh-CN.md)
+- [迁移至 v0.1.0](release-notes/migration/v0.1.0.zh-CN.md)
