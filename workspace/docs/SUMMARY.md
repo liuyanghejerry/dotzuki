@@ -82,3 +82,7 @@ More translations land as M2.5 batches merge.
 - [GUI DSL](reference/dsl/gui.zh-CN.md)
 - [Theme & Style DSL](reference/dsl/theme-style.zh-CN.md)
 - [Codegen 约定](reference/dsl/codegen.zh-CN.md)
+- [架构总览](explanation/architecture.zh-CN.md)
+- [效果栈战斗引擎](explanation/effect-stack.zh-CN.md)
+- [GameData Trait](explanation/game-data.zh-CN.md)
+- [存档兼容](explanation/save-compatibility.zh-CN.md)
