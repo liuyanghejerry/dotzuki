@@ -22,7 +22,9 @@
 
 ## v0.1.0
 
-引擎 workspace 的初始发布版本：核心引擎、战斗效果栈、`dotzuki-rules`、DSL
-编译器、运行器、CLI、渲染器、UI、音频、app/tui/web shell，以及
-dotzuki-editor 工具链。（若这条记录以占位形式发布，请从首次 release 之前的
-git 历史回填。）
+首个发布版本（crates.io）。引擎 workspace 的版本线从 v0.5.x 预发布 tag
+（`v0.5.0`、`v0.5.1`）重置为 `0.1.0`；每个 `dotzuki-*` crate 以 0.1.0 发布，
+并落地 tag 驱动的发布管线：`workspace/scripts/publish-crates.sh`、发布工作流与
+package-check PR 门禁。tag `v0.1.0` 的代码只比 `v0.5.1` 多一个提交——这次跳跃
+没有 API 变更。预发布时代的消费者按[迁移指南](migration/v0.1.0.md)把 git tag 从
+`v0.5.x` 换成 `v0.1.0`（或改成 registry 形式）。

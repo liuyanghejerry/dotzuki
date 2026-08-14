@@ -71,7 +71,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（首篇：[`release-notes/migration/v0.1.0.md`](./release-notes/migration/v0.1.0.md)）
 
 ## 归档
 

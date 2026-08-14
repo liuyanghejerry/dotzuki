@@ -70,7 +70,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 
 ## Release notes
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release
+- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release (first: [`release-notes/migration/v0.1.0.md`](./release-notes/migration/v0.1.0.md))
 
 ## Archive
 
