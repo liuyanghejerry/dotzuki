@@ -5,6 +5,7 @@
 # Tutorials
 
 - [Quickstart](tutorials/quickstart.md)
+- [Your First Game](tutorials/your-first-game.md)
 - [Your First Game in the Editor](tutorials/editor-first-game.md)
 
 # How-To Guides
@@ -67,6 +68,7 @@ archive pages stay English-only (doc-standard §5).
 
 - [简介](index.zh-CN.md)
 - [快速上手](tutorials/quickstart.zh-CN.md)
+- [你的第一个游戏](tutorials/your-first-game.zh-CN.md)
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
 - [制作地图](how-to/maps.zh-CN.md)
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)

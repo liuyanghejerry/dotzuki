@@ -29,6 +29,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | Document | Covers |
 |---|---|
 | [`tutorials/quickstart.md`](./tutorials/quickstart.md) | 5-minute zero-code tour: `dotzuki new` → edit `.scene` → `check` → `run` |
+| [`tutorials/your-first-game.md`](./tutorials/your-first-game.md) | Build the `examples/your-first-game/` project step by step: town, scripted battle, random encounters, save |
 | [`tutorials/editor-first-game.md`](./tutorials/editor-first-game.md) | 15-minute guided tour of the dotzuki-editor, from an empty machine to a playable project with a battle |
 
 ## How-to guides

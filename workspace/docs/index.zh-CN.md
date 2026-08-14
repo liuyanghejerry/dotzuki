@@ -30,6 +30,7 @@
 | 文档 | 涵盖内容 |
 |---|---|
 | [`tutorials/quickstart.md`](./tutorials/quickstart.md) | 5 分钟零代码之旅：`dotzuki new` → 编辑 `.scene` → `check` → `run` |
+| [`tutorials/your-first-game.md`](./tutorials/your-first-game.md) | 逐步构建 `examples/your-first-game/` 项目：城镇、脚本战斗、随机遇敌、存档 |
 | [`tutorials/editor-first-game.md`](./tutorials/editor-first-game.md) | 15 分钟带你逛一遍 dotzuki-editor，从一台空机器到一个带战斗的可玩项目 |
 
 ## 指南
