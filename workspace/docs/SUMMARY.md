@@ -67,3 +67,8 @@ More translations land as M2.5 batches merge.
 - [简介](index.zh-CN.md)
 - [快速上手](tutorials/quickstart.zh-CN.md)
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
+- [制作地图](how-to/maps.zh-CN.md)
+- [主题与样式指南](how-to/themes.zh-CN.md)
+- [音频制作指南](how-to/audio.zh-CN.md)
+- [i18n 指南](how-to/i18n.zh-CN.md)
+- [发布与升级指南](how-to/publishing.zh-CN.md)
