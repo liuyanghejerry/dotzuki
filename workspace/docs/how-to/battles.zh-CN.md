@@ -492,7 +492,7 @@ pub enum Op {                                        // dotzuki-rules/src/model.
   ——吸血/反伤的基数；`model.rs:214`）。
 - `Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String),
   MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }`（`model.rs:268`）——由
-  `unless` / `when` / `cond` 守卫使用。（最后四个是为迁移添加的：侧面状态的
+  `unless` / `when` / `cond` 守卫使用。（最后四个是为迁移添加的：侧边状态的
   Substitute/同属性否决、Dream Eater 的睡眠门槛、OHKO 的等级门槛。）
 - `DamageValue { Const(u16), UserLevel, RngScaledLevel { num, den } }`——`SetDamage` 的数值
   来源（Sonic Boom 20 / Dragon Rage 40 / Seismic Toss = 等级 / Psywave；`model.rs:249`）。

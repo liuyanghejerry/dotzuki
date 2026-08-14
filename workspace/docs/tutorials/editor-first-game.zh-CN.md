@@ -116,7 +116,7 @@ dotzuki check ~/dotzuki-projects/<your-game>
   攻击，Bryn 的 `leftovers` 在他的行动结束后给他回血，场景还可以在 `startBattle`
   之前用 `setWeather("sandstorm")` 布置预置的 `sandstorm`）；持有的道具不会被消耗，
   天气只属于单场战斗（只能由场景布置），战斗失败会治疗全队并把你送回入口地图的
-  出生点（还没有治疗点系统）。其余内容都已就位：敌方队伍（`encounters` 表 —— 排队
+  出生点（还没有回复点系统）。其余内容都已就位：敌方队伍（`encounters` 表 —— 排队
   出场、EXP 累加）、trainer 战（Run 被禁用、胜利得钱）、仅野怪可用的 Run 动作（场景
   会看到第三种结果 `"run"`），以及半价出售的商店。规则格式见
   [战斗规则参考](../reference/battle-rules.md)。
