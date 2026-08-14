@@ -57,6 +57,15 @@ jobs:
         working-directory: workspace
         run: cargo test --workspace
 
+      - name: Smoke-run the tutorial project
+        working-directory: workspace
+        run: |
+          # M3: the zero-Rust tutorial project (examples/your-first-game)
+          # must compile-check and boot headless — the walkthrough target
+          # of tutorials/your-first-game.md.
+          ./target/debug/dotzuki check examples/your-first-game
+          ./target/debug/dotzuki run examples/your-first-game --headless --frames 180
+
   package-check:
     runs-on: ubuntu-latest
     permissions:
