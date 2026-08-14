@@ -1,6 +1,6 @@
 # 素材
 
-如何管理游戏素材：tileset 与共享瓦片库、转换 Game Boy 2bpp 美术、字体，以及每个文件的存放位置。
+如何管理游戏素材：tileset 与共享 tile 库、转换 Game Boy 2bpp 美术、字体，以及每个文件的存放位置。
 
 > 本文是 `how-to/assets.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
@@ -10,7 +10,7 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-本页是素材管线视角；tileset 的地图侧是[制作地图](./maps.md)，素材目录的清单契约是[项目清单](../reference/project-manifest.md)，编辑器导览是[在编辑器中制作你的第一个游戏](../tutorials/editor-first-game.md)。
+开始前，请先阅读[制作地图](./maps.md)（tileset 的地图侧）与[项目清单](../reference/project-manifest.md)（素材目录契约）；[在编辑器中制作你的第一个游戏](../tutorials/editor-first-game.md)是编辑器导览。
 
 ## 素材放在哪里
 
@@ -21,13 +21,13 @@
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 ```
 
-脚手架项目自带一套可用的布局：`assets/tileset.png`（32×8 演示图）、`assets/scenes/`，以及 `data/tiles/`——支撑地图编辑器选瓦片面板（Backdrop/Trace）的共享瓦片库。声明根目录之外的一切都是项目数据，不是受管素材。
+脚手架项目自带一套可用的布局：`assets/tileset.png`（32×8 演示图）、`assets/scenes/`，以及 `data/tiles/`——支撑地图编辑器选 tile 面板（Backdrop/Trace）的共享 tile 库。声明根目录之外的一切都是项目数据，不是受管素材。
 
 ## Tileset
 
-tileset 是 `tileset.png` 图集加它的 Tiled 元数据：全彩 RGBA、8×8 像素瓦片横向排列、[GID](../reference/glossary.md) 从 1 起、行优先。地图的 `map.tmx.json` 引用自己 `tileset.png` 里的 GID；collision 层用非零 GID 标记阻挡瓦片——完整地图契约见[制作地图](./maps.md)。
+tileset 是 `tileset.png` 图集加它的 Tiled 元数据：全彩 RGBA、8×8 像素 tile 横向排列、[GID](../reference/glossary.md) 从 1 起、行优先。地图的 `map.tmx.json` 引用自己 `tileset.png` 里的 GID；collision 层用非零 GID 标记阻挡 tile——完整地图契约见[制作地图](./maps.md)。
 
-`.tsx` 文件为 Tiled 命名同一张图，让地图编辑器能把瓦片当调色板用。逐地图的 `tileset.png` 与 `script.scene` 一起生成；可复用的图放在共享的 `data/tiles/` 库里。
+`.tsx` 文件为 Tiled 命名同一张图，让地图编辑器能把 tile 当调色板用。脚手架为每张地图在 `script.scene` 旁生成一份 `tileset.png`；可复用的图放在共享的 `data/tiles/` 库里。
 
 ## 转换 Game Boy 2bpp 美术
 

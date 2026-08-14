@@ -8,10 +8,10 @@ Game Boy 2bpp art, fonts, and where each file lives.
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-This page is the asset pipeline view; the map side of tilesets is
-[Authoring Maps](./maps.md), the manifest contract for asset directories is
-[the project manifest](../reference/project-manifest.md), and a guided
-editor tour is [Your First Game in the Editor](../tutorials/editor-first-game.md).
+Before you start, read [Authoring Maps](./maps.md) for the map side of
+tilesets and [the project manifest](../reference/project-manifest.md) for
+the asset-directory contract; [Your First Game in the
+Editor](../tutorials/editor-first-game.md) is the guided editor tour.
 
 ## Where assets live
 
@@ -27,8 +27,8 @@ and the editor's Assets activity lists exactly those roots. By convention
 
 The scaffolded project ships a working layout: `assets/tileset.png` (a 32×8
 demo sheet), `assets/scenes/`, and `data/tiles/` — the shared tile library
-backing the map editor's tile picker (Backdrop/Trace). Everything outside
-the declared roots is project data, not managed assets.
+that backs the map editor's tile picker (Backdrop/Trace). Everything
+outside the declared roots is project data, not managed assets.
 
 ## Tilesets
 
@@ -39,9 +39,9 @@ RGBA, 8×8-pixel tiles laid out horizontally, [GIDs](../reference/glossary.md)
 the full map contract is in [Authoring Maps](./maps.md).
 
 The `.tsx` file names the same sheet for Tiled, so the map editor can
-offer the tiles as a palette. A per-map `tileset.png` is seeded alongside
-`script.scene`; the shared `data/tiles/` library is where reusable sheets
-live.
+offer the tiles as a palette. The scaffolder seeds a per-map
+`tileset.png` next to its `script.scene`; reusable sheets live in the
+shared `data/tiles/` library.
 
 ## Converting Game Boy 2bpp art
 
