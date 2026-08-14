@@ -2,7 +2,7 @@
 
 > 本文档定义文档体系的**呈现形式**（怎么发布、怎么导航、读者走哪条路）和
 > **目标内容大纲**（每页是什么、从哪来）。写作规则见
-> [`doc-standard.md`](./doc-standard.md)。状态：active（M0–M3 已落地）。
+> [`doc-standard.md`](./doc-standard.md)。状态：active（M0–M3.5 已落地）。
 
 ## 1. 对标结论
 
@@ -70,12 +70,12 @@ docs/                              # mdBook src
 │   └── editor-first-game.md       # [迁移] ← tools/dotzuki-editor/docs/first-game.md
 ├── how-to/                        # —— 指南层：教任务 ——
 │   ├── maps.md                    # [新建] Tiled 地图 + objects.json 工作流（自 spec §Maps 抽出）
-│   ├── scenes.md                  # [新建] .scene 剧情/事件脚本工作流
+│   ├── scenes.md                  # [新建✅] .scene 剧情/事件脚本工作流（M3.5 落地）
 │   ├── battles.md                 # [拆分] ← BATTLE_ENGINE_GUIDE.md 的 RON 作者向部分
-│   ├── ui.md                      # [新建] .gui 布局制作（编辑器 Scripts 活动）
+│   ├── ui.md                      # [新建✅] .gui 布局制作（编辑器 UI 活动，M3.5 落地）
 │   ├── themes.md                  # [拆分] ← THEME_STYLE_DSL.md 的使用部分
 │   ├── audio.md                   # [迁移] ← AUDIO.md
-│   ├── assets.md                  # [新建] 素材管线：asset-converter、tileset、CJK 字体
+│   ├── assets.md                  # [新建✅] 素材管线：asset-converter、tileset、内嵌 CJK 字体（M3.5 落地）
 │   ├── i18n.md                    # [迁移] ← JS_SCRIPT_I18N.md 的现行部分
 │   └── publishing.md              # [迁移] ← PUBLISHING.md
 ├── reference/                     # —— 参考层：查定义 ——
@@ -153,6 +153,7 @@ docs/                              # mdBook src
 | **M2 内容迁移** | 按 §3.1 映射表迁移/拆分现有文档；archive 隔离历史文档；调和 DSL 矛盾（以代码为准） | 所有现有文档就位；索引更新；链接全通 | ✅ 已落地（PR #9） |
 | **M2.5 翻译覆盖** | 存量文档逐篇产出 `-zh-CN` 翻译版；`glossary.md` 补全部术语中文对照；`SUMMARY.md` 加「中文（zh-CN）」分组 | 每篇英文源都有对应翻译版，门禁 §6 校验通过 | ✅ 已落地（PR #16 起逐批合入） |
 | **M3 新内容补齐** | `your-first-game` 教程项目与页面、`glossary.md`、`architecture.md`、`changelog.md` + 首篇迁移指南；新页面中英双语成对产出 | 教程可逐步复现；术语表覆盖正文术语；每个新页面带翻译版 | ✅ 已落地（PR #23 起逐批合入） |
+| **M3.5 how-to 补齐** | `how-to/scenes.md`、`how-to/ui.md`、`how-to/assets.md` 三页（大纲 §3 剩余的 [新建] how-to 页），中英成对、入 SUMMARY 与 index 双语收录、新术语进 glossary | 三页收录于 SUMMARY 主树与中文分组；mdbook build 0 警告；DSL 示例可编译 | ✅ 已落地（PR #26 起逐批合入） |
 | **M4 体验增强** | 编辑器内帮助面板（渲染 reference 页）；`dotzuki new` 教程模板 | zero-Rust 作者全程不离开编辑器 | 待办 |
 
 每阶段独立 PR，逐段评审；M1–M4 期间原文档保持可读（迁移完成前不做破坏性移动）。

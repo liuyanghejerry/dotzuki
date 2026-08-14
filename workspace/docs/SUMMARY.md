@@ -16,6 +16,7 @@
 - [Authoring Battles](how-to/battles.md)
 - [Themes & Styles](how-to/themes.md)
 - [Audio](how-to/audio.md)
+- [Assets](how-to/assets.md)
 - [Bilingual Text (i18n)](how-to/i18n.md)
 - [Publishing & Upgrading](how-to/publishing.md)
 
@@ -79,6 +80,7 @@ archive pages stay English-only (doc-standard §5).
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)
 - [主题与样式指南](how-to/themes.zh-CN.md)
 - [音频制作指南](how-to/audio.zh-CN.md)
+- [素材](how-to/assets.zh-CN.md)
 - [i18n 指南](how-to/i18n.zh-CN.md)
 - [发布与升级指南](how-to/publishing.zh-CN.md)
 - [项目清单](reference/project-manifest.zh-CN.md)
