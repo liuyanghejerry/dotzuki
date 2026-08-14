@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5143243f.js";
+            window.path_to_searchindex_js = "searchindex-2c1d51bc.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d5ffd437.js"></script>
+        <script src="toc-2703abeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -214,6 +214,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </thead>
 <tbody>
 <tr><td><a href="#quickstart--your-first-zero-rust-game-in-5-minutes"><code>tutorials/quickstart.md</code></a></td><td>5-minute zero-code tour: <code>dotzuki new</code> → edit <code>.scene</code> → <code>check</code> → <code>run</code></td></tr>
+<tr><td><a href="#your-first-game--town-battle-story-and-save"><code>tutorials/your-first-game.md</code></a></td><td>Build the <code>examples/your-first-game/</code> project step by step: town, scripted battle, random encounters, save</td></tr>
 <tr><td><a href="#your-first-game-in-15-minutes"><code>tutorials/editor-first-game.md</code></a></td><td>15-minute guided tour of the dotzuki-editor, from an empty machine to a playable project with a battle</td></tr>
 </tbody>
 </table>
@@ -382,6 +383,727 @@ means the scenes are valid.</p>
 <li><strong>Full doc index</strong> — <a href="#dotzuki-engine--documentation-index">doc index</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="your-first-game--town-battle-story-and-save"><a class="header" href="#your-first-game--town-battle-story-and-save">Your First Game — Town, Battle, Story and Save</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: tutorial</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>Build the project committed at
+<a href="../examples/your-first-game"><code>examples/your-first-game/</code></a> step by step: a town with an
+NPC guide, a scripted battle, a clearing whose tall grass rolls random encounters, and a
+save — authored entirely as data, with no Rust.</p>
+<p>Before you start, finish <a href="#quickstart--your-first-zero-rust-game-in-5-minutes">the quickstart</a> and put a <code>dotzuki</code> binary on
+your PATH. Build it once from <code>workspace/</code>:</p>
+<pre><code class="language-bash">cd workspace
+cargo build --release --bin dotzuki
+</code></pre>
+<p>The binary lands at <code>target/release/dotzuki</code>.</p>
+<p>The goal is the committed project itself: a playable town, a scripted battle, a
+random-encounter clearing, and a save. Every listing below is a copy of that project,
+so every step ends in a state the next one continues from. The two <code>map.tmx.json</code>
+listings abbreviate their tile arrays with a marked <code>&lt;!-- excerpt --&gt;</code> comment; copy
+those arrays from the committed project.</p>
+<h2 id="1-scaffold-the-project"><a class="header" href="#1-scaffold-the-project">1. Scaffold the project</a></h2>
+<pre><code class="language-bash">dotzuki new your-first-game
+cd your-first-game
+</code></pre>
+<p><code>dotzuki new</code> <a href="#glossary">scaffolds</a> a
+<a href="#glossary">zero-Rust project</a> — a plain directory the engine and the
+editor consume as-is. The layout it writes:</p>
+<ul>
+<li><code>.dotzuki-editor.json</code> — the <a href="#glossary">manifest</a>: seven editor
+activities, an empty data-<code>tables</code> list, and a <code>game</code> section.</li>
+<li><code>data/maps/</code> — one directory per map; empty for now.</li>
+<li><code>data/tiles/</code> — the shared tile library; this game does not use it, leave it empty.</li>
+<li><code>data/stories/</code> — the story-bible skeleton; this game does not use it, leave it
+empty.</li>
+<li><code>gfx/</code> — graphics assets.</li>
+<li><code>assets/scenes/main.scene</code> — a starter <a href="#glossary">scene</a> written in
+the <a href="#glossary">Game DSL</a>; step 6 replaces it.</li>
+<li><code>README.md</code> — free-form notes.</li>
+</ul>
+<h2 id="2-the-manifest"><a class="header" href="#2-the-manifest">2. The manifest</a></h2>
+<p>Replace the scaffolded <code>.dotzuki-editor.json</code> with this file:</p>
+<pre><code class="language-json">{
+  "name": "Your First Game",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps"
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "extension": ".scene",
+        "scriptsDir": "maps"
+      }
+    },
+    {
+      "id": "play",
+      "type": "play",
+      "label": "Play",
+      "icon": "play",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "heroes",
+            "label": "Heroes",
+            "dir": "heroes",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "monsters",
+            "label": "Monsters",
+            "dir": "monsters",
+            "icon": "bug",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "encounters",
+            "label": "Encounters",
+            "dir": "encounters",
+            "icon": "crosshair",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "enemies", "label": "Enemies", "type": "list" },
+              { "id": "trainer", "label": "Trainer", "type": "boolean" },
+              { "id": "money", "label": "Money", "type": "number" }
+            ]
+          },
+          {
+            "id": "spells",
+            "label": "Spells",
+            "dir": "spells",
+            "icon": "sparkles",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "type", "label": "Category", "type": "string" },
+              { "id": "power", "label": "Power", "type": "number" },
+              { "id": "accuracy", "label": "Accuracy", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "stat", "label": "Stat", "type": "string" },
+              { "id": "mpCost", "label": "MP Cost", "type": "number" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "healHp", "label": "Heal HP", "type": "number" },
+              { "id": "price", "label": "Price", "type": "number" },
+              { "id": "effect", "label": "Effect", "type": "string" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "story",
+      "type": "story",
+      "label": "Story",
+      "icon": "book",
+      "enabled": true,
+      "config": {
+        "locales": [
+          "en",
+          "zh"
+        ],
+        "scenesDir": "maps",
+        "storiesDir": "stories"
+      }
+    },
+    {
+      "id": "assets",
+      "type": "assets",
+      "label": "Assets",
+      "icon": "image",
+      "enabled": true,
+      "config": {
+        "roots": [
+          "gfx"
+        ]
+      }
+    },
+    {
+      "id": "tiles",
+      "type": "tiles",
+      "label": "Tiles",
+      "icon": "tiles",
+      "enabled": true,
+      "config": {
+        "backdropMapsDir": "maps",
+        "tileSize": 16,
+        "tilesDir": "tiles"
+      }
+    }
+  ],
+  "game": {
+    "entryScene": "main",
+    "entryMap": "Hometown",
+    "scenesDir": "assets/scenes"
+  },
+  "battle": {
+    "party": { "table": "heroes" },
+    "enemies": { "table": "monsters" },
+    "encounters": { "table": "encounters" },
+    "skills": { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+    "stats": { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+    "resource": "mp",
+    "rules": "data/rules.ron",
+    "items": { "table": "items", "healField": "healHp", "starting": { "potion": 3 } }
+  },
+  "shop": { "currency": "G", "startMoney": 100 }
+}
+</code></pre>
+<p>Five top-level sections matter here:</p>
+<ul>
+<li><code>activities</code> — the seven editor <a href="#glossary">activities</a> (Maps,
+Scripts, Play, Data, Story, Assets, Tiles). <code>maps</code> points the map activity at <code>maps</code>
+under <code>dataRoot</code>; <code>scripts</code> points the script activity at the same <code>maps</code> directory
+with extension <code>.scene</code>, so per-map scene files sit next to their maps. The <code>data</code>
+activity declares the five <a href="#glossary">data tables</a>: each <code>tables[]</code>
+entry names a <code>dir</code>, an <code>idField</code>, and the field schema the editor renders as a form.
+<code>story</code> declares the bilingual locales and points <code>scenesDir</code> at <code>maps</code>; <code>assets</code>
+roots the asset picker at <code>gfx</code>; <code>tiles</code> configures the tile-library pane.</li>
+<li><code>game</code> — the engine-facing section. <code>entryScene: "main"</code> names the scene under
+<code>scenesDir</code> used when the project has no maps; <code>entryMap: "Hometown"</code> is the
+<a href="#glossary">entry map</a> <code>dotzuki run</code> spawns on;
+<code>scenesDir: "assets/scenes"</code> is the scene directory.</li>
+<li><code>battle</code> — arms the data-driven battle system. <code>party</code> and <code>enemies</code> name the
+combatant tables (<code>heroes</code> vs <code>monsters</code>); <code>encounters</code> names the encounter table;
+<code>skills</code> names the <code>spells</code> table and the field names — <code>field: "skills"</code> is the
+skill list on a combatant record, <code>categoryField: "type"</code> and <code>costField: "mpCost"</code>
+name the category and MP-cost columns; <code>stats</code> maps the four roles (<code>hp</code>, <code>attack</code>,
+<code>defense</code>, <code>speed</code>) to record fields; <code>resource: "mp"</code> names the MP pool field;
+<code>rules: "data/rules.ron"</code> points at the rules file (step 4); <code>items</code> names the items
+table, its <code>healField: "healHp"</code>, and a starting inventory of 3 potions.</li>
+<li><code>shop</code> — <code>currency: "G"</code> and <code>startMoney: 100</code>: the money the runner owns, shows in
+the Bag and the shop UI, and carries in the save.</li>
+</ul>
+<h2 id="3-data-tables"><a class="header" href="#3-data-tables">3. Data tables</a></h2>
+<p>Each table directory holds one JSON record per row, named <code>&lt;id&gt;.json</code> under
+<code>data/&lt;dir&gt;/</code>. Create these nine files.</p>
+<h3 id="heroes"><a class="header" href="#heroes">Heroes</a></h3>
+<p><code>data/heroes/aria.json</code> — the <a href="#glossary">party</a> is every record of the
+<code>heroes</code> table, so Aria leads alone:</p>
+<pre><code class="language-json">{
+  "id": "aria",
+  "name": "Aria",
+  "hp": 60,
+  "atk": 12,
+  "def": 10,
+  "spd": 15,
+  "mp": 20,
+  "element": "grass",
+  "skills": ["slash", "fire-bolt", "bubble", "heal"]
+}
+</code></pre>
+<p>The four <a href="#glossary">stats</a> (<code>hp</code>, <code>atk</code>, <code>def</code>, <code>spd</code>) map through
+<code>battle.stats</code>. <code>mp</code> is the pool <code>battle.resource</code> names — Fire Bolt and Heal draw from
+it. <code>element: "grass"</code> is Aria’s <a href="#glossary">element</a>, the defending
+side of <a href="#glossary">type chart</a> lookups. <code>skills</code> lists the
+<a href="#glossary">skill</a> ids from the <code>spells</code> table that Aria can use in
+battle.</p>
+<h3 id="monsters"><a class="header" href="#monsters">Monsters</a></h3>
+<p><code>data/monsters/slime.json</code> and <code>data/monsters/goblin.json</code> — the enemy records, same
+fields as heroes:</p>
+<pre><code class="language-json">{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 40,
+  "atk": 8,
+  "def": 8,
+  "spd": 5,
+  "mp": 0,
+  "element": "grass",
+  "skills": ["slash"]
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "goblin",
+  "name": "Goblin",
+  "hp": 55,
+  "atk": 10,
+  "def": 9,
+  "spd": 9,
+  "mp": 0,
+  "element": "fire",
+  "skills": ["slash"]
+}
+</code></pre>
+<p>The Slime is grass, the Goblin fire — the chart rows from step 4 make Fire Bolt hit the
+Slime ×2 and Bubble hit the Goblin ×2. Both know only Slash, and <code>mp: 0</code> means no MP
+pool, which their only skill does not need.</p>
+<h3 id="encounters"><a class="header" href="#encounters">Encounters</a></h3>
+<p><code>data/encounters/rival.json</code> — an <a href="#glossary">encounter</a> record:</p>
+<pre><code class="language-json">{
+  "id": "rival",
+  "name": "Rival Kai",
+  "enemies": ["goblin"],
+  "trainer": true,
+  "money": 50
+}
+</code></pre>
+<p><code>enemies</code> is the ordered queue the enemy side sends out; <code>trainer: true</code> makes it a
+<a href="#glossary">trainer battle</a> — Run is blocked and a win pays
+<code>money: 50</code> G. No scene in this game calls <code>rival</code>; the record demonstrates the schema
+and stays ready for a later storyline. The Guide’s battle starts the wild <code>slime</code>
+record instead (step 6).</p>
+<h3 id="spells"><a class="header" href="#spells">Spells</a></h3>
+<p><code>data/spells/fire-bolt.json</code>, <code>data/spells/slash.json</code>, <code>data/spells/bubble.json</code>,
+<code>data/spells/heal.json</code>:</p>
+<pre><code class="language-json">{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "attack",
+  "power": 50,
+  "accuracy": 100,
+  "element": "fire",
+  "mpCost": 5
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "slash",
+  "name": "Slash",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "mpCost": 0
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "bubble",
+  "name": "Bubble",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "element": "water",
+  "mpCost": 4
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "heal",
+  "name": "Heal",
+  "type": "heal",
+  "power": 25,
+  "accuracy": 100,
+  "mpCost": 4
+}
+</code></pre>
+<p><code>type</code> is the category column (<code>battle.skills.categoryField</code>): <code>attack</code> deals damage
+through the standard formula, <code>heal</code> restores the user’s own HP by <code>power</code>, capped at
+max. <code>element</code> feeds the chart — Fire Bolt is fire, Bubble water; Slash and Heal carry
+none, so no row applies to them. <code>mpCost</code> is the cost column
+(<code>battle.skills.costField</code>): Fire Bolt costs 5 MP, Heal 4, Slash 0. <code>accuracy: 100</code>
+always lands. The formula and the turn loop live in
+<a href="#battles">the battle rules reference</a>.</p>
+<h3 id="items"><a class="header" href="#items">Items</a></h3>
+<p><code>data/items/potion.json</code>:</p>
+<pre><code class="language-json">{
+  "id": "potion",
+  "name": "Potion",
+  "healHp": 20,
+  "price": 20,
+  "effect": "Restores 20 HP."
+}
+</code></pre>
+<p><code>healHp: 20</code> is the <code>battle.items.healField</code> — a positive number makes the item usable
+in battle and from the pause-menu Bag, restoring 20 HP per use, capped at max.
+<code>price: 20</code> is the shop’s Buy price. <code>effect</code> is display-only flavor text.</p>
+<h2 id="4-the-rules-file"><a class="header" href="#4-the-rules-file">4. The rules file</a></h2>
+<p><code>data/rules.ron</code> — the declarative battle rules, parsed by <code>dotzuki-rules</code>:</p>
+<pre><code class="language-ron">// rules.ron — Your First Game's battle ruleset. The runner consumes the
+// type chart only; stats/types/resources are declared so the file is a
+// valid dotzuki-rules Ruleset (see reference/battle-rules.md).
+Ruleset(
+    stats: ["hp", "atk", "def", "spd"],
+    types: ["fire", "grass", "water"],
+    resources: ["mp"],
+    type_chart: [
+        (atk: "fire", def: "grass", mult: [2, 1]),
+        (atk: "grass", def: "fire", mult: [1, 2]),
+        (atk: "water", def: "fire", mult: [2, 1]),
+    ],
+)
+</code></pre>
+<p>The <a href="#glossary">runner</a> loads this <a href="#glossary">RON</a> file
+from the path <code>battle.rules</code> names and reads the <code>type_chart</code>: each row pairs an
+attacking skill’s <code>element</code> with a defender’s <code>element</code>, and <code>mult: [num, den]</code> is the
+rational multiplier — <code>[2, 1]</code> scales the hit ×2 (super effective), <code>[1, 2]</code> scales it
+×½ (resisted). A pairing absent from the chart stays ×1. Fire Bolt vs the grass Slime
+lands ×2, Bubble vs the fire Goblin lands ×2, and a grass skill against a fire target
+lands ×½.</p>
+<p><code>stats</code>, <code>types</code> and <code>resources</code> declare the closed vocabulary so the file parses as a
+valid dotzuki-rules <code>Ruleset</code> — <code>dotzuki check</code> fails on an unknown name. This game
+declares no <code>effects</code>, so the chart is the live part; a rules file with <code>effects</code>
+compiles into runtime <a href="#glossary">effect stacks</a> (see
+<a href="#battles">the battle rules reference</a>).</p>
+<h2 id="5-the-town-map"><a class="header" href="#5-the-town-map">5. The town map</a></h2>
+<p>Create <code>data/maps/Hometown/</code> with three files: <code>map.tmx.json</code>, <code>tileset.png</code>, and
+<code>objects.json</code>.</p>
+<p><code>map.tmx.json</code> is Tiled JSON: 20 × 15 <a href="#glossary">tiles</a> of 8 × 8 px.
+The <code>ground</code> and <code>decoration</code> layers render; the <code>collision</code> layer never renders and
+blocks every tile whose GID is non-zero. <a href="#glossary">GIDs</a> are 1-based
+into the <a href="#glossary">tileset</a> atlas, which the <code>tilesets</code> block names —
+<code>tileset.png</code>, 32 × 8 px, four tiles, <code>columns: 4</code>.</p>
+<pre><code class="language-json">{
+  "width": 20,
+  "height": 15,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). GID 1 fills the map, GID 4
+           marks the path column (x=10) and the cross row (y=7). The full array
+           lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "decoration",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). Mostly 0; GID 2 trees dot
+           the field. The full array lives in
+           examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). A GID-1 ring borders the
+           map; 0 inside, so the warp tile (18, 7) stays walkable. The full
+           array lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p>The <code>data</code> arrays hold 300 entries each (20 rows × 20); each listing shows a
+representative row with an <code>&lt;!-- excerpt --&gt;</code> marker. Copy the full arrays from
+<code>examples/your-first-game/data/maps/Hometown/map.tmx.json</code>.
+<code>ground</code> paints GID 1 everywhere with a GID-4 path column (x=10) and a full GID-4 cross
+row (y=7); <code>decoration</code> drops GID-2 trees; <code>collision</code> rings the border with GID 1,
+leaving the interior — and the warp tile (18, 7) — walkable.</p>
+<p>Copy the atlas into place (both maps share it):</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Hometown/tileset.png
+</code></pre>
+<p>Replace <code>&lt;repo&gt;</code> with the path to this repository.</p>
+<p><code>objects.json</code> is the map’s <a href="#glossary">sidecar</a> — the
+<a href="#glossary">entities</a> placed on the map:</p>
+<pre><code class="language-json">{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 12,
+      "y": 7,
+      "facing": "down",
+      "talk": "guide_talk"
+    }
+  ],
+  "warps": [
+    { "x": 18, "y": 7, "dest_map": "Clearing", "dest_x": 2, "dest_y": 5 }
+  ],
+  "signs": [
+    { "x": 3, "y": 3, "text": "Hometown — every journey starts here." }
+  ]
+}
+</code></pre>
+<p>The Guide NPC stands at (12, 7) facing down; its <code>talk</code> field names the storyline that
+runs when the player faces it and presses A. The <a href="#glossary">warp</a> at
+(18, 7) fades the player to the <code>Clearing</code> map, arriving at tile (2, 5). The sign at
+(3, 3) shows its text as paged dialogue when the player faces it and presses A.</p>
+<h2 id="6-scenes"><a class="header" href="#6-scenes">6. Scenes</a></h2>
+<p>Replace <code>assets/scenes/main.scene</code>, then create <code>data/maps/Hometown/script.scene</code>.</p>
+<p>A <a href="#glossary">scene</a> is one <code>game_scene</code> document of
+<a href="#glossary">storylines</a>. <code>main.scene</code> holds the unnamed <code>@storylines</code>
+block — the <code>main</code> storyline:</p>
+<pre><code class="language-dsl">game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to Your First Game!"
+            "Talk to the Guide in Hometown, then find the warp to the Clearing."
+        }
+    }
+}
+</code></pre>
+<p>The manifest’s <code>game.entryScene: "main"</code> names this file for map-less runs. With maps
+present, <code>game.entryMap</code> wins: <code>dotzuki run</code> spawns on Hometown and the map’s own scene
+drives it, so <code>main.scene</code> keeps the <code>scenesDir</code> contract intact.</p>
+<p><code>script.scene</code> sits next to the map, and that placement is the binding: the runner
+resolves a map’s scene as <code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code>. Hometown’s scene has two
+named storylines:</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @speaker("Guide") {
+            "Welcome to Hometown, Aria!"
+            "The warp on the east edge leads to the Clearing."
+            "Wild monsters roam the tall grass there — a good place to train."
+        }
+    }
+
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "You look ready for your first fight."
+            "Want to try one right here?"
+        }
+        @choice {
+            @option("Let's fight!") {
+                result = startBattle("slime")
+                @if (result == "win") {
+                    @speaker("Guide") {
+                        "Well fought! Fire beats grass, remember that."
+                    }
+                    @command("setFlag", "WON_GUIDE_BATTLE")
+                } @else {
+                    @speaker("Guide") {
+                        "It happens. Heal up and try again."
+                    }
+                }
+            }
+            @option("Not yet.") {
+                @speaker("Guide") {
+                    "Come back when you are ready."
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>hometown_intro</code> carries a <a href="#glossary">trigger</a> with
+<code>on_enter = true</code> — the runner fires it when the map loads.</li>
+<li><code>guide_talk</code> carries <code>npc = "Guide"</code>, the route that names this NPC — and the NPC’s
+<code>talk</code> field names the same storyline; talking to the Guide runs it.</li>
+<li><code>@choice</code> presents the two <code>@option</code>s as a menu.</li>
+<li><code>result = startBattle("slime")</code> suspends the scene and starts a
+<a href="#glossary">wild battle</a> against the <code>slime</code> record; the scene
+resumes with <code>result</code> set to <code>"win"</code>, <code>"lose"</code> or <code>"run"</code>.</li>
+<li><code>@if (result == "win")</code> branches on the outcome; the win branch sets the
+<a href="#glossary">flag</a> <code>WON_GUIDE_BATTLE</code> with a
+<a href="#glossary">command</a>. Flags persist across scenes for the session
+and ride the save.</li>
+</ul>
+<h2 id="7-the-clearing"><a class="header" href="#7-the-clearing">7. The clearing</a></h2>
+<p>Create <code>data/maps/Clearing/</code> the same way — a smaller 12 × 10 map:</p>
+<pre><code class="language-json">{
+  "width": 12,
+  "height": 10,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). GID 1 fills the map, GID 4
+           marks the tall-grass patch (x=5–6, y=2–7). The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). A GID-1 border rings the
+           map; the west wall opens at (0, 4) so the return warp tile stays
+           walkable. The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>ground</code> paints GID 1 with a GID-4 tall-grass patch at (x=5–6, y=2–7); <code>collision</code>
+borders the map and opens the west wall at (0, 4) so the return warp tile stays
+walkable. Copy the full arrays from
+<code>examples/your-first-game/data/maps/Clearing/map.tmx.json</code>.</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Clearing/tileset.png
+</code></pre>
+<p><code>objects.json</code> adds the <code>encounters</code> block — the map’s encounter side:</p>
+<pre><code class="language-json">{
+  "warps": [
+    { "x": 0, "y": 4, "dest_map": "Hometown", "dest_x": 17, "dest_y": 7 }
+  ],
+  "encounters": {
+    "rate": 60,
+    "zones": [
+      {
+        "x": 1,
+        "y": 1,
+        "w": 10,
+        "h": 8,
+        "table": [
+          { "id": "slime", "weight": 60 },
+          { "id": "goblin", "weight": 40 }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<p><code>rate: 60</code> is the per-step chance in /256 units: a completed walk step onto a zoned
+tile draws one byte, and a value below 60 (≈ 23%) triggers a battle. Each <code>zones</code>
+rectangle (<code>x</code>, <code>y</code>, <code>w</code>, <code>h</code>) is an inclusive tile range; a hit draws a weighted id
+from the zone’s <code>table</code> — Slime 60, Goblin 40. The id resolves like <code>startBattle(id)</code>
+and arms a <a href="#glossary">sceneless battle</a>: a win or a run returns to the
+overworld at the encounter tile; a loss runs the
+<a href="#glossary">whiteout</a> — the party heals and the player respawns at the
+<a href="#glossary">entry map</a>’s <a href="#glossary">spawn</a>. The return
+warp at (0, 4) lands on Hometown (17, 7), one tile west of the east-edge warp.</p>
+<p>The scene announces the place with the <a href="#glossary">narrator form</a> —
+<code>@speaker("")</code> renders the line without a name prefix:</p>
+<pre><code class="language-dsl">game_scene Clearing {
+    @storyline("clearing_enter") {
+        @trigger(map = "Clearing", on_enter = true)
+        @speaker("") {
+            "Tall grass rustles all around. Wild monsters prowl here."
+        }
+    }
+}
+</code></pre>
+<h2 id="8-run-it"><a class="header" href="#8-run-it">8. Run it</a></h2>
+<p>Compile-check every DSL directory and validate the battle section:</p>
+<pre><code class="language-bash">dotzuki check .
+</code></pre>
+<p>Exit code 0 means the scenes compile and the battle wiring — the table ids, the field
+names, and <code>data/rules.ron</code> — validates.</p>
+<p>Play it in a window:</p>
+<pre><code class="language-bash">dotzuki run .
+</code></pre>
+<p>Controls: <strong>Arrows/WASD</strong> move, <strong>Z</strong> confirms and talks, <strong>X</strong> cancels and runs,
+<strong>Enter/Space</strong> opens the pause menu, <strong>Backspace</strong> is Select. The tour: read the sign,
+talk to the Guide and pick <strong>Let’s fight!</strong> — Aria battles the wild Slime, Fire Bolt
+hits ×2 (fire beats grass), and the win sets <code>WON_GUIDE_BATTLE</code>. Step onto the
+east-edge warp to the Clearing; the tall-grass zone rolls encounters as you walk; take
+the west-edge warp home. The pause menu holds <strong>Party</strong>, <strong>Bag</strong> and <strong>Save</strong>.</p>
+<p>CI and screenshots run the same game <a href="#glossary">headless</a> — no window:</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180
+</code></pre>
+<p><code>--frames 180</code> simulates 180 frames — the <a href="#glossary">smoke test</a> this
+repo’s CI runs. Headless runs never write a save unless you pass <code>--save</code>;
+<code>--screenshot shot.png</code> dumps the final frame:</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180 --save --screenshot shot.png
+</code></pre>
+<p><code>--lang zh</code> switches the runner’s own labels (the pause menu, the save confirmation)
+to Chinese; scene text follows when written with
+<a href="#glossary"><code>@t("en", "中文")</code></a>.</p>
+<p>The save lands at <code>.dotzuki-save.json</code> in the project dir —
+<a href="#glossary">save version</a> 3, holding the map, the player tile and
+facing, the flags, the party state, the inventory and the money. Saves write at stable
+points — after a warp transition and when a scene finishes into the
+<a href="#glossary">overworld</a> — so closing the window mid-dialogue keeps the
+last stable point. Windowed runs always save; <code>--fresh</code> ignores an existing save and
+boots new.</p>
+<h2 id="where-next"><a class="header" href="#where-next">Where next</a></h2>
+<ul>
+<li><strong>Maps</strong> — <a href="#maps">how to author maps</a>: elevation, entities, encounters,
+tilesets.</li>
+<li><strong>Battles</strong> — <a href="#authoring-battles-on-the-effect-stack">battle rules guide</a> and
+<a href="#battles">battle rules reference</a>: effects, abilities, held
+items, weather.</li>
+<li><strong>Manifest contract</strong> — <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a>: what
+<code>dotzuki run</code> and <code>dotzuki check</code> promise.</li>
+<li><strong>Editor path</strong> — <a href="#your-first-game-in-15-minutes">editor-first-game.md</a>: the same game
+through the dotzuki-editor and the AI Story Designer.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="your-first-game-in-15-minutes"><a class="header" href="#your-first-game-in-15-minutes">Your First Game in 15 Minutes</a></h1>
 <blockquote>
 <ul>
@@ -488,7 +1210,7 @@ diagnostics when a <code>.scene</code>/<code>.gui</code> file is broken:</p>
 </code></pre>
 <p>(In-editor, the Scripts tab’s 🔍 lint catches dangling flags and unknown
 <code>game.*</code> APIs as you type.)</p>
-<h2 id="where-next"><a class="header" href="#where-next">Where next</a></h2>
+<h2 id="where-next-1"><a class="header" href="#where-next-1">Where next</a></h2>
 <ul>
 <li><strong>AI-assisted building</strong> — the assistant can draft maps
 (<code>propose_map_create</code>), edit the manifest, refine characters, and generate
@@ -9308,6 +10030,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </thead>
 <tbody>
 <tr><td><a href="#quickstart--your-first-zero-rust-game-in-5-minutes"><code>tutorials/quickstart.md</code></a></td><td>5 分钟零代码之旅：<code>dotzuki new</code> → 编辑 <code>.scene</code> → <code>check</code> → <code>run</code></td></tr>
+<tr><td><a href="#your-first-game--town-battle-story-and-save"><code>tutorials/your-first-game.md</code></a></td><td>逐步构建 <code>examples/your-first-game/</code> 项目：城镇、脚本战斗、随机遇敌、存档</td></tr>
 <tr><td><a href="#your-first-game-in-15-minutes"><code>tutorials/editor-first-game.md</code></a></td><td>15 分钟带你逛一遍 dotzuki-editor，从一台空机器到一个带战斗的可玩项目</td></tr>
 </tbody>
 </table>
@@ -9473,6 +10196,711 @@ Start 菜单，<strong>Backspace</strong> = Select。</p>
 <li><strong>战斗规则（<code>rules.ron</code>）</strong> —— <a href="#authoring-battles-on-the-effect-stack">战斗规则指南</a></li>
 <li><strong>带 AI Story Designer 的编辑器</strong> —— <a href="../tools/dotzuki-editor/README.html">编辑器 README</a></li>
 <li><strong>完整文档索引</strong> —— <a href="#dotzuki-engine--documentation-index">文档索引</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="你的第一个游戏--城镇战斗剧情与存档"><a class="header" href="#你的第一个游戏--城镇战斗剧情与存档">你的第一个游戏 — 城镇、战斗、剧情与存档</a></h1>
+<blockquote>
+<p>本文是 <code>tutorials/your-first-game.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: tutorial</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>逐步构建仓库里已提交的
+<a href="../examples/your-first-game"><code>examples/your-first-game/</code></a> 项目：一个有 NPC 向导的
+城镇、一场由剧情触发的战斗、一片高草丛会随机遭遇野怪的空地，以及一份存档 —— 全部用数
+据编写，不写 Rust。</p>
+<p>开始前，请先完成<a href="#quickstart--your-first-zero-rust-game-in-5-minutes">快速入门</a>，并把 <code>dotzuki</code> 可执行文件放到 PATH 上。在
+<code>workspace/</code> 下构建一次即可：</p>
+<pre><code class="language-bash">cd workspace
+cargo build --release --bin dotzuki
+</code></pre>
+<p>产物位于 <code>target/release/dotzuki</code>。</p>
+<p>目标就是已提交的项目本身：一个可玩的城镇、一场由剧情触发的战斗、一片随机遭遇的空地和
+一份存档。下文每个清单都是该项目的拷贝，所以每一步结束时都处于下一步可以继续的状态。
+两个 <code>map.tmx.json</code> 清单用带 <code>&lt;!-- excerpt --&gt;</code> 标记的注释缩写了自己的 tile 数组；请从
+已提交的项目中复制完整的数组。</p>
+<h2 id="1-搭建项目骨架-1"><a class="header" href="#1-搭建项目骨架-1">1. 搭建项目骨架</a></h2>
+<pre><code class="language-bash">dotzuki new your-first-game
+cd your-first-game
+</code></pre>
+<p><code>dotzuki new</code> 会<a href="#glossary">脚手架</a>（scaffold）出一个
+<a href="#glossary">零 Rust 项目</a> —— 一个引擎和编辑器直接按原样消费的普通目录。
+它写出的结构：</p>
+<ul>
+<li><code>.dotzuki-editor.json</code> —— <a href="#glossary">项目清单</a>（manifest）：七个编辑
+器活动、一个空的 <code>tables</code> 列表，以及一个 <code>game</code> 区块。</li>
+<li><code>data/maps/</code> —— 每张地图一个目录；目前为空。</li>
+<li><code>data/tiles/</code> —— 共享 tile 库；这个游戏用不到，保持为空。</li>
+<li><code>data/stories/</code> —— 叙事圣经骨架；这个游戏用不到，保持为空。</li>
+<li><code>gfx/</code> —— 图形资源。</li>
+<li><code>assets/scenes/main.scene</code> —— 一个用<a href="#glossary">游戏 DSL</a> 编写的入门
+<a href="#glossary">场景</a>；第 6 步会替换它。</li>
+<li><code>README.md</code> —— 自由格式的笔记。</li>
+</ul>
+<h2 id="2-项目清单"><a class="header" href="#2-项目清单">2. 项目清单</a></h2>
+<p>用下面的文件替换脚手架生成的 <code>.dotzuki-editor.json</code>：</p>
+<pre><code class="language-json">{
+  "name": "Your First Game",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps"
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "extension": ".scene",
+        "scriptsDir": "maps"
+      }
+    },
+    {
+      "id": "play",
+      "type": "play",
+      "label": "Play",
+      "icon": "play",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "heroes",
+            "label": "Heroes",
+            "dir": "heroes",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "monsters",
+            "label": "Monsters",
+            "dir": "monsters",
+            "icon": "bug",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "encounters",
+            "label": "Encounters",
+            "dir": "encounters",
+            "icon": "crosshair",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "enemies", "label": "Enemies", "type": "list" },
+              { "id": "trainer", "label": "Trainer", "type": "boolean" },
+              { "id": "money", "label": "Money", "type": "number" }
+            ]
+          },
+          {
+            "id": "spells",
+            "label": "Spells",
+            "dir": "spells",
+            "icon": "sparkles",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "type", "label": "Category", "type": "string" },
+              { "id": "power", "label": "Power", "type": "number" },
+              { "id": "accuracy", "label": "Accuracy", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "stat", "label": "Stat", "type": "string" },
+              { "id": "mpCost", "label": "MP Cost", "type": "number" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "healHp", "label": "Heal HP", "type": "number" },
+              { "id": "price", "label": "Price", "type": "number" },
+              { "id": "effect", "label": "Effect", "type": "string" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "story",
+      "type": "story",
+      "label": "Story",
+      "icon": "book",
+      "enabled": true,
+      "config": {
+        "locales": [
+          "en",
+          "zh"
+        ],
+        "scenesDir": "maps",
+        "storiesDir": "stories"
+      }
+    },
+    {
+      "id": "assets",
+      "type": "assets",
+      "label": "Assets",
+      "icon": "image",
+      "enabled": true,
+      "config": {
+        "roots": [
+          "gfx"
+        ]
+      }
+    },
+    {
+      "id": "tiles",
+      "type": "tiles",
+      "label": "Tiles",
+      "icon": "tiles",
+      "enabled": true,
+      "config": {
+        "backdropMapsDir": "maps",
+        "tileSize": 16,
+        "tilesDir": "tiles"
+      }
+    }
+  ],
+  "game": {
+    "entryScene": "main",
+    "entryMap": "Hometown",
+    "scenesDir": "assets/scenes"
+  },
+  "battle": {
+    "party": { "table": "heroes" },
+    "enemies": { "table": "monsters" },
+    "encounters": { "table": "encounters" },
+    "skills": { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+    "stats": { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+    "resource": "mp",
+    "rules": "data/rules.ron",
+    "items": { "table": "items", "healField": "healHp", "starting": { "potion": 3 } }
+  },
+  "shop": { "currency": "G", "startMoney": 100 }
+}
+</code></pre>
+<p>这里起作用的顶层区块有五个：</p>
+<ul>
+<li><code>activities</code> —— 七个编辑器<a href="#glossary">活动</a>（Maps、Scripts、Play、
+Data、Story、Assets、Tiles）。<code>maps</code> 把地图活动指向 <code>dataRoot</code> 下的 <code>maps</code>；
+<code>scripts</code> 把脚本活动指向同一个 <code>maps</code> 目录、扩展名 <code>.scene</code>，于是每张地图的场景文
+件都紧挨着自己的地图。<code>data</code> 活动声明五张<a href="#glossary">数据表</a>：每条
+<code>tables[]</code> 配置给出 <code>dir</code>、<code>idField</code> 和编辑器渲染成表单的字段模式。<code>story</code> 声明双语
+locales，并把 <code>scenesDir</code> 指向 <code>maps</code>；<code>assets</code> 把资源面板的根目录设为 <code>gfx</code>；
+<code>tiles</code> 配置 tile 库面板。</li>
+<li><code>game</code> —— 面向引擎的区块。<code>entryScene: "main"</code> 指定 <code>scenesDir</code> 下用于无地图项目的
+场景；<code>entryMap: "Hometown"</code> 是 <code>dotzuki run</code> 出生所在的
+<a href="#glossary">入口地图</a>；<code>scenesDir: "assets/scenes"</code> 是场景目录。</li>
+<li><code>battle</code> —— 启用数据驱动的战斗系统。<code>party</code> 与 <code>enemies</code> 指定双方战斗者的数据表
+（<code>heroes</code> 对 <code>monsters</code>）；<code>encounters</code> 指定 encounter 表；<code>skills</code> 指定 <code>spells</code> 表
+及字段名 —— <code>field: "skills"</code> 是战斗者记录上的技能列表，<code>categoryField: "type"</code> 与
+<code>costField: "mpCost"</code> 分别指定类别列和 MP 消耗列；<code>stats</code> 把四个角色位（<code>hp</code>、
+<code>attack</code>、<code>defense</code>、<code>speed</code>）映射到记录字段；<code>resource: "mp"</code> 指定 MP 池字段；
+<code>rules: "data/rules.ron"</code> 指向规则文件（第 4 步）；<code>items</code> 指定道具表、它的
+<code>healField: "healHp"</code>，以及 3 瓶药水的初始背包。</li>
+<li><code>shop</code> —— <code>currency: "G"</code> 与 <code>startMoney: 100</code>：运行器持有的金钱，显示在背包和商店
+界面里，并随存档保存。</li>
+</ul>
+<h2 id="3-数据表"><a class="header" href="#3-数据表">3. 数据表</a></h2>
+<p>每张数据表的目录下每个记录一个 JSON 文件，位于 <code>data/&lt;dir&gt;/</code>、命名为 <code>&lt;id&gt;.json</code>。
+创建这九个文件。</p>
+<h3 id="英雄"><a class="header" href="#英雄">英雄</a></h3>
+<p><code>data/heroes/aria.json</code> —— <a href="#glossary">队伍</a>（party）就是 <code>heroes</code> 表的
+全部记录，所以 Aria 一人带队：</p>
+<pre><code class="language-json">{
+  "id": "aria",
+  "name": "Aria",
+  "hp": 60,
+  "atk": 12,
+  "def": 10,
+  "spd": 15,
+  "mp": 20,
+  "element": "grass",
+  "skills": ["slash", "fire-bolt", "bubble", "heal"]
+}
+</code></pre>
+<p>四个<a href="#glossary">属性</a>（stat）<code>hp</code>、<code>atk</code>、<code>def</code>、<code>spd</code> 通过
+<code>battle.stats</code> 映射。<code>mp</code> 是 <code>battle.resource</code> 指定的资源池 —— Fire Bolt 和 Heal 从中
+消耗。<code>element: "grass"</code> 是 Aria 的<a href="#glossary">元素</a>，在
+<a href="#glossary">克制表</a>（type chart）查询中充当防守方。<code>skills</code> 列出 Aria
+在战斗中可用的 <code>spells</code> 表<a href="#glossary">技能</a> id。</p>
+<h3 id="怪物"><a class="header" href="#怪物">怪物</a></h3>
+<p><code>data/monsters/slime.json</code> 与 <code>data/monsters/goblin.json</code> —— 敌方记录，字段与英雄相
+同：</p>
+<pre><code class="language-json">{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 40,
+  "atk": 8,
+  "def": 8,
+  "spd": 5,
+  "mp": 0,
+  "element": "grass",
+  "skills": ["slash"]
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "goblin",
+  "name": "Goblin",
+  "hp": 55,
+  "atk": 10,
+  "def": 9,
+  "spd": 9,
+  "mp": 0,
+  "element": "fire",
+  "skills": ["slash"]
+}
+</code></pre>
+<p>史莱姆是 grass，哥布林是 fire —— 第 4 步的克制表行让 Fire Bolt 打史莱姆 ×2、Bubble
+打哥布林 ×2。两者只会 Slash，<code>mp: 0</code> 意味着没有 MP 池，而它们唯一的技能也不需要 MP。</p>
+<h3 id="encounters-1"><a class="header" href="#encounters-1">Encounters</a></h3>
+<p><code>data/encounters/rival.json</code> —— 一条 <a href="#glossary">encounter</a> 记录：</p>
+<pre><code class="language-json">{
+  "id": "rival",
+  "name": "Rival Kai",
+  "enemies": ["goblin"],
+  "trainer": true,
+  "money": 50
+}
+</code></pre>
+<p><code>enemies</code> 是敌方依次派出的有序队列；<code>trainer: true</code> 使它成为
+<a href="#glossary">trainer 战斗</a> —— 不能逃跑，获胜获得 <code>money: 50</code> G。这个游
+戏没有场景调用 <code>rival</code>；该记录演示了模式，留给之后的剧情线使用。向导的战斗开局用的
+是野生 <code>slime</code> 记录（第 6 步）。</p>
+<h3 id="技能"><a class="header" href="#技能">技能</a></h3>
+<p><code>data/spells/fire-bolt.json</code>、<code>data/spells/slash.json</code>、<code>data/spells/bubble.json</code>、
+<code>data/spells/heal.json</code>：</p>
+<pre><code class="language-json">{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "attack",
+  "power": 50,
+  "accuracy": 100,
+  "element": "fire",
+  "mpCost": 5
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "slash",
+  "name": "Slash",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "mpCost": 0
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "bubble",
+  "name": "Bubble",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "element": "water",
+  "mpCost": 4
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "heal",
+  "name": "Heal",
+  "type": "heal",
+  "power": 25,
+  "accuracy": 100,
+  "mpCost": 4
+}
+</code></pre>
+<p><code>type</code> 是类别列（<code>battle.skills.categoryField</code>）：<code>attack</code> 按标准公式造成伤害，
+<code>heal</code> 为使用者自己恢复 <code>power</code> 点 HP，上限封顶。<code>element</code> 参与克制表 —— Fire Bolt 是
+fire，Bubble 是 water；Slash 和 Heal 没有元素，因此没有克制表行适用于它们。<code>mpCost</code>
+是消耗列（<code>battle.skills.costField</code>）：Fire Bolt 消耗 5 MP，Heal 消耗 4，Slash 免费。
+<code>accuracy: 100</code> 一定命中。公式和回合循环见
+<a href="#battles">战斗规则参考</a>。</p>
+<h3 id="道具"><a class="header" href="#道具">道具</a></h3>
+<p><code>data/items/potion.json</code>：</p>
+<pre><code class="language-json">{
+  "id": "potion",
+  "name": "Potion",
+  "healHp": 20,
+  "price": 20,
+  "effect": "Restores 20 HP."
+}
+</code></pre>
+<p><code>healHp: 20</code> 是 <code>battle.items.healField</code> —— 正数让道具在战斗中和暂停菜单的背包里可
+用，每次使用恢复 20 HP，上限封顶。<code>price: 20</code> 是商店的购买价格。<code>effect</code> 是仅用于展
+示的说明文字。</p>
+<h2 id="4-规则文件"><a class="header" href="#4-规则文件">4. 规则文件</a></h2>
+<p><code>data/rules.ron</code> —— 声明式战斗规则，由 <code>dotzuki-rules</code> 解析：</p>
+<pre><code class="language-ron">// rules.ron — Your First Game's battle ruleset. The runner consumes the
+// type chart only; stats/types/resources are declared so the file is a
+// valid dotzuki-rules Ruleset (see reference/battle-rules.md).
+Ruleset(
+    stats: ["hp", "atk", "def", "spd"],
+    types: ["fire", "grass", "water"],
+    resources: ["mp"],
+    type_chart: [
+        (atk: "fire", def: "grass", mult: [2, 1]),
+        (atk: "grass", def: "fire", mult: [1, 2]),
+        (atk: "water", def: "fire", mult: [2, 1]),
+    ],
+)
+</code></pre>
+<p><a href="#glossary">运行器</a>（runner）从 <code>battle.rules</code> 指定的路径加载这个
+<a href="#glossary">RON</a> 文件，读取 <code>type_chart</code>：每一行把攻击技能的 <code>element</code>
+与防守方的 <code>element</code> 配对，<code>mult: [num, den]</code> 是有理数倍率 —— <code>[2, 1]</code> 把伤害放大 ×2
+（效果拔群），<code>[1, 2]</code> 缩小到 ×½（被抵抗）。克制表中没有的组合保持 ×1。Fire Bolt 打
+grass 的史莱姆是 ×2，Bubble 打 fire 的哥布林是 ×2，grass 技能打 fire 目标是 ×½。</p>
+<p><code>stats</code>、<code>types</code> 和 <code>resources</code> 声明封闭词表，让文件解析为合法的 <code>dotzuki-rules</code>
+<code>Ruleset</code> —— <code>dotzuki check</code> 遇到未知名称会报错。这个游戏没有声明 <code>effects</code>，所以克
+制表是唯一生效的部分；带 <code>effects</code> 的规则文件会编译成运行时
+<a href="#glossary">效果栈</a>（effect stack）（见
+<a href="#battles">战斗规则参考</a>）。</p>
+<h2 id="5-城镇地图"><a class="header" href="#5-城镇地图">5. 城镇地图</a></h2>
+<p>创建 <code>data/maps/Hometown/</code>，放入三个文件：<code>map.tmx.json</code>、<code>tileset.png</code> 和
+<code>objects.json</code>。</p>
+<p><code>map.tmx.json</code> 是 Tiled JSON：20 × 15 个 <a href="#glossary">tile</a>，每个
+8 × 8 像素。<code>ground</code> 和 <code>decoration</code> 图层会渲染；<code>collision</code> 图层从不渲染，并挡住每
+个 GID 非零的 tile。<a href="#glossary">GID</a> 从 1 开始、按行编入
+<a href="#glossary">tileset</a> 图集，图集由 <code>tilesets</code> 块声明 —— <code>tileset.png</code>，
+32 × 8 像素，四张 tile，<code>columns: 4</code>。</p>
+<pre><code class="language-json">{
+  "width": 20,
+  "height": 15,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). GID 1 fills the map, GID 4
+           marks the path column (x=10) and the cross row (y=7). The full array
+           lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "decoration",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). Mostly 0; GID 2 trees dot
+           the field. The full array lives in
+           examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). A GID-1 ring borders the
+           map; 0 inside, so the warp tile (18, 7) stays walkable. The full
+           array lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>data</code> 数组各含 300 项（20 行 × 20 列）；清单为每个图层展示有代表性的一行，并带
+<code>&lt;!-- excerpt --&gt;</code> 标记。完整数组请从
+<code>examples/your-first-game/data/maps/Hometown/map.tmx.json</code>
+复制。<code>ground</code> 全部铺 GID 1，其中 GID-4 路径列（x=10）和整行 GID-4 的横贯行（y=7）；
+<code>decoration</code> 撒下 GID-2 的树；<code>collision</code> 用 GID 1 围住地图边界，内部 —— 包括传送点
+tile（18, 7）—— 保持可行走。</p>
+<p>把图集复制进来（两张地图共用）：</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Hometown/tileset.png
+</code></pre>
+<p>把 <code>&lt;repo&gt;</code> 替换为本仓库的路径。</p>
+<p><code>objects.json</code> 是地图的<a href="#glossary">伴生文件</a>（sidecar）—— 地图上摆放
+的<a href="#glossary">实体</a>（entity）：</p>
+<pre><code class="language-json">{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 12,
+      "y": 7,
+      "facing": "down",
+      "talk": "guide_talk"
+    }
+  ],
+  "warps": [
+    { "x": 18, "y": 7, "dest_map": "Clearing", "dest_x": 2, "dest_y": 5 }
+  ],
+  "signs": [
+    { "x": 3, "y": 3, "text": "Hometown — every journey starts here." }
+  ]
+}
+</code></pre>
+<p>向导 NPC 站在 (12, 7)、面朝下；它的 <code>talk</code> 字段指定玩家面朝它并按 A 时运行的剧情线。
+<a href="#glossary">传送点</a>（warp）(18, 7) 把玩家淡出到 <code>Clearing</code> 地图，到达
+tile (2, 5)。路牌在 (3, 3)，玩家面朝它并按 A 时以分页对话显示文本。</p>
+<h2 id="6-场景"><a class="header" href="#6-场景">6. 场景</a></h2>
+<p>替换 <code>assets/scenes/main.scene</code>，然后创建 <code>data/maps/Hometown/script.scene</code>。</p>
+<p>一个<a href="#glossary">场景</a>就是一份由
+<a href="#glossary">剧情线</a>（storyline）组成的 <code>game_scene</code> 文档。<code>main.scene</code>
+装着无名的 <code>@storylines</code> 块 —— 即 <code>main</code> 剧情线：</p>
+<pre><code class="language-dsl">game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to Your First Game!"
+            "Talk to the Guide in Hometown, then find the warp to the Clearing."
+        }
+    }
+}
+</code></pre>
+<p>项目清单的 <code>game.entryScene: "main"</code> 为无地图项目指定这个文件。有地图时，
+<code>game.entryMap</code> 优先：<code>dotzuki run</code> 出生在 Hometown，由地图自己的场景驱动它，所以
+<code>main.scene</code> 维持着 <code>scenesDir</code> 的契约。</p>
+<p><code>script.scene</code> 紧挨着地图，这个位置本身就是绑定：运行器把地图的场景解析为
+<code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code>。Hometown 的场景有两条命名剧情线：</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @speaker("Guide") {
+            "Welcome to Hometown, Aria!"
+            "The warp on the east edge leads to the Clearing."
+            "Wild monsters roam the tall grass there — a good place to train."
+        }
+    }
+
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "You look ready for your first fight."
+            "Want to try one right here?"
+        }
+        @choice {
+            @option("Let's fight!") {
+                result = startBattle("slime")
+                @if (result == "win") {
+                    @speaker("Guide") {
+                        "Well fought! Fire beats grass, remember that."
+                    }
+                    @command("setFlag", "WON_GUIDE_BATTLE")
+                } @else {
+                    @speaker("Guide") {
+                        "It happens. Heal up and try again."
+                    }
+                }
+            }
+            @option("Not yet.") {
+                @speaker("Guide") {
+                    "Come back when you are ready."
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>hometown_intro</code> 带一个 <code>on_enter = true</code> 的
+<a href="#glossary">触发器</a>（trigger）—— 地图加载时运行器会触发它。</li>
+<li><code>guide_talk</code> 带 <code>npc = "Guide"</code>，是指向这个 NPC 的路由 —— 而 NPC 的 <code>talk</code> 字段指
+定同一条剧情线；与向导对话就会运行它。</li>
+<li><code>@choice</code> 把两个 <code>@option</code> 呈现为菜单。</li>
+<li><code>result = startBattle("slime")</code> 挂起场景，对 <code>slime</code> 记录开一场
+<a href="#glossary">野怪战斗</a>；场景恢复时 <code>result</code> 被设为 <code>"win"</code>、<code>"lose"</code>
+或 <code>"run"</code>。</li>
+<li><code>@if (result == "win")</code> 按结果分支；获胜分支用一条
+<a href="#glossary">命令</a>（command）设置 <a href="#glossary">flag</a>
+<code>WON_GUIDE_BATTLE</code>。flag 在本次会话中跨场景保持，并随存档保存。</li>
+</ul>
+<h2 id="7-空地"><a class="header" href="#7-空地">7. 空地</a></h2>
+<p>用同样的方式创建 <code>data/maps/Clearing/</code> —— 一张更小的 12 × 10 地图：</p>
+<pre><code class="language-json">{
+  "width": 12,
+  "height": 10,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). GID 1 fills the map, GID 4
+           marks the tall-grass patch (x=5–6, y=2–7). The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). A GID-1 border rings the
+           map; the west wall opens at (0, 4) so the return warp tile stays
+           walkable. The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>ground</code> 铺 GID 1，其中 GID-4 高草丛在（x=5–6，y=2–7）；<code>collision</code> 围住地图边界，
+并在 (0, 4) 打开西墙，让返回传送点的 tile 保持可行走。完整数组请从
+<code>examples/your-first-game/data/maps/Clearing/map.tmx.json</code>
+复制。</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Clearing/tileset.png
+</code></pre>
+<p><code>objects.json</code> 增加了 <code>encounters</code> 块 —— 地图的遭遇侧：</p>
+<pre><code class="language-json">{
+  "warps": [
+    { "x": 0, "y": 4, "dest_map": "Hometown", "dest_x": 17, "dest_y": 7 }
+  ],
+  "encounters": {
+    "rate": 60,
+    "zones": [
+      {
+        "x": 1,
+        "y": 1,
+        "w": 10,
+        "h": 8,
+        "table": [
+          { "id": "slime", "weight": 60 },
+          { "id": "goblin", "weight": 40 }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<p><code>rate: 60</code> 是每步概率，以 /256 为单位：完成一步走进区域 tile 时抽一个字节，值小于
+60（约 23%）即触发战斗。每个 <code>zones</code> 矩形（<code>x</code>、<code>y</code>、<code>w</code>、<code>h</code>）是一个含边界的 tile
+范围；命中后按权重从该区域的 <code>table</code> 抽 id —— Slime 60、Goblin 40。id 的解析与
+<code>startBattle(id)</code> 相同，开一场 <a href="#glossary">sceneless 战斗</a>：获胜或逃跑
+后回到遭遇 tile 处的大地图；失败触发 <a href="#glossary">whiteout</a> —— 队伍回
+满，玩家回到<a href="#glossary">入口地图</a>的
+<a href="#glossary">出生点</a>（spawn）。返回传送点在 (0, 4)，落到 Hometown
+(17, 7)，即东边传送点西侧一格。</p>
+<p>场景用<a href="#glossary">旁白</a>（narrator form）宣告这个地方 ——
+<code>@speaker("")</code> 渲染不带名字前缀的台词：</p>
+<pre><code class="language-dsl">game_scene Clearing {
+    @storyline("clearing_enter") {
+        @trigger(map = "Clearing", on_enter = true)
+        @speaker("") {
+            "Tall grass rustles all around. Wild monsters prowl here."
+        }
+    }
+}
+</code></pre>
+<h2 id="8-运行它"><a class="header" href="#8-运行它">8. 运行它</a></h2>
+<p>编译检查所有 DSL 目录并校验战斗区块：</p>
+<pre><code class="language-bash">dotzuki check .
+</code></pre>
+<p>退出码为 0 表示场景编译通过、战斗接线 —— 表 id、字段名和 <code>data/rules.ron</code> —— 校验
+通过。</p>
+<p>开窗口玩：</p>
+<pre><code class="language-bash">dotzuki run .
+</code></pre>
+<p>操作：<strong>Arrows/WASD</strong> 移动，<strong>Z</strong> 确认/对话，<strong>X</strong> 取消/跑步，<strong>Enter/Space</strong> 打开暂
+停菜单，<strong>Backspace</strong> 是 Select。游玩路线：读路牌，与向导对话并选 <strong>Let’s fight!</strong>
+—— Aria 对战野生史莱姆，Fire Bolt 打出 ×2（fire 克制 grass），获胜后设置
+<code>WON_GUIDE_BATTLE</code>。踏上东边传送点去 Clearing；在高草丛区域走动会触发遭遇；走西边传
+送点回家。暂停菜单里有 <strong>Party</strong>、<strong>Bag</strong> 和 <strong>Save</strong>。</p>
+<p>CI 和截图用<a href="#glossary">无头模式</a>（headless）运行同一个游戏 —— 不开窗
+口：</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180
+</code></pre>
+<p><code>--frames 180</code> 模拟 180 帧 —— 本仓库 CI 跑的就是这个
+<a href="#glossary">冒烟测试</a>（smoke test）。无头运行默认不写存档，除非加
+<code>--save</code>；<code>--screenshot shot.png</code> 导出最后一帧：</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180 --save --screenshot shot.png
+</code></pre>
+<p><code>--lang zh</code> 把运行器自己的标签（暂停菜单、存档确认）切换成中文；场景文本用
+<a href="#glossary"><code>@t("en", "中文")</code></a>（双语文本语法）编写时也会跟随切换。</p>
+<p>存档落在项目目录的 <code>.dotzuki-save.json</code> ——
+<a href="#glossary">存档版本</a>（save version）3，包含地图、玩家 tile 与朝向、
+flag、队伍状态、背包和金钱。存档只在稳定点写入 —— 传送切换完成之后、场景结束回到
+<a href="#glossary">大地图</a>（overworld）之时 —— 所以对话途中关窗会保留最后一
+个稳定点。窗口运行总是写存档；<code>--fresh</code> 忽略已有存档、全新开局。</p>
+<h2 id="接下来读什么-1"><a class="header" href="#接下来读什么-1">接下来读什么</a></h2>
+<ul>
+<li><strong>地图</strong> —— <a href="#maps">地图制作指南</a>：海拔、实体、遭遇、tileset。</li>
+<li><strong>战斗</strong> —— <a href="#authoring-battles-on-the-effect-stack">战斗规则指南</a>与
+<a href="#battles">战斗规则参考</a>：效果、特性、携带道具、天气。</li>
+<li><strong>项目清单契约</strong> —— <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>：<code>dotzuki run</code> 和
+<code>dotzuki check</code> 承诺的行为。</li>
+<li><strong>编辑器路径</strong> —— <a href="#your-first-game-in-15-minutes">editor-first-game.md</a>：通过
+dotzuki-editor 和 AI Story Designer 做同一个游戏。</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="15-分钟做出你的第一款游戏"><a class="header" href="#15-分钟做出你的第一款游戏">15 分钟做出你的第一款游戏</a></h1>
@@ -11232,7 +12660,7 @@ MP 同理）。</li>
 从 <code>starting</code> 初始化，随存档文件保存）。Item 菜单列出仍有数量的可用物品
 （<code>healField</code> 数值为正的记录）；使用一个会按该数值治疗当前成员（上限为最大
 HP），数量减一，并消耗玩家回合。数量为 0 的物品不再列出。</p>
-<h2 id="技能"><a class="header" href="#技能">技能</a></h2>
+<h2 id="技能-1"><a class="header" href="#技能-1">技能</a></h2>
 <p>技能记录 schema 见<a href="#skill-records">技能记录</a>。</p>
 <p>一条技能记录：<code>name</code>、<code>power</code>（默认 0）、<code>accuracy</code>（默认 100）、可选的
 <code>element</code>、<code>stat</code>（buff/debuff 移动哪个属性——一个 <code>stats</code> 键，如

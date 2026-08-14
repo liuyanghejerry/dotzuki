@@ -1,0 +1,944 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>你的第一个游戏 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-2c1d51bc.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-2703abeb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./tutorials/your-first-game.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="你的第一个游戏--城镇战斗剧情与存档"><a class="header" href="#你的第一个游戏--城镇战斗剧情与存档">你的第一个游戏 — 城镇、战斗、剧情与存档</a></h1>
+<blockquote>
+<p>本文是 <code>tutorials/your-first-game.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: tutorial</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>逐步构建仓库里已提交的
+<a href="../../examples/your-first-game/"><code>examples/your-first-game/</code></a> 项目：一个有 NPC 向导的
+城镇、一场由剧情触发的战斗、一片高草丛会随机遭遇野怪的空地，以及一份存档 —— 全部用数
+据编写，不写 Rust。</p>
+<p>开始前，请先完成<a href="quickstart.html">快速入门</a>，并把 <code>dotzuki</code> 可执行文件放到 PATH 上。在
+<code>workspace/</code> 下构建一次即可：</p>
+<pre><code class="language-bash">cd workspace
+cargo build --release --bin dotzuki
+</code></pre>
+<p>产物位于 <code>target/release/dotzuki</code>。</p>
+<p>目标就是已提交的项目本身：一个可玩的城镇、一场由剧情触发的战斗、一片随机遭遇的空地和
+一份存档。下文每个清单都是该项目的拷贝，所以每一步结束时都处于下一步可以继续的状态。
+两个 <code>map.tmx.json</code> 清单用带 <code>&lt;!-- excerpt --&gt;</code> 标记的注释缩写了自己的 tile 数组；请从
+已提交的项目中复制完整的数组。</p>
+<h2 id="1-搭建项目骨架"><a class="header" href="#1-搭建项目骨架">1. 搭建项目骨架</a></h2>
+<pre><code class="language-bash">dotzuki new your-first-game
+cd your-first-game
+</code></pre>
+<p><code>dotzuki new</code> 会<a href="../reference/glossary.html">脚手架</a>（scaffold）出一个
+<a href="../reference/glossary.html">零 Rust 项目</a> —— 一个引擎和编辑器直接按原样消费的普通目录。
+它写出的结构：</p>
+<ul>
+<li><code>.dotzuki-editor.json</code> —— <a href="../reference/glossary.html">项目清单</a>（manifest）：七个编辑
+器活动、一个空的 <code>tables</code> 列表，以及一个 <code>game</code> 区块。</li>
+<li><code>data/maps/</code> —— 每张地图一个目录；目前为空。</li>
+<li><code>data/tiles/</code> —— 共享 tile 库；这个游戏用不到，保持为空。</li>
+<li><code>data/stories/</code> —— 叙事圣经骨架；这个游戏用不到，保持为空。</li>
+<li><code>gfx/</code> —— 图形资源。</li>
+<li><code>assets/scenes/main.scene</code> —— 一个用<a href="../reference/glossary.html">游戏 DSL</a> 编写的入门
+<a href="../reference/glossary.html">场景</a>；第 6 步会替换它。</li>
+<li><code>README.md</code> —— 自由格式的笔记。</li>
+</ul>
+<h2 id="2-项目清单"><a class="header" href="#2-项目清单">2. 项目清单</a></h2>
+<p>用下面的文件替换脚手架生成的 <code>.dotzuki-editor.json</code>：</p>
+<pre><code class="language-json">{
+  "name": "Your First Game",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps"
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "extension": ".scene",
+        "scriptsDir": "maps"
+      }
+    },
+    {
+      "id": "play",
+      "type": "play",
+      "label": "Play",
+      "icon": "play",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "heroes",
+            "label": "Heroes",
+            "dir": "heroes",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "monsters",
+            "label": "Monsters",
+            "dir": "monsters",
+            "icon": "bug",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "encounters",
+            "label": "Encounters",
+            "dir": "encounters",
+            "icon": "crosshair",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "enemies", "label": "Enemies", "type": "list" },
+              { "id": "trainer", "label": "Trainer", "type": "boolean" },
+              { "id": "money", "label": "Money", "type": "number" }
+            ]
+          },
+          {
+            "id": "spells",
+            "label": "Spells",
+            "dir": "spells",
+            "icon": "sparkles",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "type", "label": "Category", "type": "string" },
+              { "id": "power", "label": "Power", "type": "number" },
+              { "id": "accuracy", "label": "Accuracy", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "stat", "label": "Stat", "type": "string" },
+              { "id": "mpCost", "label": "MP Cost", "type": "number" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "healHp", "label": "Heal HP", "type": "number" },
+              { "id": "price", "label": "Price", "type": "number" },
+              { "id": "effect", "label": "Effect", "type": "string" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "story",
+      "type": "story",
+      "label": "Story",
+      "icon": "book",
+      "enabled": true,
+      "config": {
+        "locales": [
+          "en",
+          "zh"
+        ],
+        "scenesDir": "maps",
+        "storiesDir": "stories"
+      }
+    },
+    {
+      "id": "assets",
+      "type": "assets",
+      "label": "Assets",
+      "icon": "image",
+      "enabled": true,
+      "config": {
+        "roots": [
+          "gfx"
+        ]
+      }
+    },
+    {
+      "id": "tiles",
+      "type": "tiles",
+      "label": "Tiles",
+      "icon": "tiles",
+      "enabled": true,
+      "config": {
+        "backdropMapsDir": "maps",
+        "tileSize": 16,
+        "tilesDir": "tiles"
+      }
+    }
+  ],
+  "game": {
+    "entryScene": "main",
+    "entryMap": "Hometown",
+    "scenesDir": "assets/scenes"
+  },
+  "battle": {
+    "party": { "table": "heroes" },
+    "enemies": { "table": "monsters" },
+    "encounters": { "table": "encounters" },
+    "skills": { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+    "stats": { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+    "resource": "mp",
+    "rules": "data/rules.ron",
+    "items": { "table": "items", "healField": "healHp", "starting": { "potion": 3 } }
+  },
+  "shop": { "currency": "G", "startMoney": 100 }
+}
+</code></pre>
+<p>这里起作用的顶层区块有五个：</p>
+<ul>
+<li><code>activities</code> —— 七个编辑器<a href="../reference/glossary.html">活动</a>（Maps、Scripts、Play、
+Data、Story、Assets、Tiles）。<code>maps</code> 把地图活动指向 <code>dataRoot</code> 下的 <code>maps</code>；
+<code>scripts</code> 把脚本活动指向同一个 <code>maps</code> 目录、扩展名 <code>.scene</code>，于是每张地图的场景文
+件都紧挨着自己的地图。<code>data</code> 活动声明五张<a href="../reference/glossary.html">数据表</a>：每条
+<code>tables[]</code> 配置给出 <code>dir</code>、<code>idField</code> 和编辑器渲染成表单的字段模式。<code>story</code> 声明双语
+locales，并把 <code>scenesDir</code> 指向 <code>maps</code>；<code>assets</code> 把资源面板的根目录设为 <code>gfx</code>；
+<code>tiles</code> 配置 tile 库面板。</li>
+<li><code>game</code> —— 面向引擎的区块。<code>entryScene: "main"</code> 指定 <code>scenesDir</code> 下用于无地图项目的
+场景；<code>entryMap: "Hometown"</code> 是 <code>dotzuki run</code> 出生所在的
+<a href="../reference/glossary.html">入口地图</a>；<code>scenesDir: "assets/scenes"</code> 是场景目录。</li>
+<li><code>battle</code> —— 启用数据驱动的战斗系统。<code>party</code> 与 <code>enemies</code> 指定双方战斗者的数据表
+（<code>heroes</code> 对 <code>monsters</code>）；<code>encounters</code> 指定 encounter 表；<code>skills</code> 指定 <code>spells</code> 表
+及字段名 —— <code>field: "skills"</code> 是战斗者记录上的技能列表，<code>categoryField: "type"</code> 与
+<code>costField: "mpCost"</code> 分别指定类别列和 MP 消耗列；<code>stats</code> 把四个角色位（<code>hp</code>、
+<code>attack</code>、<code>defense</code>、<code>speed</code>）映射到记录字段；<code>resource: "mp"</code> 指定 MP 池字段；
+<code>rules: "data/rules.ron"</code> 指向规则文件（第 4 步）；<code>items</code> 指定道具表、它的
+<code>healField: "healHp"</code>，以及 3 瓶药水的初始背包。</li>
+<li><code>shop</code> —— <code>currency: "G"</code> 与 <code>startMoney: 100</code>：运行器持有的金钱，显示在背包和商店
+界面里，并随存档保存。</li>
+</ul>
+<h2 id="3-数据表"><a class="header" href="#3-数据表">3. 数据表</a></h2>
+<p>每张数据表的目录下每个记录一个 JSON 文件，位于 <code>data/&lt;dir&gt;/</code>、命名为 <code>&lt;id&gt;.json</code>。
+创建这九个文件。</p>
+<h3 id="英雄"><a class="header" href="#英雄">英雄</a></h3>
+<p><code>data/heroes/aria.json</code> —— <a href="../reference/glossary.html">队伍</a>（party）就是 <code>heroes</code> 表的
+全部记录，所以 Aria 一人带队：</p>
+<pre><code class="language-json">{
+  "id": "aria",
+  "name": "Aria",
+  "hp": 60,
+  "atk": 12,
+  "def": 10,
+  "spd": 15,
+  "mp": 20,
+  "element": "grass",
+  "skills": ["slash", "fire-bolt", "bubble", "heal"]
+}
+</code></pre>
+<p>四个<a href="../reference/glossary.html">属性</a>（stat）<code>hp</code>、<code>atk</code>、<code>def</code>、<code>spd</code> 通过
+<code>battle.stats</code> 映射。<code>mp</code> 是 <code>battle.resource</code> 指定的资源池 —— Fire Bolt 和 Heal 从中
+消耗。<code>element: "grass"</code> 是 Aria 的<a href="../reference/glossary.html">元素</a>，在
+<a href="../reference/glossary.html">克制表</a>（type chart）查询中充当防守方。<code>skills</code> 列出 Aria
+在战斗中可用的 <code>spells</code> 表<a href="../reference/glossary.html">技能</a> id。</p>
+<h3 id="怪物"><a class="header" href="#怪物">怪物</a></h3>
+<p><code>data/monsters/slime.json</code> 与 <code>data/monsters/goblin.json</code> —— 敌方记录，字段与英雄相
+同：</p>
+<pre><code class="language-json">{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 40,
+  "atk": 8,
+  "def": 8,
+  "spd": 5,
+  "mp": 0,
+  "element": "grass",
+  "skills": ["slash"]
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "goblin",
+  "name": "Goblin",
+  "hp": 55,
+  "atk": 10,
+  "def": 9,
+  "spd": 9,
+  "mp": 0,
+  "element": "fire",
+  "skills": ["slash"]
+}
+</code></pre>
+<p>史莱姆是 grass，哥布林是 fire —— 第 4 步的克制表行让 Fire Bolt 打史莱姆 ×2、Bubble
+打哥布林 ×2。两者只会 Slash，<code>mp: 0</code> 意味着没有 MP 池，而它们唯一的技能也不需要 MP。</p>
+<h3 id="encounters"><a class="header" href="#encounters">Encounters</a></h3>
+<p><code>data/encounters/rival.json</code> —— 一条 <a href="../reference/glossary.html">encounter</a> 记录：</p>
+<pre><code class="language-json">{
+  "id": "rival",
+  "name": "Rival Kai",
+  "enemies": ["goblin"],
+  "trainer": true,
+  "money": 50
+}
+</code></pre>
+<p><code>enemies</code> 是敌方依次派出的有序队列；<code>trainer: true</code> 使它成为
+<a href="../reference/glossary.html">trainer 战斗</a> —— 不能逃跑，获胜获得 <code>money: 50</code> G。这个游
+戏没有场景调用 <code>rival</code>；该记录演示了模式，留给之后的剧情线使用。向导的战斗开局用的
+是野生 <code>slime</code> 记录（第 6 步）。</p>
+<h3 id="技能"><a class="header" href="#技能">技能</a></h3>
+<p><code>data/spells/fire-bolt.json</code>、<code>data/spells/slash.json</code>、<code>data/spells/bubble.json</code>、
+<code>data/spells/heal.json</code>：</p>
+<pre><code class="language-json">{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "attack",
+  "power": 50,
+  "accuracy": 100,
+  "element": "fire",
+  "mpCost": 5
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "slash",
+  "name": "Slash",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "mpCost": 0
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "bubble",
+  "name": "Bubble",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "element": "water",
+  "mpCost": 4
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "heal",
+  "name": "Heal",
+  "type": "heal",
+  "power": 25,
+  "accuracy": 100,
+  "mpCost": 4
+}
+</code></pre>
+<p><code>type</code> 是类别列（<code>battle.skills.categoryField</code>）：<code>attack</code> 按标准公式造成伤害，
+<code>heal</code> 为使用者自己恢复 <code>power</code> 点 HP，上限封顶。<code>element</code> 参与克制表 —— Fire Bolt 是
+fire，Bubble 是 water；Slash 和 Heal 没有元素，因此没有克制表行适用于它们。<code>mpCost</code>
+是消耗列（<code>battle.skills.costField</code>）：Fire Bolt 消耗 5 MP，Heal 消耗 4，Slash 免费。
+<code>accuracy: 100</code> 一定命中。公式和回合循环见
+<a href="../reference/battle-rules.html">战斗规则参考</a>。</p>
+<h3 id="道具"><a class="header" href="#道具">道具</a></h3>
+<p><code>data/items/potion.json</code>：</p>
+<pre><code class="language-json">{
+  "id": "potion",
+  "name": "Potion",
+  "healHp": 20,
+  "price": 20,
+  "effect": "Restores 20 HP."
+}
+</code></pre>
+<p><code>healHp: 20</code> 是 <code>battle.items.healField</code> —— 正数让道具在战斗中和暂停菜单的背包里可
+用，每次使用恢复 20 HP，上限封顶。<code>price: 20</code> 是商店的购买价格。<code>effect</code> 是仅用于展
+示的说明文字。</p>
+<h2 id="4-规则文件"><a class="header" href="#4-规则文件">4. 规则文件</a></h2>
+<p><code>data/rules.ron</code> —— 声明式战斗规则，由 <code>dotzuki-rules</code> 解析：</p>
+<pre><code class="language-ron">// rules.ron — Your First Game's battle ruleset. The runner consumes the
+// type chart only; stats/types/resources are declared so the file is a
+// valid dotzuki-rules Ruleset (see reference/battle-rules.md).
+Ruleset(
+    stats: ["hp", "atk", "def", "spd"],
+    types: ["fire", "grass", "water"],
+    resources: ["mp"],
+    type_chart: [
+        (atk: "fire", def: "grass", mult: [2, 1]),
+        (atk: "grass", def: "fire", mult: [1, 2]),
+        (atk: "water", def: "fire", mult: [2, 1]),
+    ],
+)
+</code></pre>
+<p><a href="../reference/glossary.html">运行器</a>（runner）从 <code>battle.rules</code> 指定的路径加载这个
+<a href="../reference/glossary.html">RON</a> 文件，读取 <code>type_chart</code>：每一行把攻击技能的 <code>element</code>
+与防守方的 <code>element</code> 配对，<code>mult: [num, den]</code> 是有理数倍率 —— <code>[2, 1]</code> 把伤害放大 ×2
+（效果拔群），<code>[1, 2]</code> 缩小到 ×½（被抵抗）。克制表中没有的组合保持 ×1。Fire Bolt 打
+grass 的史莱姆是 ×2，Bubble 打 fire 的哥布林是 ×2，grass 技能打 fire 目标是 ×½。</p>
+<p><code>stats</code>、<code>types</code> 和 <code>resources</code> 声明封闭词表，让文件解析为合法的 <code>dotzuki-rules</code>
+<code>Ruleset</code> —— <code>dotzuki check</code> 遇到未知名称会报错。这个游戏没有声明 <code>effects</code>，所以克
+制表是唯一生效的部分；带 <code>effects</code> 的规则文件会编译成运行时
+<a href="../reference/glossary.html">效果栈</a>（effect stack）（见
+<a href="../reference/battle-rules.html">战斗规则参考</a>）。</p>
+<h2 id="5-城镇地图"><a class="header" href="#5-城镇地图">5. 城镇地图</a></h2>
+<p>创建 <code>data/maps/Hometown/</code>，放入三个文件：<code>map.tmx.json</code>、<code>tileset.png</code> 和
+<code>objects.json</code>。</p>
+<p><code>map.tmx.json</code> 是 Tiled JSON：20 × 15 个 <a href="../reference/glossary.html">tile</a>，每个
+8 × 8 像素。<code>ground</code> 和 <code>decoration</code> 图层会渲染；<code>collision</code> 图层从不渲染，并挡住每
+个 GID 非零的 tile。<a href="../reference/glossary.html">GID</a> 从 1 开始、按行编入
+<a href="../reference/glossary.html">tileset</a> 图集，图集由 <code>tilesets</code> 块声明 —— <code>tileset.png</code>，
+32 × 8 像素，四张 tile，<code>columns: 4</code>。</p>
+<pre><code class="language-json">{
+  "width": 20,
+  "height": 15,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). GID 1 fills the map, GID 4
+           marks the path column (x=10) and the cross row (y=7). The full array
+           lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "decoration",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). Mostly 0; GID 2 trees dot
+           the field. The full array lives in
+           examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). A GID-1 ring borders the
+           map; 0 inside, so the warp tile (18, 7) stays walkable. The full
+           array lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>data</code> 数组各含 300 项（20 行 × 20 列）；清单为每个图层展示有代表性的一行，并带
+<code>&lt;!-- excerpt --&gt;</code> 标记。完整数组请从
+<code>examples/your-first-game/data/maps/Hometown/map.tmx.json</code>
+复制。<code>ground</code> 全部铺 GID 1，其中 GID-4 路径列（x=10）和整行 GID-4 的横贯行（y=7）；
+<code>decoration</code> 撒下 GID-2 的树；<code>collision</code> 用 GID 1 围住地图边界，内部 —— 包括传送点
+tile（18, 7）—— 保持可行走。</p>
+<p>把图集复制进来（两张地图共用）：</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Hometown/tileset.png
+</code></pre>
+<p>把 <code>&lt;repo&gt;</code> 替换为本仓库的路径。</p>
+<p><code>objects.json</code> 是地图的<a href="../reference/glossary.html">伴生文件</a>（sidecar）—— 地图上摆放
+的<a href="../reference/glossary.html">实体</a>（entity）：</p>
+<pre><code class="language-json">{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 12,
+      "y": 7,
+      "facing": "down",
+      "talk": "guide_talk"
+    }
+  ],
+  "warps": [
+    { "x": 18, "y": 7, "dest_map": "Clearing", "dest_x": 2, "dest_y": 5 }
+  ],
+  "signs": [
+    { "x": 3, "y": 3, "text": "Hometown — every journey starts here." }
+  ]
+}
+</code></pre>
+<p>向导 NPC 站在 (12, 7)、面朝下；它的 <code>talk</code> 字段指定玩家面朝它并按 A 时运行的剧情线。
+<a href="../reference/glossary.html">传送点</a>（warp）(18, 7) 把玩家淡出到 <code>Clearing</code> 地图，到达
+tile (2, 5)。路牌在 (3, 3)，玩家面朝它并按 A 时以分页对话显示文本。</p>
+<h2 id="6-场景"><a class="header" href="#6-场景">6. 场景</a></h2>
+<p>替换 <code>assets/scenes/main.scene</code>，然后创建 <code>data/maps/Hometown/script.scene</code>。</p>
+<p>一个<a href="../reference/glossary.html">场景</a>就是一份由
+<a href="../reference/glossary.html">剧情线</a>（storyline）组成的 <code>game_scene</code> 文档。<code>main.scene</code>
+装着无名的 <code>@storylines</code> 块 —— 即 <code>main</code> 剧情线：</p>
+<pre><code class="language-dsl">game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to Your First Game!"
+            "Talk to the Guide in Hometown, then find the warp to the Clearing."
+        }
+    }
+}
+</code></pre>
+<p>项目清单的 <code>game.entryScene: "main"</code> 为无地图项目指定这个文件。有地图时，
+<code>game.entryMap</code> 优先：<code>dotzuki run</code> 出生在 Hometown，由地图自己的场景驱动它，所以
+<code>main.scene</code> 维持着 <code>scenesDir</code> 的契约。</p>
+<p><code>script.scene</code> 紧挨着地图，这个位置本身就是绑定：运行器把地图的场景解析为
+<code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code>。Hometown 的场景有两条命名剧情线：</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @speaker("Guide") {
+            "Welcome to Hometown, Aria!"
+            "The warp on the east edge leads to the Clearing."
+            "Wild monsters roam the tall grass there — a good place to train."
+        }
+    }
+
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "You look ready for your first fight."
+            "Want to try one right here?"
+        }
+        @choice {
+            @option("Let's fight!") {
+                result = startBattle("slime")
+                @if (result == "win") {
+                    @speaker("Guide") {
+                        "Well fought! Fire beats grass, remember that."
+                    }
+                    @command("setFlag", "WON_GUIDE_BATTLE")
+                } @else {
+                    @speaker("Guide") {
+                        "It happens. Heal up and try again."
+                    }
+                }
+            }
+            @option("Not yet.") {
+                @speaker("Guide") {
+                    "Come back when you are ready."
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>hometown_intro</code> 带一个 <code>on_enter = true</code> 的
+<a href="../reference/glossary.html">触发器</a>（trigger）—— 地图加载时运行器会触发它。</li>
+<li><code>guide_talk</code> 带 <code>npc = "Guide"</code>，是指向这个 NPC 的路由 —— 而 NPC 的 <code>talk</code> 字段指
+定同一条剧情线；与向导对话就会运行它。</li>
+<li><code>@choice</code> 把两个 <code>@option</code> 呈现为菜单。</li>
+<li><code>result = startBattle("slime")</code> 挂起场景，对 <code>slime</code> 记录开一场
+<a href="../reference/glossary.html">野怪战斗</a>；场景恢复时 <code>result</code> 被设为 <code>"win"</code>、<code>"lose"</code>
+或 <code>"run"</code>。</li>
+<li><code>@if (result == "win")</code> 按结果分支；获胜分支用一条
+<a href="../reference/glossary.html">命令</a>（command）设置 <a href="../reference/glossary.html">flag</a>
+<code>WON_GUIDE_BATTLE</code>。flag 在本次会话中跨场景保持，并随存档保存。</li>
+</ul>
+<h2 id="7-空地"><a class="header" href="#7-空地">7. 空地</a></h2>
+<p>用同样的方式创建 <code>data/maps/Clearing/</code> —— 一张更小的 12 × 10 地图：</p>
+<pre><code class="language-json">{
+  "width": 12,
+  "height": 10,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). GID 1 fills the map, GID 4
+           marks the tall-grass patch (x=5–6, y=2–7). The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). A GID-1 border rings the
+           map; the west wall opens at (0, 4) so the return warp tile stays
+           walkable. The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>ground</code> 铺 GID 1，其中 GID-4 高草丛在（x=5–6，y=2–7）；<code>collision</code> 围住地图边界，
+并在 (0, 4) 打开西墙，让返回传送点的 tile 保持可行走。完整数组请从
+<code>examples/your-first-game/data/maps/Clearing/map.tmx.json</code>
+复制。</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Clearing/tileset.png
+</code></pre>
+<p><code>objects.json</code> 增加了 <code>encounters</code> 块 —— 地图的遭遇侧：</p>
+<pre><code class="language-json">{
+  "warps": [
+    { "x": 0, "y": 4, "dest_map": "Hometown", "dest_x": 17, "dest_y": 7 }
+  ],
+  "encounters": {
+    "rate": 60,
+    "zones": [
+      {
+        "x": 1,
+        "y": 1,
+        "w": 10,
+        "h": 8,
+        "table": [
+          { "id": "slime", "weight": 60 },
+          { "id": "goblin", "weight": 40 }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<p><code>rate: 60</code> 是每步概率，以 /256 为单位：完成一步走进区域 tile 时抽一个字节，值小于
+60（约 23%）即触发战斗。每个 <code>zones</code> 矩形（<code>x</code>、<code>y</code>、<code>w</code>、<code>h</code>）是一个含边界的 tile
+范围；命中后按权重从该区域的 <code>table</code> 抽 id —— Slime 60、Goblin 40。id 的解析与
+<code>startBattle(id)</code> 相同，开一场 <a href="../reference/glossary.html">sceneless 战斗</a>：获胜或逃跑
+后回到遭遇 tile 处的大地图；失败触发 <a href="../reference/glossary.html">whiteout</a> —— 队伍回
+满，玩家回到<a href="../reference/glossary.html">入口地图</a>的
+<a href="../reference/glossary.html">出生点</a>（spawn）。返回传送点在 (0, 4)，落到 Hometown
+(17, 7)，即东边传送点西侧一格。</p>
+<p>场景用<a href="../reference/glossary.html">旁白</a>（narrator form）宣告这个地方 ——
+<code>@speaker("")</code> 渲染不带名字前缀的台词：</p>
+<pre><code class="language-dsl">game_scene Clearing {
+    @storyline("clearing_enter") {
+        @trigger(map = "Clearing", on_enter = true)
+        @speaker("") {
+            "Tall grass rustles all around. Wild monsters prowl here."
+        }
+    }
+}
+</code></pre>
+<h2 id="8-运行它"><a class="header" href="#8-运行它">8. 运行它</a></h2>
+<p>编译检查所有 DSL 目录并校验战斗区块：</p>
+<pre><code class="language-bash">dotzuki check .
+</code></pre>
+<p>退出码为 0 表示场景编译通过、战斗接线 —— 表 id、字段名和 <code>data/rules.ron</code> —— 校验
+通过。</p>
+<p>开窗口玩：</p>
+<pre><code class="language-bash">dotzuki run .
+</code></pre>
+<p>操作：<strong>Arrows/WASD</strong> 移动，<strong>Z</strong> 确认/对话，<strong>X</strong> 取消/跑步，<strong>Enter/Space</strong> 打开暂
+停菜单，<strong>Backspace</strong> 是 Select。游玩路线：读路牌，与向导对话并选 <strong>Let’s fight!</strong>
+—— Aria 对战野生史莱姆，Fire Bolt 打出 ×2（fire 克制 grass），获胜后设置
+<code>WON_GUIDE_BATTLE</code>。踏上东边传送点去 Clearing；在高草丛区域走动会触发遭遇；走西边传
+送点回家。暂停菜单里有 <strong>Party</strong>、<strong>Bag</strong> 和 <strong>Save</strong>。</p>
+<p>CI 和截图用<a href="../reference/glossary.html">无头模式</a>（headless）运行同一个游戏 —— 不开窗
+口：</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180
+</code></pre>
+<p><code>--frames 180</code> 模拟 180 帧 —— 本仓库 CI 跑的就是这个
+<a href="../reference/glossary.html">冒烟测试</a>（smoke test）。无头运行默认不写存档，除非加
+<code>--save</code>；<code>--screenshot shot.png</code> 导出最后一帧：</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180 --save --screenshot shot.png
+</code></pre>
+<p><code>--lang zh</code> 把运行器自己的标签（暂停菜单、存档确认）切换成中文；场景文本用
+<a href="../reference/glossary.html"><code>@t("en", "中文")</code></a>（双语文本语法）编写时也会跟随切换。</p>
+<p>存档落在项目目录的 <code>.dotzuki-save.json</code> ——
+<a href="../reference/glossary.html">存档版本</a>（save version）3，包含地图、玩家 tile 与朝向、
+flag、队伍状态、背包和金钱。存档只在稳定点写入 —— 传送切换完成之后、场景结束回到
+<a href="../reference/glossary.html">大地图</a>（overworld）之时 —— 所以对话途中关窗会保留最后一
+个稳定点。窗口运行总是写存档；<code>--fresh</code> 忽略已有存档、全新开局。</p>
+<h2 id="接下来读什么"><a class="header" href="#接下来读什么">接下来读什么</a></h2>
+<ul>
+<li><strong>地图</strong> —— <a href="../how-to/maps.html">地图制作指南</a>：海拔、实体、遭遇、tileset。</li>
+<li><strong>战斗</strong> —— <a href="../how-to/battles.html">战斗规则指南</a>与
+<a href="../reference/battle-rules.html">战斗规则参考</a>：效果、特性、携带道具、天气。</li>
+<li><strong>项目清单契约</strong> —— <a href="../reference/project-manifest.html">项目清单</a>：<code>dotzuki run</code> 和
+<code>dotzuki check</code> 承诺的行为。</li>
+<li><strong>编辑器路径</strong> —— <a href="./editor-first-game.html">editor-first-game.md</a>：通过
+dotzuki-editor 和 AI Story Designer 做同一个游戏。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../tutorials/quickstart.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../tutorials/editor-first-game.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../tutorials/quickstart.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../tutorials/editor-first-game.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
