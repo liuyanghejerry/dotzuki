@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d318c79f.js";
+            window.path_to_searchindex_js = "searchindex-39ab62c6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-dcacbf6f.js"></script>
+        <script src="toc-466b9ebb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -232,6 +232,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>Declaring <code>.theme</code> / <code>.style</code> files and applying them to UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON tracks, channels, scene playback, authoring notes</td></tr>
+<tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>Bilingual text: the <code>game</code> i18n API and <code>@t</code> syntax</td></tr>
 <tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>Shipping a project, headless smoke tests, WASM web play, engine upgrades</td></tr>
 </tbody>
@@ -2591,6 +2592,96 @@ splits) belong in the editor’s Audio activity, not the file.</li>
 <li>The same <code>id</code> must not be duplicated across track files (the library keys by
 id).</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="assets"><a class="header" href="#assets">Assets</a></h1>
+<p>How to manage game assets: tilesets and the shared tile library, converting
+Game Boy 2bpp art, fonts, and where each file lives.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>Before you start, read <a href="#maps">Authoring Maps</a> for the map side of
+tilesets and <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest</a> for
+the asset-directory contract; <a href="#your-first-game-in-15-minutes">Your First Game in the
+Editor</a> is the guided editor tour.</p>
+<h2 id="where-assets-live"><a class="header" href="#where-assets-live">Where assets live</a></h2>
+<p>The manifest’s <code>assets</code> activity declares the asset directories —
+<code>config.roots</code> (project-root-relative paths) with optional <code>extensions</code> —
+and the editor’s Assets activity lists exactly those roots. By convention
+<code>gfx/</code> is the loose-graphics root (tilesets, sprites):</p>
+<pre><code class="language-json">{ "id": "assets", "type": "assets",
+  "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
+</code></pre>
+<p>The scaffolded project ships a working layout: <code>assets/tileset.png</code> (a 32×8
+demo sheet), <code>assets/scenes/</code>, and <code>data/tiles/</code> — the shared tile library
+that backs the map editor’s tile picker (Backdrop/Trace). Everything
+outside the declared roots is project data, not managed assets.</p>
+<h2 id="tilesets"><a class="header" href="#tilesets">Tilesets</a></h2>
+<p>A tileset is the <code>tileset.png</code> atlas plus its Tiled metadata: full-color
+RGBA, 8×8-pixel tiles laid out horizontally, <a href="#glossary">GIDs</a>
+1-based and row-major. A map’s <code>map.tmx.json</code> references GIDs from its own
+<code>tileset.png</code>; the collision layer marks blocked tiles with non-zero GIDs —
+the full map contract is in <a href="#maps">Authoring Maps</a>.</p>
+<p>The <code>.tsx</code> file names the same sheet for Tiled, so the map editor can
+offer the tiles as a palette. The scaffolder seeds a per-map
+<code>tileset.png</code> next to its <code>script.scene</code>; reusable sheets live in the
+shared <code>data/tiles/</code> library.</p>
+<h2 id="converting-game-boy-2bpp-art"><a class="header" href="#converting-game-boy-2bpp-art">Converting Game Boy 2bpp art</a></h2>
+<p><a href="../tools/asset-converter/README.html"><code>tools/asset-converter/</code></a> turns
+GB-style 2bpp tilesets (4-shade grayscale PNGs) into true-color RGBA
+tilesets under a palette you supply, and writes the <code>.tsx</code> alongside. The
+input shades map to 2bpp indices like this:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Gray value</th><th>Palette index</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td>0–63</td><td>3</td><td>black (darkest)</td></tr>
+<tr><td>64–127</td><td>2</td><td>dark gray</td></tr>
+<tr><td>128–191</td><td>1</td><td>light gray</td></tr>
+<tr><td>192–255</td><td>0</td><td>white (lightest)</td></tr>
+</tbody>
+</table>
+</div>
+<p>The palette is a JSON file of four RGBA colors, in index order:</p>
+<pre><code class="language-json">{
+  "name": "my-palette",
+  "colors": [
+    { "r": 255, "g": 255, "b": 255 },
+    { "r": 200, "g": 200, "b": 200 },
+    { "r": 96,  "g": 96,  "b": 96 },
+    { "r": 0,   "g": 0,   "b": 0 }
+  ]
+}
+</code></pre>
+<p>Convert one sheet, or every PNG in a directory:</p>
+<pre><code class="language-sh">cargo run -- -i tileset_2bpp.png -p custom_palette.json -o tileset_rgba.png
+
+cargo run -- --all --input-dir gfx/tilesets --output-dir assets/converted \
+  --batch-palette custom_palette.json
+</code></pre>
+<p>The converter is a Rust tool in the engine repository; run it from
+<code>tools/asset-converter/</code>. It produces the <code>tileset.png</code> +
+<code>.tsx</code> pair the map contract expects — the step between “ripped GB art”
+and “usable dotzuki tileset”.</p>
+<h2 id="fonts"><a class="header" href="#fonts">Fonts</a></h2>
+<p>Game text needs no font files: the renderer embeds a 10px monospaced
+bitmap font (Fusion Pixel, OFL-1.1) with CJK coverage, so bilingual text
+renders out of the box — <a href="#i18n-guide">Bilingual Text (i18n)</a> covers the
+text side. Rust games can substitute their own font tilesets through the
+renderer’s resource provider; see <a href="#rust-api-portal">Rust API</a> for
+the crate map.</p>
+<h2 id="the-editor-workflow"><a class="header" href="#the-editor-workflow">The editor workflow</a></h2>
+<p>The editor’s Assets activity shows the manifest’s asset roots; the Tiles
+activity serves the shared <code>data/tiles/</code> library to the map editor. Author
+in the editor, keep sheets under a declared root, and re-check the project
+after asset swaps — <code>dotzuki check</code> compiles the DSL side, and
+<a href="#dotzuki-cli-reference"><code>dotzuki run</code></a> shows the result in the player.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="i18n-guide"><a class="header" href="#i18n-guide">i18n Guide</a></h1>
 <blockquote>
@@ -5687,6 +5778,19 @@ the <code>@trigger</code> keyword stays as code.</li>
 <li><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
 dialogue, and menus.</li>
 <li><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</li>
+</ul>
+<h2 id="assets-1"><a class="header" href="#assets-1">Assets</a></h2>
+<ul>
+<li><strong>2bpp</strong> — 2 bits per pixel: the 4-shade Game Boy tile format the
+asset-converter reads; kept in English in Chinese text.</li>
+<li><strong>palette</strong>（调色板）— the four RGBA colors mapped onto 2bpp indices by
+the asset-converter.</li>
+<li><strong>sprite</strong>（精灵）— a character or object graphic, drawn from tileset
+tiles.</li>
+<li><strong>font</strong>（字体）— the text glyph source; the renderer embeds a CJK-capable
+bitmap font, games may substitute their own.</li>
+<li><strong>gfx</strong> — the conventional loose-graphics directory (an assets-activity
+root); kept in English in Chinese text.</li>
 </ul>
 <h2 id="scenes--ui"><a class="header" href="#scenes--ui">Scenes &amp; UI</a></h2>
 <ul>
@@ -10420,6 +10524,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>声明 <code>.theme</code> / <code>.style</code> 文件并应用到 UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
+<tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>素材管线：tileset、共享 tile 库、2bpp 转换、字体</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>双语文本：<code>game</code> i18n API 与 <code>@t</code> 语法</td></tr>
 <tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
 </tbody>
@@ -12599,6 +12704,68 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 （音符名、音量/渐弱拆分）属于编辑器的 Audio 活动，不属于文件。</li>
 <li>同一个 <code>id</code> 不得在多个音轨文件中重复（库以 id 为键）。</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="素材"><a class="header" href="#素材">素材</a></h1>
+<p>如何管理游戏素材：tileset 与共享 tile 库、转换 Game Boy 2bpp 美术、字体，以及每个文件的存放位置。</p>
+<blockquote>
+<p>本文是 <code>how-to/assets.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>开始前，请先阅读<a href="#maps">制作地图</a>（tileset 的地图侧）与<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>（素材目录契约）；<a href="#your-first-game-in-15-minutes">在编辑器中制作你的第一个游戏</a>是编辑器导览。</p>
+<h2 id="素材放在哪里"><a class="header" href="#素材放在哪里">素材放在哪里</a></h2>
+<p>清单的 <code>assets</code> 活动声明素材目录——<code>config.roots</code>（相对项目根的路径）加可选的 <code>extensions</code>——编辑器的 Assets 活动列出的正是这些根目录。按惯例 <code>gfx/</code> 是散件素材根目录（tileset、精灵）：</p>
+<pre><code class="language-json">{ "id": "assets", "type": "assets",
+  "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
+</code></pre>
+<p>脚手架项目自带一套可用的布局：<code>assets/tileset.png</code>（32×8 演示图）、<code>assets/scenes/</code>，以及 <code>data/tiles/</code>——支撑地图编辑器选 tile 面板（Backdrop/Trace）的共享 tile 库。声明根目录之外的一切都是项目数据，不是受管素材。</p>
+<h2 id="tileset"><a class="header" href="#tileset">Tileset</a></h2>
+<p>tileset 是 <code>tileset.png</code> 图集加它的 Tiled 元数据：全彩 RGBA、8×8 像素 tile 横向排列、<a href="#glossary">GID</a> 从 1 起、行优先。地图的 <code>map.tmx.json</code> 引用自己 <code>tileset.png</code> 里的 GID；collision 层用非零 GID 标记阻挡 tile——完整地图契约见<a href="#maps">制作地图</a>。</p>
+<p><code>.tsx</code> 文件为 Tiled 命名同一张图，让地图编辑器能把 tile 当调色板用。脚手架为每张地图在 <code>script.scene</code> 旁生成一份 <code>tileset.png</code>；可复用的图放在共享的 <code>data/tiles/</code> 库里。</p>
+<h2 id="转换-game-boy-2bpp-美术"><a class="header" href="#转换-game-boy-2bpp-美术">转换 Game Boy 2bpp 美术</a></h2>
+<p><a href="../tools/asset-converter/README.html"><code>tools/asset-converter/</code></a> 把 GB 风格的 2bpp tileset（4 色阶灰度 PNG）转成你指定<a href="#glossary">调色板</a>下的全彩 RGBA tileset，并顺带写出 <code>.tsx</code>。输入灰度到 2bpp 索引的映射：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>灰度值</th><th>调色板索引</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td>0–63</td><td>3</td><td>黑（最深）</td></tr>
+<tr><td>64–127</td><td>2</td><td>深灰</td></tr>
+<tr><td>128–191</td><td>1</td><td>浅灰</td></tr>
+<tr><td>192–255</td><td>0</td><td>白（最浅）</td></tr>
+</tbody>
+</table>
+</div>
+<p>调色板是按索引顺序排列的四色 RGBA JSON 文件：</p>
+<pre><code class="language-json">{
+  "name": "my-palette",
+  "colors": [
+    { "r": 255, "g": 255, "b": 255 },
+    { "r": 200, "g": 200, "b": 200 },
+    { "r": 96,  "g": 96,  "b": 96 },
+    { "r": 0,   "g": 0,   "b": 0 }
+  ]
+}
+</code></pre>
+<p>转换单张图，或整目录的 PNG：</p>
+<pre><code class="language-sh">cargo run -- -i tileset_2bpp.png -p custom_palette.json -o tileset_rgba.png
+
+cargo run -- --all --input-dir gfx/tilesets --output-dir assets/converted \
+  --batch-palette custom_palette.json
+</code></pre>
+<p>转换器是引擎仓库里的 Rust 工具；在 <code>tools/asset-converter/</code> 目录下运行。它产出地图契约所需的 <code>tileset.png</code> + <code>.tsx</code> 组合——即“扒下来的 GB 美术“到“可用的 dotzuki tileset“之间的那一步。</p>
+<h2 id="字体"><a class="header" href="#字体">字体</a></h2>
+<p>游戏文本不需要字体文件：渲染器内置 10px 等宽位图字体（Fusion Pixel，OFL-1.1），覆盖 CJK，双语文本开箱即渲染——文本侧见<a href="#i18n-guide">i18n 指南</a>。Rust 游戏可以通过渲染器的资源提供者替换自己的字体 tileset；crate 地图见 <a href="#rust-api-portal">Rust API</a>。</p>
+<h2 id="编辑器工作流"><a class="header" href="#编辑器工作流">编辑器工作流</a></h2>
+<p>编辑器的 Assets 活动展示清单的素材根目录；Tiles 活动把共享的 <code>data/tiles/</code> 库提供给地图编辑器。在编辑器里创作，把图放在已声明的根目录下，换素材后重新检查项目——<code>dotzuki check</code> 编译 DSL 侧，<a href="#dotzuki-cli-reference"><code>dotzuki run</code></a> 在播放器里给出结果。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="i18n-指南"><a class="header" href="#i18n-指南">i18n 指南</a></h1>
 <blockquote>
