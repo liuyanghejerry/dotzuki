@@ -4,6 +4,10 @@ This directory is the **entry point for dotzuki's developer documentation**. The
 engine is game-agnostic and consumed by game repositories as Cargo git
 dependencies; most game authors never touch Rust. Pick your path below.
 
+Chinese translations (`-zh-CN` siblings) are listed in `SUMMARY.md` under
+the 「中文（zh-CN）」 group; the English source is authoritative (doc-standard
+§6).
+
 ## Reader guide
 
 | You are… | Start here |

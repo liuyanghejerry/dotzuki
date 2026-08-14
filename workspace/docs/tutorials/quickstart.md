@@ -90,4 +90,4 @@ dotzuki run . --watch      # scenes + map reload as you save files
 - **All CLI flags** — [CLI reference](../reference/cli.md)
 - **Battle rules (`rules.ron`)** — [battle rules guide](../how-to/battles.md)
 - **Editor with AI Story Designer** — [editor README](../../tools/dotzuki-editor/README.md)
-- **Full doc index** — [doc index](../README.md)
+- **Full doc index** — [doc index](../index.md)

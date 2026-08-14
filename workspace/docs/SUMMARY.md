@@ -57,3 +57,13 @@
 # Appendix
 
 - [Documentation Standard](doc-standard.md)
+
+# 中文（zh-CN）
+
+Chinese translations of the English sources above. Each `-zh-CN` page is a
+derived translation — the English source is authoritative (doc-standard §6).
+More translations land as M2.5 batches merge.
+
+- [简介](index.zh-CN.md)
+- [快速上手](tutorials/quickstart.zh-CN.md)
+- [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
