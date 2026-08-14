@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2c1d51bc.js";
+            window.path_to_searchindex_js = "searchindex-b561ea30.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-2703abeb.js"></script>
+        <script src="toc-e61ceb7e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -272,7 +272,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (first: <a href="#migration-guide--v05x-pre-release--v010"><code>release-notes/migration/v0.1.0.md</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -6349,10 +6349,79 @@ version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
 <h2 id="v010"><a class="header" href="#v010">v0.1.0</a></h2>
-<p>Initial published version of the engine workspace: core engine, battle
-effect-stack, <code>dotzuki-rules</code>, DSL compiler, runner, CLI, renderer, UI, audio,
-app/tui/web shells, and the dotzuki-editor toolchain. (Backfill from git
-history before the first release if this entry ships as a placeholder.)</p>
+<p>First published release (crates.io). The engine workspace’s version line
+resets from the v0.5.x pre-release tags (<code>v0.5.0</code>, <code>v0.5.1</code>) to <code>0.1.0</code>;
+every <code>dotzuki-*</code> crate publishes at 0.1.0, and the tag-driven release
+pipeline lands: <code>workspace/scripts/publish-crates.sh</code>, the release
+workflow, and the package-check PR gate. The code at tag <code>v0.1.0</code> is one
+commit past <code>v0.5.1</code> — no API changes in the jump. Pre-release consumers
+switch their git tags from <code>v0.5.x</code> to <code>v0.1.0</code> (or to the registry form)
+per <a href="#migration-guide--v05x-pre-release--v010">the migration guide</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migration-guide--v05x-pre-release--v010"><a class="header" href="#migration-guide--v05x-pre-release--v010">Migration Guide — v0.5.x (pre-release) → v0.1.0</a></h1>
+<p>How to move a game repository from the v0.5.x git-tag era to the published
+v0.1.0 workspace.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>v0.1.0 is the first crates.io release of the engine workspace. It renames
+the version line (the pre-release tags were <code>v0.5.0</code> / <code>v0.5.1</code>; the
+published workspace version is <code>0.1.0</code>) and ships the release pipeline —
+and nothing else. The code at tag <code>v0.1.0</code> is one commit past <code>v0.5.1</code>: the
+version strings in <code>workspace/crates/*/Cargo.toml</code>, the publish script
+(<code>workspace/scripts/publish-crates.sh</code>) and the tag-driven release
+workflow. No engine API changed in that jump, so this guide has no breaking
+changes to describe; it documents the two things that DID change: where the
+crates come from and what the version numbers mean.</p>
+<h2 id="before-v05x-era"><a class="header" href="#before-v05x-era">Before (v0.5.x era)</a></h2>
+<p>Games consumed the engine as Cargo <strong>git dependencies</strong> pinned to a
+pre-release tag:</p>
+<pre><code class="language-toml">[dependencies]
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.1" }
+dotzuki-rules  = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.1" }
+</code></pre>
+<h2 id="after-v010"><a class="header" href="#after-v010">After (v0.1.0)</a></h2>
+<p>Same crates, published to crates.io. Both forms stay supported:</p>
+<pre><code class="language-toml">[dependencies]
+# Registry (preferred): one shared version for every dotzuki-* crate.
+dotzuki-engine = "0.1.0"
+dotzuki-rules  = "0.1.0"
+
+# Or keep pinning a git tag.
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.0" }
+dotzuki-rules  = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.0" }
+</code></pre>
+<h3 id="steps"><a class="header" href="#steps">Steps</a></h3>
+<ol>
+<li>Replace every <code>tag = "v0.5.x"</code> with <code>tag = "v0.1.0"</code>, or switch the
+dependency to the registry form <code>dotzuki-&lt;crate&gt; = "0.1.0"</code>.</li>
+<li>If your game vendors its own copy of the workspace, bump every internal
+<code>dotzuki-*</code> path dependency’s <code>version</code> string to <code>0.1.0</code> — crates.io
+resolves path deps through the registry, and mismatched versions fail
+the release gate.</li>
+<li><code>cargo update &amp;&amp; cargo build</code> — a clean build is the whole migration.</li>
+<li>If you use <code>dotzuki new</code> projects (zero-Rust games), nothing changes:
+those projects contain no Cargo manifests.</li>
+</ol>
+<h2 id="version-policy-from-v010-on"><a class="header" href="#version-policy-from-v010-on">Version policy from v0.1.0 on</a></h2>
+<ul>
+<li>One shared version: every <code>dotzuki-*</code> crate inherits the workspace
+version; one bump releases them all.</li>
+<li>A tag <code>vX.Y.Z</code> publishes every crate at <code>X.Y.Z</code> (the release workflow
+runs <code>workspace/scripts/publish-crates.sh</code>).</li>
+<li>Each release ships a migration guide in this directory; the changelog
+links it from the release’s entry.</li>
+</ul>
+<h2 id="related"><a class="header" href="#related">Related</a></h2>
+<ul>
+<li><a href="#changelog">Changelog</a></li>
+<li><a href="#rust-api-portal">Crate map</a></li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-engine-开发者指南"><a class="header" href="#dotzuki-engine-开发者指南">dotzuki-engine 开发者指南</a></h1>
 <blockquote>
@@ -10088,7 +10157,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（首篇：<a href="#migration-guide--v05x-pre-release--v010"><code>release-notes/migration/v0.1.0.md</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -15516,10 +15585,74 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
 <h2 id="v010-1"><a class="header" href="#v010-1">v0.1.0</a></h2>
-<p>引擎 workspace 的初始发布版本：核心引擎、战斗效果栈、<code>dotzuki-rules</code>、DSL
-编译器、运行器、CLI、渲染器、UI、音频、app/tui/web shell，以及
-dotzuki-editor 工具链。（若这条记录以占位形式发布，请从首次 release 之前的
-git 历史回填。）</p>
+<p>首个发布版本（crates.io）。引擎 workspace 的版本线从 v0.5.x 预发布 tag
+（<code>v0.5.0</code>、<code>v0.5.1</code>）重置为 <code>0.1.0</code>；每个 <code>dotzuki-*</code> crate 以 0.1.0 发布，
+并落地 tag 驱动的发布管线：<code>workspace/scripts/publish-crates.sh</code>、发布工作流与
+package-check PR 门禁。tag <code>v0.1.0</code> 的代码只比 <code>v0.5.1</code> 多一个提交——这次跳跃
+没有 API 变更。预发布时代的消费者按<a href="#migration-guide--v05x-pre-release--v010">迁移指南</a>把 git tag 从
+<code>v0.5.x</code> 换成 <code>v0.1.0</code>（或改成 registry 形式）。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移指南--v05x预发布-v010"><a class="header" href="#迁移指南--v05x预发布-v010">迁移指南 — v0.5.x（预发布）→ v0.1.0</a></h1>
+<p>如何把游戏仓库从 v0.5.x git tag 时代迁到已发布的 v0.1.0 workspace。</p>
+<blockquote>
+<p>本文是 <code>release-notes/migration/v0.1.0.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>v0.1.0 是引擎 workspace 的第一个 crates.io 版本。它重排了版本线（预发布 tag 是
+<code>v0.5.0</code> / <code>v0.5.1</code>；发布的 workspace 版本是 <code>0.1.0</code>）并接入了发布管线——仅此而已。
+tag <code>v0.1.0</code> 的代码只比 <code>v0.5.1</code> 多一个提交：<code>workspace/crates/*/Cargo.toml</code> 里的版本
+字符串、发布脚本（<code>workspace/scripts/publish-crates.sh</code>）和 tag 驱动的发布工作流。
+那次跳跃没有改动任何引擎 API，因此本指南没有破坏性变更要描述；它记录真正改变的两件
+事：crate 从哪里来，以及版本号意味着什么。</p>
+<h2 id="之前v05x-时代"><a class="header" href="#之前v05x-时代">之前（v0.5.x 时代）</a></h2>
+<p>游戏以 Cargo <strong>git 依赖</strong>的形式消费引擎，固定到预发布 tag：</p>
+<pre><code class="language-toml">[dependencies]
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.1" }
+dotzuki-rules  = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.1" }
+</code></pre>
+<h2 id="之后v010"><a class="header" href="#之后v010">之后（v0.1.0）</a></h2>
+<p>同样的 crate，发布到 crates.io。两种形式都仍然支持：</p>
+<pre><code class="language-toml">[dependencies]
+# Registry（推荐）：所有 dotzuki-* crate 共享一个版本。
+dotzuki-engine = "0.1.0"
+dotzuki-rules  = "0.1.0"
+
+# 或者继续固定 git tag。
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.0" }
+dotzuki-rules  = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.0" }
+</code></pre>
+<h3 id="步骤"><a class="header" href="#步骤">步骤</a></h3>
+<ol>
+<li>把所有 <code>tag = "v0.5.x"</code> 换成 <code>tag = "v0.1.0"</code>，或者把依赖改成 registry 形式
+<code>dotzuki-&lt;crate&gt; = "0.1.0"</code>。</li>
+<li>如果你的游戏在仓库里自带一份 workspace 副本，把每个内部 <code>dotzuki-*</code> path
+依赖的 <code>version</code> 字符串一并升到 <code>0.1.0</code>——crates.io 通过 registry 解析 path
+依赖，版本不一致会让发布门禁失败。</li>
+<li><code>cargo update &amp;&amp; cargo build</code>——一次干净的构建就是全部迁移。</li>
+<li>使用 <code>dotzuki new</code> 项目（零 Rust 游戏）的话什么都不用改：那些项目里没有
+Cargo 清单。</li>
+</ol>
+<h2 id="自-v010-起的版本政策"><a class="header" href="#自-v010-起的版本政策">自 v0.1.0 起的版本政策</a></h2>
+<ul>
+<li>单一共享版本：每个 <code>dotzuki-*</code> crate 继承 workspace 版本；一次版本号提升发布全部
+crate。</li>
+<li>tag <code>vX.Y.Z</code> 会把每个 crate 以 <code>X.Y.Z</code> 发布（发布工作流运行
+<code>workspace/scripts/publish-crates.sh</code>）。</li>
+<li>每个版本在本目录附带一篇迁移指南；changelog 在该版本的条目里链接它。</li>
+</ul>
+<h2 id="相关文档"><a class="header" href="#相关文档">相关文档</a></h2>
+<ul>
+<li><a href="#changelog">变更日志</a></li>
+<li><a href="#rust-api-portal">Crate 地图</a></li>
+</ul>
 
                     </main>
 

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2c1d51bc.js";
+            window.path_to_searchindex_js = "../searchindex-b561ea30.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2703abeb.js"></script>
+        <script src="../toc-e61ceb7e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -201,10 +201,14 @@ version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
 <h2 id="v010"><a class="header" href="#v010">v0.1.0</a></h2>
-<p>Initial published version of the engine workspace: core engine, battle
-effect-stack, <code>dotzuki-rules</code>, DSL compiler, runner, CLI, renderer, UI, audio,
-app/tui/web shells, and the dotzuki-editor toolchain. (Backfill from git
-history before the first release if this entry ships as a placeholder.)</p>
+<p>First published release (crates.io). The engine workspace’s version line
+resets from the v0.5.x pre-release tags (<code>v0.5.0</code>, <code>v0.5.1</code>) to <code>0.1.0</code>;
+every <code>dotzuki-*</code> crate publishes at 0.1.0, and the tag-driven release
+pipeline lands: <code>workspace/scripts/publish-crates.sh</code>, the release
+workflow, and the package-check PR gate. The code at tag <code>v0.1.0</code> is one
+commit past <code>v0.5.1</code> — no API changes in the jump. Pre-release consumers
+switch their git tags from <code>v0.5.x</code> to <code>v0.1.0</code> (or to the registry form)
+per <a href="migration/v0.1.0.html">the migration guide</a>.</p>
 
                     </main>
 
@@ -214,7 +218,7 @@ history before the first release if this entry ships as a placeholder.)</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../archive/developer-guide-legacy.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../release-notes/migration/v0.1.0.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -228,7 +232,7 @@ history before the first release if this entry ships as a placeholder.)</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../archive/developer-guide-legacy.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../release-notes/migration/v0.1.0.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

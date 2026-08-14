@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2c1d51bc.js";
+            window.path_to_searchindex_js = "../searchindex-b561ea30.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2703abeb.js"></script>
+        <script src="../toc-e61ceb7e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -204,10 +204,12 @@
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
 <h2 id="v010"><a class="header" href="#v010">v0.1.0</a></h2>
-<p>引擎 workspace 的初始发布版本：核心引擎、战斗效果栈、<code>dotzuki-rules</code>、DSL
-编译器、运行器、CLI、渲染器、UI、音频、app/tui/web shell，以及
-dotzuki-editor 工具链。（若这条记录以占位形式发布，请从首次 release 之前的
-git 历史回填。）</p>
+<p>首个发布版本（crates.io）。引擎 workspace 的版本线从 v0.5.x 预发布 tag
+（<code>v0.5.0</code>、<code>v0.5.1</code>）重置为 <code>0.1.0</code>；每个 <code>dotzuki-*</code> crate 以 0.1.0 发布，
+并落地 tag 驱动的发布管线：<code>workspace/scripts/publish-crates.sh</code>、发布工作流与
+package-check PR 门禁。tag <code>v0.1.0</code> 的代码只比 <code>v0.5.1</code> 多一个提交——这次跳跃
+没有 API 变更。预发布时代的消费者按<a href="migration/v0.1.0.html">迁移指南</a>把 git tag 从
+<code>v0.5.x</code> 换成 <code>v0.1.0</code>（或改成 registry 形式）。</p>
 
                     </main>
 
@@ -217,6 +219,9 @@ git 历史回填。）</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
+                            <a rel="next prefetch" href="../release-notes/migration/v0.1.0.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -228,6 +233,9 @@ git 历史回填。）</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
+                    <a rel="next prefetch" href="../release-notes/migration/v0.1.0.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
             </nav>
 
         </div>
