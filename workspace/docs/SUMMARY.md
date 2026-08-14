@@ -12,6 +12,7 @@
 
 - [Authoring Maps](how-to/maps.md)
 - [Authoring Scenes](how-to/scenes.md)
+- [Authoring UI Layouts](how-to/ui.md)
 - [Authoring Battles](how-to/battles.md)
 - [Themes & Styles](how-to/themes.md)
 - [Audio](how-to/audio.md)
@@ -74,6 +75,7 @@ archive pages stay English-only (doc-standard §5).
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
 - [制作地图](how-to/maps.zh-CN.md)
 - [编写场景](how-to/scenes.zh-CN.md)
+- [编写 UI 布局](how-to/ui.zh-CN.md)
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)
 - [主题与样式指南](how-to/themes.zh-CN.md)
 - [音频制作指南](how-to/audio.zh-CN.md)

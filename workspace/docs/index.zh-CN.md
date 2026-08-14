@@ -39,6 +39,7 @@
 |---|---|
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx`（JSON）地图、tilesets、海拔、实体以及 `objects.json` 伴生文件 |
 | [`how-to/scenes.md`](./how-to/scenes.md) | 编写 `.scene` 剧情：NPC 对话、进图过场、选项、flag、场景内战斗 |
+| [`how-to/ui.md`](./how-to/ui.md) | 编写 `.gui` 布局：20×18 网格、面板/文本、模板绑定、`@t` 标签、自定义组件 |
 | [`how-to/battles.md`](./how-to/battles.md) | 编写 `rules.ron`：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性 |
 | [`how-to/themes.md`](./how-to/themes.md) | 声明 `.theme` / `.style` 文件并应用到 UI |
 | [`how-to/audio.md`](./how-to/audio.md) | `TrackDef` JSON 音轨、通道、场景播放、编写要点 |
