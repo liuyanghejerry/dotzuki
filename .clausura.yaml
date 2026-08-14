@@ -24,13 +24,17 @@ task:
     judge them against workspace/docs/doc-standard.md, and report findings
     with the exact rule_id defined in the skill.
 
-  token_budget: 64000
-  timeout_secs: 600
-  # Headroom over the default 10: the review reads the injected diff, the
-  # standard, and pages through changed files. Each CI run reviews ONE docs
-  # area (chunked by the workflow), but large areas still page through up to
-  # 50KB of diff, so keep the loop roomy.
-  max_iterations: 25
+  token_budget: 160000
+  timeout_secs: 1500
+  # Large docs: the review reads the injected diff, the standard, the
+  # glossary, and pages through changed files. Each CI run reviews ONE docs
+  # file (chunked by the workflow), but the biggest pages (how-to/battles,
+  # explanation/effect-stack and their zh-CN translations) exceed the
+  # agent's 32KB single-read cap and need several pages plus link
+  # verification — 64K tokens / 25 iterations exhausted the loop on those
+  # legs (incomplete output, fail_closed). These bounds give such legs
+  # headroom without changing what is reviewed.
+  max_iterations: 60
   ambiguity_policy: fail_closed
   on_incomplete: fail
 
