@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -285,6 +285,41 @@ bare commands, <code>@command(...)</code>, or <code>@run { ... }</code>):</p>
 <p>Music is <strong>deduplicated</strong> by track id — calling <code>playMusic</code> with the currently
 playing id does not restart the song. Fade-outs step the master volume one
 level every 10 video frames before cutting the track.</p>
+<h2 id="file-audio-wav--ogg--flac--mp3--optional"><a class="header" href="#file-audio-wav--ogg--flac--mp3--optional">File audio (WAV / OGG / FLAC / MP3) — optional</a></h2>
+<p>Besides JSON <code>TrackDef</code> chiptune, the runtime can play <strong>real audio files</strong>
+(WAV, OGG-Vorbis, FLAC, MP3) streamed through the engine’s modern mixer, with
+volume/pan/fade, BGM/SFX mixing buses and per-bus DSP (lowpass, reverb).</p>
+<p>This is an <strong>optional, build-time capability</strong>: the runtime must be compiled
+with the <code>modern-audio</code> feature (games enable it on their <code>dotzuki-runner</code> /
+<code>dotzuki-web</code> dependency). Without the feature, audio files are ignored and
+file-track commands stay silent no-ops — nothing is compiled in and no
+decoder dependency is built.</p>
+<h3 id="layout-1"><a class="header" href="#layout-1">Layout</a></h3>
+<p>Audio files live anywhere under <code>&lt;dataRoot&gt;/audio/</code> alongside JSON tracks
+(loaded recursively):</p>
+<pre><code>data/audio/
+├── music/
+│   ├── town.json          # chiptune TrackDef (checked first)
+│   └── field.ogg          # streamed file track
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+</code></pre>
+<p>A file track’s <strong>id</strong> is its path relative to <code>audio/</code> with the extension
+stripped: <code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>.</p>
+<h3 id="semantics"><a class="header" href="#semantics">Semantics</a></h3>
+<ul>
+<li>File BGM tracks <strong>loop</strong>; they deduplicate like JSON tracks
+(<code>playMusic</code> with the currently playing id is a no-op) and cross-fade when
+replaced (<code>fadeOutMusic</code> fades them out over ~1.2 s).</li>
+<li>File SFX tracks play once on the SFX bus.</li>
+<li>A JSON <code>TrackDef</code> whose id collides with a file track <strong>wins</strong> — JSON is
+always checked first.</li>
+<li>File BGM and chiptune can play at the same time (they mix in the output);
+<code>stopMusic</code> / <code>fadeOutMusic</code> stop whichever is currently playing.</li>
+<li>Files are <strong>streamed</strong>: the compressed bytes stay in memory and PCM is
+decoded block-by-block, so a long OGG never occupies fully-decoded RAM.</li>
+</ul>
 <h2 id="authoring-notes"><a class="header" href="#authoring-notes">Authoring notes</a></h2>
 <ul>
 <li>Music is written for the four GB channels; real GB music uses channels

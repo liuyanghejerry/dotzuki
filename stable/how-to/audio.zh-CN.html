@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -280,6 +280,36 @@
 </div>
 <p>音乐按音轨 id <strong>去重</strong>——用当前正在播放的 id 调用 <code>playMusic</code> 不会重启歌曲。渐弱每
 10 个视频帧把主音量降低一档，然后切断音轨。</p>
+<h2 id="文件音频wav--ogg--flac--mp3可选"><a class="header" href="#文件音频wav--ogg--flac--mp3可选">文件音频（WAV / OGG / FLAC / MP3）——可选</a></h2>
+<p>除了 JSON <code>TrackDef</code> 芯片音乐，运行时还可以播放<strong>真实的音频文件</strong>（WAV、OGG-Vorbis、
+FLAC、MP3），通过引擎的现代混音器流式播放，支持音量/声像/淡入淡出、BGM/SFX 混音总
+线以及每总线 DSP（lowpass、混响）。</p>
+<p>这是<strong>构建期的可选能力</strong>：运行时必须用 <code>modern-audio</code> feature 编译（游戏在
+<code>dotzuki-runner</code> / <code>dotzuki-web</code> 依赖上启用）。没有该 feature 时，音频文件会被忽略，
+文件音轨命令保持静默空操作——不编译任何代码，也不构建解码器依赖。</p>
+<h3 id="目录布局-1"><a class="header" href="#目录布局-1">目录布局</a></h3>
+<p>音频文件可以放在 <code>&lt;dataRoot&gt;/audio/</code> 下的任意位置，与 JSON 音轨并存（递归加载）：</p>
+<pre><code>data/audio/
+├── music/
+│   ├── town.json          # 芯片音乐 TrackDef（优先查找）
+│   └── field.ogg          # 流式文件音轨
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+</code></pre>
+<p>文件音轨的 <strong>id</strong> 是它相对 <code>audio/</code> 的路径去掉扩展名：
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>。</p>
+<h3 id="语义"><a class="header" href="#语义">语义</a></h3>
+<ul>
+<li>文件 BGM 音轨<strong>循环</strong>播放；与 JSON 音轨一样按 id 去重（重复请求正在播放的 id 是空
+操作），被替换时交叉淡出（<code>fadeOutMusic</code> 约 1.2 秒渐弱）。</li>
+<li>文件 SFX 音轨在 SFX 总线上播放一次。</li>
+<li>与文件音轨同 id 的 JSON <code>TrackDef</code> <strong>优先</strong>——JSON 总是先查找。</li>
+<li>文件 BGM 与芯片音乐可以同时播放（在输出中混合）；<code>stopMusic</code> / <code>fadeOutMusic</code>
+停止当前正在播放的那一种。</li>
+<li>文件是<strong>流式</strong>的：压缩字节驻留内存，PCM 按块解码——长 OGG 不会占用完整解码后的
+内存。</li>
+</ul>
 <h2 id="编写要点"><a class="header" href="#编写要点">编写要点</a></h2>
 <ul>
 <li>音乐为四个 GB 通道而写；真实的 GB 音乐从 <code>pulse1</code> 起连续使用通道，通道流按 <code>hw</code> 索

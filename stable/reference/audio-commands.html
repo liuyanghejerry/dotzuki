@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -226,6 +226,15 @@ the engine’s byte-code channel commands one-to-one. The authoritative schema i
 </tbody>
 </table>
 </div>
+<h2 id="file-tracks-optional-modern-audio"><a class="header" href="#file-tracks-optional-modern-audio">File tracks (optional <code>modern-audio</code>)</a></h2>
+<p>Beyond the <code>AudioCommand</code> chiptune vocabulary above, a project may provide
+real audio files (<code>.wav</code>, <code>.ogg</code>, <code>.flac</code>, <code>.mp3</code>) under <code>data/audio/</code>. Scene
+track ids resolve against JSON <code>TrackDef</code> documents first, then against file
+tracks keyed by their extension-stripped <code>audio/</code>-relative path (e.g.
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>).</p>
+<p>File audio is a build-time option: it requires the runtime’s <code>modern-audio</code>
+feature, and is compiled out entirely otherwise. See
+<a href="../how-to/audio.html">the audio authoring guide</a> for layout and semantics.</p>
 
                     </main>
 

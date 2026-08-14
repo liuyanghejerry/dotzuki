@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -228,6 +228,13 @@
 </tbody>
 </table>
 </div>
+<h2 id="文件音轨可选-modern-audio"><a class="header" href="#文件音轨可选-modern-audio">文件音轨（可选 <code>modern-audio</code>）</a></h2>
+<p>在上述 <code>AudioCommand</code> 芯片音乐词汇表之外，项目还可以在 <code>data/audio/</code> 下提供真实的
+音频文件（<code>.wav</code>、<code>.ogg</code>、<code>.flac</code>、<code>.mp3</code>）。场景音轨 id 先按 JSON <code>TrackDef</code> 文档
+解析，再按文件音轨解析——文件音轨的键是去掉扩展名的 <code>audio/</code> 相对路径（例如
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>）。</p>
+<p>文件音频是构建期选项：需要运行时的 <code>modern-audio</code> feature，否则完全不参与编译。
+布局与语义见<a href="../how-to/audio.html">音频制作指南</a>。</p>
 
                     </main>
 

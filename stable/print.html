@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-adb271ff.js";
+            window.path_to_searchindex_js = "searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-466b9ebb.js"></script>
@@ -2584,6 +2584,41 @@ bare commands, <code>@command(...)</code>, or <code>@run { ... }</code>):</p>
 <p>Music is <strong>deduplicated</strong> by track id — calling <code>playMusic</code> with the currently
 playing id does not restart the song. Fade-outs step the master volume one
 level every 10 video frames before cutting the track.</p>
+<h2 id="file-audio-wav--ogg--flac--mp3--optional"><a class="header" href="#file-audio-wav--ogg--flac--mp3--optional">File audio (WAV / OGG / FLAC / MP3) — optional</a></h2>
+<p>Besides JSON <code>TrackDef</code> chiptune, the runtime can play <strong>real audio files</strong>
+(WAV, OGG-Vorbis, FLAC, MP3) streamed through the engine’s modern mixer, with
+volume/pan/fade, BGM/SFX mixing buses and per-bus DSP (lowpass, reverb).</p>
+<p>This is an <strong>optional, build-time capability</strong>: the runtime must be compiled
+with the <code>modern-audio</code> feature (games enable it on their <code>dotzuki-runner</code> /
+<code>dotzuki-web</code> dependency). Without the feature, audio files are ignored and
+file-track commands stay silent no-ops — nothing is compiled in and no
+decoder dependency is built.</p>
+<h3 id="layout-1"><a class="header" href="#layout-1">Layout</a></h3>
+<p>Audio files live anywhere under <code>&lt;dataRoot&gt;/audio/</code> alongside JSON tracks
+(loaded recursively):</p>
+<pre><code>data/audio/
+├── music/
+│   ├── town.json          # chiptune TrackDef (checked first)
+│   └── field.ogg          # streamed file track
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+</code></pre>
+<p>A file track’s <strong>id</strong> is its path relative to <code>audio/</code> with the extension
+stripped: <code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>.</p>
+<h3 id="semantics"><a class="header" href="#semantics">Semantics</a></h3>
+<ul>
+<li>File BGM tracks <strong>loop</strong>; they deduplicate like JSON tracks
+(<code>playMusic</code> with the currently playing id is a no-op) and cross-fade when
+replaced (<code>fadeOutMusic</code> fades them out over ~1.2 s).</li>
+<li>File SFX tracks play once on the SFX bus.</li>
+<li>A JSON <code>TrackDef</code> whose id collides with a file track <strong>wins</strong> — JSON is
+always checked first.</li>
+<li>File BGM and chiptune can play at the same time (they mix in the output);
+<code>stopMusic</code> / <code>fadeOutMusic</code> stop whichever is currently playing.</li>
+<li>Files are <strong>streamed</strong>: the compressed bytes stay in memory and PCM is
+decoded block-by-block, so a long OGG never occupies fully-decoded RAM.</li>
+</ul>
 <h2 id="authoring-notes"><a class="header" href="#authoring-notes">Authoring notes</a></h2>
 <ul>
 <li>Music is written for the four GB channels; real GB music uses channels
@@ -5483,6 +5518,15 @@ the engine’s byte-code channel commands one-to-one. The authoritative schema i
 </tbody>
 </table>
 </div>
+<h2 id="file-tracks-optional-modern-audio"><a class="header" href="#file-tracks-optional-modern-audio">File tracks (optional <code>modern-audio</code>)</a></h2>
+<p>Beyond the <code>AudioCommand</code> chiptune vocabulary above, a project may provide
+real audio files (<code>.wav</code>, <code>.ogg</code>, <code>.flac</code>, <code>.mp3</code>) under <code>data/audio/</code>. Scene
+track ids resolve against JSON <code>TrackDef</code> documents first, then against file
+tracks keyed by their extension-stripped <code>audio/</code>-relative path (e.g.
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>).</p>
+<p>File audio is a build-time option: it requires the runtime’s <code>modern-audio</code>
+feature, and is compiled out entirely otherwise. See
+<a href="#audio-authoring-guide">the audio authoring guide</a> for layout and semantics.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-cli-reference"><a class="header" href="#dotzuki-cli-reference">dotzuki CLI Reference</a></h1>
 <blockquote>
@@ -12704,6 +12748,36 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 </div>
 <p>音乐按音轨 id <strong>去重</strong>——用当前正在播放的 id 调用 <code>playMusic</code> 不会重启歌曲。渐弱每
 10 个视频帧把主音量降低一档，然后切断音轨。</p>
+<h2 id="文件音频wav--ogg--flac--mp3可选"><a class="header" href="#文件音频wav--ogg--flac--mp3可选">文件音频（WAV / OGG / FLAC / MP3）——可选</a></h2>
+<p>除了 JSON <code>TrackDef</code> 芯片音乐，运行时还可以播放<strong>真实的音频文件</strong>（WAV、OGG-Vorbis、
+FLAC、MP3），通过引擎的现代混音器流式播放，支持音量/声像/淡入淡出、BGM/SFX 混音总
+线以及每总线 DSP（lowpass、混响）。</p>
+<p>这是<strong>构建期的可选能力</strong>：运行时必须用 <code>modern-audio</code> feature 编译（游戏在
+<code>dotzuki-runner</code> / <code>dotzuki-web</code> 依赖上启用）。没有该 feature 时，音频文件会被忽略，
+文件音轨命令保持静默空操作——不编译任何代码，也不构建解码器依赖。</p>
+<h3 id="目录布局-1"><a class="header" href="#目录布局-1">目录布局</a></h3>
+<p>音频文件可以放在 <code>&lt;dataRoot&gt;/audio/</code> 下的任意位置，与 JSON 音轨并存（递归加载）：</p>
+<pre><code>data/audio/
+├── music/
+│   ├── town.json          # 芯片音乐 TrackDef（优先查找）
+│   └── field.ogg          # 流式文件音轨
+└── sfx/
+    ├── confirm.json
+    └── hit.wav
+</code></pre>
+<p>文件音轨的 <strong>id</strong> 是它相对 <code>audio/</code> 的路径去掉扩展名：
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>。</p>
+<h3 id="语义"><a class="header" href="#语义">语义</a></h3>
+<ul>
+<li>文件 BGM 音轨<strong>循环</strong>播放；与 JSON 音轨一样按 id 去重（重复请求正在播放的 id 是空
+操作），被替换时交叉淡出（<code>fadeOutMusic</code> 约 1.2 秒渐弱）。</li>
+<li>文件 SFX 音轨在 SFX 总线上播放一次。</li>
+<li>与文件音轨同 id 的 JSON <code>TrackDef</code> <strong>优先</strong>——JSON 总是先查找。</li>
+<li>文件 BGM 与芯片音乐可以同时播放（在输出中混合）；<code>stopMusic</code> / <code>fadeOutMusic</code>
+停止当前正在播放的那一种。</li>
+<li>文件是<strong>流式</strong>的：压缩字节驻留内存，PCM 按块解码——长 OGG 不会占用完整解码后的
+内存。</li>
+</ul>
 <h2 id="编写要点"><a class="header" href="#编写要点">编写要点</a></h2>
 <ul>
 <li>音乐为四个 GB 通道而写；真实的 GB 音乐从 <code>pulse1</code> 起连续使用通道，通道流按 <code>hw</code> 索
@@ -13005,7 +13079,7 @@ repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v
 </tbody>
 </table>
 </div>
-<h2 id="目录布局-1"><a class="header" href="#目录布局-1">目录布局</a></h2>
+<h2 id="目录布局-2"><a class="header" href="#目录布局-2">目录布局</a></h2>
 <pre><code>my-game/
 ├── .dotzuki-editor.json     # project manifest — the only config file
 ├── README.md             # human notes; free-form
@@ -13623,6 +13697,13 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 </tbody>
 </table>
 </div>
+<h2 id="文件音轨可选-modern-audio"><a class="header" href="#文件音轨可选-modern-audio">文件音轨（可选 <code>modern-audio</code>）</a></h2>
+<p>在上述 <code>AudioCommand</code> 芯片音乐词汇表之外，项目还可以在 <code>data/audio/</code> 下提供真实的
+音频文件（<code>.wav</code>、<code>.ogg</code>、<code>.flac</code>、<code>.mp3</code>）。场景音轨 id 先按 JSON <code>TrackDef</code> 文档
+解析，再按文件音轨解析——文件音轨的键是去掉扩展名的 <code>audio/</code> 相对路径（例如
+<code>data/audio/music/field.ogg</code> → <code>playMusic("music/field")</code>）。</p>
+<p>文件音频是构建期选项：需要运行时的 <code>modern-audio</code> feature，否则完全不参与编译。
+布局与语义见<a href="#audio-authoring-guide">音频制作指南</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
 <blockquote>
