@@ -24,7 +24,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Scaffold a new game project (layout per docs/game-project-spec.md)
+    /// Scaffold a new game project (layout per docs/reference/project-manifest.md)
     New {
         /// Project directory name; must be a slug: [a-z0-9][a-z0-9-]*
         name: String,
@@ -83,6 +83,11 @@ enum Commands {
 }
 
 fn main() -> anyhow::Result<()> {
+    // A plain stderr logger: hot-reload events, save warnings and battle
+    // diagnostics are otherwise silent (the log crate has no backend here).
+    // `RUST_LOG` overrides the default "info" filter.
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     let cli = Cli::parse();
     match cli.command {
         Commands::New {

@@ -20,7 +20,7 @@
 //!   unchanged) fires the event sequence per action through
 //!   `collect_handlers` + `run_event`; it does **not** use `StackDriver`.
 //!
-//! Naming conventions (documented in `docs/game-project-spec.md`):
+//! Naming conventions (documented in `docs/reference/project-manifest.md`):
 //!
 //! * RON `stats` names map onto the manifest `battle.stats` KEYS
 //!   (`"hp"|"attack"|"defense"|"speed"`; the usual aliases `atk`/`def`/`spd`

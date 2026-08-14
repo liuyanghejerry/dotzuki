@@ -2,7 +2,7 @@
 //!
 //! The layout mirrors the editor's scaffolder
 //! (`tools/dotzuki-editor/server/scaffold.ts`, "empty" template) plus the `game`
-//! section from `docs/game-project-spec.md`, so projects round-trip: the
+//! section from `docs/reference/project-manifest.md`, so projects round-trip: the
 //! editor opens `dotzuki new` output, and editor-wizard projects pass
 //! `dotzuki check`. `--template your-first-game` writes the embedded tutorial
 //! project (`templates::YOUR_FIRST_GAME`, a byte-for-byte copy of

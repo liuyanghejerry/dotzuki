@@ -3,9 +3,10 @@
 //!
 //! When the manifest carries a `battle` section, it is validated too: the
 //! referenced table ids must exist in the data activity, the referenced
-//! stat/skill fields must exist in the table schemas, and the rules file (if
-//! present on disk) must parse as a dotzuki-rules `Ruleset`. Record JSONs are
-//! not loaded — the manifest's table definitions are enough.
+//! stat/skill fields must exist in the table schemas, an explicitly declared
+//! rules file must exist on disk, and the rules file — whenever it exists —
+//! must parse as a dotzuki-rules `Ruleset`. Record JSONs are not loaded — the
+//! manifest's table definitions are enough.
 
 use std::fs;
 use std::path::Path;
@@ -176,9 +177,13 @@ fn battle_diagnostics(manifest: &Manifest, root: &Path) -> Vec<String> {
         );
     }
 
-    // The rules file, when it exists on disk, must parse as a Ruleset AND
-    // compile against the closed vocabulary (unknown events/ops/stat/type/
-    // resource/status names in hooks are load-time errors, never mid-battle).
+    // The rules file, when the manifest names one explicitly, must exist on
+    // disk — a missing file would silently leave battles with an empty type
+    // chart at runtime. Whenever the file exists, it must parse as a Ruleset
+    // AND compile against the closed vocabulary (unknown events/ops/stat/
+    // type/resource/status names in hooks are load-time errors, never
+    // mid-battle). An absent default file (battle.rules unset) is legal: such
+    // projects run without a type chart.
     let rules_rel = battle.rules.as_deref().unwrap_or(DEFAULT_RULES_FILE);
     let rules_path = root.join(rules_rel.strip_prefix("./").unwrap_or(rules_rel));
     if rules_path.is_file() {
@@ -190,6 +195,11 @@ fn battle_diagnostics(manifest: &Manifest, root: &Path) -> Vec<String> {
             }
             Err(e) => diags.push(format!("failed to read {}: {e}", rules_path.display())),
         }
+    } else if battle.rules.is_some() {
+        diags.push(format!(
+            "battle.rules '{}' not found — battles would run with an empty type chart",
+            rules_path.display()
+        ));
     }
 
     diags
@@ -441,6 +451,41 @@ mod tests {
     #[test]
     fn malformed_rules_ron_is_a_diagnostic() {
         let (tmp, manifest) = write_project("badron", valid_battle(), Some("Ruleset(types: ["));
+        let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
+        assert!(
+            diags.iter().any(|d| d.contains("battle.rules") && d.contains("rules.ron")),
+            "{diags:?}"
+        );
+    }
+
+    #[test]
+    fn declared_missing_rules_path_is_a_diagnostic() {
+        let mut battle = valid_battle();
+        battle["rules"] = serde_json::json!("data/typo.ron");
+        let (tmp, manifest) = write_project("missingrules", battle, None);
+        let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("typo.ron")),
+            "{diags:?}"
+        );
+    }
+
+    #[test]
+    fn undeclared_rules_with_missing_default_file_passes() {
+        // battle.rules unset + no data/rules.ron on disk is a legal project
+        // (battles run with an empty type chart) — never a diagnostic.
+        let (tmp, manifest) = write_project("nodefault", valid_battle(), None);
+        let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
+        assert!(diags.is_empty(), "{diags:?}");
+    }
+
+    #[test]
+    fn declared_existing_rules_path_validates_content() {
+        let mut battle = valid_battle();
+        battle["rules"] = serde_json::json!("data/rules.ron");
+        let (tmp, manifest) = write_project("declaredbad", battle, Some("Ruleset(types: ["));
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
             diags.iter().any(|d| d.contains("battle.rules") && d.contains("rules.ron")),

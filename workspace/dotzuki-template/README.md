@@ -25,7 +25,7 @@ Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cp
 
 This template is the **Rust (hand-written `main.rs`) path**. The recommended
 zero-Rust path is `dotzuki new my-game` + `dotzuki run` — see
-[`game-project-spec.md`](../docs/game-project-spec.md). For the Rust path,
+[the project manifest reference](../docs/reference/project-manifest.md). For the Rust path,
 generate a project from this template:
 
 ```bash
@@ -54,7 +54,7 @@ cargo run --release
 > This is the template's own minimal input mapping. The zero-Rust `dotzuki run`
 > path uses engine-standard keys instead (Arrows/WASD move, `Z` = A, `X` = B,
 > `Enter`/`Space` = Start menu, `Backspace` = Select) — see
-> [`game-project-spec.md`](../docs/game-project-spec.md).
+> [the project manifest reference](../docs/reference/project-manifest.md).
 
 ## Project Structure
 
