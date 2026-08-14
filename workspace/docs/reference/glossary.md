@@ -182,6 +182,19 @@ original form in Chinese text.
   dialogue, and menus.
 - **collision**（碰撞）— the layer(s) marking solid tiles.
 
+## Assets
+
+- **2bpp** — 2 bits per pixel: the 4-shade Game Boy tile format the
+  asset-converter reads; kept in English in Chinese text.
+- **palette**（调色板）— the four RGBA colors mapped onto 2bpp indices by
+  the asset-converter.
+- **sprite**（精灵）— a character or object graphic, drawn from tileset
+  tiles.
+- **font**（字体）— the text glyph source; the renderer embeds a CJK-capable
+  bitmap font, games may substitute their own.
+- **gfx** — the conventional loose-graphics directory (an assets-activity
+  root); kept in English in Chinese text.
+
 ## Scenes & UI
 
 - **scene**（场景）— a `.scene` file: a `game_scene` document with

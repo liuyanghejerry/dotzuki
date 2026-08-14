@@ -42,6 +42,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | [`how-to/battles.md`](./how-to/battles.md) | Authoring `rules.ron`: the minimon tutorial, type effectiveness, resources & move costs, cookbook, determinism |
 | [`how-to/themes.md`](./how-to/themes.md) | Declaring `.theme` / `.style` files and applying them to UI |
 | [`how-to/audio.md`](./how-to/audio.md) | `TrackDef` JSON tracks, channels, scene playback, authoring notes |
+| [`how-to/assets.md`](./how-to/assets.md) | Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts |
 | [`how-to/i18n.md`](./how-to/i18n.md) | Bilingual text: the `game` i18n API and `@t` syntax |
 | [`how-to/publishing.md`](./how-to/publishing.md) | Shipping a project, headless smoke tests, WASM web play, engine upgrades |
 
