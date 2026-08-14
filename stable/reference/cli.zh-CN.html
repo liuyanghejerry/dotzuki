@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-39ab62c6.js";
+            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -227,13 +227,17 @@ cargo build --release --bin dotzuki
 <tbody>
 <tr><td><code>--dir &lt;parent&gt;</code></td><td>当前目录</td><td>新项目创建于其中的父目录</td></tr>
 <tr><td><code>--title &lt;name&gt;</code></td><td>该 slug</td><td>存入项目清单根 <code>name</code> 字段的显示名</td></tr>
+<tr><td><code>--template &lt;name&gt;</code></td><td><code>empty</code></td><td>项目模板：<code>empty</code>（编辑器的空布局）或 <code>your-first-game</code>（<a href="../tutorials/your-first-game.html">教程</a>中的教程项目，内嵌于 CLI）</td></tr>
 </tbody>
 </table>
 </div>
 <p>生成的布局：<code>.dotzuki-editor.json</code> + <code>data/</code>（maps、tiles、
 stories/characters/quests/arcs）、<code>gfx/</code>、<code>assets/scenes/main.scene</code>、README
-——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。</p>
+——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。
+<code>--template your-first-game</code> 改为写出完整教程项目——城镇、空地、脚本战斗、
+随机遇敌与存档——并把项目名代入其清单。</p>
 <pre><code class="language-bash">dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 </code></pre>
 <h2 id="dotzuki-check-dir"><a class="header" href="#dotzuki-check-dir"><code>dotzuki check &lt;dir&gt;</code></a></h2>

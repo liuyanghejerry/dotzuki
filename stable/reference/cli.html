@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-39ab62c6.js";
+            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -223,14 +223,18 @@ manifest, not the CLI, defines the project layout.</p>
 <tbody>
 <tr><td><code>--dir &lt;parent&gt;</code></td><td>current directory</td><td>Parent directory the new project is created in</td></tr>
 <tr><td><code>--title &lt;name&gt;</code></td><td>the slug</td><td>Display name stored in the manifest root <code>name</code> field</td></tr>
+<tr><td><code>--template &lt;name&gt;</code></td><td><code>empty</code></td><td>Project template: <code>empty</code> (the editor’s empty layout) or <code>your-first-game</code> (the tutorial project from <a href="../tutorials/your-first-game.html">the tutorial</a>, embedded in the CLI)</td></tr>
 </tbody>
 </table>
 </div>
 <p>Generated layout: <code>.dotzuki-editor.json</code> + <code>data/</code> (maps, tiles,
 stories/characters/quests/arcs), <code>gfx/</code>, <code>assets/scenes/main.scene</code>, README —
 the seven editor activities (maps / scripts / play / data / story / assets /
-tiles).</p>
+tiles). <code>--template your-first-game</code> writes the full tutorial project
+instead — town, clearing, scripted battle, random encounters and save —
+with the project name substituted into its manifest.</p>
 <pre><code class="language-bash">dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 </code></pre>
 <h2 id="dotzuki-check-dir"><a class="header" href="#dotzuki-check-dir"><code>dotzuki check &lt;dir&gt;</code></a></h2>

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-39ab62c6.js";
+            window.path_to_searchindex_js = "searchindex-adb271ff.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-466b9ebb.js"></script>
@@ -405,6 +405,9 @@ your PATH. Build it once from <code>workspace/</code>:</p>
 cargo build --release --bin dotzuki
 </code></pre>
 <p>The binary lands at <code>target/release/dotzuki</code>.</p>
+<p>Shortcut: <code>dotzuki new &lt;name&gt; --template your-first-game</code> writes the finished
+project (the same files you will build below) — the tutorial stays the
+step-by-step route.</p>
 <p>The goal is the committed project itself: a playable town, a scripted battle, a
 random-encounter clearing, and a save. Every listing below is a copy of that project,
 so every step ends in a state the next one continues from. The two <code>map.tmx.json</code>
@@ -5524,14 +5527,18 @@ manifest, not the CLI, defines the project layout.</p>
 <tbody>
 <tr><td><code>--dir &lt;parent&gt;</code></td><td>current directory</td><td>Parent directory the new project is created in</td></tr>
 <tr><td><code>--title &lt;name&gt;</code></td><td>the slug</td><td>Display name stored in the manifest root <code>name</code> field</td></tr>
+<tr><td><code>--template &lt;name&gt;</code></td><td><code>empty</code></td><td>Project template: <code>empty</code> (the editor’s empty layout) or <code>your-first-game</code> (the tutorial project from <a href="#your-first-game--town-battle-story-and-save">the tutorial</a>, embedded in the CLI)</td></tr>
 </tbody>
 </table>
 </div>
 <p>Generated layout: <code>.dotzuki-editor.json</code> + <code>data/</code> (maps, tiles,
 stories/characters/quests/arcs), <code>gfx/</code>, <code>assets/scenes/main.scene</code>, README —
 the seven editor activities (maps / scripts / play / data / story / assets /
-tiles).</p>
+tiles). <code>--template your-first-game</code> writes the full tutorial project
+instead — town, clearing, scripted battle, random encounters and save —
+with the project name substituted into its manifest.</p>
 <pre><code class="language-bash">dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 </code></pre>
 <h2 id="dotzuki-check-dir"><a class="header" href="#dotzuki-check-dir"><code>dotzuki check &lt;dir&gt;</code></a></h2>
@@ -10700,6 +10707,7 @@ Start 菜单，<strong>Backspace</strong> = Select。</p>
 cargo build --release --bin dotzuki
 </code></pre>
 <p>产物位于 <code>target/release/dotzuki</code>。</p>
+<p>捷径：<code>dotzuki new &lt;name&gt; --template your-first-game</code> 会写出成品项目（即下文将逐步搭建的那批文件）——本教程仍是逐步路线。</p>
 <p>目标就是已提交的项目本身：一个可玩的城镇、一场由剧情触发的战斗、一片随机遭遇的空地和
 一份存档。下文每个清单都是该项目的拷贝，所以每一步结束时都处于下一步可以继续的状态。
 两个 <code>map.tmx.json</code> 清单用带 <code>&lt;!-- excerpt --&gt;</code> 标记的注释缩写了自己的 tile 数组；请从
@@ -13663,13 +13671,17 @@ cargo build --release --bin dotzuki
 <tbody>
 <tr><td><code>--dir &lt;parent&gt;</code></td><td>当前目录</td><td>新项目创建于其中的父目录</td></tr>
 <tr><td><code>--title &lt;name&gt;</code></td><td>该 slug</td><td>存入项目清单根 <code>name</code> 字段的显示名</td></tr>
+<tr><td><code>--template &lt;name&gt;</code></td><td><code>empty</code></td><td>项目模板：<code>empty</code>（编辑器的空布局）或 <code>your-first-game</code>（<a href="#your-first-game--town-battle-story-and-save">教程</a>中的教程项目，内嵌于 CLI）</td></tr>
 </tbody>
 </table>
 </div>
 <p>生成的布局：<code>.dotzuki-editor.json</code> + <code>data/</code>（maps、tiles、
 stories/characters/quests/arcs）、<code>gfx/</code>、<code>assets/scenes/main.scene</code>、README
-——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。</p>
+——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。
+<code>--template your-first-game</code> 改为写出完整教程项目——城镇、空地、脚本战斗、
+随机遇敌与存档——并把项目名代入其清单。</p>
 <pre><code class="language-bash">dotzuki new my-game --dir ~/projects --title "My Game"
+dotzuki new my-game --dir ~/projects --template your-first-game
 cd ~/projects/my-game
 </code></pre>
 <h2 id="dotzuki-check-dir-1"><a class="header" href="#dotzuki-check-dir-1"><code>dotzuki check &lt;dir&gt;</code></a></h2>

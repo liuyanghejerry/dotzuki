@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-39ab62c6.js";
+            window.path_to_searchindex_js = "../searchindex-adb271ff.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -203,6 +203,7 @@
 cargo build --release --bin dotzuki
 </code></pre>
 <p>产物位于 <code>target/release/dotzuki</code>。</p>
+<p>捷径：<code>dotzuki new &lt;name&gt; --template your-first-game</code> 会写出成品项目（即下文将逐步搭建的那批文件）——本教程仍是逐步路线。</p>
 <p>目标就是已提交的项目本身：一个可玩的城镇、一场由剧情触发的战斗、一片随机遭遇的空地和
 一份存档。下文每个清单都是该项目的拷贝，所以每一步结束时都处于下一步可以继续的状态。
 两个 <code>map.tmx.json</code> 清单用带 <code>&lt;!-- excerpt --&gt;</code> 标记的注释缩写了自己的 tile 数组；请从
