@@ -53,7 +53,8 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
   指南混入大段设计权衡）
 - **§5 新鲜度**：`Status: active` 的文档描述与当前代码行为冲突；或声明
   `archived` 却不放在 `archive/` 目录下
-- **§6 语言政策**：翻译版（`-zh-CN`）单方面增删技术内容；或新增文档
+- **§6 语言政策**：新增英文文档未伴随 `-zh-CN` 翻译版；翻译版单方面
+  增删技术内容；翻译版缺少头部同步标注（版本+commit）；或新增文档
   无英文源却只有中文版（内部元文档豁免）
 - **§9 示例**：新增示例明显无法编译（Rust）、无法通过 `scene_check`（DSL）、
   无法被 rules 加载（RON）；教程步骤不完整、读者无法复现
@@ -67,6 +68,8 @@ description: 依据 workspace/docs/doc-standard.md 审查文档变更，输出 d
 - **§7 命名**：新文件未用 kebab-case；文件放在错误的层级目录
 - **§10 版本引用**：正文出现 "since vX.Y" / "自 vX.Y 起" 式版本史（应进 changelog）
 - **§8 风格**：被动语态、冗余副词、`foo`/`bar` 式占位示例名等一般风格问题
+- **§6 术语**：新增术语未在 `reference/glossary.md` 补中文对照，或翻译版
+  自造译名（应以 glossary 中文对照为准）
 - **§4 过渡态**：`workspace/docs/` 顶层存量文件缺元信息头（迁移完成前降为 warning）
 
 ## 输出要求
