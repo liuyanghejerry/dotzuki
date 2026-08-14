@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7d0bd7d3.js";
+            window.path_to_searchindex_js = "searchindex-795adab6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-5be796d0.js"></script>
+        <script src="toc-15ddf1f3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -10605,6 +10605,834 @@ cargo build
 <p>升级 = bump tag + <code>cargo update</code>。见引擎 README 的 “Using the engine from a game
 repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v3 都能正常加载）；旧引擎拒
 绝新存档。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
+<blockquote>
+<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, tool developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>一个<strong>游戏项目</strong>就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
+项目清单 <code>.dotzuki-editor.json</code>。游戏项目里没有 Cargo workspace、没有
+<code>package.json</code>、也没有构建系统：引擎二进制和编辑器按原样消费这个目录。</p>
+<p>本规范是创建、编辑、运行这类项目的工具之间的契约。该布局的参考实现是编辑器的
+脚手架（<code>tools/dotzuki-editor/server/scaffold.ts</code>）；<code>dotzuki</code> CLI
+（<code>crates/dotzuki-cli</code>）生成同样的布局。</p>
+<h2 id="消费方"><a class="header" href="#消费方">消费方</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>消费方</th><th>它对游戏项目做什么</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>dotzuki-editor</strong> (<code>tools/dotzuki-editor</code>)</td><td>读写一切：项目清单、数据表、地图、场景、gfx。</td></tr>
+<tr><td><strong><code>dotzuki</code> CLI</strong> (<code>crates/dotzuki-cli</code>)</td><td><code>dotzuki new</code> 生成项目骨架；<code>dotzuki check</code> 编译检查它的 DSL 文件。</td></tr>
+<tr><td><strong><code>dotzuki run</code></strong> (<code>crates/dotzuki-cli</code> + <code>crates/dotzuki-runner</code>)</td><td>启动项目并游玩：大地图、对话场景、warp（见下文）。</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="目录布局-1"><a class="header" href="#目录布局-1">目录布局</a></h2>
+<pre><code>my-game/
+├── .dotzuki-editor.json     # project manifest — the only config file
+├── README.md             # human notes; free-form
+├── data/                 # dataRoot — game data
+│   ├── maps/             # map definitions + per-map script .scene files
+│   │   └── StartTown/    # editor-scaffolded demo map (map.tmx.json,
+│   │                     #   tileset.png, script.scene, map.json)
+│   ├── tiles/            # shared tile library (map-editor Backdrop/Trace)
+│   └── stories/          # narrative bible: characters/, quests/, arcs/,
+│                         #   graph.json (story activity)
+├── gfx/                  # gfxRoot — graphics assets (tilesets, sprites)
+└── assets/
+    └── scenes/           # story scenes, Game DSL (.scene)
+        └── main.scene    # starter scene
+</code></pre>
+<ul>
+<li><code>data/maps/</code> —— 每张地图一个条目。map 活动（<code>type: "map"</code>）通过 <code>mapsDir</code>
+（相对 <code>dataRoot</code>）指向这里；script 活动的 <code>scriptsDir</code> 按惯例也指向这里，
+这样每张地图的 <code>*.scene</code> 脚本就放在各自地图数据的旁边。</li>
+<li><code>data/tiles/</code> —— 支撑地图编辑器 tile 选择器的共享 tile 库（活动
+<code>type: "tiles"</code>）。</li>
+<li><code>gfx/</code> —— 散放的图形文件。assets 活动在 <code>roots</code> 中列出它。</li>
+<li><code>assets/scenes/</code> —— 用游戏 DSL 编写的剧情场景。这是默认的<strong>场景目录</strong>
+（<code>game.scenesDir</code>）；见下文。</li>
+</ul>
+<p>脚手架至少要创建：<code>.dotzuki-editor.json</code>、<code>README.md</code>、<code>data/maps/</code>、
+<code>data/tiles/</code>、<code>gfx/</code>、<code>assets/scenes/main.scene</code>。带数据表的模板还会为每张表
+额外创建一个 <code>data/&lt;table.dir&gt;/</code>。<strong>编辑器的脚手架</strong>还会额外种入入门内容，让
+新项目开箱即可探索：一张带程序生成 tileset（<code>tileset.png</code>）和地图级
+<code>script.scene</code> 的 <code>data/maps/StartTown/</code> 演示地图，<code>data/tiles/</code> 下种好的共享
+tile 库，<code>data/stories/</code> 的 bible 骨架，以及——对于游戏模板（<code>dotzuki</code>、
+<code>wuxia</code>）——示例表记录外加种好的剧情角色和任务。<code>dotzuki</code> 模板还<strong>可开战</strong>、
+<strong>可开店</strong>：它的项目清单带一个 <code>battle</code> 区块（heroes 对 monsters，使用 spells
+表——两个种好的 hero 组成可切换的队伍——外加一个含 3 瓶 Potion 的 <code>items</code> 块、
+一个含种好的 Bug Catcher trainer 的 <code>encounters</code> 块，以及一个启用 EXP/等级成长
+的 <code>levels</code> 块——种好的 Slime 获胜时给 8 EXP）、一个 <code>shop</code> 区块
+（<code>{ "currency": "G", "startMoney": 100 }</code>）、种好的技能记录和战斗者的 <code>skills</code>
+列表，以及一个 <code>data/rules.ron</code> type chart——新项目无需任何配置即可通过
+<code>@command("startBattle", "slime")</code>（野怪）或
+<code>@command("startBattle", "bug-catcher")</code>（trainer）开战，并通过
+<code>@command("openShop", ["potion"])</code> 打开 Buy/Sell 商店（种好的 Potion 售价 20）。
+<code>dotzuki new</code> 只生成最小骨架。</p>
+<h2 id="项目清单-schemadotzuki-editorjson"><a class="header" href="#项目清单-schemadotzuki-editorjson">项目清单 schema（<code>.dotzuki-editor.json</code>）</a></h2>
+<p>顶层对象：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>键</th><th>类型</th><th>必填</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>string</td><td>yes</td><td>显示名（自由格式，不必是 slug）。</td></tr>
+<tr><td><code>dataRoot</code></td><td>string</td><td>yes</td><td>游戏数据根目录，相对项目目录。脚手架写入 <code>"./data"</code>。</td></tr>
+<tr><td><code>gfxRoot</code></td><td>string</td><td>no</td><td>图形根目录，相对项目目录。默认 <code>"./gfx"</code>。</td></tr>
+<tr><td><code>activities</code></td><td>array</td><td>yes</td><td>活动定义（见下文）。编辑器 UI 保留其顺序。</td></tr>
+<tr><td><code>game</code></td><td>object</td><td>no</td><td>面向引擎的区块（见下文）。旧编辑器项目中没有。</td></tr>
+<tr><td><code>battle</code></td><td>object</td><td>no</td><td>战斗系统区块（见<a href="#battles">战斗规则</a>）。</td></tr>
+<tr><td><code>shop</code></td><td>object</td><td>no</td><td>货币区块：<code>{ "currency": "G", "startMoney": 100 }</code>（两个键均可选，那些是默认值）。见<a href="#商店">商店</a>。</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="活动"><a class="header" href="#活动">活动</a></h3>
+<p>每个活动形如 <code>{ id, type, label, icon, enabled, config }</code>。<code>id</code> 在项目清单内
+唯一；<code>type</code> 选择编辑器面板；<code>config</code> 是每个类型自由格式的对象（未知键会被
+容忍）。脚手架生成的活动集合，按顺序：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>id</code></th><th><code>type</code></th><th>关键 <code>config</code> 字段</th></tr>
+</thead>
+<tbody>
+<tr><td><code>maps</code></td><td><code>map</code></td><td><code>mapsDir</code>（相对 dataRoot），可选 <code>tileSize</code>、<code>blockSize</code></td></tr>
+<tr><td><code>scripts</code></td><td><code>script</code></td><td><code>scriptsDir</code>（相对 dataRoot），<code>extension</code>（默认 <code>".scene"</code>）</td></tr>
+<tr><td><code>play</code></td><td><code>play</code></td><td>无（编辑器内 WASM 试玩——见<a href="#编辑器试玩wasm-运行器">编辑器试玩</a>）</td></tr>
+<tr><td><code>data</code></td><td><code>data</code></td><td><code>tables</code>：<code>{ id, label, dir, icon, idField, fields[] }</code> 数组（表目录位于 dataRoot 之下）</td></tr>
+<tr><td><code>story</code></td><td><code>story</code></td><td><code>storiesDir</code>、<code>scenesDir</code>（均相对 dataRoot）、<code>locales</code></td></tr>
+<tr><td><code>assets</code></td><td><code>assets</code></td><td><code>roots</code>（相对项目目录），可选 <code>extensions</code></td></tr>
+<tr><td><code>tiles</code></td><td><code>tiles</code></td><td><code>tilesDir</code>、<code>tileSize</code>、<code>backdropMapsDir</code>（均相对 dataRoot）</td></tr>
+</tbody>
+</table>
+</div>
+<p>编辑器还定义了另一种活动类型，可能出现在手工搭建的项目中；脚手架不会生成它：</p>
+<ul>
+<li><code>ui</code> —— GUI 布局。<code>config.guiRoot</code>（相对项目目录）存放 <code>.gui</code> 文件；
+<code>config.extension</code> 默认为 <code>".gui"</code>。</li>
+</ul>
+<p>脚手架生成的 <code>story</code> 活动使用 <code>storiesDir: "stories"</code>、
+<code>scenesDir: "maps"</code>（它的 <code>.scene</code> 文件所在处）和 <code>locales: ["en", "zh"]</code>。</p>
+<h3 id="game-区块"><a class="header" href="#game-区块"><code>game</code> 区块</a></h3>
+<p>可选。<code>dotzuki new</code> 会写入它；编辑器读写缺少它的项目也不会报错。</p>
+<pre><code class="language-json">"game": {
+  "entryScene": "main",
+  "scenesDir": "assets/scenes"
+}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>键</th><th>类型</th><th>缺省时的默认值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>scenesDir</code></td><td>string（相对项目目录）</td><td><code>"assets/scenes"</code></td></tr>
+<tr><td><code>entryScene</code></td><td>string（<code>scenesDir</code> 下的场景文件名主干）</td><td><code>scenesDir</code> 下发现的第一个 <code>.scene</code> 文件，按路径排序，去掉扩展名</td></tr>
+<tr><td><code>entryMap</code></td><td>string</td><td>map 活动的 <code>mapsDir</code> 下的第一个地图目录，按名称排序</td></tr>
+</tbody>
+</table>
+</div>
+<p>消费方按以下顺序推导：解析 <code>scenesDir</code>（<code>game.scenesDir</code> 或默认值），扫描其中
+的 <code>.scene</code> 文件，再取 <code>entryScene</code>——来自 <code>game.entryScene</code> 或第一个发现的
+场景。<code>dotzuki new</code> 写入的 <code>"entryScene": "main"</code> 与脚手架生成的 <code>main.scene</code>
+对应，因此新项目天然自洽。<code>dotzuki run</code> 如何使用这两个键，见下文说明。</p>
+<h2 id="dotzuki-run-的行为"><a class="header" href="#dotzuki-run-的行为"><code>dotzuki run</code> 的行为</a></h2>
+<p><code>dotzuki run &lt;dir&gt;</code> 启动项目的一个可玩实例（窗口模式；CI/smoke 测试用
+<code>--headless [--frames N] [--screenshot out.png]</code>）。它由 <code>dotzuki-runner</code>
+crate 实现；本节是行为契约。</p>
+<h3 id="启动"><a class="header" href="#启动">启动</a></h3>
+<p>加载项目清单，编译所有 DSL 目录（任何诊断信息都会让启动失败，并打印与
+<code>dotzuki check</code> 相同的消息列表），编译后的场景按它们的 <code>game_scene</code> 名称注册。
+入口解析：</p>
+<ul>
+<li>有地图时：出生在 <code>game.entryMap</code>（或 <code>--map</code>），否则在 <code>mapsDir</code> 下的第一个
+地图目录。玩家出生在地图中央，向外扫描寻找第一个可行走的 tile。</li>
+<li>无地图时：纯对话模式——<code>entryScene</code>（默认推导见<a href="#game-区块">上文</a>）把它的
+<code>main</code> 剧情线运行到底，然后显示结束画面。</li>
+</ul>
+<h3 id="地图-1"><a class="header" href="#地图-1">地图</a></h3>
+<p>一张地图由 <code>&lt;mapsDir&gt;/&lt;id&gt;/map.tmx.json</code>（Tiled JSON；名为 <code>collision</code> 的图层
+标记阻挡 tiles，其余图层参与渲染）加上 <code>tileset.png</code>（全彩色 atlas，GID 从 1
+开始、按行主序排列），再加上一个可选的 objects 伴生文件——<code>objects.json</code>（由
+编辑器写入）组成，其中包含 <code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>、
+<code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>、<code>signs: [{x,y,text}]</code>（面向告示牌 tile
+并按 A，以分页对话的形式读出其文本），以及一个可选的 <code>encounters</code> 块（见下文）
+（旧版 <code>map.json</code> 作为后备读取）。走上 warp tile 会淡出切换到目标地图。</p>
+<p>这些文件的创作工作流见<a href="#maps">地图</a>。</p>
+<h3 id="海拔层级-1"><a class="header" href="#海拔层级-1">海拔层级</a></h3>
+<p>地图可以是多层的（既能在地面行走，<em>也能</em>在墙顶行走）。每层的碰撞：名为
+<code>collision</code>（第 0 层）、<code>collision1</code>、<code>collision2</code>、…… 的图层——该层中非零
+GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实心。名为 <code>stairs</code> 的
+图层标记过渡 tiles（从不渲染）：抵达时 GID 1 上升一层，GID 2 下降一层（限制在
+地图的层数范围内）。视觉图层可携带一个可选的整数自定义属性 <code>level</code>（默认 0）：
+<code>level &lt;= player elevation</code> 的图层渲染在精灵下方，<code>level</code> 高于玩家海拔的图层
+渲染在精灵上方。只有 <code>collision</code> 图层的地图与单层地图表现完全一致。</p>
+<h3 id="随机-encounters-1"><a class="header" href="#随机-encounters-1">随机 encounters</a></h3>
+<p>地图通过在 objects 伴生文件中加入 <code>encounters</code> 块来开启野怪战斗——与 pokered
+的 <code>wild_data</code> 结构相同：一个按步触发的 <code>rate</code> 字节，以 <strong>/256</strong> 为单位（<code>25</code>
+≈ 每步 9.8%），加上若干 tile 矩形区域，每个区域各有一张加权表：</p>
+<pre><code class="language-json">"encounters": {
+  "rate": 25,
+  "zones": [
+    { "x": 0, "y": 5, "w": 8, "h": 3,
+      "table": [ { "id": "slime", "weight": 70 }, { "id": "bug-catcher", "weight": 30 } ] }
+  ]
+}
+</code></pre>
+<p>区域坐标以地图 tiles 为单位，矩形<strong>包含</strong>其 <code>w</code>×<code>h</code> 的范围。在区域内 tile 上
+完成一步行走后掷骰一次：一个 rng 字节 <code>&lt; rate</code> 即命中，随后从该区域的 <code>table</code>
+做一次加权抽取选出 id（<code>weight</code> 是相对值，默认 1）。id 的解析与
+<code>startBattle(id)</code> 完全一致——先解析 encounter 记录（包括 trainer 队伍/队列），
+再解析单个敌人记录——并触发一场 <strong>sceneless</strong> 战斗（见
+<a href="#battles">战斗规则</a>）。步进结算优先级为：<strong>warp &gt; encounter 掷骰 &gt;
+普通行走</strong>——走上 warp tile 从不掷骰，原地转身不算一步。<code>encounters</code> 缺失
+（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
+<h3 id="场景分发"><a class="header" href="#场景分发">场景分发</a></h3>
+<p>进入地图时：触发它的 <code>on_enter</code> 路由（来自编译报告中的 <code>@trigger</code>），否则触发
+场景的 <code>&lt;SceneName&gt;OnLoad</code>，再否则触发它的 <code>main</code> 剧情线——只触发一次，由
+<code>__played_main_&lt;map&gt;</code> 标志守护。与 NPC 对话（面向 + A）会运行其 <code>talk</code> 字段
+指定的剧情线，否则运行以该 NPC 命名的路由，再否则运行地图场景的 <code>main</code>，再
+否则把 <code>talk</code> 作为原始文本显示。一张地图的场景就是源文件为
+<code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code> 的已编译场景，后备为与地图同名的场景。</p>
+<h3 id="命令"><a class="header" href="#命令">命令</a></h3>
+<p>场景 VM 完整支持 <code>showText</code>（分页文本框）、<code>showChoice</code>（菜单 → 索引）、
+<code>warpTo</code>、<code>delay</code>、<code>fadeScreen</code>、flags（<code>setFlag</code>/<code>resetFlag</code>/<code>checkFlag</code>，
+会话期间跨场景保持）、<code>startBattle</code>/<code>startWildBattle</code>（见
+<a href="#battles">战斗规则</a>）和 <code>openShop</code>（见<a href="#商店">商店</a>）。任何其他命令
+都会记录一条警告并自动完成，而不是让场景死锁。</p>
+<h3 id="菜单"><a class="header" href="#菜单">菜单</a></h3>
+<p>在大地图上按 <strong>Start</strong> 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
+冻结），其中有四个条目：</p>
+<ul>
+<li><strong>Party</strong> —— party 表每条记录的只读列表：名称、HP x/y、MP x/y、状态、基准
+属性（ATK/DEF/SPD）、元素和技能名。此版本不支持调整顺序。</li>
+<li><strong>Bag</strong> —— 持久化背包（物品 → 数量）加上玩家的金钱。记录中 heal 数值为正的
+物品（与战斗物品相同的 <code>battle.items.healField</code> 约定）可以使用：选中物品，
+再选一名队伍成员——它回复（上限为最大 HP），数量减一。濒死的成员（0 HP）
+<strong>不会</strong>复活，满 HP 的成员不会被治疗（“It won’t have any effect.”），heal
+数值非正的物品无法使用。没有 <code>battle.items</code> 块的项目会把它们的物品列为不可
+用。</li>
+<li><strong>Save</strong> —— 立即写入存档文件（同一个稳定状态写入器；从菜单存档总是允许的，
+即使在无头模式下运行也一样），并显示 “Game saved.” 确认。</li>
+<li><strong>Close</strong>（或 B）。</li>
+</ul>
+<p>菜单文字跟随运行器的语言（<code>--lang en</code>/<code>zh</code>）。</p>
+<h3 id="商店"><a class="header" href="#商店">商店</a></h3>
+<p>运行器持有玩家的<strong>金钱</strong>（一个 <code>u32</code>），初始值来自项目清单可选的顶层 <code>shop</code>
+区块——<code>{ "currency": "G", "startMoney": 100 }</code>，该区块缺失时正是这些默认值
+——并随存档文件（v3）保存。货币符号显示在商店 UI 和 Bag 中的金额旁边。场景用
+<code>@command("openShop", ["potion", "elixir"])</code>（JS 中为 <code>game.openShop([...])</code>）
+打开商店：场景挂起，商店 UI 在 <strong>Buy / Sell / Exit</strong> 根菜单上打开（在列表上
+按 B 返回根菜单；在根菜单上按 B 或 Exit 恢复场景）。<strong>Buy</strong> 列出给定物品及其
+记录中的 <code>price</code>（默认 0）和玩家的金钱。按 A 购买（money −= price，inventory
++= 1）；买不起的条目会被标记并拒绝。<strong>Sell</strong> 列出玩家背包中数量为正的条目，
+每个按 <strong><code>floor(price / 2)</code></strong> 出售（没有单独的 sellPrice 字段；定价为 0 的
+物品以 0 出售——允许）。按 A 卖出一个（money += ，count −= 1）。货架上未知的
+物品 id 以 name=id、价格 0 的形式打开——配置错误的商店永远不会让场景死锁。
+物品记录通过 <code>battle.items</code> 表读取。</p>
+<h3 id="游戏结束"><a class="header" href="#游戏结束">游戏结束</a></h3>
+<p>输掉战斗不会再让玩家带着 0 HP 的队伍卡死：收到 <code>"lose"</code> 的场景结束（先播放它
+自己的战败文本）后，运行器执行一次 <strong>whiteout</strong>——短暂黑屏，一行
+<code>&lt;Name&gt; collapsed…</code>，然后整支队伍回复到满 HP/MP（状态清除），玩家回到<strong>入口
+地图的出生点</strong>（若当前地图就是入口地图则留在原地，否则加载入口地图）。flags、
+背包和金钱保留。无地图（纯对话）项目只做回复。目前还没有回复点系统：重生位置
+总是入口出生点。</p>
+<h3 id="音频"><a class="header" href="#音频">音频</a></h3>
+<p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> 播放
+<code>data/audio/**/*.json</code> 中的音轨（dotzuki-audio <code>TrackDef</code> 格式；<code>music/</code> +
+<code>sfx/</code> 子目录是惯例——目录树会递归加载）。场景传入的 id 是音轨的 <code>id</code> 字段；
+未知 id 警告一次后继续。音频完全是可选的：没有 <code>data/audio/</code> 目录意味着每条
+命令都是零设备开销的静默空操作，输出设备在第一条播放命令时才惰性打开，设备
+缺失/不可用（CI、<code>--headless</code>）时记录一次并保持静默。音频文件不会被 <code>--watch</code>
+热重载（它们在启动时加载）。</p>
+<h3 id="精灵"><a class="header" href="#精灵">精灵</a></h3>
+<p>玩家在存在 <code>gfx/overworld/player/sheet.png</code>（24×32 单元格，4 个朝向 × 5 帧）
+时使用它；否则绘制一个程序生成的占位小人。此版本中 NPC 一律渲染为以 id 着色
+的占位图形。</p>
+<h3 id="存档读档"><a class="header" href="#存档读档">存档/读档</a></h3>
+<p>游戏存档写入 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带
+版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
+<a href="#battles">战斗规则</a>；当战斗有 <code>levels</code> 块时，队伍成员可携带可选的
+<code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级 1 / 0 EXP；<code>money</code> 总是写入；<code>player.level</code>
+是地图海拔层，缺失 ⇒ 0）。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
+以及场景结束回到大地图时——绝不在场景中途或 warp 中途写入（挂起的场景引擎
+无法恢复），因此在对话中途关掉窗口会保留最后一个稳定点。Start 菜单的
+<strong>Save</strong> 条目按需写入同一个文件（总是允许，即使在无头模式运行中）。启动时若
+存在有效存档则恢复：flags 恢复，已存档的地图加载，玩家被放在已存档的 tile 上
+（若该 tile 被占用则退回出生点扫描），队伍状态、背包和金钱随之恢复，并跳过
+开场分发——恢复的 <code>__played_main_*</code> flags 让 <code>main</code> 不会在之后的进入时重播。
+加载接受任何 <code>&lt;=</code> 当前版本的存档，并按字段给默认值——<strong>v1/v2 存档仍然能恢复</strong>
+（没有 <code>party</code>/<code>inventory</code> ⇒ 两者从零开始；没有 <code>money</code> ⇒ 采用项目清单
+<code>shop.startMoney</code> 的默认值）；缺失/损坏/<strong>更新</strong>版本的存档会警告并以全新状态
+启动。<code>--fresh</code> 忽略存档；<code>--map</code> 覆盖存档中的地图。窗口模式运行总是写入
+存档；<code>--headless</code> 除非传入 <code>--save</code>，否则从不写入（CI 保持无副作用）。</p>
+<p>围绕该格式的兼容性规则见<a href="#save-compatibility">存档兼容性</a>。</p>
+<h3 id="热重载"><a class="header" href="#热重载">热重载</a></h3>
+<p>使用 <code>--watch</code>（仅窗口模式）时，运行中的游戏会监视 data/gfx/scene 目录：编辑
+<code>.scene</code> 会重新编译 DSL 并原地替换场景（编辑出错时旧场景继续运行；诊断信息会
+记录到日志），编辑<em>当前</em>地图的 <code>map.tmx.json</code> / <code>tileset.png</code> / objects 伴生
+文件会原地重载该地图，保留玩家位置和 flags。其他地图、数据表和 gfx 在下次
+进入 / 启动时生效。</p>
+<h3 id="尚未实现"><a class="header" href="#尚未实现">尚未实现</a></h3>
+<p>依赖以下内容的场景会警告并继续：<code>StackDriver</code> 回合循环。</p>
+<h2 id="dotzuki-check-编译什么"><a class="header" href="#dotzuki-check-编译什么"><code>dotzuki check</code> 编译什么</a></h2>
+<p><code>dotzuki check &lt;dir&gt;</code> 加载项目清单，收集所有可能存放 DSL 文件的目录，并对它们
+运行 <code>dotzuki_engine_dsl::compiler::compile_dirs</code>（在内存中运行，不写出任何
+产物）。目录集合为：</p>
+<ol>
+<li>场景目录（<code>game.scenesDir</code>，默认 <code>assets/scenes</code>，相对项目目录）；</li>
+<li>每个 <code>script</code> 活动的 <code>scriptsDir</code>（相对 dataRoot）；</li>
+<li>每个 <code>story</code> 活动的 <code>scenesDir</code>（相对 dataRoot，默认 <code>"maps"</code>）；</li>
+<li>每个 <code>ui</code> 活动的 <code>guiRoot</code>（相对项目目录）。</li>
+</ol>
+<p>重复目录会被去重；不存在的目录会被跳过（因此没有 <code>assets/scenes/</code> 的旧项目
+仍会检查它 data-root 下的场景）。<code>check</code> 打印产物计数（<code>N scene(s), M layout(s), …</code>）和所有诊断信息，出现任何诊断信息时退出码为 1，否则为 0。</p>
+<p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
+（party/enemies/encounters/skills/items）必须存在于 data 活动的
+<code>config.tables[]</code> 中，引用的属性/技能字段和物品的 <code>healField</code> 必须存在于表
+schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 字段，并且规则文件（磁盘上
+存在时）必须能按 dotzuki-rules <code>Ruleset</code> 模型解析，且能对着封闭词汇表编译
+通过——hook 中未知的事件、op，或属性/类型/资源/状态名都会产生诊断信息，就像
+它会在战斗开始时成为启动错误一样。
+战斗诊断信息与 DSL 诊断信息一样打印，并让退出码失败。
+记录 JSON 不会被加载——项目清单的表定义就够了。</p>
+<h2 id="编辑器试玩wasm-运行器"><a class="header" href="#编辑器试玩wasm-运行器">编辑器试玩（WASM 运行器）</a></h2>
+<p>编辑器的 <code>play</code> 活动通过 <code>crates/dotzuki-runner-web</code>（wasm-bindgen）在
+<strong>浏览器中</strong>运行同一个 <code>RunnerGame</code>，因此试玩不需要 Rust 工具链。与运行器的
+契约：</p>
+<ul>
+<li><strong>Bundle。</strong> <code>GET /api/play/bundle</code> 返回整个项目，形如
+<code>{ files: { "&lt;project-relative posix path&gt;": "&lt;base64&gt;" }, projectRoot }</code>，
+排除 <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>、<code>*.bak</code> 以及除
+<code>.dotzuki-editor.json</code> 之外的 dotfiles（上限为 16 MB/文件、64 MB 总量）。
+路径保持 <code>data/maps/&lt;id&gt;/script.scene</code> 的形式，这正是运行器场景 ↔ 地图匹配
+所期望的。</li>
+<li><strong>Boot。</strong> bundle 喂给 <code>vfs::MemoryFiles</code> 和 <code>LoadedProject::load_with_files</code>
+——与 <code>dotzuki run</code> 完全相同的启动路径，不经过磁盘。<code>RunnerOptions</code> 强制
+<code>watch=false</code>、无头模式（无音频设备）、<code>pcm_audio=true</code> 且不写磁盘存档。</li>
+<li><strong>Frames。</strong> 页面以约 59.7 Hz 调用 <code>tick(input_bitmask)</code>，并把返回的 320×240
+RGBA 帧 blit 上屏。输入位掩码与 <code>GbButton</code> 位序一致（bit0=A … bit7=Down）。</li>
+<li><strong>Audio。</strong> 运行器不使用 cpal 设备，而是每 tick 渲染 APU PCM
+（<code>RunnerGame::render_audio</code>，44.1 kHz 立体声 f32）；页面通过 <code>take_audio()</code>
+把它排入 WebAudio 队列（<code>usePlayAudio</code>）。与原生相同的 sequencer/fade 路径，
+用拉取模型取代回调线程。</li>
+<li><strong>Saves。</strong> <code>export_save()</code>/<code>import_save(json)</code> 取代 <code>.dotzuki-save.json</code>；
+编辑器把它们持久化到 <code>localStorage</code>。场景/战斗/商店/warp 过渡挂起期间，
+<code>export_save</code> 不返回任何内容——编辑器在自己的间隔里重试即可。</li>
+</ul>
+<p>与原生 <code>dotzuki run</code> 的差异：没有文件监视（编辑器的 <strong>Restart</strong> 按钮重新拉取
+bundle 并重启，同时恢复存档），音频输出经由浏览器的 <code>AudioContext</code> 而非 cpal
+设备，战斗 RNG 的种子不取自墙上时钟时间。其余一切——地图、对话、选项、战斗、
+商店、菜单、游戏结束流程——都是同一套代码。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
+<blockquote>
+<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>项目通过顶层 <code>battle</code> 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
+（所有键均可选；默认值如下）：</p>
+<pre><code class="language-json">"battle": {
+  "party":      { "table": "heroes" },
+  "enemies":    { "table": "monsters" },
+  "encounters": { "table": "encounters" },
+  "skills":   { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+  "stats":    { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+  "resource": "mp",
+  "rules":    "data/rules.ron",
+  "items":    { "table": "items", "healField": "healHp", "starting": { "potion": 3 } },
+  "levels":   { "expField": "exp", "levelField": "level",
+                "curve": { "base": 8, "exponent": 3 }, "growth": 0.05, "maxLevel": 100 }
+}
+</code></pre>
+<h2 id="配置"><a class="header" href="#配置">配置</a></h2>
+<ul>
+<li><code>party</code> / <code>enemies</code> 指向 data 活动 <code>config.tables[]</code> 中的<strong>数据表 id</strong>（表的
+<code>dir</code> 存放记录）。战斗需要两者；引用的 id 若没有对应的已声明表，在<em>战斗真正
+开始</em>时是启动错误（从不战斗的项目不受影响）——并且无论如何都是一条
+<code>dotzuki check</code> 诊断信息。</li>
+<li><code>encounters</code>（可选）指向一张 <strong>encounter 表</strong>：其记录描述敌人队伍和 trainer
+战斗——<code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>。<code>enemies</code> 是敌人表记录 id 的有序
+列表（战斗开始时，空列表或其中的未知 id 都是明确错误），<code>trainer</code> 默认为
+<code>false</code>，<code>money</code>（获胜奖励，只有 trainer encounter 才支付）默认为 0。缺失
+⇒ 每场战斗都是单个野生敌人（v1 行为）。见下方 <strong>Encounters</strong>。</li>
+<li><code>skills</code> 指向技能表及字段名：<code>field</code>（战斗者记录中的技能 id 列表，默认
+<code>"skills"</code>）、<code>categoryField</code>（默认 <code>"type"</code>）、<code>costField</code>（默认
+<code>"mpCost"</code>）。没有 <code>skills</code> 键 ⇒ 每个战斗者只有内置的 Attack。</li>
+<li><code>stats</code> 把四个属性角色映射到记录字段名（默认 hp/atk/def/spd）。缺失/无效的
+属性字段按 1 读取。记录上可选的 <code>level</code> 字段（默认 1）供基于等级的 RON
+op/predicate 读取（<code>SetDamage</code>、<code>LevelGE</code>）——并且在有 <code>levels</code> 块时，还
+驱动属性成长（见下文）。</li>
+<li><code>resource</code> 指向保存 MP 池的记录字段；缺失 ⇒ 没有资源门槛（所有技能免费）。</li>
+<li><code>rules</code>（相对项目根目录，默认 <code>data/rules.ron</code>）<strong>仅在文件存在时</strong>用
+dotzuki-rules <code>Ruleset</code> 模型解析。它的 <code>type_chart</code> 提供效果倍率，并且——
+当它声明了 <code>effects</code> 时——那些记录是<strong>生效的</strong>：<code>kind: Move</code> 记录接管匹配的
+技能，<code>kind: Status</code> 记录定义状态，都通过引擎的效果栈解释器执行（见下方
+<strong>RON 效果钩子</strong>）；<code>kind: Ability</code>/<code>Item</code>/<code>Weather</code> 记录支撑战斗者特性、
+携带道具和场景预置的天气（见下方 <strong>Abilities, held items &amp; weather</strong>）。
+解析<em>或编译</em>失败（hook 中出现未知的事件/op/属性/类型/资源/状态名）的规则
+文件在战斗开始时是启动错误，也是一条 <code>dotzuki check</code> 诊断信息。</li>
+<li><code>items</code>（可选）启用战斗 <strong>Item</strong> 菜单：<code>table</code> 指向物品表，<code>healField</code>
+（默认 <code>"healHp"</code>）是那个数值为正即让物品可用于战斗的记录字段（即回复量），
+<code>starting</code> 是游戏启动时携带的背包（记录 id → 数量）。没有 <code>items</code> 键 ⇒ 没有
+Item 菜单。物品记录上的自由文本 <code>effect</code> 字段<strong>仅用于显示</strong>。</li>
+<li><code>levels</code>（可选）启用 <strong>EXP 与等级成长</strong>（每个键均可选，默认值如上所示）。
+缺失 ⇒ 与当前行为一致：不获得 EXP，属性永不成长，记录的 <code>level</code> 字段只供
+RON 等级 op 使用。启用该块后：
+<ul>
+<li><strong>属性成长</strong> —— 每个有效属性（双方都是，凡读取原始记录属性的地方：战斗
+构建、RON mirror、菜单 Party 视图）都按
+<code>floor(raw × (1 + growth × (level − 1)))</code> 计算，其中 <code>level</code> 来自记录的
+<code>levelField</code>（默认 <code>"level"</code>；缺失 ⇒ 1 ⇒ ×1，数值上与没有 levels 的项目
+完全一致）。5 级的敌人记录确实更强。</li>
+<li><strong>EXP 奖励</strong> —— 获胜时，每个未濒死的队伍成员获得所有被击败敌人的
+<code>expField</code> 值之和（记录缺少该字段时按 0 计），每场战斗一次，在获胜文本
+之后叙述（<code>"Aria gained 8 EXP!"</code>）。单敌人战斗的和就是该敌人的数值，与
+v1 一致。</li>
+<li><strong>升级</strong> —— 每个成员记录朝向下一级的 <code>exp</code> 进度；
+<code>exp_to_next(L) = curve.base × L^curve.exponent</code>（整数）。当
+<code>exp &gt;= exp_to_next(level)</code> 且 <code>level &lt; maxLevel</code> 时：升级，
+<code>exp -= exp_to_next(level)</code>（一次奖励可连升多级），并叙述
+（<code>"Aria grew to level 2!"</code>）。升级会用成长倍率重新计算成员的属性，并把
+最大 HP/MP 的<strong>差值</strong>补进当前池（2 级时最大 HP 60 → 63，当前 HP 增加 3；
+MP 同理）。</li>
+<li><strong>持久化</strong> —— 每名成员的 <code>level</code> + <code>exp</code> 随运行器的队伍状态和存档保存
+（<code>party[].level</code> / <code>party[].exp</code> 是可选字段；缺失 ⇒ 等级 1 / 0 EXP，所以
+存档版本保持 3，旧存档继续加载）。菜单 Party 视图显示 <code>Lv</code> 和一行
+<code>EXP &lt;progress&gt;/&lt;need&gt;</code>（仅在有该块时）。</li>
+</ul>
+</li>
+</ul>
+<p><code>levels</code> 块的 schema 见<a href="#level-growth">等级成长</a>。</p>
+<h2 id="记录"><a class="header" href="#记录">记录</a></h2>
+<p>战斗者记录 schema 见<a href="#combatant-records">战斗者记录</a>。</p>
+<p>一个战斗者是一条 <code>&lt;dataRoot&gt;/&lt;tableDir&gt;/&lt;id&gt;.json</code> 记录：<code>name</code>（显示名，缺省
+用 id）、四个属性字段、<code>resource</code> 字段、可选的 <code>element</code> 字符串（type chart
+查询中的防守方），以及技能 id 列表。另外两个可选字段接入 RON 效果种类：
+<code>ability</code>（一个 <code>kind: Ability</code> 记录 id）和 <code>heldItem</code>（一个 <code>kind: Item</code>
+记录 id）——见下文。<code>startBattle("x")</code> 按此顺序解析：有 <code>encounters</code> 块时，
+先解析 <strong>encounter 记录</strong> <code>x</code>（一个敌人队伍，见下文）；否则解析单个<strong>敌人
+记录</strong> <code>x</code>（隐式为野生）；两张表都没有该 id 时，回退到第一个敌人记录并给出
+警告。</p>
+<h2 id="encounters敌人队伍--trainer-战斗"><a class="header" href="#encounters敌人队伍--trainer-战斗">Encounters（敌人队伍 + trainer 战斗）</a></h2>
+<p>encounter 记录 schema 见<a href="#encounter-records">Encounter 记录</a>。</p>
+<p>有 <code>encounters</code> 块时，encounter 战斗的敌方是一个<strong>队列</strong>：当前敌人濒死时，下
+一个敌人上场——叙述（<code>"Foe sent out Bat!"</code>）——作为全新的战斗者（有自己的
+属性/等级，无状态；RON mirror 重建，旧敌人的 volatiles 丢弃），并且该回合
+结束（替补上场的那一回合绝不行动；敌人 AI 不变，按当前战斗者逐个行动）。
+<strong>队列清空即获胜</strong>；EXP 奖励是所有被击败敌人的 <code>expField</code> 之和（见上文）。
+<code>trainer: true</code> 的 encounter 获胜时把它的 <code>money</code> 付给玩家的金钱——叙述
+（<code>"Got 80 G for winning!"</code>）——并禁止逃跑（见下文）。玩家侧不变：队伍/换人/
+物品/whiteout 与野怪战斗表现完全一致，即使敌人还有剩余，全员濒死的队伍仍然
+输。</p>
+<h2 id="队伍"><a class="header" href="#队伍">队伍</a></h2>
+<p>玩家的队伍是 <strong>party 表的每一条记录</strong>（按记录 id 排序；单记录队伍与 v1 表现
+一致）。每场战斗开始时，基准属性都从记录重建，但每名成员的<strong>当前 HP/MP 和
+状态在战斗之间保持</strong>——运行器持有这份队伍状态，在每场战斗结束时（胜、负和
+逃跑）收割，并随存档文件（<code>party</code>）保存。0 HP 的成员保持濒死直到被治疗（目前
+物品是唯一的治疗来源）。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
+中根菜单提供 <strong>Fight</strong>（技能菜单）、<strong>Party</strong>（成员列表，含 HP 和状态——切换
+到一名存活且非当前成员会消耗玩家回合，敌人的行动随后对新成员结算）、<strong>Item</strong>
+（配置了才出现）和 <strong>Run</strong>——野怪战斗中逃跑总是成功：旁白
+<code>"Got away safely!"</code>，战斗以 <code>"run"</code> 结果结束（无 EXP、无金钱；队伍状态与任何
+战斗结束后一样保留）。trainer 战斗中逃跑被禁止——<code>"Can't escape from a trainer battle!"</code>——并且<strong>不</strong>消耗回合（菜单返回）。当前成员濒死时玩家<strong>必须</strong>选一名
+替补：这是回合中的免费行动，之后敌人本回合剩余的行动仍然结算（若濒死先发生，
+则对新成员结算）。没有存活成员时战斗判负。属性等级在换人上场时重置；成员的
+状态随成员保留（切换时 RON mirror 从成员的当前状态重建，旧战斗者的 volatiles
+丢弃）。</p>
+<h2 id="战斗中的物品"><a class="header" href="#战斗中的物品">战斗中的物品</a></h2>
+<p>物品记录 schema 见<a href="#item-records">物品记录</a>。</p>
+<p>有 <code>items</code> 块时，运行器持有一份持久化的<strong>背包</strong>（记录 id → 数量，首次启动时
+从 <code>starting</code> 初始化，随存档文件保存）。Item 菜单列出仍有数量的可用物品
+（<code>healField</code> 数值为正的记录）；使用一个会按该数值治疗当前成员（上限为最大
+HP），数量减一，并消耗玩家回合。数量为 0 的物品不再列出。</p>
+<h2 id="技能"><a class="header" href="#技能">技能</a></h2>
+<p>技能记录 schema 见<a href="#skill-records">技能记录</a>。</p>
+<p>一条技能记录：<code>name</code>、<code>power</code>（默认 0）、<code>accuracy</code>（默认 100）、可选的
+<code>element</code>、<code>stat</code>（buff/debuff 移动哪个属性——一个 <code>stats</code> 键，如
+<code>"attack"</code>/<code>"defense"</code>，默认 attack）、category 字段（不区分大小写：
+<code>attack</code>/<code>damage</code> → 伤害，<code>heal</code> → 回复自身 <code>power</code> 点 HP，上限为最大 HP，
+<code>buff</code> → 自身属性等级 +1，<code>debuff</code> → 目标属性等级 −1，无法识别 → attack），
+以及 cost 字段（默认 0）。战斗者列表中未知的技能 id 会跳过并给出警告；空/缺失
+的列表（或根本没有技能表）得到内置的 <strong>Attack</strong>（power 40，accuracy 100，
+无消耗）。</p>
+<h2 id="标准公式"><a class="header" href="#标准公式">标准公式</a></h2>
+<p>每次造成伤害的攻击，使用整数运算：
+<code>base = power × eff_atk / max(1, eff_def)</code>，其中有效属性 = 原始属性 × 等级
+倍率（等级限制在 −4..+4：0 以上为 ×(4+stage)/4，0 以下为 ×4/(4−stage)——+1 =
+×1.25，−1 = ×0.8）；然后是浮动 ×(85+rng%16)/100；再是 1/16 的会心
+（rng%16 == 0）×1.5；最后是 type chart 倍率（技能的 <code>element</code> 对防守方的
+<code>element</code>，无克制 ⇒ 1×）。<code>damage = max(1, …)</code>。命中：当且仅当
+<code>rng % 100 &lt; accuracy</code> 时命中。每次使用技能消耗一个 accuracy 字节；伤害类
+技能随后再消耗浮动和会心字节。</p>
+<h2 id="优先级v2-a"><a class="header" href="#优先级v2-a">优先级（v2-a）</a></h2>
+<p>当规则文件声明了一个 <code>id</code> 与某技能 id 匹配的 <code>kind: Move</code> 记录时，RON 记录
+<strong>接管</strong>该技能：它的 <code>power</code>/<code>type</code>/<code>accuracy</code>/<code>cost</code> 字段覆盖表记录（缺失
+字段回退到表记录），并且行动通过效果栈运行，而非内置的 category 行为。简言
+之：<strong>RON 记录 &gt; 表记录 &gt; 内置 category</strong>。没有匹配 RON 记录的技能与 v1 表现
+完全一致，即使在规则文件带 effects 的项目中也是如此。</p>
+<h2 id="ron-效果钩子v2-a"><a class="header" href="#ron-效果钩子v2-a">RON 效果钩子（v2-a）</a></h2>
+<p>钩子在规则文件的 <code>effects</code> 记录中编写，使用 dotzuki-rules 封闭的
+<code>Op</code>/<code>Predicate</code> 词汇表（<code>workspace/crates/dotzuki-rules/src/model.rs</code>——
+<code>Boost</code>、<code>InflictStatus</code>、<code>DamageFraction</code>、<code>HealFraction</code>、<code>ScaleRelay</code>、
+<code>VetoIf</code>、<code>ApplyTypeChart</code>、<code>PayResource</code>、<code>InflictVolatile</code>、<code>SetHp</code>、
+<code>SetDamage</code>、<code>RepeatHits</code>、<code>RemoveStatus</code>，以及 <code>HasType</code>/
+<code>TargetHasStatus</code>/<code>SourceHasStatus</code>/<code>SelfHpBelow</code>/<code>LevelGE</code>/… predicates）。
+命名约定：</p>
+<ul>
+<li>RON 的 <code>stats</code> 名称是项目清单 <code>battle.stats</code> 的<strong>键</strong>
+（<code>"hp"|"attack"|"defense"|"speed"</code>；常用的 <code>atk</code>/<code>def</code>/<code>spd</code> 别名也能解析），
+所以 <code>Boost { stat: "attack" }</code> 不需要任何游戏专属代码。</li>
+<li>RON 的 <code>resources</code> 名称是项目清单 <code>battle.resource</code> 的字段名（如 <code>"mp"</code>）；
+移动记录的 <code>cost: [Cost(resource: "mp", amount: N)]</code> 与表 cost 一样经过同一
+个 MP 门槛（菜单标记 + 结算时复查），<code>PayResource</code> op 读取同一个池。</li>
+<li>RON 的 <code>types</code> 名称是记录上的 <code>element</code> 字符串（与 chart 一贯要求一致），
+匹配时不区分大小写。</li>
+<li>状态词汇表是规则集 <code>kind: Status</code> 记录的 id；
+<code>InflictStatus { status: "poison" }</code> 施加一个状态，其 <code>Residual</code> 钩子 在
+<strong>中毒战斗者的每次行动之后</strong>运行（中毒扣血），并叙述
+（<code>"Aria was afflicted with poison!"</code>、<code>"Slime is hurt by poison!"</code>、
+<code>"Aria is no longer poison!"</code>）。</li>
+</ul>
+<p>对于被接管的技能，每次行动运行器都会按以下事件序列走效果栈（minimon/wuxia
+harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛（仅当记录订阅时；
+<code>VetoIf</code>/<code>PayResource</code> 的 <code>Fail</code> 阻断行动）→ 伤害预计算（标准公式，写入
+<code>ctx.mv.damage</code>）→ <code>ModifyDamage</code> → <code>Effectiveness</code> → <code>Damage</code> → 结算 →
+<code>DamagingHit</code>（任何落地的攻击之后，无论是否造成伤害——power 为 0 的状态技能
+附加效果在此触发）→ <code>AfterMove</code>。当记录订阅 <code>Effectiveness</code> 时，钩子 全权
+负责倍率——在 <code>Effectiveness</code> hook 里编写 <code>ApplyTypeChart</code> 来获得 type chart；
+当它<strong>不</strong>订阅时，v1 的直接 chart 应用发生在预计算中（因此只覆盖
+<code>power</code>/<code>type</code> 的记录保留你期望的 chart 行为）。</p>
+<h2 id="特性携带道具与天气"><a class="header" href="#特性携带道具与天气">特性、携带道具与天气</a></h2>
+<p>其余 RON 种类均已生效，由记录字段和一条场景命令接入——无需改动项目清单：</p>
+<ul>
+<li><strong>特性</strong>（<code>kind: Ability</code> 记录，由战斗者记录上可选的 <code>ability</code> 字段指定）。
+当前战斗者的特性 钩子 在战斗开始和每次换人上场（玩家主动/被迫换人、
+encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员的特性不生效。换人上场
+触发时，在常规的增减文本（<code>"Slime's Attack fell!"</code>）之前先叙述一行介绍
+（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性
+钩子 也会加入行动战斗者的每次行动事件序列：挂接
+<code>ModifyDamage</code>/<code>DamagingHit</code>/… 的特性与技能自身的 钩子 一起触发，<code>Source</code>
+（行动者）和 <code>Target</code>（对手）相同。</li>
+<li><strong>携带道具</strong>（<code>kind: Item</code> 记录，由战斗者记录上可选的 <code>heldItem</code> 字段指定）。
+它们的触发与特性完全一样，另外其 <code>Residual</code> 钩子 会在持有者每次行动之后
+运行（Leftovers 风格的 <code>HealFraction</code>）。携带道具是<strong>持久性标志——没有东西
+会消耗它们</strong>（树果/消耗品不在范围内）；<code>healField</code> 为 0 的 <code>heldItem</code> id
+绝不会出现在 Item 菜单中。</li>
+<li><strong>天气</strong>（<code>kind: Weather</code> 记录，由场景预置）。
+<code>game.setWeather("sandstorm")</code> 为<strong>下一场</strong>战斗预置一条天气记录，
+<code>game.clearWeather()</code> 取消之前预置的天气（两者都像 flag 命令一样立即生效）。
+天气是<strong>战斗内局部的</strong>：战斗开始时会叙述天气（<code>"A sandstorm rages!"</code>，取自
+记录 id），其 <code>FieldResidual</code> 钩子 在生效期间每回合在每个战斗者的残留效果上
+触发（按 op 的 <code>target</code> 作用于双方），战斗结束时丢弃——从不保存。预置的 id
+若没有对应的已编译记录则警告并忽略。<strong>不</strong>支持在战斗中途设置天气（通过移动
+op）——<code>Op</code> 词汇表中没有天气 op；场景是唯一的触发途径。</li>
+</ul>
+<p>接入的限制：只有行动战斗者的特性/携带道具 钩子 加入它的每次行动序列（防守方
+的特性在它自己的换人/残留效果上触发，不会进入攻击方的那一轮），并且残留效果
+（状态、携带道具、天气）在战斗者自己的行动之后触发——在换人/物品回合中只有
+敌人的残留效果运行，与状态相同。</p>
+<h2 id="回合循环"><a class="header" href="#回合循环">回合循环</a></h2>
+<p>每回合：玩家选择一个根菜单操作——<strong>Fight</strong> 打开技能菜单（名称 + 消耗；付不起
+的技能会被标记且不可选），<strong>Party</strong> 换人（消耗回合），<strong>Item</strong> 使用一个物品
+（消耗回合），<strong>Run</strong> 结束野怪战斗（trainer 战斗中禁止，不消耗回合）；敌人 AI
+选择它能负担的最高威力技能（回退：第一个能负担的技能，再否则是内置 Attack）。
+Fight 回合中较快的一方（有效速度）先行动，平局时玩家先动；换人/物品回合玩家
+先动。每个行动复查 MP 门槛，掷 accuracy，结算（v1 category 或 RON 钩子）并
+叙述（<code>"Slime used Tackle!"</code>、<code>"Critical hit!"</code>、<code>"It's super effective!"</code>、
+<code>"48 damage!"</code>、<code>"Aria's Attack rose!"</code>、<code>"Come back, Aria!"</code>、<code>"Go, Bryn!"</code>、
+<code>"Aria used Potion!"</code>）；随后行动方的状态残留效果触发。敌人 0 HP 时派出队列中
+的下一个敌人（encounters）或战斗以胜利结束；当前成员 0 HP 时，只要队伍还有
+存活成员就强制换人，否则战斗判负；成功逃跑立刻结束战斗：场景以 <code>"win"</code>、
+<code>"lose"</code> 或 <code>"run"</code> 恢复。这个循环是运行器自己的阶段机，不是引擎的
+<code>StackDriver</code>；RON 钩子 按事件经由效果栈解释器触发（<code>collect_handlers</code> +
+<code>run_event</code>），即 minimon/wuxia harness 模式。</p>
+<h2 id="场景集成"><a class="header" href="#场景集成">场景集成</a></h2>
+<p><code>result = startBattle("slime")</code>（或 <code>@command("startBattle", "slime")</code>）挂起
+场景，运行战斗，并以 <code>result == "win" | "lose" | "run"</code> 恢复——照常用 <code>@if</code>
+分支并设置 flags；场景结束时收割 flags。<strong><code>"run"</code> 结果是一项契约变更</strong>：按
+<code>result == "win"</code> 分支的场景把逃跑视为未获胜（走它们的 <code>@else</code> 分支）；显式的
+<code>@if (result == "run")</code> 分支可以把它与战败区分开。逃跑不给 EXP 和金钱，队伍
+状态与任何战斗结束后一样保留。<code>startWildBattle(species, level)</code> 表现相同（v1
+忽略 <code>level</code>）。<code>setWeather(id)</code> / <code>clearWeather()</code> 预置或取消下一场战斗的天气
+（见上方 <strong>Abilities, held items &amp; weather</strong>）。<strong>没有</strong> <code>battle</code> 区块的项目会
+警告并以 <code>"win"</code> 自动完成（保持不败继续，与任何未实现的命令一样）。战败把
+<code>"lose"</code> 返回给场景（播放它的战败文本），然后触发 <strong>game-over whiteout</strong>（见
+<a href="#game-over">游戏结束</a>）：队伍回复，玩家回到入口出生点。</p>
+<h2 id="无场景战斗随机-encounters"><a class="header" href="#无场景战斗随机-encounters">无场景战斗（随机 encounters）</a></h2>
+<p>走路触发的战斗（objects 伴生文件的 <code>encounters</code> 块——见
+<a href="#maps">地图</a>）没有场景可恢复，因此它的结果直接回到大地图：<strong>胜利</strong>
+或<strong>逃跑</strong>原地返回 <code>Mode::Overworld</code>（玩家从 encounter tile 继续行走；
+EXP/升级/trainer 金钱和队伍状态/背包的收割与场景战斗结束后完全一致），<strong>战败</strong>
+直接触发 game-over whiteout（没有战败文本——没有场景来播放它）。其余所有战斗
+语义——抽中 id 的解析顺序（encounter 记录 → 单个敌人记录）、trainer 战斗禁止
+逃跑、EXP 求和、特性/天气——都与场景触发的战斗相同。</p>
+<h2 id="剩余限制"><a class="header" href="#剩余限制">剩余限制</a></h2>
+<p>现在每种 RON <code>EffectKind</code> 都会触发（Move / Status / Ability / Item / Weather）；
+剩余的部分：volatiles 仅支持安装与读取（<code>InflictVolatile</code> 安装、<code>HasVolatile</code>
+读取——没有东西会清除它们）；RON 技能的 HP/MP 被限制在引擎的 <code>u16</code> 池中；
+物品只能治疗（没有解状态/复活/战斗专属效果），携带道具从不消耗；防守方的
+特性/携带道具 钩子 不加入攻击方的每次行动；天气只能由场景预置（没有战斗中
+的 op 可以设置）。后续 PR：迁移到 <code>StackDriver</code>、回复点系统（whiteout 总是在
+入口出生点重生）。</p>
+<h2 id="dotzuki-check-的校验"><a class="header" href="#dotzuki-check-的校验"><code>dotzuki check</code> 的校验</a></h2>
+<p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
+（party/enemies/encounters/skills/items）必须存在于 data 活动的
+<code>config.tables[]</code> 中，引用的属性/技能字段和物品的 <code>healField</code> 必须存在于表
+schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 字段，并且规则文件（磁盘上
+存在时）必须能按 dotzuki-rules <code>Ruleset</code> 模型解析，且能对着封闭词汇表编译
+通过——hook 中未知的事件、op，或属性/类型/资源/状态名都会产生诊断信息，就像
+它会在战斗开始时成为启动错误一样。
+战斗诊断信息与 DSL 诊断信息一样打印，并让退出码失败。
+记录 JSON 不会被加载——项目清单的表定义就够了。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="音频命令参考"><a class="header" href="#音频命令参考">音频命令参考</a></h1>
+<blockquote>
+<p>本文是 <code>reference/audio-commands.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>通道命令列表中可包含的 22 个 <code>AudioCommand</code> 变体及其字段；<code>TrackDef</code> 格式与
+播放调用见<a href="#audio-authoring-guide">音频指南</a>。</p>
+<p>命令以内部标记形式序列化：<code>{"type": "&lt;name&gt;", ...}</code>。它与引擎的字节码通道
+命令一一对应。权威 schema 是 <code>crates/dotzuki-audio/src/format.rs</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>type</code></th><th>字段</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>note</code></td><td><code>pitch</code> 0–11 (C..B)，<code>length</code> 1–16</td><td>播放一个音符</td></tr>
+<tr><td><code>drum_note</code></td><td><code>length</code> 1–16，<code>instrument</code></td><td>噪声通道的鼓点音符</td></tr>
+<tr><td><code>rest</code></td><td><code>length</code> 1–16</td><td>静音</td></tr>
+<tr><td><code>note_type</code></td><td><code>speed</code>，<code>param</code></td><td>音符速度 + 音量/包络字节（wave 通道：低半字节 = wave 乐器）</td></tr>
+<tr><td><code>octave</code></td><td><code>value</code> 0–7</td><td>设置八度（音乐八度 = 8 − value）</td></tr>
+<tr><td><code>toggle_perfect_pitch</code></td><td>—</td><td>切换 perfect-pitch 标志</td></tr>
+<tr><td><code>vibrato</code></td><td><code>delay</code>，<code>depth_rate</code> (depth&lt;&lt;4 | rate)</td><td>带起始延迟的颤音</td></tr>
+<tr><td><code>pitch_slide</code></td><td><code>length_modifier</code>，<code>octave_pitch</code> (octave&lt;&lt;4 | pitch)</td><td>开始滑音</td></tr>
+<tr><td><code>duty_cycle</code></td><td><code>value</code> 0–3</td><td>方波占空比</td></tr>
+<tr><td><code>tempo</code></td><td><code>value</code></td><td>设置 tempo（8.8 定点数）</td></tr>
+<tr><td><code>stereo_panning</code></td><td><code>value</code></td><td>NR51 声像字节</td></tr>
+<tr><td><code>unknown_ef</code></td><td><code>value</code></td><td>未使用的 <code>$EF</code> 命令（仅往返保留）</td></tr>
+<tr><td><code>volume</code></td><td><code>value</code></td><td>主音量（NR50）</td></tr>
+<tr><td><code>execute_music</code></td><td>—</td><td>切换 SFX 通道的 execute-music 标志</td></tr>
+<tr><td><code>duty_cycle_pattern</code></td><td><code>value</code></td><td>占空比轮换模式（4 × 2 位）</td></tr>
+<tr><td><code>sound_call</code></td><td><code>offset</code></td><td>在通道流的字节偏移处调用子程序</td></tr>
+<tr><td><code>sound_loop</code></td><td><code>count</code> (0 = infinite)，<code>offset</code></td><td>跳回某个偏移继续循环</td></tr>
+<tr><td><code>sound_ret</code></td><td>—</td><td>从 <code>sound_call</code> 返回</td></tr>
+<tr><td><code>pitch_sweep</code></td><td><code>param</code></td><td>通道 1 扫频（NR10）；仅 SFX</td></tr>
+<tr><td><code>sfx_square_note</code></td><td><code>length</code>，<code>volume_envelope</code>，<code>frequency</code></td><td>带显式包络与 11 位频率的 SFX 方波音符</td></tr>
+<tr><td><code>sfx_noise_note</code></td><td><code>length</code>，<code>volume_envelope</code>，<code>noise_params</code></td><td>带显式包络的 SFX 噪声音符</td></tr>
+<tr><td><code>end_of_data</code></td><td>—</td><td>结束标记</td></tr>
+</tbody>
+</table>
+</div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
+<blockquote>
+<p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, CI</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>用于生成骨架、校验和运行零 Rust 游戏项目的每个 <code>dotzuki</code> 子命令、flag 和退出
+码。</p>
+<p><code>dotzuki</code> 二进制（<code>crates/dotzuki-cli</code>）生成骨架、校验并运行<strong>零 Rust 游戏
+项目</strong>——包含 DSL、数据和资产的普通目录，外加一份 <code>.dotzuki-editor.json</code>
+项目清单（见<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>）。</p>
+<p>从 workspace 根目录构建：</p>
+<pre><code class="language-bash">cd workspace
+cargo build --release --bin dotzuki
+</code></pre>
+<p>产物是 <code>target/release/dotzuki</code>。所有命令都接收一个项目路径；定义项目布局的
+是项目清单，不是 CLI。</p>
+<h2 id="子命令"><a class="header" href="#子命令">子命令</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>命令</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dotzuki new &lt;name&gt;</code></td><td>生成一个新的游戏项目骨架（布局与编辑器的空模板一致）</td></tr>
+<tr><td><code>dotzuki check &lt;dir&gt;</code></td><td>编译项目中的每个 DSL 文件并报告诊断信息；出错时退出码为 1。有 <code>battle</code> 区块时还会校验它</td></tr>
+<tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>启动项目并在窗口中游玩（或为 CI/截图以无头模式运行）</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="dotzuki-new-name-1"><a class="header" href="#dotzuki-new-name-1"><code>dotzuki new &lt;name&gt;</code></a></h2>
+<p>生成一个新的项目骨架。<code>name</code> 必须是 slug：<code>[a-z0-9][a-z0-9-]*</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--dir &lt;parent&gt;</code></td><td>当前目录</td><td>新项目创建于其中的父目录</td></tr>
+<tr><td><code>--title &lt;name&gt;</code></td><td>该 slug</td><td>存入项目清单根 <code>name</code> 字段的显示名</td></tr>
+</tbody>
+</table>
+</div>
+<p>生成的布局：<code>.dotzuki-editor.json</code> + <code>data/</code>（maps、tiles、
+stories/characters/quests/arcs）、<code>gfx/</code>、<code>assets/scenes/main.scene</code>、README
+——编辑器的七个活动（maps / scripts / play / data / story / assets / tiles）。</p>
+<pre><code class="language-bash">dotzuki new my-game --dir ~/projects --title "My Game"
+cd ~/projects/my-game
+</code></pre>
+<h2 id="dotzuki-check-dir-1"><a class="header" href="#dotzuki-check-dir-1"><code>dotzuki check &lt;dir&gt;</code></a></h2>
+<p>在内存中编译所有发现的 DSL 文件（<code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code>）并
+报告诊断信息；任何文件失败即退出码非零。项目清单带 <code>battle</code> 区块时还会校验：</p>
+<ul>
+<li>引用的表 id 存在于 <code>data</code> 活动中；</li>
+<li><code>stats</code> / <code>skills</code> / <code>items</code> / <code>encounters</code> 字段名存在于表 schema 中；</li>
+<li><code>rules</code> 文件能解析并通过 <code>validate_ruleset</code>（未知的事件、op、属性、类型和
+资源都是加载时错误）。</li>
+</ul>
+<pre><code class="language-bash">dotzuki check .
+</code></pre>
+<h2 id="dotzuki-run-dir-1"><a class="header" href="#dotzuki-run-dir-1"><code>dotzuki run &lt;dir&gt;</code></a></h2>
+<p>启动项目。默认为一个 320×240（可缩放）的窗口游戏循环。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--map &lt;id&gt;</code></td><td>项目清单 <code>game.entryMap</code></td><td>出生所在的地图（覆盖项目清单）</td></tr>
+<tr><td><code>--lang &lt;en|zh&gt;</code></td><td><code>en</code></td><td>UI / 脚本语言（<code>@t</code> 双语文本据此选择）</td></tr>
+<tr><td><code>--headless</code></td><td>off</td><td>无窗口运行——用于 smoke 测试和截图</td></tr>
+<tr><td><code>--frames &lt;n&gt;</code></td><td><code>120</code></td><td>无头模式：要模拟的帧数</td></tr>
+<tr><td><code>--screenshot &lt;file.png&gt;</code></td><td>—</td><td>无头模式：把最后一帧导出为 PNG</td></tr>
+<tr><td><code>--save</code></td><td>off</td><td>无头模式：也写入存档文件（窗口模式运行总是存档）</td></tr>
+<tr><td><code>--save-file &lt;path&gt;</code></td><td><code>&lt;project&gt;/.dotzuki-save.json</code></td><td>存档文件位置</td></tr>
+<tr><td><code>--fresh</code></td><td>off</td><td>忽略已有存档文件，从头开始</td></tr>
+<tr><td><code>--watch</code></td><td>off</td><td>文件变化时热重载场景和当前地图。<strong>仅窗口模式</strong>——与 <code>--headless</code> 一起时被忽略</td></tr>
+<tr><td><code>--scale &lt;n&gt;</code></td><td><code>3</code></td><td>窗口缩放倍率</td></tr>
+</tbody>
+</table>
+</div>
+<p>示例：</p>
+<pre><code class="language-bash"># Play a project
+dotzuki run .
+
+# CI smoke test: boot 60 frames headless, no window, no save
+dotzuki run . --headless --frames 60
+
+# Headless screenshot for previews
+dotzuki run . --headless --map TownSquare --screenshot shot.png
+
+# Iterate with hot reload
+dotzuki run . --watch
+</code></pre>
+<h2 id="退出码"><a class="header" href="#退出码">退出码</a></h2>
+<ul>
+<li><code>dotzuki check</code>：<code>0</code> = 所有 DSL 编译通过（且 <code>battle</code> 区块校验通过）；<code>1</code> =
+发现诊断信息。</li>
+<li><code>dotzuki run</code>：<code>0</code> = 正常退出。</li>
+</ul>
+<h2 id="说明"><a class="header" href="#说明">说明</a></h2>
+<ul>
+<li>存档文件带版本号（<code>.dotzuki-save.json</code>）；<code>--fresh</code> 从头开始，不动该文件。</li>
+<li>无头模式运行会模拟完整的帧循环，包括场景 / 战斗分发，因此 <code>--screenshot</code>
+的输出反映真实的渲染状态。</li>
+<li>编辑器的 Play 活动通过 WASM（<code>dotzuki-runner-web</code>）使用同一个运行器，而不
+是这个 CLI。</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="rust-api-门户"><a class="header" href="#rust-api-门户">Rust API 门户</a></h1>
+<blockquote>
+<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
+的页面是相应的文字说明。</p>
+<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.1.0</code>）并发布在 crates.io
+上，因此它们的 API 文档位于 docs.rs。本地副本：</p>
+<pre><code class="language-bash">cd workspace
+cargo doc --workspace --no-deps --open
+</code></pre>
+<h2 id="crate-一览"><a class="header" href="#crate-一览">Crate 一览</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Crate</th><th>用途</th><th>API 文档</th><th>文字文档</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dotzuki-engine</code></td><td>核心 trait（<code>GameData</code>）、tilemap/相机/触发器、战斗效果栈、物品/商店/装备</td><td><a href="https://docs.rs/dotzuki-engine">docs.rs</a></td><td><a href="#architecture-overview">架构</a>、<a href="#the-effect-stack-battle-engine">效果栈</a></td></tr>
+<tr><td><code>dotzuki-rules</code></td><td>声明式战斗规则：RON → 效果栈</td><td><a href="https://docs.rs/dotzuki-rules">docs.rs</a></td><td><a href="#battles">战斗规则</a></td></tr>
+<tr><td><code>dotzuki-rules-macro</code></td><td><code>dotzuki-rules</code> 的 derive/辅助工具</td><td><a href="https://docs.rs/dotzuki-rules-macro">docs.rs</a></td><td><a href="#battles">战斗规则</a></td></tr>
+<tr><td><code>dotzuki-engine-tiled</code></td><td>Tiled <code>.tmx</code>（JSON）→ 引擎类型</td><td><a href="https://docs.rs/dotzuki-engine-tiled">docs.rs</a></td><td><a href="#maps">地图指南</a></td></tr>
+<tr><td><code>dotzuki-engine-script</code></td><td>基于 Boa 的异步 JS 脚本</td><td><a href="https://docs.rs/dotzuki-engine-script">docs.rs</a></td><td><a href="#i18n-guide">i18n 指南</a></td></tr>
+<tr><td><code>dotzuki-engine-dsl</code></td><td>游戏 DSL 编译器（<code>.scene</code>/<code>.gui</code>/<code>.theme</code>/<code>.style</code>）+ 运行时编译 API</td><td><a href="https://docs.rs/dotzuki-engine-dsl">docs.rs</a></td><td><a href="#scene-dsl-reference-scene">scene</a>、<a href="#gui-dsl-reference">gui</a>、<a href="#theme--style-dsl-reference-theme--style">theme &amp; style</a>、<a href="#dsl-codegen-contract">codegen</a></td></tr>
+<tr><td><code>dotzuki-renderer</code></td><td>GB 风格的 tile/文字渲染器、CJK 字体</td><td><a href="https://docs.rs/dotzuki-renderer">docs.rs</a></td><td><a href="#gui-dsl-reference">gui</a></td></tr>
+<tr><td><code>dotzuki-ui</code></td><td>基于 <code>Painter</code> trait 的 UI 组件</td><td><a href="https://docs.rs/dotzuki-ui">docs.rs</a></td><td><a href="#gui-dsl-reference">gui</a></td></tr>
+<tr><td><code>dotzuki-audio</code></td><td>音频抽象层 + GB-APU 音序器</td><td><a href="https://docs.rs/dotzuki-audio">docs.rs</a></td><td><a href="#audio-authoring-guide">音频指南</a>、<a href="#audio-command-reference">音频命令</a></td></tr>
+<tr><td><code>dotzuki-app</code></td><td>原生应用外壳（窗口/循环/热重载）</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-tui</code></td><td>终端外壳（ratatui）</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-runner</code></td><td>零 Rust 项目运行时 + 无头模式驱动</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a></td></tr>
+<tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing--upgrading-guide">发布指南</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI 参考</a></td></tr>
+<tr><td><code>dotzuki-web</code></td><td>WASM 布局预览桥</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+<p>crates.io 发布集之外的工具：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>工具</th><th>用途</th><th>文档</th></tr>
+</thead>
+<tbody>
+<tr><td><code>tools/dotzuki-editor</code></td><td>游戏无关的 Vue/Vite 编辑器、AI Story Designer、编辑器内 Play</td><td><a href="../tools/dotzuki-editor/README.html">编辑器 README</a></td></tr>
+<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> 转换器</td><td><a href="../tools/asset-converter/README.html">README</a></td></tr>
+<tr><td><code>tools/editor-extensions</code></td><td>VSCode DSL 语法高亮</td><td><code>tools/editor-extensions</code></td></tr>
+<tr><td><code>dotzuki-template/</code></td><td>cargo-generate 起始模板</td><td><a href="../dotzuki-template/README.html">README</a></td></tr>
+</tbody>
+</table>
+</div>
 
                     </main>
 
