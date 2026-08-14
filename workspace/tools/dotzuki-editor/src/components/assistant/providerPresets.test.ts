@@ -7,14 +7,14 @@ describe('PROVIDER_PRESETS', () => {
     for (const p of PROVIDER_PRESETS) {
       expect(p.id.trim()).not.toBe('')
       expect(p.label.trim()).not.toBe('')
-      expect(['openai', 'anthropic']).toContain(p.kind)
+      expect(['openai', 'anthropic', 'dsh']).toContain(p.kind)
     }
   })
 
   it('has unique ids and covers the expected vendors, moonshot first', () => {
     const ids = PROVIDER_PRESETS.map(p => p.id)
     expect(new Set(ids).size).toBe(ids.length)
-    expect(ids).toEqual(['moonshot', 'openai', 'anthropic', 'custom'])
+    expect(ids).toEqual(['moonshot', 'openai', 'anthropic', 'dsh', 'custom'])
     expect(DEFAULT_PRESET_ID).toBe('moonshot')
   })
 
@@ -25,15 +25,16 @@ describe('PROVIDER_PRESETS', () => {
     }
   })
 
-  it('openai-kind presets carry an https baseURL; anthropic leaves it empty (SDK default)', () => {
+  it('openai-kind presets carry an https baseURL; anthropic/dsh leave it empty (no wire endpoint)', () => {
     for (const p of PROVIDER_PRESETS) {
-      if (p.kind === 'anthropic') expect(p.baseURL).toBe('')
+      if (p.kind === 'anthropic' || p.kind === 'dsh') expect(p.baseURL).toBe('')
       else if (p.id !== 'custom') expect(p.baseURL).toMatch(/^https:\/\//)
     }
   })
 
   it('presetById resolves known ids and falls back to the first preset', () => {
     expect(presetById('anthropic').kind).toBe('anthropic')
+    expect(presetById('dsh').kind).toBe('dsh')
     expect(presetById('nope')).toBe(PROVIDER_PRESETS[0])
   })
 })

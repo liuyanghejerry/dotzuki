@@ -756,6 +756,7 @@ export default {
       protocol: 'Protocol',
       protocolAnthropic: 'anthropic (Messages)',
       protocolOpenai: 'openai (Chat Completions)',
+      protocolDsh: 'DeepSeek Harness (local agent)',
       baseURL: 'Base URL',
       proxy: 'Proxy (optional)',
       proxyPlaceholder: 'http://127.0.0.1:9085',

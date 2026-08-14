@@ -30,6 +30,7 @@
     "@ai-sdk/anthropic": "^3.0.81",
     "@ai-sdk/openai-compatible": "^2.0.48",
     "@ai-sdk/vue": "^4.0.3",
+    "@deepseek-ai/dsh-sdk-client": "0.1.0-rc.6",
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/language": "^6.1.0",

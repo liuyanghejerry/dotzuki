@@ -14,7 +14,7 @@ import { proxyFetchFn } from './proxy'
 
 export interface ProviderProfile {
   id: string
-  kind: 'anthropic' | 'openai'
+  kind: 'anthropic' | 'openai' | 'dsh'
   baseURL: string
   model: string
   /** Optional HTTP(S) proxy for reaching the provider, e.g. http://127.0.0.1:9085. */
@@ -82,6 +82,11 @@ export async function buildModel(profile: ProviderProfile, apiKey: string): Prom
     const { createAnthropic } = await import('@ai-sdk/anthropic')
     const provider = createAnthropic({ apiKey, baseURL: profile.baseURL || undefined, ...(fetchFn ? { fetch: fetchFn } : {}) })
     return provider(profile.model)
+  }
+  if (profile.kind === 'dsh') {
+    // kind 'dsh' is the DeepSeek Harness runtime, not an AI SDK model — chat
+    // and tests route through server/dsh.ts before ever reaching this seam.
+    throw new Error('kind "dsh" runs on the DeepSeek Harness runtime, not the AI SDK')
   }
   // openai-compatible covers OpenAI, DeepSeek, Moonshot, OpenRouter, Ollama, vLLM, …
   const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible')

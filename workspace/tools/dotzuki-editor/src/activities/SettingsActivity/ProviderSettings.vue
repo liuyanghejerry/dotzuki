@@ -138,11 +138,12 @@ async function runRowTest(i: number) {
   rowTest.testing = false
 }
 
-function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama') {
+function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama' | 'dsh') {
   if (kind === 'anthropic') Object.assign(draft, { id: draft.id || 'claude', kind: 'anthropic', baseURL: 'https://api.anthropic.com', model: 'claude-opus-4-8' })
   if (kind === 'openai') Object.assign(draft, { id: draft.id || 'openai', kind: 'openai', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o' })
   if (kind === 'deepseek') Object.assign(draft, { id: draft.id || 'deepseek', kind: 'openai', baseURL: 'https://api.deepseek.com', model: 'deepseek-chat' })
   if (kind === 'ollama') Object.assign(draft, { id: draft.id || 'local', kind: 'openai', baseURL: 'http://localhost:11434/v1', model: 'qwen2.5-coder' })
+  if (kind === 'dsh') Object.assign(draft, { id: draft.id || 'dsh', kind: 'dsh', baseURL: '', model: draft.model || 'deepseek-v4-flash' })
 }
 </script>
 
@@ -199,6 +200,7 @@ function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama') {
           <button @click="applyPreset('anthropic')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">Claude</button>
           <button @click="applyPreset('openai')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">OpenAI</button>
           <button @click="applyPreset('deepseek')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">DeepSeek</button>
+          <button @click="applyPreset('dsh')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">Harness</button>
           <button @click="applyPreset('ollama')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">Ollama</button>
         </div>
       </div>
@@ -210,6 +212,7 @@ function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama') {
           <select v-model="draft.kind" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
             <option value="anthropic">{{ t('story.providers.protocolAnthropic') }}</option>
             <option value="openai">{{ t('story.providers.protocolOpenai') }}</option>
+            <option value="dsh">{{ t('story.providers.protocolDsh') }}</option>
           </select>
         </label>
         <label class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.baseURL') }}

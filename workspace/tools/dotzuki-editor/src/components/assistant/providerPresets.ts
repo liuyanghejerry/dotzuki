@@ -47,6 +47,17 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     keyUrl: 'https://console.anthropic.com/settings/keys',
   },
   {
+    // kind 'dsh' is not a wire protocol: turns are delegated to a LOCAL
+    // DeepSeek Harness runtime (see server/dsh.ts + dsh-runtime/). baseURL is
+    // unused; `model` picks the DeepSeek model the runtime agent runs on.
+    id: 'dsh',
+    label: 'DeepSeek Harness',
+    kind: 'dsh',
+    baseURL: '',
+    modelExample: 'deepseek-v4-flash',
+    keyUrl: 'https://platform.deepseek.com/api_keys',
+  },
+  {
     id: 'custom',
     label: 'Custom (OpenAI-compatible)',
     kind: 'openai',

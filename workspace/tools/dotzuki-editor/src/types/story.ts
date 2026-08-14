@@ -149,8 +149,9 @@ export type StoryKind = 'characters' | 'quests' | 'arcs'
 
 // ── AI provider profiles ───────────────────────────────────────────────────
 
-/** Which wire protocol a vendor speaks. */
-export type ProviderKind = 'anthropic' | 'openai'
+/** Which wire protocol a vendor speaks. `dsh` = the optional DeepSeek Harness
+ *  runtime (a local agent subprocess driven over stdio JSON-RPC). */
+export type ProviderKind = 'anthropic' | 'openai' | 'dsh'
 
 /**
  * A named LLM provider profile for TEXT generation (character refine, scene
