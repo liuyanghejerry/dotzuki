@@ -1,0 +1,622 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Project Manifest - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-3b83be04.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-c9fa81a0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/project-manifest.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="game-project-spec--zero-rust-dotzuki-engine-projects"><a class="header" href="#game-project-spec--zero-rust-dotzuki-engine-projects">Game Project Spec — zero-Rust dotzuki-engine projects</a></h1>
+<p>The zero-Rust project contract: directory layout, manifest schema, and run/check/playtest behavior.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, tool developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>A <strong>game project</strong> is a plain directory of DSL, data, and asset files plus a
+single manifest, <code>.dotzuki-editor.json</code>. There is no Cargo workspace, no
+<code>package.json</code>, no build system inside a game project: the engine binary and
+the editor consume the directory as-is.</p>
+<p>This spec is the contract between the tools that create, edit, and run such
+projects. The reference implementation of the layout is the editor’s
+scaffolder (<code>tools/dotzuki-editor/server/scaffold.ts</code>); the <code>dotzuki</code> CLI
+(<code>crates/dotzuki-cli</code>) produces the same layout.</p>
+<h2 id="consumers"><a class="header" href="#consumers">Consumers</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Consumer</th><th>What it does with a game project</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>dotzuki-editor</strong> (<code>tools/dotzuki-editor</code>)</td><td>Reads and writes everything: manifest, data tables, maps, scenes, gfx.</td></tr>
+<tr><td><strong><code>dotzuki</code> CLI</strong> (<code>crates/dotzuki-cli</code>)</td><td><code>dotzuki new</code> scaffolds a project; <code>dotzuki check</code> compile-checks its DSL files.</td></tr>
+<tr><td><strong><code>dotzuki run</code></strong> (<code>crates/dotzuki-cli</code> + <code>crates/dotzuki-runner</code>)</td><td>Boots the project and plays it: overworld, dialogue scenes, warps (see below).</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="directory-layout"><a class="header" href="#directory-layout">Directory layout</a></h2>
+<pre><code>my-game/
+├── .dotzuki-editor.json     # project manifest — the only config file
+├── README.md             # human notes; free-form
+├── data/                 # dataRoot — game data
+│   ├── maps/             # map definitions + per-map script .scene files
+│   │   └── StartTown/    # editor-scaffolded demo map (map.tmx.json,
+│   │                     #   tileset.png, script.scene, map.json)
+│   ├── tiles/            # shared tile library (map-editor Backdrop/Trace)
+│   └── stories/          # narrative bible: characters/, quests/, arcs/,
+│                         #   graph.json (story activity)
+├── gfx/                  # gfxRoot — graphics assets (tilesets, sprites)
+└── assets/
+    └── scenes/           # story scenes, Game DSL (.scene)
+        └── main.scene    # starter scene
+</code></pre>
+<ul>
+<li><code>data/maps/</code> — one entry per map. Map activities (<code>type: "map"</code>) point here
+via <code>mapsDir</code> (relative to <code>dataRoot</code>); the script activity’s <code>scriptsDir</code>
+conventionally points here too, so per-map <code>*.scene</code> scripts live next to
+their map data.</li>
+<li><code>data/tiles/</code> — the shared tile library backing the map editor’s tile
+picker (activity <code>type: "tiles"</code>).</li>
+<li><code>gfx/</code> — loose graphics files. The assets activity lists it in <code>roots</code>.</li>
+<li><code>assets/scenes/</code> — story scenes written in the Game DSL. This is the
+default <strong>scene directory</strong> (<code>game.scenesDir</code>); see below.</li>
+</ul>
+<p>Scaffolders create at minimum: <code>.dotzuki-editor.json</code>, <code>README.md</code>, <code>data/maps/</code>,
+<code>data/tiles/</code>, <code>gfx/</code>, <code>assets/scenes/main.scene</code>. Templates with data tables
+additionally create one <code>data/&lt;table.dir&gt;/</code> per table. The <strong>editor’s
+scaffolder</strong> additionally seeds starter content so a fresh project is
+immediately explorable: a <code>data/maps/StartTown/</code> demo map with a procedurally
+generated tileset (<code>tileset.png</code>) and a per-map <code>script.scene</code>, a seeded
+shared tile library under <code>data/tiles/</code>, the <code>data/stories/</code> bible skeleton,
+and — for the game templates (<code>dotzuki</code>, <code>wuxia</code>) — sample table records plus a
+seeded story character and quest. The <code>dotzuki</code> template is also <strong>battle-ready</strong>
+and <strong>shop-ready</strong>: its manifest carries a <code>battle</code> section (heroes vs.
+monsters with the spells table — both seeded heroes form the switchable
+party — plus an <code>items</code> block with 3 Potions, an <code>encounters</code> block with the
+seeded Bug Catcher trainer, and a <code>levels</code> block arming
+EXP/level growth — the seeded Slime pays 8 EXP on a win), a <code>shop</code> section
+(<code>{ "currency": "G", "startMoney": 100 }</code>), seeded skill records and
+combatant <code>skills</code> lists, and a <code>data/rules.ron</code> type chart — a fresh
+project can fight via <code>@command("startBattle", "slime")</code> (wild) or
+<code>@command("startBattle", "bug-catcher")</code> (trainer), and open a Buy/Sell shop
+(the seeded Potion costs 20) via <code>@command("openShop", ["potion"])</code>
+with zero setup.
+<code>dotzuki new</code> emits the minimal skeleton only.</p>
+<h2 id="manifest-schema-dotzuki-editorjson"><a class="header" href="#manifest-schema-dotzuki-editorjson">Manifest schema (<code>.dotzuki-editor.json</code>)</a></h2>
+<p>Top-level object:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Type</th><th>Required</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>string</td><td>yes</td><td>Display name (free-form, not necessarily a slug).</td></tr>
+<tr><td><code>dataRoot</code></td><td>string</td><td>yes</td><td>Game data root, relative to the project dir. Scaffolders write <code>"./data"</code>.</td></tr>
+<tr><td><code>gfxRoot</code></td><td>string</td><td>no</td><td>Graphics root, relative to the project dir. Default <code>"./gfx"</code>.</td></tr>
+<tr><td><code>activities</code></td><td>array</td><td>yes</td><td>Activity definitions (below). Order is preserved by the editor UI.</td></tr>
+<tr><td><code>game</code></td><td>object</td><td>no</td><td>Engine-facing section (below). Absent in older editor projects.</td></tr>
+<tr><td><code>battle</code></td><td>object</td><td>no</td><td>Battle-system section (see <a href="battle-rules.html">the battle rules</a>).</td></tr>
+<tr><td><code>shop</code></td><td>object</td><td>no</td><td>Currency section: <code>{ "currency": "G", "startMoney": 100 }</code> (both keys optional, those are the defaults). See <a href="#shops">Shops</a>.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="activities"><a class="header" href="#activities">Activities</a></h3>
+<p>Each activity is <code>{ id, type, label, icon, enabled, config }</code>. <code>id</code> is unique
+within the manifest; <code>type</code> selects the editor pane; <code>config</code> is a free-form
+per-type object (unknown keys are tolerated). The scaffolded set, in order:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>id</code></th><th><code>type</code></th><th>Key <code>config</code> fields</th></tr>
+</thead>
+<tbody>
+<tr><td><code>maps</code></td><td><code>map</code></td><td><code>mapsDir</code> (rel. dataRoot), optional <code>tileSize</code>, <code>blockSize</code></td></tr>
+<tr><td><code>scripts</code></td><td><code>script</code></td><td><code>scriptsDir</code> (rel. dataRoot), <code>extension</code> (default <code>".scene"</code>)</td></tr>
+<tr><td><code>play</code></td><td><code>play</code></td><td>none (in-editor WASM playtest — see <a href="#editor-playtest-wasm-runner">Editor playtest</a>)</td></tr>
+<tr><td><code>data</code></td><td><code>data</code></td><td><code>tables</code>: array of <code>{ id, label, dir, icon, idField, fields[] }</code> (table dirs live under dataRoot)</td></tr>
+<tr><td><code>story</code></td><td><code>story</code></td><td><code>storiesDir</code>, <code>scenesDir</code> (both rel. dataRoot), <code>locales</code></td></tr>
+<tr><td><code>assets</code></td><td><code>assets</code></td><td><code>roots</code> (rel. project dir), optional <code>extensions</code></td></tr>
+<tr><td><code>tiles</code></td><td><code>tiles</code></td><td><code>tilesDir</code>, <code>tileSize</code>, <code>backdropMapsDir</code> (all rel. dataRoot)</td></tr>
+</tbody>
+</table>
+</div>
+<p>One more activity type is defined by the editor and may appear in
+hand-grown projects; scaffolders do not emit it:</p>
+<ul>
+<li><code>ui</code> — GUI layouts. <code>config.guiRoot</code> (rel. project dir) holds <code>.gui</code> files;
+<code>config.extension</code> defaults to <code>".gui"</code>.</li>
+</ul>
+<p>The scaffolded <code>story</code> activity uses <code>storiesDir: "stories"</code>,
+<code>scenesDir: "maps"</code> (where its <code>.scene</code> files live) and <code>locales: ["en", "zh"]</code>.</p>
+<h3 id="the-game-section"><a class="header" href="#the-game-section">The <code>game</code> section</a></h3>
+<p>Optional. <code>dotzuki new</code> writes it; the editor reads and writes projects that
+lack it without complaint.</p>
+<pre><code class="language-json">"game": {
+  "entryScene": "main",
+  "scenesDir": "assets/scenes"
+}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Type</th><th>Default when absent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>scenesDir</code></td><td>string (rel. project dir)</td><td><code>"assets/scenes"</code></td></tr>
+<tr><td><code>entryScene</code></td><td>string (scene file stem under <code>scenesDir</code>)</td><td>The first <code>.scene</code> file discovered under <code>scenesDir</code>, sorted by path, with its extension stripped</td></tr>
+<tr><td><code>entryMap</code></td><td>string</td><td>The first map directory under the map activity’s <code>mapsDir</code>, sorted by name</td></tr>
+</tbody>
+</table>
+</div>
+<p>Derivation rules a consumer applies, in order: resolve <code>scenesDir</code>
+(<code>game.scenesDir</code> or the default), scan it for <code>.scene</code> files, and take
+<code>entryScene</code> from <code>game.entryScene</code> or the first discovered scene. <code>dotzuki new</code>
+writes <code>"entryScene": "main"</code> matching the scaffolded <code>main.scene</code>, so a
+fresh project is already consistent. How <code>dotzuki run</code> consumes both keys is
+specified below.</p>
+<h2 id="what-dotzuki-run-does"><a class="header" href="#what-dotzuki-run-does">What <code>dotzuki run</code> does</a></h2>
+<p><code>dotzuki run &lt;dir&gt;</code> boots a playable instance of the project (windowed;
+<code>--headless [--frames N] [--screenshot out.png]</code> for CI/smoke tests). It is
+implemented by the <code>dotzuki-runner</code> crate; this section is the behavioral
+contract.</p>
+<h3 id="boot"><a class="header" href="#boot">Boot</a></h3>
+<p>The manifest is loaded, all DSL dirs are compiled (any diagnostic
+fails the boot with the same message list <code>dotzuki check</code> prints), and compiled
+scenes are registered by their <code>game_scene</code> name. Entry resolution:</p>
+<ul>
+<li>With maps: spawn on <code>game.entryMap</code> (or <code>--map</code>), else the first map
+directory under <code>mapsDir</code>. The player spawns at the map centre, scanning
+outward for the first walkable tile.</li>
+<li>Without maps: dialogue-only mode — the <code>entryScene</code> (default derivation
+<a href="#the-game-section">above</a>) runs its <code>main</code> storyline to completion, then an
+end card shows.</li>
+</ul>
+<h3 id="maps"><a class="header" href="#maps">Maps</a></h3>
+<p>A map is <code>&lt;mapsDir&gt;/&lt;id&gt;/map.tmx.json</code> (Tiled JSON; the layer named
+<code>collision</code> marks blocked tiles, every other layer renders) plus
+<code>tileset.png</code> (full-color atlas, GIDs 1-based, row-major) plus an optional
+objects sidecar — <code>objects.json</code> (editor-written) with
+<code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>, <code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>,
+<code>signs: [{x,y,text}]</code> (face the sign tile + A reads its text as paged
+dialogue) and an optional <code>encounters</code> block (below)
+(legacy <code>map.json</code> is read as a fallback). Walking onto a warp tile fades to
+the destination map.</p>
+<p>The authoring workflow for these files lives in <a href="../how-to/maps.html">Maps</a>.</p>
+<h3 id="elevation-levels"><a class="header" href="#elevation-levels">Elevation levels</a></h3>
+<p>Maps may be multi-level (walk on the ground <em>and</em> on
+wall tops). Collision per level: layers named <code>collision</code> (level 0),
+<code>collision1</code>, <code>collision2</code>, … — a non-zero GID is solid at that level; these
+layers never render. Missing intermediate levels are treated as all-solid.
+A layer named <code>stairs</code> marks transition tiles (never rendered): GID 1
+ascends one level on arrival, GID 2 descends one (clamped to the map’s
+levels). Visual layers carry an optional integer custom property <code>level</code>
+(default 0): layers with <code>level &lt;= player elevation</code> render below the
+sprites, layers above render over them. Maps with only a <code>collision</code> layer
+behave exactly as single-level maps.</p>
+<h3 id="random-encounters"><a class="header" href="#random-encounters">Random encounters</a></h3>
+<p>A map opts into wild
+battles with an <code>encounters</code> block in its objects sidecar — the same shape
+as pokered’s <code>wild_data</code>: a per-step <code>rate</code> byte in <strong>/256 units</strong> (<code>25</code> ≈
+9.8% per step) plus tile-rectangle zones, each with a weighted table:</p>
+<pre><code class="language-json">"encounters": {
+  "rate": 25,
+  "zones": [
+    { "x": 0, "y": 5, "w": 8, "h": 3,
+      "table": [ { "id": "slime", "weight": 70 }, { "id": "bug-catcher", "weight": 30 } ] }
+  ]
+}
+</code></pre>
+<p>Zone coordinates are map tiles, the rectangle <strong>inclusive</strong> of its <code>w</code>×<code>h</code>
+extent. A completed walk step onto a zoned tile rolls once: one rng byte
+<code>&lt; rate</code> hits, then a weighted draw from the zone’s <code>table</code> picks the id
+(<code>weight</code> is relative, default 1). The id resolves exactly like
+<code>startBattle(id)</code> — an encounter record first (trainer parties/queues
+included), then a single enemy record — and arms a <strong>sceneless</strong> battle (see
+<a href="battle-rules.html">the battle rules</a>). Step resolution priority is: <strong>warp &gt; encounter roll &gt;
+plain walk</strong> — stepping onto a warp tile never rolls, and turning in place
+is not a step. Absent (or <code>null</code>) <code>encounters</code> ⇒ the map never rolls —
+older sidecars keep working unchanged.</p>
+<h3 id="scene-dispatch"><a class="header" href="#scene-dispatch">Scene dispatch</a></h3>
+<p>On entering a map: fire its <code>on_enter</code> routes (from
+<code>@trigger</code> in the compiled report), else the scene’s <code>&lt;SceneName&gt;OnLoad</code>,
+else its <code>main</code> storyline — once, guarded by the <code>__played_main_&lt;map&gt;</code> flag.
+Talking to an NPC (face + A) runs the storyline named by its <code>talk</code> field,
+else a route naming that NPC, else the map scene’s <code>main</code>, else shows <code>talk</code>
+as raw text. A map’s scene is the compiled scene whose source is
+<code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code>, falling back to a scene named like the map.</p>
+<h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
+<p>The scene VM fully supports <code>showText</code> (paged textbox),
+<code>showChoice</code> (menu → index), <code>warpTo</code>, <code>delay</code>, <code>fadeScreen</code>, flags
+(<code>setFlag</code>/<code>resetFlag</code>/<code>checkFlag</code>, persisted across scenes for the session),
+<code>startBattle</code>/<code>startWildBattle</code> (see <a href="battle-rules.html">the battle rules</a>) and <code>openShop</code>
+(see <a href="#shops">Shops</a>). Any other command logs a warning and auto-completes
+rather than deadlocking the scene.</p>
+<h3 id="menus"><a class="header" href="#menus">Menus</a></h3>
+<p>Pressing <strong>Start</strong> in the overworld opens a pause menu (B/Start
+closes it; the overworld is frozen underneath) with four entries:</p>
+<ul>
+<li><strong>Party</strong> — a read-only list of every party-table record: name, HP x/y,
+MP x/y, status, base stats (ATK/DEF/SPD), element, and skill names. No
+reordering in this version.</li>
+<li><strong>Bag</strong> — the persistent inventory (item → count) plus the player’s money.
+Items whose record has a positive heal amount (the same
+<code>battle.items.healField</code> convention as battle items) can be used: pick the
+item, pick a party member — it heals (capped at max HP) and the count
+decrements. A fainted member (0 HP) is <strong>not</strong> revived, a full-HP member
+is not healed (“It won’t have any effect.”), and items without a positive
+heal amount can’t be used. Projects without a <code>battle.items</code> block list
+their items as unusable.</li>
+<li><strong>Save</strong> — writes the save file immediately (the same stable-state
+writer; saving from the menu is always allowed, even in headless runs)
+with a “Game saved.” confirmation.</li>
+<li><strong>Close</strong> (or B).</li>
+</ul>
+<p>Menu labels follow the runner’s language (<code>--lang en</code>/<code>zh</code>).</p>
+<h3 id="shops"><a class="header" href="#shops">Shops</a></h3>
+<p>The runner owns the
+player’s <strong>money</strong> (a <code>u32</code>), initialized from the manifest’s optional
+top-level <code>shop</code> section — <code>{ "currency": "G", "startMoney": 100 }</code>, exactly
+those defaults when the section is absent — and carried in the save file
+(v3). The currency label shows next to amounts in the shop UI and the Bag.
+A scene opens a shop with <code>@command("openShop", ["potion", "elixir"])</code>
+(<code>game.openShop([...])</code> in JS): the scene suspends and the shop UI opens on
+a <strong>Buy / Sell / Exit</strong> root (B on a list returns to the root; B or Exit on
+the root resumes the scene). <strong>Buy</strong> lists the given items with their record
+<code>price</code> (default 0) and the player’s money. A buys (money −= price,
+inventory += 1); unaffordable entries are marked and rejected. <strong>Sell</strong>
+lists the player’s inventory entries with a positive count, each at
+<strong><code>floor(price / 2)</code></strong> (there is no separate sellPrice field; items priced 0
+sell for 0 — allowed). A sells one (money += , count −= 1). Unknown item ids
+on the shelf open as name=id, price 0 — a misconfigured shop never deadlocks
+the scene. Item records are read through the <code>battle.items</code> table.</p>
+<h3 id="game-over"><a class="header" href="#game-over">Game-over</a></h3>
+<p>Losing a battle no longer strands the player with a 0-HP
+party: after the scene that received <code>"lose"</code> finishes (its own post-lose
+text plays first), the runner runs a <strong>whiteout</strong> — a brief blackout, a
+<code>&lt;Name&gt; collapsed…</code> line, then the whole party is healed to full HP/MP
+(status cleared) and the player returns to the <strong>entry map’s spawn point</strong>
+(the current map if it is the entry map, otherwise the entry map loads).
+Flags, inventory and money are kept. Map-less (dialogue-only) projects just
+heal. There is no heal-point system yet: the respawn is always the entry
+spawn.</p>
+<h3 id="audio"><a class="header" href="#audio">Audio</a></h3>
+<p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> play tracks
+from <code>data/audio/**/*.json</code> (dotzuki-audio <code>TrackDef</code> format; <code>music/</code> + <code>sfx/</code>
+subdirs are a convention — the tree is loaded recursively). The id a scene
+passes is the track’s <code>id</code> field; unknown ids warn once and continue. Audio
+is fully optional: no <code>data/audio/</code> dir means every command is a silent
+no-op with zero device cost, the output device is opened lazily on the first
+play command, and a missing/unavailable device (CI, <code>--headless</code>) logs once
+and continues silent. Audio files are not hot-reloaded by <code>--watch</code> (they
+load at boot).</p>
+<h3 id="sprites"><a class="header" href="#sprites">Sprites</a></h3>
+<p>The player uses <code>gfx/overworld/player/sheet.png</code> (24×32 cells,
+4 facings × 5 frames) when present; otherwise a procedural placeholder person
+is drawn. NPCs always render as id-colored placeholders in this version.</p>
+<h3 id="saveload"><a class="header" href="#saveload">Save/load</a></h3>
+<p>The game saves to <code>&lt;project&gt;/.dotzuki-save.json</code> (override with
+<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code> (v3; <code>party</code>/<code>inventory</code> appear
+once a battle has completed — see <a href="battle-rules.html">the battle rules</a>; party members may
+carry optional <code>level</code>/<code>exp</code> fields when the battle has a <code>levels</code> block —
+absent ⇒ level 1 / 0 EXP; <code>money</code> is always written; <code>player.level</code> is the
+map elevation level, absent ⇒ 0). Saves are written only from <strong>stable</strong> states — after a completed
+warp transition and when a scene finishes into the overworld — never
+mid-scene or mid-warp (a suspended scene engine can’t resume), so closing
+the window mid-dialogue keeps the last stable point. The Start menu’s
+<strong>Save</strong> entry writes the same file on demand (always allowed, even in
+headless runs). On boot a valid save resumes: flags are restored, the saved
+map loads, the player is placed at the saved tile (spawn-scan fallback if it
+became occupied), the party state, inventory and money ride along, and the
+opening dispatch is skipped — the restored <code>__played_main_*</code> flags keep
+<code>main</code> from replaying on later entries. Loading accepts any version <code>&lt;=</code>
+the current one with per-field defaults — <strong>v1/v2 saves still resume</strong> (no
+<code>party</code>/<code>inventory</code> ⇒ both start fresh; no <code>money</code> ⇒ the manifest’s
+<code>shop.startMoney</code> default applies); a missing/corrupt/<strong>newer</strong>-version save
+warns and boots fresh. <code>--fresh</code> ignores the save; <code>--map</code> overrides its
+map. Windowed runs always write saves; <code>--headless</code> never writes unless
+<code>--save</code> is passed (CI stays side-effect-free).</p>
+<p>The compatibility rules around this format live in
+<a href="../explanation/save-compatibility.html">Save compatibility</a>.</p>
+<h3 id="hot-reload"><a class="header" href="#hot-reload">Hot reload</a></h3>
+<p>With <code>--watch</code> (windowed mode only), the running game watches
+the data/gfx/scene directories: a <code>.scene</code> edit recompiles the DSL and swaps
+scenes in place (a broken edit keeps the old scenes running; diagnostics are
+logged), and an edit to the <em>current</em> map’s <code>map.tmx.json</code> / <code>tileset.png</code> /
+objects sidecar reloads that map in place, preserving the player position and
+flags. Other maps, data tables and gfx are picked up on next enter / boot.</p>
+<h3 id="not-yet-implemented"><a class="header" href="#not-yet-implemented">Not yet implemented</a></h3>
+<p>Scenes relying on these warn and continue: the
+<code>StackDriver</code> turn loop.</p>
+<h2 id="what-dotzuki-check-compiles"><a class="header" href="#what-dotzuki-check-compiles">What <code>dotzuki check</code> compiles</a></h2>
+<p><code>dotzuki check &lt;dir&gt;</code> loads the manifest, collects every directory that may hold
+DSL files, and runs <code>dotzuki_engine_dsl::compiler::compile_dirs</code> over them (in
+memory, no artifacts written). The directory set is:</p>
+<ol>
+<li>the scene directory (<code>game.scenesDir</code>, default <code>assets/scenes</code>, rel.
+project dir);</li>
+<li>each <code>script</code> activity’s <code>scriptsDir</code> (rel. dataRoot);</li>
+<li>each <code>story</code> activity’s <code>scenesDir</code> (rel. dataRoot, default <code>"maps"</code>);</li>
+<li>each <code>ui</code> activity’s <code>guiRoot</code> (rel. project dir).</li>
+</ol>
+<p>Duplicates are removed; directories that do not exist are skipped (an old
+project without <code>assets/scenes/</code> therefore still checks its data-root
+scenes). <code>check</code> prints artifact counts (<code>N scene(s), M layout(s), …</code>) plus
+all diagnostics, and exits 1 when any diagnostic fires, else 0.</p>
+<p>When the manifest has a <code>battle</code> section, <code>check</code> also validates it: the
+referenced table ids (party/enemies/encounters/skills/items) must exist in the data
+activity’s <code>config.tables[]</code>, the referenced stat/skill fields and the items
+<code>healField</code> must exist in the table schemas, an <code>encounters</code> block’s table
+must declare an <code>enemies</code> field, and the rules file (when
+present on disk) must parse as a dotzuki-rules <code>Ruleset</code> AND compile against
+the closed vocabulary — an unknown event, op, or stat/type/resource/status
+name in a hook is a diagnostic, exactly as it would be a boot-time error at
+battle start.
+Battle diagnostics print and fail the exit code like DSL diagnostics.
+Record JSONs are not loaded — the manifest’s table definitions suffice.</p>
+<h2 id="editor-playtest-wasm-runner"><a class="header" href="#editor-playtest-wasm-runner">Editor playtest (WASM runner)</a></h2>
+<p>The editor’s <code>play</code> activity runs the same <code>RunnerGame</code> <strong>in the browser</strong> via
+<code>crates/dotzuki-runner-web</code> (wasm-bindgen), so playtesting needs no Rust
+toolchain. The contract with the runner:</p>
+<ul>
+<li><strong>Bundle.</strong> <code>GET /api/play/bundle</code> returns the whole project as
+<code>{ files: { "&lt;project-relative posix path&gt;": "&lt;base64&gt;" }, projectRoot }</code>,
+excluding <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, <code>*.bak</code> and dotfiles other
+than <code>.dotzuki-editor.json</code> (16 MB/file, 64 MB total caps). Paths keep the
+<code>data/maps/&lt;id&gt;/script.scene</code> shape the runner’s scene↔map matching expects.</li>
+<li><strong>Boot.</strong> The bundle feeds <code>vfs::MemoryFiles</code> and
+<code>LoadedProject::load_with_files</code> — the exact boot path of <code>dotzuki run</code>,
+minus the disk. <code>RunnerOptions</code> force <code>watch=false</code>, headless (no audio
+device), <code>pcm_audio=true</code> and no disk saves.</li>
+<li><strong>Frames.</strong> The page calls <code>tick(input_bitmask)</code> at ~59.7 Hz and blits the
+returned 320×240 RGBA frame. Input bitmask matches <code>GbButton</code> bit order
+(bit0=A … bit7=Down).</li>
+<li><strong>Audio.</strong> Instead of a cpal device, the runner renders APU PCM per tick
+(<code>RunnerGame::render_audio</code>, 44.1 kHz stereo f32); the page drains it via
+<code>take_audio()</code> into a WebAudio queue (<code>usePlayAudio</code>). Same sequencer/fade
+path as native, just a pull model instead of the callback thread.</li>
+<li><strong>Saves.</strong> <code>export_save()</code>/<code>import_save(json)</code> replace <code>.dotzuki-save.json</code>;
+the editor persists them to <code>localStorage</code>. <code>export_save</code> returns nothing
+while a scene/battle/shop/warp transition is suspended — the editor simply
+retries on its interval.</li>
+</ul>
+<p>Differences from native <code>dotzuki run</code>: no file watching (the
+editor’s <strong>Restart</strong> button re-fetches the bundle and reboots, restoring the
+save), audio output goes through the browser’s <code>AudioContext</code> instead of a
+cpal device, and battle RNG is seeded without wall-clock time. Everything
+else — maps, dialogue, choices, battles, shops, menus, game-over flow — is
+the same code.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../how-to/publishing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/data-tables/combatants.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../how-to/publishing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/data-tables/combatants.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

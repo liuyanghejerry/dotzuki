@@ -1,0 +1,847 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The Effect-Stack Battle Engine - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-3b83be04.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-c9fa81a0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./explanation/effect-stack.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="the-effect-stack-battle-engine"><a class="header" href="#the-effect-stack-battle-engine">The effect-stack battle engine</a></h1>
+<p>This page explains the design of <code>dotzuki_engine::battle::stack</code> — the
+Showdown-style effect-stack battle engine: its execution model, its
+event/effect/handler architecture, RNG determinism, and the limits of the
+current design.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: battle authors, engine contributors</li>
+<li><strong>Type</strong>: explanation</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>Scope.</strong> This page covers the design of <strong><code>dotzuki_engine::battle::stack</code></strong> —
+the Showdown-style <strong>effect-stack</strong> battle engine — and why it is shaped the
+way it is. The authoring half — declaring events, effects, and handlers,
+writing <code>rules.ron</code>, the minimon walkthrough, type charts, resource costs, and
+testing — lives in <a href="../how-to/battles.html"><code>how-to/battles.md</code></a>.</p>
+<p>The battle stack is a <strong>separate topic</strong> from the broader engine guide
+(<a href="../archive/developer-guide-legacy.html"><code>archive/developer-guide-legacy.md</code></a>),
+which covers maps, NPCs, scripting, rendering, menus, items, and save. That
+guide predates the battle stack and its §6 (“战斗与怪物系统”) describes only the
+<em>legacy</em> <code>battle::driver</code>/<code>BattleProvider</code> path — it does <strong>not</strong> cover
+<code>battle::stack</code>. Read it for everything outside battle; read this page and
+the battles how-to for battle.</p>
+<p>Design background: §06
+(the stack design), §09
+(the generalization design), §10
+(the GO-WITH-NITS result).</p>
+</blockquote>
+<hr>
+<h2 id="table-of-contents"><a class="header" href="#table-of-contents">Table of contents</a></h2>
+<ol>
+<li><a href="#1-overview--mental-model">Overview &amp; mental model</a></li>
+<li><a href="#2-core-concepts">Core concepts</a></li>
+<li><a href="#3-honest-limits--roadmap">Honest limits &amp; roadmap</a></li>
+</ol>
+<hr>
+<h2 id="1-overview--mental-model"><a class="header" href="#1-overview--mental-model">1. Overview &amp; mental model</a></h2>
+<p>The battle stack is an <strong>effect-stack</strong> engine in the style of Showdown
+(it is <em>pattern C</em>: native-Rust <strong>zero-capture <code>fn</code>-pointer</strong> handlers, <strong>not</strong> a
+scripting VM). One sentence holds the whole design:</p>
+<blockquote>
+<p><strong>Everything is an <code>Effect</code> that subscribes to <code>Event</code>s. The engine sequences
+the events and folds the handlers; your handlers decide what happens.</strong></p>
+</blockquote>
+<p>There is <strong>no <code>Ability</code> system, no <code>Item</code> system, no weather system, no
+hazard system</strong> inside the engine. Each of those is <em>just an <code>Effect</code> hosted
+somewhere</em> (on a battler, a side, or the field) that registers handlers for the
+events it cares about. The engine reaches them through <strong>defaulted resolver
+methods</strong> you implement on a provider trait — nothing more.</p>
+<p>The consequence: the <strong>physical/special split</strong> — usually a structural battle
+decision — needs <strong>zero engine changes</strong>. Stats are a generic
+<code>EnumMap&lt;P::Stat, u16&gt;</code> keyed by <em>your</em> opaque stat enum, and the damage formula
+lives in <em>your</em> <code>calculate_damage</code>. A Gen-1 game keys <code>{Hp,Atk,Def,Spe,Spc}</code>; a
+split game keys <code>{Hp,Atk,Def,SpA,SpD,Spe}</code> and picks the stat pair by the move’s
+category. The engine never sees the category — it hands you whole battler states
+and takes a number back.</p>
+<h3 id="what-lives-where"><a class="header" href="#what-lives-where">What lives where</a></h3>
+<pre><code>dotzuki_engine::battle::stack         the effect-stack engine (game-AGNOSTIC)
+├── event       Event enum, RelayVar, HandlerResult, Effect/EventHook, HandlerFn
+├── ctx         EffectProvider (the trait you implement), BattleCtx, EffectState,
+│               EffectHost, MoveContext
+├── dispatch    collect_handlers, compare, run_event / run_event_checked
+├── driver      StackDriver (a built-in turn sequence), FirstMover, StackTurnResult
+└── authoring   the `effect!` macro
+
+dotzuki_engine::battle                BattleProvider (supertrait), BattleState,
+│                                  BattlerState, BattlerRef, BattleAction, EnumMap
+└── rng         BattleRng trait, ScriptedRng
+
+examples/minimon                   the canonical "how a developer uses this"
+</code></pre>
+<p>The flow of one dispatch:</p>
+<pre><code>your driver code             the engine                       your handlers
+─────────────────            ─────────────────                ──────────────
+collect_handlers(...)  ──►    walk EVERY live source           (a snapshot of
+                             (source effect + both              fn-pointers, by value)
+                              battlers' ability/item/
+                              volatile/status + side + field)
+run_event(ctx, hs, relay) ─► sort by comparePriority,
+                             RNG-permute only the ties,
+                             then FOLD:
+                               for each handler:        ──►    fn(ctx, relay, ...)
+                                 relay = handler(relay)         -&gt; HandlerResult
+                             return the final relay
+</code></pre>
+<h2 id="your-handlers-only-touch-the-battle-through-mut-battlectx-they-cannot-capture-or-alias-state-re-entrancy-a-handler-that-wants-to-fire-another-event-is-done-by-your-driver-code-which-holds-the-provider-not-inside-a-handler--see-29-and-the-intimidate-recipe"><a class="header" href="#your-handlers-only-touch-the-battle-through-mut-battlectx-they-cannot-capture-or-alias-state-re-entrancy-a-handler-that-wants-to-fire-another-event-is-done-by-your-driver-code-which-holds-the-provider-not-inside-a-handler--see-29-and-the-intimidate-recipe">Your handlers <strong>only</strong> touch the battle through <code>&amp;mut BattleCtx</code>; they cannot
+capture or alias state. Re-entrancy (a handler that wants to fire another event)
+is done by your <em>driver code</em> (which holds the provider), not inside a handler —
+see <a href="#29-the-provider-resolvers-you-implement">§2.9</a> and
+<a href="../how-to/battles.html#5-cookbook-cross-gen-mechanics--effect-stack-recipes">the Intimidate recipe</a>.</a></h2>
+<h2 id="2-core-concepts"><a class="header" href="#2-core-concepts">2. Core concepts</a></h2>
+<h3 id="21-the-event-taxonomy--what-fires-and-when"><a class="header" href="#21-the-event-taxonomy--what-fires-and-when">2.1 The <code>Event</code> taxonomy — what fires, and when</a></h3>
+<p>Events are a <strong>closed enum of keys with no payload</strong> (the payload rides in a
+typed <a href="#relayvar--the-typed-fold-payload"><code>RelayVar</code></a>). A closed enum (not a
+string-keyed bus) keeps the comparator and the parity tests auditable; the open
+tail <code>Event::Custom(u16)</code> is the escape hatch so a game is never <em>blocked</em>.</p>
+<p>The taxonomy is 31 named kinds in 6 groups, plus the legacy <code>Residual</code>, plus
+<code>Custom</code>. <strong>Important:</strong> the engine’s built-in <code>StackDriver</code> today only <em>fires</em> a
+subset; the rest are present as <strong>subscription seams</strong> — inert until a driver
+extension fires them. You can fire any of them yourself from your own driver code
+via <code>collect_handlers</code> + <code>run_event</code> (that is exactly what minimon does for
+<code>SwitchIn</code>, <code>TryBoost</code>, <code>FieldResidual</code>, <code>WeatherModifyStat</code>).</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Event {
+    // ── Group A — Turn lifecycle ──
+    BeforeTurn, ResidualOrder, AfterTurn,
+
+    // ── Group B — Action / move pipeline ──
+    BeforeMove,        // pre-move status gate (sleep/freeze/para/flinch/recharge) — the veto point
+    ModifyMove,        // mutate the move in flight (multi-hit count, Normalize)
+    ModifyType,        // per-hit type override (Pixilate/Aerilate)
+    ModifyCritRatio,   // crit-threshold fold; CRIT IS DRAWN HERE — before Accuracy
+    Accuracy,          // accuracy fold (the Gen-1 1/256 miss)
+    Invulnerability,   // Fly/Dig gate
+    ModifyDamage,      // final-damage fold (the damage roll; Life Orb, weather, STAB)
+    Effectiveness,     // type-effectiveness fold (Levitate, Wonder Guard)
+    AfterMove,         // per-action cleanup (Hyper Beam recharge set, Life Orb recoil)
+
+    // ── Group C — Hit / damage application ──
+    TryHit,            // pre-damage veto/redirect (Protect, Substitute, Magic Bounce)
+    Damage,            // damage-application fold (Substitute absorb, Sturdy floor-to-1)
+    DamagingHit,       // a hit connected — secondaries, Counter/Bide read, recoil, drain
+    Heal,              // healing fold (Heal Block veto, Big Root)
+    AfterFaint,        // post-KO (Moxie, Aftermath, Destiny Bond)
+
+    // ── Group D — Status &amp; stat changes ──
+    TrySetStatus,      // veto a non-volatile status (Immunity, Safeguard)
+    AfterSetStatus,    // status applied (Synchronize, Toxic Orb)
+    TryBoost,          // veto/modify a stat-stage change (Clear Body, Hyper Cutter)
+    AfterBoost,        // stat change applied (Defiant)
+    ModifyStat,        // persistent stat fold for damage-formula reads (Huge Power, burn ÷2 atk)
+    WeatherModifyStat, // weather/ability stat mults that layer AFTER ModifyStat (Swift Swim)
+
+    // ── Group E — Lifecycle / presence ──
+    Start, End, Faint,
+    SwitchIn,          // a battler entered — Intimidate, Drizzle, Stealth Rock damage
+    SwitchOut,         // a battler is leaving — Regenerator, Natural Cure, Baton Pass
+
+    // ── Group F — Field / side ──
+    SetWeather,        // veto/replace a weather change (Air Lock)
+    FieldResidual,     // field-hosted end-of-turn tick (weather chip, Trick Room countdown)
+    SideResidual,      // side-hosted end-of-turn tick (Spikes, Wish, screen countdown)
+    OnMiss,            // accuracy-miss reaction (fired by StackDriver's miss branch; Jump Kick crash)
+
+    // ── Legacy (kept for the Gen-1 regression slices) ──
+    Residual,          // PER-MOVER end-of-action residual (burn/psn → leech)
+
+    // ── The open tail ──
+    Custom(u16),       // a game-defined dispatch key the engine assigns no meaning
+}
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong><code>Residual</code> vs <code>FieldResidual</code>/<code>SideResidual</code>.</strong> The §1.4 taxonomy folds the
+per-mover <code>Residual</code> into <code>ResidualOrder</code>/<code>FieldResidual</code>/<code>SideResidual</code>, but
+the 88 Gen-1 stack-parity slices fire <code>Residual</code> directly, so it is kept as an
+existing variant (the additive/non-breaking constraint trumps the rename).
+minimon uses the legacy <code>Residual</code> for its item/status-chip ordering recipe and
+<code>FieldResidual</code> for Sandstorm. New games may prefer the §1.4 kinds.</p>
+</blockquote>
+<p>Driver firing invariant you must respect if you reproduce Gen-1: in the built-in
+<code>StackDriver</code>, <strong><code>ModifyCritRatio</code> MUST fire before <code>Accuracy</code></strong> so the crit byte
+is drawn before the accuracy byte (matching the original <code>MoveRandoms</code> field
+order). This ordering is pinned by a standing draw-order guard
+(<code>crit_is_drawn_before_accuracy</code>); do not swap them in a custom driver if you
+want Gen-1 fidelity. See <code>driver.rs:155-167</code>.</p>
+<h3 id="22-effect--eventhook--registering-handlers"><a class="header" href="#22-effect--eventhook--registering-handlers">2.2 <code>Effect</code> / <code>EventHook</code> — registering handlers</a></h3>
+<p>An <code>Effect</code> is an id + a category + a <code>'static</code> sparse table of hooks. Because
+the table is <code>'static</code>, registrations are zero-alloc <code>const</code>/<code>static</code>s.</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Effect&lt;P&gt;   { pub id: EffectId, pub kind: EffectType, pub hooks: &amp;'static [EventHook&lt;P&gt;] }
+pub struct EventHook&lt;P&gt;{ pub event: Event, pub call: HandlerFn&lt;P&gt;,
+                         pub order: u32, pub priority: i32, pub sub_order: Option&lt;u8&gt; }
+
+pub struct EffectId(pub u32);                  // opaque arena key, you assign these
+pub enum   EffectType { Move, Status, Condition }
+// EffectType::sub_order() defaults: Condition = 2, Status = 4, Move = 6
+<span class="boring">}</span></code></pre>
+<p>The ergonomic way to author one is the <strong><code>effect!</code> macro</strong> (re-exported at the
+crate root as <code>dotzuki_engine::effect</code>):</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Syntax: effect!(&lt;id expr&gt;, &lt;EffectType expr&gt;, { &lt;Event&gt; [(&lt;order&gt;)] =&gt; &lt;fn path&gt;, ... })
+//   - &lt;Event&gt; is BARE (e.g. DamagingHit) — the macro qualifies it.
+//   - (&lt;order&gt;) is optional; omitted ⇒ order = u32::MAX (fires LAST).
+//   - priority defaults to 0, sub_order defaults to None (derive from EffectType).
+
+pub static LEFTOVERS: Effect&lt;MinimonProvider&gt; = effect!(EffectId(0xB1), EffectType::Condition, {
+    Residual(20) =&gt; leftovers_residual::&lt;MinimonProvider&gt;,
+});
+<span class="boring">}</span></code></pre>
+<p>You can also write the struct literal by hand when you want explicit <code>priority</code>
+or <code>sub_order</code> (the macro always uses <code>priority: 0, sub_order: None</code>):</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub static INTIMIDATE: Effect&lt;MinimonProvider&gt; = Effect {
+    id: EffectId(0xA1),
+    kind: EffectType::Condition,
+    hooks: &amp;[EventHook {
+        event: Event::SwitchIn,
+        call: intimidate_switch_in::&lt;MinimonProvider&gt;,
+        order: 10, priority: 0, sub_order: None,
+    }],
+};
+<span class="boring">}</span></code></pre>
+<h3 id="23-the-handler-signature--handlerresult--relayvar-fold"><a class="header" href="#23-the-handler-signature--handlerresult--relayvar-fold">2.3 The handler signature + <code>HandlerResult</code> + <code>RelayVar</code> fold</a></h3>
+<p>A handler is a <strong>zero-capture <code>fn</code> pointer</strong>. Its only mutable path into the
+battle is <code>ctx</code>; everything else it receives by value.</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub type HandlerFn&lt;P&gt; = fn(
+    ctx: &amp;mut BattleCtx&lt;'_, P&gt;,   // the ONLY mutable path into the battle
+    relay: RelayVar,              // the typed fold value in flight
+    target: BattlerRef,          // event target
+    source: BattlerRef,          // event source
+    source_effect: EffectId,     // which Effect registered this handler
+) -&gt; HandlerResult;
+<span class="boring">}</span></code></pre>
+<p>A handler returns a verdict that mirrors Showdown’s <code>undefined / value / false / null</code>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Variant</th><th>Meaning</th><th>Effect on the fold</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Unchanged</code></td><td>relay passes through, continue</td><td>Showdown <code>undefined</code></td></tr>
+<tr><td><code>Set(RelayVar)</code></td><td>relay becomes this, continue (or return if <code>fast_exit</code>)</td><td>Showdown returns a value</td></tr>
+<tr><td><code>Fail</code></td><td>STOP, “but it failed!”</td><td>the fold returns <code>RelayVar::Bool(false)</code></td></tr>
+<tr><td><code>FailSilent</code></td><td>STOP, no message</td><td>the fold returns <code>RelayVar::Unit</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="relayvar--the-typed-fold-payload"><a class="header" href="#relayvar--the-typed-fold-payload"><code>RelayVar</code> — the typed fold payload</a></h4>
+<p>Events carry no payload; it rides in <code>RelayVar</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum RelayVar { Unit, Int(i64), Damage(u16), Accuracy(u8), Bool(bool) }
+<span class="boring">}</span></code></pre>
+<p>Typed accessors are <strong>lossy</strong> (the wrong lane yields <code>0</code>/<code>false</code>), and <code>scale</code> is
+the <code>×num/den</code> modifier shape that keeps the relay in its lane (and guards <code>/0</code>
+via <code>den.max(1)</code>):</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn as_int(self) -&gt; i64;        fn as_damage(self) -&gt; u16;
+fn as_accuracy(self) -&gt; u8;    fn as_bool(self) -&gt; bool;
+fn scale(self, num: u32, den: u32) -&gt; RelayVar;   // e.g. ×1.5 == relay.scale(3, 2)
+<span class="boring">}</span></code></pre>
+<p>A handler that contributes a ×1.5 boost just returns <code>Set(relay.scale(3, 2))</code>; a
+veto returns <code>Fail</code>; an observer that only side-effects (residual chip, recoil)
+mutates through <code>ctx</code> and returns <code>Unchanged</code>.</p>
+<h3 id="24-ordering--order--priority-and-the-comparepriority-knobs"><a class="header" href="#24-ordering--order--priority-and-the-comparepriority-knobs">2.4 Ordering — <code>order</code> / <code>priority</code> and the comparePriority knobs</a></h3>
+<p>When you fold, <code>run_event</code> sorts the collected handlers by this <strong>exact</strong> lexical
+order, then RNG-permutes only the tied runs:</p>
+<pre><code>order  →  priority  →  speed  →  sub_order  →  effect_order
+asc        desc        desc      asc            asc
+(LOW 1st)  (HIGH 1st)  (HIGH)    (LOW 1st)      (LOW 1st)
+</code></pre>
+<p>What you control per <code>EventHook</code>:</p>
+<ul>
+<li><strong><code>order</code></strong> (<code>u32</code>, default <code>u32::MAX</code> = fires last) — the <strong>primary,
+cross-source</strong> ordering knob. This is the one you reach for most. minimon’s
+poison chip at <code>Residual(10)</code> vs Leftovers heal at <code>Residual(20)</code> makes
+chip-before-heal hold across two <em>different</em> effect sources (a status effect
+and an item effect collected on one dispatch).</li>
+<li><strong><code>priority</code></strong> (<code>i32</code>, default <code>0</code>, HIGH first) — a secondary bracket within
+equal <code>order</code>.</li>
+<li><strong><code>sub_order</code></strong> (<code>Option&lt;u8&gt;</code>, <code>None</code> ⇒ derive from the <code>EffectType</code>).</li>
+</ul>
+<p>Engine-controlled tiers:</p>
+<ul>
+<li><strong><code>speed</code></strong> is currently always <code>0</code> (the engine cannot name a “speed” stat from
+the opaque <code>P::Stat</code>). If you need a speed tier, you sequence it yourself in
+your driver (e.g. iterate battlers fastest-first).</li>
+<li><strong><code>effect_order</code></strong> is the arena creation counter, falling back to the
+effect <code>id</code> for moves/abilities/items with no arena entry.</li>
+<li>Exact ties are broken by <strong>one RNG byte per adjacent pair</strong> (<code>&lt; 128</code> flip) — the
+only handler-order randomness (<code>speed_sort_tiebreak</code>, <code>dispatch.rs:241</code>).</li>
+</ul>
+<h3 id="25-the-handler-context-battlectx"><a class="header" href="#25-the-handler-context-battlectx">2.5 The handler context <code>BattleCtx</code></a></h3>
+<p>The split-borrow handle handed to every handler. Public fields:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct BattleCtx&lt;'a, P&gt; {
+    pub state:   &amp;'a mut BattleState&lt;P&gt;,        // the two party Vecs
+    pub effects: &amp;'a mut Vec&lt;EffectState&lt;P&gt;&gt;,   // the per-effect-instance arena, sorted by id
+    pub mv:      &amp;'a mut MoveContext,           // per-move scratch
+    pub rng:     &amp;'a mut dyn BattleRng,         // the ONLY randomness source
+}
+<span class="boring">}</span></code></pre>
+<p>Accessors:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn battler(&amp;self, r: BattlerRef)            -&gt; &amp;BattlerState&lt;P&gt;;
+fn battler_mut(&amp;mut self, r: BattlerRef)    -&gt; &amp;mut BattlerState&lt;P&gt;;
+fn pair_mut(&amp;mut self, a: BattlerRef, b: BattlerRef) -&gt; (&amp;mut BattlerState&lt;P&gt;, &amp;mut BattlerState&lt;P&gt;); // two disjoint refs
+fn effect(&amp;self, id: EffectId)              -&gt; Option&lt;&amp;EffectState&lt;P&gt;&gt;;      // binary search
+fn effect_mut(&amp;mut self, id: EffectId)      -&gt; Option&lt;&amp;mut EffectState&lt;P&gt;&gt;;
+<span class="boring">}</span></code></pre>
+<p><code>pair_mut</code> is the engine’s sole hot-path <code>unsafe</code>: cross-side refs index two
+different <code>Vec</code>s (provably disjoint) so it returns two raw-pointer-derived
+<code>&amp;mut</code>; same-side it uses a safe <code>split_at_mut</code>. It <code>debug_assert!</code>s <code>a != b</code>.
+This is the borrow-checker trick that lets a Counter-shaped handler <strong>mutate
+<code>target</code> while reading <code>source</code></strong> with no <code>RefCell</code>/<code>Rc</code>.</p>
+<p><code>BattlerState</code> exposes <code>hp: u16</code>, <code>max_hp: u16</code>, <code>stats: EnumMap&lt;P::Stat, u16&gt;</code>,
+<code>stat_stages: EnumMap&lt;P::Stat, i8&gt;</code>, <code>status: Option&lt;P::Status&gt;</code>, plus
+<code>take_damage(amount)</code> and <code>heal(amount)</code>.</p>
+<h3 id="26-movecontext--per-move-scratch"><a class="header" href="#26-movecontext--per-move-scratch">2.6 <code>MoveContext</code> — per-move scratch</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct MoveContext {
+    pub is_critical: bool,   // whether the in-flight move is a crit
+    pub damage: u16,         // the rolled/precomputed damage the driver applies
+    pub move_missed: bool,   // whether it missed
+    pub last_damage: u16,    // the last damage actually dealt (the canonical Counter/Bide read)
+}
+<span class="boring">}</span></code></pre>
+<p>This is the scratch shared across one move’s event chain. The built-in driver
+precomputes damage into <code>mv.damage</code>, then <code>ModifyDamage</code> handlers fold it, then
+the driver applies it and writes <code>mv.last_damage</code> before firing <code>DamagingHit</code>
+(<code>driver.rs:173-188</code>). Recoil/drain handlers on <code>DamagingHit</code> read
+<code>ctx.mv.last_damage</code>.</p>
+<h3 id="27-the-effectstate-arena--effecthost"><a class="header" href="#27-the-effectstate-arena--effecthost">2.7 The <code>EffectState</code> arena + <code>EffectHost</code></a></h3>
+<p>A live effect’s mutable per-instance state lives in an <strong>arena</strong> (<code>Vec&lt;EffectState&lt;P&gt;&gt;</code>,
+kept sorted by id for binary search):</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct EffectState&lt;P&gt; {
+    pub id: EffectId,                    // arena key
+    pub host: BattlerRef,                // the battler this effect is attached to
+    pub effect_order: u64,               // monotonic creation tiebreak (RNG-free)
+    pub kind: P::EffectStateKind,        // YOUR typed per-effect counter enum
+}
+impl EffectState&lt;P&gt; { fn host_scope(&amp;self) -&gt; EffectHost; }
+<span class="boring">}</span></code></pre>
+<p><code>P::EffectStateKind</code> is your game’s typed counter enum (e.g. a Toxic counter, a
+Substitute hp value, a multi-turn lock counter). The compiler checks every
+counter — there is no positional slot bag. Read/write it through
+<code>ctx.effect_mut(id)</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if let Some(es) = ctx.effect_mut(EffectId(7)) {
+    if let MyKind::Toxic { counter } = &amp;mut es.kind { *counter = counter.saturating_add(1); }
+}
+<span class="boring">}</span></code></pre>
+<p><code>EffectHost</code> is the 3-way scope the engine routes by:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum EffectHost { Battler(BattlerRef), Side(u8) /* 0=player,1=opponent */, Field }
+<span class="boring">}</span></code></pre>
+<p><strong>Important non-breaking detail:</strong> <code>EffectState.host</code> stays <code>BattlerRef</code> (so every
+existing Gen-1 slice’s struct literal compiles verbatim), and arena state is
+<strong>always battler-hosted today</strong> — <code>host_scope()</code> returns
+<code>EffectHost::Battler</code>. Side- and field-hosted state is <em>not</em> stored in the arena;
+it lives in <strong>your game</strong>, and you surface its effects through the
+<code>side_effects</code>/<code>field_effects</code> resolvers (see <a href="#29-the-provider-resolvers-you-implement">§2.9</a>).
+<code>From&lt;BattlerRef&gt;</code> and <code>PartialEq</code> cross-impls let routing code treat a
+<code>BattlerRef</code> and an <code>EffectHost::Battler</code> interchangeably.</p>
+<h3 id="28-battlerng--the-only-randomness-and-determinism"><a class="header" href="#28-battlerng--the-only-randomness-and-determinism">2.8 <code>BattleRng</code> — the only randomness, and determinism</a></h3>
+<p>The engine links <strong>no</strong> rng crate. All randomness flows through the <code>BattleRng</code>
+trait, so <em>your game</em> owns the generator and therefore the <strong>exact draw order</strong>
+(essential for Gen-1 quirks).</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait BattleRng {
+    fn next_u8(&amp;mut self) -&gt; u8;                               // required, the 8-bit primitive
+    fn range(&amp;mut self, bound: u32) -&gt; u32 { /* defaulted */ } // override for exact modulo bias
+    fn chance(&amp;mut self, num: u32, den: u32) -&gt; bool { /* defaulted: range(den) &lt; num */ }
+}
+<span class="boring">}</span></code></pre>
+<p>For tests, <code>ScriptedRng::new(bytes)</code> replays a fixed byte script (repeating the
+last byte after exhaustion) and exposes <code>consumed() -&gt; usize</code> for draw-order
+parity assertions.</p>
+<h3 id="29-the-provider-resolvers-you-implement"><a class="header" href="#29-the-provider-resolvers-you-implement">2.9 The provider resolvers you implement</a></h3>
+<p>You implement <strong><code>EffectProvider</code></strong> (which extends <code>BattleProvider</code>). This is the
+entire “abilities/items/weather/side-conditions are just Effects” mechanism: a
+set of resolvers + the collection pass. There is <strong>no <code>Ability</code> dispatcher</strong>.</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait EffectProvider: BattleProvider + 'static {
+    type EffectStateKind: Clone;   // your typed per-effect counter enum
+
+    // ── Required ──
+    fn effect_for_move  (&amp;self, m: &amp;Self::Move)   -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt;;
+    fn effect_for_status(&amp;self, s: &amp;Self::Status) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt;;
+    fn turn_order_rank(&amp;self, state: &amp;BattleState&lt;Self&gt;, who: BattlerRef,
+                       action: &amp;Self::Move) -&gt; (i32, i32);   // RNG-FREE; lower acts first
+
+    // ── Defaulted to None/empty → the broadened collector reduces to single-source ──
+    fn effect_for_volatile(&amp;self, kind: &amp;Self::EffectStateKind) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; { None }
+    fn effect_for_ability (&amp;self, b: &amp;BattlerState&lt;Self&gt;)       -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; { None }
+    fn effect_for_item    (&amp;self, b: &amp;BattlerState&lt;Self&gt;)       -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; { None }
+    fn side_effects (&amp;self, ctx: &amp;BattleCtx&lt;'_, Self&gt;, side: u8) -&gt; &amp;[&amp;'static Effect&lt;Self&gt;] { &amp;[] }
+    fn field_effects(&amp;self, ctx: &amp;BattleCtx&lt;'_, Self&gt;)          -&gt; &amp;[&amp;'static Effect&lt;Self&gt;] { &amp;[] }
+
+    // ── Cross-turn lock-in (Thrash/Hyper Beam/Fly): swap one action for another ──
+    fn forced_action(&amp;self, effects: &amp;[EffectState&lt;Self&gt;], actor: BattlerRef,
+                     chosen: &amp;BattleAction&lt;Self&gt;) -&gt; Option&lt;BattleAction&lt;Self&gt;&gt; { None }
+}
+<span class="boring">}</span></code></pre>
+<p>Because all five collection resolvers default to <code>None</code>/<code>&amp;[]</code>, a game with no
+abilities/items/weather/side-conditions sees the broadened collector reduce
+<strong>exactly</strong> to single-source behavior — zero new handlers, zero behavioral
+change, identical <code>consumed()</code> draw order. You light up a system by implementing
+its resolver.</p>
+<p><code>BattleProvider</code> (the supertrait) binds the associated types
+<code>Monster / Move / Ability / Status / Stat / Species / Type / Item</code> and owns the
+damage formula:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn calculate_damage(&amp;self, move_: &amp;Self::Move, attacker: &amp;BattlerState&lt;Self&gt;,
+                    defender: &amp;BattlerState&lt;Self&gt;, random: u8, is_critical: bool) -&gt; DamageResult;
+// DamageResult { damage: u16, effectiveness: f32, is_miss: bool }
+<span class="boring">}</span></code></pre>
+<p><strong>This is where the physical/special split lives</strong> — no engine change required.</p>
+<h3 id="210-dispatch-primitives-what-your-driver-calls"><a class="header" href="#210-dispatch-primitives-what-your-driver-calls">2.10 Dispatch primitives (what your driver calls)</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Gather hooks subscribing to `ev` from EVERY live source into an owned snapshot:
+//   1. the source effect (the move/volatile that triggered the dispatch)
+//   2. live volatiles on target &amp; source (arena scan → effect_for_volatile)
+//   3. each relevant battler's ability + item (effect_for_ability / effect_for_item)
+//   4. both sides' side_effects
+//   5. field_effects
+fn collect_handlers&lt;P&gt;(ctx: &amp;BattleCtx&lt;P&gt;, provider: &amp;P, src_eff: Option&lt;&amp;'static Effect&lt;P&gt;&gt;,
+                       ev: Event, target: BattlerRef, source: BattlerRef,
+                       out: &amp;mut Vec&lt;CollectedHandler&lt;P&gt;&gt;);
+
+// Sort by compare, RNG-permute ties, then fold the relay through each handler:
+fn run_event&lt;P&gt;(ctx: &amp;mut BattleCtx&lt;P&gt;, hs: Vec&lt;CollectedHandler&lt;P&gt;&gt;, relay: RelayVar,
+                fast_exit: bool) -&gt; RelayVar;
+fn run_event_checked&lt;P: EffectProvider + ?Sized&gt;(ctx: &amp;mut BattleCtx&lt;'_, P&gt;, mut hs: Vec&lt;CollectedHandler&lt;P&gt;&gt;,
+                                               mut relay: RelayVar, fast_exit: bool) -&gt; RelayVar;   // + a per-step liveness re-check (skip a dead target)
+fn compare&lt;P: EffectProvider + ?Sized&gt;(a: &amp;CollectedHandler&lt;P&gt;, b: &amp;CollectedHandler&lt;P&gt;) -&gt; Ordering;
+<span class="boring">}</span></code></pre>
+<ul>
+<li><code>collect_handlers</code> takes only <code>&amp;BattleCtx</code> (shared) and fills an <strong>owned</strong> <code>Vec</code>
+of <code>CollectedHandler</code> (fn-pointer + ids + <code>BattlerRef</code>s by value). No borrow
+into the arena survives into the fold — this is the collect-then-fold borrow
+discipline that makes zero-capture handlers and re-entrant dispatch coexist
+without <code>RefCell</code>.</li>
+<li><code>fast_exit: true</code> returns on the first <code>Set</code> (the redirection / first-blood
+shape, e.g. <code>TryHit</code> target redirect).</li>
+<li>Use <code>run_event_checked</code> when a fold can KO a later handler’s target (e.g.
+multi-target weather chip): it re-reads <code>hp &gt; 0</code> before each call and skips a
+dead target. Plain <code>run_event</code> does <strong>not</strong> re-check.</li>
+</ul>
+<h3 id="211-narrating-a-turn--the-turnlog"><a class="header" href="#211-narrating-a-turn--the-turnlog">2.11 Narrating a turn — the <code>TurnLog</code></a></h3>
+<p><code>StackDriver::execute_turn</code> returns only <code>StackTurnResult { first, second_cancelled }</code> — enough to <em>sequence</em> a turn, not to <em>narrate</em> it. A frontend
+that renders a battle (text, HP-bar drain, faint animation) needs to know <strong>what
+happened</strong>. That is <code>execute_turn_logged</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let (result, log): (StackTurnResult, TurnLog&lt;P&gt;) =
+    StackDriver::execute_turn_logged(provider, state, effects, actions, rng);
+for ev in &amp;log.events { /* … render … */ }
+<span class="boring">}</span></code></pre>
+<p><code>TurnLog&lt;P&gt;</code> is an ordered <code>Vec&lt;TurnEvent&lt;P&gt;&gt;</code>. The vocabulary is the universal
+JRPG turn surface, keyed by the engine’s existing generic associated types
+(<code>P::Move</code> / <code>P::Status</code> / <code>P::Stat</code>) + <code>BattlerRef</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum TurnEvent&lt;P: EffectProvider + ?Sized&gt; {
+    MoveUsed   { actor: BattlerRef, move_: P::Move },   // passed the gate + cost → executes
+    Missed     { actor: BattlerRef },                   // accuracy / immunity miss
+    Blocked    { actor: BattlerRef },                   // PREVENTED before it ran (see below)
+    Crit       { actor: BattlerRef },                   // landed a critical hit
+    Damaged    { target: BattlerRef, amount: u16, cause: Option&lt;HpChangeCause&lt;P&gt;&gt; },
+    Healed     { target: BattlerRef, amount: u16, cause: Option&lt;HpChangeCause&lt;P&gt;&gt; },
+    StatusInflicted { target: BattlerRef, status: P::Status },
+    StatusCured     { target: BattlerRef, status: P::Status },
+    StatChanged     { target: BattlerRef, stat: P::Stat, delta: i8 },
+    Fainted    { who: BattlerRef },
+}
+<span class="boring">}</span></code></pre>
+<p><strong>It is ADDITIVE + DEFAULTED.</strong> <code>execute_turn</code> is <code>execute_turn_logged</code> with the
+log discarded; the no-log path observes nothing and is <strong>byte-identical</strong> (same
+<code>rng</code> draw order, same final <code>BattleState</code>, same <code>StackTurnResult</code>). The log is
+recorded by a structural <strong>snapshot + diff</strong> at the driver’s existing event sites —
+the engine never changes a turn to log it.</p>
+<p>Two design rules that keep the engine game-agnostic:</p>
+<ul>
+<li><strong>The engine reports STRUCTURAL truth; the game supplies PRESENTATION.</strong> The log
+carries the damage <em>amount</em> but not the effectiveness <em>category</em> (“super
+effective”) — that is a game concept (some games have no type chart), so the
+frontend re-derives it from the move’s type vs the defender’s types
+(<a href="../how-to/battles.html#2-type-effectiveness-相克--type-charts">battles how-to §2</a>).
+Same for wording, animation choice, and language.</li>
+<li><strong><code>Blocked</code> is generic.</strong> When a <code>BeforeMove</code> gate aborts a move (asleep / frozen
+/ fully paralyzed / a confusion self-hit) or the actor can’t pay its cost
+(see <a href="../how-to/battles.html#43-the-beforemove-cost-gate">battles how-to §4.3</a>), the
+driver logs <code>Blocked { actor }</code> and <strong>no <code>MoveUsed</code></strong>. The engine
+reports only <em>that</em> the move was prevented; the game derives the <em>reason</em>
+(“is fast asleep!”) from the actor’s status / volatiles. This is the event that
+lets a frontend show the “can’t move” line a turn would otherwise be silent
+about.</li>
+</ul>
+<h2 id="a-game-side-translator-turns-the-log-into-whatever-the-frontend-consumes-text-lines-an-animation-queue-see-the-battles-how-to-5-for-the-recipe-the-pokered-case-study-lives-in-the-pokered-game-repository-post-split-rather-than-in-this-repo"><a class="header" href="#a-game-side-translator-turns-the-log-into-whatever-the-frontend-consumes-text-lines-an-animation-queue-see-the-battles-how-to-5-for-the-recipe-the-pokered-case-study-lives-in-the-pokered-game-repository-post-split-rather-than-in-this-repo">A game-side <strong>translator</strong> turns the log into whatever the frontend consumes (text
+lines, an animation queue). See the
+<a href="../how-to/battles.html#5-cookbook-cross-gen-mechanics--effect-stack-recipes">battles how-to §5</a> for
+the recipe; the pokered case study lives in the pokered game repository
+(post-split) rather than in this repo.</a></h2>
+<h2 id="3-honest-limits--roadmap"><a class="header" href="#3-honest-limits--roadmap">3. Honest limits &amp; roadmap</a></h2>
+<p><strong>Proven</strong> — single-battle (1v1), authored end-to-end in <code>examples/minimon</code> with
+<strong>zero <code>dotzuki-engine</code> edits</strong> beyond the additive/defaulted seams; verdict
+<strong>GO-WITH-NITS</strong> in</p>
+<ul>
+<li>The physical/special split (provider <code>calculate_damage</code> + <code>P::Stat</code>).</li>
+<li>An ability on <code>SwitchIn</code> (Intimidate) and an ability <strong>veto</strong> on <code>TryBoost</code>
+(Clear Body) — both abilities, hosted on <em>different</em> battlers, collected on
+<strong>one</strong> dispatch in comparator order.</li>
+<li>A held-item residual ordered <strong>after</strong> a status chip via <code>order</code> (cross-source
+residual ordering — the case the <code>order</code> tier exists for).</li>
+<li>Field-hosted weather (Sandstorm) with <code>FieldResidual</code> chip <strong>and</strong>
+<code>ModifyStat → WeatherModifyStat</code> stat-fold layering, on <code>EffectHost::Field</code>.</li>
+<li>Borrow safety: collect-then-fold owned snapshot + per-step liveness re-check,
+<strong>no <code>RefCell</code>/<code>Rc</code></strong>, exactly <strong>one</strong> <code>unsafe</code> (the cross-side <code>pair_mut</code>). The
+88 Gen-1 parity slices stay green unchanged (additivity proven).</li>
+</ul>
+<p><strong>DONE since the original GO-WITH-NITS</strong> (each additive, each byte-identical when
+inert; all three authored end-to-end in minimon and proven by parity tests):</p>
+<ul>
+<li><strong>Type effectiveness / type charts.</strong> ✅ The <code>Effectiveness</code> fold is now <em>fired</em>
+in the move path (<code>driver.rs:206-208</code> + minimon <code>fire_move</code>); an integer
+<code>RelayVar::scale</code> rational composes with provider damage. Authored natively (a
+const chart + handler) <strong>or</strong> as RON <code>type_chart:</code> data (<code>ApplyTypeChart</code>).
+Outcomes <code>(160, 80, 40, 0)</code> asserted. See
+<a href="../how-to/battles.html#2-type-effectiveness-相克--type-charts">battles how-to §2</a>
+and §12</li>
+<li><strong>No-code RON authoring (dual-mode).</strong> ✅ The <code>dotzuki-rules</code> loader parses
+<code>rules.ron</code> into runtime <code>Effect</code>s via a single <code>interpret()</code> keyed by
+<code>EffectId</code> (Option A, zero engine change) over a closed primitive-op vocabulary,
+with load-time validation and a <strong>baked (<code>include_str!</code>, release) /
+hot-reload-from-disk (the <code>hot-reload</code> cargo feature, dev)</strong> source-of-truth that
+guarantees baked==disk parity and safe reload-between-turns. See
+<a href="../how-to/battles.html#3-no-code-authoring-with-rulesron-the-dotzuki-rules-loader">battles how-to §3</a>
+and §11</li>
+<li><strong>MP / resources &amp; move costs.</strong> ✅ A P-independent <code>u16</code>-keyed <code>ResourcePool</code>
+on <code>BattlerState</code>, a defaulted <code>BattleProvider::move_cost</code> hook, and a
+<code>BeforeMove</code> cost gate (cannot pay ⇒ move prevented, else deduct; consumes no
+rng; inert with empty cost/pool), plus a RON <code>cost:</code> field + <code>PayResource</code>
+primitive + <code>LoadError::UnknownResource</code>. See
+<a href="../how-to/battles.html#4-resources-mpsp--move-costs">battles how-to §4</a>
+and §13</li>
+<li><strong>Turn narration — the <code>TurnLog</code>.</strong> ✅ <code>StackDriver::execute_turn_logged</code> returns
+a generic <code>TurnLog&lt;P&gt;</code> of <code>TurnEvent</code>s (move used / miss / <strong>blocked</strong> / crit /
+damage / heal / status / stat-change / faint) for a frontend to render. Additive
+<ul>
+<li>defaulted: <code>execute_turn</code> is the no-log path and is byte-identical (recorded by
+a structural snapshot+diff at the existing event sites). The engine reports
+structural truth; the game re-derives presentation. See
+<a href="#211-narrating-a-turn--the-turnlog">§2.11</a>; the pokered case study lives in
+the pokered game repository (post-split).</li>
+</ul>
+</li>
+</ul>
+<p><strong>Still pending</strong> (data model gaps, not regressions):</p>
+<ul>
+<li><strong>Nested-veto primitive.</strong> The Intimidate ↔ Clear Body vetoable cascade is still
+<strong>driver orchestration</strong> (record intent → driver fires the sub-<code>TryBoost</code>); it is
+not yet expressible purely in data. The RON <code>Boost</code>/<code>VetoIf</code> ops apply directly;
+the nested <code>TryBoost</code>/<code>TrySetStatus</code> cascade between two records is not a
+primitive (doc 11 §3, Phase 2).</li>
+<li><strong>Novel per-effect counter state.</strong> Effects with their own running counter
+(Counter / Bide / Substitute hp) need typed <code>EffectStateKind</code> arena state, which
+the RON vocabulary does not yet mint — they remain native-Rust effects.</li>
+<li><strong>Doubles / grid.</strong> A different battle model (multi-target, redirection);
+unchanged from below.</li>
+</ul>
+<p><strong>Documented nit (not a kill signal).</strong> <code>HandlerFn</code> gives <code>&amp;mut BattleCtx</code> but
+<strong>not <code>&amp;P</code></strong>, so a handler <strong>cannot re-enter dispatch</strong>. “An ability fires another
+vetoable event” is a <strong>driver-orchestration</strong> pattern (record intent → driver
+fires the sub-event). Design §09 §4.2b’s <code>try_boost(ctx, …)</code>-from-inside-a-handler
+sketch is optimistic on this point; see the “one nit” in §10.</p>
+<p><strong>Follow-up — explicitly out of scope, NOT regressions</strong> (per §10):</p>
+<ul>
+<li><strong>Doubles / multi-target.</strong> A <code>redirect_target</code> seam exists but is <strong>defaulted,
+inert, and unproven</strong>; minimon is 1v1. Follow Me / Lightning Rod redirection
+(<code>TryHit</code> + redirect) is expressible-in-principle, not exercised.</li>
+<li><strong>Full content tables / multi-hit / accuracy / crit RNG.</strong> minimon authors <strong>2
+moves</strong> with a deterministic <code>power*atk/def</code> formula (no rolls) so outcomes are
+hand-checkable. <code>Accuracy</code>, <code>ModifyCritRatio</code>, <code>ModifyMove</code> (multi-hit), and
+many Group D/E/F events are present as <strong>subscription seams</strong> but not yet fired
+by a shipped driver.</li>
+<li><strong>Wiring into pokered’s production loop is staged, not done.</strong> Gen-1 fidelity
+remains a <strong>regression credential</strong> (the 88 slices via the legacy
+<code>battle::driver</code>), not a production swap on the new stack. AI, switching policy,
+and RNG-driven secondaries are not yet exercised on the stack.</li>
+<li><strong><code>EffectHost</code> is additive, not a widened field.</strong> <code>EffectState.host</code> stays
+<code>BattlerRef</code> (so all Gen-1 slices compile verbatim); side/field state is
+addressed via the <code>Side</code>/<code>Field</code> cases + the <code>side_effects</code>/<code>field_effects</code>
+resolvers, which the game owns. Design §09 §3.1’s “widen the field via <code>From</code>”
+did <strong>not</strong> hold (Rust field-init ignores <code>From</code>) — see the NO-GO note in
+<code>ctx.rs</code>.</li>
+</ul>
+<hr>
+<h3 id="see-also"><a class="header" href="#see-also">See also</a></h3>
+<ul>
+<li><a href="../archive/developer-guide-legacy.html"><code>archive/developer-guide-legacy.md</code></a> —
+the broader engine guide (maps, NPCs, scripting, rendering, menus, items,
+save). Its §6 covers the <em>legacy</em> battle driver, not this stack.</li>
+<li>Code: <a href="../../crates/dotzuki-engine/src/battle/stack/"><code>crates/dotzuki-engine/src/battle/stack/</code></a>,
+<a href="../../crates/dotzuki-engine/src/battle/rng.rs"><code>crates/dotzuki-engine/src/battle/rng.rs</code></a>.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../explanation/architecture.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../explanation/game-data.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../explanation/architecture.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../explanation/game-data.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
