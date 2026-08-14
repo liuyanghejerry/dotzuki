@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9fca7053.js";
+            window.path_to_searchindex_js = "searchindex-8b859160.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-692fbbe4.js"></script>
+        <script src="toc-1cb5ac1d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -9427,6 +9427,422 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 会看到第三种结果 <code>"run"</code>），以及半价出售的商店。规则格式见
 <a href="#battles">战斗规则参考</a>。</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="地图"><a class="header" href="#地图">地图</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>如何定义地图：Tiled JSON、tileset、<code>objects.json</code> 伴生文件、海拔与 encounters。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>开始前，请先阅读<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>——它定义了地图目录以及
+这些文件所接入的运行器契约。</p>
+<h2 id="地图文件"><a class="header" href="#地图文件">地图文件</a></h2>
+<p>一张地图由 <code>&lt;mapsDir&gt;/&lt;id&gt;/map.tmx.json</code>（Tiled JSON；名为 <code>collision</code> 的图层标记阻
+挡 tiles，其余图层参与渲染）加上 <code>tileset.png</code>（全彩色 atlas，GID 从 1 开始、按行主
+序排列），再加上一个可选的 objects 伴生文件——<code>objects.json</code>（由编辑器写入）组成，其
+中包含 <code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>、<code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>、
+<code>signs: [{x,y,text}]</code>（面向告示牌 tile 并按 A，以分页对话的形式读出其文本），以及一
+个可选的 <code>encounters</code> 块（见下文）（旧版 <code>map.json</code> 作为后备读取）。走上 warp tile
+（传送点）会淡出切换到目标地图。</p>
+<h2 id="海拔层级"><a class="header" href="#海拔层级">海拔层级</a></h2>
+<p>地图可以是多层的（既能在地面行走，<em>也能</em>在墙顶行走）。每层的碰撞：名为 <code>collision</code>
+（第 0 层）、<code>collision1</code>、<code>collision2</code>、…… 的图层——该层中非零 GID 即为实心；这些图
+层从不渲染。缺失的中间层视作全部实心。名为 <code>stairs</code> 的图层标记过渡 tiles（从不渲
+染）：抵达时 GID 1 上升一层，GID 2 下降一层（限制在地图的层数范围内）。视觉图层可携
+带一个可选的整数自定义属性 <code>level</code>（默认 0）：<code>level &lt;= player elevation</code> 的图层渲染
+在精灵下方，<code>level</code> 高于玩家海拔的图层渲染在精灵上方。只有 <code>collision</code> 图层的地图与
+单层地图表现完全一致。</p>
+<h2 id="随机-encounters"><a class="header" href="#随机-encounters">随机 encounters</a></h2>
+<p>地图通过在 objects 伴生文件中加入 <code>encounters</code> 块来开启野怪战斗——与 pokered 的
+<code>wild_data</code> 结构相同：一个按步触发的 <code>rate</code> 字节，以 <strong>/256</strong> 为单位（<code>25</code> ≈ 每步
+9.8%），加上若干 tile 矩形区域，每个区域各有一张加权表：</p>
+<pre><code class="language-json">"encounters": {
+  "rate": 25,
+  "zones": [
+    { "x": 0, "y": 5, "w": 8, "h": 3,
+      "table": [ { "id": "slime", "weight": 70 }, { "id": "bug-catcher", "weight": 30 } ] }
+  ]
+}
+</code></pre>
+<p>区域坐标以地图 tiles 为单位，矩形<strong>包含</strong>其 <code>w</code>×<code>h</code> 的范围。在区域内 tile 上完成一步
+行走后掷骰一次：一个 rng 字节 <code>&lt; rate</code> 即命中，随后从该区域的 <code>table</code> 做一次加权抽取
+选出 id（<code>weight</code> 是相对值，默认 1）。id 的解析与 <code>startBattle(id)</code> 完全一致——先解析
+encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录——并触发一场
+<strong>sceneless</strong> 战斗（见<a href="#battles">战斗规则</a>）。步进结算优先级为：
+<strong>warp &gt; encounter 掷骰 &gt; 普通行走</strong>——走上 warp tile 从不掷骰，原地转身不算一步。
+<code>encounters</code> 缺失（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
+<p>encounter 记录的 schema 见 <a href="#encounter-records">Encounter 记录</a>；
+sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="主题与样式指南"><a class="header" href="#主题与样式指南">主题与样式指南</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/themes.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>在 <code>.theme</code> / <code>.style</code> 文件（或内联的 <code>@theme</code> / <code>@style</code> 块）中声明颜色与可复用的样式
+集，并把它们应用到 UI 组件上。语法与 codegen 约定见
+<a href="#theme--style-dsl-reference-theme--style">主题与样式参考</a>。</p>
+<p>主题与样式经 <code>dotzuki-engine-dsl</code> 编译成渲染器消费的 JSON。<code>dotzuki check</code> 在内存中校
+验它们而不写任何产物；只有给出输出目录时才会落盘输出（例如游戏 crate 的 <code>build.rs</code>
+通过 <code>compiler::compile_dirs</code>）。</p>
+<h2 id="文件类型与产物"><a class="header" href="#文件类型与产物">文件类型与产物</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>输入</th><th>要求</th><th>编译产物</th></tr>
+</thead>
+<tbody>
+<tr><td><code>foo.theme</code></td><td>至少一个 <code>@theme</code> 块</td><td>每个 <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code>（<code>{"name", "tokens"}</code>）</td></tr>
+<tr><td><code>bar.style</code></td><td>至少一个 <code>@style</code> 块</td><td><code>_auto_styles.json</code>（独立的 <code>.style</code> 文件总是包装为 <code>_auto</code> 场景，与文件名无关；解析出的继承链一并包含在内）</td></tr>
+<tr><td><code>.scene</code> 中的内联 <code>@theme</code></td><td>—</td><td><code>&lt;scene名&gt;_theme_&lt;i&gt;.json</code></td></tr>
+<tr><td><code>.scene</code> 中的内联 <code>@style</code></td><td>—</td><td><code>&lt;scene名&gt;_styles.json</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>所有产物都带有一个 <code>// @generated</code> 头部，后面跟着 JSON。</p>
+<h2 id="使用主题与样式的方式"><a class="header" href="#使用主题与样式的方式">使用主题与样式的方式</a></h2>
+<ol>
+<li><strong>独立文件</strong>——<code>*.theme</code> / <code>*.style</code> 放在 <code>data/</code> 或 DSL 目录下的任意位置；
+<code>dotzuki check</code> 会编译它们。</li>
+<li><strong>内联块</strong>——放在 <code>.scene</code> 顶层的 <code>@theme</code> / <code>@style</code>，随场景一并编译。</li>
+<li><strong>从 GUI 引用</strong>——<code>.gui</code> / <code>ui {}</code> 组件通过 <code>style = "&lt;name&gt;"</code> 应用样式；主题 token
+在属性值中以 <code>@theme.&lt;key&gt;</code> 的形式引用（该值原样传入 JSON，由消费方/渲染器解释）。</li>
+</ol>
+<p>一个最小的独立主题：</p>
+<pre><code class="language-dsl">@theme dark {
+    primary    = "#c9a03d"
+    background = "#1a1a2e"
+    text       = "#eeeeee"
+}
+</code></pre>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="#theme--style-dsl-reference-theme--style">主题与样式语法参考</a></li>
+<li><a href="#gui-dsl-reference">GUI DSL 参考</a></li>
+<li><a href="#dsl-codegen-contract">DSL codegen 约定</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="音频制作指南"><a class="header" href="#音频制作指南">音频制作指南</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/audio.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>声明式 JSON 音轨文件描述四个 GB 硬件通道的音乐与 SFX；22 条命令清单见
+<a href="#audio-command-reference">音频命令参考</a>。</p>
+<h2 id="开始前"><a class="header" href="#开始前">开始前</a></h2>
+<p>阅读<a href="#audio-command-reference">音频命令参考</a>，了解下文用到的命令词汇。</p>
+<p><code>dotzuki run</code> 从 <code>&lt;dataRoot&gt;/audio/</code> 下的声明式 <strong>JSON 音轨文件</strong>播放音乐与音效。没有
+需要编译成的二进制音频格式：一条音轨就是一个 <code>TrackDef</code> 文档，描述四个 Game Boy 硬件
+通道中哪些通道播放哪些命令，运行时音序器直接播放它。</p>
+<p>运行时背后是 <code>dotzuki-audio</code>：一个游戏无关的 GB-APU 仿真加上音序器。权威 schema 见
+<code>crates/dotzuki-audio/src/format.rs</code>。</p>
+<h2 id="目录布局"><a class="header" href="#目录布局">目录布局</a></h2>
+<p>音轨可以放在 <code>&lt;dataRoot&gt;/audio/</code> 下的任意位置（递归加载——下面 <code>music/</code> + <code>sfx/</code> 的划
+分是惯例而非规则）：</p>
+<pre><code>data/audio/
+├── music/
+│   └── town.json          # {"id": "town", "kind": "music", ...}
+└── sfx/
+    └── confirm.json       # {"id": "confirm", "kind": "sfx", ...}
+</code></pre>
+<p><strong><code>id</code></strong> 字段是稳定标识符：场景代码通过 <code>id</code> 引用音轨（例如 <code>playMusic("town")</code>、
+<code>playSound("confirm")</code>），而不是文件名。</p>
+<p><strong>音频完全是可选的。</strong> 没有 <code>data/audio/</code> 的项目也能正常运行：每条音频命令都是静默的
+空操作。在没有输出设备的主机上（CI、无头模式），运行时会记录一条警告并保持静默；
+<code>--headless</code> 从不打开设备。</p>
+<h2 id="trackdef-json-1"><a class="header" href="#trackdef-json-1">TrackDef JSON</a></h2>
+<pre><code class="language-json">{
+  "id": "town",
+  "kind": "music",
+  "name": "Town Theme",
+  "tempo": 256,
+  "channels": [
+    {
+      "hw": "pulse1",
+      "commands": [
+        { "type": "note", "pitch": 0, "length": 4 },
+        { "type": "rest", "length": 2 }
+      ]
+    }
+  ]
+}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>类型</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id</code></td><td>string</td><td>场景引用的稳定标识符（必填）</td></tr>
+<tr><td><code>kind</code></td><td><code>"music"</code> | <code>"sfx"</code></td><td>音乐按 <code>tempo</code> 在通道 1–4 上播放；SFX 在自己的通道上以固定速度播放</td></tr>
+<tr><td><code>name</code></td><td>string，可选</td><td>可读的显示名称</td></tr>
+<tr><td><code>tempo</code></td><td>integer</td><td>8.8 定点数速度（<code>256</code> = 1.0）；仅限音乐</td></tr>
+<tr><td><code>channels</code></td><td>array</td><td>每个已使用的硬件通道一条</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="通道channeldef"><a class="header" href="#通道channeldef">通道（<code>ChannelDef</code>）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>类型</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>hw</code></td><td><code>"pulse1"</code> | <code>"pulse2"</code> | <code>"wave"</code> | <code>"noise"</code></td><td>目标硬件通道</td></tr>
+<tr><td><code>commands</code></td><td><code>AudioCommand</code> 数组</td><td>该通道的命令列表</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="命令audiocommand"><a class="header" href="#命令audiocommand">命令（<code>AudioCommand</code>）</a></h3>
+<p>命令以内部标签形式序列化：<code>{"type": "&lt;name&gt;", ...}</code>。这与引擎的字节码通道命令一一对
+应。带字段语义的完整 22 条命令表见<a href="#audio-command-reference">音频命令参考</a>。</p>
+<h2 id="从场景播放音轨"><a class="header" href="#从场景播放音轨">从场景播放音轨</a></h2>
+<p>场景代码通过 <code>game</code> 运行时 API 控制音频（在 <code>.scene</code> 中可通过裸命令、<code>@command(...)</code>
+或 <code>@run { ... }</code>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>调用</th><th>效果</th></tr>
+</thead>
+<tbody>
+<tr><td><code>playMusic("id")</code></td><td>开始播放一条音乐音轨；重复请求当前音轨是空操作（每次进入地图不会重启 BGM）</td></tr>
+<tr><td><code>playSound("id")</code></td><td>播放一次 SFX</td></tr>
+<tr><td><code>stopMusic()</code></td><td>停止当前音乐</td></tr>
+<tr><td><code>fadeOutMusic()</code></td><td>把主音量从 7 渐弱到 0（约 1.2 秒）然后停止</td></tr>
+</tbody>
+</table>
+</div>
+<p>音乐按音轨 id <strong>去重</strong>——用当前正在播放的 id 调用 <code>playMusic</code> 不会重启歌曲。渐弱每
+10 个视频帧把主音量降低一档，然后切断音轨。</p>
+<h2 id="编写要点"><a class="header" href="#编写要点">编写要点</a></h2>
+<ul>
+<li>音乐为四个 GB 通道而写；真实的 GB 音乐从 <code>pulse1</code> 起连续使用通道，通道流按 <code>hw</code> 索
+引编码（未使用的内部空位留空，末尾的空位被裁掉）。</li>
+<li><code>pitch</code> 是当前八度内的一个半音 0–11——文件格式中没有音符名语法；更高级的便利功能
+（音符名、音量/渐弱拆分）属于编辑器的 Audio 活动，不属于文件。</li>
+<li>同一个 <code>id</code> 不得在多个音轨文件中重复（库以 id 为键）。</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="i18n-指南"><a class="header" href="#i18n-指南">i18n 指南</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/i18n.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>脚本中的双语文本：<code>game</code> 运行时 i18n API 与 DSL <code>@t</code> 语法。</p>
+<h2 id="开始前-1"><a class="header" href="#开始前-1">开始前</a></h2>
+<p>阅读<a href="#scene-dsl-reference-scene">场景 DSL 参考</a>了解 <code>@speaker</code> / <code>@option</code> / <code>@t</code> 的摆
+放规则，阅读 <a href="#gui-dsl-reference">GUI DSL 参考</a>了解 <code>.gui</code> 文件中的 <code>@t</code>。</p>
+<h2 id="概述"><a class="header" href="#概述">概述</a></h2>
+<p>通过 DSL（<code>@run { ... }</code> 块、<code>.scene</code>）编写或手写 JS 编写的脚本使用 <code>game</code> 全局对象
+与游戏引擎交互。下面的 i18n API 支持多语言。</p>
+<h2 id="api-1"><a class="header" href="#api-1">API</a></h2>
+<h3 id="gamelang-1"><a class="header" href="#gamelang-1"><code>game.lang()</code></a></h3>
+<p>以字符串形式返回当前语言。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>返回值</th><th>语言</th></tr>
+</thead>
+<tbody>
+<tr><td><code>"en"</code></td><td>英语</td></tr>
+<tr><td><code>"zh"</code></td><td>中文</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-js">if (game.lang() === "zh") {
+    await game.showText("你好！");
+} else {
+    await game.showText("Hello!");
+}
+</code></pre>
+<h3 id="gameten-zh-1"><a class="header" href="#gameten-zh-1"><code>game.t(en, zh)</code></a></h3>
+<p>根据 <code>game.lang()</code> 选择合适的字符串。语言为英语时返回 <code>en</code>，为中文时返回 <code>zh</code>。</p>
+<pre><code class="language-js">await game.showText(game.t(
+    "Hello! Welcome to the world of monsters!",
+    "你好！欢迎来到怪物的世界！"
+));
+</code></pre>
+<h3 id="dsl-ten-zhscene--gui-首选"><a class="header" href="#dsl-ten-zhscene--gui-首选">DSL <code>@t("en", "zh")</code>（<code>.scene</code> / <code>.gui</code> 首选）</a></h3>
+<p>用 DSL 而非手写 JS 编写时，把文本包在 <code>@t("English", "中文")</code> 里。在 <code>.scene</code> 文件中
+它可用于 <code>@speaker</code> 行和 <code>@option</code> 标签，并编译成上面的 <code>game.t(en, zh)</code> 调用；在
+<code>.gui</code> 文件中它可用于 <code>text(...)</code> / <code>button(...)</code>，并编译成按 locale 区分的
+<code>{"en": …}</code> / <code>{"zh": …}</code> 键值对，由渲染器按语言解析。</p>
+<pre><code>game_scene Example {
+    @storylines {
+        @speaker("") {
+            @t("Hello! Welcome to the world of monsters!", "你好！欢迎来到怪物的世界！")
+        }
+        @choice {
+            @option(@t("YES", "是")) {
+                @speaker("") { @t("You chose YES!", "你选了是！") }
+            }
+            @option(@t("NO", "否")) {
+                @speaker("") { @t("You chose NO.", "你选了否。") }
+            }
+        }
+    }
+}
+</code></pre>
+<h2 id="示例"><a class="header" href="#示例">示例</a></h2>
+<h3 id="对话示例"><a class="header" href="#对话示例">对话示例</a></h3>
+<pre><code class="language-js">export async function talkTravelerF() {
+    await game.showText(game.t(
+        "It's rumored that\nlittle sprites came\nfrom the moon!",
+        "据说小精灵是从\n月亮来的！"
+    ));
+}
+</code></pre>
+<h3 id="选项对话"><a class="header" href="#选项对话">选项对话</a></h3>
+<pre><code class="language-js">export async function talkMuseumVisitor() {
+    await game.showText(game.t(
+        "Did you check out the MUSEUM?", "你去博物馆看过了吗？"
+    ));
+    const choice = await game.showChoice([
+        game.t("YES", "是"), game.t("NO", "否")
+    ]);
+
+    if (choice === 0) {
+        await game.showText(game.t(
+            "Weren't those fossils amazing?",
+            "那些化石是不是很棒？"
+        ));
+    }
+}
+</code></pre>
+<h3 id="条件逻辑"><a class="header" href="#条件逻辑">条件逻辑</a></h3>
+<pre><code class="language-js">export async function talkSign() {
+    if (game.lang() === "zh") {
+        await game.showText("前方森林\n请小心！");
+    } else {
+        await game.showText("THE FOREST AHEAD\nBe careful!");
+    }
+}
+</code></pre>
+<h2 id="重要提示"><a class="header" href="#重要提示">重要提示</a></h2>
+<ul>
+<li>所有新脚本都应使用 <code>game.t()</code> 处理双语文本。</li>
+<li><code>\n</code> 用于单次 <code>showText</code> 调用内的换行。</li>
+<li>游戏引擎不会裁剪文本——为获得最佳显示效果，每行约 15 个 CJK 字符或约 30 个 ASCII
+字符换一次行。</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="发布与升级指南"><a class="header" href="#发布与升级指南">发布与升级指南</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/publishing.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, CI</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>打包、发布并升级一个零 Rust 项目。</p>
+<p>如何打包、发布并升级用 dotzuki 构建的<strong>零 Rust 项目</strong>。本文与
+<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单与项目结构</a>（项目契约）和
+<a href="#dotzuki-cli-reference">CLI 参考</a>（工具链）互补。</p>
+<h2 id="游戏项目是什么"><a class="header" href="#游戏项目是什么">游戏项目是什么</a></h2>
+<p>游戏项目就是一个<strong>普通目录</strong>——<code>.dotzuki-editor.json</code> + <code>data/</code> + <code>gfx/</code> + <code>assets/</code>
+（场景）。没有构建步骤：<code>dotzuki</code> 可执行文件（或编辑器）原样消费这个目录。发布一个
+游戏 = 发布这个目录加上一种运行它的方式。</p>
+<h2 id="1-交付项目目录"><a class="header" href="#1-交付项目目录">1. 交付项目目录</a></h2>
+<p>没有编译/打包阶段。把整个项目目录（排除 <code>*.bak</code>、点文件与任何编辑器状态）复制到目
+标机器上，然后运行：</p>
+<pre><code class="language-bash">dotzuki run &lt;project-dir&gt;
+</code></pre>
+<p>交付检查清单：</p>
+<ul>
+<li>在最终目录树上运行 <a href="#dotzuki-cli-reference"><code>dotzuki check</code></a>——干净退出是唯一存在的构
+建检查。</li>
+<li>项目隐式携带自身的 <code>dotzuki</code> 版本要求：用引擎版本与项目开发时所用版本一致的
+<code>dotzuki</code> 可执行文件来运行它。项目清单里没有按项目固定的版本。</li>
+<li>存档文件默认写入 <code>&lt;project&gt;/.dotzuki-save.json</code>——交付可写的目录，或者对只读安装
+用 <code>--save-file</code> 指向别处。</li>
+</ul>
+<h2 id="2-自动化冒烟测试ci"><a class="header" href="#2-自动化冒烟测试ci">2. 自动化冒烟测试（CI）</a></h2>
+<pre><code class="language-bash">dotzuki run . --headless --frames 60          # boot, no window, no save
+dotzuki run . --headless --map StartTown --screenshot shot.png --save
+</code></pre>
+<p><code>--headless</code> 从不打开音频设备或窗口；<code>--screenshot</code> 输出真实渲染的最后一帧。见
+<a href="#dotzuki-cli-reference"><code>CLI_REFERENCE.md</code></a>。</p>
+<h2 id="3-网页中的可玩演示wasm"><a class="header" href="#3-网页中的可玩演示wasm">3. 网页中的可玩演示（WASM）</a></h2>
+<p>同一个运行器编译为 WASM（<code>dotzuki-runner-web</code>），并基于<strong>内存文件系统</strong>启动——编辑器
+的 Play 活动走的正是这条路径，所以在编辑器里能玩的项目在网页里也能一模一样地玩。</p>
+<p>编辑器把项目打包为</p>
+<pre><code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }   // whole project, incl. .dotzuki-editor.json
+</code></pre>
+<p>（排除 <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>、点文件与 <code>*.bak</code>；单文件上限 16 MB，总
+量 64 MB）。随后页面驱动：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>WasmRunner</code> 方法</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>new(filesJson, saveJson?)</code></td><td>用打包的文件启动；可选地导入一份存档</td></tr>
+<tr><td><code>tick(inputBitmask)</code></td><td>推进一帧；返回 RGBA 帧缓冲</td></tr>
+<tr><td><code>take_audio()</code></td><td>拉取生成的立体声采样（<code>f32</code>，交错排列）</td></tr>
+<tr><td><code>width()</code> / <code>height()</code></td><td>帧尺寸（320×240）</td></tr>
+<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>存档导出/导入（例如写入 <code>localStorage</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<p>输入位掩码是 <code>dotzuki_renderer::input</code> 使用的 GB 按键掩码
+（Up/Down/Left/Right/A/B/Start/Select）。编辑器的 <code>src/composables/useWasmRunner.ts</code>
+是接线输入、音频与存档持久化的可用参考。</p>
+<h2 id="4-升级引擎"><a class="header" href="#4-升级引擎">4. 升级引擎</a></h2>
+<p><strong>零 Rust 项目</strong>——没有依赖清单；“升级”意味着使用更新的 <code>dotzuki</code> 可执行文件 / 编辑
+器。升级之前：</p>
+<ol>
+<li>在旧工具链上运行 <code>dotzuki check .</code>——一棵干净的目录树是最安全的起点。</li>
+<li>用新可执行文件重新检查，然后启动一次并核对游戏状态。</li>
+<li>存档兼容性：存档带版本号（<code>.dotzuki-save.json</code>，<code>SAVE_VERSION</code> = 3）。
+<code>version &lt;= SAVE_VERSION</code> 的存档可以加载；比运行中引擎<strong>更新</strong>的存档会被拒绝，游
+戏从头开始（文件不会被删除）。用新版本保存后再降级引擎是唯一会丢失存档的情形——
+升级期间请保留 <code>.dotzuki-save.json</code> 的备份。</li>
+</ol>
+<p><strong>Rust 游戏仓库</strong>（以 Cargo git 依赖方式消费引擎）：</p>
+<pre><code class="language-bash"># bump the tag in Cargo.toml, then
+cargo update        # re-resolve the git dependency to the new tag
+cargo build
+</code></pre>
+<p>升级 = bump tag + <code>cargo update</code>。见引擎 README 的 “Using the engine from a game
+repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v3 都能正常加载）；旧引擎拒
+绝新存档。</p>
 
                     </main>
 
