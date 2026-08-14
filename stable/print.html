@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3b83be04.js";
+            window.path_to_searchindex_js = "searchindex-bbd1ad11.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-c9fa81a0.js"></script>
@@ -4489,23 +4489,27 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
 authoritative term list (doc-standard §11.4).</p>
+<p>Terms in parentheses are the canonical Chinese translations used across
+<code>-zh-CN</code> pages (doc-standard §6.4); terms without parentheses keep their
+original form in Chinese text.</p>
 <h2 id="project--authoring"><a class="header" href="#project--authoring">Project &amp; authoring</a></h2>
 <ul>
-<li><strong>zero-Rust project</strong> — a game built without Rust: a plain directory with a
-<code>.dotzuki-editor.json</code> manifest plus <code>data/</code>, <code>gfx/</code> and <code>assets/</code> (DSL
-files), run by the <code>dotzuki</code> CLI or the editor. See
+<li><strong>zero-Rust project</strong>（零 Rust 项目）— a game built without Rust: a plain
+directory with a <code>.dotzuki-editor.json</code> manifest plus <code>data/</code>, <code>gfx/</code> and
+<code>assets/</code> (DSL files), run by the <code>dotzuki</code> CLI or the editor. See
 <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest</a>.</li>
-<li><strong>manifest</strong> — the <code>.dotzuki-editor.json</code> file declaring the game’s layout,
-entry map, activities and battle section.</li>
-<li><strong>activity</strong> — one editing surface in the dotzuki-editor (Maps / Scripts /
-Data / Assets / Tiles / Story / Play); maps to a manifest section.</li>
-<li><strong>data table</strong> — a record collection in <code>data/</code> with a fixed schema
-(combatants, encounters, skills, items, levels). See
+<li><strong>manifest</strong>（项目清单）— the <code>.dotzuki-editor.json</code> file declaring the
+game’s layout, entry map, activities and battle section.</li>
+<li><strong>activity</strong>（活动）— one editing surface in the dotzuki-editor (Maps /
+Scripts / Data / Assets / Tiles / Story / Play); maps to a manifest section.</li>
+<li><strong>data table</strong>（数据表）— a record collection in <code>data/</code> with a fixed
+schema (combatants, encounters, skills, items, levels). See
 <a href="#combatant-records">data tables</a>.</li>
-<li><strong>Game DSL</strong> — the declarative language for scenes and UI: <code>.scene</code>
-(storylines), <code>.gui</code> (layouts), <code>.theme</code> / <code>.style</code> (colors &amp; styles).</li>
-<li><strong><code>@t("en", "中文")</code></strong> — bilingual text syntax; compiles to per-locale
-values, and the runtime language selects the value. See
+<li><strong>Game DSL</strong>（游戏 DSL）— the declarative language for scenes and UI:
+<code>.scene</code> (storylines), <code>.gui</code> (layouts), <code>.theme</code> / <code>.style</code> (colors &amp;
+styles).</li>
+<li><strong><code>@t("en", "中文")</code></strong>（双语文本语法）— bilingual text syntax; compiles to
+per-locale values, and the runtime language selects the value. See
 <a href="#i18n-guide">the i18n guide</a>.</li>
 <li><strong>RON</strong> — the Rusty Object Notation config format used for battle rules
 (<code>rules.ron</code>).</li>
@@ -4515,29 +4519,30 @@ values, and the runtime language selects the value. See
 <li><strong><code>GameData</code></strong> — the provider trait every game implements to hand data to
 the engine; all identifier types (Map, Item, Species, …) are generic
 associated types on it, so the engine carries no concrete game data.</li>
-<li><strong>effect stack</strong> — the battle model: turns run as a stack of effects and
-handlers driven by <code>dotzuki_engine::battle::stack::StackDriver</code>. See
-<a href="#the-effect-stack-battle-engine">the effect stack explanation</a>.</li>
+<li><strong>effect stack</strong>（效果栈）— the battle model: turns run as a stack of
+effects and handlers driven by <code>dotzuki_engine::battle::stack::StackDriver</code>.
+See <a href="#the-effect-stack-battle-engine">the effect stack explanation</a>.</li>
 <li><strong><code>rules.ron</code></strong> — the declarative battle-rules file compiled by
 <code>dotzuki-rules</code> into runtime effect stacks. See
 <a href="#battles">battle rules</a>.</li>
-<li><strong>runner</strong> — <code>dotzuki-runner</code>: loads a zero-Rust project (manifest, DSL,
-maps, collision, tilesets) and drives <code>RunnerGame</code>; also runs headless.</li>
-<li><strong>headless</strong> — running without a window or audio device, used for CI smoke
-tests and screenshots (<code>dotzuki run --headless</code>).</li>
+<li><strong>runner</strong>（运行器）— <code>dotzuki-runner</code>: loads a zero-Rust project
+(manifest, DSL, maps, collision, tilesets) and drives <code>RunnerGame</code>; also
+runs headless.</li>
+<li><strong>headless</strong>（无头模式）— running without a window or audio device, used
+for CI smoke tests and screenshots (<code>dotzuki run --headless</code>).</li>
 <li><strong>Boa</strong> — the JavaScript engine behind <code>dotzuki-engine-script</code>; the DSL’s
 native AST interpreter mirrors its runtime protocol and is the canonical
 scene semantics.</li>
 <li><strong><code>TrackDef</code> / <code>AudioCommand</code></strong> — the JSON audio track schema and its 22
 channel commands. See <a href="#audio-command-reference">audio commands</a>.</li>
-<li><strong>save version</strong> — the version stamp inside <code>.dotzuki-save.json</code>; older
-saves load on newer engines, newer saves are refused by older engines. See
-<a href="#save-compatibility">save compatibility</a>.</li>
+<li><strong>save version</strong>（存档版本）— the version stamp inside <code>.dotzuki-save.json</code>;
+older saves load on newer engines, newer saves are refused by older engines.
+See <a href="#save-compatibility">save compatibility</a>.</li>
 <li><strong>minimon</strong> — the engine demo example (<code>examples/minimon</code>): a tiny Rust
 battle system built entirely on the effect stack, with a data-driven
 <code>rules.ron</code> counterpart, proving the engine is game-agnostic.</li>
-<li><strong>WASM runner</strong> — <code>dotzuki-runner-web</code>, the web build of the runner that
-powers the editor’s Play activity and web playtesting.</li>
+<li><strong>WASM runner</strong>（WASM 运行器）— <code>dotzuki-runner-web</code>, the web build of the
+runner that powers the editor’s Play activity and web playtesting.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="rust-api-portal"><a class="header" href="#rust-api-portal">Rust API Portal</a></h1>
@@ -8977,13 +8982,14 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <h2 id="6-语言政策"><a class="header" href="#6-语言政策">6. 语言政策</a></h2>
 <ol>
 <li>
-<p><strong>源语言为英文</strong>。面向用户（游戏作者、Rust 开发者）的文档一律以英文撰写；
-中文翻译版以 <code>-zh-CN</code> 后缀并列存在（如 <code>BATTLE_ENGINE_GUIDE.md</code> →
-<code>BATTLE_ENGINE_GUIDE.zh-CN.md</code>）。</p>
+<p><strong>英文是源语言，中文翻译版必产</strong>。面向用户（游戏作者、Rust 开发者）的
+每篇文档一律以英文撰写，并产出对应的中文翻译版，以 <code>-zh-CN</code> 后缀与
+英文源并列（如 <code>quickstart.md</code> → <code>quickstart.zh-CN.md</code>）。英文源是唯一
+权威：内容冲突时以英文为准，发现不一致先修英文源，再同步翻译。</p>
 </li>
 <li>
 <p><strong>翻译版是派生品</strong>。每篇翻译版在头部标注：</p>
-<pre><code class="language-markdown">&gt; 本文是 `xxx.md` 的中文翻译，同步至引擎版本 v0.5.0（源文档 commit &lt;sha&gt;）。
+<pre><code class="language-markdown">&gt; 本文是 `xxx.md` 的中文翻译，同步至引擎版本 vX.Y.Z（源文档 commit &lt;sha&gt;）。
 &gt; 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 </code></pre>
 </li>
@@ -8991,7 +8997,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <p><strong>禁止单侧修改翻译版</strong>。翻译版只能改措辞，不能增删技术内容。</p>
 </li>
 <li>
-<p>现存的纯中文文档（如 <code>THEME_STYLE_DSL.md</code>）在迁移时补英文源，中文版降为翻译版。</p>
+<p><strong>术语译名以 glossary 为准</strong>。中文术语对照收录在 <code>reference/glossary.md</code>；
+翻译时不得自造译名，新增术语先补 glossary 对照再用于翻译。</p>
 </li>
 <li>
 <p>本仓库的内部元文档（本规范、<code>AGENTS.md</code>）不受第 1 条约束，可用中文。</p>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3b83be04.js";
+            window.path_to_searchindex_js = "../searchindex-bbd1ad11.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c9fa81a0.js"></script>
@@ -192,23 +192,27 @@
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
 authoritative term list (doc-standard §11.4).</p>
+<p>Terms in parentheses are the canonical Chinese translations used across
+<code>-zh-CN</code> pages (doc-standard §6.4); terms without parentheses keep their
+original form in Chinese text.</p>
 <h2 id="project--authoring"><a class="header" href="#project--authoring">Project &amp; authoring</a></h2>
 <ul>
-<li><strong>zero-Rust project</strong> — a game built without Rust: a plain directory with a
-<code>.dotzuki-editor.json</code> manifest plus <code>data/</code>, <code>gfx/</code> and <code>assets/</code> (DSL
-files), run by the <code>dotzuki</code> CLI or the editor. See
+<li><strong>zero-Rust project</strong>（零 Rust 项目）— a game built without Rust: a plain
+directory with a <code>.dotzuki-editor.json</code> manifest plus <code>data/</code>, <code>gfx/</code> and
+<code>assets/</code> (DSL files), run by the <code>dotzuki</code> CLI or the editor. See
 <a href="./project-manifest.html">the project manifest</a>.</li>
-<li><strong>manifest</strong> — the <code>.dotzuki-editor.json</code> file declaring the game’s layout,
-entry map, activities and battle section.</li>
-<li><strong>activity</strong> — one editing surface in the dotzuki-editor (Maps / Scripts /
-Data / Assets / Tiles / Story / Play); maps to a manifest section.</li>
-<li><strong>data table</strong> — a record collection in <code>data/</code> with a fixed schema
-(combatants, encounters, skills, items, levels). See
+<li><strong>manifest</strong>（项目清单）— the <code>.dotzuki-editor.json</code> file declaring the
+game’s layout, entry map, activities and battle section.</li>
+<li><strong>activity</strong>（活动）— one editing surface in the dotzuki-editor (Maps /
+Scripts / Data / Assets / Tiles / Story / Play); maps to a manifest section.</li>
+<li><strong>data table</strong>（数据表）— a record collection in <code>data/</code> with a fixed
+schema (combatants, encounters, skills, items, levels). See
 <a href="./data-tables/combatants.html">data tables</a>.</li>
-<li><strong>Game DSL</strong> — the declarative language for scenes and UI: <code>.scene</code>
-(storylines), <code>.gui</code> (layouts), <code>.theme</code> / <code>.style</code> (colors &amp; styles).</li>
-<li><strong><code>@t("en", "中文")</code></strong> — bilingual text syntax; compiles to per-locale
-values, and the runtime language selects the value. See
+<li><strong>Game DSL</strong>（游戏 DSL）— the declarative language for scenes and UI:
+<code>.scene</code> (storylines), <code>.gui</code> (layouts), <code>.theme</code> / <code>.style</code> (colors &amp;
+styles).</li>
+<li><strong><code>@t("en", "中文")</code></strong>（双语文本语法）— bilingual text syntax; compiles to
+per-locale values, and the runtime language selects the value. See
 <a href="../how-to/i18n.html">the i18n guide</a>.</li>
 <li><strong>RON</strong> — the Rusty Object Notation config format used for battle rules
 (<code>rules.ron</code>).</li>
@@ -218,29 +222,30 @@ values, and the runtime language selects the value. See
 <li><strong><code>GameData</code></strong> — the provider trait every game implements to hand data to
 the engine; all identifier types (Map, Item, Species, …) are generic
 associated types on it, so the engine carries no concrete game data.</li>
-<li><strong>effect stack</strong> — the battle model: turns run as a stack of effects and
-handlers driven by <code>dotzuki_engine::battle::stack::StackDriver</code>. See
-<a href="../explanation/effect-stack.html">the effect stack explanation</a>.</li>
+<li><strong>effect stack</strong>（效果栈）— the battle model: turns run as a stack of
+effects and handlers driven by <code>dotzuki_engine::battle::stack::StackDriver</code>.
+See <a href="../explanation/effect-stack.html">the effect stack explanation</a>.</li>
 <li><strong><code>rules.ron</code></strong> — the declarative battle-rules file compiled by
 <code>dotzuki-rules</code> into runtime effect stacks. See
 <a href="./battle-rules.html">battle rules</a>.</li>
-<li><strong>runner</strong> — <code>dotzuki-runner</code>: loads a zero-Rust project (manifest, DSL,
-maps, collision, tilesets) and drives <code>RunnerGame</code>; also runs headless.</li>
-<li><strong>headless</strong> — running without a window or audio device, used for CI smoke
-tests and screenshots (<code>dotzuki run --headless</code>).</li>
+<li><strong>runner</strong>（运行器）— <code>dotzuki-runner</code>: loads a zero-Rust project
+(manifest, DSL, maps, collision, tilesets) and drives <code>RunnerGame</code>; also
+runs headless.</li>
+<li><strong>headless</strong>（无头模式）— running without a window or audio device, used
+for CI smoke tests and screenshots (<code>dotzuki run --headless</code>).</li>
 <li><strong>Boa</strong> — the JavaScript engine behind <code>dotzuki-engine-script</code>; the DSL’s
 native AST interpreter mirrors its runtime protocol and is the canonical
 scene semantics.</li>
 <li><strong><code>TrackDef</code> / <code>AudioCommand</code></strong> — the JSON audio track schema and its 22
 channel commands. See <a href="./audio-commands.html">audio commands</a>.</li>
-<li><strong>save version</strong> — the version stamp inside <code>.dotzuki-save.json</code>; older
-saves load on newer engines, newer saves are refused by older engines. See
-<a href="../explanation/save-compatibility.html">save compatibility</a>.</li>
+<li><strong>save version</strong>（存档版本）— the version stamp inside <code>.dotzuki-save.json</code>;
+older saves load on newer engines, newer saves are refused by older engines.
+See <a href="../explanation/save-compatibility.html">save compatibility</a>.</li>
 <li><strong>minimon</strong> — the engine demo example (<code>examples/minimon</code>): a tiny Rust
 battle system built entirely on the effect stack, with a data-driven
 <code>rules.ron</code> counterpart, proving the engine is game-agnostic.</li>
-<li><strong>WASM runner</strong> — <code>dotzuki-runner-web</code>, the web build of the runner that
-powers the editor’s Play activity and web playtesting.</li>
+<li><strong>WASM runner</strong>（WASM 运行器）— <code>dotzuki-runner-web</code>, the web build of the
+runner that powers the editor’s Play activity and web playtesting.</li>
 </ul>
 
                     </main>
