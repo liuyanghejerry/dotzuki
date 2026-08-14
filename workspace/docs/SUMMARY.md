@@ -78,3 +78,7 @@ More translations land as M2.5 batches merge.
 - [音频命令](reference/audio-commands.zh-CN.md)
 - [CLI 参考](reference/cli.zh-CN.md)
 - [Rust API](reference/rustdoc.zh-CN.md)
+- [Scene DSL](reference/dsl/scene.zh-CN.md)
+- [GUI DSL](reference/dsl/gui.zh-CN.md)
+- [Theme & Style DSL](reference/dsl/theme-style.zh-CN.md)
+- [Codegen 约定](reference/dsl/codegen.zh-CN.md)

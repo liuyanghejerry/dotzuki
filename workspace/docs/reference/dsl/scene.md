@@ -515,4 +515,4 @@ code parses. Not part of `.scene`:
 - [DSL codegen contract](./codegen.md)
 - [i18n guide](../../how-to/i18n.md)
 - [Quickstart](../../tutorials/quickstart.md)
-- [Documentation index](../../README.md)
+- [Documentation index](../../index.md)

@@ -601,4 +601,4 @@ artifacts. `.theme` and `.style` file syntax lives in
   project
 - [Internationalization guide](../../how-to/i18n.md)
 - [Design history](../../archive/dsl-unified-design.md)
-- [Docs index](../../README.md)
+- [Docs index](../../index.md)
