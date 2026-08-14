@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9206c04c.js";
+            window.path_to_searchindex_js = "searchindex-d318c79f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-18a383c4.js"></script>
+        <script src="toc-dcacbf6f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -228,6 +228,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code> (JSON) maps, tilesets, elevation, entities and the <code>objects.json</code> sidecar</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>Authoring <code>.scene</code> stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles</td></tr>
+<tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>Authoring <code>.gui</code> layouts: the 20×18 grid, panels/text, template bindings, <code>@t</code> labels, custom components</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>Declaring <code>.theme</code> / <code>.style</code> files and applying them to UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON tracks, channels, scene playback, authoring notes</td></tr>
@@ -1442,6 +1443,160 @@ flags or triggers.</li>
 <p>Same-(map, npc) routes without an <code>after</code> chain warn as a compile-time
 conflict; see <a href="#scene-dsl-reference-scene">the syntax reference</a> for the
 wording and the full trigger table.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ui-layouts"><a class="header" href="#ui-layouts">UI Layouts</a></h1>
+<p>How to make <code>.gui</code> layouts: the 20×18 tile grid, panels and text, template
+bindings, bilingual labels, custom components, and the preview-check loop.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>The <a href="#gui-dsl-reference">GUI DSL reference</a> is the authority on every
+component and property — this page is the task view. Layouts pair with
+<a href="#themes--styles-how-to">themes</a> and <a href="#i18n-guide">bilingual text</a>; the manifest contract
+for where files live is in <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest</a>.</p>
+<h2 id="where-layouts-live"><a class="header" href="#where-layouts-live">Where layouts live</a></h2>
+<p>A <code>.gui</code> file holds one <a href="#glossary"><code>screen</code></a> — the top-level
+layout — plus any number of <a href="#glossary"><code>component</code></a>
+declarations before it. Layout files live under the manifest’s <code>ui</code>
+activity: its <code>config.guiRoot</code> (project-root-relative) is the layouts
+directory, and <code>dotzuki check</code> compiles everything in it:</p>
+<pre><code class="language-json">{ "id": "ui", "type": "ui", "config": { "guiRoot": "ui", "extension": ".gui" } }
+</code></pre>
+<p>A file may also hold nothing but <code>component</code> declarations — the shared
+prelude pattern, conventionally <code>components.gui</code> in the same directory.
+Finally, a <code>ui { }</code> block inside a <code>.scene</code> file declares an inline layout;
+it compiles to <code>&lt;SceneName&gt;_ui.json</code> alongside the scene (see
+<a href="#scenes">Authoring Scenes</a>). Every form compiles to the same schema-v2
+JSON the renderer expects.</p>
+<h2 id="the-tile-grid"><a class="header" href="#the-tile-grid">The tile grid</a></h2>
+<p>All positioning is absolute, on a 20×18 tile grid. Every component carries a
+<code>rect</code>:</p>
+<pre><code>screen Box {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    }
+}
+</code></pre>
+<ul>
+<li><code>tx</code> / <code>ty</code> — tile column / row of the top-left corner (0-based).</li>
+<li><code>tw</code> / <code>th</code> — width / height in tiles.</li>
+</ul>
+<p>20 tiles wide, 18 tall: a full-width bottom panel is <code>tx: 0, ty: 12, tw: 20, th: 6</code>, a full-screen container is <code>tx: 0, ty: 0, tw: 20, th: 18</code>.</p>
+<h2 id="a-dialog-box"><a class="header" href="#a-dialog-box">A dialog box</a></h2>
+<p>The classic bottom-of-screen text box is a bordered <code>panel</code> with a <code>text</code>
+child and a blinking <code>tile</code> cursor:</p>
+<pre><code>screen Dialog {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+        style = "default"
+        text("{text}") {
+            rect = {tx: 1, ty: 13, tw: 18, th: 4}
+            wrap = "word"
+        }
+        tile(31) {
+            rect = {tx: 18, ty: 16, tw: 1, th: 1}
+        }
+    }
+}
+</code></pre>
+<p><code>style</code> picks the border (<code>"default"</code>, <code>"single"</code>, <code>"double"</code>, or a custom
+object of tile ids); <code>wrap = "word"</code> wraps the text within its <code>rect</code>. The
+compiled JSON is plain data — the shape the renderer draws:</p>
+<pre><code class="language-json">{
+    "schema_version": 2,
+    "screen": "Dialog",
+    "elements": [
+        {"type": "border", "rect": {"tx": 0, "ty": 12, "tw": 20, "th": 6}, "style": "default", "children": [
+            {"type": "text", "rect": {"tx": 1, "ty": 13, "tw": 18, "th": 4}, "value": "{text}", "wrap": "word"},
+            {"type": "tile", "rect": {"tx": 18, "ty": 16, "tw": 1, "th": 1}, "tile_id": 31}
+        ]}
+    ]
+}
+</code></pre>
+<h2 id="template-variables"><a class="header" href="#template-variables">Template variables</a></h2>
+<p><code>{name}</code> inside a string is a <a href="#glossary">template variable</a> —
+it passes through the compiler untouched and the renderer resolves it at
+draw time against the runtime data context. Bindings work in text values,
+<code>rect</code> values, and conditions:</p>
+<pre><code>screen BattleHud {
+    text("{player_name}") {
+        rect = {tx: 1, ty: 1, tw: 7, th: 1}
+    }
+    tile("{sprite_index}") {
+        rect = {tx: 15, ty: 2, tw: 2, th: 2}
+        visible = "{has_sprite}"
+    }
+    text("L{level}") {
+        rect = {tx: 14, ty: 1, tw: 3, th: 1}
+        color = "DarkGray"
+    }
+}
+</code></pre>
+<p>The game (or the editor preview) supplies the data; the layout names it.
+Menus follow the same pattern: a <code>list</code> or <code>flex_list</code> takes a
+<code>source = "{items}"</code> binding, and a <code>cursor</code> moves by <code>row</code> / <code>col</code>
+bindings — see the <a href="#gui-dsl-reference">GUI DSL reference</a> for the
+list shapes.</p>
+<h2 id="bilingual-labels"><a class="header" href="#bilingual-labels">Bilingual labels</a></h2>
+<p>Wrap any <code>text(...)</code> or <code>button(...)</code> argument in <code>@t("en", "中文")</code> and the
+label compiles to a per-language object; the renderer picks by the current
+language and falls back to <code>en</code>:</p>
+<pre><code>screen Options {
+    text(@t("TEXT SPEED", "文字速度")) {
+        rect = {tx: 1, ty: 1, tw: 16, th: 1}
+    }
+    button(@t("CANCEL", "取消")) {
+        rect = {tx: 2, ty: 16, tw: 8, th: 1}
+    }
+}
+</code></pre>
+<p><code>@t</code> mixes with bindings — <code>@t("MONEY ${balance}", "金钱 ${balance}")</code> — and
+the manifest’s <code>story.locales</code> declares the language list. Runtime rules
+live in <a href="#i18n-guide">Bilingual Text (i18n)</a>.</p>
+<h2 id="custom-components"><a class="header" href="#custom-components">Custom components</a></h2>
+<p>The built-ins cover panels, text, tiles, lists, and cursors. Game-specific
+widgets (an HP bar, a party card) are declared in a shared file and used by
+name; the compiler validates every use site against the declaration:</p>
+<pre><code>// components.gui — prop schema only, shared by all layouts
+component hp_bar {
+  current: expr required
+  max: expr required
+}
+</code></pre>
+<pre><code>// battle.gui
+screen BattleHud {
+    hp_bar {
+        rect = {tx: 13, ty: 3, tw: 6, th: 1}
+        current = "{hp}"
+        max = "{max_hp}"
+    }
+}
+</code></pre>
+<p>The compiled element type is <code>custom:hp_bar</code>. A missing required prop, a
+prop kind mismatch, or an undeclared prop is a compile error. Rendering the
+element is the game’s part: games register their <code>custom:*</code> implementations
+with the renderer (<code>ElementRegistry</code>). The zero-Rust runner’s own screens
+(dialogue, menus, battle) are engine widgets, not layouts; custom layouts
+appear wherever a game registers their renderers — including the editor
+preview below.</p>
+<h2 id="the-preview-check-loop"><a class="header" href="#the-preview-check-loop">The preview-check loop</a></h2>
+<ol>
+<li><strong>Edit</strong> the layout in the dotzuki-editor’s UI activity. The editor’s
+preview compiles the source, injects a theme, binds the editor’s data,
+and rasterizes the result, so a broken layout shows a compile error
+instead of a picture.</li>
+<li><strong>Check</strong> with <code>dotzuki check</code> — it compiles every layout under the <code>ui</code>
+activity’s <code>guiRoot</code> (and every <code>ui { }</code> block in scenes) and prints
+diagnostics; exit code 0 means the layouts compile.</li>
+<li><strong>Ship</strong> — the compiled schema-v2 JSON is the game-side contract; see
+<a href="#dsl-codegen-contract">the codegen contract</a> for the exact
+shapes.</li>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="authoring-battles-on-the-effect-stack"><a class="header" href="#authoring-battles-on-the-effect-stack">Authoring battles on the effect stack</a></h1>
 <p>This page teaches battle authors how to build a battle system on
@@ -10261,6 +10416,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>编写 <code>.scene</code> 剧情：NPC 对话、进图过场、选项、flag、场景内战斗</td></tr>
+<tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>编写 <code>.gui</code> 布局：20×18 网格、面板/文本、模板绑定、<code>@t</code> 标签、自定义组件</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>声明 <code>.theme</code> / <code>.style</code> 文件并应用到 UI</td></tr>
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
@@ -11401,6 +11557,121 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 <li>运行 <code>dotzuki run</code> 走一遍剧情线；走路走不到的分支（胜负路径）用临时 flag 或 trigger 验证最方便。</li>
 </ol>
 <p>同一 (map, npc) 路由没有 <code>after</code> 链会在编译期告警为冲突；措辞与完整 trigger 表见<a href="#scene-dsl-reference-scene">语法参考</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ui-布局"><a class="header" href="#ui-布局">UI 布局</a></h1>
+<p>如何制作 <code>.gui</code> 布局：20×18 瓦片网格、面板与文本、模板绑定、双语标签、自定义组件，以及预览-检查循环。</p>
+<blockquote>
+<p>本文是 <code>how-to/ui.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p><a href="#gui-dsl-reference">GUI DSL 参考</a>是每个组件与属性的权威——本页是任务视角。布局与<a href="#themes--styles-how-to">主题</a>、<a href="#i18n-guide">双语文本</a>配套；文件位置的清单契约见<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>。</p>
+<h2 id="布局文件放在哪里"><a class="header" href="#布局文件放在哪里">布局文件放在哪里</a></h2>
+<p>一个 <code>.gui</code> 文件包含一个 <a href="#glossary"><code>screen</code></a>——顶层布局——前面可以有任意多个 <a href="#glossary"><code>component</code></a> 声明。布局文件放在清单的 <code>ui</code> 活动下：其 <code>config.guiRoot</code>（相对项目根）是布局目录，<code>dotzuki check</code> 编译其中的全部内容：</p>
+<pre><code class="language-json">{ "id": "ui", "type": "ui", "config": { "guiRoot": "ui", "extension": ".gui" } }
+</code></pre>
+<p>一个文件也可以只含 <code>component</code> 声明——共享前奏模式，按惯例是同目录下的 <code>components.gui</code>。此外，<code>.scene</code> 文件里的 <code>ui { }</code> 块声明内联布局；它与场景一起编译为 <code>&lt;SceneName&gt;_ui.json</code>（见<a href="#scenes">编写场景</a>）。所有形式都编译为渲染器期望的同一种 schema-v2 JSON。</p>
+<h2 id="瓦片网格"><a class="header" href="#瓦片网格">瓦片网格</a></h2>
+<p>所有定位都是绝对定位，画布是 20×18 的瓦片网格。每个组件都带一个 <code>rect</code>：</p>
+<pre><code>screen Box {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    }
+}
+</code></pre>
+<ul>
+<li><code>tx</code> / <code>ty</code> —— 左上角的瓦片列 / 行（从 0 起）。</li>
+<li><code>tw</code> / <code>th</code> —— 宽 / 高，单位为瓦片。</li>
+</ul>
+<p>宽 20、高 18：全宽底部面板是 <code>tx: 0, ty: 12, tw: 20, th: 6</code>，全屏容器是 <code>tx: 0, ty: 0, tw: 20, th: 18</code>。</p>
+<h2 id="对话框"><a class="header" href="#对话框">对话框</a></h2>
+<p>经典屏幕底部文本框 = 带边框的 <code>panel</code> + <code>text</code> 子元素 + 闪烁的 <code>tile</code> 光标：</p>
+<pre><code>screen Dialog {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+        style = "default"
+        text("{text}") {
+            rect = {tx: 1, ty: 13, tw: 18, th: 4}
+            wrap = "word"
+        }
+        tile(31) {
+            rect = {tx: 18, ty: 16, tw: 1, th: 1}
+        }
+    }
+}
+</code></pre>
+<p><code>style</code> 选择边框（<code>"default"</code>、<code>"single"</code>、<code>"double"</code>，或瓦片 id 的自定义对象）；<code>wrap = "word"</code> 让文本在 <code>rect</code> 内换行。编译出的 JSON 是纯数据——渲染器绘制的形状：</p>
+<pre><code class="language-json">{
+    "schema_version": 2,
+    "screen": "Dialog",
+    "elements": [
+        {"type": "border", "rect": {"tx": 0, "ty": 12, "tw": 20, "th": 6}, "style": "default", "children": [
+            {"type": "text", "rect": {"tx": 1, "ty": 13, "tw": 18, "th": 4}, "value": "{text}", "wrap": "word"},
+            {"type": "tile", "rect": {"tx": 18, "ty": 16, "tw": 1, "th": 1}, "tile_id": 31}
+        ]}
+    ]
+}
+</code></pre>
+<h2 id="模板变量"><a class="header" href="#模板变量">模板变量</a></h2>
+<p>字符串里的 <code>{name}</code> 是<a href="#glossary">模板变量</a>——原样通过编译器，由渲染器在绘制时按运行时数据上下文解析。绑定可用于文本值、<code>rect</code> 值与条件：</p>
+<pre><code>screen BattleHud {
+    text("{player_name}") {
+        rect = {tx: 1, ty: 1, tw: 7, th: 1}
+    }
+    tile("{sprite_index}") {
+        rect = {tx: 15, ty: 2, tw: 2, th: 2}
+        visible = "{has_sprite}"
+    }
+    text("L{level}") {
+        rect = {tx: 14, ty: 1, tw: 3, th: 1}
+        color = "DarkGray"
+    }
+}
+</code></pre>
+<p>游戏（或编辑器预览）提供数据；布局负责命名。菜单同理：<code>list</code> 或 <code>flex_list</code> 接受 <code>source = "{items}"</code> 绑定，<code>cursor</code> 按 <code>row</code> / <code>col</code> 绑定移动——各列表形状见 <a href="#gui-dsl-reference">GUI DSL 参考</a>。</p>
+<h2 id="双语标签"><a class="header" href="#双语标签">双语标签</a></h2>
+<p>把任意 <code>text(...)</code> 或 <code>button(...)</code> 参数包进 <code>@t("en", "中文")</code>，标签就编译为按语言索引的对象；渲染器按当前语言挑选，回退到 <code>en</code>：</p>
+<pre><code>screen Options {
+    text(@t("TEXT SPEED", "文字速度")) {
+        rect = {tx: 1, ty: 1, tw: 16, th: 1}
+    }
+    button(@t("CANCEL", "取消")) {
+        rect = {tx: 2, ty: 16, tw: 8, th: 1}
+    }
+}
+</code></pre>
+<p><code>@t</code> 可与绑定混用——<code>@t("MONEY ${balance}", "金钱 ${balance}")</code>——语言列表由清单的 <code>story.locales</code> 声明。运行时规则见<a href="#i18n-guide">i18n 指南</a>。</p>
+<h2 id="自定义组件"><a class="header" href="#自定义组件">自定义组件</a></h2>
+<p>内置组件覆盖面板、文本、瓦片、列表与光标。游戏专属的部件（血条、队伍卡片）在共享文件里声明、按名字使用；编译器对每个使用点做声明校验：</p>
+<pre><code>// components.gui — 仅属性 schema，所有布局共享
+component hp_bar {
+  current: expr required
+  max: expr required
+}
+</code></pre>
+<pre><code>// battle.gui
+screen BattleHud {
+    hp_bar {
+        rect = {tx: 13, ty: 3, tw: 6, th: 1}
+        current = "{hp}"
+        max = "{max_hp}"
+    }
+}
+</code></pre>
+<p>编译出的元素类型是 <code>custom:hp_bar</code>。缺少 required 属性、属性类型不符或属性未声明都是编译错误。渲染元素是游戏侧的工作：游戏向渲染器（<code>ElementRegistry</code>）注册自己的 <code>custom:*</code> 实现。zero-Rust runner 自带界面（对话、菜单、战斗）是引擎部件而非布局；自定义布局出现在注册了渲染器的游戏里——包括下面的编辑器预览。</p>
+<h2 id="预览-检查循环"><a class="header" href="#预览-检查循环">预览-检查循环</a></h2>
+<ol>
+<li><strong>编辑</strong> —— 在 dotzuki-editor 的 UI 活动中改布局。编辑器预览会编译源码、注入主题、绑定编辑器数据并光栅化，因此布局坏了会显示编译错误而不是画面。</li>
+<li><strong>检查</strong> —— 运行 <code>dotzuki check</code>：编译 <code>ui</code> 活动 <code>guiRoot</code> 下的每个布局（以及场景里的每个 <code>ui { }</code> 块）并输出诊断；退出码 0 表示布局全部通过编译。</li>
+<li><strong>交付</strong> —— 编译出的 schema-v2 JSON 是游戏侧契约；精确形状见 <a href="#dsl-codegen-contract">codegen 契约</a>。</li>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="在效果栈上编写战斗"><a class="header" href="#在效果栈上编写战斗">在效果栈上编写战斗</a></h1>
 <blockquote>
@@ -14077,7 +14348,7 @@ component hp_bar {
 </code></pre>
 <p>编译出的 JSON 元素 <code>type</code> 为 <code>custom:hp_bar</code>；由游戏注册的实现负责渲染。</p>
 <h2 id="完整示例"><a class="header" href="#完整示例">完整示例</a></h2>
-<h3 id="对话框"><a class="header" href="#对话框">对话框</a></h3>
+<h3 id="对话框-1"><a class="header" href="#对话框-1">对话框</a></h3>
 <pre><code>screen Dialog {
     panel {
         rect = {tx: 0, ty: 12, tw: 20, th: 6}
