@@ -1,5 +1,6 @@
 //! Serde model of `.dotzuki-editor.json`, the single manifest of a zero-Rust
-//! game project. See `docs/game-project-spec.md` for the full contract.
+//! game project. See `docs/reference/project-manifest.md` for the full
+//! contract.
 //!
 //! Reads are lenient (unknown keys ignored, everything optional except the
 //! fields every consumer needs) so old editor-written projects keep parsing.
@@ -85,7 +86,7 @@ pub const DEFAULT_HEAL_FIELD: &str = "healHp";
 
 /// The optional top-level `battle` section: how project data tables map onto
 /// the generic battle system. Every key is optional; the defaults match
-/// the documented schema (see `docs/game-project-spec.md`).
+/// the documented schema (see `docs/reference/project-manifest.md`).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BattleSection {
     /// The player's party table (`{ "table": "<id>" }`); ALL records of the

@@ -2,7 +2,7 @@
 //!
 //! A project opts in with a top-level `battle` section in its
 //! `.dotzuki-editor.json` (see [`crate::manifest::BattleSection`] and
-//! `docs/game-project-spec.md`). Combatants are plain data-table records
+//! `docs/reference/project-manifest.md`). Combatants are plain data-table records
 //! (`<dataRoot>/<tableDir>/<id>.json`); skills are records of the skills
 //! table; the optional rules file (dotzuki-rules `Ruleset` RON) contributes the
 //! type chart and — when it declares `effects` — **RON effect hooks** (v2-a):
@@ -826,7 +826,18 @@ impl BattleSetup {
                 }
                 chart
             }
-            Err(_) => TypeChart::default(),
+            Err(e) => {
+                // An absent default file (battle.rules unset) is a legal
+                // project — no type chart. A manifest-named file that can't
+                // be read is a configuration slip: warn loudly so the chart's
+                // silent absence is visible (`dotzuki check` errors on it).
+                if section.rules.is_some() {
+                    log::warn!(
+                        "battle.rules '{rules_rel}' could not be read ({e:#}); battles run with an empty type chart"
+                    );
+                }
+                TypeChart::default()
+            }
         };
 
         Ok(Self {

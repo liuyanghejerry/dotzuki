@@ -37,7 +37,7 @@ tools/editor-extensions/         # VSCode DSL syntax highlighting
 dotzuki-template/                   # cargo-generate starter template for new games
 ```
 
-New game projects are **zero-Rust**: a `.dotzuki-editor.json` manifest plus a data/DSL/assets layout (see `docs/game-project-spec.md`), scaffolded by `dotzuki new` (dotzuki-cli) or the dotzuki-editor Create wizard.
+New game projects are **zero-Rust**: a `.dotzuki-editor.json` manifest plus a data/DSL/assets layout (see `workspace/docs/reference/project-manifest.md`), scaffolded by `dotzuki new` (dotzuki-cli) or the dotzuki-editor Create wizard.
 
 ## Build System (Rust)
 - **Toolchain**: Rust 1.70+ (stable), wasm32-unknown-unknown target for WebAssembly

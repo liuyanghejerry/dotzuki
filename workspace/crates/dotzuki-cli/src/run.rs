@@ -74,6 +74,22 @@ pub fn run(args: RunArgs) -> Result<()> {
             },
         )?;
         println!("headless run complete ({} frames)", args.frames);
+        if args.save {
+            // Saves only land at stable points (scene end / map transition);
+            // a short run may never reach one, which otherwise looks like
+            // --save silently failing.
+            let save_path = args
+                .save_file
+                .clone()
+                .unwrap_or_else(|| args.dir.join(dotzuki_runner::DEFAULT_SAVE_FILE));
+            if !save_path.is_file() {
+                eprintln!(
+                    "note: no save file was written at {} — the run reached no stable point within {} frames",
+                    save_path.display(),
+                    args.frames
+                );
+            }
+        }
         return Ok(());
     }
 

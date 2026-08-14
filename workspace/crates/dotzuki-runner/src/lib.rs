@@ -4,7 +4,7 @@
 //! `dataRoot` holding `maps/<MapId>/` directories (Tiled `map.tmx.json` +
 //! `tileset.png` + `objects.json` sidecar + per-map `script.scene`), and a
 //! scenes directory with story `.scene` files. See
-//! `docs/game-project-spec.md` for the full contract.
+//! `docs/reference/project-manifest.md` for the full contract.
 //!
 //! This crate boots such a project without any game-specific Rust:
 //!
