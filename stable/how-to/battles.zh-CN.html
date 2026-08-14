@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66e1f125.js";
+            window.path_to_searchindex_js = "../searchindex-5143243f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fc7ab92d.js"></script>
+        <script src="../toc-d5ffd437.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -627,7 +627,7 @@ Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
 <li><code>FractionOf { MaxHp, CurHp, LastDamage }</code>（默认 <code>MaxHp</code>；<code>LastDamage</code> = 刚刚打出的伤害
 ——吸血/反伤的基数；<code>model.rs:214</code>）。</li>
 <li><code>Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String), MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }</code>（<code>model.rs:268</code>）——由
-<code>unless</code> / <code>when</code> / <code>cond</code> 守卫使用。（最后四个是为迁移添加的：侧面状态的
+<code>unless</code> / <code>when</code> / <code>cond</code> 守卫使用。（最后四个是为迁移添加的：侧边状态的
 Substitute/同属性否决、Dream Eater 的睡眠门槛、OHKO 的等级门槛。）</li>
 <li><code>DamageValue { Const(u16), UserLevel, RngScaledLevel { num, den } }</code>——<code>SetDamage</code> 的数值
 来源（Sonic Boom 20 / Dragon Rage 40 / Seismic Toss = 等级 / Psywave；<code>model.rs:249</code>）。</li>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66e1f125.js";
+            window.path_to_searchindex_js = "../searchindex-5143243f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fc7ab92d.js"></script>
+        <script src="../toc-d5ffd437.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -246,6 +246,169 @@ battle system built entirely on the effect stack, with a data-driven
 <code>rules.ron</code> counterpart, proving the engine is game-agnostic.</li>
 <li><strong>WASM runner</strong>（WASM 运行器）— <code>dotzuki-runner-web</code>, the web build of the
 runner that powers the editor’s Play activity and web playtesting.</li>
+</ul>
+<h2 id="battle-stack"><a class="header" href="#battle-stack">Battle stack</a></h2>
+<ul>
+<li><strong>event</strong>（事件）— a dispatch key in the battle stack (<code>SwitchIn</code>,
+<code>BeforeMove</code>, …); effects subscribe handlers to events. See
+<a href="../explanation/effect-stack.html">the effect stack explanation</a>.</li>
+<li><strong>effect</strong>（效果）— the stack’s subscription unit: an id, an <code>EffectType</code>,
+and a static table of hooks; every rule compiles to effects hosted on
+battlers, sides, or the field.</li>
+<li><strong>hook</strong>（钩子）— one <code>(event, call, order)</code> subscription an effect
+declares; the unit a handler plugs into.</li>
+<li><strong>handler</strong>（处理器）— the zero-capture function a hook runs:
+<code>fn(&amp;mut BattleCtx, RelayVar, target, source, source_effect) -&gt; HandlerResult</code>.</li>
+<li><strong>driver</strong>（驱动器）— the code that owns the provider and sequences
+dispatches and rounds; <code>StackDriver</code> is the engine’s reference driver.</li>
+<li><strong>dispatch</strong>（派发）— running one event: collect the sorted hooks, then
+fold their handlers.</li>
+<li><strong>fold</strong>（折叠）— running a <code>RelayVar</code> through the collected handlers in
+order; each handler returns a <code>HandlerResult</code> that short-circuits or
+continues the fold.</li>
+<li><strong><code>RelayVar</code></strong> — the typed fold payload (<code>Unit | Int | Damage | Accuracy | Bool</code>); Chinese text describes it as the 折叠载荷.</li>
+<li><strong>lane</strong>（通道）— the typed value space a relay occupies; accessors
+outside the current lane return 0 / false.</li>
+<li><strong>volatile</strong>（易变状态）— a per-battler effect instance with per-instance
+state (multi-turn locks, Substitute, …), separate from data-defined
+statuses.</li>
+<li><strong>re-entrant dispatch</strong>（可重入派发）— driver code firing a sub-event while
+a fold is in flight; handlers cannot re-enter, the driver can.</li>
+<li><strong>seam</strong>（接缝）— a subscription point that is inert by default and lets
+games extend behavior without engine edits.</li>
+<li><strong>resolver</strong>（解析器）— a provider method mapping opaque ids or battler
+state to static effects.</li>
+<li><strong>gate</strong>（门槛）— a veto check a move must pass (status gate,
+<code>BeforeMove</code> cost gate, chance gate).</li>
+<li><strong>veto</strong>（否决）— a <code>Fail</code> / <code>FailSilent</code> result that cancels a fold.</li>
+<li><strong><code>TurnLog</code></strong> — the ordered <code>TurnEvent</code> list from <code>execute_turn_logged</code>;
+Chinese text calls it the 回合叙述.</li>
+<li><strong>draw order</strong>（抽取顺序）— the exact RNG byte sequence; the determinism
+credential for parity checks.</li>
+<li><strong>host / hosted</strong>（托管）— where an effect lives: a battler（战斗者）, a
+side（侧边）, or the field（场地）; resolvers route effects to hosts.</li>
+<li><strong>provider</strong> — the trait pattern handing game data to the engine
+(<code>GameData</code>, <code>BattleProvider</code>, <code>EffectProvider</code>); kept in English in
+Chinese text.</li>
+</ul>
+<h2 id="battle-gameplay"><a class="header" href="#battle-gameplay">Battle gameplay</a></h2>
+<ul>
+<li><strong>stat</strong>（属性）— a numeric battler attribute (Hp/Atk/Def/Spd/SpA/SpD).</li>
+<li><strong>base stats</strong>（基准属性）— the record-derived raw stats, before stages
+and growth.</li>
+<li><strong>stat stage</strong>（属性等级）— the −4..+4 multiplier tier applied per stat.</li>
+<li><strong>element / type</strong>（元素）— the tag driving type-chart lookups (record
+field <code>element</code>, RON <code>types</code>); chart phrases use 克制表 / 属性克制 as fixed
+collocations, and the tag itself renders as 元素 to stay distinct from
+stat.</li>
+<li><strong>type chart</strong>（克制表）— the element-pair multiplier table (<code>type_chart</code>
+in <code>rules.ron</code>).</li>
+<li><strong>type effectiveness</strong>（克制倍率）— the multiplier a chart lookup applies
+(super effective, resisted, immune).</li>
+<li><strong>physical/special split</strong>（物特分家）— the per-move category deciding
+whether Atk/Def or SpA/SpD apply.</li>
+<li><strong>move</strong>（招式）— an in-battle action (power, accuracy, category) on the
+generic <code>P::Move</code> id.</li>
+<li><strong>skill</strong>（技能）— a data-table record describing a move (name, power,
+element, category, cost); RON <code>kind: Move</code> records take over skills.</li>
+<li><strong>ability</strong>（特性）— a <code>kind: Ability</code> record wired through a combatant’s
+<code>ability</code> field; fires on switch-in and per action.</li>
+<li><strong>held item</strong>（携带道具）— a <code>kind: Item</code> record wired through <code>heldItem</code>;
+a persistent flag, never consumed.</li>
+<li><strong>combatant / battler</strong>（战斗者）— combatant: one data-table record on a
+battle side; battler: the engine-side active unit (<code>BattlerState</code> /
+<code>BattlerRef</code>).</li>
+<li><strong>party</strong>（队伍）— the records of the party table; HP/MP/status persist
+across battles and in the save.</li>
+<li><strong>fainted</strong>（濒死）— at 0 HP; fainted members are not revived by healing
+items.</li>
+<li><strong>encounter</strong> — an encounter-table record or a walk-triggered map battle;
+kept in English in Chinese text.</li>
+<li><strong>wild battle</strong>（野怪战斗）— a single-enemy battle where Run always
+succeeds.</li>
+<li><strong>trainer battle</strong>（trainer 战斗）— an encounter with <code>trainer: true</code>: Run
+is blocked and a win pays out money.</li>
+<li><strong>sceneless battle</strong>（sceneless 战斗）— a walk-triggered battle with no
+scene to resume.</li>
+<li><strong>switch</strong>（换人）— replacing the active battler; fires <code>SwitchIn</code>.</li>
+<li><strong>residual</strong>（残留效果）— the end-of-action / end-of-turn tick (status
+chip, held-item recovery, weather).</li>
+<li><strong>whiteout</strong> — the post-loss flow: party healed, player respawns at the
+entry spawn; kept in English in Chinese text.</li>
+<li><strong>turn loop</strong>（回合循环）— the per-round phase machine (Fight / Party /
+Item / Run → resolution → residuals).</li>
+<li><strong>heal point</strong>（回复点）— the planned whiteout-respawn alternative on
+maps.</li>
+</ul>
+<h2 id="maps"><a class="header" href="#maps">Maps</a></h2>
+<ul>
+<li><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</li>
+<li><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
+in English in Chinese text.</li>
+<li><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
+kept in English in Chinese text.</li>
+<li><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
+in English in Chinese text.</li>
+<li><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
+below, higher layers render above.</li>
+<li><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
+(npcs, warps, signs, encounters).</li>
+<li><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</li>
+<li><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</li>
+<li><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
+the <code>@trigger</code> keyword stays as code.</li>
+<li><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</li>
+<li><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</li>
+<li><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
+dialogue, and menus.</li>
+<li><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</li>
+</ul>
+<h2 id="scenes--ui"><a class="header" href="#scenes--ui">Scenes &amp; UI</a></h2>
+<ul>
+<li><strong>scene</strong>（场景）— a <code>.scene</code> file: a <code>game_scene</code> document with
+storylines.</li>
+<li><strong>storyline</strong>（剧情线）— a named async statement sequence bound by
+<code>@trigger</code>; <code>main</code> is the unnamed entry one.</li>
+<li><strong>narrator form</strong>（旁白）— <code>@speaker("")</code> / <code>@say("")</code> lines rendered
+without a name prefix.</li>
+<li><strong>cutscene speech</strong>（过场对白）— <code>@say</code> dialogue inside an auto-triggered
+storyline.</li>
+<li><strong>command</strong>（命令）— a <code>game.*</code> API call from a storyline (bare or
+<code>@command</code>).</li>
+<li><strong>flag</strong> — a persisted boolean (<code>setFlag</code> / <code>getFlag</code>) carried in the
+save; kept in English in Chinese text.</li>
+<li><strong>interpreter</strong>（解释器）— the native AST interpreter of
+<code>dotzuki-engine-dsl</code>, the canonical scene semantics; Boa is the dev
+fallback.</li>
+<li><strong>codegen</strong> — the DSL → JS/JSON compile contract; kept in English in
+Chinese text.</li>
+<li><strong>screen</strong>（屏幕）— the top-level layout of a <code>.gui</code> file.</li>
+<li><strong>component</strong>（组件）— a GUI DSL element (<code>panel</code>, <code>text</code>, <code>custom:*</code>,
+…).</li>
+<li><strong>template variable</strong>（模板变量）— a <code>{var}</code> string the renderer resolves
+at draw time.</li>
+<li><strong>hot reload</strong>（热重载）— <code>--watch</code> recompiling DSL and reloading the
+current map in place.</li>
+<li><strong>scaffold</strong>（脚手架）— the tooling that generates a project layout
+(<code>dotzuki new</code>, the editor wizard).</li>
+<li><strong>smoke test</strong>（冒烟测试）— a headless boot of a few frames as a CI check.</li>
+<li><strong>playtest</strong>（试玩）— in-editor WASM play of <code>RunnerGame</code> (the Play
+activity).</li>
+<li><strong>generic associated types</strong>（泛型关联类型）— identifier types declared on
+the <code>GameData</code> trait.</li>
+<li><strong>battle section</strong>（battle 区块）— the manifest section arming the
+data-driven battle system.</li>
+<li><strong>story bible</strong>（叙事圣经）— the seeded <code>data/stories/</code> narrative content.</li>
+<li><strong>recipe</strong>（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.</li>
+</ul>
+<h2 id="audio"><a class="header" href="#audio">Audio</a></h2>
+<ul>
+<li><strong>track</strong>（音轨）— a <code>TrackDef</code> JSON document (music or sfx).</li>
+<li><strong>channel</strong>（通道）— one GB hardware voice (<code>pulse1</code> / <code>pulse2</code> / <code>wave</code> /
+<code>noise</code>); the audio channel, distinct from the battle lane.</li>
+<li><strong>sequencer</strong>（音序器）— the GB-APU playback engine in <code>dotzuki-audio</code>.</li>
+<li><strong>GB-APU</strong> — the Game Boy audio emulation; kept in English in Chinese
+text.</li>
 </ul>
 
                     </main>

@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-66e1f125.js";
+            window.path_to_searchindex_js = "searchindex-5143243f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-fc7ab92d.js"></script>
+        <script src="toc-d5ffd437.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -4546,6 +4546,169 @@ battle system built entirely on the effect stack, with a data-driven
 <code>rules.ron</code> counterpart, proving the engine is game-agnostic.</li>
 <li><strong>WASM runner</strong>（WASM 运行器）— <code>dotzuki-runner-web</code>, the web build of the
 runner that powers the editor’s Play activity and web playtesting.</li>
+</ul>
+<h2 id="battle-stack"><a class="header" href="#battle-stack">Battle stack</a></h2>
+<ul>
+<li><strong>event</strong>（事件）— a dispatch key in the battle stack (<code>SwitchIn</code>,
+<code>BeforeMove</code>, …); effects subscribe handlers to events. See
+<a href="#the-effect-stack-battle-engine">the effect stack explanation</a>.</li>
+<li><strong>effect</strong>（效果）— the stack’s subscription unit: an id, an <code>EffectType</code>,
+and a static table of hooks; every rule compiles to effects hosted on
+battlers, sides, or the field.</li>
+<li><strong>hook</strong>（钩子）— one <code>(event, call, order)</code> subscription an effect
+declares; the unit a handler plugs into.</li>
+<li><strong>handler</strong>（处理器）— the zero-capture function a hook runs:
+<code>fn(&amp;mut BattleCtx, RelayVar, target, source, source_effect) -&gt; HandlerResult</code>.</li>
+<li><strong>driver</strong>（驱动器）— the code that owns the provider and sequences
+dispatches and rounds; <code>StackDriver</code> is the engine’s reference driver.</li>
+<li><strong>dispatch</strong>（派发）— running one event: collect the sorted hooks, then
+fold their handlers.</li>
+<li><strong>fold</strong>（折叠）— running a <code>RelayVar</code> through the collected handlers in
+order; each handler returns a <code>HandlerResult</code> that short-circuits or
+continues the fold.</li>
+<li><strong><code>RelayVar</code></strong> — the typed fold payload (<code>Unit | Int | Damage | Accuracy | Bool</code>); Chinese text describes it as the 折叠载荷.</li>
+<li><strong>lane</strong>（通道）— the typed value space a relay occupies; accessors
+outside the current lane return 0 / false.</li>
+<li><strong>volatile</strong>（易变状态）— a per-battler effect instance with per-instance
+state (multi-turn locks, Substitute, …), separate from data-defined
+statuses.</li>
+<li><strong>re-entrant dispatch</strong>（可重入派发）— driver code firing a sub-event while
+a fold is in flight; handlers cannot re-enter, the driver can.</li>
+<li><strong>seam</strong>（接缝）— a subscription point that is inert by default and lets
+games extend behavior without engine edits.</li>
+<li><strong>resolver</strong>（解析器）— a provider method mapping opaque ids or battler
+state to static effects.</li>
+<li><strong>gate</strong>（门槛）— a veto check a move must pass (status gate,
+<code>BeforeMove</code> cost gate, chance gate).</li>
+<li><strong>veto</strong>（否决）— a <code>Fail</code> / <code>FailSilent</code> result that cancels a fold.</li>
+<li><strong><code>TurnLog</code></strong> — the ordered <code>TurnEvent</code> list from <code>execute_turn_logged</code>;
+Chinese text calls it the 回合叙述.</li>
+<li><strong>draw order</strong>（抽取顺序）— the exact RNG byte sequence; the determinism
+credential for parity checks.</li>
+<li><strong>host / hosted</strong>（托管）— where an effect lives: a battler（战斗者）, a
+side（侧边）, or the field（场地）; resolvers route effects to hosts.</li>
+<li><strong>provider</strong> — the trait pattern handing game data to the engine
+(<code>GameData</code>, <code>BattleProvider</code>, <code>EffectProvider</code>); kept in English in
+Chinese text.</li>
+</ul>
+<h2 id="battle-gameplay"><a class="header" href="#battle-gameplay">Battle gameplay</a></h2>
+<ul>
+<li><strong>stat</strong>（属性）— a numeric battler attribute (Hp/Atk/Def/Spd/SpA/SpD).</li>
+<li><strong>base stats</strong>（基准属性）— the record-derived raw stats, before stages
+and growth.</li>
+<li><strong>stat stage</strong>（属性等级）— the −4..+4 multiplier tier applied per stat.</li>
+<li><strong>element / type</strong>（元素）— the tag driving type-chart lookups (record
+field <code>element</code>, RON <code>types</code>); chart phrases use 克制表 / 属性克制 as fixed
+collocations, and the tag itself renders as 元素 to stay distinct from
+stat.</li>
+<li><strong>type chart</strong>（克制表）— the element-pair multiplier table (<code>type_chart</code>
+in <code>rules.ron</code>).</li>
+<li><strong>type effectiveness</strong>（克制倍率）— the multiplier a chart lookup applies
+(super effective, resisted, immune).</li>
+<li><strong>physical/special split</strong>（物特分家）— the per-move category deciding
+whether Atk/Def or SpA/SpD apply.</li>
+<li><strong>move</strong>（招式）— an in-battle action (power, accuracy, category) on the
+generic <code>P::Move</code> id.</li>
+<li><strong>skill</strong>（技能）— a data-table record describing a move (name, power,
+element, category, cost); RON <code>kind: Move</code> records take over skills.</li>
+<li><strong>ability</strong>（特性）— a <code>kind: Ability</code> record wired through a combatant’s
+<code>ability</code> field; fires on switch-in and per action.</li>
+<li><strong>held item</strong>（携带道具）— a <code>kind: Item</code> record wired through <code>heldItem</code>;
+a persistent flag, never consumed.</li>
+<li><strong>combatant / battler</strong>（战斗者）— combatant: one data-table record on a
+battle side; battler: the engine-side active unit (<code>BattlerState</code> /
+<code>BattlerRef</code>).</li>
+<li><strong>party</strong>（队伍）— the records of the party table; HP/MP/status persist
+across battles and in the save.</li>
+<li><strong>fainted</strong>（濒死）— at 0 HP; fainted members are not revived by healing
+items.</li>
+<li><strong>encounter</strong> — an encounter-table record or a walk-triggered map battle;
+kept in English in Chinese text.</li>
+<li><strong>wild battle</strong>（野怪战斗）— a single-enemy battle where Run always
+succeeds.</li>
+<li><strong>trainer battle</strong>（trainer 战斗）— an encounter with <code>trainer: true</code>: Run
+is blocked and a win pays out money.</li>
+<li><strong>sceneless battle</strong>（sceneless 战斗）— a walk-triggered battle with no
+scene to resume.</li>
+<li><strong>switch</strong>（换人）— replacing the active battler; fires <code>SwitchIn</code>.</li>
+<li><strong>residual</strong>（残留效果）— the end-of-action / end-of-turn tick (status
+chip, held-item recovery, weather).</li>
+<li><strong>whiteout</strong> — the post-loss flow: party healed, player respawns at the
+entry spawn; kept in English in Chinese text.</li>
+<li><strong>turn loop</strong>（回合循环）— the per-round phase machine (Fight / Party /
+Item / Run → resolution → residuals).</li>
+<li><strong>heal point</strong>（回复点）— the planned whiteout-respawn alternative on
+maps.</li>
+</ul>
+<h2 id="maps-2"><a class="header" href="#maps-2">Maps</a></h2>
+<ul>
+<li><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</li>
+<li><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
+in English in Chinese text.</li>
+<li><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
+kept in English in Chinese text.</li>
+<li><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
+in English in Chinese text.</li>
+<li><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
+below, higher layers render above.</li>
+<li><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
+(npcs, warps, signs, encounters).</li>
+<li><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</li>
+<li><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</li>
+<li><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
+the <code>@trigger</code> keyword stays as code.</li>
+<li><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</li>
+<li><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</li>
+<li><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
+dialogue, and menus.</li>
+<li><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</li>
+</ul>
+<h2 id="scenes--ui"><a class="header" href="#scenes--ui">Scenes &amp; UI</a></h2>
+<ul>
+<li><strong>scene</strong>（场景）— a <code>.scene</code> file: a <code>game_scene</code> document with
+storylines.</li>
+<li><strong>storyline</strong>（剧情线）— a named async statement sequence bound by
+<code>@trigger</code>; <code>main</code> is the unnamed entry one.</li>
+<li><strong>narrator form</strong>（旁白）— <code>@speaker("")</code> / <code>@say("")</code> lines rendered
+without a name prefix.</li>
+<li><strong>cutscene speech</strong>（过场对白）— <code>@say</code> dialogue inside an auto-triggered
+storyline.</li>
+<li><strong>command</strong>（命令）— a <code>game.*</code> API call from a storyline (bare or
+<code>@command</code>).</li>
+<li><strong>flag</strong> — a persisted boolean (<code>setFlag</code> / <code>getFlag</code>) carried in the
+save; kept in English in Chinese text.</li>
+<li><strong>interpreter</strong>（解释器）— the native AST interpreter of
+<code>dotzuki-engine-dsl</code>, the canonical scene semantics; Boa is the dev
+fallback.</li>
+<li><strong>codegen</strong> — the DSL → JS/JSON compile contract; kept in English in
+Chinese text.</li>
+<li><strong>screen</strong>（屏幕）— the top-level layout of a <code>.gui</code> file.</li>
+<li><strong>component</strong>（组件）— a GUI DSL element (<code>panel</code>, <code>text</code>, <code>custom:*</code>,
+…).</li>
+<li><strong>template variable</strong>（模板变量）— a <code>{var}</code> string the renderer resolves
+at draw time.</li>
+<li><strong>hot reload</strong>（热重载）— <code>--watch</code> recompiling DSL and reloading the
+current map in place.</li>
+<li><strong>scaffold</strong>（脚手架）— the tooling that generates a project layout
+(<code>dotzuki new</code>, the editor wizard).</li>
+<li><strong>smoke test</strong>（冒烟测试）— a headless boot of a few frames as a CI check.</li>
+<li><strong>playtest</strong>（试玩）— in-editor WASM play of <code>RunnerGame</code> (the Play
+activity).</li>
+<li><strong>generic associated types</strong>（泛型关联类型）— identifier types declared on
+the <code>GameData</code> trait.</li>
+<li><strong>battle section</strong>（battle 区块）— the manifest section arming the
+data-driven battle system.</li>
+<li><strong>story bible</strong>（叙事圣经）— the seeded <code>data/stories/</code> narrative content.</li>
+<li><strong>recipe</strong>（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.</li>
+</ul>
+<h2 id="audio-1"><a class="header" href="#audio-1">Audio</a></h2>
+<ul>
+<li><strong>track</strong>（音轨）— a <code>TrackDef</code> JSON document (music or sfx).</li>
+<li><strong>channel</strong>（通道）— one GB hardware voice (<code>pulse1</code> / <code>pulse2</code> / <code>wave</code> /
+<code>noise</code>); the audio channel, distinct from the battle lane.</li>
+<li><strong>sequencer</strong>（音序器）— the GB-APU playback engine in <code>dotzuki-audio</code>.</li>
+<li><strong>GB-APU</strong> — the Game Boy audio emulation; kept in English in Chinese
+text.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="rust-api-portal"><a class="header" href="#rust-api-portal">Rust API Portal</a></h1>
@@ -9159,7 +9322,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
 <tr><td><a href="#themes--styles-how-to"><code>how-to/themes.md</code></a></td><td>声明 <code>.theme</code> / <code>.style</code> 文件并应用到 UI</td></tr>
-<tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、声道、场景播放、编写要点</td></tr>
+<tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>双语文本：<code>game</code> i18n API 与 <code>@t</code> 语法</td></tr>
 <tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
 </tbody>
@@ -9422,7 +9585,7 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 攻击，Bryn 的 <code>leftovers</code> 在他的行动结束后给他回血，场景还可以在 <code>startBattle</code>
 之前用 <code>setWeather("sandstorm")</code> 布置预置的 <code>sandstorm</code>）；持有的道具不会被消耗，
 天气只属于单场战斗（只能由场景布置），战斗失败会治疗全队并把你送回入口地图的
-出生点（还没有治疗点系统）。其余内容都已就位：敌方队伍（<code>encounters</code> 表 —— 排队
+出生点（还没有回复点系统）。其余内容都已就位：敌方队伍（<code>encounters</code> 表 —— 排队
 出场、EXP 累加）、trainer 战（Run 被禁用、胜利得钱）、仅野怪可用的 Run 动作（场景
 会看到第三种结果 <code>"run"</code>），以及半价出售的商店。规则格式见
 <a href="#battles">战斗规则参考</a>。</li>
@@ -9929,7 +10092,7 @@ Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
 <li><code>FractionOf { MaxHp, CurHp, LastDamage }</code>（默认 <code>MaxHp</code>；<code>LastDamage</code> = 刚刚打出的伤害
 ——吸血/反伤的基数；<code>model.rs:214</code>）。</li>
 <li><code>Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String), MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }</code>（<code>model.rs:268</code>）——由
-<code>unless</code> / <code>when</code> / <code>cond</code> 守卫使用。（最后四个是为迁移添加的：侧面状态的
+<code>unless</code> / <code>when</code> / <code>cond</code> 守卫使用。（最后四个是为迁移添加的：侧边状态的
 Substitute/同属性否决、Dream Eater 的睡眠门槛、OHKO 的等级门槛。）</li>
 <li><code>DamageValue { Const(u16), UserLevel, RngScaledLevel { num, den } }</code>——<code>SetDamage</code> 的数值
 来源（Sonic Boom 20 / Dragon Rage 40 / Seismic Toss = 等级 / Psywave；<code>model.rs:249</code>）。</li>
@@ -13627,6 +13790,308 @@ provider 经由一个泛型 <code>BattleProvider</code>/<code>EffectProvider</co
 <em>内容</em>——编辑器的脚手架生成器会种下<a href="#directory-layout">目录布局</a>中描述的演示地图、tile 库、示例记录与叙事圣经（story bible），
 而 <code>dotzuki new</code> 产出最小骨架。</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="combatant-记录"><a class="header" href="#combatant-记录">Combatant 记录</a></h1>
+<blockquote>
+<p>本文是 <code>reference/data-tables/combatants.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>Combatant 记录 schema：名称、属性、资源、元素、技能，以及可选的 RON 钩子字段。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>一名 combatant 就是一条 <code>&lt;dataRoot&gt;/&lt;tableDir&gt;/&lt;id&gt;.json</code> 记录：<code>name</code>（显示名，
+缺省则用 id）、四个属性字段、<code>resource</code> 字段、一个可选的 <code>element</code> 字符串（克制
+表查询中的防守方），以及技能 id 列表。另外两个可选字段接入 RON 效果种类：
+<code>ability</code>（一条 <code>kind: Ability</code> 记录 id）和 <code>heldItem</code>（一条 <code>kind: Item</code> 记录
+id）——见<a href="#battles">战斗规则</a>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>string</td><td>the record id</td><td>显示名。</td></tr>
+<tr><td>属性字段</td><td>number</td><td><code>1</code></td><td>四个属性角色经 <code>battle.stats</code> 映射到记录字段名（默认 <code>hp</code>/<code>atk</code>/<code>def</code>/<code>spd</code>）。缺失或非法的属性字段按 1 读取。</td></tr>
+<tr><td>资源字段</td><td>number</td><td>—</td><td>MP 池，字段名由 <code>battle.resource</code> 指定。缺少 <code>resource</code> 键 ⇒ 无资源门槛（所有技能免费）。</td></tr>
+<tr><td><code>element</code></td><td>string</td><td>—</td><td>克制表查询中的防守方。</td></tr>
+<tr><td>技能列表</td><td>array of skill ids</td><td>empty</td><td>字段名由 <code>battle.skills.field</code> 指定（默认 <code>"skills"</code>）。</td></tr>
+<tr><td><code>ability</code></td><td>string</td><td>—</td><td>规则文件中的一条 <code>kind: Ability</code> 记录 id。</td></tr>
+<tr><td><code>heldItem</code></td><td>string</td><td>—</td><td>规则文件中的一条 <code>kind: Item</code> 记录 id。</td></tr>
+<tr><td><code>level</code></td><td>number</td><td><code>1</code></td><td>供基于等级的 RON op/谓词读取（<code>SetDamage</code>、<code>LevelGE</code>）；搭配 <code>levels</code> 块时还会驱动属性成长。</td></tr>
+</tbody>
+</table>
+</div>
+<p>源 spec 以文字描述 combatant 记录，没有为它附带 JSON 示例。</p>
+<h2 id="属性字段"><a class="header" href="#属性字段">属性字段</a></h2>
+<p><code>stats</code> 把四个属性角色映射到记录字段名（默认 hp/atk/def/spd）。缺失或非法的属
+性字段按 1 读取。记录上还有一个可选的 <code>level</code> 字段（默认 1），供基于等级的
+RON op/谓词读取（<code>SetDamage</code>、<code>LevelGE</code>）——并且搭配 <code>levels</code> 块时，还会驱动
+属性成长（见<a href="#level-growth">等级成长</a>）。</p>
+<h2 id="资源字段"><a class="header" href="#资源字段">资源字段</a></h2>
+<p><code>resource</code> 指定持有 MP 池的记录字段名；缺失 ⇒ 无资源门槛（所有技能免费）。</p>
+<h2 id="技能列表"><a class="header" href="#技能列表">技能列表</a></h2>
+<p>技能 id 列表存放在由 <code>battle.skills.field</code> 命名的记录字段中（默认
+<code>"skills"</code>）。combatant 列表中未知的技能 id 会被跳过并给出警告；列表为空/缺失
+（或根本没有 skills 表）时，将退回到内置的 <strong>Attack</strong>（power 40、accuracy
+100、无消耗）。技能记录的 schema 见<a href="#skill-records">技能记录</a>。</p>
+<h2 id="startbattleid-的解析"><a class="header" href="#startbattleid-的解析"><code>startBattle(id)</code> 的解析</a></h2>
+<p><code>startBattle("x")</code> 按以下顺序解析：存在 <code>encounters</code> 块时，先解析一条
+<strong>encounter 记录</strong> <code>x</code>（一个敌方队伍，见<a href="#encounter-records">Encounter 记录</a>）；否
+则解析单条<strong>敌人记录</strong> <code>x</code>（隐式为野怪）；两张表中都没有的 id 会退回第一条敌
+人记录并给出警告。</p>
+<p>玩家的队伍是<strong>队伍表的每一条记录</strong>（按记录 id 排序；只有一条记录的队伍与 v1
+行为一致）——队伍机制见<a href="#battles">战斗规则</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="encounter-记录"><a class="header" href="#encounter-记录">Encounter 记录</a></h1>
+<blockquote>
+<p>本文是 <code>reference/data-tables/encounters.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>Encounter 记录：敌方队伍、trainer 战斗、队列、trainer 标志和金钱奖励。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p><code>encounters</code>（可选）指定一张 <strong>encounter 表</strong>：其中的记录描述敌方队伍与
+trainer 战斗——
+<code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>。</p>
+<p>来自 spec 的记录示例，原文照录：</p>
+<pre><code class="language-json">{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id</code></td><td>string</td><td>—</td><td>记录 id；由 <code>startBattle(id)</code> 与随机 encounter 区域表解析。</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>—</td><td>出现在 spec 的示例记录中。</td></tr>
+<tr><td><code>enemies</code></td><td>array of enemy-table record ids</td><td>—</td><td>有序的敌人队列。空列表或其中包含未知 id 是战斗开始时的明确错误。</td></tr>
+<tr><td><code>trainer</code></td><td>boolean</td><td><code>false</code></td><td>Trainer 战斗：胜利时支付 <code>money</code>，并封锁 Run 行动。</td></tr>
+<tr><td><code>money</code></td><td>number</td><td><code>0</code></td><td>胜利奖励，仅由 trainer encounter 支付。</td></tr>
+</tbody>
+</table>
+</div>
+<p>缺少 <code>encounters</code> 块 ⇒ 每场战斗都是一个单独的野怪敌人（v1 行为）——见<a href="#battles">战斗规则</a>。</p>
+<h2 id="战斗行为"><a class="header" href="#战斗行为">战斗行为</a></h2>
+<p>存在 <code>encounters</code> 块时，encounter 战斗中敌方一侧是一个<strong>队列</strong>：当前敌人濒死
+后，下一个敌人被派出——以叙述呈现（<code>"Foe sent out Bat!"</code>）——作为一名全新的
+combatant（拥有自己的属性/等级，无状态；RON 镜像会重建，旧敌人的 volatile 全
+部丢弃），且该回合结束（替补登场的那一回合从不行动；敌方 AI 不变，按当前
+combatant 处理）。<strong>队列清空即获胜</strong>；EXP 奖励是所有被击败敌人的 <code>expField</code>
+的总和（见<a href="#level-growth">等级成长</a>）。<code>trainer: true</code> 的 encounter 在胜利时把它
+的 <code>money</code> 支付给玩家的金钱——以叙述呈现（<code>"Got 80 G for winning!"</code>）——并封
+锁 Run 行动（见<a href="#battles">战斗规则</a>）。玩家一侧不变：队伍/换人/道具/
+whiteout 的表现与野怪战斗完全一致，即使敌人仍有剩余，队伍全部濒死依然判负。</p>
+<h2 id="schema-校验"><a class="header" href="#schema-校验">Schema 校验</a></h2>
+<p><code>dotzuki check</code> 要求 <code>encounters</code> 块中的表必须声明 <code>enemies</code> 字段。</p>
+<p>地图伴生文件里的 <code>encounters</code> 块（按 tile 区域划分的野怪 encounter）是另一个
+对象——见<a href="#maps">地图</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="技能记录"><a class="header" href="#技能记录">技能记录</a></h1>
+<blockquote>
+<p>本文是 <code>reference/data-tables/skills.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>技能记录：伤害、治疗、增益、减益招式；<code>power</code>、<code>accuracy</code>、<code>element</code>、类别与消耗。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>一条技能记录包含：<code>name</code>、<code>power</code>（默认 0）、<code>accuracy</code>（默认 100）、可选的
+<code>element</code>、<code>stat</code>（增益/减益招式作用的属性——一个 <code>stats</code> 键，如
+<code>"attack"</code>/<code>"defense"</code>，默认 attack）、类别字段（category field，大小写不敏
+感：<code>attack</code>/<code>damage</code> → 伤害，<code>heal</code> → 按 <code>power</code> 回复自身 HP、上限为最大
+值，<code>buff</code> → 自身属性等级 +1，<code>debuff</code> → 目标属性等级 −1，无法识别 → 按
+attack 处理），以及消耗字段（cost field，默认 0）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>string</td><td>—</td><td>技能名，出现在叙述中（<code>"Slime used Tackle!"</code>）。</td></tr>
+<tr><td><code>power</code></td><td>number</td><td><code>0</code></td><td>伤害数值；对 <code>heal</code> 招式而言是治疗数值。</td></tr>
+<tr><td><code>accuracy</code></td><td>number</td><td><code>100</code></td><td>当且仅当 <code>rng % 100 &lt; accuracy</code> 时命中。</td></tr>
+<tr><td><code>element</code></td><td>string</td><td>—</td><td>克制表查询：技能的 <code>element</code> 对防守方的 <code>element</code>。</td></tr>
+<tr><td><code>stat</code></td><td>string</td><td><code>attack</code></td><td>增益/减益招式作用的属性（一个 <code>stats</code> 键，如 <code>"attack"</code>/<code>"defense"</code>）。</td></tr>
+<tr><td>类别字段</td><td>string</td><td>—</td><td>大小写不敏感：<code>attack</code>/<code>damage</code> → 伤害，<code>heal</code> → 按 <code>power</code> 回复自身 HP、上限为最大值，<code>buff</code> → 自身属性等级 +1，<code>debuff</code> → 目标属性等级 −1，无法识别 → 按 attack 处理。</td></tr>
+<tr><td>消耗字段</td><td>number</td><td><code>0</code></td><td>MP 消耗，以 <code>battle.resource</code> 为门槛。</td></tr>
+</tbody>
+</table>
+</div>
+<p>combatant 列表中未知的技能 id 会被跳过并给出警告；列表为空/缺失（或根本没有
+skills 表）时，将退回到内置的 <strong>Attack</strong>（power 40、accuracy 100、无消耗）。</p>
+<h2 id="接线"><a class="header" href="#接线">接线</a></h2>
+<p><code>skills</code> 指定 skills 表以及若干字段名：<code>field</code>（combatant 记录上的技能 id 列
+表，默认 <code>"skills"</code>）、<code>categoryField</code>（默认 <code>"type"</code>）、<code>costField</code>（默认
+<code>"mpCost"</code>）。没有 <code>skills</code> 键 ⇒ 每个 combatant 只有内置的 Attack。</p>
+<p>来自 spec 的 <code>battle</code> 示例中的项目清单 wiring，原文照录：</p>
+<pre><code class="language-json">"skills":   { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" }
+</code></pre>
+<p>spec 以文字描述技能记录，没有为技能记录本身附带 JSON 示例；上面的 wiring 块
+是 skills 唯一的原文 JSON。</p>
+<h2 id="ron-覆盖"><a class="header" href="#ron-覆盖">RON 覆盖</a></h2>
+<p>当规则文件声明了一条 <code>id</code> 与技能 id 匹配的 <code>kind: Move</code> 记录时，这条 RON 记
+录会<strong>接管</strong>该技能：其 <code>power</code>/<code>type</code>/<code>accuracy</code>/<code>cost</code> 字段覆盖数据表记录
+（缺失的字段回落到数据表记录），且该行动改走效果栈，而不再走内置的类别行
+为。简言之：<strong>RON 记录 &gt; 数据表记录 &gt; 内置类别</strong>。没有匹配 RON 记录的技能与
+v1 表现完全一致，即使所在项目的规则文件里有效果。见<a href="#battles">战斗规则</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="道具记录"><a class="header" href="#道具记录">道具记录</a></h1>
+<blockquote>
+<p>本文是 <code>reference/data-tables/items.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>道具记录：治疗量、商店价格、仅作显示的 effect 文本，以及初始背包。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p><code>items</code>（可选）开启战斗中的 <strong>Item menu</strong>：<code>table</code> 指定道具表，<code>healField</code>
+（默认 <code>"healHp"</code>）指定记录中那个字段——正数即让道具在战斗中可用（也就是治
+疗量），<code>starting</code> 指定游戏启动时的背包（记录 id → 数量）。没有 <code>items</code> 键 ⇒
+没有 Item menu。道具记录上的自由文本 <code>effect</code> 字段<strong>仅作显示</strong>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id</code></td><td>string</td><td>—</td><td>记录 id：背包的键，也是场景传给 <code>openShop</code> 的 id。</td></tr>
+<tr><td><code>healHp</code>（列名由项目清单的 <code>healField</code> 指定，默认 <code>"healHp"</code>）</td><td>number</td><td>—</td><td>正数即让道具在战斗中可用：也就是治疗量。</td></tr>
+<tr><td><code>price</code></td><td>number</td><td><code>0</code></td><td>商店 Buy 价格；Sell 支付 <code>floor(price / 2)</code>。</td></tr>
+<tr><td><code>effect</code></td><td>string</td><td>—</td><td>自由文本，仅作显示。</td></tr>
+</tbody>
+</table>
+</div>
+<p>spec 以文字描述道具记录，没有为道具记录本身附带 JSON 示例；项目清单的
+wiring 是唯一的原文 JSON：</p>
+<pre><code class="language-json">"items":    { "table": "items", "healField": "healHp", "starting": { "potion": 3 } }
+</code></pre>
+<h2 id="战斗中"><a class="header" href="#战斗中">战斗中</a></h2>
+<p>存在 <code>items</code> 块时，运行器持有一个持久化的<strong>背包</strong>（记录 id → 数量，首次启动
+时由 <code>starting</code> 初始化，随存档文件保存）。Item menu 会列出仍有剩余数量的可用
+道具（<code>healField</code> 数值为正的记录）；使用一个会按该数值治疗<strong>当前出战</strong>成员
+（上限为最大 HP）、扣减数量，并消耗玩家的回合。数量为 0 的道具不再列出。</p>
+<h2 id="商店中"><a class="header" href="#商店中">商店中</a></h2>
+<p>道具记录通过 <code>battle.items</code> 表读取。<strong>Buy</strong> 列出给定道具及其记录 <code>price</code>（默
+认 0）和玩家的金钱。<strong>Sell</strong> 列出玩家背包中数量为正的条目，每件按
+<strong><code>floor(price / 2)</code></strong> 计价（没有单独的 sellPrice 字段；价格为 0 的道具按 0
+出售——这是允许的）。货架上的未知道具 id 会以 name=id、price 0 的形式打开。
+见<a href="#shops">商店</a>。</p>
+<h2 id="大地图中的-bag"><a class="header" href="#大地图中的-bag">大地图中的 Bag</a></h2>
+<p>记录带正治疗数值的道具（与战斗道具相同的 <code>battle.items.healField</code> 约定）可以
+使用：选择道具，选择一名队伍成员——为其治疗（上限为最大 HP）并扣减数量。濒
+死成员（0 HP）<strong>不会</strong>被复活，满 HP 成员不会被治疗（“It won’t have any
+effect.”），没有正治疗数值的道具无法使用。没有 <code>battle.items</code> 块的项目会把自
+己的道具列为不可用。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="等级成长"><a class="header" href="#等级成长">等级成长</a></h1>
+<blockquote>
+<p>本文是 <code>reference/data-tables/levels.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p><code>battle.levels</code> 块：属性成长、EXP 奖励、升级曲线与逐成员持久化。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p><code>levels</code>（可选）开启 <strong>EXP 与等级成长</strong>（每个键都可选，以下为默认值）：</p>
+<pre><code class="language-json">"levels":   { "expField": "exp", "levelField": "level",
+              "curve": { "base": 8, "exponent": 3 }, "growth": 0.05, "maxLevel": 100 }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>expField</code></td><td>string</td><td><code>"exp"</code></td><td>记录中存放被击败敌人所付 EXP 的字段（记录缺少它时按 0）。</td></tr>
+<tr><td><code>levelField</code></td><td>string</td><td><code>"level"</code></td><td>记录中存放等级的字段（缺失 ⇒ 1 ⇒ ×1）。</td></tr>
+<tr><td><code>curve.base</code></td><td>number</td><td><code>8</code></td><td><code>exp_to_next(L) = curve.base × L^curve.exponent</code>（整数）中的基数。</td></tr>
+<tr><td><code>curve.exponent</code></td><td>number</td><td><code>3</code></td><td>升级所需经验曲线中的指数。</td></tr>
+<tr><td><code>growth</code></td><td>number</td><td><code>0.05</code></td><td>属性成长倍率：<code>floor(raw × (1 + growth × (level − 1)))</code>。</td></tr>
+<tr><td><code>maxLevel</code></td><td>number</td><td><code>100</code></td><td>等级上限。</td></tr>
+</tbody>
+</table>
+</div>
+<p>缺失 ⇒ 维持当前的确切行为：不获得 EXP、属性永不成长，记录的 <code>level</code> 字段只供
+给 RON 等级 op。存在该块时：</p>
+<ul>
+<li><strong>属性成长</strong>——每一项生效属性（双方皆然，凡是读取原始记录属性的地方：战斗
+构建、RON 镜像、菜单的 Party 视图）都是
+<code>floor(raw × (1 + growth × (level − 1)))</code>，其中 <code>level</code> 来自记录的
+<code>levelField</code>（默认 <code>"level"</code>；缺失 ⇒ 1 ⇒ ×1，在数值上与无 levels 的项目完
+全相同）。一条 5 级的敌人记录确实更强。</li>
+<li><strong>EXP 奖励</strong>——获胜时，每名<strong>未濒死</strong>的队伍成员获得所有被击败敌人
+<code>expField</code> 数值的总和（记录缺少它时按 0），每场战斗一次，在胜利文本之后以
+叙述呈现（<code>"Aria gained 8 EXP!"</code>）。单敌人战斗的总和就是那个敌人的数值，与
+v1 相同。</li>
+<li><strong>升级</strong>——每名成员都记录朝下一级累积的 <code>exp</code> 进度；
+<code>exp_to_next(L) = curve.base × L^curve.exponent</code>（整数）。当
+<code>exp &gt;= exp_to_next(level)</code> 且 <code>level &lt; maxLevel</code> 时：升级，
+<code>exp -= exp_to_next(level)</code>（支持一次奖励连升多级），以叙述呈现（<code>"Aria grew to level 2!"</code>）。升级会按成长倍率重算成员的属性，并把最大 HP/MP 的
+<strong>差值</strong>补入当前池（最大 HP 60 → 63 时，2 级会把当前 HP 提高 3；MP 同理）。</li>
+<li><strong>持久化</strong>——逐成员的 <code>level</code> + <code>exp</code> 搭载在运行器的队伍状态和存档上
+（<code>party[].level</code> / <code>party[].exp</code> 是 OPTIONAL 字段；缺失 ⇒ 等级 1 / 0
+EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party 视图会显示 <code>Lv</code>
+和一行 <code>EXP &lt;progress&gt;/&lt;need&gt;</code>（仅在有该块时）。</li>
+</ul>
+<p><code>levels</code> 是项目清单中的一个配置块，而不是数据表：它读取的记录是队伍表与敌人
+表中的 combatant 和敌人记录。战斗侧的行为见<a href="#battles">战斗规则</a>；存
+档版本化见<a href="#save-compatibility">存档兼容性</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
+<blockquote>
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
+<code>dotzuki-*</code> crate 共享）；每个 release 都附带一份 <code>migration/</code> 目录下的迁移指
+南（每个 release 各建一份）。</p>
+<h2 id="格式"><a class="header" href="#格式">格式</a></h2>
+<ul>
+<li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
+的新增与修复。</li>
+<li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<h2 id="v010-1"><a class="header" href="#v010-1">v0.1.0</a></h2>
+<p>引擎 workspace 的初始发布版本：核心引擎、战斗效果栈、<code>dotzuki-rules</code>、DSL
+编译器、运行器、CLI、渲染器、UI、音频、app/tui/web shell，以及
+dotzuki-editor 工具链。（若这条记录以占位形式发布，请从首次 release 之前的
+git 历史回填。）</p>
 
                     </main>
 
