@@ -23,6 +23,8 @@ cargo build --release --bin dotzuki
 
 产物位于 `target/release/dotzuki`。
 
+捷径：`dotzuki new <name> --template your-first-game` 会写出成品项目（即下文将逐步搭建的那批文件）——本教程仍是逐步路线。
+
 目标就是已提交的项目本身：一个可玩的城镇、一场由剧情触发的战斗、一片随机遭遇的空地和
 一份存档。下文每个清单都是该项目的拷贝，所以每一步结束时都处于下一步可以继续的状态。
 两个 `map.tmx.json` 清单用带 `<!-- excerpt -->` 标记的注释缩写了自己的 tile 数组；请从
