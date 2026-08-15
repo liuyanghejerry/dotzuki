@@ -65,16 +65,16 @@ function onDelete() {
 <template>
   <div v-if="selectedRecord" class="h-full overflow-y-auto p-5 max-w-3xl">
     <div class="flex items-center gap-3 mb-4">
-      <input v-model="selectedRecord.id" placeholder="quest-id" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-blue-300 font-mono w-48" />
-      <select v-model="selectedRecord.type" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+      <input v-model="selectedRecord.id" placeholder="quest-id" class="bg-surface border border-border rounded-control px-2 py-1 text-sm text-accent-ink-strong font-mono w-48" />
+      <select v-model="selectedRecord.type" class="bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
         <option v-for="ty in types" :key="ty" :value="ty">{{ t('story.questType.' + ty) }}</option>
       </select>
-      <select v-model="selectedRecord.status" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+      <select v-model="selectedRecord.status" class="bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
         <option v-for="s in statuses" :key="s" :value="s">{{ t('story.status.' + s) }}</option>
       </select>
       <div class="flex-1" />
-      <button @click="onDelete" class="px-2 py-1 text-xs rounded text-gray-400 hover:text-red-400">{{ t('story.delete') }}</button>
-      <button @click="onSave" :disabled="saving" class="px-4 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">
+      <button @click="onDelete" class="px-2 py-1 text-xs rounded-control text-ink-muted hover:text-danger-ink">{{ t('story.delete') }}</button>
+      <button @click="onSave" :disabled="saving" class="px-4 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">
         {{ saving ? t('story.saving') : t('story.save') }}
       </button>
     </div>
@@ -82,14 +82,14 @@ function onDelete() {
     <div class="grid grid-cols-2 gap-4 mb-4">
       <LocalizedField :label="t('story.fields.title')" :locales="locales" v-model="selectedRecord.title" />
       <div class="space-y-3">
-        <label class="block text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.arc') }}
-          <select v-model="selectedRecord.arc" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
+        <label class="block text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.arc') }}
+          <select v-model="selectedRecord.arc" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink">
             <option value="">—</option>
             <option v-for="a in story.arcs.value" :key="a.id" :value="a.id">{{ a.id }}</option>
           </select>
         </label>
-        <label class="block text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.giver') }}
-          <select v-model="selectedRecord.giver" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
+        <label class="block text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.giver') }}
+          <select v-model="selectedRecord.giver" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink">
             <option value="">—</option>
             <option v-for="c in story.characters.value" :key="c.id" :value="c.id">{{ c.id }}</option>
           </select>
@@ -97,8 +97,8 @@ function onDelete() {
       </div>
     </div>
 
-    <label class="block text-[11px] uppercase tracking-wide text-gray-500 mb-4">{{ t('story.fields.summary') }}
-      <textarea v-model="selectedRecord.summary" rows="2" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100 focus:border-blue-500 focus:outline-none" />
+    <label class="block text-tiny uppercase tracking-wide text-ink-faint mb-4">{{ t('story.fields.summary') }}
+      <textarea v-model="selectedRecord.summary" rows="2" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink focus:border-accent-strong focus:outline-none" />
     </label>
 
     <div class="grid grid-cols-2 gap-4 mb-4">
@@ -115,14 +115,14 @@ function onDelete() {
     <!-- objectives -->
     <div class="mb-5">
       <div class="flex items-center justify-between mb-1">
-        <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.objectives') }}</label>
-        <button @click="addObjective" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.add') }}</button>
+        <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.objectives') }}</label>
+        <button @click="addObjective" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.add') }}</button>
       </div>
-      <div v-for="(o, i) in selectedRecord.objectives" :key="i" class="bg-gray-800/40 border border-gray-700/60 rounded p-2 mb-2">
+      <div v-for="(o, i) in selectedRecord.objectives" :key="i" class="bg-surface/40 border border-border/60 rounded-control p-2 mb-2">
         <div class="flex gap-2 mb-2">
-          <input v-model="o.id" placeholder="o1" class="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-          <input v-model="o.doneFlag" list="quest-flags" placeholder="doneFlag (EVENT_...)" class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-          <button @click="delObjective(Number(i))" class="text-gray-500 hover:text-red-400 px-1">×</button>
+          <input v-model="o.id" placeholder="o1" class="w-16 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+          <input v-model="o.doneFlag" list="quest-flags" placeholder="doneFlag (EVENT_...)" class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+          <button @click="delObjective(Number(i))" class="text-ink-faint hover:text-danger-ink px-1">×</button>
         </div>
         <LocalizedField :label="t('story.fields.text')" :locales="locales" v-model="o.text" />
       </div>
@@ -132,44 +132,44 @@ function onDelete() {
     <!-- rewards -->
     <div class="mb-5">
       <div class="flex items-center justify-between mb-1">
-        <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.rewards') }}</label>
-        <button @click="addReward" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.add') }}</button>
+        <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.rewards') }}</label>
+        <button @click="addReward" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.add') }}</button>
       </div>
       <div v-for="(r, i) in selectedRecord.rewards" :key="i" class="flex gap-2 mb-1">
-        <input v-model="r.kind" placeholder="item" class="w-28 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <input v-model="r.id" placeholder="POTION" class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <input v-model.number="r.amount" type="number" class="w-20 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <button @click="delReward(Number(i))" class="text-gray-500 hover:text-red-400 px-1">×</button>
+        <input v-model="r.kind" placeholder="item" class="w-28 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <input v-model="r.id" placeholder="POTION" class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <input v-model.number="r.amount" type="number" class="w-20 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <button @click="delReward(Number(i))" class="text-ink-faint hover:text-danger-ink px-1">×</button>
       </div>
     </div>
 
     <!-- implementation cross-reference -->
     <div class="mb-2">
       <div class="flex items-center justify-between mb-1">
-        <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.implementedBy') }}</label>
-        <button @click="addImpl" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.add') }}</button>
+        <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.implementedBy') }}</label>
+        <button @click="addImpl" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.add') }}</button>
       </div>
       <div v-for="(im, i) in selectedRecord.implementedBy" :key="i" class="flex gap-2 mb-1 items-center">
         <input v-model="im.scene" @change="onSceneChange(im)" list="quest-scene-stems" :placeholder="t('story.scenePlaceholder')"
-          class="flex-1 bg-gray-800 border rounded px-2 py-1 text-xs text-gray-100 focus:outline-none"
-          :class="sceneExists(im.scene) ? 'border-gray-700 focus:border-blue-500' : 'border-amber-500/70'" />
+          class="flex-1 bg-surface border rounded-control px-2 py-1 text-xs text-ink focus:outline-none"
+          :class="sceneExists(im.scene) ? 'border-border focus:border-accent-strong' : 'border-warning/70'" />
         <input v-model="im.storyline" :list="'quest-sl-' + i" :placeholder="t('story.storylinePlaceholder')"
-          class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:outline-none focus:border-blue-500" />
+          class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink focus:outline-none focus:border-accent-strong" />
         <datalist :id="'quest-sl-' + i"><option v-for="n in namesFor(im.scene)" :key="n" :value="n" /></datalist>
         <button v-if="scriptActivity && im.scene && sceneExists(im.scene)" type="button" @click="openScene(im.scene)"
-          class="text-gray-400 hover:text-blue-300 px-1" :title="t('story.openScene')">↗</button>
-        <button type="button" @click="delImpl(Number(i))" class="text-gray-500 hover:text-red-400 px-1">×</button>
+          class="text-ink-muted hover:text-accent-ink-strong px-1" :title="t('story.openScene')">↗</button>
+        <button type="button" @click="delImpl(Number(i))" class="text-ink-faint hover:text-danger-ink px-1">×</button>
       </div>
       <datalist id="quest-scene-stems"><option v-for="s in sceneStems" :key="s" :value="s" /></datalist>
-      <p v-if="!selectedRecord.implementedBy.length" class="text-[11px] text-amber-500/80">{{ t('story.noImplementation') }}</p>
-      <p v-else-if="implHasMissing" class="text-[11px] text-amber-500/80 mt-1">⚠ {{ t('story.sceneMissing') }}</p>
+      <p v-if="!selectedRecord.implementedBy.length" class="text-tiny text-warning/80">{{ t('story.noImplementation') }}</p>
+      <p v-else-if="implHasMissing" class="text-tiny text-warning/80 mt-1">⚠ {{ t('story.sceneMissing') }}</p>
     </div>
 
     <!-- 剧情 → .scene generation -->
     <SceneGenerator :key="selectedRecord.id" />
   </div>
 
-  <div v-else class="h-full flex items-center justify-center text-gray-600 text-sm">
+  <div v-else class="h-full flex items-center justify-center text-ink-disabled text-sm">
     {{ t('story.selectOrCreate') }}
   </div>
 </template>

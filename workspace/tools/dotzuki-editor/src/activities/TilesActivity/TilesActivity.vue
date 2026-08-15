@@ -1,41 +1,41 @@
 <template>
   <div class="h-full flex flex-col">
     <!-- toolbar -->
-    <div class="flex items-center gap-3 px-3 py-2 bg-gray-800 border-b border-gray-700 text-sm shrink-0">
-      <div class="flex rounded overflow-hidden border border-gray-600">
+    <div class="flex items-center gap-3 px-3 py-2 bg-surface border-b border-border text-sm shrink-0">
+      <div class="flex rounded-control overflow-hidden border border-border-strong">
         <button
           @click="mode = 'harvest'"
-          :class="['px-3 py-1', mode === 'harvest' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+          :class="['px-3 py-1', mode === 'harvest' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
         >采集</button>
         <button
           @click="mode = 'building'"
-          :class="['px-3 py-1', mode === 'building' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+          :class="['px-3 py-1', mode === 'building' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
         >建筑</button>
       </div>
       <template v-if="mode === 'harvest'">
-        <span class="text-gray-400 ml-1">背景图</span>
-        <select v-model="selectedUrl" class="bg-gray-700 rounded px-2 py-1 border border-gray-600 max-w-xs">
+        <span class="text-ink-muted ml-1">背景图</span>
+        <select v-model="selectedUrl" class="bg-raised rounded-control px-2 py-1 border border-border-strong max-w-xs">
           <option value="">（选择一张 AI 地图作为采集背景）</option>
           <option v-for="b in tilesStore.backdrops" :key="b.url" :value="b.url">
             {{ b.map }} / {{ b.file }}
           </option>
         </select>
-        <label class="text-gray-400 ml-2">缩放</label>
+        <label class="text-ink-muted ml-2">缩放</label>
         <input type="range" min="1" max="6" step="1" v-model.number="zoom" />
-        <span class="text-gray-500">{{ zoom }}× · {{ tileSize }}px 格</span>
-        <span class="text-gray-400 ml-2">建筑名</span>
-        <input v-model="harvestName" placeholder="留空用地图名" class="w-28 bg-gray-700 rounded px-2 py-1 border border-gray-600" />
-        <span v-if="harvesting" class="text-blue-400">采集中…</span>
-        <span v-else-if="harvestMsg" class="text-green-400 max-w-xs truncate">{{ harvestMsg }}</span>
+        <span class="text-ink-faint">{{ zoom }}× · {{ tileSize }}px 格</span>
+        <span class="text-ink-muted ml-2">建筑名</span>
+        <input v-model="harvestName" placeholder="留空用地图名" class="w-28 bg-raised rounded-control px-2 py-1 border border-border-strong" />
+        <span v-if="harvesting" class="text-accent-ink">采集中…</span>
+        <span v-else-if="harvestMsg" class="text-success-ink max-w-xs truncate">{{ harvestMsg }}</span>
       </template>
-      <span class="ml-auto text-gray-500">库中 {{ tilesStore.libraryTiles.length }} 块</span>
-      <span v-if="tilesStore.error" class="text-red-400 max-w-xs truncate">{{ tilesStore.error }}</span>
+      <span class="ml-auto text-ink-faint">库中 {{ tilesStore.libraryTiles.length }} 块</span>
+      <span v-if="tilesStore.error" class="text-danger-ink max-w-xs truncate">{{ tilesStore.error }}</span>
     </div>
 
     <div class="flex-1 flex overflow-hidden">
       <!-- LEFT: harvest backdrop (采集) -->
-      <div v-if="mode === 'harvest'" class="flex-1 overflow-auto bg-gray-900 p-2">
-        <div v-if="!selectedUrl" class="h-full flex items-center justify-center text-gray-600 text-center px-8">
+      <div v-if="mode === 'harvest'" class="flex-1 overflow-auto bg-canvas p-2">
+        <div v-if="!selectedUrl" class="h-full flex items-center justify-center text-ink-disabled text-center px-8">
           选择上方的一张 AI 地图，拖拽框选一片区域，即可整片采集为一座建筑（整体一张图，到「建筑」页可精修、盖到地图）。
         </div>
         <canvas
@@ -53,50 +53,50 @@
       <!-- BUILDING (建筑): pick/create a building, edit it inline in the pixel editor -->
       <template v-else>
         <!-- buildings list + create -->
-        <div class="w-44 shrink-0 bg-gray-800 border-r border-gray-700 overflow-y-auto p-2 flex flex-col gap-2">
+        <div class="w-44 shrink-0 bg-surface border-r border-border overflow-y-auto p-2 flex flex-col gap-2">
           <button
-            class="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 text-[12px]"
+            class="px-2 py-1 rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-50 text-[12px]"
             :disabled="creatingBlank"
             title="按 列×行 新建一座空白建筑，直接在像素编辑器里绘制 / 印章"
             @click="newBlankBuilding"
           >{{ creatingBlank ? '创建中…' : '＋ 新建空白建筑' }}</button>
-          <div class="flex items-center gap-1 text-[11px] text-gray-400">
+          <div class="flex items-center gap-1 text-tiny text-ink-muted">
             <span>列</span>
-            <input type="number" min="1" max="16" v-model.number="groupW" class="w-12 bg-gray-700 rounded px-1 py-0.5 border border-gray-600" />
+            <input type="number" min="1" max="16" v-model.number="groupW" class="w-12 bg-raised rounded-control px-1 py-0.5 border border-border-strong" />
             <span>行</span>
-            <input type="number" min="1" max="16" v-model.number="groupH" class="w-12 bg-gray-700 rounded px-1 py-0.5 border border-gray-600" />
+            <input type="number" min="1" max="16" v-model.number="groupH" class="w-12 bg-raised rounded-control px-1 py-0.5 border border-border-strong" />
           </div>
-          <input v-model="groupName" placeholder="新建名称（可空）" class="bg-gray-700 rounded px-2 py-1 border border-gray-600 text-[12px]" />
-          <span v-if="groupMsg" class="text-green-400 text-[11px]">{{ groupMsg }}</span>
+          <input v-model="groupName" placeholder="新建名称（可空）" class="bg-raised rounded-control px-2 py-1 border border-border-strong text-[12px]" />
+          <span v-if="groupMsg" class="text-success-ink text-tiny">{{ groupMsg }}</span>
 
-          <div class="text-[11px] text-gray-500 mt-1">已保存的建筑</div>
+          <div class="text-tiny text-ink-faint mt-1">已保存的建筑</div>
           <input
             v-if="tilesStore.groups.length"
             v-model="buildingFilter"
             placeholder="搜索建筑…"
-            class="w-full px-2 py-1 text-[11px] bg-gray-900 border border-gray-700 rounded text-gray-200 placeholder-gray-500 outline-none focus:border-blue-400"
+            class="w-full px-2 py-1 text-tiny bg-inset border border-border rounded-control text-ink-secondary placeholder-gray-500 outline-none focus:border-accent-ink"
           />
-          <div v-if="tilesStore.groups.length === 0" class="text-[11px] text-gray-600">
+          <div v-if="tilesStore.groups.length === 0" class="text-tiny text-ink-disabled">
             还没有建筑。「＋ 新建空白建筑」，或到「采集」从参考图整片采集。
           </div>
           <div v-else class="flex flex-col gap-1">
-            <div v-if="filteredBuildings.length === 0" class="text-[11px] text-gray-600">没有匹配的建筑。</div>
+            <div v-if="filteredBuildings.length === 0" class="text-tiny text-ink-disabled">没有匹配的建筑。</div>
             <div v-for="g in filteredBuildings" :key="g.id" class="relative group/bg">
               <button
-                class="w-full flex items-center gap-2 border rounded bg-gray-900 hover:border-blue-400 p-1 text-left"
-                :class="editingGroupId === g.id ? 'border-blue-400 ring-1 ring-blue-400' : 'border-gray-700'"
+                class="w-full flex items-center gap-2 border rounded-control bg-canvas hover:border-accent-ink p-1 text-left"
+                :class="editingGroupId === g.id ? 'border-accent-ink ring-1 ring-accent-ink' : 'border-border'"
                 :title="`${g.name || g.id} · ${g.w}×${g.h} — 点开编辑（可在编辑器标题处重命名）`"
                 @click="selectBuilding(g)"
               >
-                <img :src="tilesStore.groupUrl(g.id)" class="block w-10 h-10 shrink-0 bg-gray-800 object-contain" style="image-rendering: pixelated;" />
-                <span class="text-[11px] text-gray-300 truncate">{{ g.name || g.id }}</span>
+                <img :src="tilesStore.groupUrl(g.id)" class="block w-10 h-10 shrink-0 bg-surface object-contain" style="image-rendering: pixelated;" />
+                <span class="text-tiny text-ink-body truncate">{{ g.name || g.id }}</span>
               </button>
               <button
-                class="absolute top-0.5 right-5 w-4 h-4 rounded bg-black/70 text-gray-200 text-[10px] hidden group-hover/bg:flex items-center justify-center hover:bg-blue-600 disabled:opacity-50"
+                class="absolute top-0.5 right-5 w-4 h-4 rounded-control bg-black/70 text-ink-secondary text-micro hidden group-hover/bg:flex items-center justify-center hover:bg-accent disabled:opacity-50"
                 title="复制为一个新的、独立的建筑" :disabled="copyingGroupId === g.id" @click.stop="copyGroup(g)"
               >⧉</button>
               <button
-                class="absolute top-0.5 right-0.5 w-4 h-4 rounded bg-black/70 text-red-300 text-[10px] hidden group-hover/bg:flex items-center justify-center hover:bg-red-600"
+                class="absolute top-0.5 right-0.5 w-4 h-4 rounded-control bg-black/70 text-danger-ink-strong text-micro hidden group-hover/bg:flex items-center justify-center hover:bg-danger"
                 title="删除建筑" @click.stop="deleteGroupConfirm(g)"
               >✕</button>
             </div>
@@ -104,7 +104,7 @@
         </div>
 
         <!-- inline pixel editor for the selected building -->
-        <div class="flex-1 min-w-0 bg-gray-900">
+        <div class="flex-1 min-w-0 bg-canvas">
           <TilePixelEditor
             v-if="pixelGroup"
             ref="buildingEditor"
@@ -122,46 +122,46 @@
             @resized="onBuildingResized"
             @rename="onRenameBuilding"
           />
-          <div v-else class="h-full flex items-center justify-center text-gray-600 text-sm text-center px-6">
+          <div v-else class="h-full flex items-center justify-center text-ink-disabled text-sm text-center px-6">
             选择左侧的建筑进行编辑，或「＋ 新建空白建筑」。<br />也可到「采集」从参考图整片采集为建筑。
           </div>
         </div>
       </template>
 
       <!-- library (harvest mode only; the building editor has its own 印章 palette) -->
-      <div v-if="mode === 'harvest'" class="w-72 shrink-0 bg-gray-800 border-l border-gray-700 overflow-y-auto p-2">
+      <div v-if="mode === 'harvest'" class="w-72 shrink-0 bg-surface border-l border-border overflow-y-auto p-2">
         <div class="flex items-center gap-1 mb-2">
-          <span class="text-xs text-gray-400">共享瓦片库 (data/tiles)</span>
+          <span class="text-xs text-ink-muted">共享瓦片库 (data/tiles)</span>
           <button
-            class="ml-auto text-[11px] px-1.5 py-0.5 rounded border bg-gray-700 border-gray-600 text-gray-300 hover:border-blue-400 disabled:opacity-50"
+            class="ml-auto text-tiny px-1.5 py-0.5 rounded-control border bg-raised border-border-strong text-ink-body hover:border-accent-ink disabled:opacity-50"
             :disabled="creatingBlank"
             title="新建一块空白瓦片，直接在像素编辑器里绘制（无需从参考图圈选）"
             @click="newBlankTile"
           >{{ creatingBlank ? '…' : '＋ 空白' }}</button>
           <button
-            class="text-[11px] px-1.5 py-0.5 rounded border"
-            :class="selectMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-blue-400'"
+            class="text-tiny px-1.5 py-0.5 rounded-control border"
+            :class="selectMode ? 'bg-accent border-accent-strong text-white' : 'bg-raised border-border-strong text-ink-body hover:border-accent-ink'"
             :disabled="tilesStore.libraryTiles.length === 0"
             :title="selectMode ? '退出批量选择' : '批量选择瓦片以删除'"
             @click="toggleSelectMode"
           >{{ selectMode ? '退出选择' : '选择' }}</button>
         </div>
-        <div v-if="selectMode" class="flex items-center gap-1 mb-2 text-[11px]">
+        <div v-if="selectMode" class="flex items-center gap-1 mb-2 text-tiny">
           <button
-            class="px-1.5 py-0.5 rounded bg-gray-700 border border-gray-600 text-gray-300 hover:border-blue-400"
+            class="px-1.5 py-0.5 rounded-control bg-raised border border-border-strong text-ink-body hover:border-accent-ink"
             @click="selectAllTiles"
           >全选</button>
           <button
-            class="px-1.5 py-0.5 rounded bg-gray-700 border border-gray-600 text-gray-300 hover:border-blue-400"
+            class="px-1.5 py-0.5 rounded-control bg-raised border border-border-strong text-ink-body hover:border-accent-ink"
             @click="clearTileSelection"
           >清空</button>
           <button
-            class="ml-auto px-2 py-0.5 rounded bg-red-600 text-white hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            class="ml-auto px-2 py-0.5 rounded-control bg-danger text-white hover:bg-danger-hover disabled:opacity-40 disabled:cursor-not-allowed"
             :disabled="selectedTileIds.size === 0"
             @click="deleteSelectedTiles"
           >删除选中 ({{ selectedTileIds.size }})</button>
         </div>
-        <div v-if="tilesStore.libraryTiles.length === 0" class="text-gray-600 text-xs">
+        <div v-if="tilesStore.libraryTiles.length === 0" class="text-ink-disabled text-xs">
           还没有瓦片。点上方「＋ 空白」从零绘制一块（「采集」现在直接生成建筑，不再拆成瓦片）。
         </div>
         <div class="grid grid-cols-4 gap-1">
@@ -175,10 +175,10 @@
               :src="tilesStore.tileUrl(t.id)"
               :alt="t.id"
               :class="[
-                'w-12 h-12 border bg-gray-700 cursor-pointer',
+                'w-12 h-12 border bg-raised cursor-pointer',
                 selectMode && selectedTileIds.has(t.id)
-                  ? 'border-red-400 ring-2 ring-red-400'
-                  : 'border-gray-700 group-hover:border-blue-400',
+                  ? 'border-danger-ink ring-2 ring-danger-ink'
+                  : 'border-border group-hover:border-accent-ink',
               ]"
               style="image-rendering: pixelated;"
               :title="selectMode ? `选择 ${t.id}` : `编辑 ${t.id}`"
@@ -186,15 +186,15 @@
             />
             <div
               v-if="selectMode && selectedTileIds.has(t.id)"
-              class="absolute top-0 left-0 w-4 h-4 bg-red-500 text-white text-[10px] leading-4 text-center rounded-br pointer-events-none"
+              class="absolute top-0 left-0 w-4 h-4 bg-danger text-white text-micro leading-4 text-center rounded-br pointer-events-none"
             >✓</div>
             <button
               v-if="!selectMode"
-              class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 hover:bg-red-500 text-white text-[10px] leading-none hidden group-hover:flex items-center justify-center"
+              class="absolute -top-1 -right-1 w-4 h-4 rounded-pill bg-danger hover:bg-danger-hover text-white text-micro leading-none hidden group-hover:flex items-center justify-center"
               title="删除此瓦片"
               @click.stop="onDelete(t.id)"
             >✕</button>
-            <span class="text-[10px] text-gray-500 truncate w-12 text-center">{{ t.id }}</span>
+            <span class="text-micro text-ink-faint truncate w-12 text-center">{{ t.id }}</span>
           </div>
         </div>
       </div>

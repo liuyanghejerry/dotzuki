@@ -16,22 +16,22 @@ function set(loc: string, val: string) {
 
 <template>
   <div>
-    <label class="block text-[11px] uppercase tracking-wide text-gray-500 mb-1">{{ label }}</label>
+    <label class="block text-tiny uppercase tracking-wide text-ink-faint mb-1">{{ label }}</label>
     <div class="space-y-1">
       <div v-for="loc in locales" :key="loc" class="flex items-start gap-2">
-        <span class="text-[10px] text-gray-500 w-6 shrink-0 uppercase mt-1.5">{{ loc }}</span>
+        <span class="text-micro text-ink-faint w-6 shrink-0 uppercase mt-1.5">{{ loc }}</span>
         <textarea
           v-if="textarea"
           :value="modelValue?.[loc] ?? ''"
           @input="set(loc, ($event.target as HTMLTextAreaElement).value)"
           rows="2"
-          class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+          class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink focus:border-accent-strong focus:outline-none"
         />
         <input
           v-else
           :value="modelValue?.[loc] ?? ''"
           @input="set(loc, ($event.target as HTMLInputElement).value)"
-          class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+          class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink focus:border-accent-strong focus:outline-none"
         />
       </div>
     </div>

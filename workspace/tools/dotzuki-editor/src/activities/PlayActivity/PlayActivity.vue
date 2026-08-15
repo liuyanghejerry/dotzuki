@@ -1,31 +1,31 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-900 text-gray-100">
+  <div class="h-full flex flex-col bg-canvas text-ink">
     <!-- Toolbar -->
-    <div class="flex items-center gap-3 px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
-      <span class="text-sm font-semibold text-gray-200">🎮 {{ $t('play.title') }}</span>
+    <div class="flex items-center gap-3 px-4 py-2 bg-surface border-b border-border shrink-0">
+      <span class="text-sm font-semibold text-ink-secondary">🎮 {{ $t('play.title') }}</span>
       <button
         @click="restart"
         :disabled="status === 'loading'"
-        class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-50"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
       >{{ $t('play.restart') }}</button>
       <button
         @click="clearSave"
         :disabled="status === 'loading'"
-        class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-50"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
       >{{ $t('play.clearSave') }}</button>
       <button
         @click="toggleMute"
-        class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay"
         :title="muted ? 'Unmute' : 'Mute'"
       >{{ muted ? '🔇' : '🔊' }}</button>
       <span
         class="text-xs"
-        :class="status === 'error' ? 'text-red-400' : status === 'running' ? 'text-green-400' : 'text-gray-400'"
+        :class="status === 'error' ? 'text-danger-ink' : status === 'running' ? 'text-success-ink' : 'text-ink-muted'"
       >{{ statusText }}</span>
     </div>
 
     <!-- Stage -->
-    <div class="flex-1 flex flex-col items-center justify-center gap-3 bg-gray-950 overflow-auto p-4">
+    <div class="flex-1 flex flex-col items-center justify-center gap-3 bg-canvas-deep overflow-auto p-4">
       <canvas
         v-show="status === 'running'"
         ref="canvasEl"
@@ -33,20 +33,20 @@
         :height="HEIGHT"
         tabindex="0"
         @blur="clearKeys"
-        class="w-[960px] h-[720px] max-w-full bg-black [image-rendering:pixelated] outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-[960px] h-[720px] max-w-full bg-black [image-rendering:pixelated] outline-none focus:ring-2 focus:ring-accent-strong"
       ></canvas>
 
       <div v-if="status === 'error'" class="max-w-xl text-center">
-        <p class="text-sm text-red-400 whitespace-pre-wrap">{{ errorMessage }}</p>
+        <p class="text-sm text-danger-ink whitespace-pre-wrap">{{ errorMessage }}</p>
         <button
           @click="restart"
-          class="mt-3 px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-500"
+          class="mt-3 px-3 py-1 text-sm rounded-control bg-accent hover:bg-accent-strong"
         >{{ $t('play.retry') }}</button>
       </div>
 
-      <div v-if="status === 'loading'" class="text-sm text-gray-500">{{ $t('play.loading') }}</div>
+      <div v-if="status === 'loading'" class="text-sm text-ink-faint">{{ $t('play.loading') }}</div>
 
-      <p class="text-xs text-gray-500 text-center">{{ $t('play.keyHelp') }}</p>
+      <p class="text-xs text-ink-faint text-center">{{ $t('play.keyHelp') }}</p>
     </div>
   </div>
 </template>

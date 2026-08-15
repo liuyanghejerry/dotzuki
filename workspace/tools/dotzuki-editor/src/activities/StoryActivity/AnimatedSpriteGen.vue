@@ -176,7 +176,7 @@ onMounted(startTimer)
 onBeforeUnmount(stopTimer)
 
 function scoreColor(v: number): string {
-  return v >= 0.85 ? 'text-green-400' : v >= 0.7 ? 'text-lime-400' : v >= 0.5 ? 'text-amber-400' : 'text-red-400'
+  return v >= 0.85 ? 'text-success-ink' : v >= 0.7 ? 'text-lime-400' : v >= 0.5 ? 'text-warning-ink' : 'text-danger-ink'
 }
 function stateResult(name: string) {
   return result.value?.states.find((s) => s.name === name)
@@ -184,61 +184,61 @@ function stateResult(name: string) {
 </script>
 
 <template>
-  <div class="border border-purple-900/40 bg-purple-950/10 rounded-lg mt-3">
+  <div class="border border-ai-deep/40 bg-purple-950/10 rounded-card mt-3">
     <button
       class="w-full flex items-center gap-2 px-4 py-2.5 text-left"
       @click="open = !open"
     >
       <span class="text-sm">✨</span>
-      <h3 class="text-sm font-semibold text-purple-300 flex-1">{{ t('story.aiAnim.title') }} <span class="text-[10px] font-normal text-gray-500">{{ t('story.aiAnim.subtitle') }}</span></h3>
-      <span class="text-gray-500 text-xs">{{ open ? '▾' : '▸' }}</span>
+      <h3 class="text-sm font-semibold text-ai-ink-strong flex-1">{{ t('story.aiAnim.title') }} <span class="text-micro font-normal text-ink-faint">{{ t('story.aiAnim.subtitle') }}</span></h3>
+      <span class="text-ink-faint text-xs">{{ open ? '▾' : '▸' }}</span>
     </button>
 
     <div v-if="open" class="px-4 pb-4 space-y-3">
-      <p v-if="!charId" class="text-[11px] text-amber-400/80">{{ t('story.aiAnim.saveFirst') }}</p>
+      <p v-if="!charId" class="text-tiny text-warning-ink/80">{{ t('story.aiAnim.saveFirst') }}</p>
 
       <template v-else>
         <!-- provider (key + proxy come from Settings, not re-entered here) -->
-        <label class="block text-[11px] text-gray-400">
+        <label class="block text-tiny text-ink-muted">
           {{ t('story.aiAnim.provider') }}
-          <select v-model="providerId" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+          <select v-model="providerId" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
             <option v-for="p in imageProviders" :key="p.id" :value="p.id">{{ p.id }} ({{ p.kind }}: {{ p.model }})</option>
             <option v-if="!imageProviders.length" value="">{{ t('common.none') }}</option>
           </select>
         </label>
-        <p v-if="!imageProviders.length" class="text-[10px] text-amber-400/80">{{ t('story.aiAnim.noProviders') }}</p>
-        <p v-else-if="providerId && !hasKey" class="text-[10px] text-amber-400/80">{{ t('story.aiAnim.errKey') }}</p>
-        <p v-else class="text-[10px] text-gray-500">{{ t('story.aiAnim.keyFromSettings') }}</p>
+        <p v-if="!imageProviders.length" class="text-micro text-warning-ink/80">{{ t('story.aiAnim.noProviders') }}</p>
+        <p v-else-if="providerId && !hasKey" class="text-micro text-warning-ink/80">{{ t('story.aiAnim.errKey') }}</p>
+        <p v-else class="text-micro text-ink-faint">{{ t('story.aiAnim.keyFromSettings') }}</p>
 
         <!-- brief -->
-        <label class="block text-[11px] text-gray-400">
+        <label class="block text-tiny text-ink-muted">
           {{ t('story.aiAnim.brief') }}
-          <textarea v-model="description" rows="2" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200" :placeholder="t('story.aiAnim.briefPlaceholder')" />
+          <textarea v-model="description" rows="2" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary" :placeholder="t('story.aiAnim.briefPlaceholder')" />
         </label>
 
         <!-- style / cell / motion -->
         <div class="grid grid-cols-3 gap-2">
-          <label class="text-[11px] text-gray-400">
+          <label class="text-tiny text-ink-muted">
             {{ t('story.aiAnim.style') }}
-            <select v-model="styleKey" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+            <select v-model="styleKey" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
               <option value="pixel">pixel</option>
               <option value="chibi">chibi</option>
               <option value="cartoon">cartoon</option>
               <option value="retro16">retro16</option>
             </select>
           </label>
-          <label class="text-[11px] text-gray-400">
+          <label class="text-tiny text-ink-muted">
             {{ t('story.aiAnim.cell') }}
-            <select v-model.number="cellSize" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+            <select v-model.number="cellSize" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
               <option :value="32">32</option>
               <option :value="48">48</option>
               <option :value="64">64</option>
               <option :value="128">128</option>
             </select>
           </label>
-          <label class="text-[11px] text-gray-400">
+          <label class="text-tiny text-ink-muted">
             {{ t('story.aiAnim.motion') }}
-            <select v-model="presetName" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+            <select v-model="presetName" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
               <optgroup v-for="[cat, list] in presetsByCategory" :key="cat" :label="cat">
                 <option v-for="p in list" :key="p.name" :value="p.name">{{ p.label }}</option>
               </optgroup>
@@ -247,22 +247,22 @@ function stateResult(name: string) {
         </div>
 
         <!-- frames / fps / loop -->
-        <div class="flex items-center gap-3 text-[11px] text-gray-400">
-          <label class="flex items-center gap-1">{{ t('story.aiAnim.frames') }} <input v-model.number="frames" type="number" min="1" max="10" class="w-12 bg-gray-900 border border-gray-700 rounded px-1 py-0.5 text-xs text-gray-200" /></label>
-          <label class="flex items-center gap-1">{{ t('story.aiAnim.fps') }} <input v-model.number="fps" type="number" min="1" max="24" class="w-12 bg-gray-900 border border-gray-700 rounded px-1 py-0.5 text-xs text-gray-200" /></label>
+        <div class="flex items-center gap-3 text-tiny text-ink-muted">
+          <label class="flex items-center gap-1">{{ t('story.aiAnim.frames') }} <input v-model.number="frames" type="number" min="1" max="10" class="w-12 bg-inset border border-border rounded-control px-1 py-0.5 text-xs text-ink-secondary" /></label>
+          <label class="flex items-center gap-1">{{ t('story.aiAnim.fps') }} <input v-model.number="fps" type="number" min="1" max="24" class="w-12 bg-inset border border-border rounded-control px-1 py-0.5 text-xs text-ink-secondary" /></label>
           <label class="flex items-center gap-1"><input v-model="loop" type="checkbox" /> {{ t('story.aiAnim.loop') }}</label>
         </div>
 
         <!-- 8-direction set (optional) -->
         <div>
-          <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">{{ t('story.aiAnim.directions') }} <span class="normal-case text-gray-600">{{ t('story.aiAnim.directionsHint') }}</span></div>
+          <div class="text-micro uppercase tracking-wide text-ink-faint mb-1">{{ t('story.aiAnim.directions') }} <span class="normal-case text-ink-disabled">{{ t('story.aiAnim.directionsHint') }}</span></div>
           <div class="grid grid-cols-3 gap-1 w-[8.5rem]">
             <template v-for="(d, i) in dirGrid" :key="i">
               <button
                 v-if="d"
                 @click="toggleDir(d.key)"
-                class="aspect-square text-[10px] rounded border"
-                :class="selectedDirs.includes(d.key) ? 'bg-purple-700 border-purple-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'"
+                class="aspect-square text-micro rounded-control border"
+                :class="selectedDirs.includes(d.key) ? 'bg-ai-hover border-ai text-white' : 'bg-surface border-border text-ink-muted hover:text-ink-secondary'"
                 :title="d.label + (d.mirrorOf ? ` (mirror of ${d.mirrorOf})` : '')"
               >{{ d.short }}</button>
               <span v-else />
@@ -274,32 +274,32 @@ function stateResult(name: string) {
         <div class="flex items-center gap-2">
           <button
             @click="onGenerate(false)" :disabled="generating"
-            class="px-3 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-40"
+            class="px-3 py-1 text-xs rounded-control bg-ai text-white hover:bg-ai-hover disabled:opacity-40"
           >{{ generating ? t('story.aiAnim.generating') : t('story.aiAnim.generate') }}</button>
-          <span v-if="generating" class="text-[10px] text-gray-500">{{ t('story.aiAnim.selfCorrect') }}</span>
+          <span v-if="generating" class="text-micro text-ink-faint">{{ t('story.aiAnim.selfCorrect') }}</span>
         </div>
 
-        <p v-if="error" class="text-xs text-red-400">{{ error }}</p>
+        <p v-if="error" class="text-xs text-danger-ink">{{ error }}</p>
 
         <!-- progress log -->
-        <pre v-if="log.length" class="max-h-28 overflow-auto text-[10px] text-gray-400 bg-black/40 rounded p-2 whitespace-pre-wrap">{{ log.join('\n') }}</pre>
+        <pre v-if="log.length" class="max-h-28 overflow-auto text-micro text-ink-muted bg-black/40 rounded-control p-2 whitespace-pre-wrap">{{ log.join('\n') }}</pre>
 
         <!-- result -->
         <div v-if="result" class="space-y-2">
           <div class="flex items-center gap-3">
-            <div class="text-[10px] uppercase tracking-wide text-gray-500">{{ t('story.aiAnim.result') }}</div>
-            <label class="flex items-center gap-1 text-[10px] text-gray-500">{{ t('story.aiAnim.preview') }} <input v-model.number="previewFps" type="range" min="1" max="16" class="w-16" /> {{ previewFps }}fps</label>
-            <a :href="anim.gfxUrl(result.dir, 'sheet.png', version)" target="_blank" class="text-[10px] text-purple-400 hover:underline">{{ t('story.aiAnim.openSheet') }}</a>
-            <a :href="anim.gfxUrl(result.dir, 'manifest.json', version)" target="_blank" class="text-[10px] text-purple-400 hover:underline">{{ t('story.aiAnim.manifest') }}</a>
+            <div class="text-micro uppercase tracking-wide text-ink-faint">{{ t('story.aiAnim.result') }}</div>
+            <label class="flex items-center gap-1 text-micro text-ink-faint">{{ t('story.aiAnim.preview') }} <input v-model.number="previewFps" type="range" min="1" max="16" class="w-16" /> {{ previewFps }}fps</label>
+            <a :href="anim.gfxUrl(result.dir, 'sheet.png', version)" target="_blank" class="text-micro text-ai-ink hover:underline">{{ t('story.aiAnim.openSheet') }}</a>
+            <a :href="anim.gfxUrl(result.dir, 'manifest.json', version)" target="_blank" class="text-micro text-ai-ink hover:underline">{{ t('story.aiAnim.manifest') }}</a>
           </div>
           <div class="flex flex-wrap gap-3">
             <div v-for="name in stateNames" :key="name" class="shrink-0">
-              <div class="sprite-checker rounded border border-gray-700 inline-flex items-center justify-center p-1">
+              <div class="sprite-checker rounded-control border border-border inline-flex items-center justify-center p-1">
                 <canvas :ref="setCanvas(name)" class="block" style="image-rendering: pixelated;" />
               </div>
-              <div class="text-[9px] text-gray-400 text-center mt-0.5 max-w-[6rem] truncate" :title="name">{{ name }}</div>
+              <div class="text-[9px] text-ink-muted text-center mt-0.5 max-w-[6rem] truncate" :title="name">{{ name }}</div>
               <div v-if="stateResult(name)" class="text-[9px] text-center">
-                <span :class="stateResult(name)!.found === stateResult(name)!.expected ? 'text-gray-500' : 'text-amber-400'">
+                <span :class="stateResult(name)!.found === stateResult(name)!.expected ? 'text-ink-faint' : 'text-warning-ink'">
                   {{ stateResult(name)!.found }}/{{ stateResult(name)!.expected }}f
                 </span>
                 <span :class="scoreColor(stateResult(name)!.scores.overall)"> · {{ Math.round(stateResult(name)!.scores.overall * 100) }}</span>
@@ -308,19 +308,19 @@ function stateResult(name: string) {
           </div>
 
           <!-- warnings -->
-          <ul v-if="result.states.some(s => s.warnings.length)" class="text-[10px] text-amber-400/80 space-y-0.5">
+          <ul v-if="result.states.some(s => s.warnings.length)" class="text-micro text-warning-ink/80 space-y-0.5">
             <li v-for="(w, i) in result.states.flatMap(s => s.warnings.map(x => `${s.name}: ${x}`))" :key="i">⚠ {{ w }}</li>
           </ul>
 
           <!-- regenerate with feedback -->
           <div class="flex items-end gap-2">
-            <label class="flex-1 text-[11px] text-gray-400">
+            <label class="flex-1 text-tiny text-ink-muted">
               {{ t('story.aiAnim.feedback') }}
-              <input v-model="feedback" :placeholder="t('story.aiAnim.feedbackPlaceholder')" class="w-full mt-0.5 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200" />
+              <input v-model="feedback" :placeholder="t('story.aiAnim.feedbackPlaceholder')" class="w-full mt-0.5 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink-secondary" />
             </label>
             <button
               @click="onGenerate(true)" :disabled="generating"
-              class="px-3 py-1 text-xs rounded bg-gray-700 text-gray-100 hover:bg-gray-600 disabled:opacity-40"
+              class="px-3 py-1 text-xs rounded-control bg-raised text-ink hover:bg-overlay disabled:opacity-40"
             >{{ t('story.aiAnim.regenerate') }}</button>
           </div>
         </div>

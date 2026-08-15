@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 flex items-center justify-center bg-gray-900 p-4">
+  <div class="flex-1 flex items-center justify-center bg-canvas p-4">
     <div class="w-full max-w-xl">
       <!-- Step Indicator -->
       <div class="flex items-center justify-center gap-2 mb-8">
@@ -8,12 +8,12 @@
             <!-- Circle -->
             <div
               :class="[
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors',
+                'w-8 h-8 rounded-pill flex items-center justify-center text-sm font-semibold transition-colors',
                 i + 1 === currentStep
-                  ? 'bg-blue-600 text-white ring-2 ring-blue-500/50'
+                  ? 'bg-accent text-white ring-2 ring-accent-strong/50'
                   : i + 1 < currentStep
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-700 text-gray-500'
+                    ? 'bg-success text-white'
+                    : 'bg-raised text-ink-faint'
               ]"
             >
               <span v-if="i + 1 < currentStep">&#10003;</span>
@@ -22,7 +22,7 @@
             <span
               :class="[
                 'text-sm transition-colors',
-                i + 1 === currentStep ? 'text-blue-400 font-medium' : 'text-gray-500'
+                i + 1 === currentStep ? 'text-accent-ink font-medium' : 'text-ink-faint'
               ]"
             >
               {{ step.label }}
@@ -33,18 +33,18 @@
             v-if="i < steps.length - 1"
             :class="[
               'w-8 h-px transition-colors',
-              i + 1 < currentStep ? 'bg-green-600' : 'bg-gray-700'
+              i + 1 < currentStep ? 'bg-success' : 'bg-raised'
             ]"
           />
         </template>
       </div>
 
       <!-- Card -->
-      <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-xl">
+      <div class="bg-surface border border-border rounded-card shadow-popover">
         <!-- Step 1: Name Your Game -->
         <div v-if="currentStep === 1" class="p-6 space-y-5">
-          <h2 class="text-xl font-bold text-gray-100">{{ $t('wizard.step1') }}</h2>
-          <p class="text-sm text-gray-400">
+          <h2 class="text-xl font-bold text-ink">{{ $t('wizard.step1') }}</h2>
+          <p class="text-sm text-ink-muted">
             {{ $t('wizard.step1Desc') }}
           </p>
           <input
@@ -52,15 +52,15 @@
             v-model="gameName"
             type="text"
             :placeholder="$t('wizard.namePlaceholder')"
-            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded text-gray-100 text-base
-                   placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30
+            class="w-full px-4 py-3 bg-raised border border-border-strong rounded-control text-ink text-base
+                   placeholder-gray-500 focus:outline-none focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30
                    transition-colors"
             @keyup.enter="nextStep"
           />
 
           <!-- Directory name — defaults to a slug of the game name -->
           <div class="space-y-1.5">
-            <label class="block text-xs font-medium text-gray-400">{{ $t('wizard.dirLabel') }}</label>
+            <label class="block text-xs font-medium text-ink-muted">{{ $t('wizard.dirLabel') }}</label>
             <div class="flex gap-2">
               <input
                 v-model="dirName"
@@ -68,11 +68,11 @@
                 @input="dirTouched = true"
                 :placeholder="$t('wizard.dirPlaceholder')"
                 :class="[
-                  'flex-1 px-3 py-2 bg-gray-700 border rounded text-sm text-gray-100 placeholder-gray-500',
+                  'flex-1 px-3 py-2 bg-raised border rounded-control text-sm text-ink placeholder-gray-500',
                   'focus:outline-none transition-colors',
                   dirValid
-                    ? 'border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30'
-                    : 'border-red-600 focus:border-red-500'
+                    ? 'border-border-strong focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30'
+                    : 'border-danger focus:border-danger-hover'
                 ]"
                 @keyup.enter="nextStep"
               />
@@ -80,14 +80,14 @@
               <button
                 v-if="canBrowse"
                 @click="browseParentDir"
-                class="px-3 py-2 rounded text-sm bg-gray-700 hover:bg-gray-600 text-gray-200
-                       border border-gray-600 transition-colors whitespace-nowrap"
+                class="px-3 py-2 rounded-control text-sm bg-raised hover:bg-overlay text-ink-secondary
+                       border border-border-strong transition-colors whitespace-nowrap"
               >
                 {{ $t('wizard.browse') }}
               </button>
             </div>
-            <p v-if="!dirValid" class="text-xs text-red-400">{{ $t('wizard.dirInvalid') }}</p>
-            <p class="text-xs text-gray-500 break-all">{{ $t('wizard.dirPreview') }} {{ fullTargetPath }}</p>
+            <p v-if="!dirValid" class="text-xs text-danger-ink">{{ $t('wizard.dirInvalid') }}</p>
+            <p class="text-xs text-ink-faint break-all">{{ $t('wizard.dirPreview') }} {{ fullTargetPath }}</p>
           </div>
 
           <div class="flex justify-end">
@@ -95,10 +95,10 @@
               :disabled="!canProceedStep1"
               @click="nextStep"
               :class="[
-                'px-5 py-2.5 rounded text-sm font-medium transition-colors',
+                'px-5 py-2.5 rounded-control text-sm font-medium transition-colors',
                 canProceedStep1
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
+                  : 'bg-raised text-ink-faint cursor-not-allowed'
               ]"
             >
               {{ $t('wizard.next') }}
@@ -108,14 +108,14 @@
 
         <!-- Step 2: Choose Template -->
         <div v-else-if="currentStep === 2" class="p-6 space-y-5">
-          <h2 class="text-xl font-bold text-gray-100">{{ $t('wizard.step2') }}</h2>
-          <p class="text-sm text-gray-400">
+          <h2 class="text-xl font-bold text-ink">{{ $t('wizard.step2') }}</h2>
+          <p class="text-sm text-ink-muted">
             {{ $t('wizard.step2Desc') }}
           </p>
 
           <!-- Loading -->
           <div v-if="templatesLoading" class="flex items-center justify-center py-12">
-            <div class="flex items-center gap-2 text-gray-500">
+            <div class="flex items-center gap-2 text-ink-faint">
               <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -131,40 +131,40 @@
               :key="tpl.id"
               @click="selectedTemplate = tpl.id"
               :class="[
-                'p-4 rounded-lg border-2 text-left transition-all',
+                'p-4 rounded-card border-2 text-left transition-all',
                 selectedTemplate === tpl.id
-                  ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.25)]'
-                  : 'border-gray-700 bg-gray-700/50 hover:border-gray-600 hover:bg-gray-700'
+                  ? 'border-accent-strong bg-accent-strong/10 shadow-[0_0_12px_rgba(59,130,246,0.25)]'
+                  : 'border-border bg-raised/50 hover:border-border-strong hover:bg-raised'
               ]"
             >
               <div class="text-2xl mb-2">{{ iconFor(tpl.icon) }}</div>
               <div
                 :class="[
                   'text-sm font-semibold mb-1 transition-colors',
-                  selectedTemplate === tpl.id ? 'text-blue-400' : 'text-gray-200'
+                  selectedTemplate === tpl.id ? 'text-accent-ink' : 'text-ink-secondary'
                 ]"
               >
                 {{ tpl.name }}
               </div>
-              <div class="text-xs text-gray-500 leading-relaxed">{{ tpl.description }}</div>
+              <div class="text-xs text-ink-faint leading-relaxed">{{ tpl.description }}</div>
             </button>
           </div>
 
           <!-- Empty state if no templates returned -->
-          <div v-if="!templatesLoading && templates.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-if="!templatesLoading && templates.length === 0" class="text-center py-8 text-ink-faint text-sm">
             {{ $t('wizard.noTemplates') }}
           </div>
 
           <div class="flex justify-between pt-2">
             <button
               @click="currentStep = 1"
-              class="px-5 py-2.5 rounded text-sm font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
+              class="px-5 py-2.5 rounded-control text-sm font-medium bg-raised hover:bg-overlay text-ink-secondary transition-colors"
             >
               {{ $t('wizard.back') }}
             </button>
             <button
               @click="nextStep"
-              class="px-5 py-2.5 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              class="px-5 py-2.5 rounded-control text-sm font-medium bg-accent hover:bg-accent-hover text-white transition-colors"
             >
               {{ $t('wizard.next') }}
             </button>
@@ -173,37 +173,37 @@
 
         <!-- Step 3: Review & Create -->
         <div v-else-if="currentStep === 3" class="p-6 space-y-5">
-          <h2 class="text-xl font-bold text-gray-100">{{ $t('wizard.step3') }}</h2>
-          <p class="text-sm text-gray-400">
+          <h2 class="text-xl font-bold text-ink">{{ $t('wizard.step3') }}</h2>
+          <p class="text-sm text-ink-muted">
             {{ $t('wizard.step3Desc') }}
           </p>
 
           <!-- Summary Card -->
-          <div class="bg-gray-700/50 border border-gray-700 rounded-lg p-4 space-y-3">
+          <div class="bg-raised/50 border border-border rounded-card p-4 space-y-3">
             <div class="flex justify-between items-baseline">
-              <span class="text-sm text-gray-400">{{ $t('wizard.summaryName') }}</span>
-              <span class="text-sm font-semibold text-gray-100">{{ gameName }}</span>
+              <span class="text-sm text-ink-muted">{{ $t('wizard.summaryName') }}</span>
+              <span class="text-sm font-semibold text-ink">{{ gameName }}</span>
             </div>
             <div class="flex justify-between items-baseline">
-              <span class="text-sm text-gray-400">{{ $t('wizard.summaryTemplate') }}</span>
-              <span class="text-sm font-semibold text-gray-100">{{ selectedTemplateName }}</span>
+              <span class="text-sm text-ink-muted">{{ $t('wizard.summaryTemplate') }}</span>
+              <span class="text-sm font-semibold text-ink">{{ selectedTemplateName }}</span>
             </div>
             <div class="flex justify-between items-baseline gap-4">
-              <span class="text-sm text-gray-400 shrink-0">{{ $t('wizard.summaryDir') }}</span>
-              <span class="text-sm font-semibold text-gray-100 break-all text-right">{{ fullTargetPath }}</span>
+              <span class="text-sm text-ink-muted shrink-0">{{ $t('wizard.summaryDir') }}</span>
+              <span class="text-sm font-semibold text-ink break-all text-right">{{ fullTargetPath }}</span>
             </div>
-            <hr class="border-gray-600" />
+            <hr class="border-border-strong" />
             <div>
-              <span class="text-sm text-gray-400">{{ $t('wizard.summary') }}</span>
-              <ul class="mt-2 space-y-1 text-xs text-gray-300">
+              <span class="text-sm text-ink-muted">{{ $t('wizard.summary') }}</span>
+              <ul class="mt-2 space-y-1 text-xs text-ink-body">
                 <li class="flex items-center gap-2">
-                  <span class="text-blue-400">&#x2022;</span> {{ $t('wizard.summaryConfig') }}
+                  <span class="text-accent-ink">&#x2022;</span> {{ $t('wizard.summaryConfig') }}
                 </li>
                 <li class="flex items-center gap-2">
-                  <span class="text-blue-400">&#x2022;</span> {{ $t('wizard.summaryDirs') }}
+                  <span class="text-accent-ink">&#x2022;</span> {{ $t('wizard.summaryDirs') }}
                 </li>
                 <li class="flex items-center gap-2">
-                  <span class="text-blue-400">&#x2022;</span> {{ $t('wizard.summaryAssets') }}
+                  <span class="text-accent-ink">&#x2022;</span> {{ $t('wizard.summaryAssets') }}
                 </li>
               </ul>
             </div>
@@ -212,7 +212,7 @@
           <!-- Error message -->
           <div
             v-if="createError"
-            class="bg-red-900/30 border border-red-800 rounded-lg p-3 text-sm text-red-400"
+            class="bg-danger-surface border border-danger-deep rounded-card p-3 text-sm text-danger-ink"
           >
             {{ createError }}
           </div>
@@ -220,7 +220,7 @@
           <!-- Success message -->
           <div
             v-if="createSuccess"
-            class="bg-green-900/30 border border-green-800 rounded-lg p-3 text-sm text-green-400 flex items-center gap-2"
+            class="bg-success-deep/30 border border-success-deep rounded-card p-3 text-sm text-success-ink flex items-center gap-2"
           >
             <span>&#10003;</span> {{ $t('wizard.created') }}
           </div>
@@ -228,12 +228,12 @@
           <!-- What's inside: friendly summary of the scaffolded files -->
           <div
             v-if="createSuccess && fileGroups.length > 0"
-            class="bg-gray-700/50 border border-gray-700 rounded-lg p-4"
+            class="bg-raised/50 border border-border rounded-card p-4"
           >
-            <span class="text-sm text-gray-400">{{ $t('wizard.includesTitle') }}</span>
-            <ul class="mt-2 space-y-1 text-xs text-gray-300">
+            <span class="text-sm text-ink-muted">{{ $t('wizard.includesTitle') }}</span>
+            <ul class="mt-2 space-y-1 text-xs text-ink-body">
               <li v-for="group in fileGroups" :key="group.key" class="flex items-center gap-2">
-                <span class="text-blue-400">&#x2022;</span> {{ $t(group.key, { count: group.count }) }}
+                <span class="text-accent-ink">&#x2022;</span> {{ $t(group.key, { count: group.count }) }}
               </li>
             </ul>
           </div>
@@ -241,10 +241,10 @@
           <!-- First steps: where to go from here -->
           <div
             v-if="createSuccess"
-            class="bg-gray-700/50 border border-gray-700 rounded-lg p-4"
+            class="bg-raised/50 border border-border rounded-card p-4"
           >
-            <span class="text-sm text-gray-400">{{ $t('wizard.firstStepsTitle') }}</span>
-            <ol class="mt-2 space-y-1 text-xs text-gray-300 list-decimal list-inside">
+            <span class="text-sm text-ink-muted">{{ $t('wizard.firstStepsTitle') }}</span>
+            <ol class="mt-2 space-y-1 text-xs text-ink-body list-decimal list-inside">
               <li v-for="hint in firstSteps" :key="hint">{{ $t(hint) }}</li>
             </ol>
           </div>
@@ -253,7 +253,7 @@
             <button
               :disabled="creating"
               @click="currentStep = 2"
-              class="px-5 py-2.5 rounded text-sm font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-5 py-2.5 rounded-control text-sm font-medium bg-raised hover:bg-overlay text-ink-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ $t('wizard.back') }}
             </button>
@@ -261,10 +261,10 @@
               :disabled="creating"
               @click="handleCreate"
               :class="[
-                'px-5 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2',
+                'px-5 py-2.5 rounded-control text-sm font-medium transition-colors flex items-center gap-2',
                 creating
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                  ? 'bg-raised text-ink-faint cursor-not-allowed'
+                  : 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
               ]"
             >
               <!-- Spinner -->
@@ -280,13 +280,13 @@
           <div v-else class="flex justify-end gap-2 pt-2">
             <button
               @click="emit('created', false)"
-              class="px-5 py-2.5 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              class="px-5 py-2.5 rounded-control text-sm font-medium bg-accent hover:bg-accent-hover text-white transition-colors"
             >
               {{ $t('wizard.openEditor') }}
             </button>
             <button
               @click="emit('created', true)"
-              class="px-5 py-2.5 rounded text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+              class="px-5 py-2.5 rounded-control text-sm font-medium bg-ai hover:bg-ai-hover text-white transition-colors"
             >
               {{ $t('wizard.createWithAi') }}
             </button>
@@ -295,7 +295,7 @@
       </div>
 
       <!-- Manual hint -->
-      <p class="text-center mt-4 text-xs text-gray-600">
+      <p class="text-center mt-4 text-xs text-ink-disabled">
         {{ $t('welcome.manualHint') }}
       </p>
     </div>

@@ -1513,7 +1513,7 @@ const cameraScreen = computed(() => {
 const showCamera = ref(false)
 /** Top-left corner of the camera box, in map tile coordinates. */
 const cameraPos = ref({ x: 0, y: 0 })
-/** Camera span in whole tiles (rounded up) — for clamping/centering the box. */
+/** Camera span in whole tiles (rounded-control up) — for clamping/centering the box. */
 const cameraTilesW = computed(() => Math.max(1, Math.ceil(cameraScreen.value.w / tileW.value)))
 const cameraTilesH = computed(() => Math.max(1, Math.ceil(cameraScreen.value.h / tileH.value)))
 /** Box geometry in CSS px, matching the canvas so it scrolls and scales with it. */
@@ -1762,43 +1762,43 @@ watch(activeSubTab, (tab, prev) => {
 </script>
 
 <template>
-  <div class="flex h-full overflow-hidden bg-gray-900 text-gray-200">
+  <div class="flex h-full overflow-hidden bg-canvas text-ink-secondary">
     <!-- ═══ Map list ═══ -->
-    <aside class="w-48 bg-gray-800 border-r border-gray-700 flex flex-col shrink-0">
-      <div class="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
-        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <aside class="w-48 bg-surface border-r border-border flex flex-col shrink-0">
+      <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+        <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">
           {{ $t('map.title') }}
         </h2>
         <button
           @click="openNewDialog"
-          class="text-xs px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-200"
+          class="text-xs px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay text-ink-secondary"
           :title="$t('map.newMap')"
         >＋</button>
       </div>
-      <div class="px-2 py-1.5 border-b border-gray-700">
+      <div class="px-2 py-1.5 border-b border-border">
         <input
           v-model="mapFilter"
           :placeholder="$t('map.searchMaps')"
-          class="w-full px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500"
+          class="w-full px-2 py-1 text-xs bg-inset border border-border rounded-control text-ink-secondary placeholder-gray-500 outline-none focus:border-accent-strong"
         />
       </div>
       <div class="flex-1 overflow-y-auto p-1">
-        <div v-if="loadingList" class="p-3 text-sm text-gray-500">{{ $t('map.loading') }}</div>
+        <div v-if="loadingList" class="p-3 text-sm text-ink-faint">{{ $t('map.loading') }}</div>
         <div v-else-if="mapList.length === 0" class="p-3 space-y-3">
-          <p class="text-sm text-gray-500">{{ $t('map.noMaps') }}</p>
+          <p class="text-sm text-ink-faint">{{ $t('map.noMaps') }}</p>
           <!-- First-run guidance: create a map by hand or let the AI draft one -->
           <div class="flex flex-col gap-2">
             <button
               @click="openNewDialog"
-              class="px-3 py-1.5 rounded text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              class="px-3 py-1.5 rounded-control text-xs font-medium bg-accent hover:bg-accent-hover text-white transition-colors"
             >{{ $t('map.newMap') }}</button>
             <button
               @click="openAssistant"
-              class="px-3 py-1.5 rounded text-xs font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
+              class="px-3 py-1.5 rounded-control text-xs font-medium bg-raised hover:bg-overlay text-ink-secondary transition-colors"
             >{{ $t('map.askAi') }}</button>
           </div>
         </div>
-        <div v-else-if="filteredMapList.length === 0" class="p-3 text-sm text-gray-500">
+        <div v-else-if="filteredMapList.length === 0" class="p-3 text-sm text-ink-faint">
           {{ $t('map.noMapsMatch') }}
         </div>
         <div v-for="m in filteredMapList" :key="m.name" class="group relative">
@@ -1809,7 +1809,7 @@ watch(activeSubTab, (tab, prev) => {
               v-model="mapRenameDraft"
               maxlength="40"
               :title="$t('map.renameMapRule')"
-              class="w-full px-2 py-1 text-sm bg-gray-900 border border-blue-500 rounded text-gray-100 outline-none"
+              class="w-full px-2 py-1 text-sm bg-canvas border border-accent-strong rounded-control text-ink outline-none"
               @keydown.enter.prevent="commitRenameMap(m.name)"
               @keydown.esc.prevent="cancelRenameMap()"
               @blur="commitRenameMap(m.name)"
@@ -1819,29 +1819,29 @@ watch(activeSubTab, (tab, prev) => {
             <button
               @click="openMapTab(m.name)"
               :class="[
-                'w-full text-left pl-3 pr-12 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5',
+                'w-full text-left pl-3 pr-12 py-1.5 text-sm rounded-control transition-colors flex items-center gap-1.5',
                 activeSubTab === `map:${m.name}`
-                  ? 'bg-blue-600/30 text-blue-300 font-medium'
+                  ? 'bg-accent-surface text-accent-ink-strong font-medium'
                   : m.hasTilemap
-                    ? 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-100'
-                    : 'text-gray-500 hover:bg-gray-700/50 hover:text-gray-300',
+                    ? 'text-ink-body hover:bg-raised/50 hover:text-ink'
+                    : 'text-ink-faint hover:bg-raised/50 hover:text-ink-body',
               ]"
             >
               <span class="truncate flex-1">{{ m.name }}</span>
               <span
                 v-if="!m.hasTilemap"
-                class="text-[9px] px-1 rounded shrink-0"
-                :class="m.hasBackdrop ? 'bg-amber-500/20 text-amber-400' : 'bg-gray-600/40 text-gray-500'"
+                class="text-[9px] px-1 rounded-control shrink-0"
+                :class="m.hasBackdrop ? 'bg-warning/20 text-warning-ink' : 'bg-overlay/40 text-ink-faint'"
               >{{ m.hasBackdrop ? $t('map.refOnly') : $t('map.empty') }}</span>
             </button>
             <button
               @click.stop="startRenameMap(m.name)"
-              class="absolute right-6 top-1/2 -translate-y-1/2 px-1 leading-none rounded text-gray-500 opacity-0 group-hover:opacity-100 hover:bg-blue-600/30 hover:text-blue-300 transition-opacity"
+              class="absolute right-6 top-1/2 -translate-y-1/2 px-1 leading-none rounded-control text-ink-faint opacity-0 group-hover:opacity-100 hover:bg-accent-surface hover:text-accent-ink-strong transition-opacity"
               :title="$t('map.renameMapHint')"
             >✎</button>
             <button
               @click.stop="deleteMapPrompt(m.name)"
-              class="absolute right-1 top-1/2 -translate-y-1/2 px-1 leading-none rounded text-gray-500 opacity-0 group-hover:opacity-100 hover:bg-red-600/30 hover:text-red-300 transition-opacity"
+              class="absolute right-1 top-1/2 -translate-y-1/2 px-1 leading-none rounded-control text-ink-faint opacity-0 group-hover:opacity-100 hover:bg-danger/30 hover:text-danger-ink-strong transition-opacity"
               :title="$t('map.deleteMapHint')"
             >🗑</button>
           </template>
@@ -1852,21 +1852,21 @@ watch(activeSubTab, (tab, prev) => {
     <!-- ═══ Center: sub-tab system (map + building editors) ═══ -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Sub-tab bar -->
-      <div class="flex items-center bg-gray-800 border-b border-gray-700 shrink-0 pl-1 pr-2 min-h-[32px] overflow-x-auto">
+      <div class="flex items-center bg-surface border-b border-border shrink-0 pl-1 pr-2 min-h-[32px] overflow-x-auto">
         <button
           v-for="tab in mapTabs"
           :key="tab.id"
           @click="activeSubTab = tab.id"
           :class="[
             'px-3 py-1.5 text-xs border-b-2 transition-colors leading-none shrink-0 whitespace-nowrap flex items-center gap-1',
-            activeSubTab === tab.id ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200',
+            activeSubTab === tab.id ? 'border-accent-ink text-accent-ink' : 'border-transparent text-ink-muted hover:text-ink-secondary',
           ]"
         >
           <span>🗺</span>
           <span class="truncate max-w-[120px]">{{ tab.label }}</span>
           <span
             @click.stop="closeTab(tab.id)"
-            class="ml-0.5 w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] leading-none hover:bg-gray-600 hover:text-gray-100"
+            class="ml-0.5 w-3.5 h-3.5 rounded-control flex items-center justify-center text-micro leading-none hover:bg-overlay hover:text-ink"
           >×</span>
         </button>
         <button
@@ -1875,17 +1875,17 @@ watch(activeSubTab, (tab, prev) => {
           @click="activeSubTab = bt.id"
           :class="[
             'px-3 py-1.5 text-xs border-b-2 transition-colors leading-none shrink-0 whitespace-nowrap flex items-center gap-1',
-            activeSubTab === bt.id ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200',
+            activeSubTab === bt.id ? 'border-accent-ink text-accent-ink' : 'border-transparent text-ink-muted hover:text-ink-secondary',
           ]"
         >
           <span>🏗</span>
           <span class="truncate max-w-[120px]">{{ bt.label }}</span>
           <span
             @click.stop="closeTab(bt.id)"
-            class="ml-0.5 w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] leading-none hover:bg-gray-600 hover:text-gray-100"
+            class="ml-0.5 w-3.5 h-3.5 rounded-control flex items-center justify-center text-micro leading-none hover:bg-overlay hover:text-ink"
           >×</span>
         </button>
-        <div v-if="subTabs.length === 0" class="px-3 py-1.5 text-xs text-gray-500">
+        <div v-if="subTabs.length === 0" class="px-3 py-1.5 text-xs text-ink-faint">
           {{ $t('map.selectToEdit') }}
         </div>
       </div>
@@ -1893,41 +1893,41 @@ watch(activeSubTab, (tab, prev) => {
       <!-- ═══ Map editor (v-show = keep canvas alive when switching tabs) ═══ -->
       <div v-show="activeSubTab?.startsWith('map:')" class="flex flex-col flex-1 min-h-0">
         <!-- Toolbar -->
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700 shrink-0 flex-wrap">
-        <span v-if="mapName" class="text-sm text-gray-300 font-medium truncate">{{ mapName }}</span>
-        <span v-else class="text-sm text-gray-500 italic">{{ $t('map.selectToEdit') }}</span>
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-surface border-b border-border shrink-0 flex-wrap">
+        <span v-if="mapName" class="text-sm text-ink-body font-medium truncate">{{ mapName }}</span>
+        <span v-else class="text-sm text-ink-faint italic">{{ $t('map.selectToEdit') }}</span>
 
         <button v-if="mapName" @click="showBackdropGen = true"
-          class="px-2 py-0.5 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200"
+          class="px-2 py-0.5 text-xs rounded-control bg-raised hover:bg-overlay text-ink-secondary"
         >✨ {{ $t('map.backdrop') }}</button>
 
         <!-- Backdrop-only: this map is just an art reference — offer to author over it -->
         <template v-if="backdropOnly">
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">{{ $t('map.refOnly') }}</span>
+          <span class="text-micro px-1.5 py-0.5 rounded-control bg-warning/20 text-warning-ink-strong">{{ $t('map.refOnly') }}</span>
           <button
             @click="showTrace = true"
             :disabled="creating || tracing"
             :title="$t('map.traceDesc')"
-            class="px-2 py-0.5 text-xs rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+            class="px-2 py-0.5 text-xs rounded-control bg-success hover:bg-success-strong text-white disabled:opacity-50"
           >🗺 {{ tracing ? '…' : $t('map.traceToMap') }}</button>
           <button
             @click="createFromBackdrop"
             :disabled="creating || tracing"
             :title="$t('map.newFromBackdropHint')"
-            class="px-2 py-0.5 text-xs rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+            class="px-2 py-0.5 text-xs rounded-control bg-accent hover:bg-accent-strong text-white disabled:opacity-50"
           >{{ creating ? '…' : $t('map.newFromBackdrop') }}</button>
-          <span class="text-gray-600 mx-1">|</span>
-          <button @click="zoomOut" class="px-2 py-0.5 text-sm bg-gray-700 hover:bg-gray-600 rounded text-gray-300">−</button>
-          <span class="text-xs text-gray-500 w-10 text-center tabular-nums">{{ Math.round(zoom * 100) }}%</span>
-          <button @click="zoomIn" class="px-2 py-0.5 text-sm bg-gray-700 hover:bg-gray-600 rounded text-gray-300">+</button>
+          <span class="text-ink-disabled mx-1">|</span>
+          <button @click="zoomOut" class="px-2 py-0.5 text-sm bg-raised hover:bg-overlay rounded-control text-ink-body">−</button>
+          <span class="text-xs text-ink-faint w-10 text-center tabular-nums">{{ Math.round(zoom * 100) }}%</span>
+          <button @click="zoomIn" class="px-2 py-0.5 text-sm bg-raised hover:bg-overlay rounded-control text-ink-body">+</button>
         </template>
 
         <!-- Backdrop reference toggle when a tilemap + backdrop coexist -->
         <template v-if="tmx && backdropImg">
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <button
             @click="showBackdrop = !showBackdrop; drawMap()"
-            :class="['px-2 py-0.5 text-xs rounded', showBackdrop ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300']"
+            :class="['px-2 py-0.5 text-xs rounded-control', showBackdrop ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay text-ink-body']"
             :title="$t('map.backdrop')"
           >🖼 {{ $t('map.backdrop') }}</button>
           <input
@@ -1941,7 +1941,7 @@ watch(activeSubTab, (tab, prev) => {
         </template>
 
         <template v-if="tmx">
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <!-- Tools -->
           <div class="flex gap-1">
             <button
@@ -1949,63 +1949,63 @@ watch(activeSubTab, (tab, prev) => {
               :key="tl"
               @click="tool = tl"
               :class="[
-                'px-2 py-0.5 text-xs rounded transition-colors',
-                tool === tl ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+                'px-2 py-0.5 text-xs rounded-control transition-colors',
+                tool === tl ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay text-ink-body',
               ]"
             >
               {{ $t('map.tool.' + tl) }}
             </button>
           </div>
 
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <!-- Undo / redo -->
           <button
             @click="handleUndo"
             :disabled="!canUndo"
-            :class="['px-2 py-0.5 text-xs rounded', canUndo ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-800 text-gray-600 cursor-not-allowed']"
+            :class="['px-2 py-0.5 text-xs rounded-control', canUndo ? 'bg-raised hover:bg-overlay text-ink-body' : 'bg-surface text-ink-disabled cursor-not-allowed']"
             :title="$t('map.undo')"
           >↶</button>
           <button
             @click="handleRedo"
             :disabled="!canRedo"
-            :class="['px-2 py-0.5 text-xs rounded', canRedo ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-800 text-gray-600 cursor-not-allowed']"
+            :class="['px-2 py-0.5 text-xs rounded-control', canRedo ? 'bg-raised hover:bg-overlay text-ink-body' : 'bg-surface text-ink-disabled cursor-not-allowed']"
             :title="$t('map.redo')"
           >↷</button>
 
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <!-- Zoom -->
-          <button @click="zoomOut" class="px-2 py-0.5 text-sm bg-gray-700 hover:bg-gray-600 rounded text-gray-300">−</button>
-          <span class="text-xs text-gray-500 w-10 text-center tabular-nums">{{ Math.round(zoom * 100) }}%</span>
-          <button @click="zoomIn" class="px-2 py-0.5 text-sm bg-gray-700 hover:bg-gray-600 rounded text-gray-300">+</button>
-          <button @click="resetView" class="px-2 py-0.5 text-sm bg-gray-700 hover:bg-gray-600 rounded text-gray-300" :title="$t('map.resetView')">↺</button>
+          <button @click="zoomOut" class="px-2 py-0.5 text-sm bg-raised hover:bg-overlay rounded-control text-ink-body">−</button>
+          <span class="text-xs text-ink-faint w-10 text-center tabular-nums">{{ Math.round(zoom * 100) }}%</span>
+          <button @click="zoomIn" class="px-2 py-0.5 text-sm bg-raised hover:bg-overlay rounded-control text-ink-body">+</button>
+          <button @click="resetView" class="px-2 py-0.5 text-sm bg-raised hover:bg-overlay rounded-control text-ink-body" :title="$t('map.resetView')">↺</button>
 
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <!-- Screen-camera helper box -->
           <button
             @click="toggleCamera"
-            :class="['px-2 py-0.5 text-xs rounded', showCamera ? 'bg-amber-500 text-gray-900' : 'bg-gray-700 hover:bg-gray-600 text-gray-300']"
+            :class="['px-2 py-0.5 text-xs rounded-control', showCamera ? 'bg-warning text-gray-900' : 'bg-raised hover:bg-overlay text-ink-body']"
             :title="$t('map.cameraBoxHint')"
           >🎥 {{ $t('map.cameraBox') }}</button>
 
-          <span class="text-gray-600 mx-1">|</span>
+          <span class="text-ink-disabled mx-1">|</span>
           <!-- Resize the map canvas -->
           <button
             @click="openResizeDialog"
-            class="px-2 py-0.5 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-300"
+            class="px-2 py-0.5 text-xs rounded-control bg-raised hover:bg-overlay text-ink-body"
             :title="$t('map.resizeHint')"
           >⤡ {{ $t('map.resize') }}</button>
 
           <div class="flex-1" />
           <span
             v-if="dirty || objectsDirty"
-            class="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium"
+            class="text-micro px-1.5 py-0.5 rounded-control bg-warning-surface text-warning-ink font-medium"
           >{{ $t('map.unsaved') }}</span>
           <button
             @click="handleSave"
             :disabled="(!dirty && !objectsDirty) || saving"
             :class="[
-              'px-3 py-0.5 text-sm rounded transition-colors',
-              (dirty || objectsDirty) && !saving ? 'bg-green-700 hover:bg-green-600 text-green-200' : 'bg-gray-700 text-gray-500 cursor-not-allowed',
+              'px-3 py-0.5 text-sm rounded-control transition-colors',
+              (dirty || objectsDirty) && !saving ? 'bg-success-hover hover:bg-success text-green-200' : 'bg-raised text-ink-faint cursor-not-allowed',
             ]"
           >{{ saving ? $t('map.saving') : $t('map.save') }}</button>
         </template>
@@ -2014,7 +2014,7 @@ watch(activeSubTab, (tab, prev) => {
       <!-- Canvas scroll area -->
       <div
         ref="scrollRef"
-        class="flex-1 overflow-auto bg-gray-900 relative"
+        class="flex-1 overflow-auto bg-canvas relative"
         :class="{ 'cursor-grab': spaceDown && !isPanning, 'cursor-grabbing': isPanning }"
         @wheel="onWheel"
         @mousedown="onCanvasMouseDown"
@@ -2023,13 +2023,13 @@ watch(activeSubTab, (tab, prev) => {
         @mouseleave="onCanvasMouseLeave"
         @contextmenu.prevent
       >
-        <div v-if="!tmx && !backdropImg && !loading" class="absolute inset-0 flex items-center justify-center text-gray-600">
+        <div v-if="!tmx && !backdropImg && !loading" class="absolute inset-0 flex items-center justify-center text-ink-disabled">
           <div class="text-center">
             <div class="text-3xl mb-2">🗺</div>
             <p class="text-sm">{{ activeMapName ? $t('map.noMapData', { name: activeMapName }) : $t('map.selectFromSidebar') }}</p>
           </div>
         </div>
-        <div v-if="loading" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center text-ink-faint text-sm">
           {{ $t('map.loading') }}
         </div>
         <canvas
@@ -2043,11 +2043,11 @@ watch(activeSubTab, (tab, prev) => {
              body is click-through; drag the label to reposition the box. -->
         <div
           v-if="showCamera && tmx"
-          class="absolute border-2 border-amber-400 pointer-events-none z-10"
+          class="absolute border-2 border-warning-ink pointer-events-none z-10"
           :style="{ left: cameraBox.left + 'px', top: cameraBox.top + 'px', width: cameraBox.width + 'px', height: cameraBox.height + 'px' }"
         >
           <div
-            class="absolute top-0 left-0 px-1.5 py-0.5 bg-amber-400 text-gray-900 text-[10px] font-medium leading-none cursor-move pointer-events-auto select-none whitespace-nowrap"
+            class="absolute top-0 left-0 px-1.5 py-0.5 bg-warning-ink text-gray-900 text-micro font-medium leading-none cursor-move pointer-events-auto select-none whitespace-nowrap"
             @pointerdown="onCameraDown"
             @pointermove="onCameraMove"
             @pointerup="onCameraUp"
@@ -2059,12 +2059,12 @@ watch(activeSubTab, (tab, prev) => {
       <!-- Status bar -->
       <div
         v-if="tmx"
-        class="flex items-center gap-4 px-3 py-1 bg-gray-800 border-t border-gray-700 text-xs text-gray-500 shrink-0"
+        class="flex items-center gap-4 px-3 py-1 bg-surface border-t border-border text-xs text-ink-faint shrink-0"
       >
         <span>{{ $t('map.width') }} {{ tmx.width }} × {{ $t('map.height') }} {{ tmx.height }}</span>
         <span>{{ $t('map.selectedTile') }}: {{ selectedTile }}</span>
-        <span v-if="error" class="text-red-400">{{ error }}</span>
-        <span class="ml-auto text-gray-600">{{ $t('map.panHint') }}</span>
+        <span v-if="error" class="text-danger-ink">{{ error }}</span>
+        <span class="ml-auto text-ink-disabled">{{ $t('map.panHint') }}</span>
         </div>
       </div>
 
@@ -2097,21 +2097,21 @@ watch(activeSubTab, (tab, prev) => {
     </div>
 
     <!-- ═══ Right sidebar ═══ -->
-    <aside class="w-64 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0 overflow-hidden">
+    <aside class="w-64 bg-surface border-l border-border flex flex-col shrink-0 overflow-hidden">
       <!-- ═══ Building groups (建筑) — always visible ═══ -->
-      <div class="border-b border-gray-700 shrink-0">
+      <div class="border-b border-border shrink-0">
         <div class="px-3 py-2 flex items-center justify-between">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.buildings') }}</h2>
+          <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.buildings') }}</h2>
           <div class="flex items-center gap-1">
-            <span v-if="stamping" class="text-[10px] text-blue-400">{{ $t('map.stamping') }}</span>
+            <span v-if="stamping" class="text-micro text-accent-ink">{{ $t('map.stamping') }}</span>
             <button
               @click="openBrowseBuildings"
-              class="text-[10px] px-1.5 py-0.5 rounded bg-blue-700 hover:bg-blue-600 text-blue-100"
+              class="text-micro px-1.5 py-0.5 rounded-control bg-accent-hover hover:bg-accent text-accent-ink-faint"
             >{{ $t('map.browseBuildings') }}</button>
           </div>
         </div>
         <div class="px-2 pb-2 max-h-40 overflow-y-auto">
-          <div v-if="tilesStore.groups.length === 0" class="text-xs text-gray-500 px-1 pb-1">
+          <div v-if="tilesStore.groups.length === 0" class="text-xs text-ink-faint px-1 pb-1">
             {{ $t('map.noBuildings') }}
           </div>
           <div v-else class="flex flex-wrap gap-1.5">
@@ -2121,8 +2121,8 @@ watch(activeSubTab, (tab, prev) => {
               @click="selectGroup(g)"
               @dblclick="openBuildingTab(g)"
               :class="[
-                'border rounded p-0.5 bg-gray-900 hover:border-blue-400',
-                selectedGroup?.id === g.id ? 'border-blue-400 ring-1 ring-blue-400' : 'border-gray-700',
+                'border rounded-control p-0.5 bg-canvas hover:border-accent-ink',
+                selectedGroup?.id === g.id ? 'border-accent-ink ring-1 ring-accent-ink' : 'border-border',
               ]"
               :title="`${g.name || g.id} · ${g.w}×${g.h} — ${$t('map.buildingEditor')}`"
             >
@@ -2136,92 +2136,92 @@ watch(activeSubTab, (tab, prev) => {
       <template v-if="activeSubTab?.startsWith('map:')">
         <template v-if="tmx">
         <!-- Entities (NPC / warp) -->
-        <div v-if="objectsEnabled" class="border-b border-gray-700">
+        <div v-if="objectsEnabled" class="border-b border-border">
           <div class="px-3 py-2 flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.entities') }}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.entities') }}</h2>
             <div class="flex gap-1">
-              <button @click="addNpcHere" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-700 hover:bg-blue-600 text-blue-100">{{ $t('map.addNpc') }}</button>
-              <button @click="addWarpHere" class="text-[10px] px-1.5 py-0.5 rounded bg-green-700 hover:bg-green-600 text-green-100">{{ $t('map.addWarp') }}</button>
-              <button @click="addSignHere" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-amber-100">{{ $t('map.addSign') }}</button>
-              <button v-if="selected" @click="deleteSelected" :title="$t('map.deleteSelectedHint')" class="text-[10px] px-1.5 py-0.5 rounded bg-red-700 hover:bg-red-600 text-red-100">{{ $t('common.delete') }}</button>
+              <button @click="addNpcHere" class="text-micro px-1.5 py-0.5 rounded-control bg-accent-hover hover:bg-accent text-accent-ink-faint">{{ $t('map.addNpc') }}</button>
+              <button @click="addWarpHere" class="text-micro px-1.5 py-0.5 rounded-control bg-success-hover hover:bg-success text-green-100">{{ $t('map.addWarp') }}</button>
+              <button @click="addSignHere" class="text-micro px-1.5 py-0.5 rounded-control bg-warning-strong hover:bg-warning-hover text-on-warning">{{ $t('map.addSign') }}</button>
+              <button v-if="selected" @click="deleteSelected" :title="$t('map.deleteSelectedHint')" class="text-micro px-1.5 py-0.5 rounded-control bg-red-700 hover:bg-danger text-red-100">{{ $t('common.delete') }}</button>
             </div>
           </div>
           <div class="px-3 pb-2 text-xs max-h-56 overflow-y-auto">
             <div v-if="selectedNpc" class="space-y-1.5">
-              <div class="text-gray-400">NPC #{{ selectedNpc.id }}</div>
-              <label class="block text-gray-400">名称
-                <input v-model="selectedNpc.name" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+              <div class="text-ink-muted">NPC #{{ selectedNpc.id }}</div>
+              <label class="block text-ink-muted">名称
+                <input v-model="selectedNpc.name" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
               </label>
               <div class="flex gap-2">
-                <label class="flex-1 text-gray-400">x
-                  <input type="number" v-model.number="selectedNpc.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">x
+                  <input type="number" v-model.number="selectedNpc.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
-                <label class="flex-1 text-gray-400">y
-                  <input type="number" v-model.number="selectedNpc.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">y
+                  <input type="number" v-model.number="selectedNpc.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
               </div>
-              <label class="block text-gray-400">朝向
-                <select v-model="selectedNpc.facing" @change="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200">
+              <label class="block text-ink-muted">朝向
+                <select v-model="selectedNpc.facing" @change="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary">
                   <option value="down">down</option>
                   <option value="up">up</option>
                   <option value="left">left</option>
                   <option value="right">right</option>
                 </select>
               </label>
-              <label class="block text-gray-400">sprite
-                <input v-model="selectedNpc.sprite" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+              <label class="block text-ink-muted">sprite
+                <input v-model="selectedNpc.sprite" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
               </label>
-              <label class="block text-gray-400">talk
-                <input v-model="selectedNpc.talk" @input="store.markObjectsDirty()" placeholder="@story 或 storyline 名" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+              <label class="block text-ink-muted">talk
+                <input v-model="selectedNpc.talk" @input="store.markObjectsDirty()" placeholder="@story 或 storyline 名" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
               </label>
             </div>
             <div v-else-if="selectedWarp" class="space-y-1.5">
-              <div class="text-gray-400">Warp</div>
+              <div class="text-ink-muted">Warp</div>
               <div class="flex gap-2">
-                <label class="flex-1 text-gray-400">x
-                  <input type="number" v-model.number="selectedWarp.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">x
+                  <input type="number" v-model.number="selectedWarp.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
-                <label class="flex-1 text-gray-400">y
-                  <input type="number" v-model.number="selectedWarp.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">y
+                  <input type="number" v-model.number="selectedWarp.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
               </div>
-              <label class="block text-gray-400">dest_map
-                <input v-model="selectedWarp.dest_map" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+              <label class="block text-ink-muted">dest_map
+                <input v-model="selectedWarp.dest_map" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
               </label>
               <div class="flex gap-2">
-                <label class="flex-1 text-gray-400">dest_x
-                  <input type="number" v-model.number="selectedWarp.dest_x" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">dest_x
+                  <input type="number" v-model.number="selectedWarp.dest_x" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
-                <label class="flex-1 text-gray-400">dest_y
-                  <input type="number" v-model.number="selectedWarp.dest_y" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">dest_y
+                  <input type="number" v-model.number="selectedWarp.dest_y" @input="store.markObjectsDirty()" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
               </div>
             </div>
             <div v-else-if="selectedSign" class="space-y-1.5">
-              <div class="text-gray-400">{{ $t('map.sign') }}</div>
+              <div class="text-ink-muted">{{ $t('map.sign') }}</div>
               <div class="flex gap-2">
-                <label class="flex-1 text-gray-400">x
-                  <input type="number" v-model.number="selectedSign.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">x
+                  <input type="number" v-model.number="selectedSign.x" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
-                <label class="flex-1 text-gray-400">y
-                  <input type="number" v-model.number="selectedSign.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <label class="flex-1 text-ink-muted">y
+                  <input type="number" v-model.number="selectedSign.y" @input="afterObjectEdit" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 </label>
               </div>
-              <label class="block text-gray-400">{{ $t('map.signText') }}
-                <textarea v-model="selectedSign.text" @input="store.markObjectsDirty()" rows="3" class="w-full mt-0.5 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-gray-200" />
+              <label class="block text-ink-muted">{{ $t('map.signText') }}
+                <textarea v-model="selectedSign.text" @input="store.markObjectsDirty()" rows="3" class="w-full mt-0.5 px-1 py-0.5 bg-raised border border-border-strong rounded-control text-ink-secondary" />
               </label>
             </div>
-            <div v-else class="text-gray-500 py-1">{{ $t('map.noObjects') }}</div>
+            <div v-else class="text-ink-faint py-1">{{ $t('map.noObjects') }}</div>
           </div>
         </div>
 
         <!-- Layers -->
-        <div class="border-b border-gray-700">
+        <div class="border-b border-border">
           <div class="px-3 py-2 flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.layers') }}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.layers') }}</h2>
             <button
               @click="addLayer"
-              class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300"
+              class="text-micro px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay text-ink-body"
               :title="$t('map.addLayerHint')"
             >{{ $t('map.addLayer') }}</button>
           </div>
@@ -2231,8 +2231,8 @@ watch(activeSubTab, (tab, prev) => {
               :key="row.index"
               @click="selectLayer(row.index)"
               :class="[
-                'group flex items-center gap-2 px-2 py-1 text-sm rounded cursor-pointer',
-                activeLayer === row.index ? 'bg-blue-600/30 text-blue-300' : 'text-gray-400 hover:bg-gray-700/50',
+                'group flex items-center gap-2 px-2 py-1 text-sm rounded-control cursor-pointer',
+                activeLayer === row.index ? 'bg-accent-surface text-accent-ink-strong' : 'text-ink-muted hover:bg-raised/50',
               ]"
             >
               <button
@@ -2245,7 +2245,7 @@ watch(activeSubTab, (tab, prev) => {
                 :ref="onRenameFocus"
                 v-model="layerRenameDraft"
                 maxlength="40"
-                class="flex-1 min-w-0 px-1 py-0.5 text-sm bg-gray-900 border border-blue-500 rounded text-gray-100 outline-none"
+                class="flex-1 min-w-0 px-1 py-0.5 text-sm bg-canvas border border-accent-strong rounded-control text-ink outline-none"
                 @click.stop
                 @keydown.enter.prevent="commitRenameLayer(row.index)"
                 @keydown.esc.prevent="cancelRenameLayer()"
@@ -2255,7 +2255,7 @@ watch(activeSubTab, (tab, prev) => {
                 <span class="truncate flex-1" @dblclick.stop="startRenameLayer(row.index)">{{ row.layer.name }}</span>
                 <button
                   @click.stop="startRenameLayer(row.index)"
-                  class="shrink-0 px-0.5 text-[10px] leading-none rounded text-gray-500 opacity-0 group-hover:opacity-100 hover:text-gray-200 transition-opacity"
+                  class="shrink-0 px-0.5 text-micro leading-none rounded-control text-ink-faint opacity-0 group-hover:opacity-100 hover:text-ink-secondary transition-opacity"
                   :title="$t('map.renameLayerHint')"
                 >✎</button>
               </template>
@@ -2265,7 +2265,7 @@ watch(activeSubTab, (tab, prev) => {
                 max="9"
                 :value="store.layerLevel(row.index)"
                 :title="$t('map.layerLevelHint')"
-                class="shrink-0 w-8 px-0.5 text-[10px] text-center bg-gray-900 border border-gray-700 rounded text-gray-400 outline-none focus:border-blue-500"
+                class="shrink-0 w-8 px-0.5 text-micro text-center bg-inset border border-border rounded-control text-ink-muted outline-none focus:border-accent-strong"
                 @click.stop
                 @change="onLayerLevelChange(row.index, $event)"
               />
@@ -2273,8 +2273,8 @@ watch(activeSubTab, (tab, prev) => {
                 @click.stop="moveLayerBy(row.index, 1)"
                 :disabled="row.index === layers.length - 1"
                 :class="[
-                  'shrink-0 px-0.5 text-[10px] leading-none rounded transition-opacity',
-                  row.index === layers.length - 1 ? 'opacity-0 cursor-default' : 'text-gray-500 opacity-0 group-hover:opacity-100 hover:text-gray-200',
+                  'shrink-0 px-0.5 text-micro leading-none rounded-control transition-opacity',
+                  row.index === layers.length - 1 ? 'opacity-0 cursor-default' : 'text-ink-faint opacity-0 group-hover:opacity-100 hover:text-ink-secondary',
                 ]"
                 :title="$t('map.moveLayerUp')"
               >▲</button>
@@ -2282,15 +2282,15 @@ watch(activeSubTab, (tab, prev) => {
                 @click.stop="moveLayerBy(row.index, -1)"
                 :disabled="row.index === 0"
                 :class="[
-                  'shrink-0 px-0.5 text-[10px] leading-none rounded transition-opacity',
-                  row.index === 0 ? 'opacity-0 cursor-default' : 'text-gray-500 opacity-0 group-hover:opacity-100 hover:text-gray-200',
+                  'shrink-0 px-0.5 text-micro leading-none rounded-control transition-opacity',
+                  row.index === 0 ? 'opacity-0 cursor-default' : 'text-ink-faint opacity-0 group-hover:opacity-100 hover:text-ink-secondary',
                 ]"
                 :title="$t('map.moveLayerDown')"
               >▼</button>
               <button
                 v-if="layers.length > 1"
                 @click.stop="removeLayerPrompt(row.index)"
-                class="shrink-0 px-1 leading-none rounded text-gray-500 opacity-0 group-hover:opacity-100 hover:bg-red-600/30 hover:text-red-300 transition-opacity"
+                class="shrink-0 px-1 leading-none rounded-control text-ink-faint opacity-0 group-hover:opacity-100 hover:bg-danger/30 hover:text-danger-ink-strong transition-opacity"
                 :title="$t('map.removeLayerHint')"
               >🗑</button>
             </div>
@@ -2298,16 +2298,16 @@ watch(activeSubTab, (tab, prev) => {
         </div>
 
         <!-- Collision (per elevation level) -->
-        <div class="border-b border-gray-700 px-3 py-2">
+        <div class="border-b border-border px-3 py-2">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.collision') }}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.collision') }}</h2>
             <div class="flex items-center gap-2">
-              <span class="text-[10px]" :class="hasCollision ? 'text-red-400' : 'text-gray-600'">
+              <span class="text-micro" :class="hasCollision ? 'text-danger-ink' : 'text-ink-disabled'">
                 {{ hasCollision ? $t('map.collisionOn') : $t('map.collisionEmpty') }}
               </span>
               <button
                 @click="collisionVisible = !collisionVisible; drawMap()"
-                class="w-5 text-center rounded hover:bg-gray-700"
+                class="w-5 text-center rounded-control hover:bg-raised"
                 :title="$t('map.collisionToggleHint')"
               >{{ collisionVisible ? '👁' : '–' }}</button>
             </div>
@@ -2316,35 +2316,35 @@ watch(activeSubTab, (tab, prev) => {
                "+" selects a level beyond the current max (grid created lazily
                on first paint). -->
           <div class="flex items-center gap-1 mt-1.5">
-            <span class="text-[10px] text-gray-500 mr-0.5" :title="$t('map.collisionLevelHint')">{{ $t('map.collisionLevel') }}</span>
+            <span class="text-micro text-ink-faint mr-0.5" :title="$t('map.collisionLevelHint')">{{ $t('map.collisionLevel') }}</span>
             <button
               v-for="lv in collisionLevelSlots"
               :key="lv"
               @click="collisionLevel = lv; drawMap()"
               :class="[
-                'w-5 h-5 text-[10px] rounded leading-none',
-                collisionLevel === lv ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+                'w-5 h-5 text-micro rounded-control leading-none',
+                collisionLevel === lv ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay text-ink-body',
               ]"
             >{{ lv }}</button>
             <button
               @click="addCollisionLevel(); drawMap()"
-              class="w-5 h-5 text-[10px] rounded leading-none bg-gray-700 hover:bg-gray-600 text-gray-300"
+              class="w-5 h-5 text-micro rounded-control leading-none bg-raised hover:bg-overlay text-ink-body"
               :title="$t('map.collisionAddLevel')"
             >+</button>
           </div>
         </div>
 
         <!-- Stairs (ascend/descend one elevation level) -->
-        <div class="border-b border-gray-700 px-3 py-2">
+        <div class="border-b border-border px-3 py-2">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.stairs') }}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.stairs') }}</h2>
             <div class="flex items-center gap-2">
-              <span class="text-[10px]" :class="stairsGrid ? 'text-green-400' : 'text-gray-600'">
+              <span class="text-micro" :class="stairsGrid ? 'text-success-ink' : 'text-ink-disabled'">
                 {{ stairsGrid ? $t('map.collisionOn') : $t('map.collisionEmpty') }}
               </span>
               <button
                 @click="stairsVisible = !stairsVisible; drawMap()"
-                class="w-5 text-center rounded hover:bg-gray-700"
+                class="w-5 text-center rounded-control hover:bg-raised"
                 :title="$t('map.stairsToggleHint')"
               >{{ stairsVisible ? '👁' : '–' }}</button>
             </div>
@@ -2356,28 +2356,28 @@ watch(activeSubTab, (tab, prev) => {
               :key="opt"
               @click="stairBrush = opt"
               :class="[
-                'px-1.5 h-5 text-[10px] rounded leading-none',
-                stairBrush === opt ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+                'px-1.5 h-5 text-micro rounded-control leading-none',
+                stairBrush === opt ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay text-ink-body',
               ]"
             >{{ opt === 1 ? `▲ ${$t('map.stairUp')}` : opt === 2 ? `▼ ${$t('map.stairDown')}` : $t('map.stairClear') }}</button>
           </div>
         </div>
 
         <!-- Minimap -->
-        <div class="border-b border-gray-700 px-3 py-2">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $t('map.minimap') }}</h2>
-          <div class="flex justify-center bg-gray-900 rounded p-1">
+        <div class="border-b border-border px-3 py-2">
+          <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">{{ $t('map.minimap') }}</h2>
+          <div class="flex justify-center bg-canvas rounded-control p-1">
             <canvas ref="minimapRef" style="image-rendering: pixelated" />
           </div>
         </div>
 
         <!-- Tileset palette -->
         <div class="flex-1 flex flex-col min-h-0">
-          <div class="px-3 py-2 border-b border-gray-700 shrink-0">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('map.palette') }}</h2>
+          <div class="px-3 py-2 border-b border-border shrink-0">
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{{ $t('map.palette') }}</h2>
           </div>
           <div class="flex-1 overflow-auto p-2">
-            <div v-if="!tilesetImg" class="text-xs text-gray-500">{{ $t('map.noTileset') }}</div>
+            <div v-if="!tilesetImg" class="text-xs text-ink-faint">{{ $t('map.noTileset') }}</div>
             <canvas
               v-show="tilesetImg"
               ref="tilesetCanvasRef"
@@ -2388,7 +2388,7 @@ watch(activeSubTab, (tab, prev) => {
           </div>
         </div>
         </template>
-        <div v-if="!tmx" class="flex-1 flex items-center justify-center text-xs text-gray-500 p-4">
+        <div v-if="!tmx" class="flex-1 flex items-center justify-center text-xs text-ink-faint p-4">
           {{ $t('map.selectToEdit') }}
         </div>
       </template>
@@ -2396,8 +2396,8 @@ watch(activeSubTab, (tab, prev) => {
       <!-- ═══ Building editor panels (building sub-tab) ═══ -->
       <template v-if="activeSubTab?.startsWith('building:')">
         <div class="flex-1 flex flex-col min-h-0 p-3">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ $t('map.tileset') }}</h2>
-          <div v-if="libraryTiles.length === 0" class="text-xs text-gray-500">
+          <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">{{ $t('map.tileset') }}</h2>
+          <div v-if="libraryTiles.length === 0" class="text-xs text-ink-faint">
             {{ $t('map.noTileset') }}
           </div>
           <div v-else class="grid grid-cols-4 gap-1 overflow-y-auto flex-1">
@@ -2405,20 +2405,20 @@ watch(activeSubTab, (tab, prev) => {
               <img
                 :src="tilesStore.tileUrl(t.id)"
                 :alt="t.id"
-                class="w-12 h-12 border border-gray-700 bg-gray-900 cursor-pointer hover:border-blue-400"
+                class="w-12 h-12 border border-border bg-canvas cursor-pointer hover:border-accent-ink"
                 style="image-rendering: pixelated"
                 :title="`${t.id} — ${$t('map.selectedTile')}`"
                 @click="copyTileToClipboard(t.id)"
               />
               <div v-if="clipboard?.kind === 'tile' && clipboard.id === t.id"
-                class="absolute top-0 left-0 w-full h-full border-2 border-blue-400 pointer-events-none"
+                class="absolute top-0 left-0 w-full h-full border-2 border-accent-ink pointer-events-none"
               ></div>
             </div>
           </div>
-          <div v-if="clipboard" class="mt-2 text-[10px] text-blue-400">
+          <div v-if="clipboard" class="mt-2 text-micro text-accent-ink">
             📋 {{ clipboard.kind === 'tile' ? clipboard.id : $t('map.buildings') }}
           </div>
-          <div v-else class="mt-2 text-[10px] text-gray-500">
+          <div v-else class="mt-2 text-micro text-ink-faint">
             {{ $t('map.selectedTile') }}: {{ $t('map.noTileset') }}
           </div>
         </div>
@@ -2431,42 +2431,42 @@ watch(activeSubTab, (tab, prev) => {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       @click.self="showNew = false"
     >
-      <div class="bg-gray-800 border border-gray-600 rounded-lg p-4 w-80 shadow-xl">
-        <h3 class="text-sm font-semibold text-gray-200 mb-3">{{ $t('map.newMap') }}</h3>
-        <label class="block text-xs text-gray-400 mb-1">{{ $t('map.name') }}</label>
+      <div class="bg-surface border border-border-strong rounded-card p-4 w-80 shadow-popover">
+        <h3 class="text-sm font-semibold text-ink-secondary mb-3">{{ $t('map.newMap') }}</h3>
+        <label class="block text-xs text-ink-muted mb-1">{{ $t('map.name') }}</label>
         <input
           v-model="newName"
           :placeholder="$t('map.newMapName')"
-          class="w-full mb-3 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200"
+          class="w-full mb-3 px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary"
           @keydown.enter="confirmCreate"
         />
         <div class="flex gap-3 mb-3">
           <div class="flex-1">
-            <label class="block text-xs text-gray-400 mb-1">{{ $t('map.width') }}</label>
+            <label class="block text-xs text-ink-muted mb-1">{{ $t('map.width') }}</label>
             <input type="number" min="1" max="512" v-model.number="newW"
-              class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+              class="w-full px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </div>
           <div class="flex-1">
-            <label class="block text-xs text-gray-400 mb-1">{{ $t('map.height') }}</label>
+            <label class="block text-xs text-ink-muted mb-1">{{ $t('map.height') }}</label>
             <input type="number" min="1" max="512" v-model.number="newH"
-              class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+              class="w-full px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </div>
         </div>
-        <p class="text-[11px] text-gray-500 mb-3">
+        <p class="text-tiny text-ink-faint mb-3">
           {{ $t('map.newMapHint') }}
         </p>
         <div class="flex justify-end gap-2">
           <button @click="showNew = false"
-            class="px-3 py-1 text-sm rounded bg-gray-700 hover:bg-gray-600 text-gray-300">
+            class="px-3 py-1 text-sm rounded-control bg-raised hover:bg-overlay text-ink-body">
             {{ $t('common.cancel') }}
           </button>
           <button
             @click="confirmCreate"
             :disabled="!newName.trim() || creating"
-            class="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+            class="px-3 py-1 text-sm rounded-control bg-accent hover:bg-accent-strong text-white disabled:opacity-50"
           >{{ creating ? '…' : $t('map.create') }}</button>
         </div>
-        <p v-if="error" class="text-xs text-red-400 mt-2">{{ error }}</p>
+        <p v-if="error" class="text-xs text-danger-ink mt-2">{{ error }}</p>
       </div>
     </div>
 
@@ -2476,26 +2476,26 @@ watch(activeSubTab, (tab, prev) => {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       @click.self="showResize = false"
     >
-      <div class="bg-gray-800 border border-gray-600 rounded-lg p-4 w-80 shadow-xl">
-        <h3 class="text-sm font-semibold text-gray-200 mb-1">{{ $t('map.resizeMap') }}</h3>
-        <p class="text-[11px] text-gray-500 mb-3">
+      <div class="bg-surface border border-border-strong rounded-card p-4 w-80 shadow-popover">
+        <h3 class="text-sm font-semibold text-ink-secondary mb-1">{{ $t('map.resizeMap') }}</h3>
+        <p class="text-tiny text-ink-faint mb-3">
           {{ $t('map.resizeCurrent', { w: tmx.width, h: tmx.height }) }}
         </p>
         <div class="flex gap-3 mb-3">
           <div class="flex-1">
-            <label class="block text-xs text-gray-400 mb-1">{{ $t('map.width') }}</label>
+            <label class="block text-xs text-ink-muted mb-1">{{ $t('map.width') }}</label>
             <input type="number" min="1" max="512" v-model.number="resizeW"
               @keydown.enter="confirmResize"
-              class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+              class="w-full px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </div>
           <div class="flex-1">
-            <label class="block text-xs text-gray-400 mb-1">{{ $t('map.height') }}</label>
+            <label class="block text-xs text-ink-muted mb-1">{{ $t('map.height') }}</label>
             <input type="number" min="1" max="512" v-model.number="resizeH"
               @keydown.enter="confirmResize"
-              class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+              class="w-full px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </div>
         </div>
-        <label class="block text-xs text-gray-400 mb-1">{{ $t('map.anchor') }}</label>
+        <label class="block text-xs text-ink-muted mb-1">{{ $t('map.anchor') }}</label>
         <div class="grid grid-cols-3 gap-1 w-24 mb-2">
           <button
             v-for="(c, i) in anchorCells"
@@ -2503,23 +2503,23 @@ watch(activeSubTab, (tab, prev) => {
             @click="resizeAnchorX = c.x; resizeAnchorY = c.y"
             :title="$t('map.anchor')"
             :class="[
-              'h-7 rounded border text-xs flex items-center justify-center leading-none',
+              'h-7 rounded-control border text-xs flex items-center justify-center leading-none',
               resizeAnchorX === c.x && resizeAnchorY === c.y
-                ? 'bg-blue-600 border-blue-400 text-white'
-                : 'bg-gray-700 border-gray-600 text-gray-500 hover:bg-gray-600',
+                ? 'bg-accent border-accent-ink text-white'
+                : 'bg-raised border-border-strong text-ink-faint hover:bg-overlay',
             ]"
           >{{ resizeAnchorX === c.x && resizeAnchorY === c.y ? '●' : '·' }}</button>
         </div>
-        <p class="text-[11px] text-gray-500 mb-3">{{ $t('map.anchorHint') }}</p>
+        <p class="text-tiny text-ink-faint mb-3">{{ $t('map.anchorHint') }}</p>
         <div class="flex justify-end gap-2">
           <button @click="showResize = false"
-            class="px-3 py-1 text-sm rounded bg-gray-700 hover:bg-gray-600 text-gray-300">
+            class="px-3 py-1 text-sm rounded-control bg-raised hover:bg-overlay text-ink-body">
             {{ $t('common.cancel') }}
           </button>
           <button
             @click="confirmResize"
             :disabled="resizeUnchanged || !resizeValid || resizing"
-            class="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+            class="px-3 py-1 text-sm rounded-control bg-accent hover:bg-accent-strong text-white disabled:opacity-50"
           >{{ $t('map.resize') }}</button>
         </div>
       </div>
@@ -2539,62 +2539,62 @@ watch(activeSubTab, (tab, prev) => {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       @click.self="showBrowseBuildings = false"
     >
-      <div class="bg-gray-800 border border-gray-600 rounded-lg shadow-xl flex flex-col max-w-lg w-full max-h-[80vh]">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 shrink-0">
-          <h3 class="text-sm font-semibold text-gray-200">{{ $t('map.buildings') }}</h3>
-          <button @click="showBrowseBuildings = false" class="text-gray-400 hover:text-gray-200">✕</button>
+      <div class="bg-surface border border-border-strong rounded-card shadow-popover flex flex-col max-w-lg w-full max-h-[80vh]">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+          <h3 class="text-sm font-semibold text-ink-secondary">{{ $t('map.buildings') }}</h3>
+          <button @click="showBrowseBuildings = false" class="text-ink-muted hover:text-ink-secondary">✕</button>
         </div>
 
         <!-- Search + new building form -->
-        <div class="px-4 py-2 border-b border-gray-700 space-y-2 shrink-0">
+        <div class="px-4 py-2 border-b border-border space-y-2 shrink-0">
           <input
             v-model="browseFilter"
             :placeholder="$t('map.searchMaps')"
-            class="w-full px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500"
+            class="w-full px-2 py-1 text-xs bg-inset border border-border rounded-control text-ink-secondary placeholder-gray-500 outline-none focus:border-accent-strong"
           />
           <details class="text-xs">
-            <summary class="cursor-pointer text-blue-400 hover:text-blue-300">{{ $t('map.newBuildingTitle') }}</summary>
-            <div class="mt-2 space-y-2 p-2 bg-gray-900 rounded border border-gray-700">
+            <summary class="cursor-pointer text-accent-ink hover:text-accent-ink-strong">{{ $t('map.newBuildingTitle') }}</summary>
+            <div class="mt-2 space-y-2 p-2 bg-canvas rounded-control border border-border">
               <input
                 v-model="browseNewName"
                 :placeholder="$t('map.newBuildingName')"
-                class="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 outline-none focus:border-blue-400"
+                class="w-full px-2 py-1 text-xs bg-raised border border-border-strong rounded-control text-ink-secondary placeholder-gray-500 outline-none focus:border-accent-ink"
               />
               <div class="flex gap-2 items-center">
-                <span class="text-gray-400">{{ $t('map.newBuildingCols') }}</span>
-                <input type="number" min="1" max="16" v-model.number="browseNewW" class="w-14 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-gray-200" />
-                <span class="text-gray-400">{{ $t('map.newBuildingRows') }}</span>
-                <input type="number" min="1" max="16" v-model.number="browseNewH" class="w-14 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-gray-200" />
+                <span class="text-ink-muted">{{ $t('map.newBuildingCols') }}</span>
+                <input type="number" min="1" max="16" v-model.number="browseNewW" class="w-14 px-1 py-0.5 text-xs bg-raised border border-border-strong rounded-control text-ink-secondary" />
+                <span class="text-ink-muted">{{ $t('map.newBuildingRows') }}</span>
+                <input type="number" min="1" max="16" v-model.number="browseNewH" class="w-14 px-1 py-0.5 text-xs bg-raised border border-border-strong rounded-control text-ink-secondary" />
                 <button
                   @click="createNewBuildingFromBrowse"
                   :disabled="browseCreating"
-                  class="ml-auto px-2 py-0.5 text-xs rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                  class="ml-auto px-2 py-0.5 text-xs rounded-control bg-accent hover:bg-accent-strong text-white disabled:opacity-50"
                 >{{ browseCreating ? '…' : $t('map.create') }}</button>
               </div>
-              <span v-if="browseMsg" class="text-green-400">{{ browseMsg }}</span>
+              <span v-if="browseMsg" class="text-success-ink">{{ browseMsg }}</span>
             </div>
           </details>
         </div>
 
         <!-- Building list -->
         <div class="flex-1 overflow-y-auto p-2">
-          <div v-if="filteredBuildings.length === 0" class="text-xs text-gray-500 p-3 text-center">
+          <div v-if="filteredBuildings.length === 0" class="text-xs text-ink-faint p-3 text-center">
             {{ browseFilter ? $t('map.noMapsMatch') : $t('map.noBuildings') }}
           </div>
-          <div v-for="g in filteredBuildings" :key="g.id" class="group flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-700/50">
-            <img :src="tilesStore.groupUrl(g.id)" class="w-10 h-10 shrink-0 bg-gray-900 border border-gray-700" style="image-rendering: pixelated" />
+          <div v-for="g in filteredBuildings" :key="g.id" class="group flex items-center gap-2 px-2 py-1.5 rounded-control hover:bg-raised/50">
+            <img :src="tilesStore.groupUrl(g.id)" class="w-10 h-10 shrink-0 bg-canvas border border-border" style="image-rendering: pixelated" />
             <div class="flex-1 min-w-0">
-              <div class="text-xs text-gray-200 truncate">{{ g.name || g.id }}</div>
-              <div class="text-[10px] text-gray-500">{{ g.id }} · {{ g.w }}×{{ g.h }}</div>
+              <div class="text-xs text-ink-secondary truncate">{{ g.name || g.id }}</div>
+              <div class="text-micro text-ink-faint">{{ g.id }} · {{ g.w }}×{{ g.h }}</div>
             </div>
             <button
               @click="openBuildingTab(g)"
-              class="px-2 py-0.5 text-[10px] rounded bg-blue-700 hover:bg-blue-600 text-blue-100"
+              class="px-2 py-0.5 text-micro rounded-control bg-accent-hover hover:bg-accent text-accent-ink-faint"
               :title="$t('map.buildingEditor')"
             >{{ $t('map.buildingEditor') }}</button>
             <button
               @click="deleteBuildingFromBrowse(g)"
-              class="px-1 py-0.5 text-[10px] rounded bg-red-700/50 hover:bg-red-600 text-red-200 opacity-0 group-hover:opacity-100"
+              class="px-1 py-0.5 text-micro rounded-control bg-red-700/50 hover:bg-danger text-red-200 opacity-0 group-hover:opacity-100"
             >{{ $t('common.delete') }}</button>
           </div>
         </div>

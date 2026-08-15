@@ -17,16 +17,21 @@
  * See docs/DESIGN-TOKENS.md for the token table and the class migration map.
  */
 @theme inline {
-  /* ── Surfaces (dark hierarchy: canvas → surface → raised → overlay) ────── */
-  --color-canvas: var(--color-gray-900);   /* page background */
-  --color-surface: var(--color-gray-800);  /* panels, header, sidebar, cards */
-  --color-raised: var(--color-gray-700);   /* controls, hover background */
-  --color-overlay: var(--color-gray-600);  /* stronger hover / active */
-  --color-inset: var(--color-gray-900);    /* input wells sitting on surfaces */
+  /* ── Surfaces (dark hierarchy) ─────────────────────────────────────────── */
+  --color-canvas: var(--color-gray-900);        /* page background */
+  --color-canvas-deep: var(--color-gray-950);   /* deepest wells, play backdrop */
+  --color-surface: var(--color-gray-800);       /* panels, header, sidebar, cards */
+  --color-surface-deep: var(--color-gray-850);  /* panels inset below surface */
+  --color-surface-hover: var(--color-gray-750); /* subtle row hover on surface */
+  --color-raised: var(--color-gray-700);        /* controls, hover background */
+  --color-overlay: var(--color-gray-600);       /* stronger hover / neutral actions */
+  --color-overlay-strong: var(--color-gray-500);/* active / pressed */
+  --color-inset: var(--color-gray-900);         /* input wells sitting on surfaces */
 
   /* ── Borders ───────────────────────────────────────────────────────────── */
   --color-border: var(--color-gray-700);
   --color-border-strong: var(--color-gray-600);
+  --color-border-strongest: var(--color-gray-500); /* hover/active borders */
   --color-border-subtle: var(--color-gray-800);
 
   /* ── Text scale (dark theme: higher prominence = lighter gray) ─────────── */
@@ -41,21 +46,46 @@
   --color-accent: var(--color-blue-600);            /* primary buttons */
   --color-accent-hover: var(--color-blue-700);      /* primary button hover */
   --color-accent-strong: var(--color-blue-500);     /* focus rings, active borders */
-  --color-accent-ink: var(--color-blue-400);        /* accent-colored text, active tabs */
+  --color-accent-ink: var(--color-blue-400);        /* accent text, active tabs */
   --color-accent-ink-strong: var(--color-blue-300); /* accent text hover */
+  --color-accent-ink-faint: var(--color-blue-100);  /* accent text on deep accent bg */
+  --color-accent-deep: var(--color-blue-900);       /* solid deep accent badges */
+  --color-accent-selected: color-mix(in oklab, var(--color-blue-900) 30%, transparent);
   --color-accent-surface: color-mix(in oklab, var(--color-blue-600) 30%, transparent);
 
-  /* ── Status colors ─────────────────────────────────────────────────────── */
+  /* ── AI accent (purple — AI features, image providers) ─────────────────── */
+  --color-ai: var(--color-purple-600);
+  --color-ai-hover: var(--color-purple-700);
+  --color-ai-ink: var(--color-purple-400);
+  --color-ai-ink-strong: var(--color-purple-300);
+  --color-ai-deep: var(--color-purple-900);
+  --color-ai-surface: color-mix(in oklab, var(--color-purple-900) 30%, transparent);
+
+  /* ── Status: danger ────────────────────────────────────────────────────── */
   --color-danger: var(--color-red-600);
+  --color-danger-hover: var(--color-red-500);
+  --color-danger-deep: var(--color-red-900);
   --color-danger-ink: var(--color-red-400);
+  --color-danger-ink-strong: var(--color-red-300);
   --color-danger-surface: color-mix(in oklab, var(--color-red-900) 30%, transparent);
 
-  --color-success: var(--color-emerald-600);
-  --color-success-ink: var(--color-emerald-400);
+  /* ── Status: success (green family) ────────────────────────────────────── */
+  --color-success: var(--color-green-600);
+  --color-success-hover: var(--color-green-700);
+  --color-success-strong: var(--color-green-500);
+  --color-success-deep: var(--color-green-900);
+  --color-success-ink: var(--color-green-400);
+  --color-success-ink-strong: var(--color-green-300);
   --color-success-surface: color-mix(in oklab, var(--color-green-900) 20%, transparent);
 
+  /* ── Status: warning (amber family) ────────────────────────────────────── */
   --color-warning: var(--color-amber-500);
+  --color-warning-hover: var(--color-amber-600);
+  --color-warning-strong: var(--color-amber-700);
+  --color-warning-deep: var(--color-amber-900);
   --color-warning-ink: var(--color-amber-400);
+  --color-warning-ink-strong: var(--color-amber-300);
+  --color-on-warning: var(--color-amber-100);    /* text on warning backgrounds */
   --color-warning-surface: color-mix(in oklab, var(--color-yellow-500) 20%, transparent);
 
   /* ── Radii (custom names on purpose — overriding `rounded-sm` etc. would
@@ -73,9 +103,9 @@
 }
 
 /*
- * Fill in the two gray shades the components already use but the default
- * Tailwind palette does not provide. Without this, classes like `bg-gray-850`
- * silently generate no CSS at all.
+ * Fill in the two gray shades the components use but the default Tailwind
+ * palette does not provide. Without this, classes like `bg-gray-850` silently
+ * generate no CSS at all.
  */
 @theme inline {
   --color-gray-750: color-mix(in oklab, var(--color-gray-700) 50%, var(--color-gray-800));

@@ -2,18 +2,18 @@
   <div class="flex h-full">
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Toolbar -->
-      <div v-if="currentTable" class="flex items-center gap-3 px-4 py-2 border-b border-gray-700 bg-gray-850 shrink-0">
-        <span class="text-sm font-medium text-gray-300">{{ localize(currentTable.label) }}</span>
-        <span class="text-xs text-gray-600">{{ records.length }} {{ records.length === 1 ? t('data.record') : t('data.records') }}</span>
+      <div v-if="currentTable" class="flex items-center gap-3 px-4 py-2 border-b border-border bg-surface-deep shrink-0">
+        <span class="text-sm font-medium text-ink-body">{{ localize(currentTable.label) }}</span>
+        <span class="text-xs text-ink-disabled">{{ records.length }} {{ records.length === 1 ? t('data.record') : t('data.records') }}</span>
         <div class="flex-1" />
         <button
           @click="showAi = true"
-          class="px-3 py-1 text-xs rounded bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors"
+          class="px-3 py-1 text-xs rounded-control bg-raised text-ink-secondary hover:bg-overlay transition-colors"
         >✨ {{ $t('data.ai') }}</button>
         <button
           v-if="currentTable.allowCreate !== false"
           @click="newRecord()"
-          class="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+          class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong transition-colors"
         >
           {{ $t('data.newRecord') }}
         </button>
@@ -22,7 +22,7 @@
       <!-- Error banner -->
       <div
         v-if="error"
-        class="px-4 py-2 text-sm text-red-400 bg-red-900/20 border-b border-red-900/30 shrink-0"
+        class="px-4 py-2 text-sm text-danger-ink bg-danger-surface border-b border-danger-deep/30 shrink-0"
       >{{ error }}</div>
 
       <!-- Table content -->
@@ -39,8 +39,8 @@
       <div v-else class="flex-1 flex items-center justify-center">
         <div class="text-center">
           <p class="text-4xl mb-3">📊</p>
-          <p class="text-lg text-gray-400 font-medium">{{ t('data.editorTitle') }}</p>
-          <p class="text-sm text-gray-600 mt-1">{{ t('data.selectTableHint') }}</p>
+          <p class="text-lg text-ink-muted font-medium">{{ t('data.editorTitle') }}</p>
+          <p class="text-sm text-ink-disabled mt-1">{{ t('data.selectTableHint') }}</p>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
     <Transition name="slide">
       <div
         v-if="selectedRecord && currentTable"
-        class="w-96 border-l border-gray-700 bg-gray-900 shrink-0 overflow-hidden"
+        class="w-96 border-l border-border bg-canvas shrink-0 overflow-hidden"
       >
         <DataForm
           :record="selectedRecord"

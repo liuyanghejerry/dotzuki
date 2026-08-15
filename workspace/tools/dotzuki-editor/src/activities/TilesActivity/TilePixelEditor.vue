@@ -1,17 +1,17 @@
 <template>
   <div
-    :class="embedded ? 'w-full h-full flex flex-col bg-gray-800' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/60'"
+    :class="embedded ? 'w-full h-full flex flex-col bg-surface' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/60'"
     @click.self="onBackdrop"
   >
-    <div :class="embedded ? 'flex flex-col flex-1 min-h-0 w-full p-3' : 'bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl'">
+    <div :class="embedded ? 'flex flex-col flex-1 min-h-0 w-full p-3' : 'bg-surface border border-border-strong rounded-card p-4 shadow-popover'">
       <div class="flex items-center justify-between mb-3 gap-4">
-        <div class="text-sm text-gray-200 min-w-0 flex items-center gap-1">
+        <div class="text-sm text-ink-secondary min-w-0 flex items-center gap-1">
           <input
             v-if="editingTitle"
             :ref="onTitleInput"
             v-model="titleDraft"
             maxlength="60"
-            class="min-w-0 bg-gray-900 border border-blue-400 rounded px-1 py-0.5 text-sm text-gray-100 outline-none"
+            class="min-w-0 bg-canvas border border-accent-ink rounded-control px-1 py-0.5 text-sm text-ink outline-none"
             @keydown.enter.prevent="commitTitleEdit"
             @keydown.esc.prevent="cancelTitleEdit"
             @blur="commitTitleEdit"
@@ -20,32 +20,32 @@
             <span class="truncate">{{ displayTitle }}</span>
             <button
               v-if="titleEditable"
-              class="shrink-0 w-5 h-5 rounded text-gray-400 hover:text-gray-100 hover:bg-gray-700"
+              class="shrink-0 w-5 h-5 rounded-control text-ink-muted hover:text-ink hover:bg-raised"
               title="重命名"
               @click="startTitleEdit"
             >✎</button>
           </template>
         </div>
-        <div class="flex items-center gap-2 text-xs text-gray-400">
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" title="水平翻转 (H)" @click="flipH">⇄</button>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" title="垂直翻转 (V)" @click="flipV">⇅</button>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 disabled:opacity-40" :disabled="!canRotate" title="顺时针 90°（仅方形画布）" @click="rotateCW">↻</button>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 disabled:opacity-40" :disabled="!canRotate" title="逆时针 90°（仅方形画布）" @click="rotateCCW">↺</button>
-          <span class="w-px h-4 bg-gray-600 mx-0.5"></span>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 disabled:opacity-40 grid place-content-center" :disabled="!canUndo" title="撤销 (⌘Z / Ctrl+Z)" @click="undo">
+        <div class="flex items-center gap-2 text-xs text-ink-muted">
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary" title="水平翻转 (H)" @click="flipH">⇄</button>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary" title="垂直翻转 (V)" @click="flipV">⇅</button>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary disabled:opacity-40" :disabled="!canRotate" title="顺时针 90°（仅方形画布）" @click="rotateCW">↻</button>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary disabled:opacity-40" :disabled="!canRotate" title="逆时针 90°（仅方形画布）" @click="rotateCCW">↺</button>
+          <span class="w-px h-4 bg-overlay mx-0.5"></span>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary disabled:opacity-40 grid place-content-center" :disabled="!canUndo" title="撤销 (⌘Z / Ctrl+Z)" @click="undo">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7 4 12l5 5" /><path d="M4 12h11a5 5 0 0 1 0 10h-1" /></svg>
           </button>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 disabled:opacity-40 grid place-content-center" :disabled="!canRedo" title="重做 (⌘⇧Z / Ctrl+Y)" @click="redo">
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary disabled:opacity-40 grid place-content-center" :disabled="!canRedo" title="重做 (⌘⇧Z / Ctrl+Y)" @click="redo">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7l5 5-5 5" /><path d="M20 12H9a5 5 0 0 0 0 10h1" /></svg>
           </button>
           <span class="ml-2">缩放</span>
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" @click="zoomBy(-4)">−</button>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary" @click="zoomBy(-4)">−</button>
           <input type="range" :min="ZOOM_MIN" :max="ZOOM_MAX" step="2" v-model.number="zoom" class="w-32" />
-          <button class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" @click="zoomBy(4)">＋</button>
+          <button class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary" @click="zoomBy(4)">＋</button>
           <span class="w-8 text-right tabular-nums">{{ zoom }}×</span>
           <button
-            class="ml-3 px-1 rounded"
-            :class="showGrid ? 'bg-gray-600 text-gray-100' : 'bg-gray-700 text-gray-500 hover:bg-gray-600'"
+            class="ml-3 px-1 rounded-control"
+            :class="showGrid ? 'bg-overlay text-ink' : 'bg-raised text-ink-faint hover:bg-overlay'"
             title="显示 / 隐藏格线"
             @click="showGrid = !showGrid"
           >格线</button>
@@ -60,7 +60,7 @@
               title="格线颜色：黑 ↔ 白"
             />
             <span
-              class="w-5 h-4 rounded border border-gray-500"
+              class="w-5 h-4 rounded-control border border-border-strongest"
               :style="{ background: `rgb(${gridShade},${gridShade},${gridShade})` }"
             />
           </template>
@@ -75,18 +75,18 @@
             title="预览明度（仅显示，不改像素）— 拉高放大色差，便于揪出杂色"
           />
           <button
-            class="px-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 tabular-nums"
+            class="px-1 rounded-control bg-raised hover:bg-overlay text-ink-secondary tabular-nums"
             title="点击重置为 100%"
             @click="brightness = 100"
           >{{ brightness }}%</button>
           <button
             v-if="embedded"
-            class="ml-3 px-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 tabular-nums"
+            class="ml-3 px-1.5 rounded-control bg-raised hover:bg-overlay text-ink-secondary tabular-nums"
             title="调整画布大小（列×行）"
             @click="openResize"
           >画布 {{ cellsX }}×{{ cellsY }}</button>
         </div>
-        <button class="text-gray-400 hover:text-gray-200" @click="requestClose">✕</button>
+        <button class="text-ink-muted hover:text-ink-secondary" @click="requestClose">✕</button>
       </div>
 
       <div :class="['flex gap-4', embedded ? 'flex-1 min-h-0' : '']">
@@ -97,36 +97,36 @@
             :key="t.id"
             @click="tool = t.id"
             :title="`${t.label} (${t.key})`"
-            :class="['px-2 py-1 rounded flex items-center justify-between', tool === t.id ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+            :class="['px-2 py-1 rounded-control flex items-center justify-between', tool === t.id ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
           >
             <span>{{ t.icon }} {{ t.label }}</span>
             <span class="opacity-60 text-xs">{{ t.key }}</span>
           </button>
 
           <!-- brush size + shape -->
-          <div class="mt-2 text-xs text-gray-400">笔刷 {{ brushSize }}px</div>
+          <div class="mt-2 text-xs text-ink-muted">笔刷 {{ brushSize }}px</div>
           <div class="flex items-center gap-1">
-            <button class="w-5 h-5 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" title="变细 ( [ )" @click="brushBy(-1)">−</button>
+            <button class="w-5 h-5 rounded-control bg-raised hover:bg-overlay text-ink-secondary" title="变细 ( [ )" @click="brushBy(-1)">−</button>
             <input type="range" :min="BRUSH_MIN" :max="BRUSH_MAX" step="1" v-model.number="brushSize" class="flex-1 min-w-0" />
-            <button class="w-5 h-5 rounded bg-gray-700 hover:bg-gray-600 text-gray-200" title="变粗 ( ] )" @click="brushBy(1)">＋</button>
+            <button class="w-5 h-5 rounded-control bg-raised hover:bg-overlay text-ink-secondary" title="变粗 ( ] )" @click="brushBy(1)">＋</button>
           </div>
           <div class="flex gap-1">
             <button
-              :class="['flex-1 px-1 py-0.5 rounded text-[11px]', brushShape === 'square' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+              :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', brushShape === 'square' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
               title="方头" @click="brushShape = 'square'"
             >■ 方</button>
             <button
-              :class="['flex-1 px-1 py-0.5 rounded text-[11px]', brushShape === 'round' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+              :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', brushShape === 'round' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
               title="圆头" @click="brushShape = 'round'"
             >● 圆</button>
           </div>
           <div v-if="tool === 'rect' || tool === 'ellipse'" class="flex gap-1">
             <button
-              :class="['flex-1 px-1 py-0.5 rounded text-[11px]', !shapeFill ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+              :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', !shapeFill ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
               title="描边 (F)" @click="shapeFill = false"
             >▭ 描边</button>
             <button
-              :class="['flex-1 px-1 py-0.5 rounded text-[11px]', shapeFill ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+              :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', shapeFill ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
               title="填充 (F)" @click="shapeFill = true"
             >▬ 填充</button>
           </div>
@@ -136,32 +136,32 @@
             <!-- combine mode (Shift = 并) — how a new selection merges with the old -->
             <div class="mt-1 grid grid-cols-4 gap-0.5" title="新选区与已有选区的组合方式（按住 Shift = 并）">
               <button v-for="m in (['replace','add','intersect','subtract'] as const)" :key="m"
-                :class="['px-0.5 py-0.5 rounded text-[11px]', selOp === m ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+                :class="['px-0.5 py-0.5 rounded-control text-tiny', selOp === m ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
                 :title="{replace:'替换',add:'并集 (加)',intersect:'交集',subtract:'差集 (减)'}[m]"
                 @click="selOp = m"
               >{{ {replace:'替换',add:'并',intersect:'交',subtract:'减'}[m] }}</button>
             </div>
             <!-- 魔棒 params -->
             <template v-if="tool === 'wand'">
-              <div class="flex items-center gap-1 mt-1 text-[11px] text-gray-400">
+              <div class="flex items-center gap-1 mt-1 text-tiny text-ink-muted">
                 <span>容差</span>
                 <input type="range" min="0" max="128" step="1" v-model.number="wandTol" class="flex-1 min-w-0" />
-                <span class="tabular-nums w-6 text-right text-gray-200">{{ wandTol }}</span>
+                <span class="tabular-nums w-6 text-right text-ink-secondary">{{ wandTol }}</span>
               </div>
               <button
-                :class="['px-1 py-0.5 rounded text-[11px]', wandGlobal ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+                :class="['px-1 py-0.5 rounded-control text-tiny', wandGlobal ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
                 title="全局：选中整张图中颜色相近的所有像素（非仅相连）"
                 @click="wandGlobal = !wandGlobal"
               >{{ wandGlobal ? '✓ 全局同色' : '全局同色' }}</button>
             </template>
             <div class="mt-1 grid grid-cols-2 gap-1">
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!hasSel" title="复制 (Ctrl+C)" @click="copySel">复制</button>
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!hasSel" title="剪切 (Ctrl+X)" @click="cutSel">剪切</button>
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!hasClip" title="粘贴 (Ctrl+V)" @click="pasteClip">粘贴</button>
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px]" title="全选 (Ctrl+A)" @click="selectAll">全选</button>
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!hasSel" title="复制 (Ctrl+C)" @click="copySel">复制</button>
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!hasSel" title="剪切 (Ctrl+X)" @click="cutSel">剪切</button>
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!hasClip" title="粘贴 (Ctrl+V)" @click="pasteClip">粘贴</button>
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny" title="全选 (Ctrl+A)" @click="selectAll">全选</button>
             </div>
-            <button class="px-2 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!hasSel" title="取消选区 (Esc)" @click="deselect">取消选区</button>
-            <div class="text-[10px] text-gray-500 leading-tight">
+            <button class="px-2 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!hasSel" title="取消选区 (Esc)" @click="deselect">取消选区</button>
+            <div class="text-micro text-ink-faint leading-tight">
               <template v-if="tool === 'select'">拖动框选；选区内拖动可移动。</template>
               <template v-else-if="tool === 'lasso'">按住拖动勾勒任意轮廓，松开闭合即成选区。</template>
               <template v-else-if="tool === 'wand'">点一处按颜色选取相近像素（用「容差」调范围）。</template>
@@ -176,7 +176,7 @@
         <div :class="['flex flex-col gap-1', embedded ? 'flex-1 min-w-0 min-h-0' : 'shrink-0']">
           <div
             ref="scrollEl"
-            class="overflow-auto bg-gray-900 rounded"
+            class="overflow-auto bg-canvas rounded-control"
             :class="[{ 'cursor-grabbing': panning }, embedded ? 'flex-1 w-full min-h-0' : '']"
             :style="embedded ? {} : { maxWidth: '64vw', maxHeight: '78vh' }"
             @pointerdown.capture="onPanDown"
@@ -188,7 +188,7 @@
               ref="canvasEl"
               :width="canvasW"
               :height="canvasH"
-              class="block border border-gray-600 touch-none"
+              class="block border border-border-strong touch-none"
               :style="{ imageRendering: 'pixelated', cursor: canvasCursor }"
               @pointerdown="onDown"
               @pointermove="onMove"
@@ -198,7 +198,7 @@
               @contextmenu.prevent
             />
           </div>
-          <div class="text-xs text-gray-400 tabular-nums h-4 select-none">
+          <div class="text-xs text-ink-muted tabular-nums h-4 select-none">
             <template v-if="cursorPx">
               x {{ cursorPx.x }}, y {{ cursorPx.y }}
               <span v-if="cellsX > 1 || cellsY > 1" class="ml-2 text-indigo-300">
@@ -213,166 +213,166 @@
         <div class="w-48 shrink-0 overflow-y-auto text-sm" :style="{ maxHeight: panelMaxH }">
           <!-- 印章 tile palette: pick a library tile, then stamp it into cells -->
           <template v-if="tool === 'stamp'">
-            <div class="text-xs text-gray-400 mb-1">印章 · 选一块瓦片盖进格子（可拖动连续盖）</div>
-            <div v-if="tilesStore.libraryTiles.length === 0" class="text-[11px] text-gray-600 mb-2">
+            <div class="text-xs text-ink-muted mb-1">印章 · 选一块瓦片盖进格子（可拖动连续盖）</div>
+            <div v-if="tilesStore.libraryTiles.length === 0" class="text-tiny text-ink-disabled mb-2">
               瓦片库为空。到「采集」或用「＋ 空白」先做几块瓦片。
             </div>
             <div v-else class="grid grid-cols-4 gap-1 mb-2">
               <img
                 v-for="t in tilesStore.libraryTiles" :key="t.id"
                 :src="tilesStore.tileUrl(t.id)" :alt="t.id" :title="t.id"
-                :class="['w-9 h-9 border bg-gray-700 cursor-pointer', stampTileId === t.id ? 'border-blue-400 ring-2 ring-blue-400' : 'border-gray-700 hover:border-blue-400']"
+                :class="['w-9 h-9 border bg-raised cursor-pointer', stampTileId === t.id ? 'border-accent-ink ring-2 ring-accent-ink' : 'border-border hover:border-accent-ink']"
                 style="image-rendering: pixelated;"
                 @click="pickStampTile(t.id)"
               />
             </div>
-            <div class="border-t border-gray-700 my-2"></div>
+            <div class="border-t border-border my-2"></div>
           </template>
           <!-- ── colour controls (consolidated here from the tools column) ── -->
           <!-- 勾填笔: two tones at once — dark outline + light fill -->
           <template v-if="tool === 'contour'">
-            <div class="text-xs text-gray-400">勾填双色</div>
+            <div class="text-xs text-ink-muted">勾填双色</div>
             <div class="flex gap-1">
               <button
-                :class="['flex-1 flex items-center gap-1 px-1.5 py-1 rounded border text-[11px] transition-colors', contourSlot === 'outline' ? 'border-blue-400 ring-1 ring-blue-400 bg-gray-700 text-white' : 'border-gray-600 bg-gray-700/40 text-gray-300 hover:bg-gray-700']"
+                :class="['flex-1 flex items-center gap-1 px-1.5 py-1 rounded-control border text-tiny transition-colors', contourSlot === 'outline' ? 'border-accent-ink ring-1 ring-accent-ink bg-raised text-white' : 'border-border-strong bg-raised/40 text-ink-body hover:bg-raised']"
                 :title="`轮廓(深) ${outlineColor} — 调色盘 / 取色器 / 吸管作用于轮廓色`"
                 @click="contourSlot = 'outline'"
               >
-                <span class="w-4 h-4 rounded border border-gray-500 shrink-0" :style="{ background: outlineColor }" />
+                <span class="w-4 h-4 rounded-control border border-border-strongest shrink-0" :style="{ background: outlineColor }" />
                 轮廓
               </button>
               <button
-                :class="['flex-1 flex items-center gap-1 px-1.5 py-1 rounded border text-[11px] transition-colors', contourSlot === 'fill' ? 'border-blue-400 ring-1 ring-blue-400 bg-gray-700 text-white' : 'border-gray-600 bg-gray-700/40 text-gray-300 hover:bg-gray-700']"
+                :class="['flex-1 flex items-center gap-1 px-1.5 py-1 rounded-control border text-tiny transition-colors', contourSlot === 'fill' ? 'border-accent-ink ring-1 ring-accent-ink bg-raised text-white' : 'border-border-strong bg-raised/40 text-ink-body hover:bg-raised']"
                 :title="`填充(浅) ${fillColor} — 调色盘 / 取色器 / 吸管作用于填充色`"
                 @click="contourSlot = 'fill'"
               >
-                <span class="w-4 h-4 rounded border border-gray-500 shrink-0" :style="{ background: fillColor }" />
+                <span class="w-4 h-4 rounded-control border border-border-strongest shrink-0" :style="{ background: fillColor }" />
                 填充
               </button>
             </div>
             <input
               type="color"
               :value="activeColor"
-              class="w-full h-8 bg-gray-700 rounded cursor-pointer"
+              class="w-full h-8 bg-raised rounded-control cursor-pointer"
               :title="`${contourSlot === 'outline' ? '编辑轮廓(深)色' : '编辑填充(浅)色'} ${activeColor}`"
               @input="setColor(($event.target as HTMLInputElement).value)"
             />
             <button
-              class="px-2 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-xs"
+              class="px-2 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-xs"
               title="把填充色调暗，作为轮廓色"
               @click="outlineColor = darken(fillColor)"
             >↧ 由填充取暗边</button>
             <!-- shading mode: how the interior ramps between outline & fill -->
-            <div class="text-xs text-gray-400 mt-1">渐变模式</div>
+            <div class="text-xs text-ink-muted mt-1">渐变模式</div>
             <div class="grid grid-cols-2 gap-1">
               <button
                 v-for="m in CONTOUR_MODES"
                 :key="m.id"
-                :class="['px-1.5 py-1 rounded border text-[11px] transition-colors', layerMode === m.id ? 'border-blue-400 ring-1 ring-blue-400 bg-gray-700 text-white' : 'border-gray-600 bg-gray-700/40 text-gray-300 hover:bg-gray-700']"
+                :class="['px-1.5 py-1 rounded-control border text-tiny transition-colors', layerMode === m.id ? 'border-accent-ink ring-1 ring-accent-ink bg-raised text-white' : 'border-border-strong bg-raised/40 text-ink-body hover:bg-raised']"
                 :title="m.title"
                 @click="layerMode = m.id"
               >{{ m.label }}</button>
             </div>
             <div v-if="layerMode !== 'flat'" class="flex items-center gap-1">
-              <span class="text-[11px] text-gray-400 shrink-0">层数</span>
+              <span class="text-tiny text-ink-muted shrink-0">层数</span>
               <input type="range" min="2" max="6" step="1" v-model.number="layerLevels" class="flex-1 min-w-0" title="渐变色带数量" />
-              <span class="text-[11px] text-gray-300 w-4 text-right">{{ layerLevels }}</span>
+              <span class="text-tiny text-ink-body w-4 text-right">{{ layerLevels }}</span>
             </div>
             <div v-if="layerMode === 'directional'" class="flex items-center gap-1">
-              <span class="text-[11px] text-gray-400 shrink-0">光向</span>
+              <span class="text-tiny text-ink-muted shrink-0">光向</span>
               <input type="range" min="0" max="345" step="15" v-model.number="layerAngle" class="flex-1 min-w-0" title="光照方向（角度）" />
-              <span class="text-[11px] text-gray-300 w-8 text-right">{{ layerAngle }}°</span>
+              <span class="text-tiny text-ink-body w-8 text-right">{{ layerAngle }}°</span>
             </div>
-            <div class="text-[10px] text-gray-500 leading-tight">{{ CONTOUR_MODES.find((m) => m.id === layerMode)?.title }}</div>
+            <div class="text-micro text-ink-faint leading-tight">{{ CONTOUR_MODES.find((m) => m.id === layerMode)?.title }}</div>
           </template>
           <template v-else>
-            <div class="text-xs text-gray-400">当前颜色</div>
+            <div class="text-xs text-ink-muted">当前颜色</div>
             <div class="flex items-center gap-2">
               <input
                 type="color"
                 v-model="color"
-                class="w-14 h-14 shrink-0 rounded cursor-pointer"
+                class="w-14 h-14 shrink-0 rounded-control cursor-pointer"
                 :title="`主色 ${color}（左键绘制）`"
               />
-              <span class="text-xs text-gray-200 font-mono uppercase break-all leading-tight">{{ color }}</span>
+              <span class="text-xs text-ink-secondary font-mono uppercase break-all leading-tight">{{ color }}</span>
             </div>
             <div class="mt-1 flex items-center gap-1">
-              <span class="text-[11px] text-gray-400">次色</span>
+              <span class="text-tiny text-ink-muted">次色</span>
               <input
                 type="color"
                 v-model="secondaryColor"
-                class="flex-1 min-w-0 h-6 bg-gray-700 rounded cursor-pointer"
+                class="flex-1 min-w-0 h-6 bg-raised rounded-control cursor-pointer"
                 :title="`次色 ${secondaryColor}（右键绘制）`"
               />
               <button
-                class="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs shrink-0"
+                class="w-6 h-6 rounded-control bg-raised hover:bg-overlay text-ink-secondary text-xs shrink-0"
                 title="交换主 / 次色 (X)"
                 @click="swapColors"
               >⇄</button>
             </div>
             <div class="mt-1 flex items-center gap-1">
-              <span class="text-[11px] text-gray-400">透明</span>
+              <span class="text-tiny text-ink-muted">透明</span>
               <input type="range" min="0" max="255" step="1" v-model.number="alpha" class="flex-1 min-w-0" title="画笔不透明度" />
-              <span class="text-[10px] text-gray-500 w-8 text-right tabular-nums">{{ Math.round((alpha / 255) * 100) }}%</span>
+              <span class="text-micro text-ink-faint w-8 text-right tabular-nums">{{ Math.round((alpha / 255) * 100) }}%</span>
             </div>
           </template>
           <div class="mt-1 grid grid-cols-2 gap-1">
             <button
-              class="px-2 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-xs"
+              class="px-2 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-xs"
               title="把当前颜色存入「我的色板」"
               @click="storeColor"
             >＋ 存入</button>
             <button
-              class="px-2 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-xs"
+              class="px-2 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-xs"
               title="把某个颜色整体替换为另一个"
               @click="openReplace"
             >🎨 替换</button>
           </div>
           <template v-if="replacing">
-            <div class="flex items-center gap-1 text-[11px] mt-1">
+            <div class="flex items-center gap-1 text-tiny mt-1">
               <button
-                :class="['px-1 py-0.5 rounded', pickReplaceFrom ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']"
+                :class="['px-1 py-0.5 rounded-control', pickReplaceFrom ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']"
                 title="从画布点取要替换的颜色"
                 @click="pickReplaceFrom = true"
               >取色</button>
-              <span class="w-5 h-5 rounded border border-gray-500 shrink-0" :style="{ background: replaceFrom ?? 'transparent' }" :title="replaceFrom ?? '未选择'" />
+              <span class="w-5 h-5 rounded-control border border-border-strongest shrink-0" :style="{ background: replaceFrom ?? 'transparent' }" :title="replaceFrom ?? '未选择'" />
               <span>→</span>
-              <input type="color" v-model="replaceTo" class="flex-1 min-w-0 h-5 bg-gray-700 rounded cursor-pointer" :title="replaceTo" />
+              <input type="color" v-model="replaceTo" class="flex-1 min-w-0 h-5 bg-raised rounded-control cursor-pointer" :title="replaceTo" />
             </div>
             <div class="flex gap-1 mt-1">
               <button
-                class="flex-1 px-1 py-0.5 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40 text-[11px]"
+                class="flex-1 px-1 py-0.5 rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40 text-tiny"
                 :disabled="!replaceFrom"
                 @click="doReplace"
               >执行</button>
-              <button class="flex-1 px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px]" @click="closeReplace">取消</button>
+              <button class="flex-1 px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny" @click="closeReplace">取消</button>
             </div>
           </template>
 
-          <div class="border-t border-gray-700 my-2"></div>
+          <div class="border-t border-border my-2"></div>
 
           <!-- working palette extracted from this image: sort + 合并杂色 + optional constrain -->
           <div class="flex items-center justify-between mb-0.5">
-            <div class="text-xs text-gray-400">本图色板</div>
+            <div class="text-xs text-ink-muted">本图色板</div>
             <div class="flex items-center gap-1">
-              <select v-model="docSort" class="text-[10px] bg-gray-700 text-gray-300 rounded px-1 py-0.5 cursor-pointer" title="排序：按数量 / 色相 / 明度（排序后相近的杂色会挨在一起）">
+              <select v-model="docSort" class="text-micro bg-raised text-ink-body rounded-control px-1 py-0.5 cursor-pointer" title="排序：按数量 / 色相 / 明度（排序后相近的杂色会挨在一起）">
                 <option value="count">数量</option>
                 <option value="hue">色相</option>
                 <option value="lum">明度</option>
               </select>
-              <button class="text-[10px] px-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600" title="从当前图像重新提取颜色" @click="extractDocPalette">提取</button>
+              <button class="text-micro px-1 rounded-control bg-raised text-ink-body hover:bg-overlay" title="从当前图像重新提取颜色" @click="extractDocPalette">提取</button>
             </div>
           </div>
-          <div class="text-[10px] text-gray-500 mb-1" title="整张图不重复的非透明颜色数（按 RGBA 计）；下方色板只取其中高频前 64 色">
-            整图 <span class="text-gray-300 tabular-nums">{{ colorCount }}</span> 色 · 色板取前 64
+          <div class="text-micro text-ink-faint mb-1" title="整张图不重复的非透明颜色数（按 RGBA 计）；下方色板只取其中高频前 64 色">
+            整图 <span class="text-ink-body tabular-nums">{{ colorCount }}</span> 色 · 色板取前 64
           </div>
-          <label class="flex items-center gap-1 text-[10px] text-gray-400 mb-1 cursor-pointer" title="绘制时把颜色吸附到最接近的色板色 (K)">
+          <label class="flex items-center gap-1 text-micro text-ink-muted mb-1 cursor-pointer" title="绘制时把颜色吸附到最接近的色板色 (K)">
             <input type="checkbox" v-model="constrainToPalette" /> 约束到色板 (K)
           </label>
-          <label class="flex items-center gap-1 text-[10px] text-gray-400 mb-1 cursor-pointer" title="先点一个源色，再点目标色，把当前图层中的源色替换为目标色 — 快速并掉杂色">
+          <label class="flex items-center gap-1 text-micro text-ink-muted mb-1 cursor-pointer" title="先点一个源色，再点目标色，把当前图层中的源色替换为目标色 — 快速并掉杂色">
             <input type="checkbox" v-model="mergeMode" /> 合并杂色（点源色→点目标色）
           </label>
-          <div v-if="mergeMode" class="text-[10px] text-amber-300/80 mb-1 leading-tight">
+          <div v-if="mergeMode" class="text-micro text-warning-ink-strong/80 mb-1 leading-tight">
             <template v-if="mergeFrom">源色 <span class="font-mono">{{ mergeFrom }}</span> → 点目标色完成替换</template>
             <template v-else>点一个「源色」开始合并</template>
           </div>
@@ -380,27 +380,27 @@
             <button
               v-for="e in sortedDocPalette"
               :key="e.hex"
-              class="w-6 h-6 rounded border transition-colors"
-              :class="mergeMode && mergeFrom === e.hex ? 'border-amber-400 ring-2 ring-amber-400' : 'border-gray-600 hover:border-white hover:ring-2 hover:ring-blue-400'"
+              class="w-6 h-6 rounded-control border transition-colors"
+              :class="mergeMode && mergeFrom === e.hex ? 'border-warning-ink ring-2 ring-warning-ink' : 'border-border-strong hover:border-white hover:ring-2 hover:ring-accent-ink'"
               :style="{ background: displayHex(e.hex) }"
               :title="`${e.hex} · ${e.n}px${mergeMode ? (mergeFrom ? ' · 点此设为目标色' : ' · 点此设为源色') : ''}`"
               @click="onDocSwatch(e)"
             />
           </div>
-          <div v-else class="text-[10px] text-gray-600 mb-3">点「提取」从图中取色。</div>
+          <div v-else class="text-micro text-ink-disabled mb-3">点「提取」从图中取色。</div>
 
           <template v-if="userPalette.length">
-            <div class="text-xs text-gray-400 mb-1">我的色板</div>
+            <div class="text-xs text-ink-muted mb-1">我的色板</div>
             <div class="grid grid-cols-7 gap-1 mb-3">
               <div v-for="(s, i) in userPalette" :key="i" class="relative group">
                 <button
-                  class="w-6 h-6 rounded border border-gray-600 block hover:border-white hover:ring-2 hover:ring-blue-400 transition-colors"
+                  class="w-6 h-6 rounded-control border border-border-strong block hover:border-white hover:ring-2 hover:ring-accent-ink transition-colors"
                   :style="{ background: displayHex(s) }"
                   :title="s"
                   @click="setColor(s)"
                 />
                 <button
-                  class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white text-[8px] leading-none hidden group-hover:flex items-center justify-center"
+                  class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-pill bg-danger hover:bg-danger-hover text-white text-[8px] leading-none hidden group-hover:flex items-center justify-center"
                   title="移除"
                   @click.stop="removeUserColor(i)"
                 >✕</button>
@@ -409,12 +409,12 @@
           </template>
 
           <template v-if="recent.length">
-            <div class="text-xs text-gray-400 mb-1">最近</div>
+            <div class="text-xs text-ink-muted mb-1">最近</div>
             <div class="grid grid-cols-7 gap-1 mb-3">
               <button
                 v-for="(s, i) in recent"
                 :key="i"
-                class="w-6 h-6 rounded border border-gray-600 hover:border-white hover:ring-2 hover:ring-blue-400 transition-colors"
+                class="w-6 h-6 rounded-control border border-border-strong hover:border-white hover:ring-2 hover:ring-accent-ink transition-colors"
                 :style="{ background: displayHex(s) }"
                 :title="s"
                 @click="setColor(s)"
@@ -422,12 +422,12 @@
             </div>
           </template>
 
-          <div class="text-xs text-gray-400 mb-1">预置色板</div>
+          <div class="text-xs text-ink-muted mb-1">预置色板</div>
           <div class="grid grid-cols-7 gap-1">
             <button
               v-for="c in JP_COLORS"
               :key="c.hex"
-              class="w-6 h-6 rounded border border-gray-600 hover:border-white hover:ring-2 hover:ring-blue-400 transition-colors"
+              class="w-6 h-6 rounded-control border border-border-strong hover:border-white hover:ring-2 hover:ring-accent-ink transition-colors"
               :style="{ background: c.hex }"
               :title="`${c.name} ${c.hex}`"
               @click="setColor(c.hex)"
@@ -438,37 +438,37 @@
         <!-- ═══ layers ═══ -->
         <div class="w-44 shrink-0 overflow-y-auto text-sm" :style="{ maxHeight: panelMaxH }">
           <!-- preview + seamless-tile preview (moved above the layers panel) -->
-          <div class="text-xs text-gray-400 mb-1">预览 ×{{ previewScale }}</div>
-          <canvas ref="previewEl" :width="pw * previewScale" :height="ph * previewScale" class="block border border-gray-600 max-w-full h-auto mb-2" style="image-rendering: pixelated;" />
-          <button class="text-xs text-gray-400 hover:text-gray-200 block mb-1" title="无缝平铺预览（3×3 环绕），便于检查接缝" @click="tilePreview = !tilePreview">{{ tilePreview ? '▾' : '▸' }} 平铺 3×3</button>
-          <canvas v-show="tilePreview" ref="tileEl" :width="pw * 3 * tileScale" :height="ph * 3 * tileScale" class="block border border-gray-600 max-w-full h-auto mb-2" style="image-rendering: pixelated;" />
-          <div class="border-t border-gray-700 mb-2"></div>
+          <div class="text-xs text-ink-muted mb-1">预览 ×{{ previewScale }}</div>
+          <canvas ref="previewEl" :width="pw * previewScale" :height="ph * previewScale" class="block border border-border-strong max-w-full h-auto mb-2" style="image-rendering: pixelated;" />
+          <button class="text-xs text-ink-muted hover:text-ink-secondary block mb-1" title="无缝平铺预览（3×3 环绕），便于检查接缝" @click="tilePreview = !tilePreview">{{ tilePreview ? '▾' : '▸' }} 平铺 3×3</button>
+          <canvas v-show="tilePreview" ref="tileEl" :width="pw * 3 * tileScale" :height="ph * 3 * tileScale" class="block border border-border-strong max-w-full h-auto mb-2" style="image-rendering: pixelated;" />
+          <div class="border-t border-border mb-2"></div>
 
           <div class="flex items-center justify-between mb-1">
-            <div class="text-xs text-gray-400">图层</div>
+            <div class="text-xs text-ink-muted">图层</div>
             <div class="flex gap-1">
-              <button class="text-[10px] px-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600" title="新建栅格图层" @click="addLayer('raster')">＋栅格</button>
-              <button class="text-[10px] px-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600" title="新建勾填图层（轮廓非破坏推导）" @click="addLayer('contour')">＋勾填</button>
+              <button class="text-micro px-1 rounded-control bg-raised text-ink-body hover:bg-overlay" title="新建栅格图层" @click="addLayer('raster')">＋栅格</button>
+              <button class="text-micro px-1 rounded-control bg-raised text-ink-body hover:bg-overlay" title="新建勾填图层（轮廓非破坏推导）" @click="addLayer('contour')">＋勾填</button>
             </div>
           </div>
           <div class="flex gap-1 mb-2">
-            <button class="flex-1 px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!canMoveUp" title="上移" @click="reorderLayer(activeIndex, 1)">↑</button>
-            <button class="flex-1 px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 text-[11px]" :disabled="!canMoveDown" title="下移" @click="reorderLayer(activeIndex, -1)">↓</button>
-            <button class="flex-1 px-1 py-0.5 rounded bg-gray-700 text-red-300 hover:bg-red-600 hover:text-white disabled:opacity-40 text-[11px]" :disabled="layers.length <= 1" title="删除图层" @click="removeLayer(activeIndex)">🗑</button>
+            <button class="flex-1 px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!canMoveUp" title="上移" @click="reorderLayer(activeIndex, 1)">↑</button>
+            <button class="flex-1 px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay disabled:opacity-40 text-tiny" :disabled="!canMoveDown" title="下移" @click="reorderLayer(activeIndex, -1)">↓</button>
+            <button class="flex-1 px-1 py-0.5 rounded-control bg-raised text-danger-ink-strong hover:bg-danger hover:text-white disabled:opacity-40 text-tiny" :disabled="layers.length <= 1" title="删除图层" @click="removeLayer(activeIndex)">🗑</button>
           </div>
           <div class="flex flex-col gap-0.5 mb-2">
             <div
               v-for="{ l, i } in layersTopFirst"
               :key="l.id"
-              :class="['flex items-center gap-1 px-1 py-1 rounded cursor-pointer', i === activeIndex ? 'bg-blue-600/30 ring-1 ring-blue-400' : 'hover:bg-gray-700/50']"
+              :class="['flex items-center gap-1 px-1 py-1 rounded-control cursor-pointer', i === activeIndex ? 'bg-accent-surface ring-1 ring-accent-ink' : 'hover:bg-raised/50']"
               @click="setActiveIndex(i)"
             >
               <button class="w-4 shrink-0 text-center" :title="l.visible ? '隐藏' : '显示'" @click.stop="setLayerVisible(i, !l.visible)">{{ l.visible ? '👁' : '◌' }}</button>
-              <span class="text-[9px] px-1 rounded shrink-0" :class="l.kind === 'contour' ? 'bg-amber-700 text-amber-100' : 'bg-gray-600 text-gray-200'">{{ l.kind === 'contour' ? '勾' : '栅' }}</span>
+              <span class="text-[9px] px-1 rounded-control shrink-0" :class="l.kind === 'contour' ? 'bg-warning-strong text-on-warning' : 'bg-overlay text-ink-secondary'">{{ l.kind === 'contour' ? '勾' : '栅' }}</span>
               <input
                 v-if="renamingLayerId === l.id"
                 v-model="renameDraft"
-                class="flex-1 min-w-0 bg-gray-900 px-1 rounded text-gray-100"
+                class="flex-1 min-w-0 bg-canvas px-1 rounded-control text-ink"
                 @click.stop
                 @keydown.enter="commitRename(i)"
                 @blur="commitRename(i)"
@@ -477,7 +477,7 @@
             </div>
           </div>
           <template v-if="activeLayer">
-            <div class="text-[11px] text-gray-400">不透明度 {{ Math.round((activeLayer.opacity / 255) * 100) }}%</div>
+            <div class="text-tiny text-ink-muted">不透明度 {{ Math.round((activeLayer.opacity / 255) * 100) }}%</div>
             <input
               type="range"
               min="0"
@@ -490,7 +490,7 @@
               @change="commitOpacity"
             />
             <template v-if="activeLayer.kind === 'contour'">
-              <div class="text-[11px] text-gray-400 mt-1">描边宽 {{ activeLayer.width }}px</div>
+              <div class="text-tiny text-ink-muted mt-1">描边宽 {{ activeLayer.width }}px</div>
               <input
                 type="range"
                 min="1"
@@ -503,63 +503,63 @@
             </template>
           </template>
           <div v-if="tool === 'eyedropper'" class="mt-3">
-            <div class="text-[11px] text-gray-400">取样来源</div>
+            <div class="text-tiny text-ink-muted">取样来源</div>
             <div class="flex gap-1">
-              <button :class="['flex-1 px-1 py-0.5 rounded text-[11px]', sampleMode === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']" @click="sampleMode = 'active'">本层</button>
-              <button :class="['flex-1 px-1 py-0.5 rounded text-[11px]', sampleMode === 'merged' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600']" @click="sampleMode = 'merged'">合并</button>
+              <button :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', sampleMode === 'active' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']" @click="sampleMode = 'active'">本层</button>
+              <button :class="['flex-1 px-1 py-0.5 rounded-control text-tiny', sampleMode === 'merged' ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay']" @click="sampleMode = 'merged'">合并</button>
             </div>
           </div>
 
           <!-- ✨ 智能处理 (CV assist + AI inpaint) — moved below the layers to balance the panels -->
-          <div class="border-t border-gray-700 my-2"></div>
-          <div class="text-xs text-gray-400 mb-1">✨ 智能处理
-            <span class="text-gray-500">{{ hasSel ? '· 仅选区' : '· 整层' }}</span>
+          <div class="border-t border-border my-2"></div>
+          <div class="text-xs text-ink-muted mb-1">✨ 智能处理
+            <span class="text-ink-faint">{{ hasSel ? '· 仅选区' : '· 整层' }}</span>
           </div>
           <!-- 调色 目标色数（可调，无固定预设）— 拖动会即时刷新预览 -->
-          <div class="flex items-center gap-1 mb-1 text-[11px] text-gray-400" title="「调色」的目标颜色数：越少越扁平，越能压掉渐变/杂色">
+          <div class="flex items-center gap-1 mb-1 text-tiny text-ink-muted" title="「调色」的目标颜色数：越少越扁平，越能压掉渐变/杂色">
             <span>色数</span>
             <input type="range" min="2" max="64" step="1" v-model.number="quantizeColors" class="flex-1 min-w-0" />
-            <span class="tabular-nums w-6 text-right text-gray-200">{{ quantizeColors }}</span>
+            <span class="tabular-nums w-6 text-right text-ink-secondary">{{ quantizeColors }}</span>
           </div>
           <div class="grid grid-cols-2 gap-1">
-            <button class="px-1 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px] disabled:opacity-40" :disabled="cvBusy" title="自动移除背景（抠图）。先预览，满意再应用。" @click="applyCv('bg-removal')">抠底</button>
-            <button class="px-1 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px] disabled:opacity-40" :disabled="cvBusy" title="调和到「色数」色板，压掉渐变/杂色。先预览，满意再应用。" @click="applyCv('palette-harmonize')">调色</button>
-            <button class="px-1 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px] disabled:opacity-40" :disabled="cvBusy" title="吸附到像素栅格。先预览，满意再应用。" @click="applyCv('pixelize-grid')">栅格</button>
-            <button class="px-1 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 text-[11px] disabled:opacity-40" :disabled="cvBusy" title="3×3 中值降噪：消除椒盐杂色，不引入新颜色。先预览，满意再应用。" @click="applyDenoise">降噪</button>
+            <button class="px-1 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny disabled:opacity-40" :disabled="cvBusy" title="自动移除背景（抠图）。先预览，满意再应用。" @click="applyCv('bg-removal')">抠底</button>
+            <button class="px-1 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny disabled:opacity-40" :disabled="cvBusy" title="调和到「色数」色板，压掉渐变/杂色。先预览，满意再应用。" @click="applyCv('palette-harmonize')">调色</button>
+            <button class="px-1 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny disabled:opacity-40" :disabled="cvBusy" title="吸附到像素栅格。先预览，满意再应用。" @click="applyCv('pixelize-grid')">栅格</button>
+            <button class="px-1 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay text-tiny disabled:opacity-40" :disabled="cvBusy" title="3×3 中值降噪：消除椒盐杂色，不引入新颜色。先预览，满意再应用。" @click="applyDenoise">降噪</button>
           </div>
-          <button class="mt-1 w-full px-1 py-1 rounded text-[11px] disabled:opacity-40"
-            :class="showInpaint ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+          <button class="mt-1 w-full px-1 py-1 rounded-control text-tiny disabled:opacity-40"
+            :class="showInpaint ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay'"
             :disabled="cvBusy" title="用 AI 编辑选区/整块（需图像提供方）" @click="showInpaint = !showInpaint">✨ AI 修复</button>
           <div v-if="showInpaint" class="mt-1 flex gap-1">
             <input v-model="inpaintPrompt" placeholder="描述修改（如：去掉路灯）" @keydown.enter="runInpaint"
-              class="flex-1 min-w-0 bg-gray-900 border border-gray-700 rounded px-1.5 py-1 text-[11px] text-gray-100 focus:outline-none focus:border-blue-500" />
+              class="flex-1 min-w-0 bg-inset border border-border rounded-control px-1.5 py-1 text-tiny text-ink focus:outline-none focus:border-accent-strong" />
             <button :disabled="cvBusy || !inpaintPrompt.trim()" @click="runInpaint"
-              class="px-2 py-1 rounded bg-blue-600 text-white text-[11px] disabled:opacity-40">{{ cvBusy ? '…' : 'GO' }}</button>
+              class="px-2 py-1 rounded-control bg-accent text-white text-tiny disabled:opacity-40">{{ cvBusy ? '…' : 'GO' }}</button>
           </div>
           <!-- preview bar: try an op without committing; 应用 to keep, 取消 to drop,
                press-hold 原图 to A/B against the unprocessed pixels -->
-          <div v-if="hasPreview" class="mt-1 rounded border border-blue-500/60 bg-blue-600/10 p-1">
-            <div class="text-[11px] text-blue-300 mb-1">预览：{{ preview?.label }}<span v-if="cvBusy" class="text-gray-400"> · 处理中…</span></div>
-            <div class="grid grid-cols-3 gap-1 text-[11px]">
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-200 hover:bg-gray-600 select-none"
+          <div v-if="hasPreview" class="mt-1 rounded-control border border-accent-strong/60 bg-accent/10 p-1">
+            <div class="text-tiny text-accent-ink-strong mb-1">预览：{{ preview?.label }}<span v-if="cvBusy" class="text-ink-muted"> · 处理中…</span></div>
+            <div class="grid grid-cols-3 gap-1 text-tiny">
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-secondary hover:bg-overlay select-none"
                 title="按住查看原图（对比）"
                 @pointerdown="previewShowOriginal = true; redraw()"
                 @pointerup="previewShowOriginal = false; redraw()"
                 @pointerleave="previewShowOriginal = false; redraw()"
               >原图</button>
-              <button class="px-1 py-0.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600" title="放弃此次处理 (Esc)" @click="cancelPreview">取消</button>
-              <button class="px-1 py-0.5 rounded bg-blue-600 text-white hover:bg-blue-500" title="应用到图层 (Enter)" @click="applyPreview">应用</button>
+              <button class="px-1 py-0.5 rounded-control bg-raised text-ink-body hover:bg-overlay" title="放弃此次处理 (Esc)" @click="cancelPreview">取消</button>
+              <button class="px-1 py-0.5 rounded-control bg-accent text-white hover:bg-accent-strong" title="应用到图层 (Enter)" @click="applyPreview">应用</button>
             </div>
           </div>
-          <p v-if="cvError" class="text-[10px] text-red-400">{{ cvError }}</p>
+          <p v-if="cvError" class="text-micro text-danger-ink">{{ cvError }}</p>
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 mt-4">
-        <span v-if="dirty" class="mr-auto text-xs text-amber-400">● 有未保存的修改</span>
-        <button class="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600" title="关闭 (Esc)" @click="requestClose">关闭</button>
+        <span v-if="dirty" class="mr-auto text-xs text-warning-ink">● 有未保存的修改</span>
+        <button class="px-3 py-1 rounded-control bg-raised text-ink-body hover:bg-overlay" title="关闭 (Esc)" @click="requestClose">关闭</button>
         <button
-          class="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+          class="px-3 py-1 rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-50"
           :disabled="saving"
           title="保存 (⌘S / Ctrl+S)"
           @click="save"
@@ -569,30 +569,30 @@
 
     <!-- resize-canvas dialog (building editor) -->
     <div v-if="showResize" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60" @click.self="showResize = false">
-      <div class="bg-gray-800 border border-gray-600 rounded-lg p-4 w-72 shadow-xl">
-        <h3 class="text-sm font-semibold text-gray-200 mb-1">调整画布大小</h3>
-        <p class="text-[11px] text-gray-500 mb-3">当前 {{ cellsX }} × {{ cellsY }} 格（{{ pw }}×{{ ph }}px）。放大在锚点反侧补空白，缩小则裁掉。</p>
+      <div class="bg-surface border border-border-strong rounded-card p-4 w-72 shadow-popover">
+        <h3 class="text-sm font-semibold text-ink-secondary mb-1">调整画布大小</h3>
+        <p class="text-tiny text-ink-faint mb-3">当前 {{ cellsX }} × {{ cellsY }} 格（{{ pw }}×{{ ph }}px）。放大在锚点反侧补空白，缩小则裁掉。</p>
         <div class="flex gap-3 mb-3">
-          <label class="flex-1 text-xs text-gray-400">列
-            <input type="number" min="1" :max="RESIZE_MAX" v-model.number="resizeCols" class="w-full mt-0.5 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+          <label class="flex-1 text-xs text-ink-muted">列
+            <input type="number" min="1" :max="RESIZE_MAX" v-model.number="resizeCols" class="w-full mt-0.5 px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </label>
-          <label class="flex-1 text-xs text-gray-400">行
-            <input type="number" min="1" :max="RESIZE_MAX" v-model.number="resizeRows" class="w-full mt-0.5 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200" />
+          <label class="flex-1 text-xs text-ink-muted">行
+            <input type="number" min="1" :max="RESIZE_MAX" v-model.number="resizeRows" class="w-full mt-0.5 px-2 py-1 bg-raised border border-border-strong rounded-control text-sm text-ink-secondary" />
           </label>
         </div>
-        <div class="text-xs text-gray-400 mb-1">锚点</div>
+        <div class="text-xs text-ink-muted mb-1">锚点</div>
         <div class="grid grid-cols-3 gap-1 w-24 mb-3">
           <button
             v-for="(a, i) in resizeAnchors" :key="i"
             @click="resizeAnchorX = a.x; resizeAnchorY = a.y"
             :title="'锚点'"
-            :class="['h-7 rounded border text-xs leading-none', resizeAnchorX === a.x && resizeAnchorY === a.y ? 'bg-blue-600 border-blue-400 text-white' : 'bg-gray-700 border-gray-600 text-gray-500 hover:bg-gray-600']"
+            :class="['h-7 rounded-control border text-xs leading-none', resizeAnchorX === a.x && resizeAnchorY === a.y ? 'bg-accent border-accent-ink text-white' : 'bg-raised border-border-strong text-ink-faint hover:bg-overlay']"
           >{{ resizeAnchorX === a.x && resizeAnchorY === a.y ? '●' : '·' }}</button>
         </div>
-        <p class="text-[10px] text-amber-300/70 mb-3">注意：调整尺寸会清空本次撤销历史。</p>
+        <p class="text-micro text-warning-ink-strong/70 mb-3">注意：调整尺寸会清空本次撤销历史。</p>
         <div class="flex justify-end gap-2">
-          <button class="px-3 py-1 text-sm rounded bg-gray-700 hover:bg-gray-600 text-gray-300" @click="showResize = false">取消</button>
-          <button class="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white" @click="applyResize">应用</button>
+          <button class="px-3 py-1 text-sm rounded-control bg-raised hover:bg-overlay text-ink-body" @click="showResize = false">取消</button>
+          <button class="px-3 py-1 text-sm rounded-control bg-accent hover:bg-accent-strong text-white" @click="applyResize">应用</button>
         </div>
       </div>
     </div>
@@ -600,8 +600,8 @@
     <!-- save-result toast -->
     <div
       v-if="toast"
-      class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-lg shadow-lg text-sm font-medium pointer-events-none"
-      :class="toast.ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white'"
+      class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-card shadow-lg text-sm font-medium pointer-events-none"
+      :class="toast.ok ? 'bg-success text-white' : 'bg-danger text-white'"
     >{{ toast.text }}</div>
   </div>
 </template>

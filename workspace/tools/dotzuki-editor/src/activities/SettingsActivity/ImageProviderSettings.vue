@@ -141,99 +141,99 @@ function applyPreset(kind: 'openai' | 'geminiFlash' | 'geminiPro') {
 
 <template>
   <div class="p-5 max-w-2xl">
-    <h2 class="text-base font-bold text-purple-400 mb-1">{{ t('settings.imageProviders.title') }}</h2>
-    <p class="text-[11px] text-gray-400 mb-4 leading-snug">{{ t('settings.imageProviders.desc') }}</p>
+    <h2 class="text-base font-bold text-ai-ink mb-1">{{ t('settings.imageProviders.title') }}</h2>
+    <p class="text-tiny text-ink-muted mb-4 leading-snug">{{ t('settings.imageProviders.desc') }}</p>
 
     <!-- Existing profiles -->
     <div class="space-y-2 mb-6">
-      <div v-for="(p, i) in imageProviders" :key="p.id" class="bg-gray-800 border border-gray-700 rounded px-3 py-2">
+      <div v-for="(p, i) in imageProviders" :key="p.id" class="bg-surface border border-border rounded-control px-3 py-2">
         <div class="flex items-center gap-3">
           <div class="flex-1 min-w-0">
-            <div class="text-sm text-gray-100 font-medium">{{ p.id }}
-              <span class="text-[10px] text-gray-500 ml-1">{{ p.kind }}</span>
+            <div class="text-sm text-ink font-medium">{{ p.id }}
+              <span class="text-micro text-ink-faint ml-1">{{ p.kind }}</span>
             </div>
-            <div class="text-[11px] text-gray-500 truncate">{{ p.model }} · {{ p.baseURL }}</div>
+            <div class="text-tiny text-ink-faint truncate">{{ p.model }} · {{ p.baseURL }}</div>
           </div>
-          <span class="text-[10px] px-1.5 py-0.5 rounded" :class="keyStored(p.id) ? 'bg-green-900/40 text-green-400' : 'bg-gray-700 text-gray-400'">
+          <span class="text-micro px-1.5 py-0.5 rounded-control" :class="keyStored(p.id) ? 'bg-success-surface/40 text-success-ink' : 'bg-raised text-ink-muted'">
             {{ keyStored(p.id) ? t('settings.imageProviders.keySet') : t('settings.imageProviders.noKey') }}
           </span>
-          <button @click="runRowTest(i)" :disabled="rowTest.testing" class="text-[11px] text-gray-400 hover:text-green-400 disabled:opacity-40">
+          <button @click="runRowTest(i)" :disabled="rowTest.testing" class="text-tiny text-ink-muted hover:text-success-ink disabled:opacity-40">
             {{ rowTest.index === i && rowTest.testing ? t('settings.imageProviders.testing') : t('settings.imageProviders.test') }}
           </button>
-          <button v-if="keyStored(p.id)" @click="clearKey(p.id)" class="text-[11px] text-gray-400 hover:text-amber-400">{{ t('settings.imageProviders.clearKey') }}</button>
-          <button @click="edit(i)" class="text-[11px] text-gray-400 hover:text-purple-400">{{ t('settings.imageProviders.edit') }}</button>
-          <button @click="removeAt(i)" class="text-[11px] text-gray-400 hover:text-red-400">{{ t('settings.imageProviders.delete') }}</button>
+          <button v-if="keyStored(p.id)" @click="clearKey(p.id)" class="text-tiny text-ink-muted hover:text-warning-ink">{{ t('settings.imageProviders.clearKey') }}</button>
+          <button @click="edit(i)" class="text-tiny text-ink-muted hover:text-ai-ink">{{ t('settings.imageProviders.edit') }}</button>
+          <button @click="removeAt(i)" class="text-tiny text-ink-muted hover:text-danger-ink">{{ t('settings.imageProviders.delete') }}</button>
         </div>
-        <div v-if="rowTest.index === i && rowTest.result" class="mt-2 flex items-center gap-2 text-[11px] rounded px-2 py-1"
-          :class="rowTest.result.ok ? 'bg-green-900/20 text-green-300' : 'bg-red-900/20 text-red-300'">
-          <img v-if="rowTest.result.preview" :src="rowTest.result.preview" class="w-8 h-8 rounded border border-gray-700" style="image-rendering: pixelated;" alt="" />
+        <div v-if="rowTest.index === i && rowTest.result" class="mt-2 flex items-center gap-2 text-tiny rounded-control px-2 py-1"
+          :class="rowTest.result.ok ? 'bg-success-surface text-success-ink-strong' : 'bg-danger-surface text-danger-ink-strong'">
+          <img v-if="rowTest.result.preview" :src="rowTest.result.preview" class="w-8 h-8 rounded-control border border-border" style="image-rendering: pixelated;" alt="" />
           <span class="font-semibold">{{ rowTest.result.ok ? t('settings.imageProviders.testOk') : t('settings.imageProviders.testFailed') }}</span>
           <span v-if="rowTest.result.msg" class="break-words">· {{ rowTest.result.msg }}</span>
         </div>
       </div>
-      <p v-if="!imageProviders.length" class="text-xs text-gray-600">{{ t('settings.imageProviders.empty') }}</p>
+      <p v-if="!imageProviders.length" class="text-xs text-ink-disabled">{{ t('settings.imageProviders.empty') }}</p>
     </div>
 
     <!-- Editor -->
-    <div class="bg-gray-850 border border-gray-700 rounded p-4 space-y-3">
+    <div class="bg-surface-deep border border-border rounded-control p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           {{ editingIndex !== null ? t('settings.imageProviders.editProfile') : t('settings.imageProviders.newProfile') }}
         </h3>
         <div class="flex gap-1">
-          <button @click="applyPreset('geminiFlash')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">Gemini Flash</button>
-          <button @click="applyPreset('geminiPro')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">Gemini Pro</button>
-          <button @click="applyPreset('openai')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600">OpenAI</button>
+          <button @click="applyPreset('geminiFlash')" class="text-micro px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay">Gemini Flash</button>
+          <button @click="applyPreset('geminiPro')" class="text-micro px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay">Gemini Pro</button>
+          <button @click="applyPreset('openai')" class="text-micro px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay">OpenAI</button>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <label class="text-[11px] text-gray-400">{{ t('settings.imageProviders.name') }}
-          <input v-model="draft.id" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
+        <label class="text-tiny text-ink-muted">{{ t('settings.imageProviders.name') }}
+          <input v-model="draft.id" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
         </label>
-        <label class="text-[11px] text-gray-400">{{ t('settings.imageProviders.protocol') }}
-          <select v-model="draft.kind" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
+        <label class="text-tiny text-ink-muted">{{ t('settings.imageProviders.protocol') }}
+          <select v-model="draft.kind" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink">
             <option value="gemini">{{ t('settings.imageProviders.protocolGemini') }}</option>
             <option value="openai">{{ t('settings.imageProviders.protocolOpenai') }}</option>
           </select>
         </label>
-        <label class="text-[11px] text-gray-400 col-span-2">{{ t('settings.imageProviders.baseURL') }}
-          <input v-model="draft.baseURL" placeholder="https://generativelanguage.googleapis.com" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
+        <label class="text-tiny text-ink-muted col-span-2">{{ t('settings.imageProviders.baseURL') }}
+          <input v-model="draft.baseURL" placeholder="https://generativelanguage.googleapis.com" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
         </label>
-        <label class="text-[11px] text-gray-400 col-span-2">{{ t('settings.imageProviders.proxy') }}
-          <input v-model="draft.proxyUrl" :placeholder="t('settings.imageProviders.proxyPlaceholder')" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
-          <span class="text-[10px] text-gray-500 block mt-0.5">{{ t('settings.imageProviders.proxyHint') }}</span>
+        <label class="text-tiny text-ink-muted col-span-2">{{ t('settings.imageProviders.proxy') }}
+          <input v-model="draft.proxyUrl" :placeholder="t('settings.imageProviders.proxyPlaceholder')" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
+          <span class="text-micro text-ink-faint block mt-0.5">{{ t('settings.imageProviders.proxyHint') }}</span>
         </label>
-        <label class="text-[11px] text-gray-400">{{ t('settings.imageProviders.model') }}
-          <input v-model="draft.model" placeholder="gemini-2.5-flash-image" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
+        <label class="text-tiny text-ink-muted">{{ t('settings.imageProviders.model') }}
+          <input v-model="draft.model" placeholder="gemini-2.5-flash-image" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
         </label>
-        <label class="text-[11px] text-gray-400">{{ t('settings.imageProviders.apiKey') }}
-          <input v-model="draft.apiKey" type="password" autocomplete="off" :placeholder="t('settings.imageProviders.apiKeyPlaceholder')" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
-          <span v-if="editingHasKey" class="text-[10px] text-gray-500">{{ t('settings.imageProviders.apiKeyKept') }}</span>
+        <label class="text-tiny text-ink-muted">{{ t('settings.imageProviders.apiKey') }}
+          <input v-model="draft.apiKey" type="password" autocomplete="off" :placeholder="t('settings.imageProviders.apiKeyPlaceholder')" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
+          <span v-if="editingHasKey" class="text-micro text-ink-faint">{{ t('settings.imageProviders.apiKeyKept') }}</span>
         </label>
       </div>
 
       <!-- Test generation -->
-      <div class="border-t border-gray-700/70 pt-3 space-y-2">
+      <div class="border-t border-border/70 pt-3 space-y-2">
         <div class="flex items-center gap-2">
-          <button @click="runTest" :disabled="testing || !draft.id.trim()" class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600 disabled:opacity-40">
+          <button @click="runTest" :disabled="testing || !draft.id.trim()" class="px-3 py-1 text-xs rounded-control bg-success-hover text-white hover:bg-success disabled:opacity-40">
             {{ testing ? t('settings.imageProviders.testing') : t('settings.imageProviders.runTest') }}
           </button>
-          <span class="text-[10px] text-gray-500">{{ t('settings.imageProviders.testHint') }}</span>
+          <span class="text-micro text-ink-faint">{{ t('settings.imageProviders.testHint') }}</span>
         </div>
-        <div v-if="testResult" class="flex items-center gap-2 text-[11px] rounded px-2 py-1.5"
-          :class="testResult.ok ? 'bg-green-900/20 text-green-300' : 'bg-red-900/20 text-red-300'">
-          <img v-if="testResult.preview" :src="testResult.preview" class="w-10 h-10 rounded border border-gray-700" style="image-rendering: pixelated;" alt="" />
+        <div v-if="testResult" class="flex items-center gap-2 text-tiny rounded-control px-2 py-1.5"
+          :class="testResult.ok ? 'bg-success-surface text-success-ink-strong' : 'bg-danger-surface text-danger-ink-strong'">
+          <img v-if="testResult.preview" :src="testResult.preview" class="w-10 h-10 rounded-control border border-border" style="image-rendering: pixelated;" alt="" />
           <span class="font-semibold">{{ testResult.ok ? t('settings.imageProviders.testOk') : t('settings.imageProviders.testFailed') }}</span>
           <span v-if="testResult.msg" class="break-words">· {{ testResult.msg }}</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 border-t border-gray-700/70 pt-3">
-        <button @click="commit" :disabled="!draft.id.trim()" class="px-3 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-40">
+      <div class="flex items-center gap-2 border-t border-border/70 pt-3">
+        <button @click="commit" :disabled="!draft.id.trim()" class="px-3 py-1 text-xs rounded-control bg-ai text-white hover:bg-ai-hover disabled:opacity-40">
           {{ editingIndex !== null ? t('settings.imageProviders.update') : t('settings.imageProviders.add') }}
         </button>
-        <button v-if="editingIndex !== null" @click="reset" class="px-3 py-1 text-xs rounded text-gray-400 hover:text-gray-200">{{ t('settings.imageProviders.cancel') }}</button>
-        <span v-if="savedMsg" class="text-[11px] text-green-400">{{ savedMsg }}</span>
+        <button v-if="editingIndex !== null" @click="reset" class="px-3 py-1 text-xs rounded-control text-ink-muted hover:text-ink-secondary">{{ t('settings.imageProviders.cancel') }}</button>
+        <span v-if="savedMsg" class="text-tiny text-success-ink">{{ savedMsg }}</span>
       </div>
     </div>
   </div>

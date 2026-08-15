@@ -42,40 +42,40 @@ function convert() {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="!busy && emit('close')">
-    <div class="w-[26rem] bg-gray-850 border border-gray-700 rounded-lg shadow-xl p-4">
+    <div class="w-[26rem] bg-surface-deep border border-border rounded-card shadow-popover p-4">
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-sm font-bold text-emerald-400">🗺 {{ t('map.traceTitle') }}</span>
-        <span class="text-[11px] text-gray-500 truncate">{{ mapName }}</span>
+        <span class="text-sm font-bold text-success-ink">🗺 {{ t('map.traceTitle') }}</span>
+        <span class="text-tiny text-ink-faint truncate">{{ mapName }}</span>
       </div>
-      <p class="text-[11px] text-gray-400 mb-3">{{ t('map.traceDesc') }}</p>
+      <p class="text-tiny text-ink-muted mb-3">{{ t('map.traceDesc') }}</p>
 
-      <div class="text-xs text-gray-300 mb-3 flex items-center gap-2">
-        <span class="px-1.5 py-0.5 rounded bg-gray-700 tabular-nums">{{ gridW }} × {{ gridH }}</span>
-        <span class="text-gray-500">{{ t('map.traceCells', { n: cellCount }) }}</span>
+      <div class="text-xs text-ink-body mb-3 flex items-center gap-2">
+        <span class="px-1.5 py-0.5 rounded-control bg-raised tabular-nums">{{ gridW }} × {{ gridH }}</span>
+        <span class="text-ink-faint">{{ t('map.traceCells', { n: cellCount }) }}</span>
       </div>
-      <p v-if="heavy" class="text-[11px] text-amber-400 mb-3">⚠ {{ t('map.traceHeavy') }}</p>
+      <p v-if="heavy" class="text-tiny text-warning-ink mb-3">⚠ {{ t('map.traceHeavy') }}</p>
 
-      <label class="flex items-center gap-2 text-xs text-gray-300 mb-2 select-none">
+      <label class="flex items-center gap-2 text-xs text-ink-body mb-2 select-none">
         <input type="checkbox" v-model="quantize" :disabled="busy" />
         {{ t('map.traceQuantize') }}
       </label>
       <div v-if="quantize" class="flex items-center gap-2 mb-2 pl-6">
-        <span class="text-[11px] text-gray-500 w-14">{{ t('map.traceColors') }}</span>
+        <span class="text-tiny text-ink-faint w-14">{{ t('map.traceColors') }}</span>
         <input type="range" min="4" max="64" step="1" v-model.number="colors" :disabled="busy" class="flex-1" />
-        <span class="text-[11px] text-gray-400 w-6 text-right tabular-nums">{{ colors }}</span>
+        <span class="text-tiny text-ink-muted w-6 text-right tabular-nums">{{ colors }}</span>
       </div>
-      <label class="flex items-center gap-2 text-xs text-gray-300 mb-1 select-none">
+      <label class="flex items-center gap-2 text-xs text-ink-body mb-1 select-none">
         <input type="checkbox" v-model="pixelize" :disabled="busy" />
         {{ t('map.tracePixelize') }}
       </label>
 
-      <p v-if="error" class="text-[11px] text-red-400 mt-2">{{ error }}</p>
+      <p v-if="error" class="text-tiny text-danger-ink mt-2">{{ error }}</p>
 
       <div class="flex justify-end gap-2 mt-4">
         <button @click="emit('close')" :disabled="busy"
-          class="px-3 py-1 text-xs rounded text-gray-400 hover:text-gray-200 disabled:opacity-40">{{ t('common.cancel') }}</button>
+          class="px-3 py-1 text-xs rounded-control text-ink-muted hover:text-ink-secondary disabled:opacity-40">{{ t('common.cancel') }}</button>
         <button @click="convert" :disabled="busy"
-          class="px-3 py-1 text-xs rounded bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-40">
+          class="px-3 py-1 text-xs rounded-control bg-success text-white hover:bg-success-strong disabled:opacity-40">
           {{ busy ? t('map.tracing') : t('map.traceConvert') }}</button>
       </div>
     </div>

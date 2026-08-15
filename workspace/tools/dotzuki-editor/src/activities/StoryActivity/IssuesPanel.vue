@@ -26,10 +26,10 @@ function issueMessage(issue: StoryIssue): string {
 
 <template>
   <div class="h-full overflow-y-auto p-5 max-w-3xl">
-    <h2 class="text-base font-bold text-blue-400 mb-1">{{ t('story.views.issues') }}</h2>
-    <p class="text-[11px] text-gray-400 mb-4">{{ t('story.issuesDesc') }}</p>
+    <h2 class="text-base font-bold text-accent-ink mb-1">{{ t('story.views.issues') }}</h2>
+    <p class="text-tiny text-ink-muted mb-4">{{ t('story.issuesDesc') }}</p>
 
-    <div v-if="!issues.length" class="text-sm text-green-400/80 flex items-center gap-2">
+    <div v-if="!issues.length" class="text-sm text-success-ink/80 flex items-center gap-2">
       <span>✓</span> {{ t('story.noIssues') }}
     </div>
 
@@ -38,14 +38,14 @@ function issueMessage(issue: StoryIssue): string {
         v-for="(issue, i) in issues"
         :key="i"
         @click="open(issue)"
-        class="flex items-start gap-2 bg-gray-800 border border-gray-700 rounded px-3 py-2 cursor-pointer hover:border-gray-600"
+        class="flex items-start gap-2 bg-surface border border-border rounded-control px-3 py-2 cursor-pointer hover:border-border-strong"
       >
-        <span class="text-sm shrink-0" :class="issue.severity === 'error' ? 'text-red-400' : 'text-amber-400'">
+        <span class="text-sm shrink-0" :class="issue.severity === 'error' ? 'text-danger-ink' : 'text-warning-ink'">
           {{ issue.severity === 'error' ? '⛔' : '⚠' }}
         </span>
         <div class="min-w-0">
-          <div class="text-xs text-gray-200">{{ issueMessage(issue) }}</div>
-          <div class="text-[10px] text-gray-500 font-mono">{{ issue.code }}<span v-if="issue.recordId"> · {{ issue.recordId }}</span></div>
+          <div class="text-xs text-ink-secondary">{{ issueMessage(issue) }}</div>
+          <div class="text-micro text-ink-faint font-mono">{{ issue.code }}<span v-if="issue.recordId"> · {{ issue.recordId }}</span></div>
         </div>
       </li>
     </ul>
