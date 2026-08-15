@@ -9,7 +9,7 @@ import { useEditorStore } from '@/stores/editor'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { javascript } from '@codemirror/lang-javascript'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { lightCodeTheme } from '@/composables/codeTheme'
 import { basicSetup } from 'codemirror'
 import type { ScriptActivityConfig } from '@/types'
 import { useScriptActivity } from '@/composables/useScriptActivity'
@@ -60,12 +60,11 @@ function createEditor(doc: string) {
     extensions: [
       basicSetup,
       javascript(),
-      oneDark,
+      lightCodeTheme,
       updateListener,
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { overflow: 'auto' },
-        '.cm-gutters': { borderRight: '1px solid rgba(255,255,255,0.08)' },
       }),
     ],
   })
@@ -95,7 +94,7 @@ async function handleSave() {
   runLint()
 }
 
-// ── AI: NL → .scene snippet inserted at the cursor (grounded by real scenes) ──
+// ── AI: NL → .scene snippet inserted at the cursor (grounded-control by real scenes) ──
 const showGen = ref(false)
 const genPrompt = ref('')
 const genText = ref('')
@@ -216,46 +215,46 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-900">
-    <div class="flex items-center justify-between px-3 py-2 bg-gray-800/80 border-b border-gray-700 shrink-0">
+  <div class="flex flex-col h-full bg-canvas">
+    <div class="flex items-center justify-between px-3 py-2 bg-surface/80 border-b border-border shrink-0">
       <div class="flex items-center gap-3 min-w-0">
-        <span class="text-xs font-mono text-gray-400 truncate">
+        <span class="text-xs font-mono text-ink-muted truncate">
           {{ activeFile || $t('script.noFileSelected') }}
         </span>
         <span
           v-if="dirty"
-          class="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium shrink-0"
+          class="text-micro px-1.5 py-0.5 rounded-control bg-warning-surface text-warning-ink font-medium shrink-0"
         >
           {{ $t('script.unsaved') }}
         </span>
         <span
           v-if="saving"
-          class="text-[10px] text-gray-500 shrink-0"
+          class="text-micro text-ink-faint shrink-0"
         >
           {{ $t('script.saving') }}
         </span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <span class="text-[10px] text-gray-600">
+        <span class="text-micro text-ink-disabled">
            {{ dirty ? $t('script.saveHint') : $t('script.saved') }}
         </span>
         <button
           v-if="activeFile"
-          class="px-2.5 py-1 text-xs rounded shrink-0"
-          :class="showLint ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+          class="px-2.5 py-1 text-xs rounded-control shrink-0"
+          :class="showLint ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay'"
           @click="showLint = !showLint"
-        >🔍 {{ $t('script.lint') }}<span v-if="lintFindings.length" class="ml-1 px-1 rounded bg-amber-500/30 text-amber-300 text-[10px]">{{ lintFindings.length }}</span></button>
+        >🔍 {{ $t('script.lint') }}<span v-if="lintFindings.length" class="ml-1 px-1 rounded-control bg-warning/30 text-warning-ink-strong text-micro">{{ lintFindings.length }}</span></button>
         <button
           v-if="activeFile"
-          class="px-2.5 py-1 text-xs rounded shrink-0"
-          :class="showGen ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+          class="px-2.5 py-1 text-xs rounded-control shrink-0"
+          :class="showGen ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay'"
           @click="showGen = !showGen"
         >✨ {{ $t('script.generate') }}</button>
         <button
-          class="px-2.5 py-1 text-xs font-medium rounded transition-colors shrink-0"
+          class="px-2.5 py-1 text-xs font-medium rounded-control transition-colors shrink-0"
           :class="dirty
-            ? 'bg-blue-600 text-white hover:bg-blue-500 cursor-pointer'
-            : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+            ? 'bg-accent text-white hover:bg-accent-strong cursor-pointer'
+            : 'bg-raised text-ink-faint cursor-not-allowed'"
           :disabled="!dirty"
           @click="handleSave"
         >
@@ -265,51 +264,51 @@ onUnmounted(() => {
     </div>
 
     <!-- AI generate bar -->
-    <div v-if="showGen && activeFile" class="px-3 py-2 bg-gray-850 border-b border-gray-700 shrink-0 space-y-1.5">
+    <div v-if="showGen && activeFile" class="px-3 py-2 bg-surface-deep border-b border-border shrink-0 space-y-1.5">
       <div class="flex items-center gap-2">
         <select v-if="aiGen.providers.value.length" v-model="aiGen.providerId.value"
-          class="bg-gray-700 text-gray-200 text-[11px] rounded px-1.5 py-0.5 border border-gray-600 max-w-[7rem]">
+          class="bg-raised text-ink-secondary text-tiny rounded-control px-1.5 py-0.5 border border-border-strong max-w-[7rem]">
           <option v-for="p in aiGen.providers.value" :key="p.id" :value="p.id">{{ p.id }}</option>
         </select>
         <input v-model="genPrompt" :placeholder="$t('script.generatePlaceholder')" @keydown.enter="generateSnippet()"
-          class="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:outline-none focus:border-blue-500" />
+          class="flex-1 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:outline-none focus:border-accent-strong" />
         <button :disabled="aiGen.busy.value || !genPrompt.trim()" @click="generateSnippet()"
-          class="px-2.5 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">
+          class="px-2.5 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">
           {{ aiGen.busy.value ? $t('script.generating') : $t('script.insert') }}</button>
       </div>
-      <p v-if="aiGen.error.value" class="text-[11px] text-red-400">{{ aiGen.error.value === 'no-provider' ? $t('script.noProvider') : aiGen.error.value }}</p>
-      <p v-else-if="genText" class="text-[11px] text-gray-500 max-h-16 overflow-y-auto whitespace-pre-wrap font-mono">{{ genText }}</p>
+      <p v-if="aiGen.error.value" class="text-tiny text-danger-ink">{{ aiGen.error.value === 'no-provider' ? $t('script.noProvider') : aiGen.error.value }}</p>
+      <p v-else-if="genText" class="text-tiny text-ink-faint max-h-16 overflow-y-auto whitespace-pre-wrap font-mono">{{ genText }}</p>
     </div>
 
     <AiKeyPrompt v-if="aiGen.showKeyPrompt.value" :provider-id="aiGen.providerId.value"
       @submit="aiGen.onKeySubmit" @cancel="aiGen.onKeyCancel" />
 
     <!-- Lint findings -->
-    <div v-if="showLint && activeFile" class="px-3 py-2 bg-gray-850 border-b border-gray-700 shrink-0 max-h-40 overflow-y-auto">
-      <p v-if="!lintFindings.length" class="text-[11px] text-gray-500">{{ $t('script.lintClean') }}</p>
+    <div v-if="showLint && activeFile" class="px-3 py-2 bg-surface-deep border-b border-border shrink-0 max-h-40 overflow-y-auto">
+      <p v-if="!lintFindings.length" class="text-tiny text-ink-faint">{{ $t('script.lintClean') }}</p>
       <button v-for="(f, i) in lintFindings" :key="i" @click="jumpToLine(f.line)"
-        class="w-full text-left flex items-start gap-2 px-1 py-0.5 text-[11px] hover:bg-gray-800 rounded">
-        <span class="shrink-0 tabular-nums" :class="f.severity === 'warn' ? 'text-amber-400' : 'text-gray-500'">{{ f.severity === 'warn' ? '⚠' : 'ℹ' }} L{{ f.line }}</span>
-        <span class="text-gray-300">{{ f.message }}</span>
+        class="w-full text-left flex items-start gap-2 px-1 py-0.5 text-tiny hover:bg-surface rounded-control">
+        <span class="shrink-0 tabular-nums" :class="f.severity === 'warn' ? 'text-warning-ink' : 'text-ink-faint'">{{ f.severity === 'warn' ? '⚠' : 'ℹ' }} L{{ f.line }}</span>
+        <span class="text-ink-body">{{ f.message }}</span>
       </button>
     </div>
 
     <div class="flex-1 min-h-0 overflow-hidden relative">
       <div
         v-if="!activeFile"
-        class="absolute inset-0 flex items-center justify-center text-gray-600 text-sm"
+        class="absolute inset-0 flex items-center justify-center text-ink-disabled text-sm"
       >
         {{ $t('script.selectFromSidebar') }}
       </div>
       <div
         v-else-if="loading"
-        class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm"
+        class="absolute inset-0 flex items-center justify-center text-ink-faint text-sm"
       >
         {{ $t('script.loading') }}
       </div>
       <div
         v-else-if="error"
-        class="absolute inset-0 flex items-center justify-center text-red-400 text-sm"
+        class="absolute inset-0 flex items-center justify-center text-danger-ink text-sm"
       >
         {{ error }}
       </div>

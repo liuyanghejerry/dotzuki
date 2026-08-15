@@ -1,66 +1,66 @@
 <template>
   <div class="h-full flex flex-col">
     <!-- toolbar -->
-    <div class="flex items-center gap-3 px-3 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
-      <span class="text-sm text-gray-200">
+    <div class="flex items-center gap-3 px-3 py-2 bg-surface border-b border-border shrink-0">
+      <span class="text-sm text-ink-secondary">
         {{ layoutName }}
-        <span v-if="store.dirty" class="text-amber-400">●</span>
+        <span v-if="store.dirty" class="text-warning-ink">●</span>
       </span>
       <button
-        class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-40"
+        class="px-2 py-1 text-xs rounded-control bg-accent hover:bg-accent-strong disabled:opacity-40"
         :disabled="!store.dirty || store.saving"
         @click="save"
       >{{ store.saving ? $t('gui.saving') : $t('gui.save') }}</button>
       <button
-        class="px-2 py-1 text-xs rounded"
-        :class="showGen ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600'"
+        class="px-2 py-1 text-xs rounded-control"
+        :class="showGen ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay'"
         @click="showGen = !showGen"
       >✨ {{ $t('titlescreen.background') }}</button>
-      <div class="flex items-center gap-1 text-xs text-gray-400">
+      <div class="flex items-center gap-1 text-xs text-ink-muted">
         <span>Lang</span>
-        <select v-model.number="lang" class="bg-gray-700 rounded px-1 py-0.5 border border-gray-600">
+        <select v-model.number="lang" class="bg-raised rounded-control px-1 py-0.5 border border-border-strong">
           <option :value="0">en</option>
           <option :value="1">zh</option>
         </select>
       </div>
-      <span v-if="compileError" class="text-xs text-red-400 truncate">⚠ {{ compileError }}</span>
-      <span v-if="store.error" class="text-xs text-red-400 truncate">{{ store.error }}</span>
+      <span v-if="compileError" class="text-xs text-danger-ink truncate">⚠ {{ compileError }}</span>
+      <span v-if="store.error" class="text-xs text-danger-ink truncate">{{ store.error }}</span>
     </div>
 
     <!-- background generation / upload panel -->
-    <div v-if="showGen" class="px-3 py-2 bg-gray-850 border-b border-gray-700 shrink-0 space-y-1.5">
+    <div v-if="showGen" class="px-3 py-2 bg-surface-deep border-b border-border shrink-0 space-y-1.5">
       <div class="flex items-center gap-2">
-        <span class="text-[11px] font-semibold text-gray-300">{{ $t('titlescreen.generateBackground') }}</span>
+        <span class="text-tiny font-semibold text-ink-body">{{ $t('titlescreen.generateBackground') }}</span>
         <select v-if="imageProviders.length" v-model="providerId"
-          class="bg-gray-700 text-gray-200 text-[11px] rounded px-1.5 py-0.5 border border-gray-600 max-w-[7rem]">
+          class="bg-raised text-ink-secondary text-tiny rounded-control px-1.5 py-0.5 border border-border-strong max-w-[7rem]">
           <option v-for="p in imageProviders" :key="p.id" :value="p.id">{{ p.id }}</option>
         </select>
-        <span v-else class="text-[11px] text-amber-400">{{ $t('titlescreen.noImageProvider') }}</span>
-        <button class="ml-auto px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600" @click="pickUpload">
+        <span v-else class="text-tiny text-warning-ink">{{ $t('titlescreen.noImageProvider') }}</span>
+        <button class="ml-auto px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay" @click="pickUpload">
           {{ $t('titlescreen.upload') }}
         </button>
         <input ref="uploadInput" type="file" accept="image/png" class="hidden" @change="onUpload" />
       </div>
       <div class="flex items-start gap-2">
         <textarea v-model="genPrompt" rows="2" :placeholder="$t('titlescreen.promptPlaceholder')"
-          class="flex-1 resize-none bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:outline-none focus:border-blue-500"></textarea>
+          class="flex-1 resize-none bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:outline-none focus:border-accent-strong"></textarea>
         <button :disabled="genBusy || !genPrompt.trim() || !imageProviders.length" @click="generateBg"
-          class="px-2.5 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40 shrink-0">
+          class="px-2.5 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40 shrink-0">
           {{ genBusy ? $t('titlescreen.generating') : $t('titlescreen.generate') }}</button>
       </div>
-      <p v-if="genError" class="text-[11px] text-red-400">{{ genError === 'no-provider' ? $t('titlescreen.noImageProvider') : genError }}</p>
+      <p v-if="genError" class="text-tiny text-danger-ink">{{ genError === 'no-provider' ? $t('titlescreen.noImageProvider') : genError }}</p>
     </div>
 
     <AiKeyPrompt v-if="showKeyPrompt" :provider-id="providerId" @submit="onKeySubmit" @cancel="showKeyPrompt = false" />
 
     <div class="flex-1 flex overflow-hidden">
       <!-- source editor -->
-      <div ref="editorContainer" class="w-2/5 min-w-[280px] border-r border-gray-700 overflow-hidden" />
+      <div ref="editorContainer" class="w-2/5 min-w-[280px] border-r border-border overflow-hidden" />
 
       <!-- live preview: transparent .gui overlay drawn on top of the background layer -->
-      <div class="flex-1 flex flex-col items-center justify-start gap-2 p-4 overflow-auto bg-[#0d0d10]">
-        <div class="text-xs text-gray-500">{{ cfg.width }}×{{ cfg.height }}</div>
-        <div class="relative shadow-lg outline outline-1 outline-[rgba(255,255,255,0.1)]" :style="{ width: previewW + 'px', height: previewH + 'px' }">
+      <div class="flex-1 flex flex-col items-center justify-start gap-2 p-4 overflow-auto bg-canvas-deep">
+        <div class="text-xs text-ink-faint">{{ cfg.width }}×{{ cfg.height }}</div>
+        <div class="relative shadow-lg outline outline-1 outline-border" :style="{ width: previewW + 'px', height: previewH + 'px' }">
           <!-- background: the on-disk override PNG, or a neutral placeholder when absent -->
           <div
             v-if="bgUrl"
@@ -69,7 +69,7 @@
           />
           <div
             v-else
-            class="absolute inset-0 flex items-center justify-center text-[10px] text-gray-600 select-none"
+            class="absolute inset-0 flex items-center justify-center text-micro text-ink-disabled select-none"
             :style="{ background: 'repeating-linear-gradient(45deg,#15151a,#15151a 8px,#191920 8px,#191920 16px)' }"
           >{{ $t('titlescreen.noBackground') }}</div>
           <!-- overlay canvas: theme bg_color #00000000 → non-text pixels stay transparent -->
@@ -81,7 +81,7 @@
             :style="{ imageRendering: 'pixelated', width: previewW + 'px', height: previewH + 'px' }"
           />
         </div>
-        <div class="flex items-center gap-2 text-xs text-gray-400">
+        <div class="flex items-center gap-2 text-xs text-ink-muted">
           <span>Zoom</span>
           <input type="range" min="1" max="3" step="0.5" v-model.number="zoom" />
           <span>{{ zoom }}×</span>
@@ -89,24 +89,24 @@
       </div>
 
       <!-- mock-data panel -->
-      <div class="w-72 shrink-0 border-l border-gray-700 flex flex-col bg-gray-800">
-        <div class="px-3 py-2 text-xs font-semibold text-gray-300 border-b border-gray-700 flex items-center justify-between">
+      <div class="w-72 shrink-0 border-l border-border flex flex-col bg-surface">
+        <div class="px-3 py-2 text-xs font-semibold text-ink-body border-b border-border flex items-center justify-between">
           <span>{{ $t('gui.mockData') }}</span>
-          <button class="px-1.5 py-0.5 rounded bg-gray-700 hover:bg-gray-600" @click="fillSkeleton">⟳ {{ $t('gui.fillVars') }}</button>
+          <button class="px-1.5 py-0.5 rounded-control bg-raised hover:bg-overlay" @click="fillSkeleton">⟳ {{ $t('gui.fillVars') }}</button>
         </div>
-        <p class="px-3 pt-2 text-[11px] text-gray-500 leading-snug">
+        <p class="px-3 pt-2 text-tiny text-ink-faint leading-snug">
           {{ $t('gui.mockDataHint') }}
         </p>
-        <div v-if="vars.length" class="px-3 pt-1 text-[11px] text-gray-500">
-          {{ $t('gui.detectedVars') }}: <span class="text-gray-400">{{ vars.join(', ') }}</span>
+        <div v-if="vars.length" class="px-3 pt-1 text-tiny text-ink-faint">
+          {{ $t('gui.detectedVars') }}: <span class="text-ink-muted">{{ vars.join(', ') }}</span>
         </div>
         <textarea
           v-model="dataText"
           spellcheck="false"
-          class="flex-1 m-2 p-2 text-xs font-mono bg-gray-900 text-gray-200 rounded border border-gray-700 resize-none focus:outline-none focus:border-blue-500"
-          :class="{ 'border-red-500': dataError }"
+          class="flex-1 m-2 p-2 text-xs font-mono bg-canvas text-ink-secondary rounded-control border border-border resize-none focus:outline-none focus:border-accent-strong"
+          :class="{ 'border-danger-hover': dataError }"
         />
-        <div v-if="dataError" class="px-3 pb-2 text-[11px] text-red-400">{{ dataError }}</div>
+        <div v-if="dataError" class="px-3 pb-2 text-tiny text-danger-ink">{{ dataError }}</div>
       </div>
     </div>
   </div>
@@ -117,7 +117,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { lightCodeTheme } from '@/composables/codeTheme'
 import { basicSetup } from 'codemirror'
 import { useProjectStore } from '@/stores/project'
 import { useEditorStore } from '@/stores/editor'
@@ -216,7 +216,7 @@ function createEditor(doc: string) {
       basicSetup,
       guiLanguage(),
       guiFold(),
-      oneDark,
+      lightCodeTheme,
       updateListener,
       EditorView.theme({
         '&': { height: '100%' },

@@ -40,12 +40,12 @@ function handleSelect(path: string) {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-800">
-    <div class="px-3 py-3 border-b border-gray-700 shrink-0">
+  <div class="flex flex-col h-full bg-surface">
+    <div class="px-4 py-4 border-b border-border shrink-0">
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-sm font-semibold text-gray-200">{{ $t('script.title') }}</h2>
+        <h2 class="text-sm font-semibold text-ink-secondary">{{ $t('script.title') }}</h2>
         <button
-          class="text-xs text-gray-500 hover:text-gray-300 transition-colors px-1.5 py-0.5 rounded hover:bg-gray-700"
+          class="text-xs text-ink-faint hover:text-ink-body transition-colors px-1.5 py-0.5 rounded-control hover:bg-raised"
           :title="$t('script.refresh')"
           @click="store.fetchFiles()"
         >
@@ -57,25 +57,25 @@ function handleSelect(path: string) {
           v-model="search"
           type="text"
           :placeholder="$t('script.search')"
-          class="w-full bg-gray-900 border border-gray-700 rounded text-xs px-2.5 py-1.5 text-gray-200 placeholder-gray-500
-                 focus:outline-none focus:border-blue-500/50 transition-colors"
+          class="w-full bg-inset border border-border rounded-control text-xs px-2.5 py-1.5 text-ink-secondary placeholder-gray-500
+                 focus:outline-none focus:border-accent-strong/50 transition-colors"
         />
         <span
           v-if="search"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 cursor-pointer text-xs hover:text-gray-400"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-disabled cursor-pointer text-xs hover:text-ink-muted"
           @click="search = ''"
         >×</span>
       </div>
     </div>
 
     <div class="flex-1 overflow-y-auto">
-      <div v-if="loading" class="flex items-center justify-center py-8 text-xs text-gray-500">
+      <div v-if="loading" class="flex items-center justify-center py-8 text-xs text-ink-faint">
         {{ $t('script.loading') }}
       </div>
-      <div v-else-if="error" class="px-3 py-4 text-xs text-red-400">
+      <div v-else-if="error" class="px-3 py-4 text-xs text-danger-ink">
         {{ error }}
       </div>
-      <div v-else-if="filteredFiles.length === 0" class="px-3 py-4 text-xs text-gray-500">
+      <div v-else-if="filteredFiles.length === 0" class="px-3 py-4 text-xs text-ink-faint">
         <template v-if="search">{{ $t('script.noMatch', { query: search }) }}</template>
         <template v-else>{{ $t('script.noScripts') }}</template>
       </div>
@@ -83,9 +83,9 @@ function handleSelect(path: string) {
         <button
           v-for="file in filteredFiles"
           :key="file.path"
-          class="w-full text-left px-3 py-1.5 text-xs font-mono transition-colors truncate block
-                 hover:bg-gray-700/50"
-          :class="isActive(file) ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-400 pl-2.5' : 'text-gray-400 border-l-2 border-transparent pl-2.5'"
+          class="w-full text-left px-4 py-2 text-xs font-mono transition-colors truncate block
+                 hover:bg-raised/50"
+          :class="isActive(file) ? 'bg-accent/20 text-accent-ink border-l-2 border-accent-ink pl-2.5' : 'text-ink-muted border-l-2 border-transparent pl-2.5'"
           @click="handleSelect(file.path)"
         >
           {{ displayName(file) }}
@@ -93,7 +93,7 @@ function handleSelect(path: string) {
       </div>
     </div>
 
-    <div class="px-3 py-2 border-t border-gray-700 text-[10px] text-gray-600 shrink-0">
+    <div class="px-4 py-2.5 border-t border-border text-micro text-ink-disabled shrink-0">
       {{ files.length }} {{ $t('script.files') }}
     </div>
   </div>

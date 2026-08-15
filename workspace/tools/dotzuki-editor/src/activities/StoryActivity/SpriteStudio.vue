@@ -344,37 +344,37 @@ async function onGenerate() {
 </script>
 
 <template>
-  <div class="border border-blue-900/40 bg-blue-950/10 rounded-lg p-4">
+  <div class="border border-accent-deep/40 bg-accent-surface rounded-card p-4">
     <div class="flex items-center gap-2 mb-3">
       <span class="text-sm">🎬</span>
-      <h3 class="text-sm font-semibold text-blue-300">{{ t('story.spriteStudio.title') }}</h3>
+      <h3 class="text-sm font-semibold text-accent-ink-strong">{{ t('story.spriteStudio.title') }}</h3>
     </div>
 
-    <p v-if="!charId" class="text-[11px] text-amber-400/80">{{ t('story.spriteStudio.saveFirst') }}</p>
+    <p v-if="!charId" class="text-tiny text-warning-ink/80">{{ t('story.spriteStudio.saveFirst') }}</p>
 
     <template v-else>
       <!-- category tabs -->
-      <div class="flex flex-wrap gap-1 mb-3 border-b border-gray-800 pb-2">
+      <div class="flex flex-wrap gap-1 mb-3 border-b border-border-subtle pb-2">
         <button
           v-for="c in cats" :key="c.id"
           @click="activeId = c.id"
-          class="px-2.5 py-1 text-xs rounded"
-          :class="activeId === c.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 bg-gray-800/60'"
+          class="px-2.5 py-1 text-xs rounded-control"
+          :class="activeId === c.id ? 'bg-accent text-white' : 'text-ink-muted hover:text-ink-secondary bg-surface/60'"
         >{{ catLabel(c) }}</button>
       </div>
 
-      <p v-if="error" class="text-xs text-red-400 mb-2">{{ error }}</p>
+      <p v-if="error" class="text-xs text-danger-ink mb-2">{{ error }}</p>
 
       <div v-if="activeCat" class="flex gap-5">
         <!-- preview -->
         <div class="shrink-0">
-          <div class="sprite-checker rounded border border-gray-700 inline-flex items-center justify-center p-2">
+          <div class="sprite-checker rounded-control border border-border inline-flex items-center justify-center p-2">
             <canvas ref="previewCanvas" class="block" style="image-rendering: pixelated;" />
           </div>
-          <div class="text-[10px] text-gray-500 mt-1 text-center">
+          <div class="text-micro text-ink-faint mt-1 text-center">
             {{ activeCat.cellW }}×{{ activeCat.cellH }}
             <span v-if="meta?.sheet.exists">· {{ meta.sheet.w }}×{{ meta.sheet.h }}</span>
-            <span v-else class="text-amber-500/70">· {{ t('story.spriteStudio.noSheet') }}</span>
+            <span v-else class="text-warning/70">· {{ t('story.spriteStudio.noSheet') }}</span>
           </div>
 
           <!-- animated controls (overworld) -->
@@ -383,35 +383,35 @@ async function onGenerate() {
               <button
                 v-for="f in facings" :key="f.row"
                 @click="facing = f.row"
-                class="px-2 py-0.5 text-[10px] rounded"
-                :class="facing === f.row ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200'"
+                class="px-2 py-0.5 text-micro rounded-control"
+                :class="facing === f.row ? 'bg-overlay text-white' : 'bg-surface text-ink-muted hover:text-ink-secondary'"
               >{{ facingLabel(f.label) }}</button>
             </div>
             <div class="flex gap-1 justify-center">
               <button
                 v-for="m in (['stand','walk','run'] as const)" :key="m"
                 @click="mode = m"
-                class="px-2 py-0.5 text-[10px] rounded"
+                class="px-2 py-0.5 text-micro rounded-control"
                 :class="[
-                  mode === m ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200',
+                  mode === m ? 'bg-accent-hover text-white' : 'bg-surface text-ink-muted hover:text-ink-secondary',
                   m === 'run' && !hasRun ? 'opacity-50' : '',
                 ]"
                 :title="m === 'run' && !hasRun ? t('story.spriteStudio.runFallback') : ''"
               >{{ t('story.spriteStudio.mode.' + m) }}</button>
             </div>
             <div class="flex items-center gap-2 justify-center">
-              <button @click="playing = !playing" class="px-2 py-0.5 text-[10px] rounded bg-gray-800 text-gray-300 hover:text-white">
+              <button @click="playing = !playing" class="px-2 py-0.5 text-micro rounded-control bg-surface text-ink-body hover:text-white">
                 {{ playing ? '⏸' : '▶' }}
               </button>
               <input v-model.number="fps" type="range" min="1" max="16" class="w-20" />
-              <span class="text-[10px] text-gray-500 w-10">{{ fps }} fps</span>
+              <span class="text-micro text-ink-faint w-10">{{ fps }} fps</span>
             </div>
           </div>
         </div>
 
         <!-- frame grid + actions -->
         <div class="flex-1 min-w-0">
-          <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">{{ t('story.spriteStudio.frames') }}</div>
+          <div class="text-micro uppercase tracking-wide text-ink-faint mb-1">{{ t('story.spriteStudio.frames') }}</div>
           <div
             class="grid gap-1 mb-3"
             :style="{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, maxWidth: (gridCols * 56) + 'px' }"
@@ -419,12 +419,12 @@ async function onGenerate() {
             <button
               v-for="tb in thumbs" :key="tb.row + '-' + tb.col"
               @click="openFrame(tb.row, tb.col)"
-              class="sprite-checker relative rounded border border-gray-700 hover:border-blue-500 aspect-square flex items-center justify-center overflow-hidden group"
+              class="sprite-checker relative rounded-control border border-border hover:border-accent-strong aspect-square flex items-center justify-center overflow-hidden group"
               :title="tb.label + ' — ' + t('story.spriteStudio.editFrame')"
             >
               <img v-if="tb.url" :src="tb.url" class="max-w-full max-h-full" style="image-rendering: pixelated;" alt="" />
-              <span v-else class="text-gray-600 text-lg group-hover:text-blue-400">＋</span>
-              <span class="absolute bottom-0 inset-x-0 text-[8px] text-gray-400 bg-black/50 truncate px-0.5">{{ tb.label }}</span>
+              <span v-else class="text-ink-disabled text-lg group-hover:text-accent-ink">＋</span>
+              <span class="absolute bottom-0 inset-x-0 text-[8px] text-ink-muted bg-black/50 truncate px-0.5">{{ tb.label }}</span>
             </button>
           </div>
 
@@ -432,24 +432,24 @@ async function onGenerate() {
             <button
               v-if="genConfigured"
               @click="onGenerate" :disabled="generating || saving"
-              class="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40"
+              class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40"
             >{{ generating ? t('story.spriteStudio.generating') : t('story.spriteStudio.generate') }}</button>
 
-            <label class="px-3 py-1 text-xs rounded bg-gray-700 text-gray-100 hover:bg-gray-600 cursor-pointer">
+            <label class="px-3 py-1 text-xs rounded-control bg-raised text-ink hover:bg-overlay cursor-pointer">
               {{ t('story.spriteStudio.import') }}
               <input type="file" accept="image/png,image/*" class="hidden" @change="onImport" />
             </label>
 
-            <span v-if="saving" class="text-[10px] text-gray-500">{{ t('story.spriteStudio.saving') }}</span>
-            <span v-if="loading" class="text-[10px] text-gray-500">…</span>
+            <span v-if="saving" class="text-micro text-ink-faint">{{ t('story.spriteStudio.saving') }}</span>
+            <span v-if="loading" class="text-micro text-ink-faint">…</span>
           </div>
 
-          <p v-if="genError" class="text-xs text-red-400 mt-2">{{ genError }}</p>
+          <p v-if="genError" class="text-xs text-danger-ink mt-2">{{ genError }}</p>
           <pre
             v-if="genOutput"
-            class="mt-2 max-h-32 overflow-auto text-[10px] text-gray-400 bg-black/40 rounded p-2 whitespace-pre-wrap"
+            class="mt-2 max-h-32 overflow-auto text-micro text-ink-muted bg-black/40 rounded-control p-2 whitespace-pre-wrap"
           >{{ genOutput }}</pre>
-          <p class="text-[10px] text-gray-500 mt-2">{{ t('story.spriteStudio.editHint') }}</p>
+          <p class="text-micro text-ink-faint mt-2">{{ t('story.spriteStudio.editHint') }}</p>
         </div>
       </div>
     </template>

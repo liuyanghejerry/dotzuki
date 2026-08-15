@@ -17,10 +17,10 @@ onMounted(() => story.loadAll())
 
 <template>
   <div class="h-full flex flex-col min-h-0">
-    <div v-if="error" class="px-4 py-2 text-sm text-red-400 bg-red-900/20 border-b border-red-900/30 shrink-0">
+    <div v-if="error" class="px-4 py-2 text-sm text-danger-ink bg-danger-surface border-b border-danger-deep/30 shrink-0">
       {{ error }}
     </div>
-    <div v-if="loading" class="flex-1 flex items-center justify-center text-gray-500 text-sm">
+    <div v-if="loading" class="flex-1 flex items-center justify-center text-ink-faint text-sm">
       {{ t('story.loading') }}
     </div>
     <template v-else>

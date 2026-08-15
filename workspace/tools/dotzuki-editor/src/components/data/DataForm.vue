@@ -1,13 +1,13 @@
 <template>
   <form @submit.prevent="handleSave" class="flex flex-col h-full">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-800 shrink-0">
-      <h3 class="text-sm font-semibold text-gray-200">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-surface shrink-0">
+      <h3 class="text-sm font-semibold text-ink-secondary">
         {{ isNew ? $t('data.newRecord') : $t('data.editRecord') }}
       </h3>
       <button
         type="button"
         @click="$emit('cancel')"
-        class="text-gray-500 hover:text-gray-300 text-lg leading-none"
+        class="text-ink-faint hover:text-ink-body text-lg leading-none"
         :aria-label="$t('common.close')"
       >&times;</button>
     </div>
@@ -19,9 +19,9 @@
         class="space-y-1"
         :class="field.width ? `col-span-${field.width}` : ''"
       >
-        <label :for="`field-${field.key}`" class="block text-xs font-medium text-gray-400">
+        <label :for="`field-${field.key}`" class="block text-xs font-medium text-ink-muted">
           {{ localize(field.label) }}
-          <span v-if="field.required" class="text-red-400 ml-0.5">*</span>
+          <span v-if="field.required" class="text-danger-ink ml-0.5">*</span>
         </label>
 
         <!-- string -->
@@ -31,8 +31,8 @@
           v-model="local[field.key]"
           type="text"
           :required="field.required"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm
-                 placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+          class="w-full px-3 py-2 bg-surface border border-border rounded-control text-ink text-sm
+                 placeholder-gray-600 focus:outline-none focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30"
         />
 
         <!-- number -->
@@ -42,8 +42,8 @@
           v-model.number="local[field.key]"
           type="number"
           :required="field.required"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm
-                 placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+          class="w-full px-3 py-2 bg-surface border border-border rounded-control text-ink text-sm
+                 placeholder-gray-600 focus:outline-none focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30"
         />
 
         <!-- boolean -->
@@ -55,10 +55,10 @@
             :id="`field-${field.key}`"
             v-model="local[field.key]"
             type="checkbox"
-            class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500
-                   focus:ring-blue-500/30 focus:ring-offset-0"
+            class="w-4 h-4 rounded-control border-border-strong bg-surface text-accent-strong
+                   focus:ring-accent-strong/30 focus:ring-offset-0"
           />
-          <span class="text-sm text-gray-400">{{ local[field.key] ? $t('common.yes') : $t('common.no') }}</span>
+          <span class="text-sm text-ink-muted">{{ local[field.key] ? $t('common.yes') : $t('common.no') }}</span>
         </label>
 
         <!-- select -->
@@ -67,8 +67,8 @@
           :id="`field-${field.key}`"
           v-model="local[field.key]"
           :required="field.required"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm
-                 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+          class="w-full px-3 py-2 bg-surface border border-border rounded-control text-ink text-sm
+                 focus:outline-none focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30"
         >
           <option value="" disabled>{{ $t('data.selectPlaceholder') }}</option>
           <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
@@ -85,10 +85,10 @@
               type="checkbox"
               :checked="(local[field.key] as unknown[])?.includes(opt)"
               @change="toggleMulti(field.key, opt)"
-              class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500
-                     focus:ring-blue-500/30 focus:ring-offset-0"
+              class="w-4 h-4 rounded-control border-border-strong bg-surface text-accent-strong
+                     focus:ring-accent-strong/30 focus:ring-offset-0"
             />
-            <span class="text-sm text-gray-300">{{ opt }}</span>
+            <span class="text-sm text-ink-body">{{ opt }}</span>
           </label>
         </div>
 
@@ -98,25 +98,25 @@
           :id="`field-${field.key}`"
           v-model="local[field.key]"
           rows="5"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono
-                 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 resize-y"
+          class="w-full px-3 py-2 bg-surface border border-border rounded-control text-ink text-sm font-mono
+                 focus:outline-none focus:border-accent-strong focus:ring-1 focus:ring-accent-strong/30 resize-y"
         />
       </div>
 
       <!-- Field description -->
       <p
         v-if="focusedField?.description"
-        class="text-xs text-gray-500 mt-3 border-t border-gray-800 pt-3"
+        class="text-xs text-ink-faint mt-3 border-t border-border-subtle pt-3"
       >{{ localize(focusedField.description) }}</p>
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-800 shrink-0">
+    <div class="flex items-center justify-between px-4 py-3 border-t border-border bg-surface shrink-0">
       <button
         v-if="!isNew"
         type="button"
         @click="$emit('delete')"
-        class="px-3 py-1.5 text-sm rounded text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+        class="px-3 py-1.5 text-sm rounded-control text-danger-ink hover:text-danger-ink-strong hover:bg-danger-surface transition-colors"
       >
         {{ $t('data.delete') }}
       </button>
@@ -126,20 +126,20 @@
         <button
           type="button"
           @click="$emit('cancel')"
-          class="px-3 py-1.5 text-sm rounded text-gray-400 hover:text-gray-200 transition-colors"
+          class="px-3 py-1.5 text-sm rounded-control text-ink-muted hover:text-ink-secondary transition-colors"
         >
           {{ $t('data.cancel') }}
         </button>
         <button
           type="submit"
           :disabled="saving"
-          class="px-4 py-1.5 text-sm rounded bg-blue-600 text-white font-medium
-                 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+          class="px-4 py-1.5 text-sm rounded-control bg-accent text-white font-medium
+                 hover:bg-accent-strong disabled:opacity-50 disabled:cursor-not-allowed
                  transition-colors inline-flex items-center gap-2"
         >
           <span
             v-if="saving"
-            class="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"
+            class="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-pill animate-spin"
           />
           {{ saving ? $t('data.saving') : $t('data.save') }}
         </button>

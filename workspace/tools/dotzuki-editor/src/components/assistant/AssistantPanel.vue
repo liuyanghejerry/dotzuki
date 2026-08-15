@@ -110,11 +110,11 @@ async function saveJob() {
 /** Status dot color for a job row's last run. */
 function jobStatusClass(j: ScheduledJob): string {
   switch (j.lastStatus) {
-    case 'ok': return 'bg-emerald-400'
-    case 'error': return 'bg-red-400'
-    case 'running': return 'bg-blue-400 animate-pulse'
-    case 'skipped-busy': return 'bg-amber-400'
-    default: return 'bg-gray-600'
+    case 'ok': return 'bg-success-ink'
+    case 'error': return 'bg-danger-ink'
+    case 'running': return 'bg-accent-ink animate-pulse'
+    case 'skipped-busy': return 'bg-warning-ink'
+    default: return 'bg-overlay'
   }
 }
 
@@ -349,182 +349,182 @@ watch(
 <template>
   <aside
     :class="props.welcome
-      ? 'relative bg-gray-800 border border-gray-700 rounded-lg flex flex-col w-full max-w-2xl mx-auto min-h-0'
-      : 'relative bg-gray-800 border-l border-gray-700 flex flex-col shrink-0'"
+      ? 'relative bg-surface border border-border rounded-card flex flex-col w-full max-w-2xl mx-auto min-h-0'
+      : 'relative bg-surface border-l border-border flex flex-col shrink-0'"
     :style="props.welcome ? undefined : { width: width + 'px' }"
   >
     <!-- drag-to-resize handle on the left edge -->
-    <div v-if="!props.welcome" class="absolute left-0 top-0 h-full w-1.5 -ml-0.5 cursor-col-resize hover:bg-blue-500/50 z-20" @mousedown.prevent="startResize" />
+    <div v-if="!props.welcome" class="absolute left-0 top-0 h-full w-1.5 -ml-0.5 cursor-col-resize hover:bg-accent-strong/50 z-20" @mousedown.prevent="startResize" />
 
-    <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-700 shrink-0">
-      <span class="text-sm font-bold text-blue-400">✨ {{ t('assistant.title') }}</span>
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
+      <span class="text-sm font-bold text-accent-ink">✨ {{ t('assistant.title') }}</span>
       <!-- live working-state indicator: a pulsing dot + label, hidden when idle -->
       <span v-if="phase !== 'idle'" :title="statusLabel"
-        class="flex items-center gap-1 max-w-[9rem] text-[10px]"
-        :class="phase === 'error' ? 'text-red-400' : 'text-blue-300'">
+        class="flex items-center gap-1 max-w-[9rem] text-micro"
+        :class="phase === 'error' ? 'text-danger-ink' : 'text-accent-ink-strong'">
         <span class="status-dot" :class="phase === 'error' ? 'is-error' : 'is-busy'" />
         <span class="truncate">{{ statusLabel }}</span>
       </span>
       <button @click="toggleThreads" :disabled="busy"
         :title="busy ? t('assistant.threads.busyLocked') : t('assistant.threads.list')"
-        class="text-gray-500 hover:text-gray-300 text-xs disabled:opacity-40 disabled:hover:text-gray-500">🗂</button>
+        class="text-ink-faint hover:text-ink-body text-xs disabled:opacity-40 disabled:hover:text-ink-faint">🗂</button>
       <button @click="onNewThread" :disabled="busy"
         :title="busy ? t('assistant.threads.busyLocked') : t('assistant.threads.new')"
-        class="text-gray-500 hover:text-gray-300 text-xs disabled:opacity-40 disabled:hover:text-gray-500">＋</button>
+        class="text-ink-faint hover:text-ink-body text-xs disabled:opacity-40 disabled:hover:text-ink-faint">＋</button>
       <button v-if="!props.welcome" @click="toggleJobs" :title="t('assistant.jobs.title')"
-        class="relative text-gray-500 hover:text-gray-300 text-xs">
+        class="relative text-ink-faint hover:text-ink-body text-xs">
         🕒
         <span v-if="unreadJobs"
-          class="absolute -top-1.5 -right-1.5 min-w-[12px] h-3 px-0.5 rounded-full bg-blue-500 text-white text-[8px] leading-3 text-center">{{ unreadJobs }}</span>
+          class="absolute -top-1.5 -right-1.5 min-w-[12px] h-3 px-0.5 rounded-pill bg-accent-strong text-white text-[8px] leading-3 text-center">{{ unreadJobs }}</span>
       </button>
       <button @click="inspectorEnabled = !inspectorEnabled" :title="t('assistant.inspector.toggle')"
-        :class="['text-xs', inspectorEnabled ? 'text-amber-400' : 'text-gray-500 hover:text-gray-300']">🐞</button>
+        :class="['text-xs', inspectorEnabled ? 'text-warning-ink' : 'text-ink-faint hover:text-ink-body']">🐞</button>
       <select v-if="providers.length" v-model="providerId"
-        class="ml-auto bg-gray-700 text-gray-200 text-[11px] rounded px-1.5 py-0.5 border border-gray-600 max-w-[8rem]">
+        class="ml-auto bg-raised text-ink-secondary text-tiny rounded-control px-1.5 py-0.5 border border-border-strong max-w-[8rem]">
         <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.id }}</option>
       </select>
       <span v-if="usage.total.value > 0" :title="t('assistant.tokens', { calls: usage.calls.value })"
-        class="text-[10px] text-gray-500 tabular-nums">{{ usage.label.value }}</span>
-      <button @click="assistant.clear()" :title="t('assistant.clear')" class="text-gray-500 hover:text-gray-300 text-xs">⟲</button>
-      <button @click="onClose" class="text-gray-500 hover:text-gray-300 text-sm">✕</button>
+        class="text-micro text-ink-faint tabular-nums">{{ usage.label.value }}</span>
+      <button @click="assistant.clear()" :title="t('assistant.clear')" class="text-ink-faint hover:text-ink-body text-xs">⟲</button>
+      <button @click="onClose" class="text-ink-faint hover:text-ink-body text-sm">✕</button>
     </div>
 
     <!-- chat threads dropdown: one row per session, most recently active first -->
     <div v-if="threadsOpen"
-      class="absolute left-2 right-2 top-9 z-30 max-h-72 overflow-y-auto bg-gray-900 border border-gray-700 rounded shadow-xl">
+      class="absolute left-2 right-2 top-9 z-30 max-h-72 overflow-y-auto bg-inset border border-border rounded-control shadow-popover">
       <div v-for="th in threads" :key="th.id" @click="onSwitchThread(th.id)"
         :title="busy ? t('assistant.threads.busyLocked') : undefined"
         :class="['flex items-center gap-2 px-2.5 py-1.5 text-xs',
-          th.id === activeThreadId ? 'bg-blue-600/20 text-gray-100' : 'text-gray-300 hover:bg-gray-800',
+          th.id === activeThreadId ? 'bg-accent/20 text-ink' : 'text-ink-body hover:bg-surface',
           busy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer']">
         <span class="flex-1 min-w-0 truncate">{{ th.title || t('assistant.threads.new') }}</span>
-        <span class="shrink-0 text-[10px] text-gray-500 tabular-nums">{{ relTime(th.updatedAt) }}</span>
+        <span class="shrink-0 text-micro text-ink-faint tabular-nums">{{ relTime(th.updatedAt) }}</span>
         <button @click.stop="onDeleteThread(th.id)" :disabled="busy"
           :title="busy ? t('assistant.threads.busyLocked') : t('assistant.threads.delete')"
-          class="shrink-0 text-gray-600 hover:text-red-400 disabled:opacity-40 disabled:hover:text-gray-600">✕</button>
+          class="shrink-0 text-ink-disabled hover:text-danger-ink disabled:opacity-40 disabled:hover:text-ink-disabled">✕</button>
       </div>
     </div>
 
     <!-- scheduled jobs dropdown: one row per job + an inline new-job form -->
     <div v-if="jobsOpen"
-      class="absolute left-2 right-2 top-9 z-30 max-h-80 overflow-y-auto bg-gray-900 border border-gray-700 rounded shadow-xl">
-      <div class="flex items-center gap-2 px-2.5 py-1.5 border-b border-gray-800">
-        <span class="text-[11px] font-semibold text-gray-400">{{ t('assistant.jobs.title') }}</span>
+      class="absolute left-2 right-2 top-9 z-30 max-h-80 overflow-y-auto bg-inset border border-border rounded-control shadow-popover">
+      <div class="flex items-center gap-2 px-2.5 py-1.5 border-b border-border-subtle">
+        <span class="text-tiny font-semibold text-ink-muted">{{ t('assistant.jobs.title') }}</span>
         <button @click="jobFormOpen = !jobFormOpen"
-          class="ml-auto text-[10px] px-2 py-0.5 rounded bg-blue-600 text-white hover:bg-blue-500">
+          class="ml-auto text-micro px-2 py-0.5 rounded-control bg-accent text-white hover:bg-accent-strong">
           {{ t('assistant.jobs.new') }}
         </button>
       </div>
 
       <!-- new-job form -->
-      <div v-if="jobFormOpen" class="px-2.5 py-2 space-y-1.5 border-b border-gray-800">
+      <div v-if="jobFormOpen" class="px-2.5 py-2 space-y-1.5 border-b border-border-subtle">
         <input v-model="jobDraft.name" :placeholder="t('assistant.jobs.name')"
-          class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+          class="w-full bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
         <div class="flex items-center gap-1.5">
           <select v-model="jobDraft.kind" :aria-label="t('assistant.jobs.kind')"
-            class="flex-1 bg-gray-800 border border-gray-700 rounded px-1.5 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none">
+            class="flex-1 bg-surface border border-border rounded-control px-1.5 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none">
             <option value="scene-check">{{ t('assistant.jobs.kindSceneCheck') }}</option>
             <option value="agent-prompt">{{ t('assistant.jobs.kindAgentPrompt') }}</option>
           </select>
           <input v-model.number="jobDraft.intervalMinutes" type="number" min="1" :title="t('assistant.jobs.intervalMinutes')"
-            class="w-16 bg-gray-800 border border-gray-700 rounded px-1.5 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
-          <span class="text-[10px] text-gray-500">{{ t('assistant.jobs.intervalUnit') }}</span>
+            class="w-16 bg-surface border border-border rounded-control px-1.5 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
+          <span class="text-micro text-ink-faint">{{ t('assistant.jobs.intervalUnit') }}</span>
         </div>
         <textarea v-if="jobDraft.kind === 'agent-prompt'" v-model="jobDraft.prompt" rows="2" :placeholder="t('assistant.jobs.prompt')"
-          class="w-full resize-none bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+          class="w-full resize-none bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
         <button @click="saveJob" :disabled="!jobDraftValid"
-          class="px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">
+          class="px-2.5 py-1 text-tiny rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">
           {{ t('assistant.jobs.save') }}
         </button>
       </div>
 
-      <p v-if="!scheduler.jobs.value.length" class="px-2.5 py-2 text-[11px] text-gray-500">{{ t('assistant.jobs.empty') }}</p>
+      <p v-if="!scheduler.jobs.value.length" class="px-2.5 py-2 text-tiny text-ink-faint">{{ t('assistant.jobs.empty') }}</p>
       <div v-for="j in scheduler.jobs.value" :key="j.id"
-        class="flex items-center gap-2 px-2.5 py-1.5 text-xs text-gray-300 hover:bg-gray-800">
+        class="flex items-center gap-2 px-2.5 py-1.5 text-xs text-ink-body hover:bg-surface">
         <span class="shrink-0" :title="t(j.kind === 'scene-check' ? 'assistant.jobs.kindSceneCheck' : 'assistant.jobs.kindAgentPrompt')">{{ j.kind === 'scene-check' ? '🔍' : '✨' }}</span>
         <div class="flex-1 min-w-0">
           <div class="truncate" :class="j.enabled ? '' : 'opacity-50'">{{ j.name }}</div>
-          <div class="flex items-center gap-1 text-[10px] text-gray-500">
-            <span class="inline-block w-1.5 h-1.5 rounded-full shrink-0" :class="jobStatusClass(j)" />
+          <div class="flex items-center gap-1 text-micro text-ink-faint">
+            <span class="inline-block w-1.5 h-1.5 rounded-pill shrink-0" :class="jobStatusClass(j)" />
             <span class="shrink-0">{{ j.lastRunAt ? relTime(j.lastRunAt) : t('assistant.jobs.never') }}</span>
             <span v-if="j.lastSummary" class="truncate" :title="j.lastSummary">· {{ j.lastSummary }}</span>
           </div>
         </div>
-        <span class="shrink-0 text-[10px] text-gray-500 tabular-nums">{{ t('assistant.jobs.interval', { n: j.intervalMinutes }) }}</span>
+        <span class="shrink-0 text-micro text-ink-faint tabular-nums">{{ t('assistant.jobs.interval', { n: j.intervalMinutes }) }}</span>
         <input type="checkbox" :checked="j.enabled" @change="scheduler.toggleJob(j)" :title="t('assistant.jobs.enable')"
           class="accent-emerald-500 shrink-0" />
         <button @click="scheduler.runNow(j)" :disabled="j.kind === 'agent-prompt' && busy"
           :title="j.kind === 'agent-prompt' && busy ? t('assistant.jobs.busyRunDisabled') : t('assistant.jobs.run')"
-          class="shrink-0 text-gray-500 hover:text-gray-200 disabled:opacity-40 disabled:hover:text-gray-500">▶</button>
+          class="shrink-0 text-ink-faint hover:text-ink-secondary disabled:opacity-40 disabled:hover:text-ink-faint">▶</button>
         <button @click="scheduler.removeJob(j.id)" :title="t('assistant.jobs.delete')"
-          class="shrink-0 text-gray-600 hover:text-red-400">✕</button>
+          class="shrink-0 text-ink-disabled hover:text-danger-ink">✕</button>
       </div>
     </div>
 
     <!-- inline quick setup: welcome mode with no provider profile yet -->
-    <div v-if="props.welcome && !providers.length" class="border-b border-gray-700 px-3 py-2.5 space-y-1.5 shrink-0">
-      <div class="text-[11px] font-semibold text-amber-400">{{ t('assistant.quickSetup.title') }}</div>
+    <div v-if="props.welcome && !providers.length" class="border-b border-border px-3 py-2.5 space-y-1.5 shrink-0">
+      <div class="text-tiny font-semibold text-warning-ink">{{ t('assistant.quickSetup.title') }}</div>
       <select v-model="qpVendor" @change="onVendorChange" :aria-label="t('assistant.quickSetup.vendor')"
-        class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none">
+        class="w-full bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none">
         <option v-for="p in PROVIDER_PRESETS" :key="p.id" :value="p.id">
           {{ p.id === 'custom' ? t('assistant.quickSetup.vendorCustom') : p.label }}
         </option>
       </select>
       <input v-model="qp.id" :placeholder="t('assistant.quickSetup.name')"
-        class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+        class="w-full bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
       <input v-model="qp.baseURL" :placeholder="qpPreset.baseURL || t('assistant.quickSetup.baseUrl')"
-        class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+        class="w-full bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
       <input v-model="qp.model"
         :placeholder="qpPreset.modelExample ? t('assistant.quickSetup.modelExample', { model: qpPreset.modelExample }) : t('assistant.quickSetup.model')"
-        class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+        class="w-full bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
       <div class="flex items-center gap-2">
         <input v-model="qp.key" type="password" :placeholder="t('assistant.quickSetup.key')"
-          class="flex-1 min-w-0 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+          class="flex-1 min-w-0 bg-inset border border-border rounded-control px-2 py-1 text-xs text-ink focus:border-accent-strong focus:outline-none" />
         <a v-if="qpPreset.keyUrl" :href="qpPreset.keyUrl" target="_blank" rel="noopener noreferrer"
-          class="shrink-0 text-[10px] text-blue-400 hover:text-blue-300 whitespace-nowrap">
+          class="shrink-0 text-micro text-accent-ink hover:text-accent-ink-strong whitespace-nowrap">
           {{ t('assistant.quickSetup.getKey') }}
         </a>
       </div>
       <div class="flex items-center gap-2">
         <button @click="saveQuickProviderAndSelect" :disabled="!qpReady || qpSaving"
-          class="px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">
+          class="px-2.5 py-1 text-tiny rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">
           {{ qpSaving ? t('assistant.quickSetup.saving') : t('assistant.quickSetup.save') }}
         </button>
-        <span v-if="qpError" class="text-[10px] text-red-400 truncate">{{ qpError }}</span>
+        <span v-if="qpError" class="text-micro text-danger-ink truncate">{{ qpError }}</span>
       </div>
     </div>
 
     <div ref="scrollEl" class="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-      <p v-if="!messages.length" class="text-xs text-gray-500 leading-relaxed">{{ props.welcome ? t('assistant.emptyWelcome') : t('assistant.empty') }}</p>
+      <p v-if="!messages.length" class="text-xs text-ink-faint leading-relaxed">{{ props.welcome ? t('assistant.emptyWelcome') : t('assistant.empty') }}</p>
 
       <template v-for="(m, i) in messages" :key="m.id || i">
         <div v-if="m.role === 'user'" class="flex justify-end">
-          <div class="max-w-[85%] bg-blue-600/90 text-white text-xs rounded-lg rounded-br-sm px-2.5 py-1.5 whitespace-pre-wrap break-words">{{ messageText(m) }}</div>
+          <div class="max-w-[85%] bg-accent/90 text-white text-xs rounded-card rounded-br-sm px-2.5 py-1.5 whitespace-pre-wrap break-words">{{ messageText(m) }}</div>
         </div>
         <div v-else class="space-y-1.5">
-          <div v-if="messageTools(m).length" class="text-[10px] text-gray-500">
+          <div v-if="messageTools(m).length" class="text-micro text-ink-faint">
             <span class="opacity-70">{{ t('assistant.tools') }}:</span> {{ messageTools(m).join(' · ') }}
           </div>
-          <div v-if="messageText(m)" class="md text-xs text-gray-200 leading-relaxed break-words" v-html="renderMarkdown(messageText(m))" />
+          <div v-if="messageText(m)" class="md text-xs text-ink-secondary leading-relaxed break-words" v-html="renderMarkdown(messageText(m))" />
         </div>
       </template>
 
       <!-- the agent's working checklist (update_plan) -->
-      <div v-if="plan.length" class="rounded border border-gray-700/70 bg-gray-850/40 px-2.5 py-2 space-y-1">
-        <div class="text-[10px] font-semibold text-gray-400 flex items-center gap-1">📋 {{ t('assistant.plan') }}</div>
-        <div v-for="(s, i) in plan" :key="i" class="flex items-start gap-1.5 text-[11px]">
+      <div v-if="plan.length" class="rounded-control border border-border/70 bg-surface-deep/40 px-2.5 py-2 space-y-1">
+        <div class="text-micro font-semibold text-ink-muted flex items-center gap-1">📋 {{ t('assistant.plan') }}</div>
+        <div v-for="(s, i) in plan" :key="i" class="flex items-start gap-1.5 text-tiny">
           <span class="mt-[1px] shrink-0"
-            :class="s.status === 'done' ? 'text-emerald-400' : s.status === 'active' ? 'text-blue-400' : 'text-gray-600'">{{ s.status === 'done' ? '✓' : s.status === 'active' ? '▸' : '○' }}</span>
-          <span :class="s.status === 'done' ? 'text-gray-500 line-through' : s.status === 'active' ? 'text-gray-100' : 'text-gray-400'">{{ s.title }}</span>
+            :class="s.status === 'done' ? 'text-success-ink' : s.status === 'active' ? 'text-accent-ink' : 'text-ink-disabled'">{{ s.status === 'done' ? '✓' : s.status === 'active' ? '▸' : '○' }}</span>
+          <span :class="s.status === 'done' ? 'text-ink-faint line-through' : s.status === 'active' ? 'text-ink' : 'text-ink-muted'">{{ s.title }}</span>
         </div>
       </div>
 
       <div v-if="proposals.length" class="pt-1 space-y-2">
         <div class="flex items-center gap-2">
-          <span class="text-[11px] font-semibold text-gray-400">{{ t('assistant.proposalsTitle') }} ({{ proposals.length }})</span>
+          <span class="text-tiny font-semibold text-ink-muted">{{ t('assistant.proposalsTitle') }} ({{ proposals.length }})</span>
           <!-- meta operations (project config/scaffold/map-create) are excluded: they always need a manual apply -->
           <button v-if="proposals.some(p => p.status === 'pending' && !isMetaKind(p.target?.kind))" @click="assistant.applyAll()"
-            class="ml-auto text-[10px] px-2 py-0.5 rounded bg-emerald-700 text-white hover:bg-emerald-600">{{ t('assistant.applyAll') }}</button>
+            class="ml-auto text-micro px-2 py-0.5 rounded-control bg-success-hover text-white hover:bg-success">{{ t('assistant.applyAll') }}</button>
         </div>
         <ProposalCard v-for="p in proposals" :key="p.uid" :proposal="p"
           @apply="assistant.applyProposal(p)" @apply-subset="(acc) => assistant.applySubset(p, new Set(acc))"
@@ -535,17 +535,17 @@ watch(
       <!-- session artifacts: proposals currently applied; a row jumps to the owning activity -->
       <div v-if="artifacts.length" class="pt-1">
         <button @click="artifactsOpen = !artifactsOpen" class="flex w-full items-center gap-1.5 text-left">
-          <span class="inline-block w-2.5 shrink-0 text-[10px] text-gray-500">{{ artifactsOpen ? '▾' : '▸' }}</span>
-          <span class="text-[11px] font-semibold text-gray-400">{{ t('assistant.artifacts.title') }}</span>
-          <span class="ml-auto text-[10px] text-gray-500 tabular-nums">{{ summaryLine }}</span>
+          <span class="inline-block w-2.5 shrink-0 text-micro text-ink-faint">{{ artifactsOpen ? '▾' : '▸' }}</span>
+          <span class="text-tiny font-semibold text-ink-muted">{{ t('assistant.artifacts.title') }}</span>
+          <span class="ml-auto text-micro text-ink-faint tabular-nums">{{ summaryLine }}</span>
         </button>
         <div v-if="artifactsOpen" class="mt-1 space-y-0.5">
           <button v-for="a in artifacts" :key="a.uid" @click="jumpToArtifact(a)" :disabled="!activityIdFor(a)"
             :title="activityIdFor(a) ? a.path : undefined"
-            class="flex w-full items-center gap-1.5 px-1.5 py-1 rounded text-left hover:bg-gray-700/40 disabled:hover:bg-transparent disabled:cursor-default">
-            <span class="shrink-0 text-[11px]">{{ a.icon }}</span>
-            <span class="min-w-0 flex-1 truncate text-[11px]" :class="activityIdFor(a) ? 'text-gray-300' : 'text-gray-500'">{{ a.path }}</span>
-            <span class="shrink-0 text-[10px] tabular-nums"><span class="text-emerald-500">+{{ a.add }}</span><span v-if="a.del" class="text-red-500 ml-1">−{{ a.del }}</span></span>
+            class="flex w-full items-center gap-1.5 px-1.5 py-1 rounded-control text-left hover:bg-raised/40 disabled:hover:bg-transparent disabled:cursor-default">
+            <span class="shrink-0 text-tiny">{{ a.icon }}</span>
+            <span class="min-w-0 flex-1 truncate text-tiny" :class="activityIdFor(a) ? 'text-ink-body' : 'text-ink-faint'">{{ a.path }}</span>
+            <span class="shrink-0 text-micro tabular-nums"><span class="text-success-strong">+{{ a.add }}</span><span v-if="a.del" class="text-danger ml-1">−{{ a.del }}</span></span>
           </button>
         </div>
       </div>
@@ -555,60 +555,60 @@ watch(
 
       <!-- persistent working-state footer: always visible while busy (even mid-stream),
            so the user can always tell the assistant is still working vs. finished -->
-      <div v-if="busy" class="flex items-center gap-2 text-[11px] text-blue-300">
+      <div v-if="busy" class="flex items-center gap-2 text-tiny text-accent-ink-strong">
         <span class="typing-dots"><i /><i /><i /></span>
         <span>{{ statusLabel }}</span>
       </div>
-      <div v-else-if="stopped" class="flex items-center gap-1.5 text-[11px] text-amber-400/90">
-        <span class="text-[10px]">⏹</span>{{ t('assistant.stopped') }}
+      <div v-else-if="stopped" class="flex items-center gap-1.5 text-tiny text-warning-ink/90">
+        <span class="text-micro">⏹</span>{{ t('assistant.stopped') }}
       </div>
     </div>
 
-    <div v-if="error" class="px-3 py-1 text-[11px] text-red-400 border-t border-gray-700 shrink-0">{{ error }}</div>
+    <div v-if="error" class="px-3 py-1 text-tiny text-danger-ink border-t border-border shrink-0">{{ error }}</div>
 
-    <div class="relative border-t border-gray-700 p-2 shrink-0">
+    <div class="relative border-t border-border p-2 shrink-0">
       <!-- @mention autocomplete -->
       <div v-if="mentionOpen && mentionMatches.length"
-        class="absolute bottom-full left-2 right-2 mb-1 max-h-52 overflow-y-auto bg-gray-900 border border-gray-700 rounded shadow-xl z-30">
+        class="absolute bottom-full left-2 right-2 mb-1 max-h-52 overflow-y-auto bg-inset border border-border rounded-control shadow-popover z-30">
         <button v-for="(it, idx) in mentionMatches" :key="it.kind + it.id"
           @mousedown.prevent="applyMention(it)" @mouseenter="mentionActive = idx"
-          :class="['w-full flex items-center gap-2 px-2 py-1 text-left text-xs', idx === mentionActive ? 'bg-blue-600/30' : 'hover:bg-gray-800']">
-          <span class="text-[9px] uppercase text-gray-500 w-10 shrink-0">{{ it.kind }}</span>
-          <span class="text-gray-200 truncate">{{ it.label }}</span>
-          <span v-if="String(it.label) !== it.id" class="text-gray-500 truncate text-[10px]">{{ it.id }}</span>
+          :class="['w-full flex items-center gap-2 px-2 py-1 text-left text-xs', idx === mentionActive ? 'bg-accent-surface' : 'hover:bg-surface']">
+          <span class="text-[9px] uppercase text-ink-faint w-10 shrink-0">{{ it.kind }}</span>
+          <span class="text-ink-secondary truncate">{{ it.label }}</span>
+          <span v-if="String(it.label) !== it.id" class="text-ink-faint truncate text-micro">{{ it.id }}</span>
         </button>
       </div>
 
-      <p v-if="!providers.length && !props.welcome" class="text-[11px] text-amber-400 px-1 pb-1">{{ t('assistant.noProvider') }}</p>
+      <p v-if="!providers.length && !props.welcome" class="text-tiny text-warning-ink px-1 pb-1">{{ t('assistant.noProvider') }}</p>
       <!-- per-kind auto-apply: content kinds get a switch; meta operations never auto-apply -->
       <div class="px-1 pb-1">
         <button @click="autoApplyOpen = !autoApplyOpen" :title="t('assistant.autoApplyHint')"
-          class="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-300 select-none">
+          class="flex items-center gap-1 text-micro text-ink-faint hover:text-ink-body select-none">
           <span class="inline-block w-2.5">{{ autoApplyOpen ? '▾' : '▸' }}</span>{{ t('assistant.autoApply') }}
         </button>
         <div v-if="autoApplyOpen" class="mt-1 pl-3.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <!-- labels reuse the raw proposal-kind text shown on the review-card badges -->
-          <label v-for="k in CONTENT_KINDS" :key="k" class="flex items-center gap-1 text-[10px] text-gray-400 cursor-pointer select-none">
+          <label v-for="k in CONTENT_KINDS" :key="k" class="flex items-center gap-1 text-micro text-ink-muted cursor-pointer select-none">
             <input type="checkbox" v-model="autoApplyKinds[k]" class="accent-emerald-500" />{{ k }}
           </label>
-          <span class="text-[10px] text-gray-600">{{ t('assistant.autoApplyMetaNote') }}</span>
+          <span class="text-micro text-ink-disabled">{{ t('assistant.autoApplyMetaNote') }}</span>
         </div>
       </div>
       <!-- context-aware quick prompts: one click sends a canned instruction -->
       <div v-if="quickPrompts.length" class="flex flex-wrap gap-1 px-1 pb-1">
         <button v-for="p in quickPrompts" :key="p.id" @click="runQuickPrompt(p)" :disabled="busy || !providers.length"
-          class="text-[10px] px-2 py-0.5 rounded-full border border-gray-700 bg-gray-800 hover:border-gray-500 text-gray-300 disabled:opacity-40 disabled:hover:border-gray-700">
+          class="text-micro px-2 py-0.5 rounded-pill border border-border bg-surface hover:border-border-strongest text-ink-body disabled:opacity-40 disabled:hover:border-border">
           {{ p.icon }} {{ t(p.labelKey) }}
         </button>
       </div>
       <div class="flex items-end gap-1.5">
         <textarea ref="taRef" v-model="draft" rows="2" :placeholder="t('assistant.placeholder')"
           @input="onInput" @keydown="onKeydown"
-          class="flex-1 resize-none bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none"></textarea>
+          class="flex-1 resize-none bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none"></textarea>
         <button v-if="!busy" @click="submit" :disabled="!draft.trim() || !providers.length"
-          class="px-3 py-1.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">{{ t('assistant.send') }}</button>
+          class="px-3 py-1.5 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">{{ t('assistant.send') }}</button>
         <button v-else @click="assistant.stop()" :title="statusLabel"
-          class="flex items-center gap-1 px-3 py-1.5 text-xs rounded bg-gray-600 text-white hover:bg-gray-500">
+          class="flex items-center gap-1 px-3 py-1.5 text-xs rounded-control bg-overlay text-white hover:bg-overlay-strong">
           <span class="inline-block w-2 h-2 rounded-[1px] bg-white/90" />{{ t('assistant.stop') }}</button>
       </div>
     </div>

@@ -93,26 +93,26 @@ watch(() => editorStore.pendingCharacterId, (charId) => {
 </script>
 
 <template>
-  <div class="flex h-full overflow-hidden bg-gray-900 text-gray-200">
+  <div class="flex h-full overflow-hidden bg-canvas text-ink-secondary">
     <!-- Sidebar: character list -->
-    <aside class="w-48 bg-gray-800 border-r border-gray-700 flex flex-col shrink-0">
-      <div class="px-3 py-3 border-b border-gray-700">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('character.title') }}</h2>
+    <aside class="w-48 bg-surface border-r border-border flex flex-col shrink-0">
+      <div class="px-3 py-3 border-b border-border">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-faint">{{ t('character.title') }}</h2>
       </div>
       <div class="flex-1 overflow-y-auto py-1">
-        <p v-if="loadingList" class="text-xs text-gray-500 px-3 py-4">{{ t('map.loading') }}</p>
-        <p v-if="loadingErr" class="text-xs text-red-400 px-3 py-4">{{ loadingErr }}</p>
-        <div v-if="characters.length === 0 && !loadingList" class="text-xs text-gray-500 px-3 py-4">
+        <p v-if="loadingList" class="text-xs text-ink-faint px-3 py-4">{{ t('map.loading') }}</p>
+        <p v-if="loadingErr" class="text-xs text-danger-ink px-3 py-4">{{ loadingErr }}</p>
+        <div v-if="characters.length === 0 && !loadingList" class="text-xs text-ink-faint px-3 py-4">
           {{ t('character.noCharacters') }}
         </div>
         <button
           v-for="c in characters" :key="c.id"
           @click="openCharacter(c)"
           :class="[
-            'w-full text-left px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5',
+            'w-full text-left px-3 py-1.5 text-sm rounded-control transition-colors flex items-center gap-1.5',
             activeSubTab === `char:${c.id}`
-              ? 'bg-blue-600/30 text-blue-300 font-medium'
-              : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-100',
+              ? 'bg-accent-surface text-accent-ink-strong font-medium'
+              : 'text-ink-body hover:bg-raised/50 hover:text-ink',
           ]"
         >
           <span class="truncate flex-1">{{ localize(c.name, c.id) }}</span>
@@ -123,23 +123,23 @@ watch(() => editorStore.pendingCharacterId, (charId) => {
     <!-- Center: sub-tab system -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Sub-tab bar -->
-      <div class="flex items-center bg-gray-800 border-b border-gray-700 shrink-0 pl-1 pr-2 min-h-[32px] overflow-x-auto">
+      <div class="flex items-center bg-surface border-b border-border shrink-0 pl-1 pr-2 min-h-[32px] overflow-x-auto">
         <button
           v-for="tab in subTabs" :key="tab.id"
           @click="activeSubTab = tab.id"
           :class="[
             'px-3 py-1.5 text-xs border-b-2 transition-colors leading-none shrink-0 whitespace-nowrap flex items-center gap-1',
-            activeSubTab === tab.id ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200',
+            activeSubTab === tab.id ? 'border-accent-ink text-accent-ink' : 'border-transparent text-ink-muted hover:text-ink-secondary',
           ]"
         >
           <span>👤</span>
           <span class="truncate max-w-[120px]">{{ tab.label }}</span>
           <span
             @click.stop="closeTab(tab.id)"
-            class="ml-0.5 w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] leading-none hover:bg-gray-600 hover:text-gray-100"
+            class="ml-0.5 w-3.5 h-3.5 rounded-control flex items-center justify-center text-micro leading-none hover:bg-overlay hover:text-ink"
           >×</span>
         </button>
-        <div v-if="subTabs.length === 0" class="px-3 py-1.5 text-xs text-gray-500">
+        <div v-if="subTabs.length === 0" class="px-3 py-1.5 text-xs text-ink-faint">
           {{ t('character.selectFromSidebar') }}
         </div>
       </div>
@@ -154,7 +154,7 @@ watch(() => editorStore.pendingCharacterId, (charId) => {
       </div>
 
       <!-- Empty state -->
-      <div v-if="!activeSubTab" class="flex-1 flex items-center justify-center text-sm text-gray-500">
+      <div v-if="!activeSubTab" class="flex-1 flex items-center justify-center text-sm text-ink-faint">
         {{ t('character.selectFromSidebar') }}
       </div>
     </div>

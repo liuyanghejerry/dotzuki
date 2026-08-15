@@ -1,19 +1,19 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-900">
+  <div class="h-full flex flex-col bg-canvas">
     <!-- ── No config ── -->
     <div
       v-if="!browser.config.value"
-      class="flex-1 flex items-center justify-center text-gray-500 text-sm"
+      class="flex-1 flex items-center justify-center text-ink-faint text-sm"
     >
       <i18n-t keypath="assets.noConfig" tag="span">
-        <template #assets><code class="bg-gray-800 px-1 rounded">assets</code></template>
-        <template #file><code class="bg-gray-800 px-1 rounded">.dotzuki-editor.json</code></template>
+        <template #assets><code class="bg-surface px-1 rounded-control">assets</code></template>
+        <template #file><code class="bg-surface px-1 rounded-control">.dotzuki-editor.json</code></template>
       </i18n-t>
     </div>
 
     <template v-else>
       <!-- ── Root tabs ── -->
-      <nav class="flex bg-gray-800 border-b border-gray-700 shrink-0 px-2">
+      <nav class="flex bg-surface border-b border-border shrink-0 px-2">
         <button
           v-for="root in browser.roots.value"
           :key="root"
@@ -21,8 +21,8 @@
           :class="[
             'px-4 py-2 text-sm border-b-2 transition-colors truncate max-w-[240px]',
             root === browser.activeRoot.value
-              ? 'border-blue-400 text-blue-400'
-              : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600',
+              ? 'border-accent-ink text-accent-ink'
+              : 'border-transparent text-ink-muted hover:text-ink-secondary hover:border-border-strong',
           ]"
         >
           {{ rootLabel(root) }}
@@ -32,11 +32,11 @@
       <!-- ── Toolbar: breadcrumbs + view toggle ── -->
       <div
         v-if="browser.activeRoot.value"
-        class="flex items-center justify-between px-3 py-2 bg-gray-850 border-b border-gray-700 shrink-0"
+        class="flex items-center justify-between px-3 py-2 bg-surface-deep border-b border-border shrink-0"
       >
         <div class="flex items-center gap-1 text-sm min-w-0">
           <button
-            class="shrink-0 px-1.5 py-0.5 rounded text-blue-400 hover:bg-gray-700 transition-colors"
+            class="shrink-0 px-1.5 py-0.5 rounded-control text-accent-ink hover:bg-raised transition-colors"
             :class="{ 'opacity-30 cursor-default': browser.breadcrumbs.value.length === 0 }"
             @click="browser.navigateUp()"
           >
@@ -44,10 +44,10 @@
           </button>
 
           <template v-for="(crumb, i) in browser.breadcrumbs.value" :key="i">
-            <span class="text-gray-600 shrink-0">/</span>
+            <span class="text-ink-disabled shrink-0">/</span>
             <button
-              class="shrink-0 px-1.5 py-0.5 rounded hover:bg-gray-700 transition-colors truncate max-w-[160px]"
-              :class="i === browser.breadcrumbs.value.length - 1 ? 'text-gray-200' : 'text-gray-400'"
+              class="shrink-0 px-1.5 py-0.5 rounded-control hover:bg-raised transition-colors truncate max-w-[160px]"
+              :class="i === browser.breadcrumbs.value.length - 1 ? 'text-ink-secondary' : 'text-ink-muted'"
               @click="browser.navigateToBreadcrumb(i)"
             >
               {{ crumb }}
@@ -55,7 +55,7 @@
           </template>
 
           <span v-if="browser.loading.value" class="ml-2 shrink-0">
-            <span class="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <span class="inline-block w-3 h-3 border-2 border-accent-ink border-t-transparent rounded-pill animate-spin" />
           </span>
         </div>
 
@@ -63,14 +63,14 @@
           <!-- ── Mutations: upload / new folder / rename / delete ── -->
           <button
             @click="triggerUpload"
-            class="px-2 py-1 rounded text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+            class="px-2 py-1 rounded-control text-xs text-ink-body hover:bg-raised transition-colors"
             :title="$t('assets.upload')"
           >
             ⬆ {{ $t('assets.upload') }}
           </button>
           <button
             @click="onNewFolder"
-            class="px-2 py-1 rounded text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+            class="px-2 py-1 rounded-control text-xs text-ink-body hover:bg-raised transition-colors"
             :title="$t('assets.newFolder')"
           >
             ＋📁
@@ -78,7 +78,7 @@
           <button
             v-if="browser.selectedFile.value"
             @click="onRenameSelected"
-            class="px-2 py-1 rounded text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+            class="px-2 py-1 rounded-control text-xs text-ink-body hover:bg-raised transition-colors"
             :title="$t('assets.rename')"
           >
             ✎
@@ -86,25 +86,25 @@
           <button
             v-if="browser.selectedFile.value"
             @click="onDeleteSelected"
-            class="px-2 py-1 rounded text-xs text-red-400 hover:bg-red-900/40 transition-colors"
+            class="px-2 py-1 rounded-control text-xs text-danger-ink hover:bg-danger-surface/40 transition-colors"
             :title="$t('assets.delete')"
           >
             🗑
           </button>
           <input ref="fileInput" type="file" multiple class="hidden" @change="onFilesPicked" />
-          <span class="w-px h-4 bg-gray-700 mx-1" />
+          <span class="w-px h-4 bg-raised mx-1" />
           <button
             @click="browser.viewMode.value = 'grid'"
-            class="px-2 py-1 rounded text-xs transition-colors"
-            :class="browser.viewMode.value === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'"
+            class="px-2 py-1 rounded-control text-xs transition-colors"
+            :class="browser.viewMode.value === 'grid' ? 'bg-accent text-white' : 'text-ink-muted hover:bg-raised'"
             :title="$t('assets.grid')"
           >
             ▦
           </button>
           <button
             @click="browser.viewMode.value = 'list'"
-            class="px-2 py-1 rounded text-xs transition-colors"
-            :class="browser.viewMode.value === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'"
+            class="px-2 py-1 rounded-control text-xs transition-colors"
+            :class="browser.viewMode.value === 'list' ? 'bg-accent text-white' : 'text-ink-muted hover:bg-raised'"
             :title="$t('assets.list')"
           >
             ☰
@@ -115,7 +115,7 @@
       <!-- ── Status bar: file count ── -->
       <div
         v-if="browser.activeRoot.value && !browser.loading.value && !browser.error.value"
-        class="px-3 py-1 bg-gray-850 border-b border-gray-700/50 text-xs text-gray-500 shrink-0"
+        class="px-3 py-1 bg-surface-deep border-b border-border/50 text-xs text-ink-faint shrink-0"
       >
         {{ browser.displayFiles.value.length }} {{ browser.displayFiles.value.length === 1 ? $t('assets.item') : $t('assets.items') }}
         <span v-if="browser.extensions.value.length" class="ml-2">
@@ -132,10 +132,10 @@
             class="flex items-center justify-center h-full"
           >
             <div class="text-center">
-              <p class="text-red-400 mb-1">{{ browser.error.value }}</p>
+              <p class="text-danger-ink mb-1">{{ browser.error.value }}</p>
               <button
                 @click="browser.fetchFiles()"
-                class="text-sm text-blue-400 hover:text-blue-300"
+                class="text-sm text-accent-ink hover:text-accent-ink-strong"
               >
                 {{ $t('common.retry') }}
               </button>
@@ -148,10 +148,10 @@
             class="p-6"
           >
             <div v-if="browser.viewMode.value === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              <div v-for="n in 12" :key="n" class="aspect-square bg-gray-800 rounded-lg animate-pulse" />
+              <div v-for="n in 12" :key="n" class="aspect-square bg-surface rounded-card animate-pulse" />
             </div>
             <div v-else class="space-y-1">
-              <div v-for="n in 8" :key="n" class="h-8 bg-gray-800 rounded animate-pulse" />
+              <div v-for="n in 8" :key="n" class="h-8 bg-surface rounded-control animate-pulse" />
             </div>
           </div>
 
@@ -160,10 +160,10 @@
             v-else-if="browser.displayFiles.value.length === 0"
             class="flex items-center justify-center h-full"
           >
-            <div class="text-center text-gray-500">
+            <div class="text-center text-ink-faint">
               <p class="text-4xl mb-3">📁</p>
               <p class="text-sm">{{ $t('assets.noFiles') }}</p>
-              <p v-if="browser.extensions.value.length" class="text-xs text-gray-600 mt-1">
+              <p v-if="browser.extensions.value.length" class="text-xs text-ink-disabled mt-1">
                 {{ $t('assets.extFilter') }}: {{ browser.extensions.value.join(', ') }}
               </p>
             </div>
@@ -179,10 +179,10 @@
               :key="file.name"
               @click="browser.selectFile(file)"
               :class="[
-                'group relative flex flex-col items-center rounded-lg border transition-all duration-150',
+                'group relative flex flex-col items-center rounded-card border transition-all duration-150',
                 file === browser.selectedFile.value
-                  ? 'border-blue-400 bg-blue-900/20 ring-1 ring-blue-400/30'
-                  : 'border-gray-700 bg-gray-800/60 hover:bg-gray-700/60 hover:border-gray-600',
+                  ? 'border-accent-ink bg-accent-deep/20 ring-1 ring-accent-ink/30'
+                  : 'border-border bg-surface/60 hover:bg-raised/60 hover:border-border-strong',
               ]"
             >
               <!-- Thumbnail area -->
@@ -194,7 +194,7 @@
                   :src="browser.fileUrl(file)"
                   :alt="file.name"
                   loading="lazy"
-                  class="max-w-full max-h-full object-contain rounded"
+                  class="max-w-full max-h-full object-contain rounded-control"
                   @error="onImageError"
                 />
 
@@ -205,7 +205,7 @@
               <div class="w-full px-2 pb-2 min-w-0">
                 <p
                   class="text-xs text-center truncate"
-                  :class="file === browser.selectedFile.value ? 'text-blue-300' : 'text-gray-400 group-hover:text-gray-200'"
+                  :class="file === browser.selectedFile.value ? 'text-accent-ink-strong' : 'text-ink-muted group-hover:text-ink-secondary'"
                 >
                   {{ file.name }}
                 </p>
@@ -214,9 +214,9 @@
               <!-- Image overlay on hover — view hint -->
               <div
                 v-if="!file.isDir && browser.isImage(file)"
-                class="absolute inset-0 flex items-end justify-center pb-6 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
+                class="absolute inset-0 flex items-end justify-center pb-6 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-card pointer-events-none"
               >
-                <span class="text-xs text-white bg-black/50 px-2 py-0.5 rounded">{{ $t('assets.clickPreview') }}</span>
+                <span class="text-xs text-white bg-black/50 px-2 py-0.5 rounded-control">{{ $t('assets.clickPreview') }}</span>
               </div>
             </button>
           </div>
@@ -224,15 +224,15 @@
           <!-- List view -->
           <div v-else class="overflow-auto">
             <table class="w-full text-sm">
-              <thead class="sticky top-0 bg-gray-850">
-                <tr class="text-left text-gray-500 text-xs uppercase tracking-wider">
+              <thead class="sticky top-0 bg-surface-deep">
+                <tr class="text-left text-ink-faint text-xs uppercase tracking-wider">
                   <th class="px-4 py-2 w-8" />
                   <th class="px-0 py-2 font-medium">{{ $t('assets.colName') }}</th>
                   <th class="px-4 py-2 font-medium hidden md:table-cell">{{ $t('assets.colType') }}</th>
                   <th class="px-4 py-2 font-medium hidden sm:table-cell text-right">{{ $t('assets.colSize') }}</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-700/50">
+              <tbody class="divide-y divide-border">
                 <tr
                   v-for="file in browser.displayFiles.value"
                   :key="file.name"
@@ -240,22 +240,22 @@
                   :class="[
                     'cursor-pointer transition-colors',
                     file === browser.selectedFile.value
-                      ? 'bg-blue-900/20'
-                      : 'hover:bg-gray-800/50',
+                      ? 'bg-accent-deep/20'
+                      : 'hover:bg-surface/50',
                   ]"
                 >
                   <td class="px-4 py-2 text-lg">
                     {{ file.isDir ? '📁' : fileIcon(file) }}
                   </td>
                   <td class="px-0 py-2 truncate max-w-[300px]">
-                    <span :class="file === browser.selectedFile.value ? 'text-blue-300' : 'text-gray-200'">
+                    <span :class="file === browser.selectedFile.value ? 'text-accent-ink-strong' : 'text-ink-secondary'">
                       {{ file.name }}
                     </span>
                   </td>
-                  <td class="px-4 py-2 text-gray-500 hidden md:table-cell">
+                  <td class="px-4 py-2 text-ink-faint hidden md:table-cell">
                     {{ file.isDir ? $t('assets.folder') : file.ext || $t('common.dash') }}
                   </td>
-                  <td class="px-4 py-2 text-gray-500 text-right hidden sm:table-cell tabular-nums">
+                  <td class="px-4 py-2 text-ink-faint text-right hidden sm:table-cell tabular-nums">
                     {{ file.isDir ? '—' : browser.formatSize(file.size) }}
                   </td>
                 </tr>
@@ -267,30 +267,30 @@
         <!-- ── Preview panel (selected image / audio / video) ── -->
         <div
           v-if="previewKind"
-          class="w-80 border-l border-gray-700 bg-gray-800 flex flex-col shrink-0"
+          class="w-80 border-l border-border bg-surface flex flex-col shrink-0"
         >
-          <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700 shrink-0">
-            <span class="text-sm text-gray-300 truncate">{{ browser.selectedFile.value?.name }}</span>
+          <div class="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+            <span class="text-sm text-ink-body truncate">{{ browser.selectedFile.value?.name }}</span>
             <button
               @click="browser.selectedFile.value = null"
-              class="text-gray-500 hover:text-gray-300 text-lg leading-none px-1"
+              class="text-ink-faint hover:text-ink-body text-lg leading-none px-1"
             >
               &times;
             </button>
           </div>
 
-          <div class="flex-1 flex items-center justify-center p-4 bg-gray-900/50 overflow-auto">
+          <div class="flex-1 flex items-center justify-center p-4 bg-canvas/50 overflow-auto">
             <img
               v-if="previewKind === 'image'"
               :src="selectedUrl!"
               :alt="browser.selectedFile.value?.name"
-              class="max-w-full max-h-full object-contain rounded"
+              class="max-w-full max-h-full object-contain rounded-control"
             />
             <video
               v-else-if="previewKind === 'video'"
               :src="selectedUrl!"
               controls
-              class="max-w-full max-h-full rounded"
+              class="max-w-full max-h-full rounded-control"
             />
             <audio
               v-else-if="previewKind === 'audio'"
@@ -300,15 +300,15 @@
             />
           </div>
 
-          <div class="px-3 py-2 border-t border-gray-700 text-xs text-gray-500 space-y-1 shrink-0">
-            <p><span class="text-gray-600">{{ $t('assets.propName') }}:</span> {{ browser.selectedFile.value?.name }}</p>
-            <p><span class="text-gray-600">{{ $t('assets.propSize') }}:</span> {{ browser.formatSize(browser.selectedFile.value?.size ?? 0) }}</p>
-            <p><span class="text-gray-600">{{ $t('assets.propType') }}:</span> {{ browser.selectedFile.value?.ext || $t('common.unknown') }}</p>
-            <p class="truncate"><span class="text-gray-600">{{ $t('assets.propPath') }}:</span> {{ browser.activeRoot.value }}/{{ browser.filePath(browser.selectedFile.value!) }}</p>
+          <div class="px-3 py-2 border-t border-border text-xs text-ink-faint space-y-1 shrink-0">
+            <p><span class="text-ink-disabled">{{ $t('assets.propName') }}:</span> {{ browser.selectedFile.value?.name }}</p>
+            <p><span class="text-ink-disabled">{{ $t('assets.propSize') }}:</span> {{ browser.formatSize(browser.selectedFile.value?.size ?? 0) }}</p>
+            <p><span class="text-ink-disabled">{{ $t('assets.propType') }}:</span> {{ browser.selectedFile.value?.ext || $t('common.unknown') }}</p>
+            <p class="truncate"><span class="text-ink-disabled">{{ $t('assets.propPath') }}:</span> {{ browser.activeRoot.value }}/{{ browser.filePath(browser.selectedFile.value!) }}</p>
             <a
               :href="selectedUrl!"
               target="_blank"
-              class="inline-block mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs transition-colors"
+              class="inline-block mt-2 px-3 py-1 bg-accent hover:bg-accent-strong text-white rounded-control text-xs transition-colors"
             >
               {{ $t('assets.openFull') }}
             </a>
@@ -424,7 +424,7 @@ function onImageError(e: Event) {
 </script>
 
 <style scoped>
-.bg-gray-850 {
+.bg-surface-deep {
   background-color: #1a1e2b;
 }
 </style>
