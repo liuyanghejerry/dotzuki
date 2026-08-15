@@ -39,21 +39,44 @@ export interface DshStatus {
   hint?: string
 }
 
+/** Bin shim candidates for a dsh-runtime install dir, platform-aware:
+ *  pnpm's .bin on Windows ships both a bash shim (no extension) and a .cmd
+ *  launcher; only the .cmd is spawnable without a shell, so it wins there. */
+export function dshBinCandidates(dir: string, isWin = process.platform === 'win32'): string[] {
+  const base = path.join(dir, 'node_modules', '.bin', DSH_BIN_NAME)
+  return isWin ? [base + '.cmd', base] : [base, base + '.cmd']
+}
+
+/**
+ * Launch spec for the runtime subprocess. The SDK client spawns with
+ * `child_process.spawn` (no shell), so on Windows the .cmd shim must be
+ * wrapped through cmd.exe — spawn() cannot execute .cmd files directly.
+ */
+export function dshLaunchSpec(
+  bin: string,
+  config: string,
+  isWin = process.platform === 'win32',
+): { command: string; args: string[] } {
+  if (isWin && /\.(cmd|bat)$/i.test(bin)) {
+    return { command: 'cmd.exe', args: ['/d', '/s', '/c', bin, config] }
+  }
+  return { command: bin, args: [config] }
+}
+
 /** Where the runtime lives, in preference order:
- *  1. DOTZUKI_DSH_BIN / DOTZUKI_DSH_CONFIG env overrides (power users), then
+ *  1. DOTZUKI_DSH_BIN / DOTZUKI_DSH_CONFIG env overrides (the packaged app
+ *     points these at Resources/dsh-runtime), then
  *  2. the bundled dsh-runtime/ install next to this server. */
 export function dshStatus(): DshStatus {
-  const bin =
-    process.env.DOTZUKI_DSH_BIN ||
-    firstExisting([
-      path.join(DSH_RUNTIME_DIR, 'node_modules', '.bin', DSH_BIN_NAME),
-      path.join(DSH_RUNTIME_DIR, 'node_modules', '.bin', DSH_BIN_NAME + '.cmd'),
-    ])
+  const envBin = process.env.DOTZUKI_DSH_BIN
+  const bin = envBin || firstExisting(dshBinCandidates(DSH_RUNTIME_DIR))
   const config = process.env.DOTZUKI_DSH_CONFIG || path.join(DSH_RUNTIME_DIR, 'cordis.yml')
   const installed = Boolean(bin && fs.existsSync(bin) && fs.existsSync(config))
   const status: DshStatus = { kind: 'dsh', installed, bin: bin || null, config }
   if (!installed) {
-    status.hint = `DeepSeek Harness runtime not installed. Run \`pnpm install\` in ${DSH_RUNTIME_DIR}, then retry.`
+    status.hint = envBin
+      ? 'The packaged DeepSeek Harness runtime is missing from this build (Resources/dsh-runtime). Rebuild with `pnpm electron:build`, or install the runtime yourself and set DOTZUKI_DSH_BIN / DOTZUKI_DSH_CONFIG.'
+      : `DeepSeek Harness runtime not installed. Run \`pnpm install\` in ${DSH_RUNTIME_DIR}, then retry.`
   }
   return status
 }
@@ -94,10 +117,10 @@ async function spawnHarness(opts: {
   // Dynamic import: the heavy SDK client is only loaded when the dsh backend
   // is actually used, keeping the dev-server boot path fast.
   const { DeepSeekHarness } = await import('@deepseek-ai/dsh-sdk-client')
+  const launch = dshLaunchSpec(opts.bin, opts.config)
   const harness = new DeepSeekHarness({
     launch: {
-      command: opts.bin,
-      args: [opts.config],
+      ...launch,
       // `env` replaces the child environment entirely — spread the parent and
       // layer the transient credential + deployment knobs on top.
       env: {

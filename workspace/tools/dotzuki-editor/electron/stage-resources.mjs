@@ -57,3 +57,37 @@ stagePkg(
   'wasm-node-pkg', 'pnpm build:wasm', 'WASM scene-compile pkg (Node)',
   'pkg-node',
 )
+
+// ── DeepSeek Harness runtime (optional dsh backend) ──────────────────────────
+// Unlike the WASM pkgs, the runtime is an installed Node package tree
+// (dsh-runtime/node_modules + cordis.yml), not a wasm-pack output. Stage the
+// whole dir when it is installed; otherwise leave a README so packaging still
+// succeeds and the app reports "not installed" with a useful hint.
+{
+  const src = path.join(root, 'dsh-runtime')
+  const dest = path.join(root, 'dist-electron', 'dsh-runtime')
+  const binShim = process.platform === 'win32'
+    ? path.join(src, 'node_modules', '.bin', 'dsh-jsonrpc-agent.cmd')
+    : path.join(src, 'node_modules', '.bin', 'dsh-jsonrpc-agent')
+  fs.rmSync(dest, { recursive: true, force: true })
+  fs.mkdirSync(dest, { recursive: true })
+  if (fs.existsSync(binShim) && fs.existsSync(path.join(src, 'cordis.yml'))) {
+    fs.cpSync(src, dest, {
+      recursive: true,
+      // Keep the staged tree lean and neutral: the .npmrc pins the standalone
+      // install registry and is meaningless inside the packaged app.
+      filter: (s) => path.basename(s) !== '.npmrc',
+    })
+    console.log(`✓ staged DeepSeek Harness runtime → dist-electron/dsh-runtime`)
+  } else {
+    fs.writeFileSync(
+      path.join(dest, 'README.txt'),
+      'DeepSeek Harness runtime not staged.\n' +
+        'Run `pnpm install` in dsh-runtime/ before packaging to enable the dsh assistant backend.\n',
+    )
+    console.warn(
+      '⚠ dsh-runtime/node_modules not found — the packaged app will lack the DeepSeek Harness\n' +
+        '  assistant backend. Run `pnpm install` in dsh-runtime/, then re-run `pnpm electron:build`.',
+    )
+  }
+}

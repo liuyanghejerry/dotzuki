@@ -5,7 +5,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { dshStatus, buildDshPersona, blockText, toolOutputText, safeJsonInput } from './dsh'
+import { dshStatus, buildDshPersona, blockText, toolOutputText, safeJsonInput, dshBinCandidates, dshLaunchSpec } from './dsh'
 import { createProjectContext } from './context/projectContext'
 
 function tmpProject(): { root: string; cleanup: () => void } {
@@ -53,6 +53,28 @@ describe('dshStatus', () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true })
     }
+  })
+
+  it('env override pointing at a missing bin reports the packaged-build hint', () => {
+    process.env.DOTZUKI_DSH_BIN = '/nonexistent/dsh-jsonrpc-agent'
+    process.env.DOTZUKI_DSH_CONFIG = '/nonexistent/cordis.yml'
+    const s = dshStatus()
+    expect(s.installed).toBe(false)
+    expect(s.hint).toContain('packaged')
+  })
+
+  it('prefers the .cmd shim on Windows and the plain shim elsewhere', () => {
+    expect(dshBinCandidates('/dsh', true)[0]).toMatch(/\.cmd$/)
+    expect(dshBinCandidates('/dsh', false)[0]).not.toMatch(/\.cmd$/)
+  })
+
+  it('wraps .cmd shims through cmd.exe on Windows', () => {
+    const win = dshLaunchSpec('C:\\x\\dsh-jsonrpc-agent.cmd', 'C:\\x\\cordis.yml', true)
+    expect(win.command).toBe('cmd.exe')
+    expect(win.args).toEqual(['/d', '/s', '/c', 'C:\\x\\dsh-jsonrpc-agent.cmd', 'C:\\x\\cordis.yml'])
+    const unix = dshLaunchSpec('/x/dsh-jsonrpc-agent', '/x/cordis.yml', false)
+    expect(unix.command).toBe('/x/dsh-jsonrpc-agent')
+    expect(unix.args).toEqual(['/x/cordis.yml'])
   })
 })
 

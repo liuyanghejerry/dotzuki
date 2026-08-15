@@ -54,8 +54,10 @@ directly with its own tools (bash, string-replace editor, filesystem) and
 persists session logs under `<project>/.dsh-sessions/`. It needs the optional
 runtime install — see [dsh-runtime/README.md](dsh-runtime/README.md) — plus a
 DeepSeek API key (https://platform.deepseek.com/api_keys) and an open project.
-`GET /api/dsh/status` reports whether the runtime is installed. Without the
-runtime the other providers keep working unchanged.
+Packaged builds ship the runtime as `Resources/dsh-runtime` when it was
+installed at build time (run `pnpm install` in `dsh-runtime/` before
+`pnpm electron:build`). `GET /api/dsh/status` reports whether the runtime is
+installed. Without the runtime the other providers keep working unchanged.
 
 ### ② Create with the wizard
 

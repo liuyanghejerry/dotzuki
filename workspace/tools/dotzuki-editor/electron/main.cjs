@@ -45,6 +45,17 @@ if (app.isPackaged && !process.env.DOTZUKI_WASM_NODE_ROOT) {
   process.env.DOTZUKI_WASM_NODE_ROOT = path.join(process.resourcesPath, 'wasm-node-pkg')
 }
 
+// The optional DeepSeek Harness runtime (dsh-runtime/) ships as
+// Resources/dsh-runtime; the dsh backend (server/dsh.ts) probes it through
+// these vars. Platform-aware: pnpm's .bin on Windows is spawnable as the
+// .cmd shim only.
+if (app.isPackaged && !process.env.DOTZUKI_DSH_BIN && !process.env.DOTZUKI_DSH_CONFIG) {
+  const dshDir = path.join(process.resourcesPath, 'dsh-runtime')
+  const binName = process.platform === 'win32' ? 'dsh-jsonrpc-agent.cmd' : 'dsh-jsonrpc-agent'
+  process.env.DOTZUKI_DSH_BIN = path.join(dshDir, 'node_modules', '.bin', binName)
+  process.env.DOTZUKI_DSH_CONFIG = path.join(dshDir, 'cordis.yml')
+}
+
 /** @type {import('http').Server extends any ? any : never} */
 let apiServer = null // { url, port, close } from the prod api-server
 /** @type {string} base origin the renderer + main talk to for /api */

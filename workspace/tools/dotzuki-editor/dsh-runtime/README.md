@@ -39,6 +39,17 @@ The editor probes `dsh-runtime/node_modules/.bin/dsh-jsonrpc-agent` +
   - `DSH_SYSTEM_PROMPT` — the dotzuki-editor persona
   - `DSH_SESSION_ROOT` — session log persistence root
 
+## Packaged app
+
+`electron/stage-resources.mjs` stages this directory into
+`dist-electron/dsh-runtime`, and `electron-builder.cjs` ships it as
+`Resources/dsh-runtime` (via `DOTZUKI_DSH_BIN` / `DOTZUKI_DSH_CONFIG` set by
+`electron/main.cjs` in packaged builds). So: install here **before** running
+`pnpm electron:build` if the packaged app should include the runtime — the
+stage step degrades to a README otherwise. Note the staged tree includes the
+platform's compiled native deps (node-pty), so build the package on/for the
+target platform.
+
 ## Troubleshooting
 
 - `GET /api/dsh/status` → `installed: false`: run `pnpm install` here (or set
