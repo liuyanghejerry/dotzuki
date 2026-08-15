@@ -3,6 +3,7 @@
 // Electron pointed at it. Killing either tears down both. No extra deps —
 // just child_process + a tiny TCP wait.
 import { spawn } from 'node:child_process'
+import fs from 'node:fs'
 import net from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -29,11 +30,16 @@ function waitForPort(port, host, timeoutMs = 30000) {
   })
 }
 
-// Vite lives at the pnpm-workspace root, not in this package's node_modules, so
-// `require.resolve('vite')` fails here. pnpm still exposes a runnable .bin/vite
-// shim in the package (same thing `pnpm run dev` executes) — spawn that.
+// Vite lives at the pnpm-workspace root (workspace/tools), not in this
+// package's node_modules, so with pnpm's isolated linker the runnable
+// .bin/vite shim sits in the parent directory and `require.resolve('vite')`
+// fails here. Prefer the workspace shim; fall back to a package-local one for
+// setups where vite is a direct devDependency.
 const isWin = process.platform === 'win32'
-const viteBin = path.join(root, 'node_modules', '.bin', isWin ? 'vite.CMD' : 'vite')
+const binName = isWin ? 'vite.CMD' : 'vite'
+const workspaceBin = path.join(root, '..', 'node_modules', '.bin', binName)
+const localBin = path.join(root, 'node_modules', '.bin', binName)
+const viteBin = fs.existsSync(workspaceBin) ? workspaceBin : localBin
 const vite = spawn(viteBin, ['--host', HOST, '--port', String(PORT), '--strictPort'], {
   cwd: root,
   stdio: 'inherit',

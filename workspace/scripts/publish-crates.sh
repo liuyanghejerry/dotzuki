@@ -20,11 +20,13 @@
 #
 #   --check        Validate manifests and packaging only (`cargo package`
 #                  for every crate, no upload, no network). Use in local dev
-#                  and optionally in CI before releasing. Before the FIRST
-#                  release, crates whose internal dotzuki-* deps are not on
-#                  crates.io yet are reported as skipped rather than failed —
-#                  that is the expected pre-release state; after the first
-#                  release the check is a strict gate.
+#                  and optionally in CI before releasing. Crates whose
+#                  internal dotzuki-* deps are not resolvable on crates.io —
+#                  the pre-release state, or the brief window after a version
+#                  bump while the sparse index catches up — are reported as
+#                  skipped rather than failed; the release itself publishes in
+#                  dependency order, so the check stays strict for everything
+#                  the registry can actually resolve.
 #   --no-verify    Skip cargo publish's package-verify build. Not recommended:
 #                  verification is what catches broken packaged manifests.
 #   --allow-dirty  Publish from a dirty git tree (not recommended).
@@ -154,13 +156,18 @@ if [[ $CHECK -eq 1 ]]; then
         log="$(mktemp)"
         if cargo package -p "$crate" --no-verify --allow-dirty >"$log" 2>&1; then
             grep -E '^\s+Packaged ' "$log" | tail -1 || true
-        elif grep -q 'no matching package named .dotzuki-' "$log"; then
+        elif grep -q 'no matching package named .dotzuki-' "$log" \
+          || grep -q 'failed to select a version for the requirement .dotzuki-' "$log"; then
             # `cargo package` resolves versioned path deps against the registry
             # index. Before the first release those internal deps don't exist
-            # anywhere yet — the manifest is fine, and the real publish
-            # sequence resolves them in topological order.
+            # anywhere yet; after a version bump they briefly lag the sparse
+            # index (crates.io serves the API ahead of index propagation). In
+            # both cases the manifest is fine — the version-consistency gate
+            # above already pins every internal dep to the workspace version —
+            # and the real publish resolves them in topological order.
             echo "    skipped: an internal dotzuki-* dependency is not on the"
-            echo "    registry yet (expected before the first release)"
+            echo "    registry at the required version yet (expected before the"
+            echo "    first release or right after a version bump)"
         else
             cat "$log" >&2
             failed=1

@@ -84,9 +84,17 @@ export default defineConfig({
     // (or pass `vite --open` for a one-off). Applies to dev/demo/pokered/wuxia.
     open: false,
     fs: {
-      // The Help panel bundles `workspace/docs/reference/*.md` via `?raw`
-      // imports; the dev server must be allowed to serve those files.
-      allow: [path.resolve(__dirname, '../../docs')],
+      // In Vite 8, setting `allow` REPLACES the default workspace-root entry
+      // instead of extending it — an explicit list without the project root
+      // makes the dev server 403 the app's own src/ modules (the .vue activity
+      // dynamic imports die with "outside of Vite serving allow list"). Include
+      // the project root explicitly, then the extra dirs the app reads outside
+      // it: the Help panel bundles `workspace/docs/reference/*.md` via `?raw`
+      // imports, so the dev server must be allowed to serve those files too.
+      allow: [
+        path.resolve(__dirname, '.'),
+        path.resolve(__dirname, '../../docs'),
+      ],
     },
   },
 })
