@@ -3,6 +3,9 @@
 // Copies the checked-in fixture project to a throwaway scratch dir (so tests
 // may freely create/edit/delete records without dirtying the repo), then
 // starts the Vite dev server against that scratch copy on a dedicated port.
+// The port comes from E2E_PORT — playwright.config.ts passes the per-worktree
+// default derived in e2e/ports.ts, so parallel checkouts don't collide; the
+// 5199 fallback below only covers standalone manual runs.
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'

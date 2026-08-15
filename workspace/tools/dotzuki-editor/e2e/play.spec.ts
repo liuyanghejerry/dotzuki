@@ -6,7 +6,9 @@ import { test, expect, type Page } from '@playwright/test'
 //
 // Requires the runner wasm bundle (pnpm build:wasm-runner →
 // crates/dotzuki-runner-web/pkg). The spec skips itself when it isn't built.
-const playBase = `http://localhost:${process.env.E2E_PLAY_PORT ?? 5200}`
+import { playPort } from './ports'
+
+const playBase = `http://localhost:${playPort}`
 
 /** Sum + sampled distinct colors of the play canvas, to detect frame changes. */
 function sampleFrame(page: Page) {

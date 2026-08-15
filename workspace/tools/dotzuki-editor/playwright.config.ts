@@ -1,7 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
-
-const port = Number(process.env.E2E_PORT ?? 5199)
-const playPort = Number(process.env.E2E_PLAY_PORT ?? 5200)
+import { port, playPort } from './e2e/ports'
 
 // E2E suite for the dotzuki-editor SPA + its Vite-dev API surface. The webServer
 // (e2e/serve.mjs) copies e2e/fixtures/demo-game to a scratch dir and starts
@@ -32,7 +30,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'node e2e/serve.mjs',
+      command: `E2E_PORT=${port} node e2e/serve.mjs`,
       port,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
