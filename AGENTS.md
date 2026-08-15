@@ -70,7 +70,7 @@ All `dotzuki-*` crates are published to crates.io under one shared version — t
 
 - **Entry point**: `workspace/scripts/publish-crates.sh` — topological-order publish with a version-consistency gate and idempotent skip of already-published crates.
 - **GitHub integration**: `.github/workflows/release.yml` runs it on `vX.Y.Z` tag pushes, GitHub Release publishes, and manual runs. The tag must name the workspace version (e.g. tag `v0.1.0` publishes every crate at 0.1.0). Requires the `CARGO_REGISTRY_TOKEN` repo secret (crates.io API token).
-- **PR gate**: the `package-check` job in `.github/workflows/main.yml` runs `scripts/publish-crates.sh --check` — a manifest/packaging check that turns strict after the first release.
+- **PR gate**: the `package-check` job in `.github/workflows/main.yml` runs `scripts/publish-crates.sh --check` — a manifest/packaging check. It stays strict except for the expected windows where an internal `dotzuki-*` dep is not yet resolvable on crates.io (pre-first-release, or right after a version bump while the sparse index catches up); those are reported as skipped, since the version-consistency gate already pins internal deps to the workspace version.
 - **Local check**: `cd workspace && bash scripts/publish-crates.sh --check`.
 - **Internal dep rule**: every internal `dotzuki-*` path dependency MUST carry `version = "<workspace version>"` (crates.io resolves path deps through the registry); the script fails the release on drift. When bumping the workspace version, bump those strings too — or just run the `--check`, which catches any mismatch.
 - **Non-publishable members**: `minimon`, `run-wasm`, and the `dotzuki-template` dir are excluded from publishing (`publish = false` / workspace `exclude`).
