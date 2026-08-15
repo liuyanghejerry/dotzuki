@@ -1,0 +1,568 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Battle Rules (rules.ron) - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/battle-rules.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="battles"><a class="header" href="#battles">Battles</a></h1>
+<p>The <code>battle</code> manifest section: config, rules.ron hooks, turn loop, and <code>check</code> validation.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>A project opts into the generic, data-driven battle system (parties +
+battle-usable items) with a top-level <code>battle</code> section (all keys optional;
+the defaults shown):</p>
+<pre><code class="language-json">"battle": {
+  "party":      { "table": "heroes" },
+  "enemies":    { "table": "monsters" },
+  "encounters": { "table": "encounters" },
+  "skills":   { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+  "stats":    { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+  "resource": "mp",
+  "rules":    "data/rules.ron",
+  "items":    { "table": "items", "healField": "healHp", "starting": { "potion": 3 } },
+  "levels":   { "expField": "exp", "levelField": "level",
+                "curve": { "base": 8, "exponent": 3 }, "growth": 0.05, "maxLevel": 100 }
+}
+</code></pre>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<ul>
+<li><code>party</code> / <code>enemies</code> name <strong>data-table ids</strong> from the data activity’s
+<code>config.tables[]</code> (their <code>dir</code>s hold the records). A battle needs both;
+a referenced id that names no declared table is a boot-time error <em>when a
+battle actually starts</em> (projects that never battle are unaffected) — and a
+<code>dotzuki check</code> diagnostic regardless.</li>
+<li><code>encounters</code> (optional) names an <strong>encounter table</strong>: its records describe
+enemy parties and trainer battles — <code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>.
+<code>enemies</code> is an ordered list of enemy-table record ids (an empty list or
+an unknown id inside it is a clear error at battle start), <code>trainer</code>
+defaults to <code>false</code>, and <code>money</code> (the win reward, paid only by trainer
+encounters) defaults to 0. Absent ⇒ every battle is a single wild enemy
+(v1 behavior). See <strong>Encounters</strong> below.</li>
+<li><code>skills</code> names the skills table plus field names: <code>field</code> (the combatant
+record’s skill-id list, default <code>"skills"</code>), <code>categoryField</code> (default
+<code>"type"</code>), <code>costField</code> (default <code>"mpCost"</code>). No <code>skills</code> key ⇒ every
+combatant has only the built-in Attack.</li>
+<li><code>stats</code> maps the four stat roles to record field names (defaults
+hp/atk/def/spd). A missing/invalid stat field reads as 1. An optional
+<code>level</code> field on records (default 1) is read by level-based RON
+ops/predicates (<code>SetDamage</code>, <code>LevelGE</code>) — and, with a <code>levels</code> block,
+also drives stat growth (see below).</li>
+<li><code>resource</code> names the record field holding the MP pool; absent ⇒ no
+resource gate (every skill is free).</li>
+<li><code>rules</code> (project-root-relative, default <code>data/rules.ron</code>) is parsed with
+the dotzuki-rules <code>Ruleset</code> model <strong>only when the file exists</strong>. Its
+<code>type_chart</code> feeds the effectiveness multiplier, and — when it declares
+<code>effects</code> — those records are <strong>live</strong>: <code>kind: Move</code> records take
+over matching skills and <code>kind: Status</code> records define statuses, executed
+through the engine’s effect-stack interpreter (see <strong>RON effect hooks</strong>
+below); <code>kind: Ability</code>/<code>Item</code>/<code>Weather</code> records back combatant abilities,
+held items and scene-armed weather (see <strong>Abilities, held items &amp;
+weather</strong> below). A rules file that fails to parse <em>or compile</em> (unknown
+event/op/stat/type/resource/status name in a hook) is a boot-time error at
+battle start and a <code>dotzuki check</code> diagnostic.</li>
+<li><code>items</code> (optional) arms the battle <strong>Item menu</strong>: <code>table</code> names the items
+table, <code>healField</code> (default <code>"healHp"</code>) the record field whose positive
+number makes an item battle-usable (the heal amount), and <code>starting</code> the
+inventory (record id → count) the game boots with. No <code>items</code> key ⇒ no
+Item menu. Free-text <code>effect</code> fields on item records are <strong>display-only</strong>.</li>
+<li><code>levels</code> (optional) arms <strong>EXP and level growth</strong> (every key optional, the
+defaults shown above). Absent ⇒ today’s exact behavior: no EXP is earned,
+stats never grow, and a record’s <code>level</code> field only feeds RON level-ops.
+With the block:
+<ul>
+<li><strong>Stat growth</strong> — every effective stat (both sides, wherever raw record
+stats are read: battle build, the RON mirror, the menu Party view) is
+<code>floor(raw × (1 + growth × (level − 1)))</code>, with <code>level</code> from the
+record’s <code>levelField</code> (default <code>"level"</code>; missing ⇒ 1 ⇒ ×1, numerically
+identical to a no-levels project). A level-5 enemy record is genuinely
+stronger.</li>
+<li><strong>EXP award</strong> — on a win, each NON-fainted party member gains the
+SUM of every defeated enemy’s <code>expField</code> value (0 when a record lacks
+it), once per battle, narrated after the win text (<code>"Aria gained 8 EXP!"</code>). A single-enemy battle’s sum is its enemy’s value, identical to
+v1.</li>
+<li><strong>Level-ups</strong> — each member tracks <code>exp</code> progress toward the next
+level; <code>exp_to_next(L) = curve.base × L^curve.exponent</code> (integer).
+While <code>exp &gt;= exp_to_next(level)</code> and <code>level &lt; maxLevel</code>: level up,
+<code>exp -= exp_to_next(level)</code> (multiple level-ups from one award
+supported), narrated (<code>"Aria grew to level 2!"</code>). A level-up recomputes
+the member’s stats with the growth multiplier and heals the max-HP/MP
+<strong>delta</strong> into the current pools (max HP 60 → 63 at level 2 raises
+current HP by 3; MP likewise).</li>
+<li><strong>Persistence</strong> — per-member <code>level</code> + <code>exp</code> ride the runner’s party
+state and the save (<code>party[].level</code> / <code>party[].exp</code> are OPTIONAL fields;
+absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
+keep loading). The menu Party view shows <code>Lv</code> and an <code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
+</ul>
+</li>
+</ul>
+<p>The <code>levels</code> block schema lives in <a href="data-tables/levels.html">Level growth</a>.</p>
+<h2 id="records"><a class="header" href="#records">Records</a></h2>
+<p>The combatant record schema lives in
+<a href="data-tables/combatants.html">Combatant records</a>.</p>
+<p>A combatant is one <code>&lt;dataRoot&gt;/&lt;tableDir&gt;/&lt;id&gt;.json</code> record:
+<code>name</code> (display, else the id), the four stat fields, the <code>resource</code> field,
+an optional <code>element</code> string (the defending side of type-chart lookups), and
+the skill-id list. Two more optional fields hook the RON effect kinds:
+<code>ability</code> (a <code>kind: Ability</code> record id) and <code>heldItem</code> (a <code>kind: Item</code>
+record id) — see below. <code>startBattle("x")</code> resolves in this order: with an
+<code>encounters</code> block, an <strong>encounter record</strong> <code>x</code> (an enemy party, below);
+else a single <strong>enemy record</strong> <code>x</code> (implicitly wild); an id in neither table
+falls back to the first enemy record with a warning.</p>
+<h2 id="encounters-enemy-parties--trainer-battles"><a class="header" href="#encounters-enemy-parties--trainer-battles">Encounters (enemy parties + trainer battles)</a></h2>
+<p>The encounter record schema lives in
+<a href="data-tables/encounters.html">Encounter records</a>.</p>
+<p>With an <code>encounters</code>
+block, the enemy side of an encounter battle is a <strong>queue</strong>: when the active
+enemy faints the next one is sent out — narrated (<code>"Foe sent out Bat!"</code>) —
+as a fresh combatant (its own stats/level, no status; the RON mirror is
+rebuilt and the old enemy’s volatiles drop), and the round ends (the
+replacement never acts the turn it comes in; the enemy AI is unchanged, per
+active combatant). The battle is <strong>won when the queue empties</strong>; the EXP
+award is the SUM of every defeated enemy’s <code>expField</code> (see above). A
+<code>trainer: true</code> encounter pays its <code>money</code> to the player’s money on a win —
+narrated (<code>"Got 80 G for winning!"</code>) — and blocks the Run action (below).
+The player side is unchanged: party/switch/items/whiteout behave exactly as
+in a wild battle, and an all-fainted party still loses even with enemies
+remaining.</p>
+<h2 id="parties"><a class="header" href="#parties">Parties</a></h2>
+<p>The player’s party is <strong>every record of the party table</strong>
+(sorted by record id; a 1-record party behaves like v1). Base stats are
+rebuilt from the records at every battle start, but each member’s <strong>current
+HP/MP and status persist between battles</strong> — the runner owns that party
+state, harvests it at the end of every battle (win, lose AND run), and
+carries it
+in the save file (<code>party</code>). A member at 0 HP stays fainted until healed
+(items are the only healing source so far). The first LIVING member leads;
+a party with no living member loses on the spot. In battle the root menu
+offers <strong>Fight</strong> (the skill menu), <strong>Party</strong> (the member list with HP and
+status — switching to a living, non-active member consumes the player’s
+turn, and the enemy’s action then resolves against the NEW member),
+<strong>Item</strong> (when configured), and <strong>Run</strong> — in a WILD battle Run always
+succeeds: narration <code>"Got away safely!"</code>, the battle ends with the <code>"run"</code>
+outcome (no EXP, no money; the party state carries over as after any
+battle). In a TRAINER battle Run is blocked — <code>"Can't escape from a trainer battle!"</code> — and the turn is NOT consumed (the menu returns). When the active
+member faints the player is
+FORCED to pick a replacement: a free action mid-round, after which the
+enemy’s remaining action this round still resolves (against the new member
+if the faint happened first). With no living member left, the battle is
+lost. Stat stages reset on switch-in; a member’s status persists with the
+member (the RON mirrors are rebuilt from the member’s current state on
+switch, and the old battler’s volatiles drop).</p>
+<h2 id="items-in-battle"><a class="header" href="#items-in-battle">Items in battle</a></h2>
+<p>The item record schema lives in <a href="data-tables/items.html">Item records</a>.</p>
+<p>With an <code>items</code> block, the runner owns a persistent
+<strong>inventory</strong> (record id → count, initialized from <code>starting</code> at first boot,
+carried in the save file). The Item menu lists the usable items (records
+whose <code>healField</code> number is positive) that still have a count; using one
+heals the ACTIVE member by that amount (capped at max HP), decrements the
+count, and consumes the player’s turn. An item at count 0 is no longer
+listed.</p>
+<h2 id="skills"><a class="header" href="#skills">Skills</a></h2>
+<p>The skill record schema lives in <a href="data-tables/skills.html">Skill records</a>.</p>
+<p>A skill record: <code>name</code>, <code>power</code> (default 0), <code>accuracy</code>
+(default 100), optional <code>element</code>, <code>stat</code> (which stat a buff/debuff moves —
+a <code>stats</code> key like <code>"attack"</code>/<code>"defense"</code>, default attack), the category
+field (case-insensitive: <code>attack</code>/<code>damage</code> → damage, <code>heal</code> → restore own HP
+by <code>power</code> capped at max, <code>buff</code> → own stat stage +1, <code>debuff</code> → target stat
+stage −1, unrecognized → attack), and the cost field (default 0). Unknown
+skill ids in a combatant’s list are skipped with a warning; an empty/missing
+list (or no skills table at all) yields the built-in <strong>Attack</strong> (power 40,
+accuracy 100, no cost).</p>
+<h2 id="the-standard-formula"><a class="header" href="#the-standard-formula">The standard formula</a></h2>
+<p>Per damaging hit, integer math:
+<code>base = power × eff_atk / max(1, eff_def)</code> where an eff stat is the raw stat
+× the stage multiplier (stages clamp to −4..+4: ×(4+stage)/4 above 0,
+×4/(4−stage) below — +1 = ×1.25, −1 = ×0.8); then variance ×(85+rng%16)/100;
+then a 1/16 crit (rng%16 == 0) ×1.5; then the type-chart multiplier
+(skill <code>element</code> vs defender <code>element</code>, no edge ⇒ 1×). <code>damage = max(1, …)</code>.
+Accuracy: the hit lands iff <code>rng % 100 &lt; accuracy</code>. Every skill use consumes
+one accuracy byte; damaging skills then consume the variance and crit bytes.</p>
+<h2 id="precedence-v2-a"><a class="header" href="#precedence-v2-a">Precedence (v2-a)</a></h2>
+<p>When the rules file declares a <code>kind: Move</code> record
+whose <code>id</code> matches a skill id, the RON record <strong>takes over</strong> the skill: its
+<code>power</code>/<code>type</code>/<code>accuracy</code>/<code>cost</code> fields override the table record (absent
+fields fall back to the table record), and the action runs through the
+effect stack instead of the built-in category behavior. In short: <strong>RON
+record &gt; table record &gt; built-in category</strong>. Skills with NO matching RON
+record behave exactly as v1, even in a project whose rules file has effects.</p>
+<h2 id="ron-effect-hooks-v2-a"><a class="header" href="#ron-effect-hooks-v2-a">RON effect hooks (v2-a)</a></h2>
+<p>Hooks are authored in the rules file’s
+<code>effects</code> records with the dotzuki-rules closed <code>Op</code>/<code>Predicate</code> vocabulary
+(<code>workspace/crates/dotzuki-rules/src/model.rs</code> — <code>Boost</code>, <code>InflictStatus</code>,
+<code>DamageFraction</code>, <code>HealFraction</code>, <code>ScaleRelay</code>, <code>VetoIf</code>, <code>ApplyTypeChart</code>,
+<code>PayResource</code>, <code>InflictVolatile</code>, <code>SetHp</code>, <code>SetDamage</code>, <code>RepeatHits</code>,
+<code>RemoveStatus</code>, and the <code>HasType</code>/<code>TargetHasStatus</code>/<code>SourceHasStatus</code>/
+<code>SelfHpBelow</code>/<code>LevelGE</code>/… predicates). Naming conventions:</p>
+<ul>
+<li>RON <code>stats</code> names are the manifest <code>battle.stats</code> <strong>keys</strong>
+(<code>"hp"|"attack"|"defense"|"speed"</code>; the usual <code>atk</code>/<code>def</code>/<code>spd</code> aliases
+also resolve), so <code>Boost { stat: "attack" }</code> needs no per-game code.</li>
+<li>RON <code>resources</code> names are the manifest <code>battle.resource</code> field name (e.g.
+<code>"mp"</code>); a move record’s <code>cost: [Cost(resource: "mp", amount: N)]</code> flows
+through the same MP gate as table costs (menu marking + resolution-time
+re-check), and <code>PayResource</code> ops read the same pool.</li>
+<li>RON <code>types</code> names are the <code>element</code> strings on records (as the chart
+already required), matched case-insensitively.</li>
+<li>The status vocabulary is the ids of the ruleset’s <code>kind: Status</code> records;
+<code>InflictStatus { status: "poison" }</code> inflicts one, and its <code>Residual</code>
+hooks run <strong>after each action of the afflicted combatant</strong> (poison chip),
+narrated (<code>"Aria was afflicted with poison!"</code>, <code>"Slime is hurt by poison!"</code>, <code>"Aria is no longer poison!"</code>).</li>
+</ul>
+<p>Per action with a taken-over skill, the runner fires this event sequence
+through the stack (the minimon/wuxia harness order): MP gate → accuracy →
+<code>BeforeMove</code> gate (only when the record subscribes; a <code>VetoIf</code>/<code>PayResource</code>
+<code>Fail</code> blocks the action) → damage precompute (the standard formula, written
+into <code>ctx.mv.damage</code>) → <code>ModifyDamage</code> → <code>Effectiveness</code> → <code>Damage</code> → apply
+→ <code>DamagingHit</code> (after any landed hit, damaging or not — a power-0 status
+skill’s riders live here) → <code>AfterMove</code>. When the record subscribes to
+<code>Effectiveness</code> the hooks own the scaling — author <code>ApplyTypeChart</code> in an
+<code>Effectiveness</code> hook to get the type chart; when it does NOT subscribe, the
+v1 direct chart application applies in the precompute (so a record that only
+overrides <code>power</code>/<code>type</code> keeps the chart behavior you expect).</p>
+<h2 id="abilities-held-items--weather"><a class="header" href="#abilities-held-items--weather">Abilities, held items &amp; weather</a></h2>
+<p>The remaining RON kinds are live, wired
+by record fields and a scene command — no manifest changes:</p>
+<ul>
+<li><strong>Abilities</strong> (<code>kind: Ability</code> records, named by a combatant record’s
+optional <code>ability</code> field). The ACTIVE combatants’ ability hooks fire at
+battle start and on every switch-in (a voluntary/forced player switch, an
+encounter send-out) on the <code>SwitchIn</code> event — benched members’ abilities
+are inert. A switch-in fire narrates an intro line (<code>"Aria's Intimidate!"</code> — the record id prettified, since records carry no display
+name) before the usual diff lines (<code>"Slime's Attack fell!"</code>). Ability
+hooks also join the acting combatant’s per-action event sequence: an
+ability hooking <code>ModifyDamage</code>/<code>DamagingHit</code>/… fires alongside the skill’s
+own hooks, with the same <code>Source</code> (the actor) and <code>Target</code> (the foe).</li>
+<li><strong>Held items</strong> (<code>kind: Item</code> records, named by a combatant record’s
+optional <code>heldItem</code> field). They fire exactly like abilities, plus their
+<code>Residual</code> hooks run after each of the holder’s actions (a Leftovers-style
+<code>HealFraction</code>). Held items are <strong>persistent flags — nothing consumes
+them</strong> (berries/consumption are out of scope); a <code>heldItem</code> id whose
+<code>healField</code> is 0 never appears in the Item menu.</li>
+<li><strong>Weather</strong> (<code>kind: Weather</code> records, armed by a scene). <code>game. setWeather("sandstorm")</code> arms a weather record for the NEXT battle and
+<code>game.clearWeather()</code> cancels a previously armed one (both resolve
+immediately, like flag commands). The weather is <strong>battle-local</strong>: the
+battle narrates its start (<code>"A sandstorm rages!"</code>, from the record id),
+its <code>FieldResidual</code> hooks fire on each combatant’s residual every round
+while active (both sides, per the ops’ <code>target</code>), and it is dropped when
+the battle ends — never saved. An armed id that names no compiled record
+warns and is ignored. In-battle weather-setting (a move op) is NOT
+supported — the <code>Op</code> vocabulary has no weather op; scenes are the only
+trigger.</li>
+</ul>
+<p>Limits of the wiring: only the ACTING combatant’s ability/held-item hooks
+join its per-action sequence (a defender’s ability fires on its own
+switch-in/residual, not in the attacker’s fold), and residuals (status, held
+item, weather) fire after a combatant’s own action — on switch/item rounds
+only the enemy’s residual runs, as with statuses.</p>
+<h2 id="turn-loop"><a class="header" href="#turn-loop">Turn loop</a></h2>
+<p>Each round: the player picks a root-menu action — <strong>Fight</strong>
+opens the skill menu (name + cost; unaffordable skills are marked and
+unselectable), <strong>Party</strong> switches (consumes the turn), <strong>Item</strong> uses one
+(consumes the turn), <strong>Run</strong> ends a wild battle (blocked in trainer
+battles, turn not consumed); the enemy AI picks its highest-power
+affordable skill
+(fallback: first affordable, else the built-in Attack). For Fight rounds the
+faster side (eff speed) acts first, ties go to the player; switch/item
+rounds act player-first. Each action re-checks the MP gate, rolls accuracy,
+resolves (v1 category or RON hooks) and narrates (<code>"Slime used Tackle!"</code>,
+<code>"Critical hit!"</code>, <code>"It's super effective!"</code>, <code>"48 damage!"</code>, <code>"Aria's Attack rose!"</code>, <code>"Come back, Aria!"</code>, <code>"Go, Bryn!"</code>, <code>"Aria used Potion!"</code>); the acting side’s status residuals then fire. The enemy at 0 HP
+sends out the next queued enemy (encounters) or ends the battle in a win;
+the active member at 0 HP forces a replacement
+while the party has living members, else the battle is lost; a successful
+Run ends it on the spot: the scene
+resumes with <code>"win"</code>, <code>"lose"</code> or <code>"run"</code>. The loop is the runner’s own phase
+machine, not the engine’s <code>StackDriver</code>; RON hooks fire per event through
+the effect-stack interpreter (<code>collect_handlers</code> + <code>run_event</code>), the
+minimon/wuxia harness pattern.</p>
+<h2 id="scene-integration"><a class="header" href="#scene-integration">Scene integration</a></h2>
+<p><code>result = startBattle("slime")</code> (or
+<code>@command("startBattle", "slime")</code>) suspends the scene, runs the battle, and
+resumes with <code>result == "win" | "lose" | "run"</code> — branch with <code>@if</code> and set
+flags as usual; flags are harvested when the scene ends. <strong>The <code>"run"</code>
+outcome is a contract change</strong>: scenes branching on <code>result == "win"</code> treat
+a run as not-won (their <code>@else</code> arm runs); an explicit
+<code>@if (result == "run")</code> branch distinguishes it from a loss. A run awards no
+EXP and no money, and the party state carries over as after any battle.
+<code>startWildBattle(species, level)</code> behaves the same (v1 ignores <code>level</code>). <code>setWeather(id)</code> /
+<code>clearWeather()</code> arm or cancel the next battle’s weather (see <strong>Abilities,
+held items &amp; weather</strong> above). A project <strong>without</strong> a
+<code>battle</code> section warns and auto-completes with <code>"win"</code> (undefeated-continue,
+like any unimplemented command). A lost battle returns <code>"lose"</code> to the scene
+(its post-lose text plays), then triggers the <strong>game-over whiteout</strong> (see
+<a href="project-manifest.html#game-over">Game-over</a>): the party is healed and the player
+returns to the entry spawn.</p>
+<h2 id="sceneless-battles-random-encounters"><a class="header" href="#sceneless-battles-random-encounters">Sceneless battles (random encounters)</a></h2>
+<p>A battle armed by walking (the
+objects sidecar’s <code>encounters</code> block — see <a href="../how-to/maps.html">Maps</a>) has no scene
+to resume, so its outcomes flow straight back into the overworld: a <strong>win</strong>
+or a <strong>run</strong> returns to <code>Mode::Overworld</code> in place (the player keeps
+walking from the encounter tile; EXP/level-ups/trainer money and the
+party-state/inventory harvest behave exactly as after a scene battle), and
+a <strong>loss</strong> triggers the game-over whiteout directly (no post-lose text —
+there is no scene to play it). All other battle semantics — the resolution
+order of the drawn id (encounter record → single enemy record), trainer
+battles blocking Run, EXP sums, abilities/weather — are identical to a
+scene-triggered battle.</p>
+<h2 id="remaining-limits"><a class="header" href="#remaining-limits">Remaining limits</a></h2>
+<p>Every RON <code>EffectKind</code> now fires (Move / Status /
+Ability / Item / Weather); what remains: volatiles are basic
+(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing expires them);
+HP/MP clamp into the engine’s <code>u16</code> pools for RON skills; items only heal
+(no status cures / revives / battle-only effects) and held items are never
+consumed; a defender’s ability/held-item hooks don’t join the attacker’s
+per-action fold; weather is scene-armed only (no in-battle op sets it).
+Later PRs:
+<code>StackDriver</code> migration, a heal-point system (the whiteout
+always respawns at the entry spawn).</p>
+<h2 id="validation-by-dotzuki-check"><a class="header" href="#validation-by-dotzuki-check">Validation by <code>dotzuki check</code></a></h2>
+<p>When the manifest has a <code>battle</code> section, <code>check</code> also validates it: the
+referenced table ids (party/enemies/encounters/skills/items) must exist in the data
+activity’s <code>config.tables[]</code>, the referenced stat/skill fields and the items
+<code>healField</code> must exist in the table schemas, an <code>encounters</code> block’s table
+must declare an <code>enemies</code> field, and the rules file (when
+present on disk) must parse as a dotzuki-rules <code>Ruleset</code> AND compile against
+the closed vocabulary — an unknown event, op, or stat/type/resource/status
+name in a hook is a diagnostic, exactly as it would be a boot-time error at
+battle start.
+Battle diagnostics print and fail the exit code like DSL diagnostics.
+Record JSONs are not loaded — the manifest’s table definitions suffice.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/data-tables/levels.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/dsl/scene.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/data-tables/levels.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/dsl/scene.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
