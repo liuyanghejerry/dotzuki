@@ -310,10 +310,13 @@ per test, no real HTTP server).
 E2E specs live in `e2e/*.spec.ts`. The Playwright `webServer` (`e2e/serve.mjs`)
 copies `e2e/fixtures/demo-game/` to a gitignored scratch dir and starts the
 Vite dev server with `DOTZUKI_PROJECT_ROOT` pointing at that copy, so tests may
-create/edit/delete project data freely. A second server (default port 5200)
+create/edit/delete project data freely. A second server (on the adjacent port)
 serves `e2e/fixtures/playable-game/` — a scaffolded StartTown project — for
 `play.spec.ts`, which boots the WASM runner in the browser (needs
 `pnpm build:wasm-runner`; the spec skips itself when the pkg is missing).
+E2E ports default per-worktree (derived from the checkout path in
+`e2e/ports.ts`, range 21000–25999) so parallel checkouts never collide;
+set `E2E_PORT` (and optionally `E2E_PLAY_PORT`) to override.
 Browsers come from the local Playwright cache (`npx playwright install chromium`
 if missing, or set `E2E_CHROMIUM_PATH` to a specific binary). Tests run
 serially (`workers: 1`) because they share one dev server and scratch project.
