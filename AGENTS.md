@@ -32,6 +32,10 @@ examples/
 └── minimon/                     # Cross-gen battle POC, pure RON rules
 tools/dotzuki-editor/               # Game-agnostic Vue/Vite editor + AI Story Designer
                                  #   + in-editor Play activity (WASM dotzuki-runner)
+                                 #   + Tailwind v4 UI theme via design tokens
+                                 #     (src/design-tokens.css; see docs/DESIGN-TOKENS.md
+                                 #     in that dir — components use semantic tokens,
+                                 #     not raw palette classes)
 tools/asset-converter/           # 2bpp → RGBA tileset + Tiled .tsx converter
 tools/editor-extensions/         # VSCode DSL syntax highlighting
 dotzuki-template/                   # cargo-generate starter template for new games

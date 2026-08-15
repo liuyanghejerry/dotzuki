@@ -1,0 +1,83 @@
+/*
+ * dotzuki-editor design tokens — the single source of truth for the UI theme.
+ *
+ * Tailwind CSS v4: every `--color-*`, `--radius-*`, `--shadow-*` and `--text-*`
+ * variable declared in `@theme` generates a matching utility class
+ * (e.g. `--color-surface` → `bg-surface` / `text-surface` / `border-surface`).
+ *
+ * Rules:
+ *  - Components must use the semantic tokens below, NOT raw palette classes
+ *    (`bg-gray-700`, `text-blue-400`, …). Raw palette classes are only for
+ *    one-off colors that have no semantic meaning yet.
+ *  - All values are mapped onto the Tailwind default palette via var()
+ *    references, so a full redesign = editing this one file.
+ *  - `@theme inline` resolves the references at build time, keeping generated
+ *    utilities self-contained.
+ *
+ * See docs/DESIGN-TOKENS.md for the token table and the class migration map.
+ */
+@theme inline {
+  /* ── Surfaces (dark hierarchy: canvas → surface → raised → overlay) ────── */
+  --color-canvas: var(--color-gray-900);   /* page background */
+  --color-surface: var(--color-gray-800);  /* panels, header, sidebar, cards */
+  --color-raised: var(--color-gray-700);   /* controls, hover background */
+  --color-overlay: var(--color-gray-600);  /* stronger hover / active */
+  --color-inset: var(--color-gray-900);    /* input wells sitting on surfaces */
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --color-border: var(--color-gray-700);
+  --color-border-strong: var(--color-gray-600);
+  --color-border-subtle: var(--color-gray-800);
+
+  /* ── Text scale (dark theme: higher prominence = lighter gray) ─────────── */
+  --color-ink: var(--color-gray-100);          /* headings, primary text */
+  --color-ink-secondary: var(--color-gray-200);/* emphasized body text */
+  --color-ink-body: var(--color-gray-300);     /* regular body text */
+  --color-ink-muted: var(--color-gray-400);    /* secondary / descriptions */
+  --color-ink-faint: var(--color-gray-500);    /* tertiary, placeholders */
+  --color-ink-disabled: var(--color-gray-600); /* disabled states */
+
+  /* ── Accent (primary action / brand) ───────────────────────────────────── */
+  --color-accent: var(--color-blue-600);            /* primary buttons */
+  --color-accent-hover: var(--color-blue-700);      /* primary button hover */
+  --color-accent-strong: var(--color-blue-500);     /* focus rings, active borders */
+  --color-accent-ink: var(--color-blue-400);        /* accent-colored text, active tabs */
+  --color-accent-ink-strong: var(--color-blue-300); /* accent text hover */
+  --color-accent-surface: color-mix(in oklab, var(--color-blue-600) 30%, transparent);
+
+  /* ── Status colors ─────────────────────────────────────────────────────── */
+  --color-danger: var(--color-red-600);
+  --color-danger-ink: var(--color-red-400);
+  --color-danger-surface: color-mix(in oklab, var(--color-red-900) 30%, transparent);
+
+  --color-success: var(--color-emerald-600);
+  --color-success-ink: var(--color-emerald-400);
+  --color-success-surface: color-mix(in oklab, var(--color-green-900) 20%, transparent);
+
+  --color-warning: var(--color-amber-500);
+  --color-warning-ink: var(--color-amber-400);
+  --color-warning-surface: color-mix(in oklab, var(--color-yellow-500) 20%, transparent);
+
+  /* ── Radii (custom names on purpose — overriding `rounded-sm` etc. would
+   *     silently change every existing default utility) ──────────────────── */
+  --radius-control: 0.25rem;   /* matches default `rounded` (buttons, inputs) */
+  --radius-card: 0.5rem;       /* matches `rounded-lg` (cards, panels) */
+  --radius-pill: 9999px;       /* matches `rounded-full` (badges, dots) */
+
+  /* ── Shadows ───────────────────────────────────────────────────────────── */
+  --shadow-popover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); /* = shadow-xl */
+
+  /* ── Tiny type scale used throughout the dense editor UI ───────────────── */
+  --text-micro: 0.625rem;  /* replaces text-[10px] */
+  --text-tiny: 0.6875rem;  /* replaces text-[11px] */
+}
+
+/*
+ * Fill in the two gray shades the components already use but the default
+ * Tailwind palette does not provide. Without this, classes like `bg-gray-850`
+ * silently generate no CSS at all.
+ */
+@theme inline {
+  --color-gray-750: color-mix(in oklab, var(--color-gray-700) 50%, var(--color-gray-800));
+  --color-gray-850: color-mix(in oklab, var(--color-gray-800) 50%, var(--color-gray-900));
+}
