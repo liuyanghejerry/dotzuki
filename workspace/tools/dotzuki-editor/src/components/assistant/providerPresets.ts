@@ -4,7 +4,7 @@
 // types a model name. `modelExample` is shown as an input placeholder only —
 // never pre-filled. No API keys live here.
 // ───────────────────────────────────────────────────────────────────────────
-import type { ProviderKind } from '@/types'
+import type { AssistantBackend, ProviderKind } from '@/types'
 
 export interface ProviderPreset {
   /** Also used as the default profile id (except `custom`, which stays blank). */
@@ -17,6 +17,8 @@ export interface ProviderPreset {
   modelExample: string
   /** Console page where the user creates an API key (opened in a new tab). */
   keyUrl: string
+  /** Execution backend pre-selected by this preset (absent = 'sdk'). */
+  backend?: AssistantBackend
 }
 
 export const PROVIDER_PRESETS: ProviderPreset[] = [
@@ -47,15 +49,16 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     keyUrl: 'https://console.anthropic.com/settings/keys',
   },
   {
-    // kind 'dsh' is not a wire protocol: turns are delegated to a LOCAL
-    // DeepSeek Harness runtime (see server/dsh.ts + dsh-runtime/). baseURL is
-    // unused; `model` picks the DeepSeek model the runtime agent runs on.
+    // The DeepSeek Harness preset selects the LOCAL agent-runtime backend
+    // (backend 'dsh') — the wire-protocol fields below are unused by that
+    // backend; `model` picks the DeepSeek model the runtime agent runs on.
     id: 'dsh',
     label: 'DeepSeek Harness',
-    kind: 'dsh',
+    kind: 'openai',
     baseURL: '',
     modelExample: 'deepseek-v4-flash',
     keyUrl: 'https://platform.deepseek.com/api_keys',
+    backend: 'dsh',
   },
   {
     id: 'custom',

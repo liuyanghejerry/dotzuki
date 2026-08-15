@@ -11,10 +11,11 @@ const { providers } = ai
 
 interface Draft extends ProviderProfile {
   apiKey: string
+  backend: 'sdk' | 'dsh'
 }
 
 function blankDraft(): Draft {
-  return { id: '', kind: 'openai', baseURL: '', model: '', embeddingModel: '', proxyUrl: '', apiKey: '' }
+  return { id: '', kind: 'openai', baseURL: '', model: '', embeddingModel: '', proxyUrl: '', apiKey: '', backend: 'sdk' }
 }
 
 const draft = reactive<Draft>(blankDraft())
@@ -38,6 +39,8 @@ const editingHasKey = computed(() => editingIndex.value !== null && keyStored(dr
 function edit(i: number) {
   editingIndex.value = i
   Object.assign(draft, blankDraft(), JSON.parse(JSON.stringify(providers.value[i])))
+  // Saved profiles omit backend for the default ('sdk').
+  if (!draft.backend) draft.backend = 'sdk'
   draft.apiKey = ''
   testResult.value = null
 }
@@ -50,8 +53,12 @@ function reset() {
 
 function toProfile(): ProviderProfile {
   const clean: ProviderProfile = { id: draft.id.trim(), kind: draft.kind, baseURL: draft.baseURL.trim(), model: draft.model.trim() }
-  if (draft.embeddingModel?.trim()) clean.embeddingModel = draft.embeddingModel.trim()
-  if (draft.proxyUrl?.trim()) clean.proxyUrl = draft.proxyUrl.trim()
+  // Only the non-default backend is persisted (absent = 'sdk').
+  if (draft.backend === 'dsh') clean.backend = 'dsh'
+  if (!draft.backend || draft.backend === 'sdk') {
+    if (draft.embeddingModel?.trim()) clean.embeddingModel = draft.embeddingModel.trim()
+    if (draft.proxyUrl?.trim()) clean.proxyUrl = draft.proxyUrl.trim()
+  }
   return clean
 }
 
@@ -139,11 +146,13 @@ async function runRowTest(i: number) {
 }
 
 function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama' | 'dsh') {
-  if (kind === 'anthropic') Object.assign(draft, { id: draft.id || 'claude', kind: 'anthropic', baseURL: 'https://api.anthropic.com', model: 'claude-opus-4-8' })
-  if (kind === 'openai') Object.assign(draft, { id: draft.id || 'openai', kind: 'openai', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o' })
-  if (kind === 'deepseek') Object.assign(draft, { id: draft.id || 'deepseek', kind: 'openai', baseURL: 'https://api.deepseek.com', model: 'deepseek-chat' })
-  if (kind === 'ollama') Object.assign(draft, { id: draft.id || 'local', kind: 'openai', baseURL: 'http://localhost:11434/v1', model: 'qwen2.5-coder' })
-  if (kind === 'dsh') Object.assign(draft, { id: draft.id || 'dsh', kind: 'dsh', baseURL: '', model: draft.model || 'deepseek-v4-flash' })
+  if (kind === 'anthropic') Object.assign(draft, { id: draft.id || 'claude', kind: 'anthropic', baseURL: 'https://api.anthropic.com', model: 'claude-opus-4-8', backend: 'sdk' })
+  if (kind === 'openai') Object.assign(draft, { id: draft.id || 'openai', kind: 'openai', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o', backend: 'sdk' })
+  if (kind === 'deepseek') Object.assign(draft, { id: draft.id || 'deepseek', kind: 'openai', baseURL: 'https://api.deepseek.com', model: 'deepseek-chat', backend: 'sdk' })
+  if (kind === 'ollama') Object.assign(draft, { id: draft.id || 'local', kind: 'openai', baseURL: 'http://localhost:11434/v1', model: 'qwen2.5-coder', backend: 'sdk' })
+  // The Harness preset selects the local agent-runtime BACKEND; the wire
+  // protocol fields are irrelevant to it (baseURL stays empty).
+  if (kind === 'dsh') Object.assign(draft, { id: draft.id || 'dsh', kind: 'openai', baseURL: '', model: draft.model || 'deepseek-v4-flash', backend: 'dsh' })
 }
 </script>
 
@@ -212,20 +221,26 @@ function applyPreset(kind: 'anthropic' | 'openai' | 'deepseek' | 'ollama' | 'dsh
           <select v-model="draft.kind" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
             <option value="anthropic">{{ t('story.providers.protocolAnthropic') }}</option>
             <option value="openai">{{ t('story.providers.protocolOpenai') }}</option>
-            <option value="dsh">{{ t('story.providers.protocolDsh') }}</option>
           </select>
         </label>
-        <label class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.baseURL') }}
+        <label class="text-[11px] text-gray-400">{{ t('story.providers.backend') }}
+          <select v-model="draft.backend" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100">
+            <option value="sdk">{{ t('story.providers.backendSdk') }}</option>
+            <option value="dsh">{{ t('story.providers.backendDsh') }}</option>
+          </select>
+        </label>
+        <p v-if="draft.backend === 'dsh'" class="text-[10px] text-gray-500 col-span-2 -mt-1">{{ t('story.providers.backendDshHint') }}</p>
+        <label v-if="draft.backend !== 'dsh'" class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.baseURL') }}
           <input v-model="draft.baseURL" placeholder="https://api.deepseek.com" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
         </label>
-        <label class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.proxy') }}
+        <label v-if="draft.backend !== 'dsh'" class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.proxy') }}
           <input v-model="draft.proxyUrl" :placeholder="t('story.providers.proxyPlaceholder')" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
           <span class="text-[10px] text-gray-500 block mt-0.5">{{ t('story.providers.proxyHint') }}</span>
         </label>
         <label class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.modelText') }}
           <input v-model="draft.model" placeholder="deepseek-chat" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
         </label>
-        <label v-if="draft.kind === 'openai'" class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.embeddingModel') }}
+        <label v-if="draft.kind === 'openai' && draft.backend !== 'dsh'" class="text-[11px] text-gray-400 col-span-2">{{ t('story.providers.embeddingModel') }}
           <input v-model="draft.embeddingModel" placeholder="text-embedding-3-small" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
           <span class="text-[10px] text-gray-500 block mt-0.5">{{ t('story.providers.embeddingHint') }}</span>
         </label>

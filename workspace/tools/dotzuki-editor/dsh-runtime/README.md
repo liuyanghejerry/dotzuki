@@ -1,11 +1,14 @@
 # dotzuki-editor — DeepSeek Harness runtime (optional)
 
 Standalone install of the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
-(`dsh`) agent runtime for the editor's assistant. When a provider profile has
-`kind: "dsh"`, the assistant chat delegates its turns to a LOCAL dsh subprocess
-(stdio JSON-RPC) instead of the Vercel AI SDK — the agent works on the game
-project directly with its own tools (persistent bash, string-replace editor,
-filesystem), and the editor streams dsh session events into the same chat UI.
+(`dsh`) agent runtime for the editor's assistant. When a provider profile
+selects `backend: "dsh"`, the assistant chat delegates its turns to a LOCAL
+dsh subprocess (stdio JSON-RPC) instead of the Vercel AI SDK — the agent works
+on the game project directly with its own tools (persistent bash,
+string-replace editor, filesystem), and the editor streams dsh session events
+into the same chat UI. The backend is orthogonal to the provider: the model
+still comes from the profile (today only DeepSeek models route through the
+runtime's built-in adapter).
 
 ## Install
 

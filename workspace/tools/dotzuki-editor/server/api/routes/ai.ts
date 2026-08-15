@@ -33,9 +33,12 @@ export function registerAi(server: any) {
         const parsed = JSON.parse(await readBody(req))
         const clean = (Array.isArray(parsed) ? parsed : []).map((p: any) => ({
           id: String(p.id || ''),
-          kind: p.kind === 'anthropic' ? 'anthropic' : p.kind === 'dsh' ? 'dsh' : 'openai',
+          kind: p.kind === 'anthropic' ? 'anthropic' : 'openai',
           baseURL: String(p.baseURL || ''),
           model: String(p.model || ''),
+          // The execution backend is orthogonal to the wire protocol; only the
+          // non-default 'dsh' value is persisted (absent = 'sdk').
+          ...(p.backend === 'dsh' ? { backend: 'dsh' as const } : {}),
           ...(p.proxyUrl ? { proxyUrl: String(p.proxyUrl) } : {}),
           ...(p.embeddingModel ? { embeddingModel: String(p.embeddingModel) } : {}),
           ...(p.imageModel ? { imageModel: String(p.imageModel) } : {}),
@@ -129,9 +132,9 @@ export function registerAi(server: any) {
     try {
       const { profile, apiKey, prompt } = JSON.parse(await readBody(req))
       if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
-      // kind 'dsh' routes through the DeepSeek Harness runtime instead of the
+      // backend 'dsh' routes through the DeepSeek Harness runtime instead of the
       // AI SDK — it needs an open project (the runtime works on the project).
-      if (profile.kind === 'dsh') {
+      if (profile.backend === 'dsh') {
         let project = null
         try { loadConfig(); project = getProjectContext() } catch { /* no project */ }
         const result = await testDsh({ project, profile, apiKey, prompt })
@@ -187,9 +190,9 @@ export function registerAi(server: any) {
       // loadConfig is the no-project probe: it throws when no .dotzuki-editor.json.
       let project = null
       try { loadConfig(); project = getProjectContext() } catch { project = null }
-      // kind 'dsh' delegates the whole turn to a local DeepSeek Harness runtime
+      // backend 'dsh' delegates the whole turn to a local DeepSeek Harness runtime
       // (streams the same UI-message format, so the client chat UI is unchanged).
-      if (profile.kind === 'dsh') {
+      if (profile.backend === 'dsh') {
         const ac = new AbortController()
         req.on('close', () => ac.abort())
         await streamDshChat({

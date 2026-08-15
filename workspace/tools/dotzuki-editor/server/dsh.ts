@@ -1,9 +1,12 @@
 // ───────────────────────────────────────────────────────────────────────────
 // DeepSeek Harness (dsh) backend — the optional agent-runtime provider.
 //
-// When a provider profile has kind 'dsh', the assistant chat runs through a
-// LOCAL dsh runtime subprocess (stdio JSON-RPC, @deepseek-ai/dsh-sdk-client)
-// instead of the Vercel AI SDK. The runtime is an optional standalone install
+// When a provider profile selects backend 'dsh', the assistant chat runs
+// through a LOCAL dsh runtime subprocess (stdio JSON-RPC,
+// @deepseek-ai/dsh-sdk-client) instead of the Vercel AI SDK. The backend is
+// orthogonal to the provider: the model still comes from the profile
+// (DeepSeek model ids route through the runtime's built-in deepseek-official
+// adapter). The runtime is an optional standalone install
 // under dsh-runtime/ (`pnpm install` there — its deps are heavy and deliberately
 // excluded from the editor's own install); without it the routes report a clear
 // "not installed" status instead of crashing, and the AI SDK providers keep

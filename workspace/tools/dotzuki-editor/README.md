@@ -46,12 +46,14 @@ OpenAI-compatible endpoint) are stored **without API keys** — per project in
 when no project is open. Keys live only in the browser's `localStorage` and
 are sent per request.
 
-**DeepSeek Harness (dsh) — optional agent backend.** A profile with
-`kind: "dsh"` (preset button **Harness** in Settings → AI providers) routes
-the assistant chat through a LOCAL [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+**DeepSeek Harness (dsh) — optional agent backend.** A provider profile with
+`backend: "dsh"` (preset button **Harness** in Settings → AI providers, or the
+backend selector there) routes the assistant chat through a LOCAL [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 runtime instead of the AI SDK: a real multi-step agent that edits the project
 directly with its own tools (bash, string-replace editor, filesystem) and
-persists session logs under `<project>/.dsh-sessions/`. It needs the optional
+persists session logs under `<project>/.dsh-sessions/`. The backend is
+orthogonal to the provider — the model still comes from the profile (today
+only DeepSeek models route through the runtime). It needs the optional
 runtime install — see [dsh-runtime/README.md](dsh-runtime/README.md) — plus a
 DeepSeek API key (https://platform.deepseek.com/api_keys) and an open project.
 Packaged builds ship the runtime as `Resources/dsh-runtime` when it was

@@ -7,7 +7,7 @@ describe('PROVIDER_PRESETS', () => {
     for (const p of PROVIDER_PRESETS) {
       expect(p.id.trim()).not.toBe('')
       expect(p.label.trim()).not.toBe('')
-      expect(['openai', 'anthropic', 'dsh']).toContain(p.kind)
+      expect(['openai', 'anthropic']).toContain(p.kind)
     }
   })
 
@@ -25,16 +25,23 @@ describe('PROVIDER_PRESETS', () => {
     }
   })
 
-  it('openai-kind presets carry an https baseURL; anthropic/dsh leave it empty (no wire endpoint)', () => {
+  it('openai-kind presets carry an https baseURL; anthropic and the dsh backend leave it empty', () => {
     for (const p of PROVIDER_PRESETS) {
-      if (p.kind === 'anthropic' || p.kind === 'dsh') expect(p.baseURL).toBe('')
+      if (p.kind === 'anthropic' || p.backend === 'dsh') expect(p.baseURL).toBe('')
       else if (p.id !== 'custom') expect(p.baseURL).toMatch(/^https:\/\//)
+    }
+  })
+
+  it('only the DeepSeek Harness preset selects the dsh execution backend', () => {
+    for (const p of PROVIDER_PRESETS) {
+      expect(p.backend).toBe(p.id === 'dsh' ? 'dsh' : undefined)
     }
   })
 
   it('presetById resolves known ids and falls back to the first preset', () => {
     expect(presetById('anthropic').kind).toBe('anthropic')
-    expect(presetById('dsh').kind).toBe('dsh')
+    expect(presetById('dsh').backend).toBe('dsh')
+    expect(presetById('dsh').kind).toBe('openai')
     expect(presetById('nope')).toBe(PROVIDER_PRESETS[0])
   })
 })
