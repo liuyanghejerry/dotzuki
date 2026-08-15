@@ -61,19 +61,26 @@
 
       <!-- live preview -->
       <div class="flex-1 flex flex-col items-center justify-start gap-2 p-4 overflow-auto bg-canvas-deep">
-        <div class="text-xs text-ink-faint">{{ cfg.width }}×{{ cfg.height }}</div>
-        <canvas
-          ref="canvasRef"
-          :width="cfg.width"
-          :height="cfg.height"
-          class="border border-[rgba(255,255,255,0.1)]"
-          :style="{ imageRendering: 'pixelated', width: previewW + 'px', height: previewH + 'px' }"
-        />
-        <div class="flex items-center gap-2 text-xs text-ink-muted">
-          <span>Zoom</span>
-          <input type="range" min="1" max="3" step="0.5" v-model.number="zoom" />
-          <span>{{ zoom }}×</span>
+        <!-- Declarations-only component prelude: no screen to preview. -->
+        <div v-if="componentLib" class="flex-1 flex flex-col items-center justify-center gap-2 text-center">
+          <div class="text-sm text-ink-secondary">{{ $t('gui.componentLibrary') }}</div>
+          <div class="text-xs text-ink-faint">{{ componentLib.join(', ') }}</div>
         </div>
+        <template v-else>
+          <div class="text-xs text-ink-faint">{{ cfg.width }}×{{ cfg.height }}</div>
+          <canvas
+            ref="canvasRef"
+            :width="cfg.width"
+            :height="cfg.height"
+            class="border border-[rgba(255,255,255,0.1)]"
+            :style="{ imageRendering: 'pixelated', width: previewW + 'px', height: previewH + 'px' }"
+          />
+          <div class="flex items-center gap-2 text-xs text-ink-muted">
+            <span>Zoom</span>
+            <input type="range" min="1" max="3" step="0.5" v-model.number="zoom" />
+            <span>{{ zoom }}×</span>
+          </div>
+        </template>
       </div>
 
       <!-- mock-data panel -->
@@ -134,6 +141,7 @@ const zoom = ref(2)
 const dataText = ref('{}')
 const dataError = ref<string | null>(null)
 const compileError = ref<string | null>(null)
+const componentLib = ref<string[] | null>(null)
 let cmView: EditorView | null = null
 let renderTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -203,8 +211,25 @@ function scheduleRender() {
 }
 
 async function renderPreview() {
+  if (!content.value) return
+
+  // Report compile errors (the render also fails silently on bad source).
+  // A declarations-only component prelude is not an error: show an
+  // informational state instead of a screen preview.
+  const compiled = await wasm.compileScreen(content.value)
+  if (compiled.ok && compiled.kind === 'components') {
+    compileError.value = null
+    componentLib.value = compiled.names
+    return
+  }
+  componentLib.value = null
+  compileError.value = compiled.ok ? null : `${compiled.line}:${compiled.col} ${compiled.error}`
+
+  // The canvas is unmounted while a component prelude is shown — wait for the
+  // re-mount when transitioning back to a screen source.
+  await nextTick()
   const canvas = canvasRef.value
-  if (!canvas || !content.value) return
+  if (!canvas) return
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
@@ -214,10 +239,6 @@ async function renderPreview() {
   if (dataText.value.trim()) {
     try { data = JSON.parse(dataText.value) } catch (e) { dataError.value = (e as Error).message }
   }
-
-  // Report compile errors (the render also fails silently on bad source).
-  const compiled = await wasm.compileScreen(content.value)
-  compileError.value = compiled.ok ? null : `${compiled.line}:${compiled.col} ${compiled.error}`
 
   const bytes = await wasm.renderGui(content.value, cfg.width, cfg.height, cfg.theme, data, lang.value)
   if (bytes.length === 0) {
