@@ -60,7 +60,7 @@
       <div ref="editorContainer" class="w-2/5 min-w-[280px] border-r border-border overflow-hidden" />
 
       <!-- live preview -->
-      <div class="flex-1 flex flex-col items-center justify-start gap-2 p-4 overflow-auto bg-[#0d0d10]">
+      <div class="flex-1 flex flex-col items-center justify-start gap-2 p-4 overflow-auto bg-canvas-deep">
         <div class="text-xs text-ink-faint">{{ cfg.width }}×{{ cfg.height }}</div>
         <canvas
           ref="canvasRef"
@@ -105,7 +105,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { lightCodeTheme } from '@/composables/codeTheme'
 import { basicSetup } from 'codemirror'
 import { useProjectStore } from '@/stores/project'
 import { useEditorStore } from '@/stores/editor'
@@ -181,7 +181,7 @@ function createEditor(doc: string) {
       basicSetup,
       guiLanguage(),
       guiFold(),
-      oneDark,
+      lightCodeTheme,
       updateListener,
       EditorView.theme({
         '&': { height: '100%' },

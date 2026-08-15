@@ -344,7 +344,7 @@ async function onGenerate() {
 </script>
 
 <template>
-  <div class="border border-accent-deep/40 bg-blue-950/10 rounded-card p-4">
+  <div class="border border-accent-deep/40 bg-accent-surface rounded-card p-4">
     <div class="flex items-center gap-2 mb-3">
       <span class="text-sm">🎬</span>
       <h3 class="text-sm font-semibold text-accent-ink-strong">{{ t('story.spriteStudio.title') }}</h3>

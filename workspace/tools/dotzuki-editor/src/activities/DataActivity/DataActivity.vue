@@ -2,18 +2,18 @@
   <div class="flex h-full">
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Toolbar -->
-      <div v-if="currentTable" class="flex items-center gap-3 px-4 py-2 border-b border-border bg-surface-deep shrink-0">
+      <div v-if="currentTable" class="flex items-center gap-3 px-5 py-3 border-b border-border bg-surface-deep shrink-0">
         <span class="text-sm font-medium text-ink-body">{{ localize(currentTable.label) }}</span>
         <span class="text-xs text-ink-disabled">{{ records.length }} {{ records.length === 1 ? t('data.record') : t('data.records') }}</span>
         <div class="flex-1" />
         <button
           @click="showAi = true"
-          class="px-3 py-1 text-xs rounded-control bg-raised text-ink-secondary hover:bg-overlay transition-colors"
+          class="px-4 py-1.5 text-xs rounded-control bg-raised text-ink-secondary hover:bg-overlay transition-colors"
         >✨ {{ $t('data.ai') }}</button>
         <button
           v-if="currentTable.allowCreate !== false"
           @click="newRecord()"
-          class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong transition-colors"
+          class="px-4 py-1.5 text-xs rounded-control bg-accent text-white hover:bg-accent-strong transition-colors"
         >
           {{ $t('data.newRecord') }}
         </button>

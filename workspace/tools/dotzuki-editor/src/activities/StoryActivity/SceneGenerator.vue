@@ -123,7 +123,7 @@ async function revert() {
 </script>
 
 <template>
-  <div class="border border-ai-deep/40 bg-purple-950/15 rounded-card">
+  <div class="border border-ai-deep/40 bg-ai-surface rounded-card">
     <button @click="open = !open" class="w-full flex items-center gap-2 px-4 py-2.5 text-left">
       <span>🪄</span>
       <h3 class="text-sm font-semibold text-ai-ink-strong flex-1">{{ t('story.scene.title') }}</h3>

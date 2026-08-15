@@ -2047,7 +2047,7 @@ watch(activeSubTab, (tab, prev) => {
           :style="{ left: cameraBox.left + 'px', top: cameraBox.top + 'px', width: cameraBox.width + 'px', height: cameraBox.height + 'px' }"
         >
           <div
-            class="absolute top-0 left-0 px-1.5 py-0.5 bg-warning-ink text-gray-900 text-micro font-medium leading-none cursor-move pointer-events-auto select-none whitespace-nowrap"
+            class="absolute top-0 left-0 px-1.5 py-0.5 bg-warning text-gray-900 text-micro font-medium leading-none cursor-move pointer-events-auto select-none whitespace-nowrap"
             @pointerdown="onCameraDown"
             @pointermove="onCameraMove"
             @pointerup="onCameraUp"
@@ -2594,7 +2594,7 @@ watch(activeSubTab, (tab, prev) => {
             >{{ $t('map.buildingEditor') }}</button>
             <button
               @click="deleteBuildingFromBrowse(g)"
-              class="px-1 py-0.5 text-micro rounded-control bg-red-700/50 hover:bg-danger text-red-200 opacity-0 group-hover:opacity-100"
+              class="px-1 py-0.5 text-micro rounded-control bg-danger/70 hover:bg-danger text-white opacity-0 group-hover:opacity-100"
             >{{ $t('common.delete') }}</button>
           </div>
         </div>

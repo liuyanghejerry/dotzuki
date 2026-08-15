@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full">
-    <div class="px-3 py-3 border-b border-border">
+    <div class="px-4 py-4 border-b border-border">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-faint">{{ $t('data.title') }}</h2>
     </div>
     <nav class="flex-1 overflow-y-auto">
@@ -9,7 +9,7 @@
         :key="table.id"
         @click="selectTable(table.id)"
         :class="[
-          'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left',
+          'w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors text-left',
           selectedTableId === table.id
             ? 'bg-accent-selected text-accent-ink-strong border-l-2 border-accent-ink'
             : 'text-ink-muted hover:text-ink-secondary hover:bg-surface-hover border-l-2 border-transparent'

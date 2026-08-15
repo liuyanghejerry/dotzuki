@@ -20,7 +20,7 @@
                 v-for="f in visibleFields"
                 :key="f.key"
                 :style="f.width ? { width: `${(f.width / 12) * 100}%` } : {}"
-                class="text-left px-3 py-2 text-ink-muted font-medium border-b border-border whitespace-nowrap"
+                class="text-left px-4 py-2.5 text-ink-muted font-medium border-b border-border whitespace-nowrap"
               >
                 {{ localize(f.label) }}
               </th>
@@ -36,7 +36,7 @@
               <td
                 v-for="f in visibleFields"
                 :key="f.key"
-                class="px-3 py-2 text-ink-body truncate max-w-xs"
+                class="px-4 py-2.5 text-ink-body truncate max-w-xs"
               >
                 {{ formatCell(record[f.key], f.type) }}
               </td>
@@ -44,7 +44,7 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-1.5 text-xs text-ink-faint border-t border-border bg-surface-deep shrink-0">
+      <div class="px-4 py-2 text-xs text-ink-faint border-t border-border bg-surface-deep shrink-0">
         {{ records.length }} {{ records.length === 1 ? $t('data.record') : $t('data.records') }}
       </div>
     </template>

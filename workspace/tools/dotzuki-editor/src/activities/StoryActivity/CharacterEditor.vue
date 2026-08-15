@@ -233,7 +233,7 @@ function onDelete() {
     </div>
 
     <!-- AI refine panel -->
-    <div class="border border-accent-deep/40 bg-blue-950/20 rounded-card p-4">
+    <div class="border border-accent-deep/40 bg-accent-surface rounded-card p-4">
       <div class="flex items-center gap-2 mb-2">
         <span class="text-sm">✨</span>
         <h3 class="text-sm font-semibold text-accent-ink-strong">{{ t('story.ai.refineTitle') }}</h3>

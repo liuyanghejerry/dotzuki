@@ -14,100 +14,97 @@
  *  - `@theme inline` resolves the references at build time, keeping generated
  *    utilities self-contained.
  *
+ * Current theme: light "modern workbench" — white panels on a light-gray
+ * canvas, coral-orange accent, soft tinted status surfaces, generous radii.
+ *
  * See docs/DESIGN-TOKENS.md for the token table and the class migration map.
  */
 @theme inline {
-  /* ── Surfaces (dark hierarchy) ─────────────────────────────────────────── */
-  --color-canvas: var(--color-gray-900);        /* page background */
-  --color-canvas-deep: var(--color-gray-950);   /* deepest wells, play backdrop */
-  --color-surface: var(--color-gray-800);       /* panels, header, sidebar, cards */
-  --color-surface-deep: var(--color-gray-850);  /* panels inset below surface */
-  --color-surface-hover: var(--color-gray-750); /* subtle row hover on surface */
-  --color-raised: var(--color-gray-700);        /* controls, hover background */
-  --color-overlay: var(--color-gray-600);       /* stronger hover / neutral actions */
-  --color-overlay-strong: var(--color-gray-500);/* active / pressed */
-  --color-inset: var(--color-gray-900);         /* input wells sitting on surfaces */
+  /* ── Spacing base (Tailwind default is 0.25rem — this theme runs 12.5%
+   *     looser so every p/m/gap utility gets more breathing room) ─────────── */
+  --spacing: 0.28125rem;
+
+  /* ── Surfaces (light hierarchy) ────────────────────────────────────────── */
+  --color-canvas: var(--color-gray-100);        /* page background */
+  --color-canvas-deep: var(--color-gray-200);   /* deepest wells, play backdrop */
+  --color-surface: var(--color-white);          /* panels, header, sidebar, cards */
+  --color-surface-deep: var(--color-gray-50);   /* panels inset below surface */
+  --color-surface-hover: var(--color-gray-100); /* subtle row hover on surface */
+  --color-raised: var(--color-gray-200);        /* controls, hover background */
+  --color-overlay: var(--color-gray-300);       /* stronger hover / neutral actions */
+  --color-overlay-strong: var(--color-gray-400);/* active / pressed */
+  --color-inset: var(--color-gray-50);          /* input wells sitting on surfaces */
 
   /* ── Borders ───────────────────────────────────────────────────────────── */
-  --color-border: var(--color-gray-700);
-  --color-border-strong: var(--color-gray-600);
-  --color-border-strongest: var(--color-gray-500); /* hover/active borders */
-  --color-border-subtle: var(--color-gray-800);
+  --color-border: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+  --color-border-strongest: var(--color-gray-400); /* hover/active borders */
+  --color-border-subtle: var(--color-gray-100);
 
-  /* ── Text scale (dark theme: higher prominence = lighter gray) ─────────── */
-  --color-ink: var(--color-gray-100);          /* headings, primary text */
-  --color-ink-secondary: var(--color-gray-200);/* emphasized body text */
-  --color-ink-body: var(--color-gray-300);     /* regular body text */
-  --color-ink-muted: var(--color-gray-400);    /* secondary / descriptions */
+  /* ── Text scale (light theme: higher prominence = darker gray) ─────────── */
+  --color-ink: var(--color-gray-900);          /* headings, primary text */
+  --color-ink-secondary: var(--color-gray-800);/* emphasized body text */
+  --color-ink-body: var(--color-gray-700);     /* regular body text */
+  --color-ink-muted: var(--color-gray-600);    /* secondary / descriptions */
   --color-ink-faint: var(--color-gray-500);    /* tertiary, placeholders */
-  --color-ink-disabled: var(--color-gray-600); /* disabled states */
+  --color-ink-disabled: var(--color-gray-400); /* disabled states */
 
-  /* ── Accent (primary action / brand) ───────────────────────────────────── */
-  --color-accent: var(--color-blue-600);            /* primary buttons */
-  --color-accent-hover: var(--color-blue-700);      /* primary button hover */
-  --color-accent-strong: var(--color-blue-500);     /* focus rings, active borders */
-  --color-accent-ink: var(--color-blue-400);        /* accent text, active tabs */
-  --color-accent-ink-strong: var(--color-blue-300); /* accent text hover */
-  --color-accent-ink-faint: var(--color-blue-100);  /* accent text on deep accent bg */
-  --color-accent-deep: var(--color-blue-900);       /* solid deep accent badges */
-  --color-accent-selected: color-mix(in oklab, var(--color-blue-900) 30%, transparent);
-  --color-accent-surface: color-mix(in oklab, var(--color-blue-600) 30%, transparent);
+  /* ── Accent (primary action / brand, coral orange) ─────────────────────── */
+  --color-accent: var(--color-orange-600);          /* primary buttons */
+  --color-accent-hover: var(--color-orange-700);    /* primary button hover */
+  --color-accent-strong: var(--color-orange-500);   /* focus rings, active borders */
+  --color-accent-ink: var(--color-orange-600);      /* accent text, active tabs */
+  --color-accent-ink-strong: var(--color-orange-700); /* accent text hover */
+  --color-accent-ink-faint: var(--color-orange-100);  /* accent text on deep accent bg */
+  --color-accent-deep: var(--color-orange-700);     /* deep accent (borders, tint base) */
+  --color-accent-selected: color-mix(in oklab, var(--color-orange-500) 18%, transparent);
+  --color-accent-surface: color-mix(in oklab, var(--color-orange-600) 10%, transparent);
 
   /* ── AI accent (purple — AI features, image providers) ─────────────────── */
   --color-ai: var(--color-purple-600);
   --color-ai-hover: var(--color-purple-700);
-  --color-ai-ink: var(--color-purple-400);
-  --color-ai-ink-strong: var(--color-purple-300);
-  --color-ai-deep: var(--color-purple-900);
-  --color-ai-surface: color-mix(in oklab, var(--color-purple-900) 30%, transparent);
+  --color-ai-ink: var(--color-purple-600);
+  --color-ai-ink-strong: var(--color-purple-700);
+  --color-ai-deep: var(--color-purple-700);
+  --color-ai-surface: color-mix(in oklab, var(--color-purple-600) 10%, transparent);
 
   /* ── Status: danger ────────────────────────────────────────────────────── */
   --color-danger: var(--color-red-600);
-  --color-danger-hover: var(--color-red-500);
-  --color-danger-deep: var(--color-red-900);
-  --color-danger-ink: var(--color-red-400);
-  --color-danger-ink-strong: var(--color-red-300);
-  --color-danger-surface: color-mix(in oklab, var(--color-red-900) 30%, transparent);
+  --color-danger-hover: var(--color-red-700);
+  --color-danger-deep: var(--color-red-700);
+  --color-danger-ink: var(--color-red-600);
+  --color-danger-ink-strong: var(--color-red-700);
+  --color-danger-surface: color-mix(in oklab, var(--color-red-600) 10%, transparent);
 
   /* ── Status: success (green family) ────────────────────────────────────── */
   --color-success: var(--color-green-600);
   --color-success-hover: var(--color-green-700);
-  --color-success-strong: var(--color-green-500);
-  --color-success-deep: var(--color-green-900);
-  --color-success-ink: var(--color-green-400);
-  --color-success-ink-strong: var(--color-green-300);
-  --color-success-surface: color-mix(in oklab, var(--color-green-900) 20%, transparent);
+  --color-success-strong: var(--color-green-600);   /* emphasized success text */
+  --color-success-deep: var(--color-green-700);
+  --color-success-ink: var(--color-green-700);
+  --color-success-ink-strong: var(--color-green-800);
+  --color-success-surface: color-mix(in oklab, var(--color-green-600) 12%, transparent);
 
   /* ── Status: warning (amber family) ────────────────────────────────────── */
   --color-warning: var(--color-amber-500);
   --color-warning-hover: var(--color-amber-600);
   --color-warning-strong: var(--color-amber-700);
-  --color-warning-deep: var(--color-amber-900);
-  --color-warning-ink: var(--color-amber-400);
-  --color-warning-ink-strong: var(--color-amber-300);
-  --color-on-warning: var(--color-amber-100);    /* text on warning backgrounds */
-  --color-warning-surface: color-mix(in oklab, var(--color-yellow-500) 20%, transparent);
+  --color-warning-deep: var(--color-amber-700);
+  --color-warning-ink: var(--color-amber-700);
+  --color-warning-ink-strong: var(--color-amber-800);
+  --color-on-warning: var(--color-amber-100);    /* text on solid warning-strong bg */
+  --color-warning-surface: color-mix(in oklab, var(--color-amber-500) 15%, transparent);
 
   /* ── Radii (custom names on purpose — overriding `rounded-sm` etc. would
    *     silently change every existing default utility) ──────────────────── */
-  --radius-control: 0.25rem;   /* matches default `rounded` (buttons, inputs) */
-  --radius-card: 0.5rem;       /* matches `rounded-lg` (cards, panels) */
-  --radius-pill: 9999px;       /* matches `rounded-full` (badges, dots) */
+  --radius-control: 0.375rem;  /* matches default `rounded-md` (buttons, inputs) */
+  --radius-card: 0.75rem;      /* matches default `rounded-xl` (cards, panels) */
+  --radius-pill: 9999px;       /* matches default `rounded-full` (badges, dots) */
 
-  /* ── Shadows ───────────────────────────────────────────────────────────── */
-  --shadow-popover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); /* = shadow-xl */
+  /* ── Shadows (soft, diffuse — light theme) ─────────────────────────────── */
+  --shadow-popover: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.05);
 
   /* ── Tiny type scale used throughout the dense editor UI ───────────────── */
   --text-micro: 0.625rem;  /* replaces text-[10px] */
   --text-tiny: 0.6875rem;  /* replaces text-[11px] */
-}
-
-/*
- * Fill in the two gray shades the components use but the default Tailwind
- * palette does not provide. Without this, classes like `bg-gray-850` silently
- * generate no CSS at all.
- */
-@theme inline {
-  --color-gray-750: color-mix(in oklab, var(--color-gray-700) 50%, var(--color-gray-800));
-  --color-gray-850: color-mix(in oklab, var(--color-gray-800) 50%, var(--color-gray-900));
 }

@@ -220,7 +220,7 @@
           <!-- Success message -->
           <div
             v-if="createSuccess"
-            class="bg-success-deep/30 border border-success-deep rounded-card p-3 text-sm text-success-ink flex items-center gap-2"
+            class="bg-success-surface border border-success-deep rounded-card p-3 text-sm text-success-ink flex items-center gap-2"
           >
             <span>&#10003;</span> {{ $t('wizard.created') }}
           </div>

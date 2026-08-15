@@ -9,7 +9,7 @@ import { useEditorStore } from '@/stores/editor'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { javascript } from '@codemirror/lang-javascript'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { lightCodeTheme } from '@/composables/codeTheme'
 import { basicSetup } from 'codemirror'
 import type { ScriptActivityConfig } from '@/types'
 import { useScriptActivity } from '@/composables/useScriptActivity'
@@ -60,12 +60,11 @@ function createEditor(doc: string) {
     extensions: [
       basicSetup,
       javascript(),
-      oneDark,
+      lightCodeTheme,
       updateListener,
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { overflow: 'auto' },
-        '.cm-gutters': { borderRight: '1px solid rgba(255,255,255,0.08)' },
       }),
     ],
   })

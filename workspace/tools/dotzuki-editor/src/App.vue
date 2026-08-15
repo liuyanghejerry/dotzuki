@@ -1,6 +1,6 @@
 <template>
   <div class="h-screen relative flex flex-col bg-canvas text-ink">
-    <header class="flex items-center justify-between px-4 py-2 bg-surface border-b border-border shrink-0">
+    <header class="flex items-center justify-between px-5 py-3 bg-surface border-b border-border shrink-0">
       <div class="flex items-center gap-3">
         <h1 class="text-lg font-bold text-accent-ink">{{ $t('app.title') }}</h1>
         <span v-if="project.config" class="text-sm text-ink-muted">{{ project.config.name }}</span>
@@ -38,13 +38,13 @@
     <WelcomeScreen v-else-if="project.error" @created="onProjectCreated" @opened="onProjectOpened" />
 
     <template v-else>
-      <nav class="flex bg-surface border-b border-border shrink-0 px-2">
+      <nav class="flex bg-surface border-b border-border shrink-0 px-4">
         <button
           v-for="act in visibleActivities"
           :key="act.id"
           @click="selectActivity(act.id)"
           :class="[
-            'px-4 py-2 text-sm border-b-2 transition-colors',
+            'px-5 py-2.5 text-sm border-b-2 transition-colors',
             editor.activeActivity === act.id
               ? 'border-accent-ink text-accent-ink'
               : 'border-transparent text-ink-muted hover:text-ink-secondary hover:border-border-strong'
@@ -57,7 +57,7 @@
       <div class="flex-1 flex overflow-hidden">
         <div
           v-if="editor.sidebarOpen && sidebarComponent"
-          class="w-64 bg-surface border-r border-border overflow-y-auto shrink-0"
+          class="w-72 bg-surface border-r border-border overflow-y-auto shrink-0"
         >
           <component :is="sidebarComponent" />
         </div>

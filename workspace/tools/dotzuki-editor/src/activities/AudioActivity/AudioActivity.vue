@@ -99,7 +99,7 @@
           </div>
 
           <!-- Command rows -->
-          <div class="divide-y divide-gray-800">
+          <div class="divide-y divide-border">
             <div
               v-for="(cmd, ii) in ch.commands"
               :key="ii"

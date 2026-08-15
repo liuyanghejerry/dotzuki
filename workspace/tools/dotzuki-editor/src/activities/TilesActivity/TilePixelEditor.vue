@@ -201,7 +201,7 @@
           <div class="text-xs text-ink-muted tabular-nums h-4 select-none">
             <template v-if="cursorPx">
               x {{ cursorPx.x }}, y {{ cursorPx.y }}
-              <span v-if="cellsX > 1 || cellsY > 1" class="ml-2 text-indigo-300">
+              <span v-if="cellsX > 1 || cellsY > 1" class="ml-2 text-indigo-500">
                 格 {{ Math.floor(cursorPx.x / cell) }},{{ Math.floor(cursorPx.y / cell) }}
               </span>
             </template>

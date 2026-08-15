@@ -70,14 +70,14 @@ function onApply() {
     <div class="flex items-start gap-2 px-2.5 py-2">
       <span
         class="mt-0.5 text-[9px] uppercase tracking-wide px-1 rounded-control shrink-0"
-        :class="proposal.target.kind === 'story' ? 'bg-indigo-900 text-indigo-300'
-          : proposal.target.kind === 'data' ? 'bg-success-deep text-success-ink-strong'
-          : proposal.target.kind === 'scene' ? 'bg-warning-deep text-warning-ink-strong'
-          : proposal.target.kind === 'project-config' ? 'bg-ai-deep text-ai-ink-strong'
-          : proposal.target.kind === 'project-scaffold' ? 'bg-accent-deep text-accent-ink-strong'
-          : proposal.target.kind === 'map-create' ? 'bg-teal-900 text-teal-300'
-          : proposal.target.kind === 'map-tilemap' ? 'bg-rose-900 text-rose-300'
-          : 'bg-sky-900 text-sky-300'"
+        :class="proposal.target.kind === 'story' ? 'bg-indigo-100 text-indigo-700'
+          : proposal.target.kind === 'data' ? 'bg-success-surface text-success-ink-strong'
+          : proposal.target.kind === 'scene' ? 'bg-warning-surface text-warning-ink-strong'
+          : proposal.target.kind === 'project-config' ? 'bg-ai-surface text-ai-ink-strong'
+          : proposal.target.kind === 'project-scaffold' ? 'bg-accent-surface text-accent-ink-strong'
+          : proposal.target.kind === 'map-create' ? 'bg-teal-100 text-teal-700'
+          : proposal.target.kind === 'map-tilemap' ? 'bg-rose-100 text-rose-700'
+          : 'bg-sky-100 text-sky-700'"
       >{{ proposal.target.kind }}</span>
       <div class="min-w-0 flex-1">
         <div class="text-xs text-ink font-medium truncate">{{ proposal.title }}</div>
@@ -119,7 +119,7 @@ function onApply() {
             class="mt-1 ml-1 mr-0.5 shrink-0 accent-emerald-500" :title="t('assistant.includeHunk')" />
           <div class="min-w-0 flex-1">
             <div v-for="(op, oi) in row.ops" :key="oi" class="px-2 whitespace-pre-wrap break-all"
-              :class="op.type === 'add' ? 'bg-success-deep/60 text-success-ink-strong' : 'bg-danger-deep/60 text-danger-ink-strong'"
+              :class="op.type === 'add' ? 'bg-success-surface text-success-ink-strong' : 'bg-danger-surface text-danger-ink-strong'"
             >{{ (op.type === 'add' ? '+ ' : '- ') + op.text }}</div>
           </div>
         </div>

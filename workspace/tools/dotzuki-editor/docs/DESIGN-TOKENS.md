@@ -3,6 +3,9 @@
 Single source of truth for the editor's visual theme, defined in
 `src/design-tokens.css` (Tailwind CSS v4 `@theme`).
 
+Current theme: **light "modern workbench"** — white panels on a light-gray
+canvas, coral-orange accent, soft tinted status surfaces, generous radii.
+
 ## How it works
 
 Every `--color-*`, `--radius-*`, `--shadow-*` and `--text-*` variable declared
@@ -21,110 +24,100 @@ never carry raw colors.
 
 ## Token reference
 
-### Surfaces (dark hierarchy)
+### Surfaces (light hierarchy)
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `canvas` | `gray-900` | `bg-gray-900` (page background) |
-| `canvas-deep` | `gray-950` | `bg-gray-950` (code wells, play backdrop) |
-| `surface` | `gray-800` | `bg-gray-800` (panels, header, sidebar, cards) |
-| `surface-deep` | `gray-850` | `bg-gray-850` (panels inset below surface) |
-| `surface-hover` | `gray-750` | `bg-gray-750` (subtle row hover) |
-| `raised` | `gray-700` | `bg-gray-700` (controls, hover background) |
-| `overlay` | `gray-600` | `bg-gray-600` (stronger hover / neutral actions) |
-| `overlay-strong` | `gray-500` | `hover:bg-gray-500` |
-| `inset` | `gray-900` | `bg-gray-900` (input wells on surfaces) |
+| `canvas` | `gray-100` | page background |
+| `canvas-deep` | `gray-200` | deepest wells, play backdrop |
+| `surface` | `white` | panels, header, sidebar, cards |
+| `surface-deep` | `gray-50` | panels inset below surface |
+| `surface-hover` | `gray-100` | subtle row hover on surface |
+| `raised` | `gray-200` | controls, hover background |
+| `overlay` | `gray-300` | stronger hover / neutral actions |
+| `overlay-strong` | `gray-400` | active / pressed |
+| `inset` | `gray-50` | input wells on surfaces |
 
 ### Borders
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `border` | `gray-700` | `border-gray-700` |
-| `border-strong` | `gray-600` | `border-gray-600` |
-| `border-strongest` | `gray-500` | `border-gray-500` (hover/active) |
-| `border-subtle` | `gray-800` | `border-gray-800` |
+| `border` | `gray-200` | default borders |
+| `border-strong` | `gray-300` | emphasized borders |
+| `border-strongest` | `gray-400` | hover/active borders |
+| `border-subtle` | `gray-100` | faint separators |
 
 ### Text
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `ink` | `gray-100` | `text-gray-100` (headings, primary) |
-| `ink-secondary` | `gray-200` | `text-gray-200` |
-| `ink-body` | `gray-300` | `text-gray-300` |
-| `ink-muted` | `gray-400` | `text-gray-400` (secondary) |
-| `ink-faint` | `gray-500` | `text-gray-500` (placeholders) |
-| `ink-disabled` | `gray-600` | `text-gray-600` |
+| `ink` | `gray-900` | headings, primary |
+| `ink-secondary` | `gray-800` | emphasized body |
+| `ink-body` | `gray-700` | regular body |
+| `ink-muted` | `gray-600` | secondary / descriptions |
+| `ink-faint` | `gray-500` | tertiary, placeholders |
+| `ink-disabled` | `gray-400` | disabled states |
 
-### Accent (primary action / brand, blue)
+### Accent (primary action / brand, coral orange)
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `accent` | `blue-600` | `bg-blue-600` (primary buttons) |
-| `accent-hover` | `blue-700` | `bg-blue-700` / `hover:bg-blue-700` |
-| `accent-strong` | `blue-500` | focus rings, active borders |
-| `accent-ink` | `blue-400` | `text-blue-400` (active tabs, accent text) |
-| `accent-ink-strong` | `blue-300` | `text-blue-300` |
-| `accent-ink-faint` | `blue-100` | `text-blue-100` (text on deep accent) |
-| `accent-deep` | `blue-900` | `bg-blue-900` (solid deep badges) |
-| `accent-selected` | `blue-900` @ 30% | `bg-blue-900/30` (selected rows) |
-| `accent-surface` | `blue-600` @ 30% | `bg-blue-600/30` |
+| `accent` | `orange-600` | primary buttons |
+| `accent-hover` | `orange-700` | primary button hover |
+| `accent-strong` | `orange-500` | focus rings, active borders |
+| `accent-ink` | `orange-600` | accent text, active tabs |
+| `accent-ink-strong` | `orange-700` | accent text hover |
+| `accent-ink-faint` | `orange-100` | accent text on deep accent bg |
+| `accent-deep` | `orange-700` | deep accent borders, tint base (`bg-accent-deep/20`) |
+| `accent-selected` | `orange-500` @ 18% | selected rows |
+| `accent-surface` | `orange-600` @ 10% | soft accent panels, tinted badges |
 
 ### AI accent (purple — AI features, image providers)
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `ai` | `purple-600` | `bg-purple-600` |
-| `ai-hover` | `purple-700` | `hover:bg-purple-700` / `hover:bg-purple-500` |
-| `ai-ink` | `purple-400` | `text-purple-400` |
-| `ai-ink-strong` | `purple-300` | `text-purple-300` |
-| `ai-deep` | `purple-900` | `bg-purple-900` |
-| `ai-surface` | `purple-900` @ 30% | `bg-purple-900/50` |
+| `ai` | `purple-600` | solid AI actions |
+| `ai-hover` | `purple-700` | hover |
+| `ai-ink` | `purple-600` | AI accent text |
+| `ai-ink-strong` | `purple-700` | AI accent text hover / on tints |
+| `ai-deep` | `purple-700` | deep AI borders (`border-ai-deep/40`) |
+| `ai-surface` | `purple-600` @ 10% | soft AI panels, tinted badges |
 
 ### Status
 
-| Token | Value | Old raw class |
+| Token | Value | Usage |
 |---|---|---|
-| `danger` / `danger-hover` / `danger-deep` | `red-600` / `red-500` / `red-900` | `bg-red-600` / `hover:bg-red-500` / `bg-red-900` |
-| `danger-ink` / `danger-ink-strong` | `red-400` / `red-300` | `text-red-400` / `text-red-300` |
-| `danger-surface` | `red-900` @ 30% | `bg-red-900/20`, `bg-red-900/30` |
-| `success` / `success-hover` / `success-strong` | `green-600` / `green-700` / `green-500` | `bg-green-600` (and `bg-emerald-600`) |
-| `success-deep` | `green-900` | `bg-green-900` (and `bg-emerald-900/950`) |
-| `success-ink` / `success-ink-strong` | `green-400` / `green-300` | `text-green-400` (and `text-emerald-400`) |
-| `success-surface` | `green-900` @ 20% | `bg-green-900/20` |
-| `warning` / `warning-hover` / `warning-strong` / `warning-deep` | `amber-500` / `amber-600` / `amber-700` / `amber-900` | `bg-amber-500/600/700/900` |
-| `warning-ink` / `warning-ink-strong` | `amber-400` / `amber-300` | `text-amber-400` / `text-amber-300` |
-| `on-warning` | `amber-100` | `text-amber-100` |
-| `warning-surface` | `yellow-500` @ 20% | `bg-yellow-500/20` |
+| `danger` / `danger-hover` / `danger-deep` | `red-600` / `red-700` / `red-700` | danger actions, alert borders |
+| `danger-ink` / `danger-ink-strong` | `red-600` / `red-700` | danger text |
+| `danger-surface` | `red-600` @ 10% | alert backgrounds, diff removals |
+| `success` / `success-hover` / `success-strong` | `green-600` / `green-700` / `green-600` | success actions / emphasized success text |
+| `success-deep` | `green-700` | success borders, tint base |
+| `success-ink` / `success-ink-strong` | `green-700` / `green-800` | success text |
+| `success-surface` | `green-600` @ 12% | success backgrounds, diff additions |
+| `warning` / `warning-hover` / `warning-strong` / `warning-deep` | `amber-500` / `amber-600` / `amber-700` / `amber-700` | warning actions / solid badges |
+| `warning-ink` / `warning-ink-strong` | `amber-700` / `amber-800` | warning text |
+| `on-warning` | `amber-100` | text on solid `warning-strong` bg |
+| `warning-surface` | `amber-500` @ 15% | warning backgrounds |
 
-> The green and emerald families were consolidated into one `success` family
-> (green-based, the dominant usage). Code-diff add/remove colors that are not
-> covered above may stay raw until they earn a semantic name.
+> On the light theme, `-surface` tokens (soft tints) pair with `-ink-strong`
+> text for badges and alert boxes; `-deep` tokens are the saturated border /
+> low-opacity tint base.
 
 ### Radii, shadows, type scale
 
-| Token | Value | Old raw class |
+| Token | Value | Closest default |
 |---|---|---|
-| `radius-control` | `0.25rem` | `rounded` |
-| `radius-card` | `0.5rem` | `rounded-lg` |
+| `radius-control` | `0.375rem` | `rounded-md` |
+| `radius-card` | `0.75rem` | `rounded-xl` |
 | `radius-pill` | `9999px` | `rounded-full` |
-| `shadow-popover` | shadow-xl values | `shadow-xl` |
+| `shadow-popover` | soft diffuse xl | `shadow-xl` (softened for light theme) |
 | `text-micro` | `0.625rem` | `text-[10px]` |
 | `text-tiny` | `0.6875rem` | `text-[11px]` |
+| `spacing` | `0.28125rem` | `--spacing` base (+12.5% vs Tailwind default — every `p-*`/`m-*`/`gap-*` utility runs looser) |
 
 Radii deliberately use custom names (`rounded-control` instead of overriding
 `rounded-sm`): overriding a default name would silently restyle every existing
 use of the default utility.
-
-### Gray shade fix
-
-Components used `bg-gray-750` / `bg-gray-850`, which are **not** part of the
-default Tailwind palette — those classes silently generated no CSS. The token
-file now defines them as `color-mix` midpoints, so they render as intended:
-
-```css
---color-gray-750: color-mix(in oklab, var(--color-gray-700) 50%, var(--color-gray-800));
---color-gray-850: color-mix(in oklab, var(--color-gray-800) 50%, var(--color-gray-900));
-```
 
 ## Usage rules
 
@@ -138,7 +131,7 @@ file now defines them as `color-mix` midpoints, so they render as intended:
 
 ## Migration map
 
-| Old | New |
+| Old (dark theme) | New |
 |---|---|
 | `bg-gray-900` (page/layout) | `bg-canvas` |
 | `bg-gray-950` | `bg-canvas-deep` |
@@ -151,25 +144,26 @@ file now defines them as `color-mix` midpoints, so they render as intended:
 | `border-gray-800` / `-700` / `-600` / `-500` | `border-border-subtle` / `-border` / `-border-strong` / `-border-strongest` |
 | `text-gray-100` / `-200` / `-300` / `-400` / `-500` / `-600` | `text-ink` / `-ink-secondary` / `-ink-body` / `-ink-muted` / `-ink-faint` / `-ink-disabled` |
 | `bg-blue-600` / `-700` / `-500` | `bg-accent` / `-accent-hover` / `-accent-strong` |
-| `bg-blue-900` / `bg-blue-900/30` / `bg-blue-600/30` | `bg-accent-deep` / `-accent-selected` / `-accent-surface` |
+| `bg-blue-900/30` / `bg-blue-600/30` | `bg-accent-selected` / `-accent-surface` |
 | `text-blue-400` / `-300` / `-100` / `-500` | `text-accent-ink` / `-accent-ink-strong` / `-accent-ink-faint` / `-accent-strong` |
 | `border-blue-400` / `-500` / `-900` | `border-accent-ink` / `-accent-strong` / `-accent-deep` |
 | `ring-blue-400` / `ring-blue-500` | `ring-accent-ink` / `ring-accent-strong` |
 | `bg-purple-600` / hover | `bg-ai` / `hover:bg-ai-hover` |
-| `bg-purple-900` / `bg-purple-900/50` | `bg-ai-deep` / `-ai-surface` |
+| `bg-purple-950/10`–`/15` (panel tints) | `bg-ai-surface` |
 | `text-purple-400` / `-300` / `-500` | `text-ai-ink` / `-ai-ink-strong` / `text-ai` |
-| `bg-red-600` / `hover:bg-red-500` / `bg-red-900` | `bg-danger` / `hover:bg-danger-hover` / `bg-danger-deep` |
+| `bg-red-600` / `hover:bg-red-500` | `bg-danger` / `hover:bg-danger-hover` |
 | `text-red-400` / `-300` / `-500` | `text-danger-ink` / `-danger-ink-strong` / `text-danger` |
-| `bg-red-900/20` / `/30` / `/40` | `bg-danger-surface` (or `bg-danger-surface/40`) |
+| `bg-red-900/20`–`/60`, `bg-red-700/50` badges | `bg-danger-surface` |
 | `border-red-*` | `border-danger-*` per the token table |
-| `bg-green-600` / `-700` / `-500` / `-900` | `bg-success` / `-success-hover` / `-success-strong` / `-success-deep` |
+| `bg-green-600` / `-700` / `-500` | `bg-success` / `-success-hover` / `-success-strong` |
 | `bg-emerald-*`, `text-emerald-*` | same `success` family (consolidated) |
 | `text-green-400` / `-300` | `text-success-ink` / `-success-ink-strong` |
-| `bg-green-900/20` | `bg-success-surface` |
-| `bg-amber-500` / `-600` / `-700` / `-400` / `-900` | `bg-warning` / `-warning-hover` / `-warning-strong` / `-warning-ink` / `-warning-deep` |
+| `bg-green-900/20`–`/60` | `bg-success-surface` |
+| `bg-amber-500` / `-600` / `-700` | `bg-warning` / `-warning-hover` / `-warning-strong` |
 | `text-amber-400` / `-300` / `-500` / `-100` | `text-warning-ink` / `-warning-ink-strong` / `text-warning` / `text-on-warning` |
 | `bg-yellow-500/20` / `text-yellow-400` | `bg-warning-surface` / `text-warning-ink` |
 | `border-amber-400` / `-500` | `border-warning-ink` / `border-warning` |
+| `bg-{indigo,teal,rose,sky}-900 text-*-300` badges | `bg-{indigo,teal,rose,sky}-100 text-*-700` |
 | `rounded` / `rounded-lg` / `rounded-full` | `rounded-control` / `rounded-card` / `rounded-pill` |
 | `shadow-xl` | `shadow-popover` |
 | `text-[10px]` / `text-[11px]` | `text-micro` / `text-tiny` |
@@ -179,10 +173,10 @@ file now defines them as `color-mix` midpoints, so they render as intended:
 Rare, context-specific colors that have no semantic name yet (revisit when a
 pattern emerges):
 
-- `text-gray-700` / `text-gray-900` — text on the few light/colored surfaces
+- `text-gray-700` / `text-gray-900` — dark text on light/colored surfaces
+  (amber badges, separators)
+- `text-green-100` / `text-green-200`, `text-red-100`, `bg-red-700` — light
+  text on solid status buttons in MapActivity
 - `bg-gray-500`, `border-green-500/70` — story-graph status node colors (domain palette)
-- `bg-blue-950`, `bg-purple-950/10`, `bg-purple-950/15` — near-invisible panel tints
-- `bg-red-700`, `bg-red-700/50`, `text-red-100` / `text-red-200` — rare badge variants
-- `text-green-100` / `text-green-200` — rare badge variants
 - `rounded-t` / `rounded-br` — directional radii
 - `text-[8px]` / `text-[9px]` / `text-[12px]` — sub-micro sizes

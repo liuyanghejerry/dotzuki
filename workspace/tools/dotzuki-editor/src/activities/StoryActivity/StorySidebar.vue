@@ -35,7 +35,7 @@ function recordLabel(rec: any): string {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="px-3 py-3 border-b border-border">
+    <div class="px-4 py-4 border-b border-border">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-faint">{{ t('story.title') }}</h2>
     </div>
 
@@ -54,13 +54,13 @@ function recordLabel(rec: any): string {
       >
         <span class="text-base shrink-0">{{ n.icon }}</span>
         <span class="truncate flex-1">{{ n.label }}</span>
-        <span v-if="n.v === 'issues' && errorCount" class="text-micro bg-danger-deep/50 text-danger-ink-strong rounded-control px-1.5">{{ errorCount }}</span>
+        <span v-if="n.v === 'issues' && errorCount" class="text-micro bg-danger-surface text-danger-ink-strong rounded-control px-1.5">{{ errorCount }}</span>
       </button>
     </nav>
 
     <!-- record list for the active kind -->
     <div v-if="activeKind" class="flex-1 overflow-y-auto">
-      <div class="flex items-center justify-between px-3 py-2">
+      <div class="flex items-center justify-between px-4 py-2.5">
         <span class="text-micro uppercase tracking-wide text-ink-disabled">{{ records.length }}</span>
         <button @click="story.create(activeKind)" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.new') }}</button>
       </div>

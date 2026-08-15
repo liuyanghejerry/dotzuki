@@ -41,7 +41,7 @@ function handleSelect(path: string) {
 
 <template>
   <div class="flex flex-col h-full bg-surface">
-    <div class="px-3 py-3 border-b border-border shrink-0">
+    <div class="px-4 py-4 border-b border-border shrink-0">
       <div class="flex items-center justify-between mb-2">
         <h2 class="text-sm font-semibold text-ink-secondary">{{ $t('script.title') }}</h2>
         <button
@@ -83,7 +83,7 @@ function handleSelect(path: string) {
         <button
           v-for="file in filteredFiles"
           :key="file.path"
-          class="w-full text-left px-3 py-1.5 text-xs font-mono transition-colors truncate block
+          class="w-full text-left px-4 py-2 text-xs font-mono transition-colors truncate block
                  hover:bg-raised/50"
           :class="isActive(file) ? 'bg-accent/20 text-accent-ink border-l-2 border-accent-ink pl-2.5' : 'text-ink-muted border-l-2 border-transparent pl-2.5'"
           @click="handleSelect(file.path)"
@@ -93,7 +93,7 @@ function handleSelect(path: string) {
       </div>
     </div>
 
-    <div class="px-3 py-2 border-t border-border text-micro text-ink-disabled shrink-0">
+    <div class="px-4 py-2.5 border-t border-border text-micro text-ink-disabled shrink-0">
       {{ files.length }} {{ $t('script.files') }}
     </div>
   </div>

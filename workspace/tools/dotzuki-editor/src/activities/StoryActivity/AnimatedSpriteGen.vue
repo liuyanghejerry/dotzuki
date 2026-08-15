@@ -184,7 +184,7 @@ function stateResult(name: string) {
 </script>
 
 <template>
-  <div class="border border-ai-deep/40 bg-purple-950/10 rounded-card mt-3">
+  <div class="border border-ai-deep/40 bg-ai-surface rounded-card mt-3">
     <button
       class="w-full flex items-center gap-2 px-4 py-2.5 text-left"
       @click="open = !open"

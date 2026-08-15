@@ -232,7 +232,7 @@
                   <th class="px-4 py-2 font-medium hidden sm:table-cell text-right">{{ $t('assets.colSize') }}</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-700/50">
+              <tbody class="divide-y divide-border">
                 <tr
                   v-for="file in browser.displayFiles.value"
                   :key="file.name"
