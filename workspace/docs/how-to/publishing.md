@@ -46,7 +46,7 @@ dotzuki run . --headless --map StartTown --screenshot shot.png --save
 ```
 
 `--headless` never opens an audio device or window; `--screenshot` dumps the
-real rendered final frame. See [`CLI_REFERENCE.md`](../reference/cli.md).
+real rendered final frame. See [the CLI reference](../reference/cli.md).
 
 ## 3. Playable demo in a web page (WASM)
 

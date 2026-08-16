@@ -11,6 +11,10 @@ in — no Rust, no code required.
 You can even **play** what you built: `dotzuki run` boots your project in a
 window (overworld, dialogue, warps).
 
+Before you start, install Node.js and pnpm, and put a `dotzuki` binary on
+your PATH — build it once per [the quickstart](quickstart.md); step 5 uses
+it to run the finished project.
+
 ## 1. Start the editor
 
 ```bash

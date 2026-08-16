@@ -49,7 +49,8 @@ record's `level` field only feeds RON level-ops. With the block:
 - **Persistence** — per-member `level` + `exp` ride the runner's party
   state and the save (`party[].level` / `party[].exp` are OPTIONAL fields;
   absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
-  keep loading). The menu Party view shows `Lv` and an `EXP <progress>/<need>` line (only with the block).
+  keep loading). The menu Party view shows `Lv` and an
+  `EXP <progress>/<need>` line (only with the block).
 
 `levels` is a manifest config block, not a data table: the records it
 reads are combatant and enemy records in the party and enemy tables. The

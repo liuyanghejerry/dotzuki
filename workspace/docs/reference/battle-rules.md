@@ -31,13 +31,13 @@ the defaults shown):
 - `party` / `enemies` name **data-table ids** from the data activity's
   `config.tables[]` (their `dir`s hold the records). A battle needs both;
   a referenced id that names no declared table is a boot-time error *when a
-  battle actually starts* (projects that never battle are unaffected) — and a
+  battle starts* (projects that never battle are unaffected) — and a
   `dotzuki check` diagnostic regardless.
 - `encounters` (optional) names an **encounter table**: its records describe
   enemy parties and trainer battles — `{ "id": "gym-leader-1", "name":
   "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }`.
   `enemies` is an ordered list of enemy-table record ids (an empty list or
-  an unknown id inside it is a clear error at battle start), `trainer`
+  an unknown id inside it is a definite error at battle start), `trainer`
   defaults to `false`, and `money` (the win reward, paid only by trainer
   encounters) defaults to 0. Absent ⇒ every battle is a single wild enemy
   (v1 behavior). See **Encounters** below.
@@ -94,7 +94,8 @@ the defaults shown):
   - **Persistence** — per-member `level` + `exp` ride the runner's party
     state and the save (`party[].level` / `party[].exp` are OPTIONAL fields;
     absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
-    keep loading). The menu Party view shows `Lv` and an `EXP <progress>/<need>` line (only with the block).
+    keep loading). The menu Party view shows `Lv` and an
+    `EXP <progress>/<need>` line (only with the block).
 
 The `levels` block schema lives in [Level growth](data-tables/levels.md).
 
@@ -343,8 +344,8 @@ scene-triggered battle.
 ## Remaining limits
 
 Every RON `EffectKind` now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles are basic
-(`InflictVolatile` installs, `HasVolatile` reads — nothing expires them);
+Ability / Item / Weather); what remains: volatiles never expire
+(`InflictVolatile` installs, `HasVolatile` reads — nothing removes them);
 HP/MP clamp into the engine's `u16` pools for RON skills; items only heal
 (no status cures / revives / battle-only effects) and held items are never
 consumed; a defender's ability/held-item hooks don't join the attacker's
