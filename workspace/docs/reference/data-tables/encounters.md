@@ -21,7 +21,7 @@ The record example from the spec, verbatim:
 |-------|------|---------|---------|
 | `id` | string | — | Record id; resolved by `startBattle(id)` and by random-encounter zone tables. |
 | `name` | string | — | Present in the spec's example record. |
-| `enemies` | array of enemy-table record ids | — | The ordered enemy queue. An empty list or an unknown id inside it is a clear error at battle start. |
+| `enemies` | array of enemy-table record ids | — | The ordered enemy queue. An empty list or an unknown id inside it is a definite error at battle start. |
 | `trainer` | boolean | `false` | Trainer battle: pays `money` on a win and blocks the Run action. |
 | `money` | number | `0` | The win reward, paid only by trainer encounters. |
 

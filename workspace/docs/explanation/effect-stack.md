@@ -49,7 +49,7 @@ scripting VM). One sentence holds the whole design:
 > the events and folds the handlers; your handlers decide what happens.**
 
 There is **no `Ability` system, no `Item` system, no weather system, no
-hazard system** inside the engine. Each of those is *just an `Effect` hosted
+hazard system** inside the engine. Each of those is *an `Effect` hosted
 somewhere* (on a battler, a side, or the field) that registers handlers for the
 events it cares about. The engine reaches them through **defaulted resolver
 methods** you implement on a provider trait — nothing more.
@@ -271,7 +271,7 @@ fn as_accuracy(self) -> u8;    fn as_bool(self) -> bool;
 fn scale(self, num: u32, den: u32) -> RelayVar;   // e.g. ×1.5 == relay.scale(3, 2)
 ```
 
-A handler that contributes a ×1.5 boost just returns `Set(relay.scale(3, 2))`; a
+A handler that contributes a ×1.5 boost returns `Set(relay.scale(3, 2))`; a
 veto returns `Fail`; an observer that only side-effects (residual chip, recoil)
 mutates through `ctx` and returns `Unchanged`.
 
@@ -419,7 +419,7 @@ parity assertions.
 ### 2.9 The provider resolvers you implement
 
 You implement **`EffectProvider`** (which extends `BattleProvider`). This is the
-entire "abilities/items/weather/side-conditions are just Effects" mechanism: a
+entire "abilities/items/weather/side-conditions are Effects" mechanism: a
 set of resolvers + the collection pass. There is **no `Ability` dispatcher**.
 
 ```rust

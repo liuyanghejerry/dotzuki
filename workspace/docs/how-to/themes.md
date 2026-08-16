@@ -12,14 +12,19 @@ the renderer. `dotzuki check` validates them in memory without writing
 artifacts; disk outputs are produced only when an output directory is given
 (e.g. a game crate's `build.rs` via `compiler::compile_dirs`).
 
+Before you start, read [the theme & style syntax
+reference](../reference/dsl/theme-style.md) for the syntax and codegen
+contract, and [the GUI DSL reference](../reference/dsl/gui.md) for how
+layouts reference styles.
+
 ## File types and outputs
 
 | Input | Requirement | Compiled output |
 |---|---|---|
-| `foo.theme` | At least one `@theme` block | Each `@theme <name>` → `<name>.json` (`{"name", "tokens"}`) |
-| `bar.style` | At least one `@style` block | `_auto_styles.json` (a standalone `.style` file is always wrapped as scene `_auto`, independent of the file name; the resolved inheritance chain is included) |
-| Inline `@theme` in a `.scene` | — | `<scene名>_theme_<i>.json` |
-| Inline `@style` in a `.scene` | — | `<scene名>_styles.json` |
+| `dark.theme` | At least one `@theme` block | Each `@theme <name>` → `<name>.json` (`{"name", "tokens"}`) |
+| `battle.style` | At least one `@style` block | `_auto_styles.json` (a standalone `.style` file is always wrapped as scene `_auto`, independent of the file name; the resolved inheritance chain is included) |
+| Inline `@theme` in a `.scene` | — | `<scene name>_theme_<i>.json` |
+| Inline `@style` in a `.scene` | — | `<scene name>_styles.json` |
 
 All outputs carry a `// @generated` header plus JSON.
 
@@ -31,8 +36,8 @@ All outputs carry a `// @generated` header plus JSON.
    compiled together with the scene.
 3. **Referencing from the GUI** — `.gui` / `ui {}` components apply styles via
    `style = "<name>"`; theme tokens are referenced in property values as
-   `@theme.<key>` (the value is passed through verbatim into the JSON and
-   interpreted by the consumer/renderer).
+   `@theme.<key>` (the compiler passes the value through verbatim into the
+   JSON, and the consumer/renderer interprets it).
 
 A minimal standalone theme:
 

@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: tutorial
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.1.1
 
 Build the project committed at
 [`examples/your-first-game/`](../../examples/your-first-game/) step by step: a town with an

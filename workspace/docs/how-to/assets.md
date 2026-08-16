@@ -25,10 +25,12 @@ and the editor's Assets activity lists exactly those roots. By convention
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 ```
 
-The scaffolded project ships a working layout: `assets/tileset.png` (a 32×8
-demo sheet), `assets/scenes/`, and `data/tiles/` — the shared tile library
-that backs the map editor's tile picker (Backdrop/Trace). Everything
-outside the declared roots is project data, not managed assets.
+The scaffolded project ships a working layout: `data/maps/` with a starter
+map (its `tileset.png` lives in the map's own directory, e.g.
+`data/maps/Hometown/tileset.png`), the shared `data/tiles/` library that
+backs the map editor's tile picker (Backdrop/Trace), `gfx/` for loose
+graphics, and `assets/scenes/` for scene scripts. Everything outside the
+declared roots is project data, not managed assets.
 
 ## Tilesets
 

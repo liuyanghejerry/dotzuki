@@ -31,7 +31,7 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 
 - Games are **zero-Rust**: the engine never probes a game's data directory.
   Rust games embed compiled artifacts via `compiler::compile_dirs` /
-  `loader::register_compiled`; zero-Rust projects are loaded by the runner.
+  `loader::register_compiled`; the runner loads zero-Rust projects.
 - Game repositories consume the engine as crates.io deps or tag-pinned git
   deps (see the repo `README.md`).
 
@@ -40,12 +40,12 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 `.scene` / `.gui` / `.theme` / `.style` files compile through
 `dotzuki-engine-dsl`:
 
-- `.scene` → JavaScript consumed by `dotzuki-engine-script` (Boa-based);
+- `.scene` → JavaScript that `dotzuki-engine-script` (Boa-based) consumes;
   `dotzuki-engine-dsl` also ships a native AST interpreter
   (`crates/dotzuki-engine-dsl/src/interpreter.rs`) that executes scenes with
   no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
   scene semantics (see `AGENTS.md` for the interpreter-vs-Boa policy).
-- `.gui` → JSON consumed by the renderer layout engine.
+- `.gui` → JSON the renderer layout engine consumes.
 - `.theme` / `.style` → JSON token/stylesheet files (see
   [the theme & style reference](../reference/dsl/theme-style.md)).
 
@@ -57,8 +57,8 @@ with the compiled project.
 Live battle turns run through `dotzuki_engine::battle::stack::StackDriver`:
 events, effects and handlers form a stack, and `dotzuki-rules` compiles
 declarative `rules.ron` into those runtime stacks. The model and its RNG
-determinism rationale are covered in [the effect stack page](effect-stack.md);
-authoring is covered in [the battle rules guide](../how-to/battles.md).
+determinism rationale live in [the effect stack page](effect-stack.md);
+the [battle rules guide](../how-to/battles.md) covers authoring.
 
 ## Provider pattern
 
