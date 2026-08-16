@@ -16,6 +16,8 @@
 [Editor](workspace/tools/dotzuki-editor/) ·
 [Examples](workspace/examples/)
 
+**English** · [中文](README.zh-CN.md)
+
 </div>
 
 dotzuki is a game engine for building classic, Game Boy-style JRPGs —
