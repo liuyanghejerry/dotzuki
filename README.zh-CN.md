@@ -20,6 +20,10 @@
 
 </div>
 
+> 本文是 [README.md](README.md) 的中文翻译，
+> 同步至引擎版本 v0.1.1（源文档 commit afab36d92a4aab566f3a1057639f3c8fcf8b2f09）。
+> 内容以英文源为准；发现不一致请更新英文源再同步翻译。
+
 dotzuki 是一个用来制作经典 Game Boy 风格 JRPG 的游戏引擎 ——
 大地图、NPC 对话、回合制战斗、商店、菜单、芯片音乐风格的音频、双语文本 ——
 全部通过声明式 DSL 和可视化编辑器完成。你写的是剧本和规则，不是引擎代码。
@@ -103,8 +107,10 @@ dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.
 <details>
 <summary><b>Crate 一览</b>（点击展开）</summary>
 
-- `dotzuki-engine` —— 核心 trait（`GameData`）、tilemap/相机/触发器、战斗 effect-stack（`battle::stack`）、道具/商店/装备系统、联机传输接口
-- `dotzuki-rules` + `dotzuki-rules-macro` —— 声明式战斗规则：`rules.ron` → 运行时 Effect 栈
+- `dotzuki-engine` —— 核心 trait（`GameData`）、tilemap/相机/触发器、
+  战斗 effect-stack（`battle::stack`）、道具/商店/装备系统、联机传输接口
+- `dotzuki-rules` + `dotzuki-rules-macro` —— 声明式战斗规则：
+  `rules.ron` → 运行时 Effect 栈
 - `dotzuki-engine-dsl` —— Game DSL 编译器（`.scene` / `.gui` / `.theme` / `.style`，双语 `@t`），附带原生 AST 解释器
 - `dotzuki-engine-tiled` —— Tiled `.tmx`（JSON）地图 → 引擎类型
 - `dotzuki-engine-script` —— 基于 Boa 的异步 JS 脚本引擎
@@ -145,6 +151,3 @@ target/release/dotzuki new demo && target/release/dotzuki run demo
 （按 Apache-2.0 许可证的定义）均按上述双许可证授权，
 不附加任何额外条款或条件。
 
----
-
-> 本文档译自 [README.md](README.md)；如两者不一致，以英文版为准。

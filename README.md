@@ -39,7 +39,7 @@ cd my-game
 dotzuki run .
 ```
 
-A scene is just a text file:
+A scene is a plain text file:
 
 ```dsl
 game_scene Main {
@@ -109,9 +109,13 @@ entirely on the effect stack, plus the `your-first-game` example project.
 <details>
 <summary><b>Crate map</b> (click to expand)</summary>
 
-- `dotzuki-engine` — core traits (`GameData`), tilemap/camera/triggers, the battle effect-stack (`battle::stack`), item/shop/equip systems, link-play seam
-- `dotzuki-rules` + `dotzuki-rules-macro` — declarative battle rules: `rules.ron` → runtime Effect stacks
-- `dotzuki-engine-dsl` — Game DSL compiler (`.scene` / `.gui` / `.theme` / `.style`, bilingual `@t`) with a native AST interpreter
+- `dotzuki-engine` — core traits (`GameData`), tilemap/camera/triggers,
+  the battle effect-stack (`battle::stack`), item/shop/equip systems,
+  link-play seam
+- `dotzuki-rules` + `dotzuki-rules-macro` — declarative battle rules:
+  `rules.ron` → runtime Effect stacks
+- `dotzuki-engine-dsl` — Game DSL compiler (`.scene` / `.gui` / `.theme` /
+  `.style`, bilingual `@t`) with a native AST interpreter
 - `dotzuki-engine-tiled` — Tiled `.tmx` (JSON) maps → engine types
 - `dotzuki-engine-script` — Boa-based async JS scripting
 - `dotzuki-renderer` — GB-style tile/sprite/text rendering, CJK pixel fonts, UI layout
