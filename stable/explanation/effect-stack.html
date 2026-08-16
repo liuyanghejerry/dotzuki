@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+            window.path_to_searchindex_js = "../searchindex-66886069.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -228,7 +228,7 @@ scripting VM). One sentence holds the whole design:</p>
 the events and folds the handlers; your handlers decide what happens.</strong></p>
 </blockquote>
 <p>There is <strong>no <code>Ability</code> system, no <code>Item</code> system, no weather system, no
-hazard system</strong> inside the engine. Each of those is <em>just an <code>Effect</code> hosted
+hazard system</strong> inside the engine. Each of those is <em>an <code>Effect</code> hosted
 somewhere</em> (on a battler, a side, or the field) that registers handlers for the
 events it cares about. The engine reaches them through <strong>defaulted resolver
 methods</strong> you implement on a provider trait — nothing more.</p>
@@ -431,7 +431,7 @@ via <code>den.max(1)</code>):</p>
 fn as_accuracy(self) -&gt; u8;    fn as_bool(self) -&gt; bool;
 fn scale(self, num: u32, den: u32) -&gt; RelayVar;   // e.g. ×1.5 == relay.scale(3, 2)
 <span class="boring">}</span></code></pre>
-<p>A handler that contributes a ×1.5 boost just returns <code>Set(relay.scale(3, 2))</code>; a
+<p>A handler that contributes a ×1.5 boost returns <code>Set(relay.scale(3, 2))</code>; a
 veto returns <code>Fail</code>; an observer that only side-effects (residual chip, recoil)
 mutates through <code>ctx</code> and returns <code>Unchanged</code>.</p>
 <h3 id="24-ordering--order--priority-and-the-comparepriority-knobs"><a class="header" href="#24-ordering--order--priority-and-the-comparepriority-knobs">2.4 Ordering — <code>order</code> / <code>priority</code> and the comparePriority knobs</a></h3>
@@ -558,7 +558,7 @@ last byte after exhaustion) and exposes <code>consumed() -&gt; usize</code> for 
 parity assertions.</p>
 <h3 id="29-the-provider-resolvers-you-implement"><a class="header" href="#29-the-provider-resolvers-you-implement">2.9 The provider resolvers you implement</a></h3>
 <p>You implement <strong><code>EffectProvider</code></strong> (which extends <code>BattleProvider</code>). This is the
-entire “abilities/items/weather/side-conditions are just Effects” mechanism: a
+entire “abilities/items/weather/side-conditions are Effects” mechanism: a
 set of resolvers + the collection pass. There is <strong>no <code>Ability</code> dispatcher</strong>.</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f13ae495.js";
+            window.path_to_searchindex_js = "../../searchindex-66886069.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-466b9ebb.js"></script>
@@ -203,7 +203,7 @@ enemy parties and trainer battles — <code>{ "id": "gym-leader-1", "name": "Lea
 <tbody>
 <tr><td><code>id</code></td><td>string</td><td>—</td><td>Record id; resolved by <code>startBattle(id)</code> and by random-encounter zone tables.</td></tr>
 <tr><td><code>name</code></td><td>string</td><td>—</td><td>Present in the spec’s example record.</td></tr>
-<tr><td><code>enemies</code></td><td>array of enemy-table record ids</td><td>—</td><td>The ordered enemy queue. An empty list or an unknown id inside it is a clear error at battle start.</td></tr>
+<tr><td><code>enemies</code></td><td>array of enemy-table record ids</td><td>—</td><td>The ordered enemy queue. An empty list or an unknown id inside it is a definite error at battle start.</td></tr>
 <tr><td><code>trainer</code></td><td>boolean</td><td><code>false</code></td><td>Trainer battle: pays <code>money</code> on a win and blocks the Run action.</td></tr>
 <tr><td><code>money</code></td><td>number</td><td><code>0</code></td><td>The win reward, paid only by trainer encounters.</td></tr>
 </tbody>
