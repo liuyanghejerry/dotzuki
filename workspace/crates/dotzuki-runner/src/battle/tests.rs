@@ -60,14 +60,38 @@ fn combatant(
 
 /// The canonical win-path pair: Aria (fast) vs Slime.
 fn aria_vs_slime() -> (Combatant, Combatant) {
-    let aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
-    let slime = combatant("Slime", 90, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
+    let slime = combatant(
+        "Slime",
+        90,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     (aria, slime)
 }
 
 /// Aria's mage teammate (same move list, distinct stats).
 fn bryn() -> Combatant {
-    combatant("Bryn", 80, 14, 12, 10, 60, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)])
+    combatant(
+        "Bryn",
+        80,
+        14,
+        12,
+        10,
+        60,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    )
 }
 
 /// A two-member party battle (Aria leads) against the Slime.
@@ -224,10 +248,26 @@ fn type_chart_from_ruleset() {
     let chart = TypeChart::from_ruleset(&ruleset);
     assert_eq!(chart.mult(Some("fire"), Some("grass")), (2, 1));
     assert_eq!(chart.mult(Some("grass"), Some("fire")), (1, 2));
-    assert_eq!(chart.mult(Some("Fire"), Some("GRASS")), (2, 1), "case-insensitive");
-    assert_eq!(chart.mult(Some("water"), Some("fire")), (1, 1), "no edge = neutral");
-    assert_eq!(chart.mult(None, Some("fire")), (1, 1), "untyped attack = neutral");
-    assert_eq!(chart.mult(Some("fire"), None), (1, 1), "untyped defender = neutral");
+    assert_eq!(
+        chart.mult(Some("Fire"), Some("GRASS")),
+        (2, 1),
+        "case-insensitive"
+    );
+    assert_eq!(
+        chart.mult(Some("water"), Some("fire")),
+        (1, 1),
+        "no edge = neutral"
+    );
+    assert_eq!(
+        chart.mult(None, Some("fire")),
+        (1, 1),
+        "untyped attack = neutral"
+    );
+    assert_eq!(
+        chart.mult(Some("fire"), None),
+        (1, 1),
+        "untyped defender = neutral"
+    );
 }
 
 // ── turn loop ───────────────────────────────────────────────────────────────
@@ -268,8 +308,24 @@ fn win_path_narrates_and_ends() {
 
 #[test]
 fn lose_path_narrates_and_ends() {
-    let weak = combatant("Aria", 20, 5, 5, 15, 0, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
-    let strong = combatant("Golem", 200, 30, 10, 5, 0, vec![skill("Smash", 40, 100, SkillCategory::Damage, 0)]);
+    let weak = combatant(
+        "Aria",
+        20,
+        5,
+        5,
+        15,
+        0,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
+    let strong = combatant(
+        "Golem",
+        200,
+        30,
+        10,
+        5,
+        0,
+        vec![skill("Smash", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::new(weak, strong, TypeChart::default(), scripted(&[50, 100, 1]));
 
     play_to_end(&mut b, 0);
@@ -311,7 +367,15 @@ fn mp_gate_blocks_unaffordable_player_skill() {
         ],
     );
     aria.max_mp = 3;
-    let slime = combatant("Slime", 90, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        90,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::new(aria, slime, TypeChart::default(), scripted(&[50, 100, 1]));
 
     // The root menu opens first; Fight reveals the skills.
@@ -320,7 +384,10 @@ fn mp_gate_blocks_unaffordable_player_skill() {
         vec!["Fight".to_string(), "Party".to_string(), "Run".to_string()]
     );
     confirm(&mut b);
-    assert_eq!(b.menu_items(), vec!["Slash".to_string(), "× Fire Bolt 5MP".to_string()]);
+    assert_eq!(
+        b.menu_items(),
+        vec!["Slash".to_string(), "× Fire Bolt 5MP".to_string()]
+    );
 
     // Cursor onto Fire Bolt; A must NOT start a round.
     press(&mut b, GbButton::Down.bit_mask());
@@ -337,9 +404,25 @@ fn mp_gate_blocks_unaffordable_player_skill() {
 
 #[test]
 fn mp_is_spent_per_use() {
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 12, vec![skill("Fire Bolt", 50, 100, SkillCategory::Damage, 5)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        12,
+        vec![skill("Fire Bolt", 50, 100, SkillCategory::Damage, 5)],
+    );
     aria.max_mp = 12;
-    let slime = combatant("Slime", 900, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        900,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::new(aria, slime, TypeChart::default(), scripted(&[50, 100, 1]));
     fight(&mut b, 0);
     settle(&mut b);
@@ -374,7 +457,15 @@ fn buff_raises_attack_stage_and_damage() {
             skill("Focus", 0, 100, SkillCategory::Buff, 0),
         ],
     );
-    let slime = combatant("Slime", 900, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        900,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     // Focus consumes 1 byte (acc), Tackle 3, Slash 3.
     let mut b = Battle::new(
         aria,
@@ -401,8 +492,21 @@ fn debuff_lowers_defense_stage() {
     let mut weaken = skill("Weaken", 0, 100, SkillCategory::Debuff, 0);
     weaken.stat = "defense".to_string();
     let aria = combatant("Aria", 60, 12, 10, 15, 20, vec![weaken]);
-    let slime = combatant("Slime", 90, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
-    let mut b = Battle::new(aria, slime, TypeChart::default(), scripted(&[50, 50, 100, 1]));
+    let slime = combatant(
+        "Slime",
+        90,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
+    let mut b = Battle::new(
+        aria,
+        slime,
+        TypeChart::default(),
+        scripted(&[50, 50, 100, 1]),
+    );
     fight(&mut b, 0);
     settle(&mut b);
     assert_eq!(b.enemy().stages.defense, -1);
@@ -413,9 +517,25 @@ fn debuff_lowers_defense_stage() {
 
 #[test]
 fn heal_restores_up_to_the_cap() {
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Heal", 25, 100, SkillCategory::Heal, 0)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Heal", 25, 100, SkillCategory::Heal, 0)],
+    );
     aria.hp = 30; // mid-battle damage
-    let slime = combatant("Slime", 90, 8, 8, 5, 0, vec![skill("Tackle", 40, 0, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        90,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 0, SkillCategory::Damage, 0)],
+    );
     // Slime has 0 accuracy: it always misses (acc byte 50).
     let mut b = Battle::new(aria, slime, TypeChart::default(), scripted(&[50]));
 
@@ -439,7 +559,15 @@ fn effectiveness_is_narrated() {
     bolt.element = Some("fire".to_string());
     let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![bolt]);
     aria.element = Some("grass".to_string());
-    let mut slime = combatant("Slime", 900, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let mut slime = combatant(
+        "Slime",
+        900,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     slime.element = Some("grass".to_string());
 
     let ruleset = dotzuki_rules::Ruleset::from_ron(
@@ -456,7 +584,11 @@ fn effectiveness_is_narrated() {
     fight(&mut b, 0);
     settle(&mut b);
     assert!(b.log().contains(&"It's super effective!".to_string()));
-    assert!(b.log().contains(&"132 damage!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"132 damage!".to_string()),
+        "{:?}",
+        b.log()
+    );
 }
 
 // ── parties: switching (v2-b) ───────────────────────────────────────────────
@@ -475,7 +607,15 @@ fn switch_consumes_the_turn_and_resets_stages() {
             skill("Focus", 0, 100, SkillCategory::Buff, 0),
         ],
     );
-    let slime = combatant("Slime", 900, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        900,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::full(
         vec![aria, bryn()],
         0,
@@ -517,11 +657,27 @@ fn switch_consumes_the_turn_and_resets_stages() {
 #[test]
 fn forced_switch_on_faint_and_win_still_possible() {
     // Aria at 1 HP faints to the first Tackle; Bryn avenges her.
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     aria.hp = 1;
     let mut strong_bryn = bryn();
     strong_bryn.attack = 200; // one-hit KO
-    let slime = combatant("Slime", 90, 8, 8, 20, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        90,
+        8,
+        8,
+        20,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     // Slime (spd 20) outspeeds Aria → Tackle first: 40×8/10 = 32 → ×89/100 = 28 ≥ 1.
     let mut b = Battle::full(
         vec![aria, strong_bryn],
@@ -563,9 +719,25 @@ fn forced_switch_on_faint_and_win_still_possible() {
 #[test]
 fn all_members_fainted_is_a_loss() {
     let weak = |name: &str| {
-        combatant(name, 10, 5, 5, 15, 0, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)])
+        combatant(
+            name,
+            10,
+            5,
+            5,
+            15,
+            0,
+            vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+        )
     };
-    let golem = combatant("Golem", 500, 30, 10, 20, 0, vec![skill("Smash", 40, 100, SkillCategory::Damage, 0)]);
+    let golem = combatant(
+        "Golem",
+        500,
+        30,
+        10,
+        20,
+        0,
+        vec![skill("Smash", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::full(
         vec![weak("Aria"), weak("Bryn")],
         0,
@@ -598,7 +770,10 @@ fn party_state_reflects_the_battle_for_write_back() {
     assert_eq!(state.len(), 2);
     // Aria took the Slime's 28 damage; Bryn is untouched at full HP.
     assert_eq!((state[0].id.as_str(), state[0].hp), ("aria", 32));
-    assert_eq!((state[1].id.as_str(), state[1].hp, state[1].mp), ("bryn", 80, 60));
+    assert_eq!(
+        (state[1].id.as_str(), state[1].hp, state[1].mp),
+        ("bryn", 80, 60)
+    );
     assert_eq!(state[0].status, None);
 }
 
@@ -614,9 +789,25 @@ fn potion() -> BattleItem {
 
 /// Aria (hurt) vs a always-missing Slime, with `count` Potions in the bag.
 fn item_battle(hp: u32, count: u32) -> Battle {
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     aria.hp = hp;
-    let slime = combatant("Slime", 900, 8, 8, 5, 0, vec![skill("Tackle", 40, 0, SkillCategory::Damage, 0)]);
+    let slime = combatant(
+        "Slime",
+        900,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 0, SkillCategory::Damage, 0)],
+    );
     Battle::full(
         vec![aria],
         0,
@@ -635,7 +826,12 @@ fn item_heals_caps_decrements_and_consumes_the_turn() {
     // The root menu gains Item when usable items exist.
     assert_eq!(
         b.menu_items(),
-        vec!["Fight".to_string(), "Party".to_string(), "Item".to_string(), "Run".to_string()]
+        vec![
+            "Fight".to_string(),
+            "Party".to_string(),
+            "Item".to_string(),
+            "Run".to_string()
+        ]
     );
 
     // Potion on 30/60: capped at max ⇒ recovers 30; count 2 → 1; the Slime
@@ -661,7 +857,11 @@ fn item_disappears_at_zero_count() {
     item_use(&mut b, 0);
     settle(&mut b);
     assert_eq!(b.player().hp, 60);
-    assert_eq!(b.inventory().get("potion"), None, "count 0 removes the entry");
+    assert_eq!(
+        b.inventory().get("potion"),
+        None,
+        "count 0 removes the entry"
+    );
 
     // The Item menu is now empty (the root Item entry remains, harmlessly).
     press(&mut b, GbButton::Down.bit_mask());
@@ -726,17 +926,38 @@ fn ron_battle(player: Combatant, enemy: Combatant, rules: &str, bytes: &[u8]) ->
 }
 
 fn venom_aria() -> Combatant {
-    combatant("Aria", 60, 12, 10, 15, 20, vec![ron_skill("venom-sting", 15, 0)])
+    combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![ron_skill("venom-sting", 15, 0)],
+    )
 }
 
 fn tackle_slime(hp: u32) -> Combatant {
-    combatant("Slime", hp, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)])
+    combatant(
+        "Slime",
+        hp,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    )
 }
 
 #[test]
 fn ron_poison_inflicts_and_chips_exact_hp() {
     // Per round: Aria [acc, var, crit, poison-chance], Slime [acc, var, crit].
-    let mut b = ron_battle(venom_aria(), tackle_slime(96), POISON_RULES, &[50, 100, 1, 29, 50, 100, 1]);
+    let mut b = ron_battle(
+        venom_aria(),
+        tackle_slime(96),
+        POISON_RULES,
+        &[50, 100, 1, 29, 50, 100, 1],
+    );
 
     // Round 1: venom-sting 15×12/8 = 22 → ×89/100 = 19 dmg (96→77); chance
     // byte 29 < 30 ⇒ poison; Tackle 40×8/10 = 32 → ×89/100 = 28 (60→32);
@@ -781,14 +1002,28 @@ fn ron_poison_inflicts_and_chips_exact_hp() {
 #[test]
 fn ron_chance_gate_compares_the_rng_byte() {
     // chance [30, 100]: byte 30 ⇒ 30 % 100 = 30, not < 30 ⇒ no poison…
-    let mut b = ron_battle(venom_aria(), tackle_slime(96), POISON_RULES, &[50, 100, 1, 30, 50, 100, 1]);
+    let mut b = ron_battle(
+        venom_aria(),
+        tackle_slime(96),
+        POISON_RULES,
+        &[50, 100, 1, 30, 50, 100, 1],
+    );
     fight(&mut b, 0);
     settle(&mut b);
     assert_eq!(b.hooks().unwrap().battler(Side::Enemy).status, None);
-    assert!(!b.log().iter().any(|l| l.contains("afflicted")), "{:?}", b.log());
+    assert!(
+        !b.log().iter().any(|l| l.contains("afflicted")),
+        "{:?}",
+        b.log()
+    );
 
     // …byte 29 < 30 ⇒ the poison lands.
-    let mut b = ron_battle(venom_aria(), tackle_slime(96), POISON_RULES, &[50, 100, 1, 29, 50, 100, 1]);
+    let mut b = ron_battle(
+        venom_aria(),
+        tackle_slime(96),
+        POISON_RULES,
+        &[50, 100, 1, 29, 50, 100, 1],
+    );
     fight(&mut b, 0);
     settle(&mut b);
     assert_eq!(
@@ -820,13 +1055,22 @@ fn ron_boost_matches_the_builtin_buff() {
         vec![skill("Slash", 40, 100, SkillCategory::Damage, 0), focus],
     );
     // The exact byte script of the built-in `buff_raises_attack_stage_and_damage`.
-    let mut b = ron_battle(aria, tackle_slime(900), rules, &[50, 50, 100, 1, 50, 100, 1]);
+    let mut b = ron_battle(
+        aria,
+        tackle_slime(900),
+        rules,
+        &[50, 50, 100, 1, 50, 100, 1],
+    );
 
     // Round 1: Focus (RON Boost hook) → "Aria's Attack rose!"; Tackle back.
     fight(&mut b, 1);
     settle(&mut b);
     assert_eq!(b.player().stages.attack, 1);
-    assert!(b.log().contains(&"Aria's Attack rose!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Aria's Attack rose!".to_string()),
+        "{:?}",
+        b.log()
+    );
 
     // Round 2: Slash at stage +1 — the same 66 damage the built-in buff deals.
     fight(&mut b, 0);
@@ -871,7 +1115,11 @@ fn ron_before_move_veto_blocks_the_action() {
     let mut b = ron_battle(aria, tackle_slime(96), rules, &[50, 100, 1, 50, 100, 1]);
     fight(&mut b, 0);
     settle(&mut b);
-    assert!(b.log().contains(&"But it failed!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"But it failed!".to_string()),
+        "{:?}",
+        b.log()
+    );
     assert_eq!(b.enemy().hp, 96, "the vetoed sting dealt nothing");
 }
 
@@ -882,12 +1130,23 @@ fn ron_residual_chip_can_knock_out() {
     let mut slime = tackle_slime(96);
     slime.hp = 60;
     slime.status = Some("poison".to_string());
-    let aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = ron_battle(aria, slime, POISON_RULES, &[50, 100, 1]);
     play_to_end(&mut b, 0);
     assert_eq!(b.outcome(), Some(BattleOutcome::Win), "{:?}", b.log());
     let log = b.log();
-    let chip = log.iter().position(|l| l == "Slime is hurt by poison!").unwrap();
+    let chip = log
+        .iter()
+        .position(|l| l == "Slime is hurt by poison!")
+        .unwrap();
     let faint = log.iter().position(|l| l == "Slime fainted!").unwrap();
     assert!(chip < faint, "{log:?}");
 }
@@ -898,7 +1157,15 @@ fn ron_poison_switch_keeps_status_and_resolves_the_deferred_enemy_action() {
     // chip then KOs her — the forced switch brings Bryn in and the Slime's
     // DEFERRED Tackle resolves against him. Aria keeps her poison on the
     // bench; Bryn's stages are reset.
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     aria.hp = 7; // poison chip: 60/8 = 7 ⇒ exactly 0
     aria.status = Some("poison".to_string());
     let slime = tackle_slime(900);
@@ -910,7 +1177,12 @@ fn ron_poison_switch_keeps_status_and_resolves_the_deferred_enemy_action() {
     let status_names = hooks::status_names(&ruleset);
     let state = HookState {
         state: BattleState::new(
-            vec![hooks::mirror_of(&player[0], &stat_names, &status_names, true)],
+            vec![hooks::mirror_of(
+                &player[0],
+                &stat_names,
+                &status_names,
+                true,
+            )],
             vec![hooks::mirror_of(&slime, &stat_names, &status_names, true)],
         ),
         effects: Vec::new(),
@@ -969,7 +1241,8 @@ fn validate_ruleset_reports_unknown_names() {
     let diags = hooks::validate_ruleset(bad_stat);
     assert!(diags.iter().any(|d| d.contains("speed")), "{diags:?}");
 
-    let bad_event = r#"Ruleset(effects: [Effect(id: "x", kind: Move, hooks: [Hook(on: "OnHit")])])"#;
+    let bad_event =
+        r#"Ruleset(effects: [Effect(id: "x", kind: Move, hooks: [Hook(on: "OnHit")])])"#;
     let diags = hooks::validate_ruleset(bad_event);
     assert!(diags.iter().any(|d| d.contains("OnHit")), "{diags:?}");
 
@@ -993,7 +1266,12 @@ fn ron_party_battle(party: Vec<Combatant>, enemy: Combatant, rules: &str, bytes:
     let status_names = hooks::status_names(&ruleset);
     let state = HookState {
         state: BattleState::new(
-            vec![hooks::mirror_of(&party[0], &stat_names, &status_names, true)],
+            vec![hooks::mirror_of(
+                &party[0],
+                &stat_names,
+                &status_names,
+                true,
+            )],
             vec![hooks::mirror_of(&enemy, &stat_names, &status_names, true)],
         ),
         effects: Vec::new(),
@@ -1005,7 +1283,16 @@ fn ron_party_battle(party: Vec<Combatant>, enemy: Combatant, rules: &str, bytes:
         has_resource: true,
     };
     let chart = TypeChart::from_ruleset(&ruleset);
-    Battle::full(party, 0, enemy, Vec::new(), HashMap::new(), chart, scripted(bytes), Some(state))
+    Battle::full(
+        party,
+        0,
+        enemy,
+        Vec::new(),
+        HashMap::new(),
+        chart,
+        scripted(bytes),
+        Some(state),
+    )
 }
 
 /// The intimidate ability: −1 attack stage to the foe on switch-in.
@@ -1020,7 +1307,15 @@ const INTIMIDATE_RULES: &str = r#"Ruleset(
 )"#;
 
 fn intimidate_aria() -> Combatant {
-    let mut aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let mut aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     aria.ability = Some("intimidate".to_string());
     aria
 }
@@ -1031,7 +1326,12 @@ fn ability_fires_on_begin_and_re_fires_on_switch_benched_inert() {
     let mut bryn = bryn();
     bryn.ability = Some("intimidate".to_string());
     let slime = tackle_slime(900);
-    let mut b = ron_party_battle(vec![intimidate_aria(), bryn], slime, INTIMIDATE_RULES, &[50, 100, 1]);
+    let mut b = ron_party_battle(
+        vec![intimidate_aria(), bryn],
+        slime,
+        INTIMIDATE_RULES,
+        &[50, 100, 1],
+    );
 
     // Battle start: Aria's intimidate drops the Slime's attack to −1; Bryn's
     // (benched) stays inert — exactly one intro line.
@@ -1053,14 +1353,21 @@ fn ability_fires_on_begin_and_re_fires_on_switch_benched_inert() {
     assert_eq!(b.enemy().stages.attack, -2, "{:?}", b.log());
     assert_eq!(b.player().name, "Bryn");
     assert_eq!(b.player().hp, 80 - 14, "{:?}", b.log());
-    assert!(b.log().contains(&"Bryn's Intimidate!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Bryn's Intimidate!".to_string()),
+        "{:?}",
+        b.log()
+    );
 
     // Switch back to Aria: her intimidate fires AGAIN (−3) — once per switch-in.
     party_switch(&mut b, 0);
     settle(&mut b);
     assert_eq!(b.enemy().stages.attack, -3, "{:?}", b.log());
     assert_eq!(
-        b.log().iter().filter(|l| l.as_str() == "Aria's Intimidate!").count(),
+        b.log()
+            .iter()
+            .filter(|l| l.as_str() == "Aria's Intimidate!")
+            .count(),
         2,
         "{:?}",
         b.log()
@@ -1105,7 +1412,12 @@ fn ability_fires_when_the_encounter_sends_out_the_next_enemy() {
     let first = tackle_slime(50);
     let mut second = tackle_slime(900);
     second.ability = Some("intimidate".to_string());
-    let mut b = ron_party_battle(vec![intimidate_aria()], first, INTIMIDATE_RULES, &[50, 100, 1]);
+    let mut b = ron_party_battle(
+        vec![intimidate_aria()],
+        first,
+        INTIMIDATE_RULES,
+        &[50, 100, 1],
+    );
     b.set_enemy_party(vec![second], false, 0);
     b.begin(); // Aria's intimidate → the first Slime's attack −1.
     settle(&mut b);
@@ -1116,8 +1428,16 @@ fn ability_fires_when_the_encounter_sends_out_the_next_enemy() {
     settle(&mut b);
     assert_eq!(b.enemy().hp, 900, "fresh replacement");
     assert_eq!(b.player().stages.attack, -1, "{:?}", b.log());
-    assert!(b.log().contains(&"Foe sent out Slime!".to_string()), "{:?}", b.log());
-    assert!(b.log().contains(&"Slime's Intimidate!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Foe sent out Slime!".to_string()),
+        "{:?}",
+        b.log()
+    );
+    assert!(
+        b.log().contains(&"Slime's Intimidate!".to_string()),
+        "{:?}",
+        b.log()
+    );
 }
 
 #[test]
@@ -1171,7 +1491,11 @@ fn held_item_leftovers_heals_after_the_holders_action_only() {
     settle(&mut b);
     assert_eq!(b.enemy().hp, 28, "{:?}", b.log());
     assert_eq!(b.player().hp, 32, "{:?}", b.log());
-    assert!(b.log().contains(&"Bryn recovered 5 HP!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Bryn recovered 5 HP!".to_string()),
+        "{:?}",
+        b.log()
+    );
     assert!(
         !b.log().iter().any(|l| l.starts_with("Slime recovered")),
         "the enemy without heldItem heals nothing: {:?}",
@@ -1190,7 +1514,15 @@ fn weather_chips_both_sides_per_round_until_cleared() {
             ]),
         ],
     )"#;
-    let aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
+    let aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
     let slime = tackle_slime(900); // chip 900/16 = 56.
     let mut b = ron_battle(aria, slime, rules, &[50, 100, 1]);
     b.set_weather(Some("sandstorm".to_string()));
@@ -1204,8 +1536,16 @@ fn weather_chips_both_sides_per_round_until_cleared() {
     settle(&mut b);
     assert_eq!(b.player().hp, 29, "{:?}", b.log());
     assert_eq!(b.enemy().hp, 791, "{:?}", b.log());
-    assert!(b.log().contains(&"Aria lost 3 HP!".to_string()), "{:?}", b.log());
-    assert!(b.log().contains(&"Slime lost 56 HP!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Aria lost 3 HP!".to_string()),
+        "{:?}",
+        b.log()
+    );
+    assert!(
+        b.log().contains(&"Slime lost 56 HP!".to_string()),
+        "{:?}",
+        b.log()
+    );
 
     // clearWeather stops the chip: round 2 deals only the hits — Slash 53
     // (791→738), Tackle 28 (29→1), no residuals either side.
@@ -1229,7 +1569,11 @@ fn unknown_weather_id_is_dropped_with_a_warning() {
     b.set_weather(Some("bogus".to_string()));
     b.begin();
     assert_eq!(b.weather(), None, "an id with no compiled hooks is ignored");
-    assert!(b.log().is_empty(), "no intro line for unknown weather: {:?}", b.log());
+    assert!(
+        b.log().is_empty(),
+        "no intro line for unknown weather: {:?}",
+        b.log()
+    );
     assert!(b.in_menu());
 }
 
@@ -1366,7 +1710,10 @@ fn max_level_caps_level_ups() {
 fn zh_narration_for_exp_and_level_up() {
     let b = win_levels_battle(8, 100, "zh");
     let log = b.log();
-    assert!(log.contains(&"Aria 获得了 8 点经验！".to_string()), "{log:?}");
+    assert!(
+        log.contains(&"Aria 获得了 8 点经验！".to_string()),
+        "{log:?}"
+    );
     assert!(log.contains(&"Aria 升到了 2 级！".to_string()), "{log:?}");
 }
 
@@ -1388,14 +1735,38 @@ fn no_levels_block_no_exp_narration() {
 /// A fast but durable Bat (the queued second enemy): Aria's 106-dmg Slash
 /// (40×12/4 ×89%) does NOT one-shot its 200 HP, so it gets to fight back.
 fn bat() -> Combatant {
-    combatant("Bat", 200, 6, 4, 12, 0, vec![skill("Bite", 20, 100, SkillCategory::Damage, 0)])
+    combatant(
+        "Bat",
+        200,
+        6,
+        4,
+        12,
+        0,
+        vec![skill("Bite", 20, 100, SkillCategory::Damage, 0)],
+    )
 }
 
 /// Aria vs a two-enemy wild encounter (the Slime active — fragile enough
 /// for a one-shot — the durable Bat queued behind it).
 fn encounter_battle(bytes: &[u8]) -> Battle {
-    let aria = combatant("Aria", 60, 12, 10, 15, 20, vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)]);
-    let slime = combatant("Slime", 40, 8, 8, 5, 0, vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)]);
+    let aria = combatant(
+        "Aria",
+        60,
+        12,
+        10,
+        15,
+        20,
+        vec![skill("Slash", 40, 100, SkillCategory::Damage, 0)],
+    );
+    let slime = combatant(
+        "Slime",
+        40,
+        8,
+        8,
+        5,
+        0,
+        vec![skill("Tackle", 40, 100, SkillCategory::Damage, 0)],
+    );
     let mut b = Battle::new(aria, slime, TypeChart::default(), scripted(bytes));
     b.set_enemy_party(vec![bat()], false, 0);
     b
@@ -1436,7 +1807,11 @@ fn encounter_queue_sends_out_next_enemy_and_exp_sums() {
     // award is the SUM (8 + 5 = 13).
     fight(&mut b, 0);
     settle(&mut b);
-    assert!(b.log().contains(&"Bat used Bite!".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"Bat used Bite!".to_string()),
+        "{:?}",
+        b.log()
+    );
     fight(&mut b, 0);
     settle(&mut b);
     assert_eq!(b.outcome(), Some(BattleOutcome::Win));
@@ -1454,7 +1829,11 @@ fn encounter_send_out_narrates_in_zh() {
     b.set_lang("zh");
     fight(&mut b, 0);
     settle(&mut b);
-    assert!(b.log().contains(&"对方派出了 Bat！".to_string()), "{:?}", b.log());
+    assert!(
+        b.log().contains(&"对方派出了 Bat！".to_string()),
+        "{:?}",
+        b.log()
+    );
 }
 
 #[test]
@@ -1467,8 +1846,14 @@ fn trainer_battle_blocks_run_without_consuming_the_turn() {
     run(&mut b);
     settle(&mut b);
     assert!(b.outcome().is_none(), "a blocked Run never ends the battle");
-    assert!(b.in_menu(), "back at the root menu — the turn was NOT consumed");
-    assert_eq!(b.log(), &["Can't escape from a trainer battle!".to_string()]);
+    assert!(
+        b.in_menu(),
+        "back at the root menu — the turn was NOT consumed"
+    );
+    assert_eq!(
+        b.log(),
+        &["Can't escape from a trainer battle!".to_string()]
+    );
     assert_eq!(b.player().hp, 60, "the enemy never acted");
 
     // Fighting on wins and pays the trainer money (narrated; the runner
@@ -1493,9 +1878,17 @@ fn wild_run_ends_the_battle_with_the_run_outcome() {
     assert_eq!(b.current_line(), Some("Got away safely!"));
     settle(&mut b);
     assert_eq!(b.outcome(), Some(BattleOutcome::Run));
-    assert_eq!(b.log(), &["Got away safely!".to_string()], "no EXP/money, no faint lines");
+    assert_eq!(
+        b.log(),
+        &["Got away safely!".to_string()],
+        "no EXP/money, no faint lines"
+    );
     assert_eq!(b.party()[0].exp, 0, "a run awards no EXP");
-    assert_eq!(b.party()[0].hp, 60, "the party state carries over untouched");
+    assert_eq!(
+        b.party()[0].hp,
+        60,
+        "the party state carries over untouched"
+    );
 }
 
 #[test]

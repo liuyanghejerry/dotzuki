@@ -168,9 +168,7 @@ impl Voice {
             base: 0,
             eof: false,
             finished: false,
-            fade_in: opts
-                .fade_in
-                .map(|s| Fade::new(0.0, 1.0, s, sample_rate)),
+            fade_in: opts.fade_in.map(|s| Fade::new(0.0, 1.0, s, sample_rate)),
             fade_out: None,
             loop_len: 0.0,
         }
@@ -275,7 +273,12 @@ impl Voice {
     /// Begin (or replace) a fade-out towards zero; completes → remove.
     fn start_fade_out(&mut self, seconds: f32, sample_rate: u32) {
         let from = self.fade_out.as_ref().map(|f| f.gain()).unwrap_or(1.0);
-        self.fade_out = Some(Fade::new(from * self.volume.max(0.0), 0.0, seconds, sample_rate));
+        self.fade_out = Some(Fade::new(
+            from * self.volume.max(0.0),
+            0.0,
+            seconds,
+            sample_rate,
+        ));
     }
 }
 
@@ -331,7 +334,12 @@ impl Mixer {
     pub fn fade_bus(&mut self, bus: Bus, target: f32, seconds: f32) {
         let bs = &mut self.buses[bus.index()];
         let from = bs.fade.as_ref().map(|f| f.gain()).unwrap_or(bs.volume);
-        bs.fade = Some(Fade::new(from, target.clamp(0.0, 2.0), seconds, self.sample_rate));
+        bs.fade = Some(Fade::new(
+            from,
+            target.clamp(0.0, 2.0),
+            seconds,
+            self.sample_rate,
+        ));
     }
 
     /// The DSP chain attached to a bus (lowpass/reverb).
@@ -342,12 +350,7 @@ impl Mixer {
     // ── Voices ──
 
     /// Start a voice on `bus` and return its id.
-    pub fn play(
-        &mut self,
-        source: Box<dyn SourceDecoder>,
-        bus: Bus,
-        opts: &PlayOptions,
-    ) -> u64 {
+    pub fn play(&mut self, source: Box<dyn SourceDecoder>, bus: Bus, opts: &PlayOptions) -> u64 {
         if bus == Bus::Sfx {
             // Bound one-shots: drop the oldest SFX voice beyond the cap.
             let sfx_ids: Vec<u64> = self
@@ -517,7 +520,10 @@ mod tests {
     fn renders_voice_at_volume() {
         let mut mx = Mixer::new(44_100);
         let id = mx.play(
-            Box::new(TestSource { remaining: 100, value: 0.5 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 0.5,
+            }),
             Bus::Bgm,
             &PlayOptions::default(),
         );
@@ -533,9 +539,15 @@ mod tests {
     fn pan_hard_left_right() {
         let mut mx = Mixer::new(44_100);
         mx.play(
-            Box::new(TestSource { remaining: 10, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 10,
+                value: 1.0,
+            }),
             Bus::Sfx,
-            &PlayOptions { pan: -1.0, ..PlayOptions::default() },
+            &PlayOptions {
+                pan: -1.0,
+                ..PlayOptions::default()
+            },
         );
         let mut out = vec![0.0f32; 10 * 2];
         mx.render_into(&mut out);
@@ -543,9 +555,15 @@ mod tests {
 
         let mut mx = Mixer::new(44_100);
         mx.play(
-            Box::new(TestSource { remaining: 10, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 10,
+                value: 1.0,
+            }),
             Bus::Sfx,
-            &PlayOptions { pan: 1.0, ..PlayOptions::default() },
+            &PlayOptions {
+                pan: 1.0,
+                ..PlayOptions::default()
+            },
         );
         let mut out = vec![0.0f32; 10 * 2];
         mx.render_into(&mut out);
@@ -557,7 +575,10 @@ mod tests {
         let mut mx = Mixer::new(44_100);
         mx.set_bus_volume(Bus::Bgm, 0.5);
         mx.play(
-            Box::new(TestSource { remaining: 100, value: 0.4 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 0.4,
+            }),
             Bus::Bgm,
             &PlayOptions::default(),
         );
@@ -571,7 +592,10 @@ mod tests {
         mx.set_bus_volume(Bus::Bgm, 1.0);
         mx.fade_bus(Bus::Bgm, 0.0, 1.0);
         mx.play(
-            Box::new(TestSource { remaining: 44_100 * 2, value: 0.5 }),
+            Box::new(TestSource {
+                remaining: 44_100 * 2,
+                value: 0.5,
+            }),
             Bus::Bgm,
             &PlayOptions::default(),
         );
@@ -590,9 +614,15 @@ mod tests {
     fn voice_fade_in_ramps_up() {
         let mut mx = Mixer::new(44_100);
         mx.play(
-            Box::new(TestSource { remaining: 44_100, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 44_100,
+                value: 1.0,
+            }),
             Bus::Bgm,
-            &PlayOptions { fade_in: Some(0.5), ..PlayOptions::default() },
+            &PlayOptions {
+                fade_in: Some(0.5),
+                ..PlayOptions::default()
+            },
         );
         let mut out = vec![0.0f32; 44_100 * 2];
         mx.render_into(&mut out);
@@ -608,9 +638,15 @@ mod tests {
     fn stop_with_fade_out_then_removal() {
         let mut mx = Mixer::new(44_100);
         let id = mx.play(
-            Box::new(TestSource { remaining: 44_100 * 2, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 44_100 * 2,
+                value: 1.0,
+            }),
             Bus::Bgm,
-            &PlayOptions { fade_out: Some(0.25), ..PlayOptions::default() },
+            &PlayOptions {
+                fade_out: Some(0.25),
+                ..PlayOptions::default()
+            },
         );
         mx.stop_voice(id, Some(0.25));
         let mut out = vec![0.0f32; 44_100];
@@ -625,17 +661,26 @@ mod tests {
         let mut mx = Mixer::new(44_100);
         mx.max_sfx_voices = 2;
         let a = mx.play(
-            Box::new(TestSource { remaining: 100, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 1.0,
+            }),
             Bus::Sfx,
             &PlayOptions::default(),
         );
         let b = mx.play(
-            Box::new(TestSource { remaining: 100, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 1.0,
+            }),
             Bus::Sfx,
             &PlayOptions::default(),
         );
         let c = mx.play(
-            Box::new(TestSource { remaining: 100, value: 1.0 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 1.0,
+            }),
             Bus::Sfx,
             &PlayOptions::default(),
         );
@@ -652,7 +697,10 @@ mod tests {
         mx.play(
             open(Box::new(Cursor::new(wav)), Some("wav")).unwrap(),
             Bus::Bgm,
-            &PlayOptions { loop_audio: true, ..PlayOptions::default() },
+            &PlayOptions {
+                loop_audio: true,
+                ..PlayOptions::default()
+            },
         );
         let mut out = vec![0.0f32; 8000 * 2];
         mx.render_into(&mut out);
@@ -690,12 +738,18 @@ mod tests {
     fn two_voices_sum_on_same_bus() {
         let mut mx = Mixer::new(44_100);
         mx.play(
-            Box::new(TestSource { remaining: 100, value: 0.25 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 0.25,
+            }),
             Bus::Bgm,
             &PlayOptions::default(),
         );
         mx.play(
-            Box::new(TestSource { remaining: 100, value: 0.25 }),
+            Box::new(TestSource {
+                remaining: 100,
+                value: 0.25,
+            }),
             Bus::Bgm,
             &PlayOptions::default(),
         );

@@ -560,10 +560,7 @@ impl PartyMenuRenderer {
         let cur_str = format!("{:>3}", current_hp);
         let max_str = format!("{:>3}", max_hp);
         let combined = format!("{}/ {}", cur_str, max_str);
-        let tiles: Vec<u8> = combined
-            .chars()
-            .filter_map(encode_char)
-            .collect();
+        let tiles: Vec<u8> = combined.chars().filter_map(encode_char).collect();
         write_tiles_at(buf, text_x, y, &tiles);
     }
 

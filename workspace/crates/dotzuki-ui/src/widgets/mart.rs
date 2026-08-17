@@ -8,7 +8,7 @@
 //! - message: [message_box]
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, Ui};
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 // ---------------------------------------------------------------------------
 // Shared data types
@@ -78,11 +78,15 @@ fn money_label(balance: u32) -> String {
     format!("MONEY ${}", balance)
 }
 
-fn draw_money_box<P: Painter>(balance: u32, config: &MenuConfig, ui: &mut Ui<P>, rel_tx_override: Option<u32>) {
+fn draw_money_box<P: Painter>(
+    balance: u32,
+    config: &MenuConfig,
+    ui: &mut Ui<P>,
+    rel_tx_override: Option<u32>,
+) {
     ui.text_box(config.area, Rgba::INK_BLACK, true, |frame| {
-        let rel_tx = rel_tx_override.unwrap_or_else(|| {
-            config.content.tx.saturating_sub(config.area.tx + 1)
-        });
+        let rel_tx =
+            rel_tx_override.unwrap_or_else(|| config.content.tx.saturating_sub(config.area.tx + 1));
         let rel_ty = config.content.ty.saturating_sub(config.area.ty + 1);
         frame.label(rel_tx, rel_ty, &money_label(balance), Rgba::INK_BLACK);
     });
@@ -146,7 +150,9 @@ pub fn draw_mart_items<P: Painter>(data: &MartItemsData, configs: &[MenuConfig],
 
             for (i, entry) in data.items.iter().enumerate() {
                 let row = rel_ty + 1 + (i as u32 * 2);
-                if row >= rel_ty + list.content.th.saturating_sub(1) { break; }
+                if row >= rel_ty + list.content.th.saturating_sub(1) {
+                    break;
+                }
                 let label = format!("{:<12} ${:<5}", entry.name, entry.price);
                 frame.label(rel_tx + 1, row, &label, Rgba::INK_BLACK);
             }
@@ -169,7 +175,11 @@ pub fn draw_mart_items<P: Painter>(data: &MartItemsData, configs: &[MenuConfig],
 // draw_mart_confirm
 // ---------------------------------------------------------------------------
 
-pub fn draw_mart_confirm<P: Painter>(data: &MartConfirmData, configs: &[MenuConfig], painter: &mut P) {
+pub fn draw_mart_confirm<P: Painter>(
+    data: &MartConfirmData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
     let mut ui = Ui::new(painter);
 
     // Message region (configs[0], no border)
@@ -201,7 +211,11 @@ pub fn draw_mart_confirm<P: Painter>(data: &MartConfirmData, configs: &[MenuConf
 // draw_mart_quantity
 // ---------------------------------------------------------------------------
 
-pub fn draw_mart_quantity<P: Painter>(data: &MartQuantityData, configs: &[MenuConfig], painter: &mut P) {
+pub fn draw_mart_quantity<P: Painter>(
+    data: &MartQuantityData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
     let mut ui = Ui::new(painter);
 
     // Detail box (configs[0])
@@ -233,8 +247,14 @@ pub fn draw_mart_quantity<P: Painter>(data: &MartQuantityData, configs: &[MenuCo
 // draw_mart_result
 // ---------------------------------------------------------------------------
 
-pub fn draw_mart_result<P: Painter>(data: &MartResultData, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+pub fn draw_mart_result<P: Painter>(
+    data: &MartResultData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     ui.text_box(config.area, Rgba::INK_BLACK, true, |frame| {
         let rel_tx = config.content.tx.saturating_sub(config.area.tx + 1);
@@ -256,7 +276,12 @@ pub fn draw_mart_result<P: Painter>(data: &MartResultData, configs: &[MenuConfig
 
         // Balance
         let balance_text = money_label(data.balance);
-        frame.label(rel_tx, rel_ty + config.content.th.saturating_sub(1), &balance_text, Rgba::INK_BLACK);
+        frame.label(
+            rel_tx,
+            rel_ty + config.content.th.saturating_sub(1),
+            &balance_text,
+            Rgba::INK_BLACK,
+        );
     });
 }
 
@@ -264,8 +289,14 @@ pub fn draw_mart_result<P: Painter>(data: &MartResultData, configs: &[MenuConfig
 // draw_mart_message
 // ---------------------------------------------------------------------------
 
-pub fn draw_mart_message<P: Painter>(data: &MartMessageData, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+pub fn draw_mart_message<P: Painter>(
+    data: &MartMessageData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     ui.text_box(config.area, Rgba::INK_BLACK, true, |frame| {
         let rel_tx = config.content.tx.saturating_sub(config.area.tx + 1);
@@ -278,7 +309,12 @@ pub fn draw_mart_message<P: Painter>(data: &MartMessageData, configs: &[MenuConf
         for (i, line) in msg_lines.iter().enumerate() {
             let line_w = line.len() as u32;
             let pad_x = config.content.tw.saturating_sub(line_w) / 2;
-            frame.label(rel_tx + pad_x, rel_ty + vert_pad + i as u32, line, Rgba::INK_BLACK);
+            frame.label(
+                rel_tx + pad_x,
+                rel_ty + vert_pad + i as u32,
+                line,
+                Rgba::INK_BLACK,
+            );
         }
 
         // Balance
@@ -305,89 +341,179 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn menu_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(1,1,18,16), None, TileRect::new(2,2,16,14), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(1, 1, 18, 16),
+            None,
+            TileRect::new(2, 2, 16, 14),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
     fn money_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(1,14,18,3), None, TileRect::new(2,15,16,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(1, 14, 18, 3),
+            None,
+            TileRect::new(2, 15, 16, 1),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn choice_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(10,10,8,6), None, TileRect::new(11,11,6,4), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(10, 10, 8, 6),
+            None,
+            TileRect::new(11, 11, 6, 4),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
 
-    #[test] fn draw_main_shows_options() {
-        let data = MartMainData { greeting: "Welcome!".into(), options: vec!["BUY".into(),"SELL".into(),"QUIT".into()], cursor: 0, balance: 5000 };
+    #[test]
+    fn draw_main_shows_options() {
+        let data = MartMainData {
+            greeting: "Welcome!".into(),
+            options: vec!["BUY".into(), "SELL".into(), "QUIT".into()],
+            cursor: 0,
+            balance: 5000,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_main(&data, &[menu_config(), money_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "BUY"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "SELL"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "QUIT"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "BUY"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "SELL"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "QUIT"));
     }
-    #[test] fn draw_main_shows_money() {
-        let data = MartMainData { greeting: "Hi!".into(), options: vec!["BUY".into()], cursor: 0, balance: 9999 };
+    #[test]
+    fn draw_main_shows_money() {
+        let data = MartMainData {
+            greeting: "Hi!".into(),
+            options: vec!["BUY".into()],
+            cursor: 0,
+            balance: 9999,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_main(&data, &[menu_config(), money_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("9999")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("9999")));
         assert_eq!(painter.text_boxes.len(), 2); // menu box + money box
     }
-    #[test] fn draw_main_cursor() {
-        let data = MartMainData { greeting: "Hi!".into(), options: vec!["BUY".into(),"SELL".into()], cursor: 1, balance: 100 };
+    #[test]
+    fn draw_main_cursor() {
+        let data = MartMainData {
+            greeting: "Hi!".into(),
+            options: vec!["BUY".into(), "SELL".into()],
+            cursor: 1,
+            balance: 100,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_main(&data, &[menu_config()], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn draw_items_shows_entries() {
+    #[test]
+    fn draw_items_shows_entries() {
         let data = MartItemsData {
-            items: vec![MartItemEntry { name: "POTION".into(), price: 300, owned: None }],
-            cursor: 0, balance: 5000, title: "BUY".into(),
+            items: vec![MartItemEntry {
+                name: "POTION".into(),
+                price: 300,
+                owned: None,
+            }],
+            cursor: 0,
+            balance: 5000,
+            title: "BUY".into(),
         };
         let mut painter = RecordingPainter::default();
         draw_mart_items(&data, &[menu_config(), money_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("POTION")));
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("300")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("POTION")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("300")));
         assert_eq!(painter.text_boxes.len(), 2);
     }
-    #[test] fn draw_confirm_yes_no() {
-        let data = MartConfirmData { item_name: "POTION".into(), item_price: 300, balance: 1000, cursor: 0 };
-        let msg_cfg = MenuConfig::new(TileRect::new(1,10,18,3), None, TileRect::new(1,10,18,2), dotzuki_engine::menu::CursorStyle::new(None, Default::default()));
+    #[test]
+    fn draw_confirm_yes_no() {
+        let data = MartConfirmData {
+            item_name: "POTION".into(),
+            item_price: 300,
+            balance: 1000,
+            cursor: 0,
+        };
+        let msg_cfg = MenuConfig::new(
+            TileRect::new(1, 10, 18, 3),
+            None,
+            TileRect::new(1, 10, 18, 2),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        );
         let mut painter = RecordingPainter::default();
         draw_mart_confirm(&data, &[msg_cfg, choice_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "YES"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "NO"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "YES"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "NO"));
     }
-    #[test] fn draw_confirm_cursor() {
-        let data = MartConfirmData { item_name: "POTION".into(), item_price: 300, balance: 500, cursor: 1 };
-        let msg_cfg = MenuConfig::new(TileRect::new(1,10,18,3), None, TileRect::new(1,10,18,2), dotzuki_engine::menu::CursorStyle::new(None, Default::default()));
+    #[test]
+    fn draw_confirm_cursor() {
+        let data = MartConfirmData {
+            item_name: "POTION".into(),
+            item_price: 300,
+            balance: 500,
+            cursor: 1,
+        };
+        let msg_cfg = MenuConfig::new(
+            TileRect::new(1, 10, 18, 3),
+            None,
+            TileRect::new(1, 10, 18, 2),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        );
         let mut painter = RecordingPainter::default();
         draw_mart_confirm(&data, &[msg_cfg, choice_config()], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn draw_quantity() {
-        let data = MartQuantityData { item_name: "POTION".into(), item_price: 300, quantity: 3, total: 900, balance: 5000, max_quantity: 10 };
+    #[test]
+    fn draw_quantity() {
+        let data = MartQuantityData {
+            item_name: "POTION".into(),
+            item_price: 300,
+            quantity: 3,
+            total: 900,
+            balance: 5000,
+            max_quantity: 10,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_quantity(&data, &[menu_config(), money_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("POTION")));
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("900")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("POTION")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("900")));
         assert_eq!(painter.text_boxes.len(), 2);
     }
-    #[test] fn draw_result() {
-        let data = MartResultData { message: "Here you are!".into(), item_name: "POTION".into(), item_quantity: 3, total_cost: 900, balance: 4100 };
+    #[test]
+    fn draw_result() {
+        let data = MartResultData {
+            message: "Here you are!".into(),
+            item_name: "POTION".into(),
+            item_quantity: 3,
+            total_cost: 900,
+            balance: 4100,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_result(&data, &[menu_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("Here you are")));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(_, t, _)| t.contains("Here you are")));
     }
-    #[test] fn draw_message() {
-        let data = MartMessageData { message: "No money!".into(), balance: 50 };
+    #[test]
+    fn draw_message() {
+        let data = MartMessageData {
+            message: "No money!".into(),
+            balance: 50,
+        };
         let mut painter = RecordingPainter::default();
         draw_mart_message(&data, &[menu_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("No money")));
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("50")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("No money")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("50")));
     }
 }

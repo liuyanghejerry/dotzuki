@@ -18,7 +18,6 @@
 //! - **Frame-by-frame typing**: [`DialogEngine::update`] processes one
 //!   character per call, enabling the classic typewriter effect.
 
-
 // ── TilePos ────────────────────────────────────────────────────────
 
 /// A position on the tile grid, measured in tiles.
@@ -306,10 +305,7 @@ pub trait TextProvider {
     /// The default implementation calls [`decode_byte`] for each byte,
     /// collecting all `Some` results.  Override for multi-byte encodings.
     fn decode_stream(&self, bytes: &[u8]) -> TextStream<Self::Char> {
-        let chars: Vec<Self::Char> = bytes
-            .iter()
-            .filter_map(|&b| self.decode_byte(b))
-            .collect();
+        let chars: Vec<Self::Char> = bytes.iter().filter_map(|&b| self.decode_byte(b)).collect();
         TextStream::new(chars)
     }
 
@@ -733,10 +729,7 @@ mod tests {
     #[test]
     fn test_string_width() {
         let provider = MockAsciiProvider;
-        let chars = vec![
-            MockChar::Ascii('H'),
-            MockChar::Ascii('I'),
-        ];
+        let chars = vec![MockChar::Ascii('H'), MockChar::Ascii('I')];
         assert_eq!(provider.string_width(&chars), 16);
         assert_eq!(provider.string_width(&[]), 0);
     }

@@ -135,9 +135,7 @@ fn render_text_element(
     let ElementParams::Text(ref params) = element.params else {
         return Ok(());
     };
-    crate::layout_engine::elements::text::render_text(
-        element, params, ctx, render_ctx, painter,
-    )
+    crate::layout_engine::elements::text::render_text(element, params, ctx, render_ctx, painter)
 }
 
 fn render_tile_element(
@@ -149,9 +147,7 @@ fn render_tile_element(
     let ElementParams::Tile(ref params) = element.params else {
         return Ok(());
     };
-    crate::layout_engine::elements::tile::render_tile(
-        element, params, ctx, render_ctx, painter,
-    )
+    crate::layout_engine::elements::tile::render_tile(element, params, ctx, render_ctx, painter)
 }
 
 fn render_divider_element(
@@ -177,9 +173,7 @@ fn render_image_element(
     let ElementParams::Image(ref params) = element.params else {
         return Ok(());
     };
-    crate::layout_engine::elements::image::render_image(
-        element, params, ctx, render_ctx, painter,
-    )
+    crate::layout_engine::elements::image::render_image(element, params, ctx, render_ctx, painter)
 }
 
 fn render_list_element(
@@ -283,9 +277,7 @@ fn render_group_element(
     );
 
     let layout = GroupLayout::from_config(&params.layout);
-    let group = Group::new(rect)
-        .with_layout(layout)
-        .with_clip(params.clip);
+    let group = Group::new(rect).with_layout(layout).with_clip(params.clip);
 
     // Resolve children to absolute positions
     let resolved = group.resolve_children(&params.children, ctx);
@@ -325,9 +317,7 @@ fn parse_bg_color(hex: &str) -> Rgba {
         "#ffffff" | "#e0e0e0" | "white" => Rgba::INK_WHITE,
         // Any other hex value (e.g. a full-colour theme like wuxia's parchment
         // "#18140F") is parsed as a literal colour.
-        other if other.starts_with('#') => {
-            crate::layout_engine::elements::text::parse_color(other)
-        }
+        other if other.starts_with('#') => crate::layout_engine::elements::text::parse_color(other),
         // Unrecognised non-hex names keep the legacy white fallback.
         other => {
             log::warn!("Unknown bg_color '{}' — falling back to White", other);
@@ -410,24 +400,11 @@ mod tests {
             self.ops.push(DrawOp::Glyph(pos, glyph, color));
         }
 
-        fn draw_pixel_rect(
-            &mut self,
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-            color: EngineRgba,
-        ) {
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, color: EngineRgba) {
             self.ops.push(DrawOp::PixelRect(px, py, pw, ph, color));
         }
 
-        fn draw_gb_tile(
-            &mut self,
-            pos: TilePos,
-            tile_id: u8,
-            fallback: &str,
-            color: EngineRgba,
-        ) {
+        fn draw_gb_tile(&mut self, pos: TilePos, tile_id: u8, fallback: &str, color: EngineRgba) {
             self.ops
                 .push(DrawOp::GbTile(pos, tile_id, fallback.to_string(), color));
         }
@@ -652,7 +629,10 @@ mod tests {
             .iter()
             .filter(|op| !matches!(op, DrawOp::Clear(_)))
             .collect();
-        assert!(non_clear_ops.is_empty(), "unknown type should skip rendering");
+        assert!(
+            non_clear_ops.is_empty(),
+            "unknown type should skip rendering"
+        );
     }
 
     // ── test_dispatch_custom ──────────────────────────────────────────

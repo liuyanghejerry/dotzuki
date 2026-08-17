@@ -25,51 +25,56 @@ pub fn scene_to_script_config(scene: &ast::GameScene) -> Value {
     for storyline in &scene.storylines {
         let fn_name = storyline.name.clone();
         for trigger in &storyline.triggers {
-        if let Some(id) = trigger.npc_id {
-            let entry = npcs.entry(id).or_insert_with(Map::new);
-            entry.insert("id".into(), json!(id));
-            if !trigger.no_talk {
-                entry.insert("talk".into(), json!(fn_name));
+            if let Some(id) = trigger.npc_id {
+                let entry = npcs.entry(id).or_insert_with(Map::new);
+                entry.insert("id".into(), json!(id));
+                if !trigger.no_talk {
+                    entry.insert("talk".into(), json!(fn_name));
+                }
+                if let Some(t) = &trigger.toggle_id {
+                    entry.insert("toggleId".into(), json!(t));
+                }
+                if let Some(s) = &trigger.script_id {
+                    entry.insert("scriptId".into(), json!(s));
+                }
+                if trigger.default_hidden {
+                    entry.insert("defaultHidden".into(), json!(true));
+                }
             }
-            if let Some(t) = &trigger.toggle_id {
-                entry.insert("toggleId".into(), json!(t));
-            }
-            if let Some(s) = &trigger.script_id {
-                entry.insert("scriptId".into(), json!(s));
-            }
-            if trigger.default_hidden {
-                entry.insert("defaultHidden".into(), json!(true));
-            }
-        }
 
-        if let Some(id) = trigger.sign_id {
-            signs.insert(id, fn_name.clone());
-        }
+            if let Some(id) = trigger.sign_id {
+                signs.insert(id, fn_name.clone());
+            }
 
-        for (idx, (x, y)) in trigger.coords.iter().enumerate() {
-            let coord_name = if trigger.name.is_empty() {
-                format!("{}_{}_{}", fn_name, x, y)
-            } else if trigger.coords.len() == 1 {
-                trigger.name.clone()
-            } else {
-                // Multiple coords with a named trigger: the .scene `name`
-                // already carries the first coord's suffix (e.g. "northExit1",
-                // "cardKeyDoor11"). Strip only the LAST digit so
-                // "cardKeyDoor11" → base "cardKeyDoor1", not "cardKeyDoor".
-                let base =
-                    if trigger.name.as_bytes().last().map_or(false, |b| b.is_ascii_digit()) {
+            for (idx, (x, y)) in trigger.coords.iter().enumerate() {
+                let coord_name = if trigger.name.is_empty() {
+                    format!("{}_{}_{}", fn_name, x, y)
+                } else if trigger.coords.len() == 1 {
+                    trigger.name.clone()
+                } else {
+                    // Multiple coords with a named trigger: the .scene `name`
+                    // already carries the first coord's suffix (e.g. "northExit1",
+                    // "cardKeyDoor11"). Strip only the LAST digit so
+                    // "cardKeyDoor11" → base "cardKeyDoor1", not "cardKeyDoor".
+                    let base = if trigger
+                        .name
+                        .as_bytes()
+                        .last()
+                        .map_or(false, |b| b.is_ascii_digit())
+                    {
                         &trigger.name[..trigger.name.len() - 1]
                     } else {
                         trigger.name.as_str()
                     };
-                if idx == 0 {
-                    trigger.name.clone()
-                } else {
-                    format!("{}{}", base, idx + 1)
-                }
-            };
-            coord_events.push(json!({ "name": coord_name, "position": [*x, *y], "trigger": fn_name }));
-        }
+                    if idx == 0 {
+                        trigger.name.clone()
+                    } else {
+                        format!("{}{}", base, idx + 1)
+                    }
+                };
+                coord_events
+                    .push(json!({ "name": coord_name, "position": [*x, *y], "trigger": fn_name }));
+            }
         } // for trigger
     } // for storyline
 
@@ -175,10 +180,24 @@ pub fn normalize_config(value: &Value) -> Value {
         .unwrap_or_default();
     coords.sort_by_key(|c| {
         let pos = c.get("position").and_then(|v| v.as_array());
-        let x = pos.and_then(|p| p.first()).and_then(|v| v.as_u64()).unwrap_or(0);
-        let y = pos.and_then(|p| p.get(1)).and_then(|v| v.as_u64()).unwrap_or(0);
-        let trig = c.get("trigger").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        let name = c.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let x = pos
+            .and_then(|p| p.first())
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0);
+        let y = pos
+            .and_then(|p| p.get(1))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0);
+        let trig = c
+            .get("trigger")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let name = c
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
         (x, y, trig, name)
     });
     out.insert("coordEvents".into(), Value::Array(coords));
@@ -197,7 +216,10 @@ fn normalize_npc(v: &Value) -> Value {
     };
     let mut out = Map::new();
     out.insert("id".into(), obj.get("id").cloned().unwrap_or(Value::Null));
-    out.insert("talk".into(), obj.get("talk").cloned().unwrap_or(Value::Null));
+    out.insert(
+        "talk".into(),
+        obj.get("talk").cloned().unwrap_or(Value::Null),
+    );
     out.insert(
         "toggleId".into(),
         obj.get("toggleId").cloned().unwrap_or(Value::Null),
@@ -208,7 +230,10 @@ fn normalize_npc(v: &Value) -> Value {
     );
     out.insert(
         "defaultHidden".into(),
-        json!(obj.get("defaultHidden").and_then(|v| v.as_bool()).unwrap_or(false)),
+        json!(obj
+            .get("defaultHidden")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)),
     );
     Value::Object(out)
 }
@@ -281,6 +306,9 @@ game_scene SilphCo7F {
         let npc = &got["npcs"][0];
         assert_eq!(npc["id"], json!(12));
         assert_eq!(npc["toggleId"], json!("SILPH_CO_7F_OBJ_12"));
-        assert!(npc.get("talk").is_none(), "object-only npc must have no talk fn");
+        assert!(
+            npc.get("talk").is_none(),
+            "object-only npc must have no talk fn"
+        );
     }
 }

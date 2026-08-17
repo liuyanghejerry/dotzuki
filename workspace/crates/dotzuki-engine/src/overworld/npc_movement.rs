@@ -275,7 +275,8 @@ pub fn update_npc_movement<T: TilesetTrait>(
                 }
 
                 // Check tile passability
-                let target_tile = provider.get_tile_at_position(tileset, blocks, map_width_blocks, tx, ty);
+                let target_tile =
+                    provider.get_tile_at_position(tileset, blocks, map_width_blocks, tx, ty);
                 if !provider.is_tile_passable(tileset, target_tile) {
                     npc.facing = dir;
                     npc.delay_counter = rng_value & NPC_MAX_DELAY;
@@ -335,7 +336,13 @@ pub fn npc_in_front_of_player<'a, M: MapTrait, T: TilesetTrait, Mus>(
     // Counter tile extension: if the tile in front is a counter,
     // check one more tile in the same direction for an NPC behind it.
     if let Some(map_data) = map {
-        let tile = provider.get_tile_at_position(map_data.tileset, &map_data.blocks, map_data.width, target_x, target_y);
+        let tile = provider.get_tile_at_position(
+            map_data.tileset,
+            &map_data.blocks,
+            map_data.width,
+            target_x,
+            target_y,
+        );
         if provider.is_counter_tile(map_data.tileset, tile) {
             let extended_x = (target_x as i32 + dx as i32) as u16;
             let extended_y = (target_y as i32 + dy as i32) as u16;

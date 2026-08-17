@@ -7,12 +7,12 @@
 
 use std::sync::Mutex;
 
+use crate::asset_provider::ResourceProvider;
 use crate::battle_scene::{
     calc_hp_bar_pixels, BATTLE_HP_BAR_TILES, TILE_HP_BAR_LEFT, TILE_HP_EMPTY,
     TILE_HP_END_CAP_BATTLE, TILE_HP_FULL, TILE_HP_LABEL, TILE_HP_PARTIAL_BASE,
 };
 use crate::palette::{GbColor, Palette};
-use crate::asset_provider::ResourceProvider;
 use crate::tile::{TileSet, TILE_PIXELS};
 use crate::FbSurface;
 use dotzuki_engine::render::Rgba;
@@ -29,9 +29,18 @@ const PARTY_HP_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0x55, 0x55, 0x55),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: std::marker::PhantomData,

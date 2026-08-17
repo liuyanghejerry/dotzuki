@@ -458,9 +458,7 @@ impl<P: BattleProvider + ?Sized> Clone for BattleAction<P> {
 impl<P: BattleProvider + ?Sized> fmt::Debug for BattleAction<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BattleAction::Fight { move_ } => {
-                f.debug_struct("Fight").field("move_", move_).finish()
-            }
+            BattleAction::Fight { move_ } => f.debug_struct("Fight").field("move_", move_).finish(),
             BattleAction::Switch { to_slot } => {
                 f.debug_struct("Switch").field("to_slot", to_slot).finish()
             }
@@ -556,11 +554,7 @@ pub trait BattleProvider {
 
     /// Select a move for the given battler. Typically delegates to a
     /// [`BattleAI`] implementation.
-    fn select_move(
-        &self,
-        battler: &BattlerState<Self>,
-        state: &BattleState<Self>,
-    ) -> Self::Move;
+    fn select_move(&self, battler: &BattlerState<Self>, state: &BattleState<Self>) -> Self::Move;
 
     /// Apply a move's effect after damage has been dealt. Typically
     /// delegates to an [`EffectHandler`] implementation.
@@ -1099,11 +1093,15 @@ mod tests {
             _is_critical: bool,
         ) -> DamageResult {
             let atk = attacker.stats.get(MockStat::Attack).copied().unwrap_or(0);
-            let def = defender.stats.get(MockStat::Defense).copied().unwrap_or(1).max(1);
+            let def = defender
+                .stats
+                .get(MockStat::Defense)
+                .copied()
+                .unwrap_or(1)
+                .max(1);
             let defender_types: Vec<MockType> = vec![]; // Simplified: uses move_type only
 
-            let effectiveness =
-                MockTypeChart::effectiveness(&move_.move_type, &defender_types);
+            let effectiveness = MockTypeChart::effectiveness(&move_.move_type, &defender_types);
 
             if effectiveness == 0.0 {
                 return DamageResult {
@@ -1140,11 +1138,7 @@ mod tests {
             target: &mut BattlerState<Self>,
         ) -> EffectResult {
             // Simplified: always deal damage based on first move's power.
-            let power = user
-                .moves
-                .first()
-                .map(|m| m.power)
-                .unwrap_or(0);
+            let power = user.moves.first().map(|m| m.power).unwrap_or(0);
             if power == 0 {
                 return EffectResult::NoEffect;
             }
@@ -1186,10 +1180,7 @@ mod tests {
             false
         }
 
-        fn should_use_item(
-            &self,
-            _battler: &BattlerState<MockProvider>,
-        ) -> Option<String> {
+        fn should_use_item(&self, _battler: &BattlerState<MockProvider>) -> Option<String> {
             None
         }
     }
@@ -1227,7 +1218,12 @@ mod tests {
     // ── Helper ────────────────────────────────────────────────────────
 
     /// Create a mock battler with given type and stats.
-    fn make_battler(species: MockSpecies, hp: u16, atk: u16, def: u16) -> BattlerState<MockProvider> {
+    fn make_battler(
+        species: MockSpecies,
+        hp: u16,
+        atk: u16,
+        def: u16,
+    ) -> BattlerState<MockProvider> {
         let mut stats = EnumMap::new();
         stats.set(MockStat::Hp, hp);
         stats.set(MockStat::Attack, atk);
@@ -1249,31 +1245,46 @@ mod tests {
     #[test]
     fn type_a_beats_type_b() {
         let eff = MockTypeChart::effectiveness(&MockType::TypeA, &[MockType::TypeB]);
-        assert!((eff - 2.0).abs() < f32::EPSILON, "TypeA should be 2x vs TypeB, got {eff}");
+        assert!(
+            (eff - 2.0).abs() < f32::EPSILON,
+            "TypeA should be 2x vs TypeB, got {eff}"
+        );
     }
 
     #[test]
     fn type_a_vs_type_a_is_half() {
         let eff = MockTypeChart::effectiveness(&MockType::TypeA, &[MockType::TypeA]);
-        assert!((eff - 0.5).abs() < f32::EPSILON, "TypeA vs TypeA should be 0.5x, got {eff}");
+        assert!(
+            (eff - 0.5).abs() < f32::EPSILON,
+            "TypeA vs TypeA should be 0.5x, got {eff}"
+        );
     }
 
     #[test]
     fn type_b_beats_type_c() {
         let eff = MockTypeChart::effectiveness(&MockType::TypeB, &[MockType::TypeC]);
-        assert!((eff - 2.0).abs() < f32::EPSILON, "TypeB should be 2x vs TypeC, got {eff}");
+        assert!(
+            (eff - 2.0).abs() < f32::EPSILON,
+            "TypeB should be 2x vs TypeC, got {eff}"
+        );
     }
 
     #[test]
     fn type_c_beats_type_a() {
         let eff = MockTypeChart::effectiveness(&MockType::TypeC, &[MockType::TypeA]);
-        assert!((eff - 2.0).abs() < f32::EPSILON, "TypeC should be 2x vs TypeA, got {eff}");
+        assert!(
+            (eff - 2.0).abs() < f32::EPSILON,
+            "TypeC should be 2x vs TypeA, got {eff}"
+        );
     }
 
     #[test]
     fn type_b_vs_type_a_is_half() {
         let eff = MockTypeChart::effectiveness(&MockType::TypeB, &[MockType::TypeA]);
-        assert!((eff - 0.5).abs() < f32::EPSILON, "TypeB vs TypeA should be 0.5x, got {eff}");
+        assert!(
+            (eff - 0.5).abs() < f32::EPSILON,
+            "TypeB vs TypeA should be 0.5x, got {eff}"
+        );
     }
 
     // ── Tests: BattleProvider ─────────────────────────────────────────
@@ -1414,7 +1425,12 @@ mod tests {
         let mut user = make_battler(MockSpecies::Alpha, 100, 50, 30);
         let mut target = make_battler(MockSpecies::Beta, 100, 40, 40);
 
-        let r1 = handler.handle_effect(MoveEffect::StatusCondition, &mut user, &mut target, &provider);
+        let r1 = handler.handle_effect(
+            MoveEffect::StatusCondition,
+            &mut user,
+            &mut target,
+            &provider,
+        );
         assert_eq!(r1, EffectResult::StatusInflicted);
 
         let r2 = handler.handle_effect(MoveEffect::StatChange, &mut user, &mut target, &provider);
@@ -1518,7 +1534,10 @@ mod tests {
         // An empty pool: a 0 cost is always payable (inert); any positive cost on
         // an undeclared resource is NOT payable.
         assert!(pool.can_pay(0, 0), "0 cost is always payable");
-        assert!(!pool.can_pay(0, 1), "positive cost on undeclared resource ⇒ not payable");
+        assert!(
+            !pool.can_pay(0, 1),
+            "positive cost on undeclared resource ⇒ not payable"
+        );
         assert_eq!(pool.current(0), None);
     }
 
@@ -1563,9 +1582,15 @@ mod tests {
         // resources — the additivity invariant.
         let b: BattlerState<MockProvider> =
             BattlerState::new(MockSpecies::Alpha, 100, 100, EnumMap::new(), vec![]);
-        assert!(b.resources.is_empty(), "default battler has an empty resource pool");
+        assert!(
+            b.resources.is_empty(),
+            "default battler has an empty resource pool"
+        );
         assert!(b.can_pay_resource(0, 0), "0 cost payable on an empty pool");
-        assert!(!b.can_pay_resource(0, 5), "positive cost unpayable on an empty pool");
+        assert!(
+            !b.can_pay_resource(0, 5),
+            "positive cost unpayable on an empty pool"
+        );
 
         // `with_resource` declares one and the pay helpers work end to end.
         let mut b = b.with_resource(0, 8);
@@ -1871,14 +1896,23 @@ mod driver_tests {
             hp,
             hp,
             stats,
-            vec![DMove { power, accuracy: 255 }],
+            vec![DMove {
+                power,
+                accuracy: 255,
+            }],
         )
     }
 
     fn mon(hp: u16, speed: u16, accuracy: u8, power: u8) -> BattlerState<DProvider> {
         let mut stats = EnumMap::new();
         stats.set(DStat::Speed, speed);
-        BattlerState::new(DSpecies::Mon, hp, hp, stats, vec![DMove { power, accuracy }])
+        BattlerState::new(
+            DSpecies::Mon,
+            hp,
+            hp,
+            stats,
+            vec![DMove { power, accuracy }],
+        )
     }
 
     /// A connecting (accuracy 255) move action of the given power.
@@ -1917,7 +1951,11 @@ mod driver_tests {
         // bytes per fight. Keep accuracy bytes below 255 so moves connect.
         let mut rng = ScriptedRng::new(vec![5, 5, 0, 0, 0, 0]);
         let out = BattleDriver::execute_turn(&provider, &mut state, [fight(), fight()], &mut rng);
-        assert_eq!(first_mover(&out), BattlerRef::OPPONENT, "faster opponent acts first");
+        assert_eq!(
+            first_mover(&out),
+            BattlerRef::OPPONENT,
+            "faster opponent acts first"
+        );
     }
 
     #[test]
@@ -1928,7 +1966,11 @@ mod driver_tests {
         let mut state = BattleState::new(vec![mon(100, 50, 255, 20)], vec![mon(100, 50, 255, 20)]);
         let mut rng = ScriptedRng::new(vec![9, 1, 0, 0, 0, 0]);
         let out = BattleDriver::execute_turn(&provider, &mut state, [fight(), fight()], &mut rng);
-        assert_eq!(first_mover(&out), BattlerRef::OPPONENT, "smaller tiebreak acts first");
+        assert_eq!(
+            first_mover(&out),
+            BattlerRef::OPPONENT,
+            "smaller tiebreak acts first"
+        );
     }
 
     #[test]
@@ -2012,8 +2054,12 @@ mod driver_tests {
         let mut state = BattleState::new(vec![mon(100, 50, 255, 0)], vec![mon(100, 50, 255, 0)]);
         // Power-0 moves so only the residual changes HP.
         let mut rng = ScriptedRng::new(vec![1, 2, 0, 0, 0, 0]);
-        let out =
-            BattleDriver::execute_turn(&provider, &mut state, [fight_pow(0), fight_pow(0)], &mut rng);
+        let out = BattleDriver::execute_turn(
+            &provider,
+            &mut state,
+            [fight_pow(0), fight_pow(0)],
+            &mut rng,
+        );
         assert_eq!(state.player_battlers[0].hp, 95);
         assert_eq!(state.opponent_battlers[0].hp, 95);
         assert_eq!(
@@ -2103,8 +2149,7 @@ mod driver_tests {
         // `critical: true` on the player's `Damage` event.
         let provider = CritProvider;
         // Player fast (acts first), power-10 move → 20 damage on a crit.
-        let mut state =
-            BattleState::new(vec![crit_mon(100, 99, 10)], vec![crit_mon(100, 10, 10)]);
+        let mut state = BattleState::new(vec![crit_mon(100, 99, 10)], vec![crit_mon(100, 10, 10)]);
         // Default turn_order/accuracy/roll_critical draw no rng; only the two
         // `calculate_damage` random bytes are consumed.
         let mut rng = ScriptedRng::new(vec![0, 0]);
@@ -2122,7 +2167,10 @@ mod driver_tests {
         );
 
         // (a) Crit doubled the damage in the formula.
-        assert_eq!(state.opponent_battlers[0].hp, 80, "crit doubled 10 → 20 dmg");
+        assert_eq!(
+            state.opponent_battlers[0].hp, 80,
+            "crit doubled 10 → 20 dmg"
+        );
 
         // (b) The player's Damage event reports the crit.
         let player_dmg = out

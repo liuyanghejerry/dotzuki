@@ -245,7 +245,9 @@ mod tests {
     #[test]
     fn boot_fails_with_named_step() {
         // An empty project: the manifest read fails inside project load.
-        let err = WasmRunner::boot(r#"{}"#, None).err().expect("boot should fail");
+        let err = WasmRunner::boot(r#"{}"#, None)
+            .err()
+            .expect("boot should fail");
         assert!(err.contains("project load failed"), "{err}");
         assert!(err.contains(".dotzuki-editor.json"), "{err}");
     }

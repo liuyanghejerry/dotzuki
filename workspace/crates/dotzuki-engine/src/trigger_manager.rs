@@ -257,12 +257,7 @@ impl TriggerManager {
     /// This is a read-only query — it does **not** mark one-shot triggers
     /// as fired.  Use [`check_interact_mut`](Self::check_interact_mut) when
     /// you also want to disable the trigger after activation.
-    pub fn check_interact(
-        &self,
-        map_id: &str,
-        facing_x: u32,
-        facing_y: u32,
-    ) -> Option<&str> {
+    pub fn check_interact(&self, map_id: &str, facing_x: u32, facing_y: u32) -> Option<&str> {
         self.triggers
             .iter()
             .find(|t| {
@@ -327,7 +322,15 @@ mod tests {
     #[test]
     fn on_step_fires_when_standing() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 2, 3, "stepFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "stepFn",
+            false,
+        ));
         // Need one call to establish previous position
         mgr.check_triggers("map1", 0, 0);
         let names = mgr.check_triggers("map1", 2, 3);
@@ -337,7 +340,15 @@ mod tests {
     #[test]
     fn on_step_fires_every_frame() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 2, 3, "stepFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "stepFn",
+            false,
+        ));
         mgr.check_triggers("map1", 0, 0); // establish prev
         let first = mgr.check_triggers("map1", 2, 3);
         let second = mgr.check_triggers("map1", 2, 3);
@@ -348,7 +359,15 @@ mod tests {
     #[test]
     fn on_step_does_not_fire_when_not_standing() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 2, 3, "stepFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "stepFn",
+            false,
+        ));
         mgr.check_triggers("map1", 0, 0);
         let names = mgr.check_triggers("map1", 5, 5);
         assert!(names.is_empty());
@@ -359,7 +378,15 @@ mod tests {
     #[test]
     fn on_enter_fires_once_on_entry() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnEnter, 2, 3, "enterFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnEnter,
+            2,
+            3,
+            "enterFn",
+            false,
+        ));
         // Player is outside area
         mgr.check_triggers("map1", 0, 0);
         // Player walks in
@@ -370,7 +397,15 @@ mod tests {
     #[test]
     fn on_enter_does_not_refire() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnEnter, 2, 3, "enterFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnEnter,
+            2,
+            3,
+            "enterFn",
+            false,
+        ));
         mgr.check_triggers("map1", 0, 0); // outside
         mgr.check_triggers("map1", 2, 3); // enter — fires
         let second = mgr.check_triggers("map1", 2, 3); // still inside — no fire
@@ -380,7 +415,15 @@ mod tests {
     #[test]
     fn on_enter_fires_on_different_map_entry() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map2", TriggerType::OnEnter, 0, 0, "enterFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map2",
+            TriggerType::OnEnter,
+            0,
+            0,
+            "enterFn",
+            false,
+        ));
         mgr.check_triggers("map1", 5, 5); // different map
         let names = mgr.check_triggers("map2", 0, 0); // first frame on map2
         assert_eq!(names, vec!["enterFn"]);
@@ -391,7 +434,15 @@ mod tests {
     #[test]
     fn one_shot_trigger_fires_once() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 2, 3, "onceFn", true));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "onceFn",
+            true,
+        ));
         mgr.check_triggers("map1", 0, 0);
         let first = mgr.check_triggers("map1", 2, 3);
         let second = mgr.check_triggers("map1", 2, 3);
@@ -402,7 +453,15 @@ mod tests {
     #[test]
     fn one_shot_reset_allows_refire() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 2, 3, "onceFn", true));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "onceFn",
+            true,
+        ));
         mgr.check_triggers("map1", 0, 0);
         mgr.check_triggers("map1", 2, 3); // fires
         mgr.reset_fired_for_map("map1");
@@ -416,7 +475,15 @@ mod tests {
     #[test]
     fn on_interact_fires_on_facing_tile() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnInteract, 5, 5, "talkFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnInteract,
+            5,
+            5,
+            "talkFn",
+            false,
+        ));
         let name = mgr.check_interact("map1", 5, 5);
         assert_eq!(name, Some("talkFn"));
     }
@@ -424,7 +491,15 @@ mod tests {
     #[test]
     fn on_interact_ignores_wrong_position() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnInteract, 5, 5, "talkFn", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnInteract,
+            5,
+            5,
+            "talkFn",
+            false,
+        ));
         let name = mgr.check_interact("map1", 0, 0);
         assert!(name.is_none());
     }
@@ -432,7 +507,15 @@ mod tests {
     #[test]
     fn on_interact_mut_marks_fired() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnInteract, 5, 5, "talkFn", true));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnInteract,
+            5,
+            5,
+            "talkFn",
+            true,
+        ));
         let first = mgr.check_interact_mut("map1", 5, 5);
         assert_eq!(first, Some("talkFn".into()));
         let second = mgr.check_interact("map1", 5, 5);
@@ -473,8 +556,24 @@ mod tests {
     #[test]
     fn remove_triggers_for_map() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("a", "map1", TriggerType::OnStep, 0, 0, "fn1", false));
-        mgr.add_trigger(make_trigger("b", "map2", TriggerType::OnStep, 0, 0, "fn2", false));
+        mgr.add_trigger(make_trigger(
+            "a",
+            "map1",
+            TriggerType::OnStep,
+            0,
+            0,
+            "fn1",
+            false,
+        ));
+        mgr.add_trigger(make_trigger(
+            "b",
+            "map2",
+            TriggerType::OnStep,
+            0,
+            0,
+            "fn2",
+            false,
+        ));
         mgr.remove_triggers_for_map("map1");
         assert_eq!(mgr.len(), 1);
         assert_eq!(mgr.triggers[0].script_name, "fn2");
@@ -485,8 +584,24 @@ mod tests {
     #[test]
     fn on_step_and_on_enter_both_fire_on_entry() {
         let mut mgr = TriggerManager::new();
-        mgr.add_trigger(make_trigger("s", "map1", TriggerType::OnStep, 2, 3, "stepFn", false));
-        mgr.add_trigger(make_trigger("e", "map1", TriggerType::OnEnter, 2, 3, "enterFn", false));
+        mgr.add_trigger(make_trigger(
+            "s",
+            "map1",
+            TriggerType::OnStep,
+            2,
+            3,
+            "stepFn",
+            false,
+        ));
+        mgr.add_trigger(make_trigger(
+            "e",
+            "map1",
+            TriggerType::OnEnter,
+            2,
+            3,
+            "enterFn",
+            false,
+        ));
         mgr.check_triggers("map1", 0, 0); // outside
         let names = mgr.check_triggers("map1", 2, 3);
         // Both should fire on entry frame

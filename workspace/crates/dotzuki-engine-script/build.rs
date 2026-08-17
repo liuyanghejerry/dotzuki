@@ -25,10 +25,6 @@ fn generate_empty_stub<W: Write>(writer: &mut W) {
         "pub fn load_embedded_scripts(_loader: &mut crate::loader::ScriptLoader) {{"
     )
     .unwrap();
-    writeln!(
-        writer,
-        "    log::warn!(\"No embedded scripts available\");"
-    )
-    .unwrap();
+    writeln!(writer, "    log::warn!(\"No embedded scripts available\");").unwrap();
     writeln!(writer, "}}").unwrap();
 }

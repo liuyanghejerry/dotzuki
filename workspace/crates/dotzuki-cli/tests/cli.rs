@@ -15,7 +15,8 @@ struct TestDir(PathBuf);
 impl TestDir {
     fn new(test: &str) -> Self {
         let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!("dotzuki-cli-{test}-{}-{id}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("dotzuki-cli-{test}-{}-{id}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         TestDir(dir)
@@ -50,11 +51,7 @@ fn stderr(out: &Output) -> String {
 /// Scaffold a default project named `name` under `parent`; asserts success.
 fn scaffold(parent: &Path, name: &str) -> PathBuf {
     let out = dotzuki(&["new", name, "--dir", parent.to_str().unwrap()]);
-    assert!(
-        out.status.success(),
-        "dotzuki new failed: {}",
-        stderr(&out)
-    );
+    assert!(out.status.success(), "dotzuki new failed: {}", stderr(&out));
     parent.join(name)
 }
 
@@ -74,10 +71,9 @@ fn new_creates_expected_tree_and_manifest() {
         assert!(project.join(entry).exists(), "missing {}", entry);
     }
 
-    let manifest: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(project.join(".dotzuki-editor.json")).unwrap(),
-    )
-    .unwrap();
+    let manifest: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(project.join(".dotzuki-editor.json")).unwrap())
+            .unwrap();
 
     assert_eq!(manifest["name"], "my-game");
     assert_eq!(manifest["dataRoot"], "./data");
@@ -93,13 +89,7 @@ fn new_creates_expected_tree_and_manifest() {
         ids,
         ["maps", "scripts", "play", "data", "story", "assets", "tiles"]
     );
-    let by_id = |id: &str| {
-        activities
-            .iter()
-            .find(|a| a["id"] == id)
-            .unwrap()
-            .clone()
-    };
+    let by_id = |id: &str| activities.iter().find(|a| a["id"] == id).unwrap().clone();
     assert_eq!(by_id("maps")["type"], "map");
     assert_eq!(by_id("maps")["config"]["mapsDir"], "maps");
     assert_eq!(by_id("scripts")["type"], "script");
@@ -171,7 +161,10 @@ fn new_rejects_non_empty_target() {
     let out = dotzuki(&["new", "my-game", "--dir", tmp.path().to_str().unwrap()]);
     assert!(!out.status.success());
     assert!(stderr(&out).contains("already exists and is not empty"));
-    assert_eq!(fs::read_to_string(target.join("keep.txt")).unwrap(), "occupied");
+    assert_eq!(
+        fs::read_to_string(target.join("keep.txt")).unwrap(),
+        "occupied"
+    );
 }
 
 #[test]

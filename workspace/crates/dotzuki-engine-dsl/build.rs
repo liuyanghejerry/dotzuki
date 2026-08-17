@@ -10,20 +10,44 @@
 use std::env;
 use std::path::Path;
 
-mod ast { include!("src/ast.rs"); }
-mod lexer { include!("src/lexer.rs"); }
-mod parser { include!("src/parser.rs"); }
-mod sourcemap { include!("src/sourcemap.rs"); }
-mod codegen {
-    pub mod i18n { include!("src/codegen/i18n.rs"); }
-    pub mod js_storyline { include!("src/codegen/js_storyline.rs"); }
-    pub mod js_variables { include!("src/codegen/js_variables.rs"); }
-    pub mod json_ui { include!("src/codegen/json_ui.rs"); }
-    pub mod json_theme { include!("src/codegen/json_theme.rs"); }
-    pub mod json_atlas { include!("src/codegen/json_atlas.rs"); }
+mod ast {
+    include!("src/ast.rs");
 }
-mod compiler { include!("src/compiler.rs"); }
-mod conflict { include!("src/conflict.rs"); }
+mod lexer {
+    include!("src/lexer.rs");
+}
+mod parser {
+    include!("src/parser.rs");
+}
+mod sourcemap {
+    include!("src/sourcemap.rs");
+}
+mod codegen {
+    pub mod i18n {
+        include!("src/codegen/i18n.rs");
+    }
+    pub mod js_storyline {
+        include!("src/codegen/js_storyline.rs");
+    }
+    pub mod js_variables {
+        include!("src/codegen/js_variables.rs");
+    }
+    pub mod json_ui {
+        include!("src/codegen/json_ui.rs");
+    }
+    pub mod json_theme {
+        include!("src/codegen/json_theme.rs");
+    }
+    pub mod json_atlas {
+        include!("src/codegen/json_atlas.rs");
+    }
+}
+mod compiler {
+    include!("src/compiler.rs");
+}
+mod conflict {
+    include!("src/conflict.rs");
+}
 
 fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
@@ -34,10 +58,8 @@ fn main() {
     // Extra search dirs from DOTZUKI_DSL_DIRS (":"-separated absolute paths)
     // take precedence over the built-in monorepo locations.
     println!("cargo:rerun-if-env-changed=DOTZUKI_DSL_DIRS");
-    let search_dirs = compiler::merge_search_dirs(
-        env::var("DOTZUKI_DSL_DIRS").ok().as_deref(),
-        manifest_path,
-    );
+    let search_dirs =
+        compiler::merge_search_dirs(env::var("DOTZUKI_DSL_DIRS").ok().as_deref(), manifest_path);
 
     let dsl_out_dir = out_path.join("dsl");
     let dir_refs: Vec<&Path> = search_dirs.iter().map(|d| d.as_path()).collect();

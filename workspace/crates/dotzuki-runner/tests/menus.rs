@@ -146,10 +146,13 @@ fn write_items(root: &Path) {
             .iter_mut()
             .find(|a| a["id"] == "data")
             .expect("data activity");
-        data["config"]["tables"].as_array_mut().unwrap().push(serde_json::json!({
-            "id": "items", "label": "Items", "dir": "items", "icon": "", "idField": "id",
-            "fields": [ {"id": "name"}, {"id": "healHp"}, {"id": "price"}, {"id": "effect"} ]
-        }));
+        data["config"]["tables"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "id": "items", "label": "Items", "dir": "items", "icon": "", "idField": "id",
+                "fields": [ {"id": "name"}, {"id": "healHp"}, {"id": "price"}, {"id": "effect"} ]
+            }));
     }
     manifest["battle"]["items"] =
         serde_json::json!({ "table": "items", "healField": "healHp", "starting": { "potion": 3 } });
@@ -272,7 +275,10 @@ fn party_view_shows_record_details() {
         lines.contains(&"Aria HP 60/60 MP 20/20".to_string()),
         "{lines:?}"
     );
-    assert!(lines.contains(&"ATK 12 DEF 10 SPD 15 grass".to_string()), "{lines:?}");
+    assert!(
+        lines.contains(&"ATK 12 DEF 10 SPD 15 grass".to_string()),
+        "{lines:?}"
+    );
     assert!(
         lines.contains(&"Skills: Slash, Fire Bolt, Heal, Focus".to_string()),
         "{lines:?}"
@@ -689,17 +695,27 @@ fn lost_battle_triggers_whiteout_and_respawns_at_entry() {
     press_a(&mut game); // boss intro
     press_a(&mut game); // → battle
     let narration = auto_battle(&mut game);
-    assert_eq!(narration.last(), Some(&"You lost the battle…".to_string()), "{narration:?}");
+    assert_eq!(
+        narration.last(),
+        Some(&"You lost the battle…".to_string()),
+        "{narration:?}"
+    );
 
     // The scene resumes with "lose": its post-lose text still plays…
     let page = game.dialogue_text().expect("post-lose text");
     assert!(page.contains("The Slime oozes onward"), "page: {page:?}");
-    assert!(!game.whiteout_active(), "whiteout waits for the scene to finish");
+    assert!(
+        !game.whiteout_active(),
+        "whiteout waits for the scene to finish"
+    );
 
     // …then the whiteout: blackout first (no text yet), then the line.
     press_a(&mut game); // dismiss the post-lose text → scene finishes
     assert!(game.whiteout_active(), "whiteout armed");
-    assert!(game.dialogue_text().is_none(), "blackout phase shows no text");
+    assert!(
+        game.dialogue_text().is_none(),
+        "blackout phase shows no text"
+    );
     idle(&mut game, 35);
     let page = game.dialogue_text().expect("whiteout message");
     assert!(page.contains("Aria collapsed"), "page: {page:?}");
@@ -708,7 +724,11 @@ fn lost_battle_triggers_whiteout_and_respawns_at_entry() {
     // (status cleared), player back on the entry map's spawn, flags kept.
     press_a(&mut game);
     assert!(!game.whiteout_active());
-    assert_eq!(game.current_map_id(), Some("Town"), "returned to the entry map");
+    assert_eq!(
+        game.current_map_id(),
+        Some("Town"),
+        "returned to the entry map"
+    );
     assert_eq!(game.player_tile(), (1, 1), "the entry spawn");
     let party = game.party_state().expect("party state");
     assert_eq!(party.len(), 1);
@@ -760,7 +780,11 @@ fn whiteout_heals_only_when_project_has_no_maps() {
     assert_eq!(game.current_map_id(), None);
 
     let narration = auto_battle(&mut game);
-    assert_eq!(narration.last(), Some(&"You lost the battle…".to_string()), "{narration:?}");
+    assert_eq!(
+        narration.last(),
+        Some(&"You lost the battle…".to_string()),
+        "{narration:?}"
+    );
     // The post-lose text plays, then the whiteout heals in place.
     dismiss_dialogue(&mut game); // "That went badly."
     idle(&mut game, 35);

@@ -3,7 +3,7 @@
 //! configs[1] is the stats box, configs[2] is the moves box.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Frame, Rgba, Painter, Ui};
+use dotzuki_engine::render::{Frame, Painter, Rgba, Ui};
 
 // Gen-I HP bar shades — picked at >50% / >20% / below (the classic GB HUD
 // convention). Game-specific, so they live with this widget rather than in
@@ -78,7 +78,9 @@ pub struct StatsData {
 /// Draw stats screen. For page 0, uses configs[0] (main area) + configs[1] (stats box).
 /// For page 1, uses configs[0] (main area) + configs[2] (moves box).
 pub fn draw_stats_screen<P: Painter>(data: &StatsData, configs: &[MenuConfig], painter: &mut P) {
-    let Some(main_config) = configs.first() else { return };
+    let Some(main_config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
 
     // Main area (region_0 in old code, no border)
@@ -89,12 +91,29 @@ pub fn draw_stats_screen<P: Painter>(data: &StatsData, configs: &[MenuConfig], p
         // Name (interior col 9, row 1 → rel_tx+8, rel_ty+0 after subtracting area origin)
         frame.label(rel_tx + 8, rel_ty, &data.name, Rgba::INK_BLACK);
         // Level
-        frame.label(rel_tx + 13, rel_ty + 1, &format!(":L{:2}", data.level), Rgba::INK_BLACK);
+        frame.label(
+            rel_tx + 13,
+            rel_ty + 1,
+            &format!(":L{:2}", data.level),
+            Rgba::INK_BLACK,
+        );
 
         // HP bar and fraction
         frame.label(rel_tx, rel_ty + 3, "HP:", Rgba::INK_BLACK);
-        hp_bar(frame, rel_tx + 3, rel_ty + 3, 8, data.hp as u16, data.max_hp as u16);
-        frame.label(rel_tx + 3, rel_ty + 4, &format!("{:>3}/{:<3}", data.hp, data.max_hp), Rgba::INK_BLACK);
+        hp_bar(
+            frame,
+            rel_tx + 3,
+            rel_ty + 3,
+            8,
+            data.hp as u16,
+            data.max_hp as u16,
+        );
+        frame.label(
+            rel_tx + 3,
+            rel_ty + 4,
+            &format!("{:>3}/{:<3}", data.hp, data.max_hp),
+            Rgba::INK_BLACK,
+        );
 
         // Status
         let status_text = data.status.as_deref().unwrap_or("OK");
@@ -116,12 +135,23 @@ pub fn draw_stats_screen<P: Painter>(data: &StatsData, configs: &[MenuConfig], p
         0 => {
             if let Some(stats_config) = configs.get(1) {
                 ui.text_box(stats_config.area, Rgba::INK_BLACK, true, |frame| {
-                    let rel_tx = stats_config.content.tx.saturating_sub(stats_config.area.tx + 1);
-                    let rel_ty = stats_config.content.ty.saturating_sub(stats_config.area.ty + 1);
+                    let rel_tx = stats_config
+                        .content
+                        .tx
+                        .saturating_sub(stats_config.area.tx + 1);
+                    let rel_ty = stats_config
+                        .content
+                        .ty
+                        .saturating_sub(stats_config.area.ty + 1);
                     for (i, stat) in data.stats.iter().enumerate() {
                         let row = rel_ty + (i as u32) * 2;
                         frame.label(rel_tx, row, &stat.label, Rgba::INK_BLACK);
-                        frame.label(rel_tx + 5, row + 1, &format!("{:3}", stat.value), Rgba::INK_BLACK);
+                        frame.label(
+                            rel_tx + 5,
+                            row + 1,
+                            &format!("{:3}", stat.value),
+                            Rgba::INK_BLACK,
+                        );
                     }
                 });
             }
@@ -129,14 +159,25 @@ pub fn draw_stats_screen<P: Painter>(data: &StatsData, configs: &[MenuConfig], p
         1 => {
             if let Some(moves_config) = configs.get(2) {
                 ui.text_box(moves_config.area, Rgba::INK_BLACK, true, |frame| {
-                    let rel_tx = moves_config.content.tx.saturating_sub(moves_config.area.tx + 1);
-                    let rel_ty = moves_config.content.ty.saturating_sub(moves_config.area.ty + 1);
+                    let rel_tx = moves_config
+                        .content
+                        .tx
+                        .saturating_sub(moves_config.area.tx + 1);
+                    let rel_ty = moves_config
+                        .content
+                        .ty
+                        .saturating_sub(moves_config.area.ty + 1);
                     for (i, mv) in data.moves.iter().enumerate().take(4) {
                         let name_row = rel_ty + (i as u32 * 2 + 1);
                         let pp_row = rel_ty + (i as u32 * 2 + 2);
                         frame.label(rel_tx + 1, name_row, &mv.name, Rgba::INK_BLACK);
                         frame.label(rel_tx + 10, pp_row, "PP", Rgba::INK_BLACK);
-                        frame.label(rel_tx + 13, pp_row, &format!("{:>2}/{:>2}", mv.pp, mv.max_pp), Rgba::INK_BLACK);
+                        frame.label(
+                            rel_tx + 13,
+                            pp_row,
+                            &format!("{:>2}/{:>2}", mv.pp, mv.max_pp),
+                            Rgba::INK_BLACK,
+                        );
                     }
                 });
             }
@@ -159,58 +200,125 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
-        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, color: Rgba) { self.pixel_rects.push((px, py, pw, ph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, color: Rgba) {
+            self.pixel_rects.push((px, py, pw, ph, color));
+        }
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn main_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(6,0,14,18), None, TileRect::new(7,1,12,16), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(6, 0, 14, 18),
+            None,
+            TileRect::new(7, 1, 12, 16),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn stats_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(6,10,10,9), None, TileRect::new(7,11,8,7), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(6, 10, 10, 9),
+            None,
+            TileRect::new(7, 11, 8, 7),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn moves_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(6,10,12,11), None, TileRect::new(7,11,10,9), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(6, 10, 12, 11),
+            None,
+            TileRect::new(7, 11, 10, 9),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn test_data() -> StatsData {
         StatsData {
-            name: "SPARKIT".into(), level: 25, species: "SPARKIT".into(),
-            hp: 60, max_hp: 60, status: None,
+            name: "SPARKIT".into(),
+            level: 25,
+            species: "SPARKIT".into(),
+            hp: 60,
+            max_hp: 60,
+            status: None,
             stats: vec![
-                StatValue { label: "ATTACK".into(), value: 55, max_value: Some(120) },
-                StatValue { label: "DEFENSE".into(), value: 40, max_value: Some(110) },
-                StatValue { label: "SPEED".into(), value: 90, max_value: Some(140) },
-                StatValue { label: "SPECIAL".into(), value: 50, max_value: Some(130) },
+                StatValue {
+                    label: "ATTACK".into(),
+                    value: 55,
+                    max_value: Some(120),
+                },
+                StatValue {
+                    label: "DEFENSE".into(),
+                    value: 40,
+                    max_value: Some(110),
+                },
+                StatValue {
+                    label: "SPEED".into(),
+                    value: 90,
+                    max_value: Some(140),
+                },
+                StatValue {
+                    label: "SPECIAL".into(),
+                    value: 50,
+                    max_value: Some(130),
+                },
             ],
             moves: vec![
-                MoveSummary { name: "THUNDERBOLT".into(), pp: 5, max_pp: 15 },
-                MoveSummary { name: "QUICK ATTACK".into(), pp: 30, max_pp: 30 },
+                MoveSummary {
+                    name: "THUNDERBOLT".into(),
+                    pp: 5,
+                    max_pp: 15,
+                },
+                MoveSummary {
+                    name: "QUICK ATTACK".into(),
+                    pp: 30,
+                    max_pp: 30,
+                },
             ],
             page: 0,
         }
     }
 
-    #[test] fn draws_page0() {
+    #[test]
+    fn draws_page0() {
         let mut painter = RecordingPainter::default();
-        draw_stats_screen(&test_data(), &[main_config(), stats_config(), moves_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("SPARKIT")));
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("ATTACK")));
+        draw_stats_screen(
+            &test_data(),
+            &[main_config(), stats_config(), moves_config()],
+            &mut painter,
+        );
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("SPARKIT")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("ATTACK")));
     }
-    #[test] fn draws_page1() {
-        let mut data = test_data(); data.page = 1;
+    #[test]
+    fn draws_page1() {
+        let mut data = test_data();
+        data.page = 1;
         let mut painter = RecordingPainter::default();
-        draw_stats_screen(&data, &[main_config(), stats_config(), moves_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("THUNDERBOLT")));
+        draw_stats_screen(
+            &data,
+            &[main_config(), stats_config(), moves_config()],
+            &mut painter,
+        );
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(_, t, _)| t.contains("THUNDERBOLT")));
     }
-    #[test] fn draws_hp_bar() {
+    #[test]
+    fn draws_hp_bar() {
         let mut painter = RecordingPainter::default();
         draw_stats_screen(&test_data(), &[main_config()], &mut painter);
         assert!(!painter.pixel_rects.is_empty());
     }
-    #[test] fn no_configs() {
+    #[test]
+    fn no_configs() {
         let mut painter = RecordingPainter::default();
         draw_stats_screen(&test_data(), &[], &mut painter);
         assert!(painter.text_boxes.is_empty());

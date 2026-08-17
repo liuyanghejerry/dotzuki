@@ -66,7 +66,10 @@ impl ModernAudio {
         if let Some(m) = &self.music {
             self.mixer.stop_voice(m.voice_id, opts.fade_out);
         }
-        let opts = PlayOptions { loop_audio: true, ..opts };
+        let opts = PlayOptions {
+            loop_audio: true,
+            ..opts
+        };
         let voice_id = self.mixer.play(dec, Bus::Bgm, &opts);
         self.music = Some(MusicHandle { voice_id, info });
         Ok(())
@@ -107,7 +110,10 @@ impl ModernAudio {
         opts: PlayOptions,
     ) -> Result<u64, DecodeError> {
         let dec = decode::open(source, ext_hint)?;
-        let opts = PlayOptions { loop_audio: false, ..opts };
+        let opts = PlayOptions {
+            loop_audio: false,
+            ..opts
+        };
         Ok(self.mixer.play(dec, Bus::Sfx, &opts))
     }
 
@@ -226,7 +232,10 @@ mod tests {
         let mut out = vec![0.0f32; 8000 * 2];
         // BGM looped: never EOFs within one second.
         a.render_into(&mut out);
-        assert!(out.iter().any(|&s| s.abs() > 0.1), "still audible at 0.25 gain");
+        assert!(
+            out.iter().any(|&s| s.abs() > 0.1),
+            "still audible at 0.25 gain"
+        );
         a.fade_bus(Bus::Bgm, 0.0, 0.05);
         let mut out2 = vec![0.0f32; 8000];
         a.render_into(&mut out2);

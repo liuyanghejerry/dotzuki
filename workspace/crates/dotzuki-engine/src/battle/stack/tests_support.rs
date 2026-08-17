@@ -11,7 +11,7 @@ use crate::battle::rng::ScriptedRng;
 use crate::battle::stack::ctx::{BattleCtx, EffectProvider, EffectState, MoveContext};
 use crate::battle::stack::event::Effect;
 use crate::battle::{
-    BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EnumMap, EffectResult,
+    BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EffectResult, EnumMap,
     MoveEffect,
 };
 

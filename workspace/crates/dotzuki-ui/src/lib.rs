@@ -35,26 +35,90 @@ impl Painter for FrameBufferPainter<'_> {
         let right_x = bx + (rect.tw - 1) * t;
         let bot_y = by + (rect.th - 1) * t;
 
-        draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, bx, by, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::TOP_LEFT,
+            &box_tiles::outside::TOP_LEFT,
+            bx,
+            by,
+            ink,
+            bg,
+            self.fb,
+        );
         for col in 0..inner_w {
-            draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, bx + (1 + col) * t, by, ink, bg, self.fb);
+            draw_box_tile(
+                &box_tiles::HORIZONTAL,
+                &box_tiles::outside::HORIZONTAL,
+                bx + (1 + col) * t,
+                by,
+                ink,
+                bg,
+                self.fb,
+            );
         }
-        draw_box_tile(&box_tiles::TOP_RIGHT, &box_tiles::outside::TOP_RIGHT, right_x, by, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::TOP_RIGHT,
+            &box_tiles::outside::TOP_RIGHT,
+            right_x,
+            by,
+            ink,
+            bg,
+            self.fb,
+        );
 
         for row in 0..inner_h {
             let y = by + (1 + row) * t;
-            draw_box_tile(&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT, bx, y, ink, bg, self.fb);
+            draw_box_tile(
+                &box_tiles::VERTICAL_LEFT,
+                &box_tiles::outside::VERTICAL_LEFT,
+                bx,
+                y,
+                ink,
+                bg,
+                self.fb,
+            );
             for col in 0..inner_w {
                 embedded_font::fill_tile(bx + (1 + col) * t, y, bg, self.fb);
             }
-            draw_box_tile(&box_tiles::VERTICAL_RIGHT, &box_tiles::outside::VERTICAL_RIGHT, right_x, y, ink, bg, self.fb);
+            draw_box_tile(
+                &box_tiles::VERTICAL_RIGHT,
+                &box_tiles::outside::VERTICAL_RIGHT,
+                right_x,
+                y,
+                ink,
+                bg,
+                self.fb,
+            );
         }
 
-        draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, bx, bot_y, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::BOTTOM_LEFT,
+            &box_tiles::outside::BOTTOM_LEFT,
+            bx,
+            bot_y,
+            ink,
+            bg,
+            self.fb,
+        );
         for col in 0..inner_w {
-            draw_box_tile(&box_tiles::HORIZONTAL_BOTTOM, &box_tiles::outside::HORIZONTAL_BOTTOM, bx + (1 + col) * t, bot_y, ink, bg, self.fb);
+            draw_box_tile(
+                &box_tiles::HORIZONTAL_BOTTOM,
+                &box_tiles::outside::HORIZONTAL_BOTTOM,
+                bx + (1 + col) * t,
+                bot_y,
+                ink,
+                bg,
+                self.fb,
+            );
         }
-        draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, right_x, bot_y, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::BOTTOM_RIGHT,
+            &box_tiles::outside::BOTTOM_RIGHT,
+            right_x,
+            bot_y,
+            ink,
+            bg,
+            self.fb,
+        );
     }
 
     fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
@@ -110,12 +174,60 @@ impl Painter for FrameBufferPainter<'_> {
                 embedded_font::draw_char('\u{25BC}', px, py, ink, self.fb);
             }
             // Default box-border tile set (0x79–0x7F)
-            0x79 => draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, px, py, ink, bg, self.fb),
-            0x7A => draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, px, py, ink, bg, self.fb),
-            0x7B => draw_box_tile(&box_tiles::TOP_RIGHT, &box_tiles::outside::TOP_RIGHT, px, py, ink, bg, self.fb),
-            0x7C => draw_box_tile(&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT, px, py, ink, bg, self.fb),
-            0x7D => draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, px, py, ink, bg, self.fb),
-            0x7E => draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, px, py, ink, bg, self.fb),
+            0x79 => draw_box_tile(
+                &box_tiles::TOP_LEFT,
+                &box_tiles::outside::TOP_LEFT,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
+            0x7A => draw_box_tile(
+                &box_tiles::HORIZONTAL,
+                &box_tiles::outside::HORIZONTAL,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
+            0x7B => draw_box_tile(
+                &box_tiles::TOP_RIGHT,
+                &box_tiles::outside::TOP_RIGHT,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
+            0x7C => draw_box_tile(
+                &box_tiles::VERTICAL_LEFT,
+                &box_tiles::outside::VERTICAL_LEFT,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
+            0x7D => draw_box_tile(
+                &box_tiles::BOTTOM_LEFT,
+                &box_tiles::outside::BOTTOM_LEFT,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
+            0x7E => draw_box_tile(
+                &box_tiles::BOTTOM_RIGHT,
+                &box_tiles::outside::BOTTOM_RIGHT,
+                px,
+                py,
+                ink,
+                bg,
+                self.fb,
+            ),
             0x7F => embedded_font::fill_tile(px, py, bg, self.fb),
             // Unknown tile id — fall back to the placeholder text glyph.
             _ => embedded_font::draw_text(fallback, px, py, ink, self.fb),

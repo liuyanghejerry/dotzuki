@@ -1,6 +1,6 @@
 use super::{
-    collision::detect_collisions_for_sprite, oam::prepare_oam_data,
-    MovementStatus, MOVEMENT_STAY, MOVEMENT_WALK, NUM_SPRITESTATEDATA_STRUCTS, SpriteTable,
+    collision::detect_collisions_for_sprite, oam::prepare_oam_data, MovementStatus, SpriteTable,
+    MOVEMENT_STAY, MOVEMENT_WALK, NUM_SPRITESTATEDATA_STRUCTS,
 };
 
 pub fn update_sprites(table: &mut SpriteTable, screen_height: u8) {

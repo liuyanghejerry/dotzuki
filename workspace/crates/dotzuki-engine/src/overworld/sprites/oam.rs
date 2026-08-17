@@ -1,7 +1,7 @@
 use super::{
-    facing_table_index, sprite_tile_base_offset, FACING_END, NUM_SPRITESTATEDATA_STRUCTS,
-    OAM_BG_PRIORITY, OAM_COUNT, OAM_X_OFS, OAM_Y_OFS, SPRITE_FACING_TABLE, UNDER_GRASS,
-    OamEntry, SpriteTable,
+    facing_table_index, sprite_tile_base_offset, OamEntry, SpriteTable, FACING_END,
+    NUM_SPRITESTATEDATA_STRUCTS, OAM_BG_PRIORITY, OAM_COUNT, OAM_X_OFS, OAM_Y_OFS,
+    SPRITE_FACING_TABLE, UNDER_GRASS,
 };
 
 const OAM_ENTRIES_PER_SPRITE: usize = 4;

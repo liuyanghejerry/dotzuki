@@ -83,7 +83,8 @@ impl StackDriver {
         rng: &mut dyn BattleRng,
     ) -> (StackTurnResult, TurnLog<P>) {
         let mut log = TurnLog::new();
-        let result = Self::execute_turn_inner(provider, state, effects, actions, rng, Some(&mut log));
+        let result =
+            Self::execute_turn_inner(provider, state, effects, actions, rng, Some(&mut log));
         (result, log)
     }
 
@@ -119,13 +120,23 @@ impl StackDriver {
         // turn 2, Hyper Beam recharge forces `Nothing`. This is the seam that
         // proves a per-turn `[Action; 2]` input is insufficient; it is defaulted
         // to `None` (inert) for every game that registers no forcing volatile.
-        let first_effective =
-            provider.forced_action(effects, first_ref, first_action).unwrap_or_else(|| first_action.clone());
+        let first_effective = provider
+            .forced_action(effects, first_ref, first_action)
+            .unwrap_or_else(|| first_action.clone());
         // Snapshot before the action (target first, then actor → natural log order:
         // the hit precedes self-effects like recoil). Only when logging.
         let act_pre = Self::snap_pair(state, Self::opposing(first_ref), first_ref, &log);
         let mut mv = MoveContext::default();
-        Self::resolve_action(provider, state, effects, &mut mv, first_ref, &first_effective, rng, log.as_deref_mut());
+        Self::resolve_action(
+            provider,
+            state,
+            effects,
+            &mut mv,
+            first_ref,
+            &first_effective,
+            rng,
+            log.as_deref_mut(),
+        );
         if let Some(l) = log.as_deref_mut() {
             Self::diff_pair(l, state, [Self::opposing(first_ref), first_ref], act_pre);
         }
@@ -133,7 +144,13 @@ impl StackDriver {
         // change is cause-tagged for narration — status tick precedes a cross-battler
         // drain heal in its per-source order).
         let first_residual_faint = Self::residual_and_faint(
-            provider, state, effects, &mut mv, first_ref, rng, log.as_deref_mut(),
+            provider,
+            state,
+            effects,
+            &mut mv,
+            first_ref,
+            rng,
+            log.as_deref_mut(),
         );
 
         // Step 2d: short-circuit. If this actor's residual KO'd it OR the move
@@ -152,12 +169,27 @@ impl StackDriver {
             .unwrap_or_else(|| second_action.clone());
         let act_pre2 = Self::snap_pair(state, Self::opposing(second_ref), second_ref, &log);
         let mut mv2 = MoveContext::default();
-        Self::resolve_action(provider, state, effects, &mut mv2, second_ref, &second_effective, rng, log.as_deref_mut());
+        Self::resolve_action(
+            provider,
+            state,
+            effects,
+            &mut mv2,
+            second_ref,
+            &second_effective,
+            rng,
+            log.as_deref_mut(),
+        );
         if let Some(l) = log.as_deref_mut() {
             Self::diff_pair(l, state, [Self::opposing(second_ref), second_ref], act_pre2);
         }
         Self::residual_and_faint(
-            provider, state, effects, &mut mv2, second_ref, rng, log.as_deref_mut(),
+            provider,
+            state,
+            effects,
+            &mut mv2,
+            second_ref,
+            rng,
+            log.as_deref_mut(),
         );
 
         StackTurnResult {
@@ -198,7 +230,14 @@ impl StackDriver {
         // 2a. BeforeMove gate (status draws here — para full-para in the POC).
         // The gate handler returns `Fail`/`FailSilent` to abort the move; a
         // `Bool(false)` relay means "cannot act".
-        let gate = Self::fire(&mut ctx, eff, Event::BeforeMove, target, actor, RelayVar::Bool(true));
+        let gate = Self::fire(
+            &mut ctx,
+            eff,
+            Event::BeforeMove,
+            target,
+            actor,
+            RelayVar::Bool(true),
+        );
         if matches!(gate, RelayVar::Bool(false) | RelayVar::Unit) {
             // The move was PREVENTED by a BeforeMove gate (asleep / frozen / fully
             // paralyzed / a confusion self-hit). Record it so a frontend can narrate
@@ -222,7 +261,10 @@ impl StackDriver {
         let costs = provider.move_cost(&move_);
         if !costs.is_empty() {
             let actor_b = ctx.battler(actor);
-            if !costs.iter().all(|(id, amt)| actor_b.can_pay_resource(*id, *amt)) {
+            if !costs
+                .iter()
+                .all(|(id, amt)| actor_b.can_pay_resource(*id, *amt))
+            {
                 if let Some(l) = log.as_deref_mut() {
                     l.push(TurnEvent::Blocked { actor });
                 }
@@ -237,7 +279,10 @@ impl StackDriver {
         // Record it (the *effective* move; a lock-in override is already resolved
         // by the driver before resolve_action is called). Gated behind `log`.
         if let Some(l) = log.as_deref_mut() {
-            l.push(TurnEvent::MoveUsed { actor, move_: move_.clone() });
+            l.push(TurnEvent::MoveUsed {
+                actor,
+                move_: move_.clone(),
+            });
         }
 
         // 2b. crit → accuracy → damage. Crit is drawn BEFORE accuracy
@@ -253,9 +298,23 @@ impl StackDriver {
         // `crit_is_drawn_before_accuracy`). Swapping these lines makes that test
         // FAIL loudly.
         ctx.mv.is_critical = false;
-        Self::fire(&mut ctx, eff, Event::ModifyCritRatio, target, actor, RelayVar::Unit);
+        Self::fire(
+            &mut ctx,
+            eff,
+            Event::ModifyCritRatio,
+            target,
+            actor,
+            RelayVar::Unit,
+        );
 
-        let acc = Self::fire(&mut ctx, eff, Event::Accuracy, target, actor, RelayVar::Bool(true));
+        let acc = Self::fire(
+            &mut ctx,
+            eff,
+            Event::Accuracy,
+            target,
+            actor,
+            RelayVar::Bool(true),
+        );
         if matches!(acc, RelayVar::Bool(false)) {
             ctx.mv.move_missed = true;
             if let Some(l) = log.as_deref_mut() {
@@ -271,7 +330,14 @@ impl StackDriver {
             return; // missed
         }
 
-        Self::fire(&mut ctx, eff, Event::ModifyDamage, target, actor, RelayVar::Unit);
+        Self::fire(
+            &mut ctx,
+            eff,
+            Event::ModifyDamage,
+            target,
+            actor,
+            RelayVar::Unit,
+        );
 
         // ── Effectiveness fold (design doc 12 §1.1). Inert at 1× when no handler
         //    subscribes (the empty-`hs` `run_event` returns the relay unchanged,
@@ -312,8 +378,15 @@ impl StackDriver {
         //    unchanged, so `folded == pre` and this is byte-identical to a plain apply
         //    (`ctx.mv.damage` is never rewritten, no rng drawn, no state change).
         let pre = ctx.mv.damage;
-        let folded = Self::fire(&mut ctx, eff, Event::Damage, target, actor, RelayVar::Damage(pre))
-            .as_damage();
+        let folded = Self::fire(
+            &mut ctx,
+            eff,
+            Event::Damage,
+            target,
+            actor,
+            RelayVar::Damage(pre),
+        )
+        .as_damage();
         if folded > 0 {
             ctx.battler_mut(target).take_damage(folded);
         }
@@ -387,14 +460,23 @@ impl StackDriver {
             if let Some(eff) = provider.effect_for_status(&s) {
                 let pre = Self::snap_pair(state, actor, opp, &log);
                 {
-                    let mut ctx = BattleCtx { state, effects, mv, rng };
+                    let mut ctx = BattleCtx {
+                        state,
+                        effects,
+                        mv,
+                        rng,
+                    };
                     // Residual fires "on" the acting battler (host == target == source).
                     Self::fire(&mut ctx, eff, Event::Residual, actor, actor, RelayVar::Unit);
                 }
                 if let Some(l) = log.as_deref_mut() {
                     let cause = HpChangeCause::Status(s.clone());
-                    if let Some(p) = &pre[0] { Self::emit_diff(l, state, actor, p, Some(cause.clone())); }
-                    if let Some(p) = &pre[1] { Self::emit_diff(l, state, opp, p, Some(cause)); }
+                    if let Some(p) = &pre[0] {
+                        Self::emit_diff(l, state, actor, p, Some(cause.clone()));
+                    }
+                    if let Some(p) = &pre[1] {
+                        Self::emit_diff(l, state, opp, p, Some(cause));
+                    }
                 }
             }
         }
@@ -405,16 +487,19 @@ impl StackDriver {
         //    volatile) cannot perturb the iteration.
         // Capture each source's opaque `kind` alongside its effect so the per-source HP
         // diff can be tagged `Volatile(kind)` — the game maps it back to Toxic / Leech Seed.
-        let mut volatiles: Vec<(EffectId, P::EffectStateKind, &'static super::event::Effect<P>)> =
-            effects
-                .iter()
-                .filter(|e| e.host == actor)
-                .filter_map(|e| {
-                    provider
-                        .effect_for_volatile(&e.kind)
-                        .map(|eff| (e.id, e.kind.clone(), eff))
-                })
-                .collect();
+        let mut volatiles: Vec<(
+            EffectId,
+            P::EffectStateKind,
+            &'static super::event::Effect<P>,
+        )> = effects
+            .iter()
+            .filter(|e| e.host == actor)
+            .filter_map(|e| {
+                provider
+                    .effect_for_volatile(&e.kind)
+                    .map(|eff| (e.id, e.kind.clone(), eff))
+            })
+            .collect();
         volatiles.sort_by_key(|(id, _, _)| *id);
         for (_id, kind, eff) in volatiles {
             let pre = Self::snap_pair(state, actor, opp, &log);
@@ -422,17 +507,34 @@ impl StackDriver {
                 // A prior volatile (e.g. Toxic) may have KO'd the actor this tick. The
                 // engine does NOT skip the later volatile (it fires unconditionally);
                 // each game handler is responsible for its own post-faint guard.
-                let mut ctx = BattleCtx { state, effects, mv, rng };
+                let mut ctx = BattleCtx {
+                    state,
+                    effects,
+                    mv,
+                    rng,
+                };
                 Self::fire(&mut ctx, eff, Event::Residual, actor, actor, RelayVar::Unit);
             }
             if let Some(l) = log.as_deref_mut() {
                 // Both the actor's Damaged AND the opponent's paired Healed (Leech Seed's
                 // drain-to-source) carry the SAME volatile kind.
                 if let Some(p) = &pre[0] {
-                    Self::emit_diff(l, state, actor, p, Some(HpChangeCause::Volatile(kind.clone())));
+                    Self::emit_diff(
+                        l,
+                        state,
+                        actor,
+                        p,
+                        Some(HpChangeCause::Volatile(kind.clone())),
+                    );
                 }
                 if let Some(p) = &pre[1] {
-                    Self::emit_diff(l, state, opp, p, Some(HpChangeCause::Volatile(kind.clone())));
+                    Self::emit_diff(
+                        l,
+                        state,
+                        opp,
+                        p,
+                        Some(HpChangeCause::Volatile(kind.clone())),
+                    );
                 }
             }
         }
@@ -540,17 +642,34 @@ impl StackDriver {
         };
         // HP delta — tagged with `cause` (None for move damage/heal, Some for a residual).
         if post.hp < pre.hp {
-            log.push(TurnEvent::Damaged { target: who, amount: pre.hp - post.hp, cause });
+            log.push(TurnEvent::Damaged {
+                target: who,
+                amount: pre.hp - post.hp,
+                cause,
+            });
         } else if post.hp > pre.hp {
-            log.push(TurnEvent::Healed { target: who, amount: post.hp - pre.hp, cause });
+            log.push(TurnEvent::Healed {
+                target: who,
+                amount: post.hp - pre.hp,
+                cause,
+            });
         }
         // Non-volatile status delta.
         if pre.status != post.status {
             match (&pre.status, &post.status) {
-                (None, Some(s)) => log.push(TurnEvent::StatusInflicted { target: who, status: s.clone() }),
-                (Some(s), None) => log.push(TurnEvent::StatusCured { target: who, status: s.clone() }),
+                (None, Some(s)) => log.push(TurnEvent::StatusInflicted {
+                    target: who,
+                    status: s.clone(),
+                }),
+                (Some(s), None) => log.push(TurnEvent::StatusCured {
+                    target: who,
+                    status: s.clone(),
+                }),
                 // A status replaced by a different one: report the new one inflicted.
-                (Some(_), Some(s)) => log.push(TurnEvent::StatusInflicted { target: who, status: s.clone() }),
+                (Some(_), Some(s)) => log.push(TurnEvent::StatusInflicted {
+                    target: who,
+                    status: s.clone(),
+                }),
                 (None, None) => {}
             }
         }
@@ -558,12 +677,20 @@ impl StackDriver {
         for (stat, &after) in post.stages.iter() {
             let before = pre.stages.get(*stat).copied().unwrap_or(0);
             if after != before {
-                log.push(TurnEvent::StatChanged { target: who, stat: *stat, delta: after - before });
+                log.push(TurnEvent::StatChanged {
+                    target: who,
+                    stat: *stat,
+                    delta: after - before,
+                });
             }
         }
         for (stat, &before) in pre.stages.iter() {
             if post.stages.get(*stat).is_none() && before != 0 {
-                log.push(TurnEvent::StatChanged { target: who, stat: *stat, delta: -before });
+                log.push(TurnEvent::StatChanged {
+                    target: who,
+                    stat: *stat,
+                    delta: -before,
+                });
             }
         }
         // Faint last — after the damage that caused it.
@@ -601,10 +728,7 @@ fn move_of<P: BattleProvider + ?Sized>(action: &BattleAction<P>) -> Option<P::Mo
     }
 }
 
-fn state_status<P: EffectProvider>(
-    state: &BattleState<P>,
-    who: BattlerRef,
-) -> Option<P::Status> {
+fn state_status<P: EffectProvider>(state: &BattleState<P>, who: BattlerRef) -> Option<P::Status> {
     let party = if who.side == 0 {
         &state.player_battlers
     } else {

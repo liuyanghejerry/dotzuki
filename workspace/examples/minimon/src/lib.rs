@@ -33,8 +33,8 @@
 
 use dotzuki_engine::battle::rng::ScriptedRng;
 use dotzuki_engine::battle::stack::{
-    collect_handlers, run_event, run_event_checked, BattleCtx, EffectProvider, EffectState,
-    EffectType, Effect, EffectId, Event, EventHook, HandlerResult, MoveContext, RelayVar,
+    collect_handlers, run_event, run_event_checked, BattleCtx, Effect, EffectId, EffectProvider,
+    EffectState, EffectType, Event, EventHook, HandlerResult, MoveContext, RelayVar,
 };
 use dotzuki_engine::battle::{
     BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EffectResult, EnumMap,
@@ -198,7 +198,11 @@ pub struct Species {
 impl Species {
     /// A plain battler: no ability, no item, Normal type.
     pub const fn plain() -> Self {
-        Species { ability: Ability::None, item: Item::None, mtype: MType::Normal }
+        Species {
+            ability: Ability::None,
+            item: Item::None,
+            mtype: MType::Normal,
+        }
     }
     /// Set the ability (builder).
     pub const fn with_ability(mut self, a: Ability) -> Self {
@@ -247,21 +251,37 @@ pub struct Move {
 /// outcomes against the same battler whose Atk≠SpA / Def≠SpD. Both are `Normal`
 /// type ⇒ never an authored chart edge ⇒ existing split/Intimidate tests are
 /// byte-identical.
-pub const TACKLE: Move =
-    Move { power: 40, category: Category::Physical, mtype: MType::Normal, id: MOVE_TACKLE_ID };
+pub const TACKLE: Move = Move {
+    power: 40,
+    category: Category::Physical,
+    mtype: MType::Normal,
+    id: MOVE_TACKLE_ID,
+};
 /// A special-category demo move (same base power as [`TACKLE`] so the *only*
 /// difference in outcome is which stats are read).
-pub const EMBER: Move =
-    Move { power: 40, category: Category::Special, mtype: MType::Normal, id: MOVE_EMBER_ID };
+pub const EMBER: Move = Move {
+    power: 40,
+    category: Category::Special,
+    mtype: MType::Normal,
+    id: MOVE_EMBER_ID,
+};
 
 // ── The 金木水火土 type-chart proof moves (doc 12 §4). `atk == def` in the tests
 //    so base damage == power, isolating the chart fold. Each carries its element.
 /// 金 Metal, power 80 (the doc 12 §4 worked attacker for super-effective/resisted).
-pub const BLADE: Move =
-    Move { power: 80, category: Category::Physical, mtype: MType::Metal, id: MOVE_BLADE_ID };
+pub const BLADE: Move = Move {
+    power: 80,
+    category: Category::Physical,
+    mtype: MType::Metal,
+    id: MOVE_BLADE_ID,
+};
 /// 水 Water, power 80 (the doc 12 §4 worked attacker for the immune case vs Wood).
-pub const TORRENT: Move =
-    Move { power: 80, category: Category::Special, mtype: MType::Water, id: MOVE_TORRENT_ID };
+pub const TORRENT: Move = Move {
+    power: 80,
+    category: Category::Special,
+    mtype: MType::Water,
+    id: MOVE_TORRENT_ID,
+};
 
 const MOVE_TACKLE_ID: u32 = 1;
 const MOVE_EMBER_ID: u32 = 2;
@@ -340,7 +360,10 @@ pub struct MinimonProvider {
 
 impl Default for MinimonProvider {
     fn default() -> Self {
-        Self { weather_on: false, data_mode: false }
+        Self {
+            weather_on: false,
+            data_mode: false,
+        }
     }
 }
 
@@ -376,7 +399,11 @@ impl BattleProvider for MinimonProvider {
         let atk = read_effective_stat(attacker, atk_stat).max(1);
         let def = read_effective_stat(defender, def_stat).max(1);
         let dmg = (move_.power as u32 * atk as u32 / def as u32) as u16;
-        DamageResult { damage: dmg.max(1), effectiveness: 1.0, is_miss: false }
+        DamageResult {
+            damage: dmg.max(1),
+            effectiveness: 1.0,
+            is_miss: false,
+        }
     }
 
     fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
@@ -891,7 +918,10 @@ impl Battle {
             };
             let mut hs = Vec::new();
             collect_handlers(
-                &ctx, provider, None, Event::SwitchIn,
+                &ctx,
+                provider,
+                None,
+                Event::SwitchIn,
                 who, // target = the entrant (ability hosted on it)
                 who, // source = the entrant
                 &mut hs,
@@ -912,7 +942,9 @@ impl Battle {
                     .get(Stat::Atk)
                     .copied()
                     .unwrap_or(0);
-                self.battler_mut_ref(foe).stat_stages.set(Stat::Atk, cur - 1);
+                self.battler_mut_ref(foe)
+                    .stat_stages
+                    .set(Stat::Atk, cur - 1);
             }
         }
     }
@@ -936,7 +968,15 @@ impl Battle {
             rng: &mut self.rng,
         };
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, None, Event::TryBoost, target, source, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            None,
+            Event::TryBoost,
+            target,
+            source,
+            &mut hs,
+        );
         let out = run_event(&mut ctx, hs, RelayVar::Int(delta), false);
         // A `Fail`/`FailSilent` fold returns Bool(false)/Unit → vetoed.
         matches!(out, RelayVar::Bool(false) | RelayVar::Unit)
@@ -964,11 +1004,15 @@ impl Battle {
         let dmg = {
             let a = self.battler_ref(attacker).clone();
             let d = self.battler_ref(target).clone();
-            self.provider.calculate_damage(move_, &a, &d, 0, false).damage
+            self.provider
+                .calculate_damage(move_, &a, &d, 0, false)
+                .damage
         };
         self.mv.damage = dmg;
 
-        let Some(eff) = self.provider.effect_for_move(move_) else { return };
+        let Some(eff) = self.provider.effect_for_move(move_) else {
+            return;
+        };
         let provider = &self.provider;
         let mut ctx = BattleCtx {
             state: &mut self.state,
@@ -978,14 +1022,30 @@ impl Battle {
         };
         // ModifyDamage (the move's hook rides here).
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, Some(eff), Event::ModifyDamage, target, attacker, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            Some(eff),
+            Event::ModifyDamage,
+            target,
+            attacker,
+            &mut hs,
+        );
         run_event(&mut ctx, hs, RelayVar::Unit, false);
         // ── Effectiveness fold (doc 12 §1.1, line-identical to the engine driver's
         //    resolve_action insertion). Lift the formula damage into the Damage
         //    lane, fire Effectiveness (the chart hook folds it via scale), write
         //    back. Inert (1×) when the chart edge is neutral/omitted.
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, Some(eff), Event::Effectiveness, target, attacker, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            Some(eff),
+            Event::Effectiveness,
+            target,
+            attacker,
+            &mut hs,
+        );
         let eff_in = RelayVar::Damage(ctx.mv.damage);
         let eff_out = run_event(&mut ctx, hs, eff_in, false);
         ctx.mv.damage = eff_out.as_damage();
@@ -996,7 +1056,15 @@ impl Battle {
             ctx.mv.last_damage = dmg;
         }
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, Some(eff), Event::DamagingHit, target, attacker, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            Some(eff),
+            Event::DamagingHit,
+            target,
+            attacker,
+            &mut hs,
+        );
         run_event(&mut ctx, hs, RelayVar::Damage(dmg), false);
     }
 
@@ -1043,7 +1111,15 @@ impl Battle {
         };
         let status_eff = provider.effect_for_status_opt(ctx.battler(who).status);
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, status_eff, Event::Residual, who, who, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            status_eff,
+            Event::Residual,
+            who,
+            who,
+            &mut hs,
+        );
         run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
     }
 
@@ -1062,7 +1138,10 @@ impl Battle {
             };
             let mut hs = Vec::new();
             collect_handlers(
-                &ctx, provider, None, Event::FieldResidual,
+                &ctx,
+                provider,
+                None,
+                Event::FieldResidual,
                 who, // target = the battler the field chips
                 who,
                 &mut hs,
@@ -1086,7 +1165,15 @@ impl Battle {
             rng: &mut self.rng,
         };
         let mut hs = Vec::new();
-        collect_handlers(&ctx, provider, None, Event::WeatherModifyStat, who, who, &mut hs);
+        collect_handlers(
+            &ctx,
+            provider,
+            None,
+            Event::WeatherModifyStat,
+            who,
+            who,
+            &mut hs,
+        );
         let out = run_event(&mut ctx, hs, RelayVar::Int(base_spd as i64), false);
         out.as_int().max(0) as u16
     }
@@ -1111,10 +1198,7 @@ impl Battle {
 impl MinimonProvider {
     /// Resolve a status's residual effect from an `Option<Status>` (small
     /// convenience for the residual helper).
-    fn effect_for_status_opt(
-        &self,
-        s: Option<Status>,
-    ) -> Option<&'static Effect<MinimonProvider>> {
+    fn effect_for_status_opt(&self, s: Option<Status>) -> Option<&'static Effect<MinimonProvider>> {
         s.and_then(|s| self.effect_for_status(&s))
     }
 }

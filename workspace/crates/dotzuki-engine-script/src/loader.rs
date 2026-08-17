@@ -83,11 +83,12 @@ impl ScriptLoader {
         let shared_dir = dir.join("shared");
         if shared_dir.is_dir() {
             log::info!(target: "dotzuki::overworld", "[ScriptLoader] Loading shared modules from {:?}", shared_dir);
-            for entry in fs::read_dir(&shared_dir)
-                .map_err(|e| ScriptLoaderError::IoError(shared_dir.to_string_lossy().to_string(), e))?
-            {
-                let entry = entry
-                    .map_err(|e| ScriptLoaderError::IoError(shared_dir.to_string_lossy().to_string(), e))?;
+            for entry in fs::read_dir(&shared_dir).map_err(|e| {
+                ScriptLoaderError::IoError(shared_dir.to_string_lossy().to_string(), e)
+            })? {
+                let entry = entry.map_err(|e| {
+                    ScriptLoaderError::IoError(shared_dir.to_string_lossy().to_string(), e)
+                })?;
                 let path = entry.path();
                 if path.is_file() {
                     if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {

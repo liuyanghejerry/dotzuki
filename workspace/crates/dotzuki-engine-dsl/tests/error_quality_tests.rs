@@ -11,7 +11,7 @@
 
 use dotzuki_engine_dsl::ast::SourceSpan;
 use dotzuki_engine_dsl::error::{to_miette_span, DslError};
-use dotzuki_engine_dsl::lexer::{Lexer, LexError, SpannedToken, Token};
+use dotzuki_engine_dsl::lexer::{LexError, Lexer, SpannedToken, Token};
 use dotzuki_engine_dsl::parser::{ParseError, SemanticError};
 use miette::Diagnostic;
 use miette::SourceSpan as MietteSpan;
@@ -36,10 +36,7 @@ fn parse_and_validate(
 
 fn parse_only(
     tokens: Vec<SpannedToken>,
-) -> (
-    Option<dotzuki_engine_dsl::ast::Document>,
-    Vec<ParseError>,
-) {
+) -> (Option<dotzuki_engine_dsl::ast::Document>, Vec<ParseError>) {
     dotzuki_engine_dsl::parser::parse(tokens)
 }
 
@@ -108,14 +105,12 @@ fn convert_parse_error(err: &ParseError, src_text: &str) -> Option<DslError> {
             line: span.line_start,
             col: span.col_start,
         }),
-        ParseError::InvalidComponentType { found, span, .. } => {
-            Some(DslError::InvalidComponent {
-                found: found.clone(),
-                span: to_miette_span(span, src_text),
-                file: span.file.clone(),
-                line: span.line_start,
-            })
-        }
+        ParseError::InvalidComponentType { found, span, .. } => Some(DslError::InvalidComponent {
+            found: found.clone(),
+            span: to_miette_span(span, src_text),
+            file: span.file.clone(),
+            line: span.line_start,
+        }),
         ParseError::UnclosedBlock { span, .. } => Some(DslError::Syntax {
             src: src_text.to_string(),
             span: to_miette_span(span, src_text),
@@ -171,14 +166,12 @@ fn convert_semantic_error(err: &SemanticError, src_text: &str) -> Option<DslErro
             file: span.file.clone(),
             line: span.line_start,
         }),
-        SemanticError::CircularStyleInheritance { chain, span } => {
-            Some(DslError::CircularStyle {
-                chain: chain.join(" -> "),
-                span: to_miette_span(span, src_text),
-                file: span.file.clone(),
-                line: span.line_start,
-            })
-        }
+        SemanticError::CircularStyleInheritance { chain, span } => Some(DslError::CircularStyle {
+            chain: chain.join(" -> "),
+            span: to_miette_span(span, src_text),
+            file: span.file.clone(),
+            line: span.line_start,
+        }),
         SemanticError::EmptyChoice { span } => Some(DslError::EmptyChoice {
             span: to_miette_span(span, src_text),
             file: span.file.clone(),
@@ -221,8 +214,7 @@ fn error_quality_test_e001_syntax_error_location() {
     let (_, parse_errors) = parse_only(tokens);
     assert!(!parse_errors.is_empty(), "Expected parse errors");
 
-    let dsl_err =
-        convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
+    let dsl_err = convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
 
     assert_eq!(dsl_error_code(&dsl_err).as_deref(), Some("E001"));
 
@@ -257,10 +249,12 @@ fn error_quality_test_e002_unknown_directive_suggestion() {
     let dsl = "game_scene Test {\n  @banana {\n  }\n}";
     let tokens = lex_dsl(dsl, "test.scene").expect("lex should succeed");
     let (_, parse_errors) = parse_only(tokens);
-    assert!(!parse_errors.is_empty(), "Expected parse errors for @banana");
+    assert!(
+        !parse_errors.is_empty(),
+        "Expected parse errors for @banana"
+    );
 
-    let dsl_err =
-        convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
+    let dsl_err = convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
 
     assert_eq!(
         dsl_error_code(&dsl_err).as_deref(),
@@ -276,7 +270,10 @@ fn error_quality_test_e002_unknown_directive_suggestion() {
     }
 
     let help = dsl_error_help(&dsl_err).expect("E002 must have help text");
-    assert!(help.contains("@variables"), "Help should list valid directives: {help}");
+    assert!(
+        help.contains("@variables"),
+        "Help should list valid directives: {help}"
+    );
     assert!(
         help.contains("@storylines"),
         "Help should mention @storylines: {help}"
@@ -325,9 +322,7 @@ fn error_quality_test_e003_undefined_variable_suggestion() {
     assert_eq!(dsl_error_code(&dsl_err).as_deref(), Some("E003"));
 
     if let DslError::UndefinedVariable {
-        name,
-        defined_vars,
-        ..
+        name, defined_vars, ..
     } = &dsl_err
     {
         assert_eq!(name, "undefined_var", "Should reference the bad variable");
@@ -340,10 +335,7 @@ fn error_quality_test_e003_undefined_variable_suggestion() {
             "Should list hp as defined: {defined_vars}"
         );
     } else {
-        panic!(
-            "Expected DslError::UndefinedVariable, got: {:?}",
-            dsl_err
-        );
+        panic!("Expected DslError::UndefinedVariable, got: {:?}", dsl_err);
     }
 
     let help = dsl_error_help(&dsl_err).expect("E003 must have help text");
@@ -356,8 +348,10 @@ fn error_quality_test_e003_undefined_variable_suggestion() {
         "Help should reference @variables: {help}"
     );
 
-    if let DslError::UndefinedVariable { file: _, line: _, .. } = &dsl_err {
-    }
+    if let DslError::UndefinedVariable {
+        file: _, line: _, ..
+    } = &dsl_err
+    {}
 }
 
 // ── E004: Circular Style Inheritance ──
@@ -430,18 +424,14 @@ fn error_quality_test_e005_invalid_component_type_with_suggestions() {
         "Expected parse errors for invalid component"
     );
 
-    let dsl_err =
-        convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
+    let dsl_err = convert_parse_error(&parse_errors[0], dsl).expect("should convert to DslError");
 
     assert_eq!(dsl_error_code(&dsl_err).as_deref(), Some("E005"));
 
     if let DslError::InvalidComponent { found, .. } = &dsl_err {
         assert_eq!(found, "widget", "Should reference the invalid type");
     } else {
-        panic!(
-            "Expected DslError::InvalidComponent, got: {:?}",
-            dsl_err
-        );
+        panic!("Expected DslError::InvalidComponent, got: {:?}", dsl_err);
     }
 
     let help = dsl_error_help(&dsl_err).expect("E005 must have help text");
@@ -562,9 +552,9 @@ fn error_quality_test_e008_tab_indentation_error() {
 
     match result {
         Ok(tokens) => {
-            let has_tab_error = tokens.iter().any(|t| {
-                matches!(&t.token, Token::Error(msg) if msg.contains("Tabs"))
-            });
+            let has_tab_error = tokens
+                .iter()
+                .any(|t| matches!(&t.token, Token::Error(msg) if msg.contains("Tabs")));
             if has_tab_error {
                 for t in &tokens {
                     if let Token::Error(msg) = &t.token {
@@ -576,16 +566,12 @@ fn error_quality_test_e008_tab_indentation_error() {
                             line: span.line_start,
                         };
                         assert_eq!(dsl_error_code(&err).as_deref(), Some("E008"));
-                        let help =
-                            dsl_error_help(&err).expect("E008 must have help text");
+                        let help = dsl_error_help(&err).expect("E008 must have help text");
                         assert!(
                             help.contains("spaces"),
                             "Help should mention spaces: {help}"
                         );
-                        assert!(
-                            help.contains("Tabs"),
-                            "Help should mention tabs: {help}"
-                        );
+                        assert!(help.contains("Tabs"), "Help should mention tabs: {help}");
                         assert_eq!(dsl_error_file(&err), "test.scene");
                         assert!(dsl_error_line(&err) > 0);
                         return;
@@ -632,8 +618,7 @@ fn error_quality_test_e008_tab_indentation_error() {
 fn error_quality_test_error_empty_input_does_not_panic() {
     let dsl = "";
     let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
-        let tokens =
-            lex_dsl(dsl, "empty.scene").expect("lex of empty string should succeed");
+        let tokens = lex_dsl(dsl, "empty.scene").expect("lex of empty string should succeed");
         let (doc, parse_errors) = parse_only(tokens);
 
         assert!(doc.is_none(), "Empty document expected None");
@@ -642,8 +627,7 @@ fn error_quality_test_error_empty_input_does_not_panic() {
             "Expected parse errors for empty input"
         );
 
-        let dsl_err =
-            convert_parse_error(&parse_errors[0], dsl).expect("should convert");
+        let dsl_err = convert_parse_error(&parse_errors[0], dsl).expect("should convert");
         let _display = dsl_err.to_string();
         let _code = dsl_error_code(&dsl_err);
 
@@ -706,8 +690,10 @@ fn error_quality_test_error_multiple_errors_collected_together() {
         "All semantic errors should be convertible"
     );
 
-    let codes: Vec<String> =
-        dsl_errors.iter().filter_map(|e| dsl_error_code(e)).collect();
+    let codes: Vec<String> = dsl_errors
+        .iter()
+        .filter_map(|e| dsl_error_code(e))
+        .collect();
     assert!(
         codes.contains(&"E003".to_string()),
         "Should have E003 (undefined var), got: {:?}",
@@ -723,7 +709,11 @@ fn error_quality_test_error_multiple_errors_collected_together() {
         "Should have E007 (empty choice), got: {:?}",
         codes
     );
-    assert_eq!(codes.len(), dsl_errors.len(), "Every error should have a code");
+    assert_eq!(
+        codes.len(),
+        dsl_errors.len(),
+        "Every error should have a code"
+    );
 
     for err in &dsl_errors {
         let msg = err.to_string();
@@ -783,7 +773,10 @@ fn error_quality_test_e008_inconsistent_indentation_error() {
             );
             let err = convert_lex_error(&lex_errors[0], dsl);
             assert_eq!(dsl_error_code(&err).as_deref(), Some("E008"));
-            assert!(!err.to_string().is_empty(), "Error message should not be empty");
+            assert!(
+                !err.to_string().is_empty(),
+                "Error message should not be empty"
+            );
         }
     }
 }
@@ -856,8 +849,7 @@ fn error_quality_test_quality_all_error_codes_unique_and_present() {
 
     let mut codes = HashSet::new();
     for err in &errors {
-        let code =
-            dsl_error_code(err).expect("every variant must have an error code");
+        let code = dsl_error_code(err).expect("every variant must have an error code");
         assert!(codes.insert(code.clone()), "duplicate error code: {code}");
     }
     assert_eq!(codes.len(), errors.len(), "all 9 codes must be unique");

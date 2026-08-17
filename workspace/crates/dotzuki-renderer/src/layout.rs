@@ -49,7 +49,12 @@ pub fn oam_to_screen(oam_y: u32, oam_x: u32, oam_y_offset: u32, oam_x_offset: u3
 /// OAM Y = screen_y + oam_y_offset, OAM X = screen_x + oam_x_offset.
 /// For Game Boy: oam_y_offset = 16, oam_x_offset = 8.
 #[inline]
-pub fn screen_to_oam(screen_y: u32, screen_x: u32, oam_y_offset: u32, oam_x_offset: u32) -> (u32, u32) {
+pub fn screen_to_oam(
+    screen_y: u32,
+    screen_x: u32,
+    oam_y_offset: u32,
+    oam_x_offset: u32,
+) -> (u32, u32) {
     (screen_y + oam_y_offset, screen_x + oam_x_offset)
 }
 
@@ -57,7 +62,12 @@ pub fn screen_to_oam(screen_y: u32, screen_x: u32, oam_y_offset: u32, oam_x_offs
 /// `screen_width` and `screen_height` are the screen dimensions in pixels.
 /// Returns None if the sprite is completely off-screen.
 #[inline]
-pub fn oam_to_screen_signed(oam_y: i16, oam_x: i16, screen_width: u32, screen_height: u32) -> Option<(i32, i32)> {
+pub fn oam_to_screen_signed(
+    oam_y: i16,
+    oam_x: i16,
+    screen_width: u32,
+    screen_height: u32,
+) -> Option<(i32, i32)> {
     let screen_y = oam_y as i32 - OAM_Y_OFFSET as i32;
     let screen_x = oam_x as i32 - OAM_X_OFFSET as i32;
 
@@ -71,8 +81,6 @@ pub fn oam_to_screen_signed(oam_y: i16, oam_x: i16, screen_width: u32, screen_he
 
     Some((screen_x, screen_y))
 }
-
-
 
 // ============================================================================
 // Tests
@@ -93,7 +101,10 @@ mod tests {
     #[test]
     fn test_oam_to_screen() {
         // Player sprite from the title screen: OAM Y=$60, X=$5a
-        assert_eq!(oam_to_screen(0x60, 0x5a, OAM_Y_OFFSET, OAM_X_OFFSET), (82, 80));
+        assert_eq!(
+            oam_to_screen(0x60, 0x5a, OAM_Y_OFFSET, OAM_X_OFFSET),
+            (82, 80)
+        );
 
         // Test edge cases
         assert_eq!(oam_to_screen(16, 8, OAM_Y_OFFSET, OAM_X_OFFSET), (0, 0));
@@ -102,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_screen_to_oam() {
-        assert_eq!(screen_to_oam(80, 82, OAM_Y_OFFSET, OAM_X_OFFSET), (96, 90)); // (Y, X) -> (OAM_Y, OAM_X)
+        assert_eq!(screen_to_oam(80, 82, OAM_Y_OFFSET, OAM_X_OFFSET), (96, 90));
+        // (Y, X) -> (OAM_Y, OAM_X)
     }
-
 }

@@ -157,9 +157,21 @@ impl Reverb {
         let feedback = room * 0.28 + 0.7;
         let damping = 0.4; // fixed, gentle damping
         let combs = [
-            Comb::new((Self::COMB_DELAYS_44K[0] as f32 * scale) as usize, feedback, damping),
-            Comb::new((Self::COMB_DELAYS_44K[1] as f32 * scale) as usize, feedback, damping),
-            Comb::new((Self::COMB_DELAYS_44K[2] as f32 * scale) as usize, feedback, damping),
+            Comb::new(
+                (Self::COMB_DELAYS_44K[0] as f32 * scale) as usize,
+                feedback,
+                damping,
+            ),
+            Comb::new(
+                (Self::COMB_DELAYS_44K[1] as f32 * scale) as usize,
+                feedback,
+                damping,
+            ),
+            Comb::new(
+                (Self::COMB_DELAYS_44K[2] as f32 * scale) as usize,
+                feedback,
+                damping,
+            ),
         ];
         let allpasses = [
             Allpass::new((Self::ALLPASS_DELAYS_44K[0] as f32 * scale) as usize, 0.5),

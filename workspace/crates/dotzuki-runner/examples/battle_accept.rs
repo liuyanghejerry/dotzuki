@@ -45,7 +45,9 @@ fn snap(game: &mut RunnerGame, path: &Path) {
 
 fn main() {
     let mut args = std::env::args().skip(1);
-    let dir = args.next().expect("usage: battle_accept <project-dir> [shot-dir]");
+    let dir = args
+        .next()
+        .expect("usage: battle_accept <project-dir> [shot-dir]");
     let shot_dir = args.next().map(PathBuf::from);
 
     let project = LoadedProject::load(Path::new(&dir)).expect("load project");

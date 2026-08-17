@@ -56,8 +56,7 @@ pub fn compile_component(comp: &UiComponent) -> Value {
             props, children, ..
         } => {
             let mut obj = json!({ "type": "border" });
-            let child_vals: Vec<Value> =
-                children.iter().map(compile_component).collect();
+            let child_vals: Vec<Value> = children.iter().map(compile_component).collect();
             if !child_vals.is_empty() {
                 obj["children"] = Value::Array(child_vals);
             }
@@ -70,8 +69,7 @@ pub fn compile_component(comp: &UiComponent) -> Value {
             props, children, ..
         } => {
             let mut obj = json!({ "type": "group" });
-            let child_vals: Vec<Value> =
-                children.iter().map(compile_component).collect();
+            let child_vals: Vec<Value> = children.iter().map(compile_component).collect();
             if !child_vals.is_empty() {
                 obj["children"] = Value::Array(child_vals);
             }
@@ -80,9 +78,7 @@ pub fn compile_component(comp: &UiComponent) -> Value {
         }
 
         // ── Text ───────────────────────────────────────────────────────
-        UiComponent::Text {
-            content, props, ..
-        } => {
+        UiComponent::Text { content, props, .. } => {
             // The renderer's `TextParams` reads the string from the canonical
             // `value` field (with `deny_unknown_fields`); emitting `content`
             // instead made text elements fall through to `Custom` and render
@@ -103,9 +99,7 @@ pub fn compile_component(comp: &UiComponent) -> Value {
         }
 
         // ── Button → text + interactive + onClick ──────────────────────
-        UiComponent::Button {
-            label, props, ..
-        } => {
+        UiComponent::Button { label, props, .. } => {
             let mut obj = json!({
                 "type": "text",
                 "value": localized_to_json_value(label),
@@ -222,7 +216,12 @@ pub fn compile_component(comp: &UiComponent) -> Value {
         }
 
         // ── FlexList → flex_list ───────────────────────────────────────
-        UiComponent::FlexList { source, format, props, .. } => {
+        UiComponent::FlexList {
+            source,
+            format,
+            props,
+            ..
+        } => {
             // The renderer's `FlexListParams` reads the data binding from
             // `items` (same as `list`); emitting `source` left it without the
             // required field and it fell through to `Custom` (blank list).
@@ -383,11 +382,7 @@ pub fn expr_to_json(expr: &Expression) -> Value {
         }
         Expression::BoolLit(b) => Value::Bool(*b),
         Expression::Variable(v) => Value::String(format!("{{{v}}}")),
-        Expression::BinaryOp {
-            op,
-            left,
-            right,
-        } => {
+        Expression::BinaryOp { op, left, right } => {
             let left_str = expr_to_template_str(left);
             let right_str = expr_to_template_str(right);
             let op_str = binop_str(*op);
@@ -435,7 +430,9 @@ fn expr_to_template_str(expr: &Expression) -> String {
         Expression::StringLit(s) => format!("\"{s}\""),
         // `@t(...)` in a template position is unusual; fall back to the base
         // (`en`) text so the binding string stays well-formed.
-        Expression::Localized(pairs) => format!("\"{}\"", crate::codegen::i18n::locale_text(pairs, "en")),
+        Expression::Localized(pairs) => {
+            format!("\"{}\"", crate::codegen::i18n::locale_text(pairs, "en"))
+        }
         Expression::NumberLit(n) => {
             if n.fract() == 0.0 && n.is_finite() {
                 format!("{}", *n as i64)
@@ -445,11 +442,7 @@ fn expr_to_template_str(expr: &Expression) -> String {
         }
         Expression::BoolLit(b) => b.to_string(),
         Expression::Variable(v) => v.clone(),
-        Expression::BinaryOp {
-            op,
-            left,
-            right,
-        } => {
+        Expression::BinaryOp { op, left, right } => {
             let left_str = expr_to_template_str(left);
             let right_str = expr_to_template_str(right);
             format!("{} {} {}", left_str, binop_str(*op), right_str)
@@ -543,12 +536,29 @@ mod tests {
             visible,
             custom,
             span: SourceSpan::point("test", 1, 1),
-            rect: None, style: None, value: None, color: None,
-            font: None, wrap: None, line_spacing: None, scale: None,
-            tile_id: None, tiles: None, repeat: None, orientation: None,
-            cursor: None, selected: None, max_visible: None, footer: None,
-            item_template: None, item_layout: None, gap: None, clip: None,
-            flip_x: None, flip_y: None, palette: None,
+            rect: None,
+            style: None,
+            value: None,
+            color: None,
+            font: None,
+            wrap: None,
+            line_spacing: None,
+            scale: None,
+            tile_id: None,
+            tiles: None,
+            repeat: None,
+            orientation: None,
+            cursor: None,
+            selected: None,
+            max_visible: None,
+            footer: None,
+            item_template: None,
+            item_layout: None,
+            gap: None,
+            clip: None,
+            flip_x: None,
+            flip_y: None,
+            palette: None,
         }
     }
 
@@ -565,20 +575,36 @@ mod tests {
             visible: None,
             custom: HashMap::new(),
             span: SourceSpan::point("test", 1, 1),
-            rect: None, style: None, value: None, color: None,
-            font: None, wrap: None, line_spacing: None, scale: None,
-            tile_id: None, tiles: None, repeat: None, orientation: None,
-            cursor: None, selected: None, max_visible: None, footer: None,
-            item_template: None, item_layout: None, gap: None, clip: None,
-            flip_x: None, flip_y: None, palette: None,
+            rect: None,
+            style: None,
+            value: None,
+            color: None,
+            font: None,
+            wrap: None,
+            line_spacing: None,
+            scale: None,
+            tile_id: None,
+            tiles: None,
+            repeat: None,
+            orientation: None,
+            cursor: None,
+            selected: None,
+            max_visible: None,
+            footer: None,
+            item_template: None,
+            item_layout: None,
+            gap: None,
+            clip: None,
+            flip_x: None,
+            flip_y: None,
+            palette: None,
         }
     }
 
     /// Assert that `json_str` parses as valid JSON and matches `expected` structurally.
     fn assert_json_eq(json_str: &Result<String, String>, expected: &Value) {
         let s = json_str.as_ref().expect("compile_ui should succeed");
-        let parsed: Value =
-            serde_json::from_str(s).expect("output must be valid JSON");
+        let parsed: Value = serde_json::from_str(s).expect("output must be valid JSON");
         assert_eq!(
             parsed, *expected,
             "JSON mismatch.\nExpected: {expected}\nGot:      {parsed}"
@@ -671,8 +697,16 @@ mod tests {
         let button = UiComponent::Button {
             label: "OK".into(),
             props: props_with(
-                None, None, None, None, None, None,
-                Some("on_ok"), None, None, HashMap::new(),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("on_ok"),
+                None,
+                None,
+                HashMap::new(),
             ),
             span: SourceSpan::point("test", 3, 1),
         };
@@ -697,8 +731,16 @@ mod tests {
         let button = UiComponent::Button {
             label: "Buy".into(),
             props: props_with(
-                None, None, None, None, None, None,
-                Some("buy_item"), None, None, HashMap::new(),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("buy_item"),
+                None,
+                None,
+                HashMap::new(),
             ),
             span: SourceSpan::point("test", 1, 1),
         };
@@ -732,16 +774,10 @@ mod tests {
     #[test]
     fn test_image_with_slice() {
         let mut custom = HashMap::new();
-        custom.insert(
-            "slice".into(),
-            Expression::StringLit("[8,8,8,8]".into()),
-        );
+        custom.insert("slice".into(), Expression::StringLit("[8,8,8,8]".into()));
         let image = UiComponent::Image {
             src: "ui/panel.png".into(),
-            props: props_with(
-                None, None, None, None, None, None,
-                None, None, None, custom,
-            ),
+            props: props_with(None, None, None, None, None, None, None, None, None, custom),
             span: SourceSpan::point("test", 1, 1),
         };
         let v = compile_component(&image);
@@ -802,8 +838,16 @@ mod tests {
                 // Panel wrapping a button
                 UiComponent::Panel {
                     props: props_with(
-                        Some("main_panel"), None, None, None, None, None, None,
-                        None, None, HashMap::new(),
+                        Some("main_panel"),
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        HashMap::new(),
                     ),
                     children: vec![
                         UiComponent::Text {
@@ -814,8 +858,15 @@ mod tests {
                         UiComponent::Button {
                             label: "Close".into(),
                             props: props_with(
-                                None, None, None, None, None, None,
-                                Some("close_screen"), None, None,
+                                None,
+                                None,
+                                None,
+                                None,
+                                None,
+                                None,
+                                Some("close_screen"),
+                                None,
+                                None,
                                 HashMap::new(),
                             ),
                             span: SourceSpan::point("test", 3, 1),
@@ -826,10 +877,7 @@ mod tests {
                 // Standalone image
                 UiComponent::Image {
                     src: "bg.png".into(),
-                    props: props_with(
-                        None, None, None, None, None, None, None, None, None,
-                        custom,
-                    ),
+                    props: props_with(None, None, None, None, None, None, None, None, None, custom),
                     span: SourceSpan::point("test", 5, 1),
                 },
             ],
@@ -874,8 +922,15 @@ mod tests {
                     children: vec![UiComponent::Button {
                         label: "ok".into(),
                         props: props_with(
-                            None, None, None, None, None, None,
-                            Some("handle"), None, None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            Some("handle"),
+                            None,
+                            None,
                             HashMap::new(),
                         ),
                         span: SourceSpan::point("test", 3, 1),
@@ -888,8 +943,7 @@ mod tests {
         let result = compile_ui(&ui);
         assert!(result.is_ok(), "compile_ui should succeed");
         let s = result.unwrap();
-        let parsed: Value =
-            serde_json::from_str(&s).expect("must be valid JSON");
+        let parsed: Value = serde_json::from_str(&s).expect("must be valid JSON");
         assert!(parsed.is_object());
         assert_eq!(parsed["type"], "group");
         assert!(parsed["children"].is_array());
@@ -899,43 +953,89 @@ mod tests {
     fn input_and_dropdown_custom_types() {
         let input = UiComponent::Input {
             props: props_with(
-                Some("name_input"), None, None, None, None, None, None,
-                None, None, HashMap::new(),
+                Some("name_input"),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                HashMap::new(),
             ),
             span: SourceSpan::point("test", 1, 1),
         };
         let dropdown = UiComponent::Dropdown {
             props: props_with(
-                Some("lang_select"), None, None, None, None, None, None,
-                None, None, HashMap::new(),
+                Some("lang_select"),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                HashMap::new(),
             ),
             span: SourceSpan::point("test", 2, 1),
         };
 
-        assert_eq!(compile_component(&input), json!({
-            "type": "custom:input",
-            "id": "name_input"
-        }));
-        assert_eq!(compile_component(&dropdown), json!({
-            "type": "custom:dropdown",
-            "id": "lang_select"
-        }));
+        assert_eq!(
+            compile_component(&input),
+            json!({
+                "type": "custom:input",
+                "id": "name_input"
+            })
+        );
+        assert_eq!(
+            compile_component(&dropdown),
+            json!({
+                "type": "custom:dropdown",
+                "id": "lang_select"
+            })
+        );
     }
 
     // ── Pokered-specific codegen tests ────────────────────────────────
 
     fn pokered_props() -> ComponentProps {
         ComponentProps {
-            id: None, width: None, height: None, padding: None, margin: None,
-            align: None, on_click: None, flex_grow: None, visible: None,
+            id: None,
+            width: None,
+            height: None,
+            padding: None,
+            margin: None,
+            align: None,
+            on_click: None,
+            flex_grow: None,
+            visible: None,
             custom: HashMap::new(),
             span: SourceSpan::point("test", 1, 1),
-            rect: None, style: None, value: None, color: None,
-            font: None, wrap: None, line_spacing: None, scale: None,
-            tile_id: None, tiles: None, repeat: None, orientation: None,
-            cursor: None, selected: None, max_visible: None, footer: None,
-            item_template: None, item_layout: None, gap: None, clip: None,
-            flip_x: None, flip_y: None, palette: None,
+            rect: None,
+            style: None,
+            value: None,
+            color: None,
+            font: None,
+            wrap: None,
+            line_spacing: None,
+            scale: None,
+            tile_id: None,
+            tiles: None,
+            repeat: None,
+            orientation: None,
+            cursor: None,
+            selected: None,
+            max_visible: None,
+            footer: None,
+            item_template: None,
+            item_layout: None,
+            gap: None,
+            clip: None,
+            flip_x: None,
+            flip_y: None,
+            palette: None,
         }
     }
 
@@ -1170,13 +1270,19 @@ mod tests {
         };
 
         let result = compile_screen(&screen);
-        assert!(result.is_ok(), "compile_screen should succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "compile_screen should succeed: {:?}",
+            result.err()
+        );
         let json_str = result.unwrap();
         let parsed: Value = serde_json::from_str(&json_str).expect("must be valid JSON");
 
         assert_eq!(parsed["schema_version"], 2);
         assert_eq!(parsed["screen"], "dialog");
-        let elements = parsed["elements"].as_array().expect("elements should be an array");
+        let elements = parsed["elements"]
+            .as_array()
+            .expect("elements should be an array");
         assert_eq!(elements.len(), 3);
         assert_eq!(elements[0]["type"], "border");
         assert_eq!(elements[0]["style"], "default");

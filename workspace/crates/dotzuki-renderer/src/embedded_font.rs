@@ -127,7 +127,9 @@ pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface)
     if ch == '▶' {
         for row in 0..8u32 {
             let py = y + row;
-            if py >= fb_h { break; }
+            if py >= fb_h {
+                break;
+            }
             let byte = GLYPH_CURSOR_RIGHT[row as usize];
             for col in 0..8u32 {
                 if byte & (0x80 >> col) != 0 {
@@ -140,7 +142,9 @@ pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface)
     if ch == '▼' {
         for row in 0..8u32 {
             let py = y + row;
-            if py >= fb_h { break; }
+            if py >= fb_h {
+                break;
+            }
             let byte = GLYPH_CURSOR_DOWN[row as usize];
             for col in 0..8u32 {
                 if byte & (0x80 >> col) != 0 {
@@ -156,7 +160,9 @@ pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface)
         for ri in 0..g.height as usize {
             let row = u16::from_le_bytes([g.rows[ri * 2], g.rows[ri * 2 + 1]]);
             let py = start_y + ri as i32;
-            if py < 0 || py >= fb_h as i32 { continue; }
+            if py < 0 || py >= fb_h as i32 {
+                continue;
+            }
             for ci in 0..g.width {
                 if row & (1 << (g.width - 1 - ci)) != 0 {
                     let px = x + ci + g.x_off as u32;
@@ -204,7 +210,14 @@ fn fill_glyph_block(x: i32, y: i32, scale: u32, color: Rgba, fb: &mut impl FbSur
 /// Draw a single character scaled by an integer factor: every source glyph pixel
 /// becomes a `scale × scale` block. `scale == 1` is identical to [`draw_char`].
 /// Returns the *scaled* advance width (`char_advance(ch) * scale`).
-pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
+pub fn draw_char_scaled(
+    ch: char,
+    x: u32,
+    y: u32,
+    scale: u32,
+    color: Rgba,
+    fb: &mut impl FbSurface,
+) -> u32 {
     let scale = scale.max(1);
     if scale == 1 {
         return draw_char(ch, x, y, color, fb);
@@ -212,7 +225,11 @@ pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &
     let s = scale as i32;
     // Cursor-arrow fallbacks (not in the BDF blob) — 8×8 bitmaps, 10px advance.
     if ch == '▶' || ch == '▼' {
-        let bmp = if ch == '▶' { &GLYPH_CURSOR_RIGHT } else { &GLYPH_CURSOR_DOWN };
+        let bmp = if ch == '▶' {
+            &GLYPH_CURSOR_RIGHT
+        } else {
+            &GLYPH_CURSOR_DOWN
+        };
         for row in 0..8i32 {
             let byte = bmp[row as usize];
             for col in 0..8i32 {
@@ -243,7 +260,14 @@ pub fn draw_char_scaled(ch: char, x: u32, y: u32, scale: u32, color: Rgba, fb: &
 /// Draw text scaled by an integer factor (see [`draw_char_scaled`]). Advances the
 /// cursor by the scaled per-glyph width. No wrapping (a title/heading is a single
 /// measured line — use [`measure_text_scaled`] to centre it).
-pub fn draw_text_scaled(text: &str, mut x: u32, y: u32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
+pub fn draw_text_scaled(
+    text: &str,
+    mut x: u32,
+    y: u32,
+    scale: u32,
+    color: Rgba,
+    fb: &mut impl FbSurface,
+) {
     for ch in text.chars() {
         x += draw_char_scaled(ch, x, y, scale, color, fb);
     }
@@ -350,11 +374,15 @@ pub fn draw_glyph(glyph: &[u8; 8], x: u32, y: u32, color: Rgba, bg: Rgba, fb: &m
     let fb_w = fb.width();
     for row in 0..8u32 {
         let py = y + row;
-        if py >= fb_h { break; }
+        if py >= fb_h {
+            break;
+        }
         let byte = glyph[row as usize];
         for col in 0..8u32 {
             let px = x + col;
-            if px >= fb_w { break; }
+            if px >= fb_w {
+                break;
+            }
             if byte & (0x80 >> col) != 0 {
                 fb.set_pixel(px, py, color);
             } else {
@@ -399,12 +427,16 @@ pub fn draw_box_tile(
     let fb_w = fb.width();
     for row in 0..8u32 {
         let py = y + row;
-        if py >= fb_h { break; }
+        if py >= fb_h {
+            break;
+        }
         let byte = glyph[row as usize];
         let out = outside[row as usize];
         for col in 0..8u32 {
             let px = x + col;
-            if px >= fb_w { break; }
+            if px >= fb_w {
+                break;
+            }
             let mask = 0x80 >> col;
             if out & mask != 0 {
                 continue;
@@ -420,8 +452,8 @@ pub fn draw_box_tile(
 
 #[cfg(test)]
 mod tests {
-    use crate::FrameBuffer;
     use super::*;
+    use crate::FrameBuffer;
     use dotzuki_engine::render_config::RenderConfig;
 
     #[test]
@@ -453,7 +485,7 @@ mod tests {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         let adv_a = draw_char('A', 0, 0, Rgba::BLACK, &mut fb);
         let adv_ni = draw_char('你', 50, 0, Rgba::BLACK, &mut fb);
-        assert_eq!(adv_a, 5);   // Latin half-width
+        assert_eq!(adv_a, 5); // Latin half-width
         assert_eq!(adv_ni, 10); // CJK full-width
     }
 
@@ -475,9 +507,18 @@ mod tests {
             (&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT),
             (&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT),
             (&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL),
-            (&box_tiles::HORIZONTAL_BOTTOM, &box_tiles::outside::HORIZONTAL_BOTTOM),
-            (&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT),
-            (&box_tiles::VERTICAL_RIGHT, &box_tiles::outside::VERTICAL_RIGHT),
+            (
+                &box_tiles::HORIZONTAL_BOTTOM,
+                &box_tiles::outside::HORIZONTAL_BOTTOM,
+            ),
+            (
+                &box_tiles::VERTICAL_LEFT,
+                &box_tiles::outside::VERTICAL_LEFT,
+            ),
+            (
+                &box_tiles::VERTICAL_RIGHT,
+                &box_tiles::outside::VERTICAL_RIGHT,
+            ),
         ];
         for (glyph, outside) in pairs {
             for row in 0..8 {
@@ -517,12 +558,21 @@ mod tests {
         // build regressing to a curated list. (陈 is why the wuxia protagonist 陈墨
         // had to be abbreviated to 墨 before the full repertoire was baked.)
         for ch in "陈剑江湖金土星令传奇侠君臣岂".chars() {
-            assert!(lookup_glyph(ch).is_some(), "CJK glyph {ch:?} should be baked");
-            assert!(is_cjk(ch), "{ch:?} should be full-width CJK (advance >= 10)");
+            assert!(
+                lookup_glyph(ch).is_some(),
+                "CJK glyph {ch:?} should be baked"
+            );
+            assert!(
+                is_cjk(ch),
+                "{ch:?} should be full-width CJK (advance >= 10)"
+            );
         }
         // Full-width CJK punctuation is in the set too.
         for ch in "：，。！？「」、".chars() {
-            assert!(lookup_glyph(ch).is_some(), "punctuation {ch:?} should be baked");
+            assert!(
+                lookup_glyph(ch).is_some(),
+                "punctuation {ch:?} should be baked"
+            );
         }
         // The blob carries full GB/CJK coverage, not a few hundred glyphs.
         assert!(

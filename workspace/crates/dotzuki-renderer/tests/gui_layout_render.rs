@@ -103,8 +103,14 @@ fn save_menu_draws_label_and_resolved_text() {
     let text = painter.drawn_text();
 
     assert!(painter.text_boxes >= 1, "panel box should draw");
-    assert!(text.contains("PLAYER"), "static label missing; drew: {text:?}");
-    assert!(text.contains("BADGES"), "static label missing; drew: {text:?}");
+    assert!(
+        text.contains("PLAYER"),
+        "static label missing; drew: {text:?}"
+    );
+    assert!(
+        text.contains("BADGES"),
+        "static label missing; drew: {text:?}"
+    );
     assert!(
         text.contains("ASH"),
         "resolved {{player_name}} missing; drew: {text:?}"
@@ -130,8 +136,8 @@ fn image_element_compiles_and_blits_registered_image() {
     let ctx = DataContext::new();
     let fonts: HashMap<String, ()> = HashMap::new();
     let tilesets: HashMap<String, ()> = HashMap::new();
-    let render_ctx = RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets)
-        .with_images(&images);
+    let render_ctx =
+        RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets).with_images(&images);
     let registry = ElementRegistry::new();
     let mut painter = RecordingPainter::default();
     render_layout(&layout, &ctx, &render_ctx, &registry, &mut painter).expect("render");
@@ -190,7 +196,10 @@ fn start_menu_list_draws_items() {
     );
 
     let text = render(&layout, &ctx).drawn_text();
-    assert!(text.contains("MONSTER"), "list item missing; drew: {text:?}");
+    assert!(
+        text.contains("MONSTER"),
+        "list item missing; drew: {text:?}"
+    );
     assert!(text.contains("SAVE"), "list item missing; drew: {text:?}");
 }
 
@@ -209,7 +218,10 @@ fn at_t_labels_render_active_language() {
     let en = render(&layout, &DataContext::new()).drawn_text();
     assert!(en.contains("TEXT SPEED"), "EN label missing; drew: {en:?}");
     assert!(en.contains("CANCEL"), "EN label missing; drew: {en:?}");
-    assert!(!en.contains("文字速度"), "EN render must not show zh; drew: {en:?}");
+    assert!(
+        !en.contains("文字速度"),
+        "EN render must not show zh; drew: {en:?}"
+    );
 
     // __lang = "zh" → Chinese variant.
     let mut ctx_zh = DataContext::new();
@@ -217,7 +229,10 @@ fn at_t_labels_render_active_language() {
     let zh = render(&layout, &ctx_zh).drawn_text();
     assert!(zh.contains("文字速度"), "ZH label missing; drew: {zh:?}");
     assert!(zh.contains("取消"), "ZH label missing; drew: {zh:?}");
-    assert!(!zh.contains("TEXT SPEED"), "ZH render must not show en; drew: {zh:?}");
+    assert!(
+        !zh.contains("TEXT SPEED"),
+        "ZH render must not show en; drew: {zh:?}"
+    );
 }
 
 /// The `cursor` element computes its position from base (rect) + col/row grid
@@ -246,7 +261,9 @@ fn cursor_element_grid_follows_bindings() {
     ctx.set("r", 0i64);
     let p = render(&layout, &ctx);
     assert!(
-        p.glyphs.iter().any(|&(ty, tx, ch)| tx == 9 && ty == 14 && ch == triangle),
+        p.glyphs
+            .iter()
+            .any(|&(ty, tx, ch)| tx == 9 && ty == 14 && ch == triangle),
         "cursor should be at (9,14); glyphs: {:?}",
         p.glyphs
     );
@@ -257,7 +274,9 @@ fn cursor_element_grid_follows_bindings() {
     ctx.set("r", 1i64);
     let p = render(&layout, &ctx);
     assert!(
-        p.glyphs.iter().any(|&(ty, tx, ch)| tx == 15 && ty == 16 && ch == triangle),
+        p.glyphs
+            .iter()
+            .any(|&(ty, tx, ch)| tx == 15 && ty == 16 && ch == triangle),
         "cursor should be at (15,16); glyphs: {:?}",
         p.glyphs
     );

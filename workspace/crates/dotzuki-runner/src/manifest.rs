@@ -59,7 +59,11 @@ pub struct Activity {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GameSection {
     /// Stem of the `.scene` file under `scenesDir` the game boots into.
-    #[serde(rename = "entryScene", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "entryScene",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub entry_scene: Option<String>,
     /// Map to spawn on (engine-specific; no default).
     #[serde(rename = "entryMap", default, skip_serializing_if = "Option::is_none")]

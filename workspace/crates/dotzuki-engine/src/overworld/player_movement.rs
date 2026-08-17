@@ -161,13 +161,12 @@ pub fn advance_step<M: MapTrait>(state: &mut GenericOverworldState<M>) -> bool {
         return true;
     }
 
-    let decrement = if state.player.transport == TransportMode::Biking
-        && state.player.bike_speedup_active
-    {
-        2
-    } else {
-        1
-    };
+    let decrement =
+        if state.player.transport == TransportMode::Biking && state.player.bike_speedup_active {
+            2
+        } else {
+            1
+        };
 
     state.walk_counter = state.walk_counter.saturating_sub(decrement);
 
@@ -307,7 +306,13 @@ pub fn check_warps_no_collision<M: MapTrait, T: TilesetTrait, Mus>(
         return Some(warp_idx);
     }
 
-    if extra_warp_check(map, state.player.x, state.player.y, state.player.facing, provider) {
+    if extra_warp_check(
+        map,
+        state.player.x,
+        state.player.y,
+        state.player.facing,
+        provider,
+    ) {
         if direction_held {
             return Some(warp_idx);
         }
@@ -365,16 +370,13 @@ pub fn process_frame<M: MapTrait, T: TilesetTrait, Mus>(
     if state.player.movement_state != MovementState::Idle {
         let step_done = advance_step(state);
         if step_done {
-            let new_standing_tile = get_tile_at_position(map, state.player.x, state.player.y, provider);
+            let new_standing_tile =
+                get_tile_at_position(map, state.player.x, state.player.y, provider);
             let direction_held = input.direction_pressed().is_some();
 
-            if let Some(warp_idx) = check_warps_no_collision(
-                state,
-                map,
-                new_standing_tile,
-                direction_held,
-                provider,
-            ) {
+            if let Some(warp_idx) =
+                check_warps_no_collision(state, map, new_standing_tile, direction_held, provider)
+            {
                 return MoveResult::Warped {
                     warp_index: warp_idx,
                 };

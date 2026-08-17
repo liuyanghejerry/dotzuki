@@ -110,11 +110,20 @@ fn test_dialogue_simple() {
     let js = compile_storyline_dsl(body, "test_dialogue");
 
     // Verify the compiled JS structure
-    assert!(js.contains("export async function storyline_main()"), "should export storyline_main function");
+    assert!(
+        js.contains("export async function storyline_main()"),
+        "should export storyline_main function"
+    );
 
     // Verify the JS contains the correct game API call
-    assert!(js.contains("await game.showText("), "should call game.showText");
-    assert!(js.contains("Prof: Hello there!"), "should include speaker name and text");
+    assert!(
+        js.contains("await game.showText("),
+        "should call game.showText"
+    );
+    assert!(
+        js.contains("Prof: Hello there!"),
+        "should include speaker name and text"
+    );
 
     // Verify source map is emitted
     assert!(js.contains("sourceMappingURL"), "should include source map");
@@ -140,7 +149,9 @@ fn test_dialogue_multiple_lines() {
     let js = compile_storyline_dsl(body, "test_multi_dialogue");
 
     let cmd = execute_js_get_command(&js);
-    assert!(matches!(&cmd, Some(ScriptCommand::ShowText { text }) if text.contains("Welcome") && text.contains("Are you ready")));
+    assert!(
+        matches!(&cmd, Some(ScriptCommand::ShowText { text }) if text.contains("Welcome") && text.contains("Are you ready"))
+    );
     assert!(cmd.unwrap().to_text().unwrap().contains("Prof:"));
 }
 
@@ -177,12 +188,19 @@ fn test_dialogue_compilation_only() {
     let js = compile_storyline_dsl(body, "test_compilation");
 
     // Verify JS structure
-    assert!(js.contains("export async function storyline_main()"), "should be a valid ES module");
+    assert!(
+        js.contains("export async function storyline_main()"),
+        "should be a valid ES module"
+    );
     assert!(js.contains("await game.showText("), "should call showText");
-    assert!(js.contains("\"Shopkeeper: Welcome to the shop!\""), "should include full text");
+    assert!(
+        js.contains("\"Shopkeeper: Welcome to the shop!\""),
+        "should include full text"
+    );
 
     // Verify source map
-    let has_source_map = js.contains("//# sourceMappingURL=data:application/json;charset=utf-8;base64,");
+    let has_source_map =
+        js.contains("//# sourceMappingURL=data:application/json;charset=utf-8;base64,");
     assert!(has_source_map, "should include base64 source map comment");
 }
 
@@ -352,7 +370,10 @@ fn test_ui_show_scene_command() {
     let js = compile_storyline_dsl(body, "test_ui_command");
 
     // Verify JS structure
-    assert!(js.contains("await game[\"showScene\"]"), "should call game.showScene via bracket notation");
+    assert!(
+        js.contains("await game[\"showScene\"]"),
+        "should call game.showScene via bracket notation"
+    );
 
     // Execute in ScriptEngine
     let cmd = execute_js_get_command(&js);
@@ -475,8 +496,7 @@ fn test_multi_step_dialogue_sequence() {
     assert_eq!(
         commands[2],
         ScriptCommand::ShowText {
-            text: "Prof: This world is inhabited by creatures called monsters."
-                .to_string()
+            text: "Prof: This world is inhabited by creatures called monsters.".to_string()
         }
     );
 }
@@ -583,7 +603,9 @@ game_scene TestShop {
     engine.load_script(&js).unwrap();
 
     let cmd = engine.call_function("storyline_main", &[]).unwrap();
-    assert!(matches!(cmd, Some(ScriptCommand::ShowText { ref text }) if text.contains("Shopkeeper: Welcome")));
+    assert!(
+        matches!(cmd, Some(ScriptCommand::ShowText { ref text }) if text.contains("Shopkeeper: Welcome"))
+    );
 
     engine.signal_done(CommandResult::Void).unwrap();
     let cmd = engine.tick();
@@ -592,7 +614,9 @@ game_scene TestShop {
     // Choose "Buy"
     engine.signal_done(CommandResult::Number(0.0)).unwrap();
     let cmd = engine.tick();
-    assert!(matches!(cmd, Some(ScriptCommand::ShowText { ref text }) if text.contains("Great choice!")));
+    assert!(
+        matches!(cmd, Some(ScriptCommand::ShowText { ref text }) if text.contains("Great choice!"))
+    );
 
     engine.signal_done(CommandResult::Void).unwrap();
     assert!(engine.is_idle());
@@ -613,7 +637,10 @@ fn test_source_map_generation() {
     let js = compile_dsl_to_js(dsl, "map_test");
 
     // Source map must be present
-    assert!(js.contains("//# sourceMappingURL="), "should have source map");
+    assert!(
+        js.contains("//# sourceMappingURL="),
+        "should have source map"
+    );
 
     // Locate the source map comment
     let sm_line = js
@@ -642,10 +669,9 @@ fn test_source_map_generation() {
     let sources = sm_json["sources"]
         .as_array()
         .expect("should have sources array");
-    let has_scene = sources.iter().any(|s| {
-        s.as_str()
-            .map_or(false, |s| s.contains(".scene"))
-    });
+    let has_scene = sources
+        .iter()
+        .any(|s| s.as_str().map_or(false, |s| s.contains(".scene")));
     assert!(has_scene, "sources should reference .scene file");
 }
 
@@ -663,7 +689,9 @@ game_scene Broken
   }
 "#;
     let mut lexer = Lexer::new(dsl, "broken.scene");
-    let tokens = lexer.tokenize().expect("lexing should succeed even for broken DSL");
+    let tokens = lexer
+        .tokenize()
+        .expect("lexing should succeed even for broken DSL");
     let (doc, errors) = parser::parse(tokens);
 
     assert!(

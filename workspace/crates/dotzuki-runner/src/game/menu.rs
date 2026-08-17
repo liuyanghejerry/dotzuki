@@ -381,19 +381,13 @@ pub fn party_info(project: &LoadedProject, state: Option<&[PartyMemberState]>) -
         // fallback (default 1 ⇒ ×1, numerically identical to v1).
         let (level, exp, exp_to_next) = match &battle.levels {
             Some(levels) => {
-                let level = cur
-                    .map(|m| m.level.max(1))
-                    .unwrap_or_else(|| {
-                        get_num(&rec, &levels.level_field).unwrap_or(1).min(255) as u8
-                    });
+                let level = cur.map(|m| m.level.max(1)).unwrap_or_else(|| {
+                    get_num(&rec, &levels.level_field).unwrap_or(1).min(255) as u8
+                });
                 (
                     level,
                     cur.map(|m| m.exp).unwrap_or(0),
-                    Some(exp_to_next(
-                        levels.curve.base,
-                        levels.curve.exponent,
-                        level,
-                    )),
+                    Some(exp_to_next(levels.curve.base, levels.curve.exponent, level)),
                 )
             }
             None => (1, 0, None),
@@ -424,7 +418,12 @@ pub fn party_info(project: &LoadedProject, state: Option<&[PartyMemberState]>) -
             defense: grown(get_num(&rec, &stats.defense).unwrap_or(1)),
             speed: grown(get_num(&rec, &stats.speed).unwrap_or(1)),
             element: get_str(&rec, "element").map(str::to_string),
-            skills: skill_names(&rec, &skills_field, project.files().as_ref(), skills_dir.as_deref()),
+            skills: skill_names(
+                &rec,
+                &skills_field,
+                project.files().as_ref(),
+                skills_dir.as_deref(),
+            ),
             id,
         });
     }
@@ -803,7 +802,13 @@ impl RunnerGame {
             MenuView::Party => {
                 draw_panel(fb, 8, 8, (SCREEN_W - 16) as u32, (SCREEN_H - 16) as u32);
                 for (i, line) in self.menu_lines_for(state).iter().enumerate() {
-                    text(fb, line, 20, 20 + i as u32 * 12, Rgba::rgb(0xF0, 0xF0, 0xF0));
+                    text(
+                        fb,
+                        line,
+                        20,
+                        20 + i as u32 * 12,
+                        Rgba::rgb(0xF0, 0xF0, 0xF0),
+                    );
                 }
             }
             MenuView::Note { text, .. } => draw_textbox(fb, text),
@@ -935,12 +940,7 @@ impl RunnerGame {
     fn shop_rows(&self, state: &ShopState) -> Vec<String> {
         let l = labels(&self.lang);
         match state.view {
-            ShopView::Root => [
-                l.buy.to_string(),
-                l.sell.to_string(),
-                l.exit.to_string(),
-            ]
-            .to_vec(),
+            ShopView::Root => [l.buy.to_string(), l.sell.to_string(), l.exit.to_string()].to_vec(),
             ShopView::Buy => {
                 if state.items.is_empty() {
                     return vec![l.nothing_for_sale.to_string()];
@@ -968,7 +968,10 @@ impl RunnerGame {
                 entries
                     .iter()
                     .map(|entry| {
-                        format!("{} ×{} {} {}", entry.name, entry.count, entry.price, currency)
+                        format!(
+                            "{} ×{} {} {}",
+                            entry.name, entry.count, entry.price, currency
+                        )
                     })
                     .collect()
             }

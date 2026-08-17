@@ -27,7 +27,10 @@ pub fn detect_conflicts(routes: &[RouteEntry]) -> ConflictResult {
         if let Some(after) = &route.after {
             if all_names.contains(after.as_str()) {
                 global_adj.entry(&route.storyline).or_default().push(after);
-                global_adj.entry(after.as_str()).or_default().push(&route.storyline);
+                global_adj
+                    .entry(after.as_str())
+                    .or_default()
+                    .push(&route.storyline);
             }
         }
     }
@@ -70,7 +73,8 @@ pub fn detect_conflicts(routes: &[RouteEntry]) -> ConflictResult {
                     }
                 }
                 // Only keep storylines from THIS group in the component
-                let group_component: Vec<&str> = component.into_iter()
+                let group_component: Vec<&str> = component
+                    .into_iter()
                     .filter(|n| group_names.contains(n))
                     .collect();
                 if !group_component.is_empty() {
@@ -179,14 +183,8 @@ mod tests {
             w.contains("rival_challenge"),
             "Warning should mention rival_challenge"
         );
-        assert!(
-            w.contains("ProfLab"),
-            "Warning should mention map ProfLab"
-        );
-        assert!(
-            w.contains("Prof"),
-            "Warning should mention NPC Prof"
-        );
+        assert!(w.contains("ProfLab"), "Warning should mention map ProfLab");
+        assert!(w.contains("Prof"), "Warning should mention NPC Prof");
         assert!(
             w.contains("no \"after\" relationship"),
             "Warning should mention missing after relationship"

@@ -222,18 +222,50 @@ pub enum StoryStmt {
     /// A dialogue line the **player initiates** — talking to an NPC (a
     /// storyline bound by a `@trigger` `npc`/`talk`). Meaning is fixed to
     /// interactive talk; it does NOT express cutscene speech.
-    Speaker { name: Expression, texts: Vec<LocalizedText>, span: SourceSpan },
+    Speaker {
+        name: Expression,
+        texts: Vec<LocalizedText>,
+        span: SourceSpan,
+    },
     /// A cutscene line (`@say("Name")`): speech inside an auto-triggered
     /// storyline (on-enter / coord), where NPCs talk in sequence. Same
     /// rendering as a speaker line, but semantically scripted dialogue —
     /// the author marks it explicitly so `@speaker` stays unambiguous.
-    Say { name: Expression, texts: Vec<LocalizedText>, span: SourceSpan },
-    Choice { options: Vec<ChoiceOption>, span: SourceSpan },
-    If { condition: Expression, then_branch: Vec<StoryStmt>, else_branch: Vec<StoryStmt>, span: SourceSpan },
-    Each { item_var: String, source: Expression, body: Vec<StoryStmt>, span: SourceSpan },
-    Run { js: String, span: SourceSpan },
-    Assign { name: String, value: Expression, span: SourceSpan },
-    Command { name: String, args: Vec<Expression>, span: SourceSpan },
+    Say {
+        name: Expression,
+        texts: Vec<LocalizedText>,
+        span: SourceSpan,
+    },
+    Choice {
+        options: Vec<ChoiceOption>,
+        span: SourceSpan,
+    },
+    If {
+        condition: Expression,
+        then_branch: Vec<StoryStmt>,
+        else_branch: Vec<StoryStmt>,
+        span: SourceSpan,
+    },
+    Each {
+        item_var: String,
+        source: Expression,
+        body: Vec<StoryStmt>,
+        span: SourceSpan,
+    },
+    Run {
+        js: String,
+        span: SourceSpan,
+    },
+    Assign {
+        name: String,
+        value: Expression,
+        span: SourceSpan,
+    },
+    Command {
+        name: String,
+        args: Vec<Expression>,
+        span: SourceSpan,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -251,30 +283,87 @@ pub struct UiBlock {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum UiComponent {
-    Panel { props: ComponentProps, children: Vec<UiComponent>, span: SourceSpan },
-    Container { props: ComponentProps, children: Vec<UiComponent>, span: SourceSpan },
-    Text { content: LocalizedText, props: ComponentProps, span: SourceSpan },
-    Button { label: LocalizedText, props: ComponentProps, span: SourceSpan },
-    List { source: Expression, format: Option<String>, props: ComponentProps, span: SourceSpan },
-    Image { src: String, props: ComponentProps, span: SourceSpan },
-    Input { props: ComponentProps, span: SourceSpan },
-    Dropdown { props: ComponentProps, span: SourceSpan },
-    Tile { tile_id: Expression, props: ComponentProps, span: SourceSpan },
-    Divider { tiles: Vec<Expression>, props: ComponentProps, span: SourceSpan },
-    FlexList { source: Expression, format: Option<String>, props: ComponentProps, span: SourceSpan },
+    Panel {
+        props: ComponentProps,
+        children: Vec<UiComponent>,
+        span: SourceSpan,
+    },
+    Container {
+        props: ComponentProps,
+        children: Vec<UiComponent>,
+        span: SourceSpan,
+    },
+    Text {
+        content: LocalizedText,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Button {
+        label: LocalizedText,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    List {
+        source: Expression,
+        format: Option<String>,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Image {
+        src: String,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Input {
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Dropdown {
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Tile {
+        tile_id: Expression,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    Divider {
+        tiles: Vec<Expression>,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
+    FlexList {
+        source: Expression,
+        format: Option<String>,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
     /// A selection cursor (▶) positioned by base (rect) + col/row grid offset.
     /// Grid step / index bindings (`col_step`, `row_step`, `col`, `row`,
     /// `glyph`) are carried as generic props and emitted to the JSON for the
     /// renderer's `CursorParams`.
-    Cursor { props: ComponentProps, span: SourceSpan },
+    Cursor {
+        props: ComponentProps,
+        span: SourceSpan,
+    },
     /// Partial box border (`left`/`right`/`top`/`bottom`/`with_arrow`).
-    Bracket { props: ComponentProps, span: SourceSpan },
+    Bracket {
+        props: ComponentProps,
+        span: SourceSpan,
+    },
     /// Raw pixel rectangle (`px`/`py`/`pw`/`ph`).
-    PixelRect { props: ComponentProps, span: SourceSpan },
+    PixelRect {
+        props: ComponentProps,
+        span: SourceSpan,
+    },
     /// A use of a `component`-declared custom element. Compiles to
     /// `{"type": "custom:<name>"}`; rendered by the game's registered
     /// [`CustomElement`] implementation.
-    Custom { name: String, props: ComponentProps, span: SourceSpan },
+    Custom {
+        name: String,
+        props: ComponentProps,
+        span: SourceSpan,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -385,10 +474,24 @@ pub enum Expression {
     Variable(String),
     ArrayLit(Vec<Expression>),
     ObjectLit(Vec<(String, Expression)>),
-    Call { callee: String, args: Vec<Expression> },
-    UnaryOp { op: UnaryOp, operand: Box<Expression> },
-    BinaryOp { op: BinOp, left: Box<Expression>, right: Box<Expression> },
-    TernaryOp { condition: Box<Expression>, then_expr: Box<Expression>, else_expr: Box<Expression> },
+    Call {
+        callee: String,
+        args: Vec<Expression>,
+    },
+    UnaryOp {
+        op: UnaryOp,
+        operand: Box<Expression>,
+    },
+    BinaryOp {
+        op: BinOp,
+        left: Box<Expression>,
+        right: Box<Expression>,
+    },
+    TernaryOp {
+        condition: Box<Expression>,
+        then_expr: Box<Expression>,
+        else_expr: Box<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -399,10 +502,20 @@ pub enum UnaryOp {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum BinOp {
-    Add, Sub, Mul, Div,
-    Eq, Neq, Gt, Lt, Gte, Lte,
-    And, Or,
-    BitOr, BitAnd,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Eq,
+    Neq,
+    Gt,
+    Lt,
+    Gte,
+    Lte,
+    And,
+    Or,
+    BitOr,
+    BitAnd,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -417,11 +530,35 @@ pub struct SourceSpan {
 }
 
 impl SourceSpan {
-    pub fn new(file: impl Into<String>, line_start: usize, col_start: usize, line_end: usize, col_end: usize, byte_start: usize, byte_end: usize) -> Self {
-        Self { file: file.into(), line_start, col_start, line_end, col_end, byte_start, byte_end }
+    pub fn new(
+        file: impl Into<String>,
+        line_start: usize,
+        col_start: usize,
+        line_end: usize,
+        col_end: usize,
+        byte_start: usize,
+        byte_end: usize,
+    ) -> Self {
+        Self {
+            file: file.into(),
+            line_start,
+            col_start,
+            line_end,
+            col_end,
+            byte_start,
+            byte_end,
+        }
     }
 
     pub fn point(file: impl Into<String>, line: usize, col: usize) -> Self {
-        Self { file: file.into(), line_start: line, col_start: col, line_end: line, col_end: col, byte_start: 0, byte_end: 0 }
+        Self {
+            file: file.into(),
+            line_start: line,
+            col_start: col,
+            line_end: line,
+            col_end: col,
+            byte_start: 0,
+            byte_end: 0,
+        }
     }
 }

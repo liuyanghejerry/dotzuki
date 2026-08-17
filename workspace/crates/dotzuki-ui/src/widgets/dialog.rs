@@ -8,7 +8,7 @@
 //! uses the [`Painter`] trait for rendering, making it backend-agnostic.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, TileRect, Ui};
+use dotzuki_engine::render::{Painter, Rgba, TileRect, Ui};
 use dotzuki_renderer::embedded_font::{char_advance, measure_text};
 
 /// Configuration for a text dialog widget (legacy).
@@ -72,24 +72,49 @@ impl DialogConfig {
             ..Default::default()
         }
     }
-    pub fn with_color(mut self, color: Rgba) -> Self { self.color = color; self }
-    pub fn with_max_line_width(mut self, w: usize) -> Self { self.max_line_width = w; self }
-    pub fn with_max_lines(mut self, n: usize) -> Self { self.max_lines = n; self }
-    pub fn with_line_height(mut self, h: u32) -> Self { self.line_height = h; self }
-    pub fn with_text_start(mut self, tx: u32, ty: u32) -> Self { self.text_start_tx = tx; self.text_start_ty = ty; self }
-    pub fn with_arrow(mut self, tx: u32, ty: u32, glyph: char, color: Rgba) -> Self {
-        self.show_arrow = true; self.arrow_tx = tx; self.arrow_ty = ty;
-        self.arrow_glyph = glyph; self.arrow_color = color; self
+    pub fn with_color(mut self, color: Rgba) -> Self {
+        self.color = color;
+        self
     }
-    pub fn without_arrow(mut self) -> Self { self.show_arrow = false; self }
+    pub fn with_max_line_width(mut self, w: usize) -> Self {
+        self.max_line_width = w;
+        self
+    }
+    pub fn with_max_lines(mut self, n: usize) -> Self {
+        self.max_lines = n;
+        self
+    }
+    pub fn with_line_height(mut self, h: u32) -> Self {
+        self.line_height = h;
+        self
+    }
+    pub fn with_text_start(mut self, tx: u32, ty: u32) -> Self {
+        self.text_start_tx = tx;
+        self.text_start_ty = ty;
+        self
+    }
+    pub fn with_arrow(mut self, tx: u32, ty: u32, glyph: char, color: Rgba) -> Self {
+        self.show_arrow = true;
+        self.arrow_tx = tx;
+        self.arrow_ty = ty;
+        self.arrow_glyph = glyph;
+        self.arrow_color = color;
+        self
+    }
+    pub fn without_arrow(mut self) -> Self {
+        self.show_arrow = false;
+        self
+    }
 }
 
 #[allow(deprecated)]
 impl From<&DialogConfig> for MenuConfig {
     fn from(cfg: &DialogConfig) -> Self {
         let content = TileRect::new(
-            cfg.rect.tx + 1, cfg.rect.ty + 1,
-            cfg.rect.tw.saturating_sub(2), cfg.rect.th.saturating_sub(2),
+            cfg.rect.tx + 1,
+            cfg.rect.ty + 1,
+            cfg.rect.tw.saturating_sub(2),
+            cfg.rect.th.saturating_sub(2),
         );
         let cursor = if cfg.show_arrow {
             dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default())
@@ -108,7 +133,9 @@ impl From<&DialogConfig> for MenuConfig {
 /// [`dotzuki_renderer::embedded_font::char_advance`]), showing at most
 /// `config.content.th / 2` lines with an optional ▼ arrow.
 pub fn draw_dialog<P: Painter>(text: &str, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     draw_dialog_impl(text, config, &mut ui);
 }
@@ -127,7 +154,12 @@ fn draw_dialog_impl<P: Painter>(text: &str, config: &MenuConfig, ui: &mut Ui<P>)
         let lines = wrap_lines(text, max_width_px, max_lines);
 
         for (i, line) in lines.iter().enumerate() {
-            frame.label(rel_tx, rel_ty + (i as u32) * line_height, line, Rgba::INK_BLACK);
+            frame.label(
+                rel_tx,
+                rel_ty + (i as u32) * line_height,
+                line,
+                Rgba::INK_BLACK,
+            );
         }
         if config.cursor.tile.is_some() && !text.is_empty() {
             let arrow_tx = rel_tx + config.content.tw.saturating_sub(1);
@@ -289,9 +321,25 @@ fn cjk_units(paragraph: &str) -> Vec<WrapUnit> {
 
 /// Closing punctuation that must not open a line.
 fn is_closing_punct(c: char) -> bool {
-    matches!(c,
-        '，' | '。' | '！' | '？' | '；' | '：' | '、' | '…' | '—' | '～'
-        | '」' | '』' | '）' | '】' | '〉' | '》' | '”' | '’'
+    matches!(
+        c,
+        '，' | '。'
+            | '！'
+            | '？'
+            | '；'
+            | '：'
+            | '、'
+            | '…'
+            | '—'
+            | '～'
+            | '」'
+            | '』'
+            | '）'
+            | '】'
+            | '〉'
+            | '》'
+            | '”'
+            | '’'
     )
 }
 
@@ -414,7 +462,11 @@ fn wrap_latin_paragraph(paragraph: &str, max_width_px: usize) -> Vec<String> {
 
     for token in paragraph.split_whitespace() {
         let token_px = measure_text(token) as usize;
-        let space_px = if current.is_empty() { 0 } else { char_advance(' ') as usize };
+        let space_px = if current.is_empty() {
+            0
+        } else {
+            char_advance(' ') as usize
+        };
         if !current.is_empty() && current_px + space_px + token_px > max_width_px {
             lines.push(std::mem::take(&mut current));
             current_px = 0;
@@ -478,9 +530,15 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
@@ -488,118 +546,150 @@ mod tests {
     fn dialog_config(show_cursor: bool) -> MenuConfig {
         let area = TileRect::new(0, 14, 20, 4);
         let content = TileRect::new(1, 15, 18, 2);
-        let cursor = if show_cursor { dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()) } else { dotzuki_engine::menu::CursorStyle::new(None, Default::default()) };
+        let cursor = if show_cursor {
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default())
+        } else {
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default())
+        };
         MenuConfig::new(area, None, content, cursor)
     }
 
-    #[test] fn wrap_lines_english() {
+    #[test]
+    fn wrap_lines_english() {
         // "Hello world test" at 60px: "Hello world" = 55px, adding " test" would be 75px.
         let lines = wrap_lines("Hello world test", 60, 5);
         assert_eq!(lines, vec!["Hello world", "test"]);
-        for l in &lines { assert!(measure_text(l) as usize <= 60); }
+        for l in &lines {
+            assert!(measure_text(l) as usize <= 60);
+        }
     }
-    #[test] fn wrap_lines_english_fills_line() {
+    #[test]
+    fn wrap_lines_english_fills_line() {
         // 28 Latin chars (28 × 5px = 140px) fit a 144px (18-tile) line —
         // the old 18-char cap only used 90px and left the box half-empty.
         let long = "abcdefghijklmnopqrstuvwxyz12";
         assert_eq!(measure_text(long), 140);
         assert_eq!(wrap_lines(long, 144, 2), vec![long.to_string()]);
     }
-    #[test] fn wrap_lines_cjk() {
+    #[test]
+    fn wrap_lines_cjk() {
         // 7 full-width chars (70px) in a 30px line → 3 per line.
         let lines = wrap_lines("こんにちは世界", 30, 5);
         assert_eq!(lines, vec!["こんに", "ちは世", "界"]);
-        for l in &lines { assert!(measure_text(l) as usize <= 30); }
+        for l in &lines {
+            assert!(measure_text(l) as usize <= 30);
+        }
     }
-    #[test] fn wrap_lines_cjk_fills_line() {
+    #[test]
+    fn wrap_lines_cjk_fills_line() {
         // 14 CJK chars = 140px fill a 144px line (the old cap was 13).
         let long = "一二三四五六七八九十一二三四";
         assert_eq!(measure_text(long), 140);
         assert_eq!(wrap_lines(long, 144, 2), vec![long.to_string()]);
     }
-    #[test] fn wrap_lines_cjk_keeps_numbers_intact() {
+    #[test]
+    fn wrap_lines_cjk_keeps_numbers_intact() {
         // "等级10级" — the digits 10 must not be split across lines.
         let lines = wrap_lines("等级10级", 25, 5);
         assert_eq!(lines, vec!["等级", "10级"]);
     }
-    #[test] fn wrap_lines_cjk_no_leading_closing_punct() {
+    #[test]
+    fn wrap_lines_cjk_no_leading_closing_punct() {
         // The comma must not open line 2: the last char of line 1 is pulled
         // down so the comma follows it (追い込み) — character order preserved.
         let lines = wrap_lines("你好你好，世界", 40, 5);
         assert_eq!(lines, vec!["你好你", "好，世界"]);
-        for l in &lines { assert!(measure_text(l) as usize <= 40); }
+        for l in &lines {
+            assert!(measure_text(l) as usize <= 40);
+        }
     }
-    #[test] fn wrap_lines_cjk_preserves_char_order() {
+    #[test]
+    fn wrap_lines_cjk_preserves_char_order() {
         // Wrapping must only move break positions, never permute characters.
         let text = "我没骗你，我做实验时出了差错，结果和一只宝可梦融合了！";
         let lines = wrap_lines(text, 140, 10);
         assert_eq!(lines.concat(), text);
-        assert!(!lines.iter().any(|l| l.starts_with('，') || l.starts_with('！')));
+        assert!(!lines
+            .iter()
+            .any(|l| l.starts_with('，') || l.starts_with('！')));
     }
-    #[test] fn wrap_lines_cjk_closing_run_never_splits() {
+    #[test]
+    fn wrap_lines_cjk_closing_run_never_splits() {
         // …… is one unbreakable run: it must not be split across lines and
         // must not open a line.
         let lines = wrap_lines("好啊……嗯", 30, 5);
         assert_eq!(lines, vec!["好", "啊……", "嗯"]);
     }
-    #[test] fn wrap_lines_cjk_soft_newline_between_cjk_drops() {
+    #[test]
+    fn wrap_lines_cjk_soft_newline_between_cjk_drops() {
         // A soft break between two CJK chars disappears (no spurious gap).
         assert_eq!(wrap_lines("你好\n世界", 144, 5), vec!["你好世界"]);
         // …but next to Latin it becomes a space, keeping words apart.
         assert_eq!(wrap_lines("你好\nabc", 144, 5), vec!["你好 abc"]);
     }
-    #[test] fn wrap_lines_cjk_opening_bracket_not_at_line_end() {
+    #[test]
+    fn wrap_lines_cjk_opening_bracket_not_at_line_end() {
         // 「 must open the next line together with its content, not dangle.
         let lines = wrap_lines("他说「你好", 30, 5);
         assert_eq!(lines, vec!["他说", "「你好"]);
     }
-    #[test] fn wrap_lines_max_lines() { assert!(wrap_lines("one two three four five six seven", 5, 3).len() <= 3); }
-    #[test] fn wrap_lines_newlines() {
+    #[test]
+    fn wrap_lines_max_lines() {
+        assert!(wrap_lines("one two three four five six seven", 5, 3).len() <= 3);
+    }
+    #[test]
+    fn wrap_lines_newlines() {
         // Single newlines are soft (short authored lines merge to fill);
         // blank lines are hard paragraph breaks.
         let lines = wrap_lines("line1\nline2\nline3", 100, 10);
         assert_eq!(lines, vec!["line1 line2 line3"]);
     }
-    #[test] fn wrap_lines_blank_line_is_paragraph_break() {
+    #[test]
+    fn wrap_lines_blank_line_is_paragraph_break() {
         let lines = wrap_lines("Line one\n\nLine three", 100, 10);
         assert_eq!(lines, vec!["Line one", "", "Line three"]);
     }
 
-    #[test] fn draw_dialog_box() {
+    #[test]
+    fn draw_dialog_box() {
         let config = dialog_config(true);
         let mut painter = RecordingPainter::default();
         draw_dialog("Hello!", &[config], &mut painter);
         assert_eq!(painter.text_boxes.len(), 1);
-        assert_eq!(painter.text_boxes[0].0, TileRect::new(0,14,20,4));
+        assert_eq!(painter.text_boxes[0].0, TileRect::new(0, 14, 20, 4));
     }
-    #[test] fn draw_dialog_text() {
+    #[test]
+    fn draw_dialog_text() {
         let config = dialog_config(true);
         let mut painter = RecordingPainter::default();
         draw_dialog("Hello!", &[config], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Hello!"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Hello!"));
     }
-    #[test] fn draw_dialog_arrow() {
+    #[test]
+    fn draw_dialog_arrow() {
         let config = dialog_config(true);
         let mut painter = RecordingPainter::default();
         draw_dialog("Hi", &[config], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn draw_dialog_no_arrow() {
+    #[test]
+    fn draw_dialog_no_arrow() {
         let config = dialog_config(false);
         let mut painter = RecordingPainter::default();
         draw_dialog("Hi", &[config], &mut painter);
         assert!(painter.glyphs.is_empty());
     }
-    #[test] fn draw_dialog_empty_no_arrow() {
+    #[test]
+    fn draw_dialog_empty_no_arrow() {
         let config = dialog_config(true);
         let mut painter = RecordingPainter::default();
         draw_dialog("", &[config], &mut painter);
         assert!(painter.glyphs.is_empty());
     }
-    #[test] fn no_configs() {
+    #[test]
+    fn no_configs() {
         let mut painter = RecordingPainter::default();
         draw_dialog("test", &[], &mut painter);
         assert!(painter.text_boxes.is_empty());
     }
 }
-

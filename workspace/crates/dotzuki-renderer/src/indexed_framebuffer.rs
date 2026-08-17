@@ -153,7 +153,11 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         // that plane across all 8 pixels of each group.
         for (i, byte) in self.data.iter_mut().enumerate() {
             let plane = i % bits;
-            *byte = if (value >> plane) & 1 == 1 { 0xFF } else { 0x00 };
+            *byte = if (value >> plane) & 1 == 1 {
+                0xFF
+            } else {
+                0x00
+            };
         }
     }
 
@@ -221,9 +225,7 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         let mut base = 0;
         for y in 0..self.height {
             for x in 0..self.width {
-                let index = self
-                    .get_pixel(x as u32, y as u32)
-                    .expect("pixel in bounds");
+                let index = self.get_pixel(x as u32, y as u32).expect("pixel in bounds");
                 out[base..base + 4].copy_from_slice(&palette.color(index).to_array());
                 base += 4;
             }
@@ -374,7 +376,10 @@ mod tests {
         }
         for y in 0..7u32 {
             for x in 0..10u32 {
-                assert_eq!(fb.get_pixel(x, y), Some(GbColor::from_u8(((x + y) % 4) as u8)));
+                assert_eq!(
+                    fb.get_pixel(x, y),
+                    Some(GbColor::from_u8(((x + y) % 4) as u8))
+                );
             }
         }
         // The unused bits of the partial group must read back as nothing:
@@ -465,7 +470,10 @@ mod tests {
         assert!(fb.to_rgba(&pal, &mut out));
         assert_eq!(&out[0..4], &Rgba::rgb(0x00, 0x00, 0x00).to_array());
         assert_eq!(&out[1 * 4..2 * 4], &Rgba::rgb(0xFF, 0xFF, 0xFF).to_array());
-        assert_eq!(&out[(3 + 1 * 4) * 4..(3 + 1 * 4) * 4 + 4], &Rgba::rgb(0x55, 0x55, 0x55).to_array());
+        assert_eq!(
+            &out[(3 + 1 * 4) * 4..(3 + 1 * 4) * 4 + 4],
+            &Rgba::rgb(0x55, 0x55, 0x55).to_array()
+        );
     }
 
     #[test]
@@ -480,8 +488,14 @@ mod tests {
     fn quantize_exact_match() {
         let pal = GRAYSCALE_PALETTE;
         assert_eq!(quantize(&pal, Rgba::rgb(0xFF, 0xFF, 0xFF)), GbColor::White);
-        assert_eq!(quantize(&pal, Rgba::rgb(0xAA, 0xAA, 0xAA)), GbColor::LightGray);
-        assert_eq!(quantize(&pal, Rgba::rgb(0x55, 0x55, 0x55)), GbColor::DarkGray);
+        assert_eq!(
+            quantize(&pal, Rgba::rgb(0xAA, 0xAA, 0xAA)),
+            GbColor::LightGray
+        );
+        assert_eq!(
+            quantize(&pal, Rgba::rgb(0x55, 0x55, 0x55)),
+            GbColor::DarkGray
+        );
         assert_eq!(quantize(&pal, Rgba::rgb(0x00, 0x00, 0x00)), GbColor::Black);
     }
 
@@ -491,7 +505,10 @@ mod tests {
         let pal = GRAYSCALE_PALETTE;
         assert_eq!(quantize(&pal, Rgba::rgb(200, 200, 200)), GbColor::LightGray);
         // Midway between light gray (170) and dark gray (85) → dark gray.
-        assert_eq!(quantize(&pal, Rgba::rgb(0x7F, 0x7F, 0x7F)), GbColor::DarkGray);
+        assert_eq!(
+            quantize(&pal, Rgba::rgb(0x7F, 0x7F, 0x7F)),
+            GbColor::DarkGray
+        );
         // Darkest possible input → black.
         assert_eq!(quantize(&pal, Rgba::rgb(30, 30, 30)), GbColor::Black);
     }
@@ -740,7 +757,9 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Copy the pixels and display palette of `other` into this buffer.
     /// Both buffers must have the same dimensions.
     pub fn copy_from(&mut self, other: &Self) {
-        self.buffer.packed_mut().copy_from_slice(other.buffer.packed());
+        self.buffer
+            .packed_mut()
+            .copy_from_slice(other.buffer.packed());
         self.palette = other.palette;
         self.base = other.base;
     }
@@ -935,10 +954,7 @@ mod facade_tests {
         }
         for (i, &c) in colors.iter().enumerate() {
             assert_eq!(fb.get_pixel(i as u32, 0), Some(c));
-            assert_eq!(
-                fb.get_index(i as u32, 0),
-                Some(GbColor::from_u8(i as u8))
-            );
+            assert_eq!(fb.get_index(i as u32, 0), Some(GbColor::from_u8(i as u8)));
         }
     }
 
@@ -1034,7 +1050,7 @@ mod facade_tests {
         let mut fb = fb();
         fb.set_pixel(4, 4, Rgba::rgb(0x55, 0x55, 0x55));
         fb.apply_bgp(0b11100100); // identity-ish fade state
-        // Drawing while a display effect is active still quantizes via base.
+                                  // Drawing while a display effect is active still quantizes via base.
         fb.set_pixel(5, 4, Rgba::rgb(0xAA, 0xAA, 0xAA));
         fb.reset_palette();
         assert_eq!(fb.get_pixel(5, 4), Some(Rgba::rgb(0xAA, 0xAA, 0xAA)));
@@ -1097,7 +1113,11 @@ mod facade_tests {
         let mut fb = fb();
         for (i, &c) in GRAYSCALE_SPRITE_PALETTE.colors[..4].iter().enumerate() {
             fb.set_pixel(i as u32, 0, c);
-            let expected = if i == 0 { GbColor::Black } else { GbColor::from_u8(i as u8) };
+            let expected = if i == 0 {
+                GbColor::Black
+            } else {
+                GbColor::from_u8(i as u8)
+            };
             assert_eq!(fb.get_index(i as u32, 0), Some(expected));
         }
     }

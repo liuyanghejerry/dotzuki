@@ -3,7 +3,7 @@
 //! configs[3] is the unbordered cancel region.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, Ui};
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 #[derive(Debug, Clone)]
 pub struct OptionEntry {
@@ -25,14 +25,34 @@ const CURSOR: char = '\u{25B6}';
 /// In the original, enum_position_map provided pixel-level offsets.
 fn value_offset_for(value: &str) -> u32 {
     match value {
-        "Fast" | "Medium" | "Slow" => match value { "Fast" => 0, "Medium" => 1, _ => 2 },
-        "On" | "Off" => if value == "On" { 0 } else { 1 },
-        "Shift" | "Set" => if value == "Shift" { 0 } else { 1 },
+        "Fast" | "Medium" | "Slow" => match value {
+            "Fast" => 0,
+            "Medium" => 1,
+            _ => 2,
+        },
+        "On" | "Off" => {
+            if value == "On" {
+                0
+            } else {
+                1
+            }
+        }
+        "Shift" | "Set" => {
+            if value == "Shift" {
+                0
+            } else {
+                1
+            }
+        }
         _ => 0,
     }
 }
 
-pub fn draw_options_menu<P: Painter>(data: &OptionsMenuData, configs: &[MenuConfig], painter: &mut P) {
+pub fn draw_options_menu<P: Painter>(
+    data: &OptionsMenuData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
     let mut ui = Ui::new(painter);
 
     // Options are distributed across 4 boxes: TEXT SPEED, BATTLE SCENE, BATTLE STYLE, CANCEL
@@ -84,67 +104,122 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn box_configs() -> [MenuConfig; 4] {
         [
-            MenuConfig::new(TileRect::new(2,2,16,3), None, TileRect::new(3,3,14,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default())),
-            MenuConfig::new(TileRect::new(2,5,16,3), None, TileRect::new(3,6,14,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default())),
-            MenuConfig::new(TileRect::new(2,8,16,3), None, TileRect::new(3,9,14,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default())),
-            MenuConfig::new(TileRect::new(2,11,16,3), None, TileRect::new(3,12,14,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default())),
+            MenuConfig::new(
+                TileRect::new(2, 2, 16, 3),
+                None,
+                TileRect::new(3, 3, 14, 1),
+                dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+            ),
+            MenuConfig::new(
+                TileRect::new(2, 5, 16, 3),
+                None,
+                TileRect::new(3, 6, 14, 1),
+                dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+            ),
+            MenuConfig::new(
+                TileRect::new(2, 8, 16, 3),
+                None,
+                TileRect::new(3, 9, 14, 1),
+                dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+            ),
+            MenuConfig::new(
+                TileRect::new(2, 11, 16, 3),
+                None,
+                TileRect::new(3, 12, 14, 1),
+                dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+            ),
         ]
     }
     fn test_data() -> OptionsMenuData {
         OptionsMenuData {
             options: vec![
-                OptionEntry { label: "TEXT SPEED".into(), value: "Fast".into(), selected: false },
-                OptionEntry { label: "BATTLE SCENE".into(), value: "On".into(), selected: false },
-                OptionEntry { label: "BATTLE STYLE".into(), value: "Shift".into(), selected: false },
-                OptionEntry { label: "CANCEL".into(), value: "".into(), selected: false },
+                OptionEntry {
+                    label: "TEXT SPEED".into(),
+                    value: "Fast".into(),
+                    selected: false,
+                },
+                OptionEntry {
+                    label: "BATTLE SCENE".into(),
+                    value: "On".into(),
+                    selected: false,
+                },
+                OptionEntry {
+                    label: "BATTLE STYLE".into(),
+                    value: "Shift".into(),
+                    selected: false,
+                },
+                OptionEntry {
+                    label: "CANCEL".into(),
+                    value: "".into(),
+                    selected: false,
+                },
             ],
             cursor: 0,
         }
     }
 
-    #[test] fn draws_all_boxes() {
+    #[test]
+    fn draws_all_boxes() {
         let configs = box_configs();
         let mut painter = RecordingPainter::default();
         draw_options_menu(&test_data(), &configs, &mut painter);
         assert_eq!(painter.text_boxes.len(), 3); // 3 bordered boxes, 4th is unbordered region
     }
-    #[test] fn draws_labels() {
+    #[test]
+    fn draws_labels() {
         let configs = box_configs();
         let mut painter = RecordingPainter::default();
         draw_options_menu(&test_data(), &configs, &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "TEXT SPEED"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "BATTLE SCENE"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "BATTLE STYLE"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "CANCEL"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "TEXT SPEED"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "BATTLE SCENE"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "BATTLE STYLE"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "CANCEL"));
     }
-    #[test] fn draws_values() {
+    #[test]
+    fn draws_values() {
         let configs = box_configs();
         let mut painter = RecordingPainter::default();
         draw_options_menu(&test_data(), &configs, &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Fast"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "On"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Shift"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Fast"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "On"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Shift"));
     }
-    #[test] fn draws_dual_cursors() {
+    #[test]
+    fn draws_dual_cursors() {
         let configs = box_configs();
         let mut painter = RecordingPainter::default();
         draw_options_menu(&test_data(), &configs, &mut painter);
         // Expect at least 4 ▷ (one per option) + 1 ▶ (for selected)
-        let indicator_count = painter.glyphs.iter().filter(|(_,g,_)| *g == INDICATOR).count();
-        let cursor_count = painter.glyphs.iter().filter(|(_,g,_)| *g == CURSOR).count();
+        let indicator_count = painter
+            .glyphs
+            .iter()
+            .filter(|(_, g, _)| *g == INDICATOR)
+            .count();
+        let cursor_count = painter
+            .glyphs
+            .iter()
+            .filter(|(_, g, _)| *g == CURSOR)
+            .count();
         assert!(indicator_count >= 4, "Each option should have ▷ indicator");
         assert_eq!(cursor_count, 1, "Only selected option should have ▶ cursor");
     }
-    #[test] fn no_configs() {
+    #[test]
+    fn no_configs() {
         let mut painter = RecordingPainter::default();
         draw_options_menu(&test_data(), &[], &mut painter);
         assert!(painter.text_boxes.is_empty());

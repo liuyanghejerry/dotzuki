@@ -72,10 +72,20 @@ mod tests {
         SourceSpan::point("test.scene", 1, 1)
     }
 
-    fn make_region(name: &str, x: u32, y: u32, w: u32, h: u32, nine_slice: Option<[u32; 4]>) -> AtlasRegion {
+    fn make_region(
+        name: &str,
+        x: u32,
+        y: u32,
+        w: u32,
+        h: u32,
+        nine_slice: Option<[u32; 4]>,
+    ) -> AtlasRegion {
         AtlasRegion {
             name: name.into(),
-            x, y, w, h,
+            x,
+            y,
+            w,
+            h,
             nine_slice,
             span: span(),
         }
@@ -167,8 +177,10 @@ mod tests {
         assert_eq!(parsed["regions"][0]["w"], 32);
         assert_eq!(parsed["regions"][0]["h"], 32);
         // nineSlice field must not be present
-        assert!(parsed["regions"][0].get("nineSlice").is_none(),
-            "region without slice should omit nineSlice");
+        assert!(
+            parsed["regions"][0].get("nineSlice").is_none(),
+            "region without slice should omit nineSlice"
+        );
     }
 
     #[test]
@@ -212,7 +224,14 @@ mod tests {
         let atlas = Atlas {
             name: "frame".into(),
             source: "frame.png".into(),
-            regions: vec![make_region("border", 0, 0, 200, 100, Some([10, 15, 20, 25]))],
+            regions: vec![make_region(
+                "border",
+                0,
+                0,
+                200,
+                100,
+                Some([10, 15, 20, 25]),
+            )],
             span: span(),
         };
         let json = compile_atlas(&atlas);

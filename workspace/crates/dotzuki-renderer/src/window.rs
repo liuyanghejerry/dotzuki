@@ -69,10 +69,7 @@ pub fn run<G: GameLoop + 'static>(
                     Window::default_attributes()
                         .with_title(&config.title)
                         .with_inner_size(size)
-                        .with_min_inner_size(LogicalSize::new(
-                            fb_width as f64,
-                            fb_height as f64,
-                        ))
+                        .with_min_inner_size(LogicalSize::new(fb_width as f64, fb_height as f64))
                         .with_resizable(config.resizable),
                 )
                 .map_err(|e| WindowError::WindowCreation(e.to_string()))?,

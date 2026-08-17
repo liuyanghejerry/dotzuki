@@ -80,12 +80,20 @@ pub struct MenuOption {
 impl MenuOption {
     /// Create an enabled option with just a label.
     pub fn new(label: impl Into<String>) -> Self {
-        Self { label: label.into(), enabled: true, description: None }
+        Self {
+            label: label.into(),
+            enabled: true,
+            description: None,
+        }
     }
 
     /// Create a disabled option.
     pub fn disabled(label: impl Into<String>) -> Self {
-        Self { label: label.into(), enabled: false, description: None }
+        Self {
+            label: label.into(),
+            enabled: false,
+            description: None,
+        }
     }
 }
 
@@ -181,10 +189,14 @@ pub struct BorderStyle {
 impl Default for BorderStyle {
     fn default() -> Self {
         Self {
-            corner_tl: 192, corner_tr: 193, // GB standard menu border
-            corner_bl: 198, corner_br: 199,
-            edge_top: 194, edge_bottom: 197,
-            edge_left: 195, edge_right: 196,
+            corner_tl: 192,
+            corner_tr: 193, // GB standard menu border
+            corner_bl: 198,
+            corner_br: 199,
+            edge_top: 194,
+            edge_bottom: 197,
+            edge_left: 195,
+            edge_right: 196,
             fill_bg: 200,
         }
     }
@@ -222,7 +234,10 @@ pub struct CursorStyle {
 
 impl Default for CursorStyle {
     fn default() -> Self {
-        Self { tile: Some(223), anchor: CursorAnchor::CenterLeft }
+        Self {
+            tile: Some(223),
+            anchor: CursorAnchor::CenterLeft,
+        }
     }
 }
 
@@ -252,7 +267,12 @@ pub struct EdgeInsets {
 
 impl Default for EdgeInsets {
     fn default() -> Self {
-        Self { top: 1, bottom: 1, left: 1, right: 1 }
+        Self {
+            top: 1,
+            bottom: 1,
+            left: 1,
+            right: 1,
+        }
     }
 }
 
@@ -287,9 +307,17 @@ pub struct MenuConfig {
 }
 
 impl MenuConfig {
-    pub fn new(area: TileRect, border: Option<BorderStyle>, content: TileRect, cursor: CursorStyle) -> Self {
+    pub fn new(
+        area: TileRect,
+        border: Option<BorderStyle>,
+        content: TileRect,
+        cursor: CursorStyle,
+    ) -> Self {
         Self {
-            area, border, content, cursor,
+            area,
+            border,
+            content,
+            cursor,
             label_positions: Vec::new(),
             gap: 1,
             padding: EdgeInsets::default(),
@@ -632,7 +660,10 @@ mod tests {
         let mut system = MenuSystem::new(&provider);
         system.open(MockMenuId::MainMenu);
 
-        let action = system.handle_input(&MenuInput { down: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::Down);
         assert_eq!(system.cursor, 1);
     }
@@ -644,12 +675,21 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Move to last option (index 2).
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(system.cursor, 2);
 
         // One more down should do nothing (stay at 2).
-        let action = system.handle_input(&MenuInput { down: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::None);
         assert_eq!(system.cursor, 2);
     }
@@ -661,10 +701,16 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Move down first, then up.
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(system.cursor, 1);
 
-        let action = system.handle_input(&MenuInput { up: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            up: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::Up);
         assert_eq!(system.cursor, 0);
     }
@@ -676,9 +722,15 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Move to "Continue" (index 1).
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
 
-        let action = system.handle_input(&MenuInput { confirm: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            confirm: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::Selected(1));
     }
 
@@ -688,7 +740,10 @@ mod tests {
         let mut system = MenuSystem::new(&provider);
         system.open(MockMenuId::MainMenu);
 
-        let action = system.handle_input(&MenuInput { cancel: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            cancel: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::Cancelled);
         assert!(!system.is_open());
     }
@@ -708,7 +763,10 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Cursor starts at "A" (index 0). Down should skip disabled "B" and land on "C".
-        let action = system.handle_input(&MenuInput { down: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::Down);
         assert_eq!(system.cursor, 2);
     }
@@ -717,17 +775,17 @@ mod tests {
     fn confirm_on_disabled_option_does_nothing() {
         let provider = MockMenuProvider {
             title: "TEST",
-            options: vec![
-                MenuOption::disabled("X"),
-                MenuOption::new("Y"),
-            ],
+            options: vec![MenuOption::disabled("X"), MenuOption::new("Y")],
             layout: MenuLayout::new(0, 0, 6, 5),
         };
         let mut system = MenuSystem::new(&provider);
         system.open(MockMenuId::MainMenu);
 
         // Cursor starts at 0 (disabled). Confirm should do nothing.
-        let action = system.handle_input(&MenuInput { confirm: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            confirm: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::None);
     }
 
@@ -738,7 +796,10 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Move to "Continue".
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
 
         let opt = system.selected_option();
         assert!(opt.is_some());
@@ -808,7 +869,10 @@ mod tests {
         system.open(MockMenuId::MainMenu);
 
         // Move cursor to index 1 ("Continue").
-        system.handle_input(&MenuInput { down: true, ..Default::default() });
+        system.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
 
         let mut painter = RecordingPainter::default();
         system.render(&mut painter);
@@ -851,7 +915,10 @@ mod tests {
         let mut system = MenuSystem::new(&provider);
         system.open(MockMenuId::MainMenu);
 
-        let action = system.handle_input(&MenuInput { confirm: true, ..Default::default() });
+        let action = system.handle_input(&MenuInput {
+            confirm: true,
+            ..Default::default()
+        });
         assert_eq!(action, MenuAction::None);
     }
 

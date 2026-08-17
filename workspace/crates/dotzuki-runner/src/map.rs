@@ -255,7 +255,11 @@ impl RuntimeMap {
     /// # Errors
     ///
     /// Same conditions as [`load`](Self::load).
-    pub fn load_with_files(files: &dyn ProjectFiles, maps_dir_rel: &str, map_id: &str) -> Result<Self> {
+    pub fn load_with_files(
+        files: &dyn ProjectFiles,
+        maps_dir_rel: &str,
+        map_id: &str,
+    ) -> Result<Self> {
         let map_dir = join_path(maps_dir_rel, map_id);
         let tmx_rel = join_path(&map_dir, "map.tmx.json");
         let bytes = files
@@ -722,7 +726,11 @@ mod tests {
         // An empty above group (player at level 1 ⇒ nothing is higher) is a
         // no-op, not a clear.
         map.render_above(&mut fb, 0, 0, 48, 32, 1).expect("above");
-        assert_eq!(fb.get_pixel(0, 0), Some(sprite), "empty group leaves fb alone");
+        assert_eq!(
+            fb.get_pixel(0, 0),
+            Some(sprite),
+            "empty group leaves fb alone"
+        );
     }
 
     #[test]

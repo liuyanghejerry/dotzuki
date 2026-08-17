@@ -55,7 +55,10 @@ pub use battle::{Battle, BattleOutcome};
 pub use game::{RunnerGame, RunnerOptions, SCREEN_H, SCREEN_W};
 #[cfg(not(target_arch = "wasm32"))]
 pub use headless::{run_headless, HeadlessOptions};
-pub use map::{EncounterConfig, EncounterTableEntry, EncounterZone, MapObjects, NpcDef, RuntimeMap, SignDef, WarpDef};
+pub use map::{
+    EncounterConfig, EncounterTableEntry, EncounterZone, MapObjects, NpcDef, RuntimeMap, SignDef,
+    WarpDef,
+};
 pub use project::LoadedProject;
 pub use save::{GameSave, PlayerSave, DEFAULT_SAVE_FILE, SAVE_VERSION};
 pub use tileset::PngTileset;

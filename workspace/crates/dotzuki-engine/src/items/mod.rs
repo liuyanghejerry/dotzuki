@@ -22,11 +22,9 @@ use std::hash::Hash;
 pub mod equip;
 pub mod kind;
 pub mod use_driver;
-pub use use_driver::{
-    buy, sell, use_item, ItemUseResult, ShopError, ShopReceipt, UsageContext,
-};
-pub use kind::ItemKind;
 pub use equip::{EquipProvider, EquipSlot};
+pub use kind::ItemKind;
+pub use use_driver::{buy, sell, use_item, ItemUseResult, ShopError, ShopReceipt, UsageContext};
 
 // ── Supporting types ──────────────────────────────────────────────────────
 
@@ -243,9 +241,7 @@ impl<I: Copy + Eq + Hash + Debug, const N: usize> Inventory<I, N> {
     where
         F: FnMut(&(I, u32), &(I, u32)) -> Ordering,
     {
-        self.items[..self.len].sort_by(|a, b| {
-            cmp(a.as_ref().unwrap(), b.as_ref().unwrap())
-        });
+        self.items[..self.len].sort_by(|a, b| cmp(a.as_ref().unwrap(), b.as_ref().unwrap()));
     }
 
     /// Sort slots by item name, using the provided `name_fn` to extract a
@@ -254,9 +250,8 @@ impl<I: Copy + Eq + Hash + Debug, const N: usize> Inventory<I, N> {
     where
         F: Fn(&I) -> &str,
     {
-        self.items[..self.len].sort_by(|a, b| {
-            name_fn(&a.as_ref().unwrap().0).cmp(name_fn(&b.as_ref().unwrap().0))
-        });
+        self.items[..self.len]
+            .sort_by(|a, b| name_fn(&a.as_ref().unwrap().0).cmp(name_fn(&b.as_ref().unwrap().0)));
     }
 
     /// Consume the inventory and return its occupied slots as a `Vec`.
@@ -776,10 +771,7 @@ mod tests {
     #[test]
     fn shop_name_is_correct() {
         let provider = MockShopProvider;
-        assert_eq!(
-            provider.shop_name(&MockShopId::CityMart),
-            "City Mart"
-        );
+        assert_eq!(provider.shop_name(&MockShopId::CityMart), "City Mart");
     }
 
     // -- Tests: Inventory ---------------------------------------------------

@@ -8,7 +8,7 @@
 //! backend-agnostic rendering.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, TileRect, Ui};
+use dotzuki_engine::render::{Painter, Rgba, TileRect, Ui};
 
 // ---------------------------------------------------------------------------
 // clamp helper
@@ -41,7 +41,12 @@ pub struct EdgeInsets {
 
 impl Default for EdgeInsets {
     fn default() -> Self {
-        Self { top: 1, bottom: 1, left: 1, right: 1 }
+        Self {
+            top: 1,
+            bottom: 1,
+            left: 1,
+            right: 1,
+        }
     }
 }
 
@@ -159,7 +164,12 @@ impl FlexMenuConfig {
 
     /// Builder: set the padding.
     pub fn with_padding(mut self, top: u32, bottom: u32, left: u32, right: u32) -> Self {
-        self.padding = EdgeInsets { top, bottom, left, right };
+        self.padding = EdgeInsets {
+            top,
+            bottom,
+            left,
+            right,
+        };
         self
     }
 
@@ -220,7 +230,10 @@ pub struct FlexMenuState {
 
 impl Default for FlexMenuState {
     fn default() -> Self {
-        Self { cursor: 0, scroll_offset: 0 }
+        Self {
+            cursor: 0,
+            scroll_offset: 0,
+        }
     }
 }
 
@@ -317,7 +330,9 @@ pub fn draw_flex_menu<P: Painter, T: AsRef<str>>(
     max_visible: usize,
     ui: &mut Ui<P>,
 ) {
-    let Some(config) = configs.first() else { return };
+    let Some(config) = configs.first() else {
+        return;
+    };
     let num_items = items.len();
     if num_items == 0 {
         return;
@@ -461,14 +476,7 @@ mod tests {
             self.glyphs.push((pos, glyph, color));
         }
         fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: Rgba) {}
-        fn draw_gb_tile(
-            &mut self,
-            _pos: TilePos,
-            _tile_id: u8,
-            _fallback: &str,
-            _color: Rgba,
-        ) {
-        }
+        fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
     }
 
     /// Helper: create a default `MenuConfig` for flex menu tests.
@@ -510,14 +518,20 @@ mod tests {
 
     #[test]
     fn flex_menu_state_cursor_down_wraps() {
-        let mut state = FlexMenuState { cursor: 2, scroll_offset: 0 };
+        let mut state = FlexMenuState {
+            cursor: 2,
+            scroll_offset: 0,
+        };
         state.cursor_down(3, 6);
         assert_eq!(state.cursor, 0);
     }
 
     #[test]
     fn flex_menu_state_cursor_up_non_wrap() {
-        let mut state = FlexMenuState { cursor: 0, scroll_offset: 0 };
+        let mut state = FlexMenuState {
+            cursor: 0,
+            scroll_offset: 0,
+        };
         state.cursor_up(3, 6);
         assert_eq!(state.cursor, 2);
     }
@@ -564,7 +578,10 @@ mod tests {
     fn draw_flex_menu_cursor_position() {
         let items = ["Item1", "Item2", "Item3"];
         let config = flex_menu_config();
-        let state = FlexMenuState { cursor: 1, scroll_offset: 0 };
+        let state = FlexMenuState {
+            cursor: 1,
+            scroll_offset: 0,
+        };
         let mut painter = RecordingPainter::default();
         let mut ui = Ui::new(&mut painter);
 
@@ -598,7 +615,10 @@ mod tests {
     fn draw_flex_menu_scroll_clips_items() {
         let items = ["A", "B", "C", "D", "E"];
         let config = flex_menu_config();
-        let state = FlexMenuState { cursor: 3, scroll_offset: 1 };
+        let state = FlexMenuState {
+            cursor: 3,
+            scroll_offset: 1,
+        };
         let mut painter = RecordingPainter::default();
         let mut ui = Ui::new(&mut painter);
 
