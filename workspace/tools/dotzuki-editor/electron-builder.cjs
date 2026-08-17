@@ -56,8 +56,8 @@ if (process.env.CSC_LINK || process.env.CSC_NAME || teamId) {
 
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
-  appId: 'com.jrpg.editor',
-  productName: 'JRPG Editor',
+  appId: 'com.dotzuki.editor',
+  productName: 'Dotzuki Editor',
   // buildResources (default: build/) holds the icon + entitlements; output is
   // the finished artifacts (gitignored).
   directories: { output: 'release', buildResources: 'build' },

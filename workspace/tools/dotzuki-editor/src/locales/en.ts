@@ -181,7 +181,7 @@ export default {
     noBackground: 'No background image — generate or upload one',
   },
   app: {
-    title: 'JRPG Editor',
+    title: 'Dotzuki Editor',
     loading: 'Loading project...',
     selectActivity: 'Select an activity',
     language: 'Language',

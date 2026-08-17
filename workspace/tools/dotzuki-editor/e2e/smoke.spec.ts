@@ -7,7 +7,9 @@ test.describe('app shell', () => {
     await page.goto('/')
     // Hash router redirects to /#/edit; config load selects the first activity.
     await expect(page).toHaveURL(/#\/edit/)
+    await expect(page.locator('header')).toContainText('Dotzuki Editor')
     await expect(page.locator('header')).toContainText('e2e-demo-game')
+    await expect(page).toHaveTitle('Dotzuki Editor · e2e-demo-game')
     const nav = page.locator('nav').first()
     await expect(nav.getByRole('button', { name: /Data/ })).toBeVisible()
     await expect(nav.getByRole('button', { name: /Scripts/ })).toBeVisible()

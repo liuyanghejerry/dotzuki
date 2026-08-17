@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────
-// Electron main process for the JRPG Editor.
+// Electron main process for the Dotzuki Editor.
 //
 //   dev  (ELECTRON_DEV=1): the Vite dev server already serves the app + full
 //        /api surface. We just point a window at it (ELECTRON_RENDERER_URL).
@@ -73,7 +73,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#f3f4f6', // matches the app's light bg-canvas (gray-100) shell
-    title: 'JRPG Editor',
+    title: 'Dotzuki Editor',
     autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -98,7 +98,7 @@ function createWindow() {
 async function openProjectDialog() {
   const target = win ?? BrowserWindow.getFocusedWindow()
   const result = await dialog.showOpenDialog(target ?? undefined, {
-    title: 'Open JRPG project',
+    title: 'Open dotzuki project',
     message: 'Choose a folder containing .dotzuki-editor.json',
     properties: ['openDirectory'],
   })
@@ -121,8 +121,8 @@ async function openProjectDialog() {
           buttons: ['Cancel', 'Initialize Project'],
           defaultId: 1,
           cancelId: 0,
-          title: 'Not a JRPG project',
-          message: 'This folder is not a JRPG project.',
+          title: 'Not a dotzuki project',
+          message: 'This folder is not a dotzuki project.',
           detail: `Initialize a new project in ${dir}?`,
         })
         if (response !== 1) return { ok: false, error: data.error }

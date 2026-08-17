@@ -1,4 +1,4 @@
-# JRPG Editor
+# Dotzuki Editor
 
 A **game-agnostic** visual editor for games built on [dotzuki-engine](../../crates/dotzuki-engine/).  
 Configure it once via `.dotzuki-editor.json`, then edit maps, scripts, data tables, and assets — without writing code.
@@ -212,7 +212,7 @@ pnpm electron:dist      # dmg/zip (mac), nsis (win), AppImage (linux)
 > notarization — no code changes. The exact env vars are documented at the top
 > of `electron-builder.cjs`; hardened-runtime entitlements + icon slot live in
 > `build/`. For unsigned copies, recipients run
-> `xattr -dr com.apple.quarantine "JRPG Editor.app"` or use *Open Anyway* in
+> `xattr -dr com.apple.quarantine "Dotzuki Editor.app"` or use *Open Anyway* in
 > System Settings → Privacy & Security.
 
 **How it's wired** — in dev, the Electron window loads the Vite dev server,
@@ -590,7 +590,7 @@ All endpoints are relative to `dataRoot` or `gfxRoot` from your config.
 
 ## For Game Developers
 
-To make your game compatible with JRPG Editor:
+To make your game compatible with Dotzuki Editor:
 
 1. Put your game data in a `data/` directory as JSON files
 2. Put your graphics in a `gfx/` directory as PNG files
