@@ -181,7 +181,7 @@ export default {
     noBackground: '暂无背景图——可生成或上传一张',
   },
   app: {
-    title: 'JRPG 编辑器',
+    title: 'Dotzuki Editor',
     loading: '正在加载项目...',
     selectActivity: '请选择一个功能',
     language: '语言',

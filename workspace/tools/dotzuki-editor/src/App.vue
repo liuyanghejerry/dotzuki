@@ -1,9 +1,9 @@
 <template>
   <div class="h-screen relative flex flex-col bg-canvas text-ink">
     <header class="flex items-center justify-between px-5 py-3 bg-surface border-b border-border shrink-0">
-      <div class="flex items-center gap-3">
-        <h1 class="text-lg font-bold text-accent-ink">{{ $t('app.title') }}</h1>
-        <span v-if="project.config" class="text-sm text-ink-muted">{{ project.config.name }}</span>
+      <div class="flex items-center gap-3 min-w-0">
+        <h1 class="text-lg font-bold text-accent-ink shrink-0">{{ $t('app.title') }}</h1>
+        <span v-if="project.config?.name" class="text-sm text-ink-muted truncate">· {{ project.config.name }}</span>
       </div>
       <div class="flex items-center gap-2">
         <select
@@ -135,6 +135,11 @@ function selectActivity(id: string) {
 // Load the matching main/sidebar components whenever the active activity changes
 // — from a tab click, a deep link, or a cross-activity jump.
 watch(() => editor.activeActivity, (id) => { if (id) loadActivity(id) })
+
+// Keep the browser tab / native window title in sync with the header branding.
+watch(() => project.config?.name, (name) => {
+  document.title = name ? `${t('app.title')} · ${name}` : t('app.title')
+}, { immediate: true })
 
 async function onProjectCreated(withAi?: boolean) {
   await project.loadConfig()

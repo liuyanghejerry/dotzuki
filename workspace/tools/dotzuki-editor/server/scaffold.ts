@@ -284,7 +284,7 @@ game_scene Main {
 function readme(name: string): string {
   return `# ${name}
 
-A JRPG project created with the JRPG Editor.
+A dotzuki project created with the Dotzuki Editor.
 
 ## Layout
 
