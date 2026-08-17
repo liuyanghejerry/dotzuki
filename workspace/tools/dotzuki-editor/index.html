@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The UI is light-only; pin native widgets (scrollbars, select popups) to
+         light in every environment — browser and Electron alike — so they don't
+         follow the OS/browser dark-mode setting. -->
+    <meta name="color-scheme" content="light" />
     <title>JRPG Editor</title>
   </head>
   <body class="bg-canvas text-ink overflow-hidden">

@@ -72,7 +72,7 @@ function createWindow() {
     height: 900,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#111827', // matches the app's bg-gray-900 shell
+    backgroundColor: '#f3f4f6', // matches the app's light bg-canvas (gray-100) shell
     title: 'JRPG Editor',
     autoHideMenuBar: false,
     webPreferences: {
