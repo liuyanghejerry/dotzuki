@@ -199,10 +199,12 @@ describe('GET /wasm/* runner-pkg fallback', () => {
       const c = await callWasm('/wasm/dotzuki_web.js')
       expect(c.res.body()).toBe('// web')
 
-      // Missing from both → falls through to next().
+      // Missing from both → 404 (never falls through to SPA fallback, which
+      // would mask "wasm not built" as a 200 HTML response).
       const d = await callWasm('/wasm/nope.js')
-      expect(d.nextCalled).toBe(true)
-      expect(d.res.status).toBe(0)
+      expect(d.nextCalled).toBe(false)
+      expect(d.res.status).toBe(404)
+      expect(d.res.body()).toContain('run pnpm build:wasm')
     } finally {
       if (prevWeb === undefined) delete process.env.DOTZUKI_WASM_ROOT
       else process.env.DOTZUKI_WASM_ROOT = prevWeb

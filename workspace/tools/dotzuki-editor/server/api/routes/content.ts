@@ -141,7 +141,12 @@ export function registerContent(server: any) {
         fs.createReadStream(resolved).pipe(res)
         return
       }
-      return next()
+      // 404 (not next()) when the asset is in neither pkg root: this middleware
+      // runs in front of dev-server SPA fallbacks that would otherwise serve
+      // index.html with 200 for /wasm/*.js, masking "wasm not built" as a
+      // confusing dynamic-import failure (and defeating e2e not-built skips).
+      res.writeHead(404, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: `not found: /wasm${rel} — run pnpm build:wasm / build:wasm-runner` }))
     } catch {
       res.writeHead(404); res.end()
     }
