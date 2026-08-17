@@ -168,6 +168,7 @@ export default {
     fix: 'Fix',
     fixHint: 'Re-generate, feeding the compile error back to the model',
     noProvider: 'Configure a text AI provider in Settings first.',
+    componentLibrary: 'Component library — declares reusable components only, no screen preview',
   },
   titlescreen: {
     background: 'Background',

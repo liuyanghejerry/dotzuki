@@ -115,21 +115,48 @@ pub enum TurnEvent<P: EffectProvider + ?Sized> {
 impl<P: EffectProvider + ?Sized> Clone for TurnEvent<P> {
     fn clone(&self) -> Self {
         match self {
-            Self::MoveUsed { actor, move_ } => Self::MoveUsed { actor: *actor, move_: move_.clone() },
+            Self::MoveUsed { actor, move_ } => Self::MoveUsed {
+                actor: *actor,
+                move_: move_.clone(),
+            },
             Self::Missed { actor } => Self::Missed { actor: *actor },
             Self::Blocked { actor } => Self::Blocked { actor: *actor },
             Self::Crit { actor } => Self::Crit { actor: *actor },
-            Self::Damaged { target, amount, cause } => Self::Damaged { target: *target, amount: *amount, cause: cause.clone() },
-            Self::Healed { target, amount, cause } => Self::Healed { target: *target, amount: *amount, cause: cause.clone() },
-            Self::StatusInflicted { target, status } => {
-                Self::StatusInflicted { target: *target, status: status.clone() }
-            }
-            Self::StatusCured { target, status } => {
-                Self::StatusCured { target: *target, status: status.clone() }
-            }
-            Self::StatChanged { target, stat, delta } => {
-                Self::StatChanged { target: *target, stat: *stat, delta: *delta }
-            }
+            Self::Damaged {
+                target,
+                amount,
+                cause,
+            } => Self::Damaged {
+                target: *target,
+                amount: *amount,
+                cause: cause.clone(),
+            },
+            Self::Healed {
+                target,
+                amount,
+                cause,
+            } => Self::Healed {
+                target: *target,
+                amount: *amount,
+                cause: cause.clone(),
+            },
+            Self::StatusInflicted { target, status } => Self::StatusInflicted {
+                target: *target,
+                status: status.clone(),
+            },
+            Self::StatusCured { target, status } => Self::StatusCured {
+                target: *target,
+                status: status.clone(),
+            },
+            Self::StatChanged {
+                target,
+                stat,
+                delta,
+            } => Self::StatChanged {
+                target: *target,
+                stat: *stat,
+                delta: *delta,
+            },
             Self::Fainted { who } => Self::Fainted { who: *who },
         }
     }
@@ -146,13 +173,21 @@ impl<P: EffectProvider + ?Sized> fmt::Debug for TurnEvent<P> {
             Self::Missed { actor } => f.debug_struct("Missed").field("actor", actor).finish(),
             Self::Blocked { actor } => f.debug_struct("Blocked").field("actor", actor).finish(),
             Self::Crit { actor } => f.debug_struct("Crit").field("actor", actor).finish(),
-            Self::Damaged { target, amount, cause } => f
+            Self::Damaged {
+                target,
+                amount,
+                cause,
+            } => f
                 .debug_struct("Damaged")
                 .field("target", target)
                 .field("amount", amount)
                 .field("cause", cause)
                 .finish(),
-            Self::Healed { target, amount, cause } => f
+            Self::Healed {
+                target,
+                amount,
+                cause,
+            } => f
                 .debug_struct("Healed")
                 .field("target", target)
                 .field("amount", amount)
@@ -168,7 +203,11 @@ impl<P: EffectProvider + ?Sized> fmt::Debug for TurnEvent<P> {
                 .field("target", target)
                 .field("status", status)
                 .finish(),
-            Self::StatChanged { target, stat, delta } => f
+            Self::StatChanged {
+                target,
+                stat,
+                delta,
+            } => f
                 .debug_struct("StatChanged")
                 .field("target", target)
                 .field("stat", stat)
@@ -253,12 +292,16 @@ impl<P: EffectProvider + ?Sized> Default for TurnLog<P> {
 
 impl<P: EffectProvider + ?Sized> Clone for TurnLog<P> {
     fn clone(&self) -> Self {
-        Self { events: self.events.clone() }
+        Self {
+            events: self.events.clone(),
+        }
     }
 }
 
 impl<P: EffectProvider + ?Sized> fmt::Debug for TurnLog<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TurnLog").field("events", &self.events).finish()
+        f.debug_struct("TurnLog")
+            .field("events", &self.events)
+            .finish()
     }
 }

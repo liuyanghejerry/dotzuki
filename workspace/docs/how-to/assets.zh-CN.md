@@ -21,7 +21,7 @@
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 ```
 
-脚手架项目自带一套可用的布局：`assets/tileset.png`（32×8 演示图）、`assets/scenes/`，以及 `data/tiles/`——支撑地图编辑器选 tile 面板（Backdrop/Trace）的共享 tile 库。声明根目录之外的一切都是项目数据，不是受管素材。
+脚手架项目自带一套可用的布局：`data/maps/`（起始地图的 `tileset.png` 位于地图自己的目录，例如 `data/maps/Hometown/tileset.png`）、共享的 `data/tiles/` 库——支撑地图编辑器选 tile 面板（Backdrop/Trace）——以及 `gfx/`（散件图形）和 `assets/scenes/`（场景脚本）。声明根目录之外的一切都是项目数据，不是受管素材。
 
 ## Tileset
 

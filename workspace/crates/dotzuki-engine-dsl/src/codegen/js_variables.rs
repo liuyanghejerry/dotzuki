@@ -18,10 +18,7 @@ use crate::sourcemap::SourceMapBuilder;
 /// //         let name = "RED";
 /// //         let has_potion = true;
 /// ```
-pub fn compile_variables(
-    vars: &VariablesBlock,
-    sourcemap: &mut SourceMapBuilder,
-) -> String {
+pub fn compile_variables(vars: &VariablesBlock, sourcemap: &mut SourceMapBuilder) -> String {
     let mut output = String::new();
     let mut generated_line: u32 = 0;
 
@@ -81,9 +78,7 @@ pub fn compile_expression(expr: &Expression) -> String {
         Expression::BoolLit(true) => "true".to_string(),
         Expression::BoolLit(false) => "false".to_string(),
 
-        Expression::Variable(name) => {
-            name.clone()
-        }
+        Expression::Variable(name) => name.clone(),
 
         Expression::ArrayLit(elements) => {
             let parts: Vec<String> = elements.iter().map(compile_expression).collect();
@@ -294,8 +289,7 @@ mod tests {
         // Each mapping increments the generated line
         for (i, mapping) in sm.mappings().iter().enumerate() {
             assert_eq!(
-                mapping.generated_line,
-                i as u32,
+                mapping.generated_line, i as u32,
                 "mapping {i} should have generated_line = {i}"
             );
         }

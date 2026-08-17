@@ -11,10 +11,10 @@
 //! abstractions the frontends already use; game assets (the substitute doll
 //! sprite, the move-animation tilesets) are passed in by the caller.
 
+use crate::indexed_framebuffer::RgbaIndexedFrameBuffer;
 use crate::palette::{GbColor, Palette};
 use crate::sprite::{SpriteLayer, SpriteOamEntry, OAM_X_FLIP};
 use crate::tile::{TileSet, TILE_PIXELS};
-use crate::indexed_framebuffer::RgbaIndexedFrameBuffer;
 use crate::{Rgba, TILE_SIZE};
 
 use super::types::ANIM_BASE_TILE_ID;
@@ -67,10 +67,26 @@ pub const WAVY_SCREEN_FRAMES: u16 = 255;
 /// effect step through, one pair per 5 frames. Terminated by $FF in the
 /// original; the 21 pairs are stored here.
 pub const SPIRAL_BALL_COORDS: [(u8, u8); 21] = [
-    (0x38, 0x28), (0x40, 0x18), (0x50, 0x10), (0x60, 0x18), (0x68, 0x28),
-    (0x60, 0x38), (0x50, 0x40), (0x40, 0x38), (0x40, 0x28), (0x46, 0x1E),
-    (0x50, 0x18), (0x5B, 0x1E), (0x60, 0x28), (0x5B, 0x32), (0x50, 0x38),
-    (0x46, 0x32), (0x48, 0x28), (0x50, 0x20), (0x58, 0x28), (0x50, 0x30),
+    (0x38, 0x28),
+    (0x40, 0x18),
+    (0x50, 0x10),
+    (0x60, 0x18),
+    (0x68, 0x28),
+    (0x60, 0x38),
+    (0x50, 0x40),
+    (0x40, 0x38),
+    (0x40, 0x28),
+    (0x46, 0x1E),
+    (0x50, 0x18),
+    (0x5B, 0x1E),
+    (0x60, 0x28),
+    (0x5B, 0x32),
+    (0x50, 0x38),
+    (0x46, 0x32),
+    (0x48, 0x28),
+    (0x50, 0x20),
+    (0x58, 0x28),
+    (0x50, 0x30),
     (0x50, 0x28),
 ];
 
@@ -371,15 +387,31 @@ enum Objects {
     None,
     /// Spiral-balls-inward: 3 balls step through SPIRAL_BALL_COORDS,
     /// 5 frames per step; ends with a short flash.
-    SpiralBalls { side: MonSide, frame: u8 },
+    SpiralBalls {
+        side: MonSide,
+        frame: u8,
+    },
     /// Shoot-balls-upward: pillars of balls rising 4 px/frame, removed at
     /// the pillar top.
-    ShootBalls { pillars: Vec<Pillar>, active: usize, frame: u8 },
+    ShootBalls {
+        pillars: Vec<Pillar>,
+        active: usize,
+        frame: u8,
+    },
     /// Falling objects (petals / leaves).
-    Falling { tile: u8, frame: u16, tick: u8, objects: Vec<FallingObject> },
+    Falling {
+        tile: u8,
+        frame: u16,
+        tick: u8,
+        objects: Vec<FallingObject>,
+    },
     /// Droplets: a full-screen droplet grid that scrolls; 32 iterations ×
     /// 2 frames.
-    Droplets { iter: u8, half: u8, base_x: i32 },
+    Droplets {
+        iter: u8,
+        half: u8,
+        base_x: i32,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -1082,9 +1114,7 @@ impl BattleEffects {
                 }
                 for x in 0..w as i32 {
                     let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
-                    let color = src
-                        .get_pixel(sx as u32, y as u32)
-                        .unwrap_or(GbColor::White);
+                    let color = src.get_pixel(sx as u32, y as u32).unwrap_or(GbColor::White);
                     fb.set_pixel_index(x as u32, y as u32, color);
                 }
             }
@@ -1213,7 +1243,13 @@ impl BattleEffects {
     /// tile = col*7 + row):
     ///   - enemy turn (facing down): tiles [0,1;2,3] at (col 2, row 4)
     ///   - player turn (facing up):  tiles [4,5;6,7] at (col 3, row 4)
-    pub fn draw_substitute(fb: &mut RgbaIndexedFrameBuffer, rect: MonRect, doll: &TileSet, pal: &Palette, side: MonSide) {
+    pub fn draw_substitute(
+        fb: &mut RgbaIndexedFrameBuffer,
+        rect: MonRect,
+        doll: &TileSet,
+        pal: &Palette,
+        side: MonSide,
+    ) {
         let (base_tile, dx, dy) = match side {
             MonSide::Enemy => (0usize, 2 * TILE_SIZE, 4 * TILE_SIZE),
             MonSide::Player => (4, 3 * TILE_SIZE, 4 * TILE_SIZE),
@@ -1555,7 +1591,10 @@ mod tests {
     #[test]
     fn shoot_many_balls_runs_six_pillars() {
         let mut fx = BattleEffects::new();
-        fx.apply(&AnimEffect::ShootBallsUpward { many: true }, MonSide::Player);
+        fx.apply(
+            &AnimEffect::ShootBallsUpward { many: true },
+            MonSide::Player,
+        );
         if let Objects::ShootBalls { pillars, .. } = &fx.objects {
             assert_eq!(pillars.len(), 6);
             assert_eq!(pillars[0].base_x, 0x10);
@@ -1703,16 +1742,21 @@ mod tests {
         // Screen shake (pixels = 8): displaced 4 frames then at rest 5
         // frames per amplitude step, 8 → 1 (72 fr).
         let mut fx = BattleEffects::new();
-        let wait = apply(&mut fx, AnimEffect::ShakeScreenH {
-            pixels: 8,
-            frames: 72,
-        });
+        let wait = apply(
+            &mut fx,
+            AnimEffect::ShakeScreenH {
+                pixels: 8,
+                frames: 72,
+            },
+        );
         assert_eq!(wait, 72);
-        let offsets: Vec<i32> = (0..9).map(|_| {
-            let o = fx.shake.unwrap().offset().0;
-            fx.tick();
-            o
-        }).collect();
+        let offsets: Vec<i32> = (0..9)
+            .map(|_| {
+                let o = fx.shake.unwrap().offset().0;
+                fx.tick();
+                o
+            })
+            .collect();
         assert_eq!(offsets, vec![8, 8, 8, 8, 0, 0, 0, 0, 0]);
         // Second step: amplitude 7.
         assert_eq!(fx.shake.unwrap().offset().0, 7);
@@ -1725,15 +1769,20 @@ mod tests {
     #[test]
     fn small_shake_alternates() {
         let mut fx = BattleEffects::new();
-        apply(&mut fx, AnimEffect::ShakeScreenV {
-            pixels: 1,
-            frames: 4,
-        });
-        let offsets: Vec<i32> = (0..4).map(|_| {
-            let o = fx.shake.unwrap().offset().1;
-            fx.tick();
-            o
-        }).collect();
+        apply(
+            &mut fx,
+            AnimEffect::ShakeScreenV {
+                pixels: 1,
+                frames: 4,
+            },
+        );
+        let offsets: Vec<i32> = (0..4)
+            .map(|_| {
+                let o = fx.shake.unwrap().offset().1;
+                fx.tick();
+                o
+            })
+            .collect();
         assert_eq!(offsets, vec![1, -1, 1, -1]);
         assert!(fx.shake.is_none());
     }

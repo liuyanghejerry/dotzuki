@@ -168,9 +168,18 @@ pub const DMG_PALETTE: Palette = Palette {
         Rgba::rgb(0x8B, 0xAC, 0x0F), // Light gray
         Rgba::rgb(0x30, 0x62, 0x30), // Dark gray
         Rgba::rgb(0x0F, 0x38, 0x0F), // Black (darkest green)
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -182,9 +191,18 @@ pub const GRAYSCALE_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0x55, 0x55, 0x55),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -196,9 +214,18 @@ pub const GRAYSCALE_SPRITE_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0x55, 0x55, 0x55),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -210,9 +237,18 @@ pub const POCKET_SPRITE_PALETTE: Palette = Palette {
         Rgba::rgb(0x8B, 0x95, 0x6D),
         Rgba::rgb(0x4D, 0x53, 0x3C),
         Rgba::rgb(0x1F, 0x1F, 0x1F),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -224,9 +260,18 @@ pub const POCKET_PALETTE: Palette = Palette {
         Rgba::rgb(0x8B, 0x95, 0x6D), // light
         Rgba::rgb(0x4D, 0x53, 0x3C), // dark
         Rgba::rgb(0x1F, 0x1F, 0x1F), // darkest
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -238,9 +283,18 @@ pub const HP_BAR_GREEN_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0x00, 0xC8, 0x00),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -252,9 +306,18 @@ pub const HP_BAR_YELLOW_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0xE8, 0xA8, 0x00),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -266,9 +329,18 @@ pub const HP_BAR_RED_PALETTE: Palette = Palette {
         Rgba::rgb(0xAA, 0xAA, 0xAA),
         Rgba::rgb(0xD8, 0x20, 0x00),
         Rgba::rgb(0x00, 0x00, 0x00),
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
-        Rgba::BLACK, Rgba::BLACK, Rgba::BLACK, Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
+        Rgba::BLACK,
     ],
     count: 4,
     _phantom: PhantomData,
@@ -544,12 +616,11 @@ impl<'a, P: PaletteTrait> ColorPaletteState<'a, P> {
     /// Get the effective background palette for rendering.
     pub fn bg_palette(&self) -> Palette {
         match self.mode {
-            PaletteMode::Sgb => {
-                sgb_entry_to_palette(&self.palette_provider.sgb_palette_data(
-                    self.sgb_bg_palette,
-                    self.is_red,
-                ))
-            }
+            PaletteMode::Sgb => sgb_entry_to_palette(
+                &self
+                    .palette_provider
+                    .sgb_palette_data(self.sgb_bg_palette, self.is_red),
+            ),
             PaletteMode::Dmg => self.dmg.bg_palette(),
             PaletteMode::Grayscale => {
                 let mut state = self.dmg.clone();
@@ -567,12 +638,11 @@ impl<'a, P: PaletteTrait> ColorPaletteState<'a, P> {
     /// Get the effective OBJ palette 0 for rendering.
     pub fn obj_palette0(&self) -> Palette {
         match self.mode {
-            PaletteMode::Sgb => {
-                sgb_entry_to_palette(&self.palette_provider.sgb_palette_data(
-                    self.sgb_obj0_palette,
-                    self.is_red,
-                ))
-            }
+            PaletteMode::Sgb => sgb_entry_to_palette(
+                &self
+                    .palette_provider
+                    .sgb_palette_data(self.sgb_obj0_palette, self.is_red),
+            ),
             PaletteMode::Dmg => self.dmg.obj_palette0(),
             PaletteMode::Grayscale => {
                 let mut state = self.dmg.clone();
@@ -590,12 +660,11 @@ impl<'a, P: PaletteTrait> ColorPaletteState<'a, P> {
     /// Get the effective OBJ palette 1 for rendering.
     pub fn obj_palette1(&self) -> Palette {
         match self.mode {
-            PaletteMode::Sgb => {
-                sgb_entry_to_palette(&self.palette_provider.sgb_palette_data(
-                    self.sgb_obj1_palette,
-                    self.is_red,
-                ))
-            }
+            PaletteMode::Sgb => sgb_entry_to_palette(
+                &self
+                    .palette_provider
+                    .sgb_palette_data(self.sgb_obj1_palette, self.is_red),
+            ),
             PaletteMode::Dmg => self.dmg.obj_palette1(),
             PaletteMode::Grayscale => {
                 let mut state = self.dmg.clone();
@@ -631,7 +700,9 @@ impl<'a, P: PaletteTrait> ColorPaletteState<'a, P> {
         // - Player mon → species palette
         // - Enemy mon → species palette
         // For simplicity, we store the main bg as player HP bar, obj0 as player mon, obj1 as enemy mon.
-        self.sgb_bg_palette = self.palette_provider.hp_bar_to_palette_id(player_hp_bar_color);
+        self.sgb_bg_palette = self
+            .palette_provider
+            .hp_bar_to_palette_id(player_hp_bar_color);
         self.sgb_obj0_palette = player_pal;
         self.sgb_obj1_palette = enemy_pal;
         self.default_command = SetPalCommand::Battle;
@@ -766,13 +837,19 @@ mod tests {
     #[test]
     fn dmg_palette_const_is_valid() {
         assert_eq!(DMG_PALETTE.count, 4);
-        assert_eq!(DMG_PALETTE.color(GbColor::White), Rgba::rgb(0x9B, 0xBC, 0x0F));
+        assert_eq!(
+            DMG_PALETTE.color(GbColor::White),
+            Rgba::rgb(0x9B, 0xBC, 0x0F)
+        );
     }
 
     #[test]
     fn grayscale_palette_const_is_valid() {
         assert_eq!(GRAYSCALE_PALETTE.count, 4);
-        assert_eq!(GRAYSCALE_PALETTE.color(GbColor::White), Rgba::rgb(0xFF, 0xFF, 0xFF));
+        assert_eq!(
+            GRAYSCALE_PALETTE.color(GbColor::White),
+            Rgba::rgb(0xFF, 0xFF, 0xFF)
+        );
     }
 
     #[test]

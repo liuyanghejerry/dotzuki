@@ -43,7 +43,12 @@ pub fn render_cursor(
     // path is preserved byte-for-byte for pokered.
     if theme.proportional(painter.supports_proportional()) {
         let mut buf = [0u8; 4];
-        painter.draw_text_px(tx * 8, ty * 8, params.glyph_char().encode_utf8(&mut buf), color);
+        painter.draw_text_px(
+            tx * 8,
+            ty * 8,
+            params.glyph_char().encode_utf8(&mut buf),
+            color,
+        );
     } else {
         painter.draw_glyph(TilePos::new(tx, ty), params.glyph_char(), color);
     }
@@ -88,7 +93,14 @@ mod tests {
     }
 
     fn cparams(col: Coord, row: Coord, col_step: u32, row_step: u32) -> CursorParams {
-        CursorParams { glyph: None, color: None, col, row, col_step, row_step }
+        CursorParams {
+            glyph: None,
+            color: None,
+            col,
+            row,
+            col_step,
+            row_step,
+        }
     }
 
     #[test]
@@ -97,8 +109,19 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set("c", 1i64);
         ctx.set("r", 1i64);
-        let e = elem(1, 12, cparams(Coord::Template("{c}".into()), Coord::Template("{r}".into()), 9, 2));
-        let ElementParams::Cursor(ref p) = e.params else { unreachable!() };
+        let e = elem(
+            1,
+            12,
+            cparams(
+                Coord::Template("{c}".into()),
+                Coord::Template("{r}".into()),
+                9,
+                2,
+            ),
+        );
+        let ElementParams::Cursor(ref p) = e.params else {
+            unreachable!()
+        };
         let mut painter = Rec::default();
         render_cursor(&e, p, &ctx, &Theme::default(), &mut painter);
         assert_eq!(painter.glyphs.borrow()[0], (10, 14, '\u{25B6}'));
@@ -107,7 +130,9 @@ mod tests {
     #[test]
     fn defaults_to_base_and_triangle_glyph() {
         let e = elem(3, 5, cparams(Coord::Literal(0), Coord::Literal(0), 0, 0));
-        let ElementParams::Cursor(ref p) = e.params else { unreachable!() };
+        let ElementParams::Cursor(ref p) = e.params else {
+            unreachable!()
+        };
         let mut painter = Rec::default();
         render_cursor(&e, p, &DataContext::new(), &Theme::default(), &mut painter);
         assert_eq!(painter.glyphs.borrow()[0], (3, 5, '\u{25B6}'));

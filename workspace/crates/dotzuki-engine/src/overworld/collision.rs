@@ -60,14 +60,7 @@ pub trait CollisionProvider<T: TilesetTrait> {
     fn is_counter_tile(&self, tileset: T, tile_id: u8) -> bool;
 
     /// Resolve the tile ID at a given map position from block data.
-    fn get_tile_at_position(
-        &self,
-        tileset: T,
-        blocks: &[u8],
-        map_width: u8,
-        x: u16,
-        y: u16,
-    ) -> u8;
+    fn get_tile_at_position(&self, tileset: T, blocks: &[u8], map_width: u8, x: u16, y: u16) -> u8;
 
     /// Returns `true` if `tile_id` is a door tile (for auto-step-out logic).
     fn is_door_tile(&self, tileset: T, tile_id: u8) -> bool;
@@ -333,7 +326,13 @@ pub fn check_movement_collision<T: TilesetTrait>(
     // 2. Check ledge jump (only on land, only overworld tileset)
     if transport == TransportMode::Walking || transport == TransportMode::Biking {
         let sprite_facing = direction_to_sprite_facing(direction);
-        if provider.check_ledge_jump(tileset, sprite_facing, standing_tile, target_tile, held_input) {
+        if provider.check_ledge_jump(
+            tileset,
+            sprite_facing,
+            standing_tile,
+            target_tile,
+            held_input,
+        ) {
             return CollisionResult::LedgeJump;
         }
     }

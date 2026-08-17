@@ -47,12 +47,13 @@ stack's execution model and event/effect/handler architecture.
 
 [`examples/minimon`](../../examples/minimon) authors a Gen-4-shaped battle system —
 phys/special split + Intimidate + Clear Body + Leftovers + Sandstorm — on the
-stack with **zero engine edits**. Its only dependency is the engine:
+stack with **zero engine edits** and only game-agnostic dependencies:
 
 ```toml
 # examples/minimon/Cargo.toml
 [dependencies]
 dotzuki-engine = { path = "../../crates/dotzuki-engine" }
+dotzuki-rules  = { path = "../../crates/dotzuki-rules" }
 ```
 
 ### Step 1 — Define the id enums (the 6-stat split shape)
@@ -103,7 +104,7 @@ fn calculate_damage(&self, move_: &Self::Move, attacker: &BattlerState<Self>,
 
 `EffectProvider` supplies `EffectStateKind = Kind` and the resolvers that map
 opaque ids to authored `&'static Effect`s — this is "abilities/items/weather are
-just Effects hosted somewhere":
+Effects hosted somewhere":
 
 ```rust
 impl EffectProvider for MinimonProvider {
@@ -370,6 +371,7 @@ minimon ships the 金木水火土 (Metal/Wood/Water/Fire/Earth) wheel as a flat
 const table of `(atk_index, def_index, num, den)` rows (`lib.rs:120-135`):
 
 ```rust
+<!-- not verified: elided rows, illustrative only -->
 pub const TYPE_CHART: &[(usize, usize, u32, u32)] = &[
     (0, 1, 2, 1), // 金克木  Metal → Wood
     (1, 4, 2, 1), // 木克土  Wood  → Earth
@@ -445,6 +447,7 @@ primitive op on an `Effectiveness` hook (`rules.ron:39-54`, see
 [§3](#3-no-code-authoring-with-rulesron-the-dotzuki-rules-loader)):
 
 ```ron
+<!-- not verified: excerpt, not loadable standalone -->
 type_chart: [
     ( atk: "Metal", def: "Wood",  mult: [2, 1] ),   // 金克木
     ( atk: "Water", def: "Fire",  mult: [2, 1] ),   // 水克火
@@ -478,7 +481,7 @@ add **moves, abilities, items, types, and resource costs with zero Rust**. It is
 **Option A** — a single `interpret()` fn keyed by `EffectId`, registered as the
 `call` of each generated `Effect`. There is **zero engine change**: the engine
 already threads `source_effect: eff.id` to every handler (`dispatch.rs:128`), and
-`interpret` is just another `HandlerFn`.
+`interpret` is another `HandlerFn`.
 
 ### 3.1 The data model — effect records + a closed primitive vocabulary
 
@@ -520,7 +523,7 @@ pub enum Op {                                        // dotzuki-rules/src/model.
 Supporting closed enums:
 - `Selector { Target, Foe, Host, Source }` (`model.rs:201`).
 - `FractionOf { MaxHp, CurHp, LastDamage }` (default `MaxHp`; `LastDamage` = the
-  damage just dealt — the drain/recoil base; `model.rs:214`).
+  most recent damage dealt — the drain/recoil base; `model.rs:214`).
 - `Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String),
   MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }` (`model.rs:268`) —
   used by the `unless` / `when` / `cond` guards. (The last four were added for the
@@ -547,7 +550,7 @@ Effect(id: "move.tackle", kind: Move, category: "Physical", power: 40, type: "No
 ```
 
 A status chip and a Leftovers heal show cross-source `order` interleaving — and
-that an ability/item/weather is just another record keyed by `kind`
+that an ability/item/weather is another record keyed by `kind`
 (`rules.ron:93-121`):
 
 ```ron

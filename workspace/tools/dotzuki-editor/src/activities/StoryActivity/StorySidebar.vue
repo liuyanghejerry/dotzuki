@@ -35,12 +35,12 @@ function recordLabel(rec: any): string {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="px-3 py-3 border-b border-gray-700">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ t('story.title') }}</h2>
+    <div class="px-4 py-4 border-b border-border">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-faint">{{ t('story.title') }}</h2>
     </div>
 
     <!-- view navigation -->
-    <nav class="border-b border-gray-700 py-1">
+    <nav class="border-b border-border py-1">
       <button
         v-for="n in navs"
         :key="n.v"
@@ -48,21 +48,21 @@ function recordLabel(rec: any): string {
         :class="[
           'w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors text-left',
           view === n.v
-            ? 'bg-blue-900/30 text-blue-300 border-l-2 border-blue-400'
-            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-750 border-l-2 border-transparent',
+            ? 'bg-accent-selected text-accent-ink-strong border-l-2 border-accent-ink'
+            : 'text-ink-muted hover:text-ink-secondary hover:bg-surface-hover border-l-2 border-transparent',
         ]"
       >
         <span class="text-base shrink-0">{{ n.icon }}</span>
         <span class="truncate flex-1">{{ n.label }}</span>
-        <span v-if="n.v === 'issues' && errorCount" class="text-[10px] bg-red-900/50 text-red-300 rounded px-1.5">{{ errorCount }}</span>
+        <span v-if="n.v === 'issues' && errorCount" class="text-micro bg-danger-surface text-danger-ink-strong rounded-control px-1.5">{{ errorCount }}</span>
       </button>
     </nav>
 
     <!-- record list for the active kind -->
     <div v-if="activeKind" class="flex-1 overflow-y-auto">
-      <div class="flex items-center justify-between px-3 py-2">
-        <span class="text-[10px] uppercase tracking-wide text-gray-600">{{ records.length }}</span>
-        <button @click="story.create(activeKind)" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.new') }}</button>
+      <div class="flex items-center justify-between px-4 py-2.5">
+        <span class="text-micro uppercase tracking-wide text-ink-disabled">{{ records.length }}</span>
+        <button @click="story.create(activeKind)" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.new') }}</button>
       </div>
       <button
         v-for="rec in records"
@@ -71,19 +71,19 @@ function recordLabel(rec: any): string {
         :class="[
           'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
           selectedRecord && selectedRecord.id === rec.id
-            ? 'bg-gray-750 text-gray-100'
-            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800',
+            ? 'bg-surface-hover text-ink'
+            : 'text-ink-muted hover:text-ink-secondary hover:bg-surface',
         ]"
       >
-        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="{
+        <span class="w-1.5 h-1.5 rounded-pill shrink-0" :class="{
           'bg-gray-500': rec.status === 'idea' || !rec.status,
-          'bg-amber-500': rec.status === 'drafted',
-          'bg-blue-500': rec.status === 'scripted',
-          'bg-green-500': rec.status === 'done',
+          'bg-warning': rec.status === 'drafted',
+          'bg-accent-strong': rec.status === 'scripted',
+          'bg-success-strong': rec.status === 'done',
         }" />
         <span class="truncate">{{ recordLabel(rec) }}</span>
       </button>
-      <p v-if="!records.length" class="px-3 py-2 text-[11px] text-gray-600">{{ t('story.noRecords') }}</p>
+      <p v-if="!records.length" class="px-3 py-2 text-tiny text-ink-disabled">{{ t('story.noRecords') }}</p>
     </div>
   </div>
 </template>

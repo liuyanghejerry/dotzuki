@@ -5,7 +5,9 @@
 > - **Status**: active
 > - **Last verified**: v0.1.0
 
-The crate map and where each crate's API documentation lives; rustdoc is the authoritative API reference, the pages below are the prose counterpart.
+The crate map and where each crate's API documentation lives; rustdoc is
+the authoritative API reference, the pages below are the prose
+counterpart.
 
 All `dotzuki-*` crates share one version (currently `0.1.0`) and are published
 on crates.io, so their API docs live on docs.rs. Local copy:

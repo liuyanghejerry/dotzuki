@@ -75,7 +75,9 @@ fn dismiss(game: &mut RunnerGame) {
 
 fn main() {
     let mut args = std::env::args().skip(1);
-    let dir = args.next().expect("usage: menu_accept <project-dir> [shot-dir]");
+    let dir = args
+        .next()
+        .expect("usage: menu_accept <project-dir> [shot-dir]");
     let shot_dir = args.next().map(PathBuf::from);
 
     let project = LoadedProject::load(Path::new(&dir)).expect("load project");
@@ -139,7 +141,10 @@ fn main() {
     for line in &last_log {
         println!("  {line}");
     }
-    assert_eq!(last_log.last().map(String::as_str), Some("You lost the battle…"));
+    assert_eq!(
+        last_log.last().map(String::as_str),
+        Some("You lost the battle…")
+    );
 
     // The scene's post-lose text still plays…
     let page = game.dialogue_text().expect("post-lose text");
@@ -161,11 +166,18 @@ fn main() {
     press_a(&mut game);
     assert!(!game.whiteout_active());
     println!("after the whiteout:");
-    println!("  map: {:?} tile: {:?}", game.current_map_id(), game.player_tile());
+    println!(
+        "  map: {:?} tile: {:?}",
+        game.current_map_id(),
+        game.player_tile()
+    );
     for m in game.party_state().expect("party state") {
         println!("  {} hp {} mp {} status {:?}", m.id, m.hp, m.mp, m.status);
     }
-    println!("  __played_main_StartTown flag kept: {}", game.flag("__played_main_StartTown"));
+    println!(
+        "  __played_main_StartTown flag kept: {}",
+        game.flag("__played_main_StartTown")
+    );
     assert_eq!(game.current_map_id(), Some("StartTown"));
     assert!(game
         .party_state()

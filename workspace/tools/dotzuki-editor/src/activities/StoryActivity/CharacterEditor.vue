@@ -153,42 +153,42 @@ function onDelete() {
       <input
         v-model="selectedRecord.id"
         placeholder="character-id"
-        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-blue-300 font-mono w-48"
+        class="bg-surface border border-border rounded-control px-2 py-1 text-sm text-accent-ink-strong font-mono w-48"
       />
-      <select v-model="selectedRecord.status" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200">
+      <select v-model="selectedRecord.status" class="bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink-secondary">
         <option v-for="s in statuses" :key="s" :value="s">{{ t('story.status.' + s) }}</option>
       </select>
       <!-- Sprite preview thumbnails -->
       <div class="flex items-center gap-2 ml-2">
-        <div v-if="spriteLoading" class="text-[10px] text-gray-500">…</div>
+        <div v-if="spriteLoading" class="text-micro text-ink-faint">…</div>
         <div
           v-for="sp in spritePreviews" :key="sp.cat"
-          class="sprite-checker border border-gray-700 rounded overflow-hidden shrink-0"
+          class="sprite-checker border border-border rounded-control overflow-hidden shrink-0"
           :title="sp.cat"
         >
           <img :src="sp.url" class="block" style="image-rendering: pixelated; width: 32px; height: 32px;" alt="" />
         </div>
         <div
           v-if="!spriteLoading && spritePreviews.length === 0"
-          class="sprite-checker border border-gray-700 rounded overflow-hidden shrink-0 w-8 h-8 flex items-center justify-center"
+          class="sprite-checker border border-border rounded-control overflow-hidden shrink-0 w-8 h-8 flex items-center justify-center"
           :title="t('story.spriteStudio.noSheet')"
         >
-          <span class="text-gray-600 text-[10px]">–</span>
+          <span class="text-ink-disabled text-micro">–</span>
         </div>
       </div>
       <div class="flex-1" />
-      <button @click="goToSpriteEditor" class="px-2 py-1 text-xs rounded text-blue-400 hover:text-blue-300"
+      <button @click="goToSpriteEditor" class="px-2 py-1 text-xs rounded-control text-accent-ink hover:text-accent-ink-strong"
         :title="t('character.openInStory')">🎨</button>
-      <button @click="onDelete" class="px-2 py-1 text-xs rounded text-gray-400 hover:text-red-400">{{ t('story.delete') }}</button>
-      <button @click="onSave" :disabled="saving" class="px-4 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40">
+      <button @click="onDelete" class="px-2 py-1 text-xs rounded-control text-ink-muted hover:text-danger-ink">{{ t('story.delete') }}</button>
+      <button @click="onSave" :disabled="saving" class="px-4 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40">
         {{ saving ? t('story.saving') : t('story.save') }}
       </button>
     </div>
 
     <div class="grid grid-cols-2 gap-4 mb-4">
       <LocalizedField :label="t('story.fields.name')" :locales="locales" v-model="selectedRecord.name" />
-      <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.role') }}
-        <input v-model="selectedRecord.role" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100" />
+      <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.role') }}
+        <input v-model="selectedRecord.role" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink" />
       </label>
     </div>
 
@@ -197,79 +197,79 @@ function onDelete() {
     </div>
 
     <div class="space-y-3 mb-5">
-      <label v-for="f in longFields" :key="f" class="block text-[11px] uppercase tracking-wide text-gray-500">
+      <label v-for="f in longFields" :key="f" class="block text-tiny uppercase tracking-wide text-ink-faint">
         {{ t('story.fields.' + f) }}
-        <textarea v-model="selectedRecord[f]" rows="2" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-100 focus:border-blue-500 focus:outline-none" />
+        <textarea v-model="selectedRecord[f]" rows="2" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-sm text-ink focus:border-accent-strong focus:outline-none" />
       </label>
     </div>
 
     <!-- relationships -->
     <div class="mb-5">
       <div class="flex items-center justify-between mb-1">
-        <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.relationships') }}</label>
-        <button @click="addRel" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.add') }}</button>
+        <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.relationships') }}</label>
+        <button @click="addRel" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.add') }}</button>
       </div>
       <div v-for="(r, i) in selectedRecord.relationships" :key="i" class="flex gap-2 mb-1">
-        <input v-model="r.kind" placeholder="mentor-of" class="w-40 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <select v-model="r.to" class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100">
+        <input v-model="r.kind" placeholder="mentor-of" class="w-40 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <select v-model="r.to" class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink">
           <option value="">—</option>
           <option v-for="c in story.characters.value" :key="c.id" :value="c.id">{{ c.id }}</option>
         </select>
-        <button @click="delRel(Number(i))" class="text-gray-500 hover:text-red-400 px-1">×</button>
+        <button @click="delRel(Number(i))" class="text-ink-faint hover:text-danger-ink px-1">×</button>
       </div>
     </div>
 
     <!-- engine NPC bindings -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-1">
-        <label class="text-[11px] uppercase tracking-wide text-gray-500">{{ t('story.fields.npcBindings') }}</label>
-        <button @click="addNpc" class="text-[11px] text-blue-400 hover:text-blue-300">＋ {{ t('story.add') }}</button>
+        <label class="text-tiny uppercase tracking-wide text-ink-faint">{{ t('story.fields.npcBindings') }}</label>
+        <button @click="addNpc" class="text-tiny text-accent-ink hover:text-accent-ink-strong">＋ {{ t('story.add') }}</button>
       </div>
       <div v-for="(n, i) in selectedRecord.engine.npcs" :key="i" class="flex gap-2 mb-1">
-        <input v-model="n.map" placeholder="MapName" class="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <input v-model.number="n.npcId" type="number" placeholder="npcId" class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
-        <button @click="delNpc(Number(i))" class="text-gray-500 hover:text-red-400 px-1">×</button>
+        <input v-model="n.map" placeholder="MapName" class="flex-1 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <input v-model.number="n.npcId" type="number" placeholder="npcId" class="w-24 bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
+        <button @click="delNpc(Number(i))" class="text-ink-faint hover:text-danger-ink px-1">×</button>
       </div>
     </div>
 
     <!-- AI refine panel -->
-    <div class="border border-blue-900/40 bg-blue-950/20 rounded-lg p-4">
+    <div class="border border-accent-deep/40 bg-accent-surface rounded-card p-4">
       <div class="flex items-center gap-2 mb-2">
         <span class="text-sm">✨</span>
-        <h3 class="text-sm font-semibold text-blue-300">{{ t('story.ai.refineTitle') }}</h3>
+        <h3 class="text-sm font-semibold text-accent-ink-strong">{{ t('story.ai.refineTitle') }}</h3>
       </div>
-      <p class="text-[11px] text-gray-400 mb-3">{{ t('story.ai.refineDesc') }}</p>
+      <p class="text-tiny text-ink-muted mb-3">{{ t('story.ai.refineDesc') }}</p>
       <div class="flex items-center gap-2 mb-3">
-        <select v-model="providerId" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100">
+        <select v-model="providerId" class="bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink">
           <option value="">{{ t('story.ai.selectProvider') }}</option>
           <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.id }} ({{ p.model }})</option>
         </select>
         <button
           @click="refine"
           :disabled="aiBusy || !providerId"
-          class="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40"
+          class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40"
         >
           {{ aiBusy ? t('story.ai.working') : t('story.ai.refine') }}
         </button>
-        <button v-if="!providers.length" @click="nav.goToType('settings')" class="text-[11px] text-blue-400 hover:text-blue-300">
+        <button v-if="!providers.length" @click="nav.goToType('settings')" class="text-tiny text-accent-ink hover:text-accent-ink-strong">
           {{ t('story.ai.addProvider') }}
         </button>
       </div>
 
-      <p v-if="aiError" class="text-xs text-red-400 mb-2">{{ aiError }}</p>
+      <p v-if="aiError" class="text-xs text-danger-ink mb-2">{{ aiError }}</p>
 
       <div v-if="proposal" class="space-y-2">
         <div v-for="c in proposalChanges" :key="c.key" class="text-xs">
-          <div class="text-[10px] uppercase tracking-wide text-blue-400">{{ c.key }}</div>
-          <div class="text-gray-300 bg-gray-800/60 rounded px-2 py-1 whitespace-pre-wrap">{{ c.value }}</div>
+          <div class="text-micro uppercase tracking-wide text-accent-ink">{{ c.key }}</div>
+          <div class="text-ink-body bg-surface/60 rounded-control px-2 py-1 whitespace-pre-wrap">{{ c.value }}</div>
         </div>
         <div v-if="proposal.spriteSpec" class="text-xs">
-          <div class="text-[10px] uppercase tracking-wide text-blue-400">spriteSpec</div>
-          <pre class="text-gray-400 bg-gray-800/60 rounded px-2 py-1 overflow-x-auto text-[10px]">{{ JSON.stringify(proposal.spriteSpec, null, 2) }}</pre>
+          <div class="text-micro uppercase tracking-wide text-accent-ink">spriteSpec</div>
+          <pre class="text-ink-muted bg-surface/60 rounded-control px-2 py-1 overflow-x-auto text-micro">{{ JSON.stringify(proposal.spriteSpec, null, 2) }}</pre>
         </div>
         <div v-if="!aiBusy" class="flex gap-2 pt-1">
-          <button @click="acceptProposal" class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600">{{ t('story.ai.accept') }}</button>
-          <button @click="proposal = null" class="px-3 py-1 text-xs rounded text-gray-400 hover:text-gray-200">{{ t('story.ai.discard') }}</button>
+          <button @click="acceptProposal" class="px-3 py-1 text-xs rounded-control bg-success-hover text-white hover:bg-success">{{ t('story.ai.accept') }}</button>
+          <button @click="proposal = null" class="px-3 py-1 text-xs rounded-control text-ink-muted hover:text-ink-secondary">{{ t('story.ai.discard') }}</button>
         </div>
       </div>
 
@@ -278,7 +278,7 @@ function onDelete() {
     <AiKeyPrompt v-if="showKeyPrompt" :provider-id="providerId" @submit="onKeySubmit" @cancel="showKeyPrompt = false" />
   </div>
 
-  <div v-else class="h-full flex items-center justify-center text-gray-600 text-sm">
+  <div v-else class="h-full flex items-center justify-center text-ink-disabled text-sm">
     {{ t('story.selectOrCreate') }}
   </div>
 </template>

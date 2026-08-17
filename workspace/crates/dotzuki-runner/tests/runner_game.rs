@@ -155,7 +155,9 @@ fn town_main_storyline_autoplays_on_boot() {
     let (_tmp, mut game) = boot("main");
 
     // The boot dispatch plays the map scene's `main` immediately.
-    let page = game.dialogue_text().expect("main storyline shows a textbox");
+    let page = game
+        .dialogue_text()
+        .expect("main storyline shows a textbox");
     assert!(page.contains("Welcome to Town"), "page: {page:?}");
 
     // Advancing past it ends the scene and leaves the once-only flag set.
@@ -319,7 +321,10 @@ fn mapless_project_boots_dialogue_only() {
 
     // The entry scene's main runs, then the game idles without panicking.
     let page = game.dialogue_text().expect("entry scene text");
-    assert!(page.contains("Welcome to the demo project"), "page: {page:?}");
+    assert!(
+        page.contains("Welcome to the demo project"),
+        "page: {page:?}"
+    );
     dismiss_dialogue(&mut game);
     idle(&mut game, 30);
 
@@ -336,5 +341,8 @@ fn mapless_project_boots_dialogue_only() {
         .chunks_exact(4)
         .map(|px| [px[0], px[1], px[2], px[3]])
         .collect();
-    assert!(colors.len() > 2, "end card should render text, got {colors:?}");
+    assert!(
+        colors.len() > 2,
+        "end card should render text, got {colors:?}"
+    );
 }

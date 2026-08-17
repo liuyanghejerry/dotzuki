@@ -124,18 +124,10 @@ pub fn render_list(
                 '\u{25B6}', // ▶
                 Rgba::INK_BLACK,
             );
-            painter.draw_text(
-                TilePos::new(tx + 1, row_ty),
-                &item_text,
-                Rgba::INK_BLACK,
-            );
+            painter.draw_text(TilePos::new(tx + 1, row_ty), &item_text, Rgba::INK_BLACK);
         } else {
             // Non-active item — indented one tile to align with cursor row
-            painter.draw_text(
-                TilePos::new(tx + 1, row_ty),
-                &item_text,
-                Rgba::INK_BLACK,
-            );
+            painter.draw_text(TilePos::new(tx + 1, row_ty), &item_text, Rgba::INK_BLACK);
         }
         row_ty += row_height + gap;
     }
@@ -180,7 +172,9 @@ fn calculate_scroll_window(cursor: usize, max_visible: usize, total: usize) -> u
         0
     } else {
         // Cursor at bottom of visible window, or as far as we can scroll
-        cursor.saturating_sub(max_visible - 1).min(total - max_visible)
+        cursor
+            .saturating_sub(max_visible - 1)
+            .min(total - max_visible)
     }
 }
 
@@ -192,12 +186,11 @@ fn data_value_to_string(value: &DataValue) -> String {
         DataValue::Float(f) => f.to_string(),
         DataValue::Bool(b) => b.to_string(),
         DataValue::TileId(t) => t.to_string(),
-        DataValue::List(v) => {
-            v.iter()
-                .map(data_value_to_string)
-                .collect::<Vec<_>>()
-                .join(", ")
-        }
+        DataValue::List(v) => v
+            .iter()
+            .map(data_value_to_string)
+            .collect::<Vec<_>>()
+            .join(", "),
     }
 }
 
@@ -214,28 +207,10 @@ mod tests {
     /// A recorded draw operation.
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum DrawOp {
-        Text {
-            tx: u32,
-            ty: u32,
-            text: String,
-        },
-        Glyph {
-            tx: u32,
-            ty: u32,
-            glyph: char,
-        },
-        TextBox {
-            tx: u32,
-            ty: u32,
-            tw: u32,
-            th: u32,
-        },
-        PixelRect {
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-        },
+        Text { tx: u32, ty: u32, text: String },
+        Glyph { tx: u32, ty: u32, glyph: char },
+        TextBox { tx: u32, ty: u32, tw: u32, th: u32 },
+        PixelRect { px: u32, py: u32, pw: u32, ph: u32 },
     }
 
     /// A [`Painter`] that records every call for verification.
@@ -258,23 +233,17 @@ mod tests {
             self.ops()
                 .iter()
                 .filter_map(|op| match op {
-                    DrawOp::Text { tx, ty, text } if text.contains(needle) => {
-                        Some((*tx, *ty))
-                    }
+                    DrawOp::Text { tx, ty, text } if text.contains(needle) => Some((*tx, *ty)),
                     _ => None,
                 })
                 .collect()
         }
 
         fn find_glyph(&self, needle: char) -> Option<(u32, u32)> {
-            self.ops()
-                .iter()
-                .find_map(|op| match op {
-                    DrawOp::Glyph { tx, ty, glyph } if *glyph == needle => {
-                        Some((*tx, *ty))
-                    }
-                    _ => None,
-                })
+            self.ops().iter().find_map(|op| match op {
+                DrawOp::Glyph { tx, ty, glyph } if *glyph == needle => Some((*tx, *ty)),
+                _ => None,
+            })
         }
     }
 
@@ -308,25 +277,13 @@ mod tests {
             });
         }
 
-        fn draw_pixel_rect(
-            &mut self,
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-            _color: Rgba,
-        ) {
-            self.ops.borrow_mut().push(DrawOp::PixelRect { px, py, pw, ph });
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, _color: Rgba) {
+            self.ops
+                .borrow_mut()
+                .push(DrawOp::PixelRect { px, py, pw, ph });
         }
 
-        fn draw_gb_tile(
-            &mut self,
-            _pos: TilePos,
-            _tile_id: u8,
-            _fallback: &str,
-            _color: Rgba,
-        ) {
-        }
+        fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
     }
 
     // ── Helper: build ListParams ─────────────────────────────────────
@@ -339,10 +296,7 @@ mod tests {
     ) -> ListParams {
         ListParams {
             items: items_key.to_string(),
-            item_template: crate::layout_engine::types::ItemTemplate {
-                height: 1,
-                gap: 0,
-            },
+            item_template: crate::layout_engine::types::ItemTemplate { height: 1, gap: 0 },
             cursor: crate::layout_engine::types::ListCursor::default(),
             selected: Some(cursor.into()),
             max_visible: Some(max_visible),
@@ -407,10 +361,7 @@ mod tests {
 
     #[test]
     fn list_value_to_string() {
-        let list = DataValue::List(vec![
-            DataValue::Str("A".into()),
-            DataValue::Str("B".into()),
-        ]);
+        let list = DataValue::List(vec![DataValue::Str("A".into()), DataValue::Str("B".into())]);
         assert_eq!(data_value_to_string(&list), "A, B");
     }
 
@@ -505,10 +456,7 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set(
             "items",
-            DataValue::List(vec![
-                DataValue::Str("A".into()),
-                DataValue::Str("B".into()),
-            ]),
+            DataValue::List(vec![DataValue::Str("A".into()), DataValue::Str("B".into())]),
         );
 
         let params = make_list_params("items", 0, 5, None);

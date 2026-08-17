@@ -150,11 +150,7 @@ impl BattleProvider for GenericProvider {
         }
     }
 
-    fn select_move(
-        &self,
-        battler: &BattlerState<Self>,
-        _state: &BattleState<Self>,
-    ) -> Self::Move {
+    fn select_move(&self, battler: &BattlerState<Self>, _state: &BattleState<Self>) -> Self::Move {
         battler.moves.first().cloned().unwrap_or_else(basic_attack)
     }
 
@@ -260,13 +256,19 @@ impl GenericBindings {
 }
 
 impl RuleBindings<GenericProvider> for GenericBindings {
-    fn apply_boost(&self, b: &mut BattlerState<GenericProvider>, stat_index: usize, stages: i8) -> bool {
+    fn apply_boost(
+        &self,
+        b: &mut BattlerState<GenericProvider>,
+        stat_index: usize,
+        stages: i8,
+    ) -> bool {
         if Self::stat_key(stat_index).is_none() {
             return false;
         }
         let id = StatId(stat_index as u16);
         let cur = b.stat_stages.get(id).copied().unwrap_or(0);
-        b.stat_stages.set(id, (cur + stages).clamp(-MAX_STAGE, MAX_STAGE));
+        b.stat_stages
+            .set(id, (cur + stages).clamp(-MAX_STAGE, MAX_STAGE));
         true
     }
 
@@ -315,7 +317,12 @@ impl RuleBindings<GenericProvider> for GenericBindings {
         })
     }
 
-    fn has_volatile(&self, ctx: &BattleCtx<'_, GenericProvider>, who: BattlerRef, name: &str) -> bool {
+    fn has_volatile(
+        &self,
+        ctx: &BattleCtx<'_, GenericProvider>,
+        who: BattlerRef,
+        name: &str,
+    ) -> bool {
         ctx.effects
             .iter()
             .any(|e| e.host == who && e.kind.name == name)
@@ -573,7 +580,8 @@ pub fn sync_to_mirror(
     b.status = status_id_of(&c.status, status_names);
     for (i, name) in stat_names.iter().enumerate() {
         let id = StatId(i as u16);
-        b.stats.set(id, raw_stat(c, name).min(u32::from(u16::MAX)) as u16);
+        b.stats
+            .set(id, raw_stat(c, name).min(u32::from(u16::MAX)) as u16);
         b.stat_stages.set(id, c.stages.get(name));
     }
     if has_resource {

@@ -190,7 +190,10 @@ fn encounters_block_deserializes_and_old_sidecars_default_to_none() {
     assert_eq!(encounters.zones.len(), 1);
     let zone = &encounters.zones[0];
     assert!(zone.contains(0, 5));
-    assert!(zone.contains(7, 7), "rectangle is inclusive of its w×h extent");
+    assert!(
+        zone.contains(7, 7),
+        "rectangle is inclusive of its w×h extent"
+    );
     assert!(!zone.contains(8, 7) && !zone.contains(7, 8));
     assert_eq!(zone.table[0].id, "slime");
     assert_eq!(zone.table[0].weight, 70);
@@ -241,7 +244,11 @@ fn roll_hit_arms_a_battle_with_the_weighted_pick() {
         frame(&mut game, GbButton::Up.bit_mask());
     }
     let battle = game.battle().expect("a hit arms a sceneless battle");
-    assert_eq!(battle.enemy().id, "bat", "the weighted draw picked past slime");
+    assert_eq!(
+        battle.enemy().id,
+        "bat",
+        "the weighted draw picked past slime"
+    );
 }
 
 #[test]
@@ -315,7 +322,10 @@ fn a_warp_tile_takes_priority_over_the_roll() {
     for _ in 0..8 {
         frame(&mut game, GbButton::Right.bit_mask());
     }
-    assert!(game.battle().is_none(), "warp beats the roll on the same tile");
+    assert!(
+        game.battle().is_none(),
+        "warp beats the roll on the same tile"
+    );
     idle(&mut game, 2 * 10 + 2); // fade out + in
     assert_eq!(game.current_map_id(), Some("Town"));
     // Town's main is once-only (its flag was set at boot) — nothing plays.

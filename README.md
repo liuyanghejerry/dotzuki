@@ -1,32 +1,92 @@
-# dotzuki — a generic JRPG game engine in Rust
+<div align="center">
 
+<img src="workspace/resources/icon.png" width="128" alt="dotzuki">
+
+# dotzuki
+
+**Make a classic JRPG — without writing a single line of Rust.**
+
+[![crates.io](https://img.shields.io/crates/v/dotzuki-engine.svg)](https://crates.io/crates/dotzuki-engine)
 [![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+[![Docs](https://img.shields.io/badge/docs-liuyanghejerry.github.io%2Fdotzuki-blue)](https://liuyanghejerry.github.io/dotzuki/stable/)
 
-A game-agnostic JRPG engine written from scratch in Rust — an original, independent implementation of classic JRPG mechanics (battles, overworld, events, menus, audio), not derived from any Nintendo game code. This repository is **engine-only**: the games that drove the design (pokered, wuxia) live in their own repositories and consume the engine as Cargo **git dependencies** (tag-pinned).
+[Quickstart](#make-a-game-in-5-minutes) ·
+[Documentation](https://liuyanghejerry.github.io/dotzuki/stable/) ·
+[Editor](workspace/tools/dotzuki-editor/) ·
+[Examples](workspace/examples/)
 
-## What this is
+**English** · [中文](README.zh-CN.md)
 
-- **Generic engine crates** (`workspace/crates/`) — zero game data. Trait-driven (`GameData`), with:
-  - `dotzuki-engine` — core traits, tilemap/camera/trigger systems, the battle **effect-stack** engine (`battle::stack`), generic item/shop/equip systems, link-play transport seam
-  - `dotzuki-rules` + `dotzuki-rules-macro` — no-code battle authoring: `rules.ron` → runtime Effect stacks
-  - `dotzuki-engine-tiled` — Tiled `.tmx` (JSON) maps → engine types
-  - `dotzuki-engine-script` — Boa-based async JS scripting engine
-  - `dotzuki-engine-dsl` — Game DSL compiler (`.scene` / `.gui` / `.theme` / `.style`, bilingual `@t` text) + runtime compile API (`compiler::compile_dirs`)
-  - `dotzuki-renderer` — generic GB-style tile/sprite/text rendering, CJK pixel fonts, UI layout engine
-  - `dotzuki-ui` — reusable JRPG UI widgets on a `Painter` trait
-  - `dotzuki-audio` — audio abstraction layer
-  - `dotzuki-app` — generic native app shell (window/loop/hot-reload)
-  - `dotzuki-tui` — generic terminal shell (ratatui)
-  - `dotzuki-web` / `dotzuki-runner-web` — WASM bridges for editor layout preview / playtest
-  - `dotzuki-runner` — zero-Rust project runtime (`.dotzuki-editor.json` manifest + DSL + maps)
-  - `dotzuki-cli` — the `dotzuki` binary: `dotzuki new` / `dotzuki check` / `dotzuki run`
-- **Engine demo example** (`workspace/examples/`) — `minimon` (a tiny Rust battle system built entirely on the effect stack, with a data-driven `rules.ron` counterpart). It is engine-only, proving the engine isn't game-locked.
-- **Tools** (`workspace/tools/`) — `dotzuki-editor` (game-agnostic Vue/Vite editor + AI Story Designer + in-editor Play), `asset-converter`, DSL editor extensions.
+</div>
 
-## Using the engine from a game repo
+dotzuki is a game engine for building classic, Game Boy-style JRPGs —
+overworld maps, NPC dialogue, turn-based battles, shops, menus, chiptune-style
+audio, bilingual text — with a declarative DSL and a visual editor. You write
+scenes and rules, not engine code.
 
-Prefer crates.io (all `dotzuki-*` crates are published there):
+Written from scratch in Rust as an original, independent implementation of
+classic JRPG mechanics — not derived from any existing game's code, and not a
+Game Boy emulator.
+
+## Make a game in 5 minutes
+
+No Rust required. Scaffold a project, write a scene, play it:
+
+```bash
+dotzuki new my-game
+cd my-game
+dotzuki run .
+```
+
+A scene is a plain text file:
+
+```dsl
+game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to your new JRPG project!"
+            "Choose your starter!"
+        }
+        @choice {
+            @option("Ember") {
+                @speaker("Guide") {
+                    @t("Ember is the fire type!", "炎系的选择！")
+                }
+            }
+            @option("Dew") {
+                @speaker("Guide") {
+                    @t("Dew is the water type!", "水系的选择！")
+                }
+            }
+        }
+    }
+}
+```
+
+`@t("en", "中文")` makes every line bilingual — `dotzuki run --lang zh`
+flips the language. `dotzuki run . --watch` hot-reloads scenes and maps as
+you save.
+
+## Why dotzuki
+
+- **Zero-Rust game authoring** — a game project is a manifest plus DSL files,
+  maps, and assets. `dotzuki new` / `check` / `run` is the whole toolchain.
+- **Battles as data** — turn-based combat runs on an effect-stack engine;
+  author moves, type charts, and status rules declaratively in `rules.ron`.
+- **Visual editor** — the dotzuki-editor (Vue/Vite) ships a Create wizard,
+  map/DSL editing, an AI Story Designer, and in-editor playtesting powered by
+  a WASM build of the runner.
+- **Classic GB-style presentation** — tile/sprite rendering with CJK pixel
+  fonts, JRPG UI widgets, and a chiptune-style audio layer included.
+- **Bilingual by design** — `@t("en", "中文")` works in scenes, UI layouts,
+  and themes from day one.
+- **Play anywhere** — native app shell, terminal shell, and a WASM web build
+  for shipping games in the browser.
+
+## Using the engine from Rust
+
+All `dotzuki-*` crates are on crates.io:
 
 ```toml
 [dependencies]
@@ -34,50 +94,53 @@ dotzuki-engine = "0.1"
 dotzuki-engine-dsl = "0.1"
 ```
 
-Or pin a git tag (all crates are resolvable from the same repository — Cargo
-finds them by name in the workspace):
+Or pin a git tag — every crate is resolvable from this one repository:
 
 ```toml
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.1" }
 ```
 
-Upgrade = bump the version/tag + `cargo update`.
+The engine is trait-driven and game-agnostic: game data arrives through the
+`GameData` trait, so no game content lives in the engine. See
+[`workspace/examples/minimon`](workspace/examples/) for a battle demo built
+entirely on the effect stack, plus the `your-first-game` example project.
 
-## Releasing
+<details>
+<summary><b>Crate map</b> (click to expand)</summary>
 
-Every `dotzuki-*` crate shares one version (`[workspace.package] version` in
-`workspace/Cargo.toml`). A `vX.Y.Z` tag (or a GitHub Release) triggers
-`.github/workflows/release.yml`, which runs `workspace/scripts/publish-crates.sh`
-— topological-order publish with an idempotent skip of already-published
-versions. Requires the `CARGO_REGISTRY_TOKEN` Actions secret; see
-`AGENTS.md` → "Releasing (crates.io)" for the full rules.
+- `dotzuki-engine` — core traits (`GameData`), tilemap/camera/triggers,
+  the battle effect-stack (`battle::stack`), item/shop/equip systems,
+  link-play seam
+- `dotzuki-rules` + `dotzuki-rules-macro` — declarative battle rules:
+  `rules.ron` → runtime Effect stacks
+- `dotzuki-engine-dsl` — Game DSL compiler (`.scene` / `.gui` / `.theme` /
+  `.style`, bilingual `@t`) with a native AST interpreter
+- `dotzuki-engine-tiled` — Tiled `.tmx` (JSON) maps → engine types
+- `dotzuki-engine-script` — Boa-based async JS scripting
+- `dotzuki-renderer` — GB-style tile/sprite/text rendering, CJK pixel fonts, UI layout
+- `dotzuki-ui` — reusable JRPG UI widgets on a `Painter` trait
+- `dotzuki-audio` — audio abstraction layer
+- `dotzuki-app` / `dotzuki-tui` — native app shell (hot-reload) / terminal shell
+- `dotzuki-runner` + `dotzuki-runner-web` — zero-Rust project runtime and its WASM build
+- `dotzuki-cli` — the `dotzuki` binary: `new` / `check` / `run`
+- `dotzuki-web` — WASM bridge for editor layout preview
 
-## Building
+</details>
+
+## Building from source
 
 The Cargo workspace root is `workspace/`:
 
 ```bash
 cd workspace
-cargo build          # or cargo build --release
-cargo test           # engine + example tests
-cargo run --release --bin dotzuki -- new demo && cd demo && cargo run --release --bin dotzuki -- run
+cargo build --release
+cargo test
+target/release/dotzuki new demo && target/release/dotzuki run demo
 ```
 
-## Layout
-
-```
-workspace/           # Cargo workspace root
-├── crates/          # game-agnostic engine crates (see above)
-├── examples/        # minimon (RON-rules-only battle demo)
-├── tools/           # dotzuki-editor (Vue/Vite), asset-converter, editor-extensions
-├── docs/            # engine docs (battle engine, DSL specs, game-project spec)
-└── dotzuki-template/  # cargo-generate starter for new games
-AGENTS.md            # developer guide for AI agents
-```
-
-See `AGENTS.md` for the full developer guide.
+Releases publish every crate to crates.io from a single `vX.Y.Z` tag via
+`.github/workflows/release.yml` — see `AGENTS.md` → "Releasing" for details.
 
 ## License
 

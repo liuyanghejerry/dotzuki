@@ -20,7 +20,7 @@ objects sidecar — `objects.json` (editor-written) with
 `npcs: [{id,name,x,y,facing,sprite,talk}]`, `warps: [{x,y,dest_map,dest_x,dest_y}]`,
 `signs: [{x,y,text}]` (face the sign tile + A reads its text as paged
 dialogue) and an optional `encounters` block (below)
-(legacy `map.json` is read as a fallback). Walking onto a warp tile fades to
+(the runner reads legacy `map.json` as a fallback). Walking onto a warp tile fades to
 the destination map.
 
 ## Elevation levels
@@ -28,7 +28,7 @@ the destination map.
 Maps may be multi-level (walk on the ground *and* on
 wall tops). Collision per level: layers named `collision` (level 0),
 `collision1`, `collision2`, … — a non-zero GID is solid at that level; these
-layers never render. Missing intermediate levels are treated as all-solid.
+layers never render. Missing intermediate levels count as all-solid.
 A layer named `stairs` marks transition tiles (never rendered): GID 1
 ascends one level on arrival, GID 2 descends one (clamped to the map's
 levels). Visual layers carry an optional integer custom property `level`

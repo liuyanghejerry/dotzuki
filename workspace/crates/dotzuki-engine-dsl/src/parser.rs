@@ -4,45 +4,119 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseError {
-    UnexpectedToken { expected: Vec<String>, found: Token, span: SourceSpan },
-    MissingBlock { keyword: String, span: SourceSpan },
-    InvalidComponentType { found: String, valid: Vec<String>, span: SourceSpan },
-    UnclosedBlock { expected_close: String, span: SourceSpan },
-    IndentationError { msg: String, span: SourceSpan },
-    UnterminatedString { span: SourceSpan },
-    UnexpectedEof { expected: Vec<String>, span: SourceSpan },
+    UnexpectedToken {
+        expected: Vec<String>,
+        found: Token,
+        span: SourceSpan,
+    },
+    MissingBlock {
+        keyword: String,
+        span: SourceSpan,
+    },
+    InvalidComponentType {
+        found: String,
+        valid: Vec<String>,
+        span: SourceSpan,
+    },
+    UnclosedBlock {
+        expected_close: String,
+        span: SourceSpan,
+    },
+    IndentationError {
+        msg: String,
+        span: SourceSpan,
+    },
+    UnterminatedString {
+        span: SourceSpan,
+    },
+    UnexpectedEof {
+        expected: Vec<String>,
+        span: SourceSpan,
+    },
     /// A required prop of a declared custom component is missing at a use site.
-    MissingRequiredProp { component: String, prop: String, span: SourceSpan },
+    MissingRequiredProp {
+        component: String,
+        prop: String,
+        span: SourceSpan,
+    },
     /// A prop value's kind does not match the component declaration.
-    PropTypeMismatch { component: String, prop: String, expected: String, span: SourceSpan },
+    PropTypeMismatch {
+        component: String,
+        prop: String,
+        expected: String,
+        span: SourceSpan,
+    },
     /// A prop not present in the component declaration (and not a standard
     /// layout prop) was passed to a declared custom component.
-    UnknownProp { component: String, prop: String, valid: Vec<String>, span: SourceSpan },
+    UnknownProp {
+        component: String,
+        prop: String,
+        valid: Vec<String>,
+        span: SourceSpan,
+    },
     /// A `component` declaration with the same name appears twice.
-    DuplicateComponentDecl { name: String, span: SourceSpan },
+    DuplicateComponentDecl {
+        name: String,
+        span: SourceSpan,
+    },
 }
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::UnexpectedToken { expected, found, .. } =>
-                write!(f, "expected one of [{}], found {:?}", expected.join(", "), found),
+            Self::UnexpectedToken {
+                expected, found, ..
+            } => write!(
+                f,
+                "expected one of [{}], found {:?}",
+                expected.join(", "),
+                found
+            ),
             Self::MissingBlock { keyword, .. } => write!(f, "missing '{{' after {}", keyword),
-            Self::InvalidComponentType { found, valid, .. } =>
-                write!(f, "'{}' is not a valid component type (valid: {})", found, valid.join(", ")),
-            Self::UnclosedBlock { expected_close, .. } => write!(f, "unclosed block, expected {}", expected_close),
+            Self::InvalidComponentType { found, valid, .. } => write!(
+                f,
+                "'{}' is not a valid component type (valid: {})",
+                found,
+                valid.join(", ")
+            ),
+            Self::UnclosedBlock { expected_close, .. } => {
+                write!(f, "unclosed block, expected {}", expected_close)
+            }
             Self::IndentationError { msg, .. } => write!(f, "indentation error: {}", msg),
             Self::UnterminatedString { .. } => write!(f, "unterminated string literal"),
-            Self::UnexpectedEof { expected, .. } =>
-                write!(f, "unexpected end of input, expected {}", expected.join(", ")),
-            Self::MissingRequiredProp { component, prop, .. } =>
-                write!(f, "component '{}' requires prop '{}'", component, prop),
-            Self::PropTypeMismatch { component, prop, expected, .. } =>
-                write!(f, "prop '{}' of component '{}' expects a {} value", prop, component, expected),
-            Self::UnknownProp { component, prop, valid, .. } =>
-                write!(f, "component '{}' has no prop '{}' (declared: {})", component, prop, valid.join(", ")),
-            Self::DuplicateComponentDecl { name, .. } =>
-                write!(f, "component '{}' is declared twice", name),
+            Self::UnexpectedEof { expected, .. } => write!(
+                f,
+                "unexpected end of input, expected {}",
+                expected.join(", ")
+            ),
+            Self::MissingRequiredProp {
+                component, prop, ..
+            } => write!(f, "component '{}' requires prop '{}'", component, prop),
+            Self::PropTypeMismatch {
+                component,
+                prop,
+                expected,
+                ..
+            } => write!(
+                f,
+                "prop '{}' of component '{}' expects a {} value",
+                prop, component, expected
+            ),
+            Self::UnknownProp {
+                component,
+                prop,
+                valid,
+                ..
+            } => write!(
+                f,
+                "component '{}' has no prop '{}' (declared: {})",
+                component,
+                prop,
+                valid.join(", ")
+            ),
+            Self::DuplicateComponentDecl { name, .. } => {
+                write!(f, "component '{}' is declared twice", name)
+            }
         }
     }
 }
@@ -51,22 +125,43 @@ impl std::error::Error for ParseError {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SemanticError {
-    UndefinedVariable { name: String, defined_vars: Vec<String>, span: SourceSpan },
-    CircularStyleInheritance { chain: Vec<String>, span: SourceSpan },
-    MissingStyleParent { parent: String, span: SourceSpan },
-    EmptyChoice { span: SourceSpan },
-    DuplicateName { name: String, kind: String, span: SourceSpan },
+    UndefinedVariable {
+        name: String,
+        defined_vars: Vec<String>,
+        span: SourceSpan,
+    },
+    CircularStyleInheritance {
+        chain: Vec<String>,
+        span: SourceSpan,
+    },
+    MissingStyleParent {
+        parent: String,
+        span: SourceSpan,
+    },
+    EmptyChoice {
+        span: SourceSpan,
+    },
+    DuplicateName {
+        name: String,
+        kind: String,
+        span: SourceSpan,
+    },
 }
 
 impl std::fmt::Display for SemanticError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UndefinedVariable { name, .. } => write!(f, "undefined variable '{}'", name),
-            Self::CircularStyleInheritance { chain, .. } =>
-                write!(f, "circular style inheritance: {}", chain.join(" -> ")),
-            Self::MissingStyleParent { parent, .. } => write!(f, "style parent '{}' not found", parent),
+            Self::CircularStyleInheritance { chain, .. } => {
+                write!(f, "circular style inheritance: {}", chain.join(" -> "))
+            }
+            Self::MissingStyleParent { parent, .. } => {
+                write!(f, "style parent '{}' not found", parent)
+            }
             Self::EmptyChoice { .. } => write!(f, "@choice must have at least one @option"),
-            Self::DuplicateName { name, kind, .. } => write!(f, "duplicate {} name '{}'", kind, name),
+            Self::DuplicateName { name, kind, .. } => {
+                write!(f, "duplicate {} name '{}'", kind, name)
+            }
         }
     }
 }
@@ -74,8 +169,20 @@ impl std::fmt::Display for SemanticError {
 impl std::error::Error for SemanticError {}
 
 const VALID_COMPONENT_TYPES: &[&str] = &[
-    "panel", "container", "text", "button", "list", "image", "input", "dropdown",
-    "tile", "divider", "flex_list", "cursor", "bracket", "pixel_rect",
+    "panel",
+    "container",
+    "text",
+    "button",
+    "list",
+    "image",
+    "input",
+    "dropdown",
+    "tile",
+    "divider",
+    "flex_list",
+    "cursor",
+    "bracket",
+    "pixel_rect",
 ];
 
 pub struct Parser {
@@ -94,8 +201,12 @@ pub struct Parser {
 impl Parser {
     pub fn new(tokens: Vec<SpannedToken>, source: &str) -> Self {
         Self {
-            tokens, pos: 0, errors: Vec::new(), current_scope: Vec::new(),
-            _source: source.to_string(), component_decls: HashMap::new(),
+            tokens,
+            pos: 0,
+            errors: Vec::new(),
+            current_scope: Vec::new(),
+            _source: source.to_string(),
+            component_decls: HashMap::new(),
         }
     }
 
@@ -108,12 +219,20 @@ impl Parser {
         self
     }
 
-    fn peek(&self) -> Option<&Token> { self.tokens.get(self.pos).map(|st| &st.token) }
-    fn peek_st(&self) -> Option<&SpannedToken> { self.tokens.get(self.pos) }
-    fn peek_n(&self, n: usize) -> Option<&Token> { self.tokens.get(self.pos + n).map(|st| &st.token) }
+    fn peek(&self) -> Option<&Token> {
+        self.tokens.get(self.pos).map(|st| &st.token)
+    }
+    fn peek_st(&self) -> Option<&SpannedToken> {
+        self.tokens.get(self.pos)
+    }
+    fn peek_n(&self, n: usize) -> Option<&Token> {
+        self.tokens.get(self.pos + n).map(|st| &st.token)
+    }
 
     fn current_span(&self) -> SourceSpan {
-        self.peek_st().map(|st| st.span.clone()).unwrap_or_else(|| SourceSpan::point("", 0, 0))
+        self.peek_st()
+            .map(|st| st.span.clone())
+            .unwrap_or_else(|| SourceSpan::point("", 0, 0))
     }
 
     fn advance(&mut self) -> Option<SpannedToken> {
@@ -121,12 +240,17 @@ impl Parser {
             let t = self.tokens[self.pos].clone();
             self.pos += 1;
             Some(t)
-        } else { None }
+        } else {
+            None
+        }
     }
 
     fn expect_peek(&mut self, expected: &Token) -> Result<(), ParseError> {
         match self.peek() {
-            Some(t) if t == expected => { self.advance(); Ok(()) }
+            Some(t) if t == expected => {
+                self.advance();
+                Ok(())
+            }
             Some(found) => Err(ParseError::UnexpectedToken {
                 expected: vec![format!("{:?}", expected)],
                 found: found.clone(),
@@ -141,7 +265,10 @@ impl Parser {
 
     fn expect_ident(&mut self) -> Result<String, ParseError> {
         match self.advance() {
-            Some(SpannedToken { token: Token::Identifier(name), .. }) => Ok(name),
+            Some(SpannedToken {
+                token: Token::Identifier(name),
+                ..
+            }) => Ok(name),
             Some(st) => Err(ParseError::UnexpectedToken {
                 expected: vec!["identifier".into()],
                 found: st.token,
@@ -156,7 +283,10 @@ impl Parser {
 
     fn expect_string(&mut self) -> Result<String, ParseError> {
         match self.advance() {
-            Some(SpannedToken { token: Token::StringLit(s), .. }) => Ok(s),
+            Some(SpannedToken {
+                token: Token::StringLit(s),
+                ..
+            }) => Ok(s),
             Some(st) => Err(ParseError::UnexpectedToken {
                 expected: vec!["string".into()],
                 found: st.token,
@@ -172,7 +302,9 @@ impl Parser {
     fn skip_noise(&mut self) {
         while let Some(tok) = self.peek() {
             match tok {
-                Token::Newline | Token::Comment(_) | Token::Indent(_) | Token::Dedent(_) => { self.advance(); }
+                Token::Newline | Token::Comment(_) | Token::Indent(_) | Token::Dedent(_) => {
+                    self.advance();
+                }
                 _ => break,
             }
         }
@@ -182,23 +314,35 @@ impl Parser {
         let mut brace_depth = 0;
         loop {
             match self.peek() {
-                Some(Token::LBrace) => { brace_depth += 1; self.advance(); }
+                Some(Token::LBrace) => {
+                    brace_depth += 1;
+                    self.advance();
+                }
                 Some(Token::RBrace) => {
-                    if brace_depth == 0 { self.advance(); return; }
+                    if brace_depth == 0 {
+                        self.advance();
+                        return;
+                    }
                     brace_depth -= 1;
                     self.advance();
                 }
                 Some(Token::Eof) | None => return,
-                _ => { self.advance(); }
+                _ => {
+                    self.advance();
+                }
             }
         }
     }
 
-    fn record_error(&mut self, err: ParseError) { self.errors.push(err); }
+    fn record_error(&mut self, err: ParseError) {
+        self.errors.push(err);
+    }
 
     // ── expression parser ──
 
-    fn parse_expression(&mut self) -> Result<Expression, ParseError> { self.parse_ternary() }
+    fn parse_expression(&mut self) -> Result<Expression, ParseError> {
+        self.parse_ternary()
+    }
 
     fn parse_ternary(&mut self) -> Result<Expression, ParseError> {
         let cond = self.parse_or()?;
@@ -221,7 +365,11 @@ impl Parser {
         while self.peek() == Some(&Token::OrOr) {
             self.advance();
             let right = self.parse_bitor()?;
-            left = Expression::BinaryOp { op: BinOp::Or, left: Box::new(left), right: Box::new(right) };
+            left = Expression::BinaryOp {
+                op: BinOp::Or,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -231,7 +379,11 @@ impl Parser {
         while self.peek() == Some(&Token::BitOr) {
             self.advance();
             let right = self.parse_and()?;
-            left = Expression::BinaryOp { op: BinOp::BitOr, left: Box::new(left), right: Box::new(right) };
+            left = Expression::BinaryOp {
+                op: BinOp::BitOr,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -241,7 +393,11 @@ impl Parser {
         while self.peek() == Some(&Token::AndAnd) {
             self.advance();
             let right = self.parse_bitand()?;
-            left = Expression::BinaryOp { op: BinOp::And, left: Box::new(left), right: Box::new(right) };
+            left = Expression::BinaryOp {
+                op: BinOp::And,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -251,7 +407,11 @@ impl Parser {
         while self.peek() == Some(&Token::BitAnd) {
             self.advance();
             let right = self.parse_equality()?;
-            left = Expression::BinaryOp { op: BinOp::BitAnd, left: Box::new(left), right: Box::new(right) };
+            left = Expression::BinaryOp {
+                op: BinOp::BitAnd,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
         }
         Ok(left)
     }
@@ -263,12 +423,20 @@ impl Parser {
                 Some(&Token::EqEq) => {
                     self.advance();
                     let right = self.parse_comparison()?;
-                    left = Expression::BinaryOp { op: BinOp::Eq, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Eq,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::NotEq) => {
                     self.advance();
                     let right = self.parse_comparison()?;
-                    left = Expression::BinaryOp { op: BinOp::Neq, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Neq,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 _ => break,
             }
@@ -283,22 +451,38 @@ impl Parser {
                 Some(&Token::Gt) => {
                     self.advance();
                     let right = self.parse_term()?;
-                    left = Expression::BinaryOp { op: BinOp::Gt, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Gt,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::Lt) => {
                     self.advance();
                     let right = self.parse_term()?;
-                    left = Expression::BinaryOp { op: BinOp::Lt, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Lt,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::GtEq) => {
                     self.advance();
                     let right = self.parse_term()?;
-                    left = Expression::BinaryOp { op: BinOp::Gte, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Gte,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::LtEq) => {
                     self.advance();
                     let right = self.parse_term()?;
-                    left = Expression::BinaryOp { op: BinOp::Lte, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Lte,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 _ => break,
             }
@@ -313,12 +497,20 @@ impl Parser {
                 Some(&Token::Plus) => {
                     self.advance();
                     let right = self.parse_factor()?;
-                    left = Expression::BinaryOp { op: BinOp::Add, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Add,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::Minus) => {
                     self.advance();
                     let right = self.parse_factor()?;
-                    left = Expression::BinaryOp { op: BinOp::Sub, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Sub,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 _ => break,
             }
@@ -333,12 +525,20 @@ impl Parser {
                 Some(&Token::Star) => {
                     self.advance();
                     let right = self.parse_unary()?;
-                    left = Expression::BinaryOp { op: BinOp::Mul, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Mul,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 Some(&Token::Slash) => {
                     self.advance();
                     let right = self.parse_unary()?;
-                    left = Expression::BinaryOp { op: BinOp::Div, left: Box::new(left), right: Box::new(right) };
+                    left = Expression::BinaryOp {
+                        op: BinOp::Div,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
                 }
                 _ => break,
             }
@@ -376,13 +576,26 @@ impl Parser {
 
     fn parse_primary(&mut self) -> Result<Expression, ParseError> {
         match self.advance() {
-            Some(SpannedToken { token: Token::NumberLit(n), .. }) => Ok(Expression::NumberLit(n)),
-            Some(SpannedToken { token: Token::StringLit(s), .. }) => Ok(Expression::StringLit(s)),
-            Some(SpannedToken { token: Token::DirectiveT, .. }) => {
-                Ok(Expression::Localized(self.parse_t_pairs()?))
-            }
-            Some(SpannedToken { token: Token::BoolLit(b), .. }) => Ok(Expression::BoolLit(b)),
-            Some(SpannedToken { token: Token::Identifier(name), .. }) => {
+            Some(SpannedToken {
+                token: Token::NumberLit(n),
+                ..
+            }) => Ok(Expression::NumberLit(n)),
+            Some(SpannedToken {
+                token: Token::StringLit(s),
+                ..
+            }) => Ok(Expression::StringLit(s)),
+            Some(SpannedToken {
+                token: Token::DirectiveT,
+                ..
+            }) => Ok(Expression::Localized(self.parse_t_pairs()?)),
+            Some(SpannedToken {
+                token: Token::BoolLit(b),
+                ..
+            }) => Ok(Expression::BoolLit(b)),
+            Some(SpannedToken {
+                token: Token::Identifier(name),
+                ..
+            }) => {
                 if self.peek() == Some(&Token::LParen) {
                     self.advance();
                     let args = self.parse_call_args()?;
@@ -391,12 +604,18 @@ impl Parser {
                     Ok(Expression::Variable(name))
                 }
             }
-            Some(SpannedToken { token: Token::LParen, .. }) => {
+            Some(SpannedToken {
+                token: Token::LParen,
+                ..
+            }) => {
                 let expr = self.parse_expression()?;
                 self.expect_peek(&Token::RParen)?;
                 Ok(expr)
             }
-            Some(SpannedToken { token: Token::LBracket, .. }) => {
+            Some(SpannedToken {
+                token: Token::LBracket,
+                ..
+            }) => {
                 let mut elements = Vec::new();
                 self.skip_noise();
                 if self.peek() != Some(&Token::RBracket) {
@@ -404,24 +623,34 @@ impl Parser {
                         elements.push(self.parse_expression()?);
                         self.skip_noise();
                         match self.peek() {
-                            Some(Token::Comma) => { self.advance(); self.skip_noise(); }
+                            Some(Token::Comma) => {
+                                self.advance();
+                                self.skip_noise();
+                            }
                             Some(Token::RBracket) => break,
-                            Some(t) => return Err(ParseError::UnexpectedToken {
-                                expected: vec![", or ]".into()],
-                                found: t.clone(),
-                                span: self.current_span(),
-                            }),
-                            None => return Err(ParseError::UnexpectedEof {
-                                expected: vec![", or ]".into()],
-                                span: self.current_span(),
-                            }),
+                            Some(t) => {
+                                return Err(ParseError::UnexpectedToken {
+                                    expected: vec![", or ]".into()],
+                                    found: t.clone(),
+                                    span: self.current_span(),
+                                })
+                            }
+                            None => {
+                                return Err(ParseError::UnexpectedEof {
+                                    expected: vec![", or ]".into()],
+                                    span: self.current_span(),
+                                })
+                            }
                         }
                     }
                 }
                 self.expect_peek(&Token::RBracket)?;
                 Ok(Expression::ArrayLit(elements))
             }
-            Some(SpannedToken { token: Token::LBrace, .. }) => {
+            Some(SpannedToken {
+                token: Token::LBrace,
+                ..
+            }) => {
                 let mut fields = Vec::new();
                 self.skip_noise();
                 if self.peek() != Some(&Token::RBrace) {
@@ -432,17 +661,24 @@ impl Parser {
                         fields.push((key, value));
                         self.skip_noise();
                         match self.peek() {
-                            Some(Token::Comma) => { self.advance(); self.skip_noise(); }
+                            Some(Token::Comma) => {
+                                self.advance();
+                                self.skip_noise();
+                            }
                             Some(Token::RBrace) => break,
-                            Some(t) => return Err(ParseError::UnexpectedToken {
-                                expected: vec![", or }".into()],
-                                found: t.clone(),
-                                span: self.current_span(),
-                            }),
-                            None => return Err(ParseError::UnexpectedEof {
-                                expected: vec![", or }".into()],
-                                span: self.current_span(),
-                            }),
+                            Some(t) => {
+                                return Err(ParseError::UnexpectedToken {
+                                    expected: vec![", or }".into()],
+                                    found: t.clone(),
+                                    span: self.current_span(),
+                                })
+                            }
+                            None => {
+                                return Err(ParseError::UnexpectedEof {
+                                    expected: vec![", or }".into()],
+                                    span: self.current_span(),
+                                })
+                            }
                         }
                     }
                 }
@@ -472,17 +708,27 @@ impl Parser {
             args.push(self.parse_expression()?);
             self.skip_noise();
             match self.peek() {
-                Some(Token::Comma) => { self.advance(); self.skip_noise(); }
-                Some(Token::RParen) => { self.advance(); return Ok(args); }
-                Some(t) => return Err(ParseError::UnexpectedToken {
-                    expected: vec![", or )".into()],
-                    found: t.clone(),
-                    span: self.current_span(),
-                }),
-                None => return Err(ParseError::UnexpectedEof {
-                    expected: vec![", or )".into()],
-                    span: self.current_span(),
-                }),
+                Some(Token::Comma) => {
+                    self.advance();
+                    self.skip_noise();
+                }
+                Some(Token::RParen) => {
+                    self.advance();
+                    return Ok(args);
+                }
+                Some(t) => {
+                    return Err(ParseError::UnexpectedToken {
+                        expected: vec![", or )".into()],
+                        found: t.clone(),
+                        span: self.current_span(),
+                    })
+                }
+                None => {
+                    return Err(ParseError::UnexpectedEof {
+                        expected: vec![", or )".into()],
+                        span: self.current_span(),
+                    })
+                }
             }
         }
     }
@@ -508,7 +754,10 @@ impl Parser {
                 texts.push(self.expect_string()?);
                 self.skip_noise();
                 match self.peek() {
-                    Some(Token::Comma) => { self.advance(); self.skip_noise(); }
+                    Some(Token::Comma) => {
+                        self.advance();
+                        self.skip_noise();
+                    }
                     _ => break,
                 }
             }
@@ -568,11 +817,17 @@ impl Parser {
         let doc = match self.peek() {
             Some(Token::KeywordGameScene) => match self.parse_game_scene() {
                 Ok(scene) => Some(Document::Scene(scene)),
-                Err(e) => { self.record_error(e); None }
+                Err(e) => {
+                    self.record_error(e);
+                    None
+                }
             },
             Some(Token::KeywordScreen) => match self.parse_screen() {
                 Ok(screen) => Some(Document::Screen(screen)),
-                Err(e) => { self.record_error(e); None }
+                Err(e) => {
+                    self.record_error(e);
+                    None
+                }
             },
             // Declarations-only file (a `components.gui` prelude).
             Some(Token::Eof) | None if !local_decls.is_empty() => {
@@ -622,20 +877,31 @@ impl Parser {
                         "expr" => PropKind::Expr,
                         other => {
                             return Err(ParseError::UnexpectedToken {
-                                expected: vec!["int".into(), "string".into(), "bool".into(),
-                                    "color".into(), "expr".into()],
+                                expected: vec![
+                                    "int".into(),
+                                    "string".into(),
+                                    "bool".into(),
+                                    "color".into(),
+                                    "expr".into(),
+                                ],
                                 found: Token::Identifier(other.to_string()),
                                 span: self.current_span(),
                             });
                         }
                     };
-                    let required = if matches!(self.peek(), Some(Token::Identifier(id)) if id == "required") {
+                    let required = if matches!(self.peek(), Some(Token::Identifier(id)) if id == "required")
+                    {
                         self.advance();
                         true
                     } else {
                         false
                     };
-                    props.push(PropDecl { name: prop_name, kind, required, span: prop_span });
+                    props.push(PropDecl {
+                        name: prop_name,
+                        kind,
+                        required,
+                        span: prop_span,
+                    });
                 }
             }
         }
@@ -649,7 +915,10 @@ impl Parser {
 
     fn expect_keyword(&mut self, kw: Token) -> Result<(), ParseError> {
         match self.peek() {
-            Some(t) if t == &kw => { self.advance(); Ok(()) }
+            Some(t) if t == &kw => {
+                self.advance();
+                Ok(())
+            }
             Some(found) => Err(ParseError::UnexpectedToken {
                 expected: vec![format!("{:?}", kw)],
                 found: found.clone(),
@@ -722,9 +991,23 @@ impl Parser {
 
         self.expect_peek(&Token::RBrace).ok();
         Ok(GameScene {
-            name, variables, storylines, on_load, ui, themes, styles, atlases,
-            span: SourceSpan::new(&start_span.file, start_span.line_start, start_span.col_start,
-                self.current_span().line_end, self.current_span().col_end, 0, 0),
+            name,
+            variables,
+            storylines,
+            on_load,
+            ui,
+            themes,
+            styles,
+            atlases,
+            span: SourceSpan::new(
+                &start_span.file,
+                start_span.line_start,
+                start_span.col_start,
+                self.current_span().line_end,
+                self.current_span().col_end,
+                0,
+                0,
+            ),
         })
     }
 
@@ -735,7 +1018,9 @@ impl Parser {
         let theme = if self.peek() == Some(&Token::Colon) {
             self.advance();
             Some(self.expect_ident()?)
-        } else { None };
+        } else {
+            None
+        };
         self.expect_peek(&Token::LBrace)?;
         let mut components = Vec::new();
         loop {
@@ -747,10 +1032,19 @@ impl Parser {
         }
         self.expect_peek(&Token::RBrace).ok();
         Ok(ScreenLayout {
-            name, theme, components,
+            name,
+            theme,
+            components,
             schema_version: None,
-            span: SourceSpan::new(&start_span.file, start_span.line_start, start_span.col_start,
-                self.current_span().line_end, self.current_span().col_end, 0, 0),
+            span: SourceSpan::new(
+                &start_span.file,
+                start_span.line_start,
+                start_span.col_start,
+                self.current_span().line_end,
+                self.current_span().col_end,
+                0,
+                0,
+            ),
         })
     }
 
@@ -768,13 +1062,20 @@ impl Parser {
                     self.expect_peek(&Token::Equals)?;
                     let value = self.parse_expression()?;
                     let span = value_span(&value);
-                    decls.push(VariableDecl { name: name.clone(), value, span });
+                    decls.push(VariableDecl {
+                        name: name.clone(),
+                        value,
+                        span,
+                    });
                     self.current_scope.push(name);
                 }
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(VariablesBlock { decls, span: merge_span(&span, &self.current_span()) })
+        Ok(VariablesBlock {
+            decls,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_storylines_block(&mut self) -> Result<StorylineBlock, ParseError> {
@@ -801,7 +1102,10 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(StorylineBlock { statements, span: merge_span(&span, &self.current_span()) })
+        Ok(StorylineBlock {
+            statements,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_named_storyline(&mut self) -> Result<Storyline, ParseError> {
@@ -1018,8 +1322,11 @@ impl Parser {
             Some(Token::DirectiveEach) => self.parse_each_stmt(),
             Some(Token::DirectiveCommand) => self.parse_directive_command_stmt(),
             Some(Token::Identifier(_)) => {
-                if self.peek_n(1) == Some(&Token::Equals) { self.parse_assign_stmt() }
-                else { self.parse_command_stmt() }
+                if self.peek_n(1) == Some(&Token::Equals) {
+                    self.parse_assign_stmt()
+                } else {
+                    self.parse_command_stmt()
+                }
             }
             Some(tok) => Err(ParseError::UnexpectedToken {
                 expected: vec!["@speaker, @say, @choice, @if, @each, or assignment".into()],
@@ -1037,14 +1344,22 @@ impl Parser {
         let span = self.current_span();
         self.expect_keyword(Token::DirectiveSpeaker)?;
         let (name, texts, end_span) = self.parse_speech_body(span.clone())?;
-        Ok(StoryStmt::Speaker { name, texts, span: end_span })
+        Ok(StoryStmt::Speaker {
+            name,
+            texts,
+            span: end_span,
+        })
     }
 
     fn parse_say_stmt(&mut self) -> Result<StoryStmt, ParseError> {
         let span = self.current_span();
         self.expect_keyword(Token::DirectiveSay)?;
         let (name, texts, end_span) = self.parse_speech_body(span.clone())?;
-        Ok(StoryStmt::Say { name, texts, span: end_span })
+        Ok(StoryStmt::Say {
+            name,
+            texts,
+            span: end_span,
+        })
     }
 
     /// Parse the `(name) { "text" ... }` body shared by `@speaker` and `@say`.
@@ -1090,7 +1405,10 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(StoryStmt::Choice { options, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::Choice {
+            options,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_option(&mut self) -> Result<ChoiceOption, ParseError> {
@@ -1109,7 +1427,11 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(ChoiceOption { label, body, span: merge_span(&span, &self.current_span()) })
+        Ok(ChoiceOption {
+            label,
+            body,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_if_stmt(&mut self) -> Result<StoryStmt, ParseError> {
@@ -1167,7 +1489,9 @@ impl Parser {
                     }
                 }
                 else_branch = vec![StoryStmt::If {
-                    condition: elif_cond, then_branch: elif_then, else_branch: elif_else,
+                    condition: elif_cond,
+                    then_branch: elif_then,
+                    else_branch: elif_else,
                     span: self.current_span(),
                 }];
             } else {
@@ -1183,7 +1507,12 @@ impl Parser {
             }
         }
 
-        Ok(StoryStmt::If { condition, then_branch, else_branch, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::If {
+            condition,
+            then_branch,
+            else_branch,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_each_stmt(&mut self) -> Result<StoryStmt, ParseError> {
@@ -1191,7 +1520,9 @@ impl Parser {
         self.expect_keyword(Token::DirectiveEach)?;
         let item_var = self.expect_ident()?;
         if let Some(Token::Identifier(s)) = self.peek() {
-            if s == "in" { self.advance(); }
+            if s == "in" {
+                self.advance();
+            }
         }
         let source = self.parse_expression()?;
         self.expect_peek(&Token::LBrace)?;
@@ -1204,7 +1535,12 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(StoryStmt::Each { item_var, source, body, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::Each {
+            item_var,
+            source,
+            body,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_assign_stmt(&mut self) -> Result<StoryStmt, ParseError> {
@@ -1212,18 +1548,27 @@ impl Parser {
         let name = self.expect_ident()?;
         self.expect_peek(&Token::Equals)?;
         let value = self.parse_expression()?;
-        Ok(StoryStmt::Assign { name, value, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::Assign {
+            name,
+            value,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_command_stmt(&mut self) -> Result<StoryStmt, ParseError> {
         let span = self.current_span();
         let name = match self.advance() {
-            Some(SpannedToken { token: Token::Identifier(s), .. }) => s,
+            Some(SpannedToken {
+                token: Token::Identifier(s),
+                ..
+            }) => s,
             Some(st) => format!("{:?}", st.token),
-            None => return Err(ParseError::UnexpectedEof {
-                expected: vec!["command name".into()],
-                span: self.current_span(),
-            }),
+            None => {
+                return Err(ParseError::UnexpectedEof {
+                    expected: vec!["command name".into()],
+                    span: self.current_span(),
+                })
+            }
         };
         let mut args = Vec::new();
         self.skip_noise();
@@ -1235,13 +1580,19 @@ impl Parser {
                     Some(Token::RParen) | None | Some(Token::Eof) => break,
                     _ => {
                         args.push(self.parse_expression()?);
-                        if self.peek() == Some(&Token::Comma) { self.advance(); }
+                        if self.peek() == Some(&Token::Comma) {
+                            self.advance();
+                        }
                     }
                 }
             }
             self.expect_peek(&Token::RParen).ok();
         }
-        Ok(StoryStmt::Command { name, args, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::Command {
+            name,
+            args,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     /// Parse `@Command("api_func", arg1, arg2, ...)` — directive escape hatch
@@ -1300,7 +1651,11 @@ impl Parser {
         };
         let cmd_args = args.into_iter().skip(1).collect();
 
-        Ok(StoryStmt::Command { name, args: cmd_args, span: merge_span(&span, &self.current_span()) })
+        Ok(StoryStmt::Command {
+            name,
+            args: cmd_args,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_ui_block(&mut self) -> Result<UiBlock, ParseError> {
@@ -1316,7 +1671,10 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(UiBlock { components, span: merge_span(&span, &self.current_span()) })
+        Ok(UiBlock {
+            components,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_component(&mut self) -> Result<UiComponent, ParseError> {
@@ -1327,12 +1685,17 @@ impl Parser {
             let name = self.expect_ident()?;
             self.advance();
             Some(name)
-        } else { None };
+        } else {
+            None
+        };
 
         let comp_type = self.expect_ident()?;
         let custom_decl = self.component_decls.get(&comp_type).cloned();
         if !VALID_COMPONENT_TYPES.contains(&comp_type.as_str()) && custom_decl.is_none() {
-            let mut valid: Vec<String> = VALID_COMPONENT_TYPES.iter().map(|s| s.to_string()).collect();
+            let mut valid: Vec<String> = VALID_COMPONENT_TYPES
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
             valid.extend(self.component_decls.keys().cloned());
             return Err(ParseError::InvalidComponentType {
                 found: comp_type.clone(),
@@ -1346,11 +1709,15 @@ impl Parser {
             let expr = self.parse_expression()?;
             self.expect_peek(&Token::RParen)?;
             Some(expr)
-        } else { None };
+        } else {
+            None
+        };
 
         self.expect_peek(&Token::LBrace)?;
         let mut props = self.parse_component_props()?;
-        if let Some(ref id_str) = id { props.id = Some(id_str.clone()); }
+        if let Some(ref id_str) = id {
+            props.id = Some(id_str.clone());
+        }
 
         let mut children = Vec::new();
         loop {
@@ -1364,15 +1731,31 @@ impl Parser {
 
         let end_span = merge_span(&span, &self.current_span());
         match comp_type.as_str() {
-            "panel" => Ok(UiComponent::Panel { props, children, span: end_span }),
-            "container" => Ok(UiComponent::Container { props, children, span: end_span }),
+            "panel" => Ok(UiComponent::Panel {
+                props,
+                children,
+                span: end_span,
+            }),
+            "container" => Ok(UiComponent::Container {
+                props,
+                children,
+                span: end_span,
+            }),
             "text" => {
                 let content = localized_from_expr(expr_arg);
-                Ok(UiComponent::Text { content, props, span: end_span })
+                Ok(UiComponent::Text {
+                    content,
+                    props,
+                    span: end_span,
+                })
             }
             "button" => {
                 let label = localized_from_expr(expr_arg);
-                Ok(UiComponent::Button { label, props, span: end_span })
+                Ok(UiComponent::Button {
+                    label,
+                    props,
+                    span: end_span,
+                })
             }
             "list" => {
                 // `source = …` is parsed as a generic property (into props.custom)
@@ -1384,55 +1767,121 @@ impl Parser {
                     .custom
                     .remove("source")
                     .unwrap_or_else(|| Expression::Variable("items".into()));
-                Ok(UiComponent::List { source, format: None, props, span: end_span })
+                Ok(UiComponent::List {
+                    source,
+                    format: None,
+                    props,
+                    span: end_span,
+                })
             }
             "image" => {
                 let src = match expr_arg {
                     Some(Expression::StringLit(s)) => s,
                     _ => String::new(),
                 };
-                Ok(UiComponent::Image { src, props, span: end_span })
+                Ok(UiComponent::Image {
+                    src,
+                    props,
+                    span: end_span,
+                })
             }
-            "input" => Ok(UiComponent::Input { props, span: end_span }),
-            "dropdown" => Ok(UiComponent::Dropdown { props, span: end_span }),
+            "input" => Ok(UiComponent::Input {
+                props,
+                span: end_span,
+            }),
+            "dropdown" => Ok(UiComponent::Dropdown {
+                props,
+                span: end_span,
+            }),
             "tile" => {
                 let tile_id = expr_arg.unwrap_or(Expression::NumberLit(0.0));
-                Ok(UiComponent::Tile { tile_id, props, span: end_span })
+                Ok(UiComponent::Tile {
+                    tile_id,
+                    props,
+                    span: end_span,
+                })
             }
             "divider" => {
                 let tiles = props.tiles.clone().unwrap_or_default();
-                Ok(UiComponent::Divider { tiles, props, span: end_span })
+                Ok(UiComponent::Divider {
+                    tiles,
+                    props,
+                    span: end_span,
+                })
             }
             "flex_list" => {
                 let source = match expr_arg {
                     Some(expr) => expr,
                     None => Expression::Variable("items".into()),
                 };
-                Ok(UiComponent::FlexList { source, format: None, props, span: end_span })
+                Ok(UiComponent::FlexList {
+                    source,
+                    format: None,
+                    props,
+                    span: end_span,
+                })
             }
-            "cursor" => Ok(UiComponent::Cursor { props, span: end_span }),
-            "bracket" => Ok(UiComponent::Bracket { props, span: end_span }),
-            "pixel_rect" => Ok(UiComponent::PixelRect { props, span: end_span }),
+            "cursor" => Ok(UiComponent::Cursor {
+                props,
+                span: end_span,
+            }),
+            "bracket" => Ok(UiComponent::Bracket {
+                props,
+                span: end_span,
+            }),
+            "pixel_rect" => Ok(UiComponent::PixelRect {
+                props,
+                span: end_span,
+            }),
             _ => {
                 // Checked against `component_decls` at the top of this fn.
                 let decl = custom_decl.expect("custom component decl looked up above");
                 validate_custom_props(&decl, &props, &end_span)?;
-                Ok(UiComponent::Custom { name: comp_type, props, span: end_span })
+                Ok(UiComponent::Custom {
+                    name: comp_type,
+                    props,
+                    span: end_span,
+                })
             }
         }
     }
 
     fn parse_component_props(&mut self) -> Result<ComponentProps, ParseError> {
         let mut props = ComponentProps {
-            id: None, width: None, height: None, padding: None, margin: None,
-            align: None, on_click: None, flex_grow: None, visible: None,
-            custom: HashMap::new(), span: self.current_span(),
-            rect: None, style: None, value: None, color: None,
-            font: None, wrap: None, line_spacing: None, scale: None,
-            tile_id: None, tiles: None, repeat: None, orientation: None,
-            cursor: None, selected: None, max_visible: None, footer: None,
-            item_template: None, item_layout: None, gap: None, clip: None,
-            flip_x: None, flip_y: None, palette: None,
+            id: None,
+            width: None,
+            height: None,
+            padding: None,
+            margin: None,
+            align: None,
+            on_click: None,
+            flex_grow: None,
+            visible: None,
+            custom: HashMap::new(),
+            span: self.current_span(),
+            rect: None,
+            style: None,
+            value: None,
+            color: None,
+            font: None,
+            wrap: None,
+            line_spacing: None,
+            scale: None,
+            tile_id: None,
+            tiles: None,
+            repeat: None,
+            orientation: None,
+            cursor: None,
+            selected: None,
+            max_visible: None,
+            footer: None,
+            item_template: None,
+            item_layout: None,
+            gap: None,
+            clip: None,
+            flip_x: None,
+            flip_y: None,
+            palette: None,
         };
         loop {
             self.skip_noise();
@@ -1449,7 +1898,9 @@ impl Parser {
                     }
 
                     let key = self.expect_ident()?;
-                    if self.peek() != Some(&Token::Equals) { break; }
+                    if self.peek() != Some(&Token::Equals) {
+                        break;
+                    }
                     // Special case: rect = { tx: N, ty: N, tw: N, th: N }
                     if key == "rect" && self.peek_n(1) == Some(&Token::LBrace) {
                         self.advance(); // consume '='
@@ -1461,33 +1912,93 @@ impl Parser {
                     match key.as_str() {
                         "width" => props.width = Some(val),
                         "height" => props.height = Some(val),
-                        "padding" => props.padding = Some(match &val {
-                            Expression::NumberLit(n) => vec![Expression::NumberLit(*n); 4],
-                            other => vec![other.clone()],
-                        }),
-                        "margin" => props.margin = Some(match &val {
-                            Expression::NumberLit(n) => vec![Expression::NumberLit(*n); 4],
-                            other => vec![other.clone()],
-                        }),
-                        "align" => { if let Expression::StringLit(s) = &val { props.align = Some(s.clone()); } }
+                        "padding" => {
+                            props.padding = Some(match &val {
+                                Expression::NumberLit(n) => vec![Expression::NumberLit(*n); 4],
+                                other => vec![other.clone()],
+                            })
+                        }
+                        "margin" => {
+                            props.margin = Some(match &val {
+                                Expression::NumberLit(n) => vec![Expression::NumberLit(*n); 4],
+                                other => vec![other.clone()],
+                            })
+                        }
+                        "align" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.align = Some(s.clone());
+                            }
+                        }
                         "on_click" => match &val {
                             Expression::StringLit(s) => props.on_click = Some(s.clone()),
                             Expression::Variable(v) => props.on_click = Some(v.clone()),
                             _ => {}
                         },
-                        "flex_grow" => { if let Expression::NumberLit(n) = val { props.flex_grow = Some(n as u32); } }
+                        "flex_grow" => {
+                            if let Expression::NumberLit(n) = val {
+                                props.flex_grow = Some(n as u32);
+                            }
+                        }
                         // Non-bool `visible` (e.g. the `"{binding}"` template form) must
                         // survive into the JSON output, where the runtime's `Visibility`
                         // deserializer accepts a bool or a template string.
-                        "visible" => { if let Expression::BoolLit(b) = &val { props.visible = Some(*b); } else { props.custom.insert(key, val); } }
+                        "visible" => {
+                            if let Expression::BoolLit(b) = &val {
+                                props.visible = Some(*b);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
                         // ─── pokered-specific props ───
-                        "style" => { if let Expression::StringLit(s) = &val { props.style = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        "value" => { if let Expression::StringLit(s) = &val { props.value = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        "color" => { if let Expression::StringLit(s) = &val { props.color = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        "font" => { if let Expression::StringLit(s) = &val { props.font = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        "wrap" => { if let Expression::StringLit(s) = &val { props.wrap = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        "line_spacing" => { if let Expression::NumberLit(n) = &val { props.line_spacing = Some(*n as u32); } else { props.custom.insert(key, val); } }
-                        "scale" => { if let Expression::NumberLit(n) = &val { props.scale = Some(*n as u32); } else { props.custom.insert(key, val); } }
+                        "style" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.style = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "value" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.value = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "color" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.color = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "font" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.font = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "wrap" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.wrap = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "line_spacing" => {
+                            if let Expression::NumberLit(n) = &val {
+                                props.line_spacing = Some(*n as u32);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "scale" => {
+                            if let Expression::NumberLit(n) = &val {
+                                props.scale = Some(*n as u32);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
                         "tile_id" => props.tile_id = Some(val),
                         "tiles" => {
                             if let Expression::ArrayLit(items) = val {
@@ -1496,12 +2007,36 @@ impl Parser {
                                 props.custom.insert(key, val);
                             }
                         }
-                        "repeat" => { if let Expression::NumberLit(n) = &val { props.repeat = Some(*n as u32); } else { props.custom.insert(key, val); } }
-                        "orientation" => { if let Expression::StringLit(s) = &val { props.orientation = Some(s.clone()); } else { props.custom.insert(key, val); } }
+                        "repeat" => {
+                            if let Expression::NumberLit(n) = &val {
+                                props.repeat = Some(*n as u32);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "orientation" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.orientation = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
                         "cursor" => props.cursor = Some(val),
                         "selected" => props.selected = Some(val),
-                        "max_visible" => { if let Expression::NumberLit(n) = &val { props.max_visible = Some(*n as u32); } else { props.custom.insert(key, val); } }
-                        "footer" => { if let Expression::StringLit(s) = &val { props.footer = Some(s.clone()); } else { props.custom.insert(key, val); } }
+                        "max_visible" => {
+                            if let Expression::NumberLit(n) = &val {
+                                props.max_visible = Some(*n as u32);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "footer" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.footer = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
                         "item_template" => props.item_template = Some(val),
                         "item_layout" => {
                             if let Expression::ArrayLit(items) = val {
@@ -1510,12 +2045,44 @@ impl Parser {
                                 props.custom.insert(key, val);
                             }
                         }
-                        "gap" => { if let Expression::NumberLit(n) = &val { props.gap = Some(*n as u32); } else { props.custom.insert(key, val); } }
-                        "clip" => { if let Expression::BoolLit(b) = &val { props.clip = Some(*b); } else { props.custom.insert(key, val); } }
-                        "flip_x" => { if let Expression::BoolLit(b) = &val { props.flip_x = Some(*b); } else { props.custom.insert(key, val); } }
-                        "flip_y" => { if let Expression::BoolLit(b) = &val { props.flip_y = Some(*b); } else { props.custom.insert(key, val); } }
-                        "palette" => { if let Expression::StringLit(s) = &val { props.palette = Some(s.clone()); } else { props.custom.insert(key, val); } }
-                        _ => { props.custom.insert(key, val); }
+                        "gap" => {
+                            if let Expression::NumberLit(n) = &val {
+                                props.gap = Some(*n as u32);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "clip" => {
+                            if let Expression::BoolLit(b) = &val {
+                                props.clip = Some(*b);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "flip_x" => {
+                            if let Expression::BoolLit(b) = &val {
+                                props.flip_x = Some(*b);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "flip_y" => {
+                            if let Expression::BoolLit(b) = &val {
+                                props.flip_y = Some(*b);
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        "palette" => {
+                            if let Expression::StringLit(s) = &val {
+                                props.palette = Some(s.clone());
+                            } else {
+                                props.custom.insert(key, val);
+                            }
+                        }
+                        _ => {
+                            props.custom.insert(key, val);
+                        }
                     }
                 }
                 Some(Token::RBrace) | Some(Token::Eof) | None => break,
@@ -1586,7 +2153,11 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(Theme { name, tokens, span: merge_span(&span, &self.current_span()) })
+        Ok(Theme {
+            name,
+            tokens,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_style(&mut self) -> Result<Style, ParseError> {
@@ -1596,7 +2167,9 @@ impl Parser {
         let extends = if self.peek() == Some(&Token::Colon) {
             self.advance();
             Some(self.expect_ident()?)
-        } else { None };
+        } else {
+            None
+        };
         self.expect_peek(&Token::LBrace)?;
         let mut properties = HashMap::new();
         loop {
@@ -1613,7 +2186,12 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(Style { name, extends, properties, span: merge_span(&span, &self.current_span()) })
+        Ok(Style {
+            name,
+            extends,
+            properties,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_atlas(&mut self) -> Result<Atlas, ParseError> {
@@ -1654,7 +2232,12 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBrace).ok();
-        Ok(Atlas { name, source, regions, span: merge_span(&span, &self.current_span()) })
+        Ok(Atlas {
+            name,
+            source,
+            regions,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_atlas_region(&mut self, name: String) -> Result<AtlasRegion, ParseError> {
@@ -1681,12 +2264,23 @@ impl Parser {
             }
         }
         self.expect_peek(&Token::RBracket).ok();
-        Ok(AtlasRegion { name, x, y, w, h, nine_slice, span: merge_span(&span, &self.current_span()) })
+        Ok(AtlasRegion {
+            name,
+            x,
+            y,
+            w,
+            h,
+            nine_slice,
+            span: merge_span(&span, &self.current_span()),
+        })
     }
 
     fn parse_number(&mut self) -> Result<u32, ParseError> {
         match self.advance() {
-            Some(SpannedToken { token: Token::NumberLit(n), .. }) => Ok(n as u32),
+            Some(SpannedToken {
+                token: Token::NumberLit(n),
+                ..
+            }) => Ok(n as u32),
             Some(st) => Err(ParseError::UnexpectedToken {
                 expected: vec!["number".into()],
                 found: st.token,
@@ -1703,11 +2297,14 @@ impl Parser {
         if self.peek() == Some(&Token::LBracket) {
             self.advance();
             let t = self.parse_number()?;
-            self.skip_noise(); self.expect_peek(&Token::Comma)?;
+            self.skip_noise();
+            self.expect_peek(&Token::Comma)?;
             let r = self.parse_number()?;
-            self.skip_noise(); self.expect_peek(&Token::Comma)?;
+            self.skip_noise();
+            self.expect_peek(&Token::Comma)?;
             let b = self.parse_number()?;
-            self.skip_noise(); self.expect_peek(&Token::Comma)?;
+            self.skip_noise();
+            self.expect_peek(&Token::Comma)?;
             let l = self.parse_number()?;
             self.expect_peek(&Token::RBracket)?;
             Ok([t, r, b, l])
@@ -1723,10 +2320,14 @@ pub struct SemanticValidator {
 }
 
 impl SemanticValidator {
-    pub fn new() -> Self { Self { errors: Vec::new() } }
+    pub fn new() -> Self {
+        Self { errors: Vec::new() }
+    }
 
     pub fn validate_scene(&mut self, scene: &GameScene) {
-        let mut declared_vars: Vec<String> = scene.variables.as_ref()
+        let mut declared_vars: Vec<String> = scene
+            .variables
+            .as_ref()
             .map(|v| v.decls.iter().map(|d| d.name.clone()).collect())
             .unwrap_or_default();
 
@@ -1735,7 +2336,9 @@ impl SemanticValidator {
         }
 
         for storyline in &scene.storylines {
-            for stmt in &storyline.statements { self.check_stmt_vars(stmt, &declared_vars); }
+            for stmt in &storyline.statements {
+                self.check_stmt_vars(stmt, &declared_vars);
+            }
         }
 
         if let Some(vb) = &scene.variables {
@@ -1743,14 +2346,18 @@ impl SemanticValidator {
                 for v in extract_variables(&decl.value) {
                     if !declared_vars.contains(&v) && v != decl.name {
                         self.errors.push(SemanticError::UndefinedVariable {
-                            name: v, defined_vars: declared_vars.clone(), span: value_span(&decl.value),
+                            name: v,
+                            defined_vars: declared_vars.clone(),
+                            span: value_span(&decl.value),
                         });
                     }
                 }
             }
         }
 
-        for storyline in &scene.storylines { self.check_choice_has_options(&storyline.statements); }
+        for storyline in &scene.storylines {
+            self.check_choice_has_options(&storyline.statements);
+        }
         self.check_style_cycles(&scene.styles);
         self.check_uniqueness(&scene.themes, &scene.styles);
     }
@@ -1763,13 +2370,19 @@ impl SemanticValidator {
                         declared.push(name.clone());
                     }
                 }
-                StoryStmt::If { then_branch, else_branch, .. } => {
+                StoryStmt::If {
+                    then_branch,
+                    else_branch,
+                    ..
+                } => {
                     self.collect_assigns(then_branch, declared);
                     self.collect_assigns(else_branch, declared);
                 }
                 StoryStmt::Each { body, .. } => self.collect_assigns(body, declared),
                 StoryStmt::Choice { options, .. } => {
-                    for opt in options { self.collect_assigns(&opt.body, declared); }
+                    for opt in options {
+                        self.collect_assigns(&opt.body, declared);
+                    }
                 }
                 StoryStmt::Run { .. } => {}
                 _ => {}
@@ -1783,42 +2396,63 @@ impl SemanticValidator {
                 for v in extract_variables(value) {
                     if !declared.contains(&v) {
                         self.errors.push(SemanticError::UndefinedVariable {
-                            name: v, defined_vars: declared.to_vec(), span: value_span(value),
+                            name: v,
+                            defined_vars: declared.to_vec(),
+                            span: value_span(value),
                         });
                     }
                 }
             }
-            StoryStmt::If { condition, then_branch, else_branch, .. } => {
+            StoryStmt::If {
+                condition,
+                then_branch,
+                else_branch,
+                ..
+            } => {
                 for v in extract_variables(condition) {
                     if !declared.contains(&v) {
                         self.errors.push(SemanticError::UndefinedVariable {
-                            name: v, defined_vars: declared.to_vec(), span: value_span(condition),
+                            name: v,
+                            defined_vars: declared.to_vec(),
+                            span: value_span(condition),
                         });
                     }
                 }
-                for s in then_branch { self.check_stmt_vars(s, declared); }
-                for s in else_branch { self.check_stmt_vars(s, declared); }
+                for s in then_branch {
+                    self.check_stmt_vars(s, declared);
+                }
+                for s in else_branch {
+                    self.check_stmt_vars(s, declared);
+                }
             }
             StoryStmt::Each { source, body, .. } => {
                 for v in extract_variables(source) {
                     if !declared.contains(&v) {
                         self.errors.push(SemanticError::UndefinedVariable {
-                            name: v, defined_vars: declared.to_vec(), span: value_span(source),
+                            name: v,
+                            defined_vars: declared.to_vec(),
+                            span: value_span(source),
                         });
                     }
                 }
-                for s in body { self.check_stmt_vars(s, declared); }
+                for s in body {
+                    self.check_stmt_vars(s, declared);
+                }
             }
             StoryStmt::Choice { options, .. } => {
                 for opt in options {
-                    for s in &opt.body { self.check_stmt_vars(s, declared); }
+                    for s in &opt.body {
+                        self.check_stmt_vars(s, declared);
+                    }
                 }
             }
             StoryStmt::Speaker { name, .. } => {
                 for v in extract_variables(name) {
                     if !declared.contains(&v) {
                         self.errors.push(SemanticError::UndefinedVariable {
-                            name: v, defined_vars: declared.to_vec(), span: value_span(name),
+                            name: v,
+                            defined_vars: declared.to_vec(),
+                            span: value_span(name),
                         });
                     }
                 }
@@ -1833,11 +2467,18 @@ impl SemanticValidator {
             match stmt {
                 StoryStmt::Choice { options, span } => {
                     if options.is_empty() {
-                        self.errors.push(SemanticError::EmptyChoice { span: span.clone() });
+                        self.errors
+                            .push(SemanticError::EmptyChoice { span: span.clone() });
                     }
-                    for opt in options { self.check_choice_has_options(&opt.body); }
+                    for opt in options {
+                        self.check_choice_has_options(&opt.body);
+                    }
                 }
-                StoryStmt::If { then_branch, else_branch, .. } => {
+                StoryStmt::If {
+                    then_branch,
+                    else_branch,
+                    ..
+                } => {
                     self.check_choice_has_options(then_branch);
                     self.check_choice_has_options(else_branch);
                 }
@@ -1854,7 +2495,8 @@ impl SemanticValidator {
             if let Some(ref parent) = style.extends {
                 if !style_names.contains(parent.as_str()) {
                     self.errors.push(SemanticError::MissingStyleParent {
-                        parent: parent.clone(), span: style.span.clone(),
+                        parent: parent.clone(),
+                        span: style.span.clone(),
                     });
                 }
             }
@@ -1863,7 +2505,8 @@ impl SemanticValidator {
             let mut visited = Vec::new();
             if self.detect_cycle(style, styles, &mut visited) {
                 self.errors.push(SemanticError::CircularStyleInheritance {
-                    chain: visited, span: style.span.clone(),
+                    chain: visited,
+                    span: style.span.clone(),
                 });
             }
         }
@@ -1877,7 +2520,9 @@ impl SemanticValidator {
                 return true;
             }
             if let Some(parent_style) = all.iter().find(|s| &s.name == parent) {
-                if self.detect_cycle(parent_style, all, visited) { return true; }
+                if self.detect_cycle(parent_style, all, visited) {
+                    return true;
+                }
             }
         }
         visited.pop();
@@ -1889,7 +2534,9 @@ impl SemanticValidator {
         for t in themes {
             if !seen.insert(&t.name) {
                 self.errors.push(SemanticError::DuplicateName {
-                    name: t.name.clone(), kind: "@theme".into(), span: t.span.clone(),
+                    name: t.name.clone(),
+                    kind: "@theme".into(),
+                    span: t.span.clone(),
                 });
             }
         }
@@ -1897,7 +2544,9 @@ impl SemanticValidator {
         for s in styles {
             if !seen.insert(&s.name) {
                 self.errors.push(SemanticError::DuplicateName {
-                    name: s.name.clone(), kind: "@style".into(), span: s.span.clone(),
+                    name: s.name.clone(),
+                    kind: "@style".into(),
+                    span: s.span.clone(),
                 });
             }
         }
@@ -1915,9 +2564,12 @@ fn value_span(expr: &Expression) -> SourceSpan {
 fn merge_span(start: &SourceSpan, end: &SourceSpan) -> SourceSpan {
     SourceSpan::new(
         &start.file,
-        start.line_start, start.col_start,
-        end.line_end, end.col_end,
-        start.byte_start, end.byte_end,
+        start.line_start,
+        start.col_start,
+        end.line_end,
+        end.col_end,
+        start.byte_start,
+        end.byte_end,
     )
 }
 
@@ -1941,7 +2593,11 @@ fn extract_variables(expr: &Expression) -> Vec<String> {
             vars.extend(extract_variables(left));
             vars.extend(extract_variables(right));
         }
-        Expression::TernaryOp { condition, then_expr, else_expr } => {
+        Expression::TernaryOp {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
             vars.extend(extract_variables(condition));
             vars.extend(extract_variables(then_expr));
             vars.extend(extract_variables(else_expr));
@@ -2076,7 +2732,10 @@ pub fn parse_with_components(
     Parser::new(tokens, "").with_components(decls).parse()
 }
 
-pub fn parse_and_validate(tokens: Vec<SpannedToken>, source: &str) -> (Option<Document>, Vec<ParseError>, Vec<SemanticError>) {
+pub fn parse_and_validate(
+    tokens: Vec<SpannedToken>,
+    source: &str,
+) -> (Option<Document>, Vec<ParseError>, Vec<SemanticError>) {
     let (doc, parse_errors) = Parser::new(tokens, source).parse();
     let mut semantic_errors = Vec::new();
     if let Some(Document::Scene(ref scene)) = doc {
@@ -2109,48 +2768,95 @@ pub fn parse_and_validate_with_components(
 mod tests {
     use super::*;
 
-    fn dummy_span() -> SourceSpan { SourceSpan::new("test", 1, 1, 1, 5, 0, 0) }
-    fn tok(t: Token) -> SpannedToken { SpannedToken { token: t, span: dummy_span() } }
-    fn id(s: &str) -> Token { Token::Identifier(s.into()) }
-    fn s_(s: &str) -> Token { Token::StringLit(s.into()) }
-    fn n(n: f64) -> Token { Token::NumberLit(n) }
+    fn dummy_span() -> SourceSpan {
+        SourceSpan::new("test", 1, 1, 1, 5, 0, 0)
+    }
+    fn tok(t: Token) -> SpannedToken {
+        SpannedToken {
+            token: t,
+            span: dummy_span(),
+        }
+    }
+    fn id(s: &str) -> Token {
+        Token::Identifier(s.into())
+    }
+    fn s_(s: &str) -> Token {
+        Token::StringLit(s.into())
+    }
+    fn n(n: f64) -> Token {
+        Token::NumberLit(n)
+    }
 
     #[test]
     fn test_parse_empty_scene() {
-        let tokens = vec![tok(Token::KeywordGameScene), tok(id("Empty")), tok(Token::LBrace), tok(Token::RBrace), tok(Token::Eof)];
+        let tokens = vec![
+            tok(Token::KeywordGameScene),
+            tok(id("Empty")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
+        ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty());
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.name, "Empty");
     }
 
     #[test]
     fn test_parse_variables() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Test")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace),
-            tok(id("gold")), tok(Token::Equals), tok(n(500.0)), tok(Token::Newline),
-            tok(id("name")), tok(Token::Equals), tok(s_("Hero")), tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Test")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("gold")),
+            tok(Token::Equals),
+            tok(n(500.0)),
+            tok(Token::Newline),
+            tok(id("name")),
+            tok(Token::Equals),
+            tok(s_("Hero")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.variables.unwrap().decls.len(), 2);
     }
 
     #[test]
     fn test_parse_speaker() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Dialog")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen), tok(Token::LBrace),
-            tok(s_("Hello!")), tok(s_("Welcome!")), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Dialog")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hello!")),
+            tok(s_("Welcome!")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Speaker { texts, .. } => assert_eq!(texts.len(), 2),
@@ -2163,15 +2869,28 @@ mod tests {
         // `@say("Prof") { "text" }` parses as StoryStmt::Say (cutscene speech),
         // distinct from @speaker (player-initiated talk).
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Dialog")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSay), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen), tok(Token::LBrace),
-            tok(s_("Hello!")), tok(s_("Welcome!")), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Dialog")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSay),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hello!")),
+            tok(s_("Welcome!")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         match &s.storylines[0].statements[0] {
             StoryStmt::Say { texts, .. } => assert_eq!(texts.len(), 2),
             other => panic!("`@say` must parse as StoryStmt::Say, got {other:?}"),
@@ -2183,11 +2902,23 @@ mod tests {
         // @speaker's meaning is fixed to player-initiated talk — a mode
         // argument is no longer accepted; cutscene speech uses @say instead.
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Dialog")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::Comma), tok(id("auto")), tok(Token::RParen), tok(Token::LBrace),
-            tok(s_("Hello!")), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Dialog")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::Comma),
+            tok(id("auto")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hello!")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(
@@ -2199,16 +2930,35 @@ mod tests {
     #[test]
     fn test_parse_choice() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ChoiceTest")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Yes")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("No")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("ChoiceTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Yes")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("No")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Choice { options, .. } => assert_eq!(options.len(), 2),
@@ -2219,22 +2969,52 @@ mod tests {
     #[test]
     fn test_parse_if_else() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("IfTest")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("gold")), tok(Token::Gt), tok(n(100.0)), tok(Token::RParen), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("NPC")), tok(Token::RParen), tok(Token::LBrace), tok(s_("Rich!")), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("IfTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("gold")),
+            tok(Token::Gt),
+            tok(n(100.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("NPC")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Rich!")),
             tok(Token::RBrace),
-            tok(Token::DirectiveElse), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("NPC")), tok(Token::RParen), tok(Token::LBrace), tok(s_("Poor!")), tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::DirectiveElse),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("NPC")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Poor!")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
-            StoryStmt::If { then_branch, else_branch, .. } => {
+            StoryStmt::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
                 assert!(!then_branch.is_empty());
                 assert!(!else_branch.is_empty());
             }
@@ -2245,20 +3025,40 @@ mod tests {
     #[test]
     fn test_parse_nested_choice_in_if() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Nested")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("flag")), tok(Token::RParen), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("A")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Nested")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("flag")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("A")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
-            StoryStmt::If { then_branch, .. } => assert!(matches!(then_branch[0], StoryStmt::Choice { .. })),
+            StoryStmt::If { then_branch, .. } => {
+                assert!(matches!(then_branch[0], StoryStmt::Choice { .. }))
+            }
             _ => panic!(),
         }
     }
@@ -2266,36 +3066,77 @@ mod tests {
     #[test]
     fn test_parse_ui_panel() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("UITest")), tok(Token::LBrace),
-            tok(Token::KeywordUi), tok(Token::LBrace),
-            tok(id("panel")), tok(Token::LBrace),
-            tok(id("title")), tok(Token::Equals), tok(id("text")), tok(Token::LParen), tok(s_("Shop")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("UITest")),
+            tok(Token::LBrace),
+            tok(Token::KeywordUi),
+            tok(Token::LBrace),
+            tok(id("panel")),
+            tok(Token::LBrace),
+            tok(id("title")),
+            tok(Token::Equals),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("Shop")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
-        assert!(matches!(s.ui.unwrap().components[0], UiComponent::Panel { .. }));
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
+        assert!(matches!(
+            s.ui.unwrap().components[0],
+            UiComponent::Panel { .. }
+        ));
     }
 
     #[test]
     fn test_parse_theme_style() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ThemeTest")), tok(Token::LBrace),
-            tok(Token::DirectiveTheme), tok(id("dark")), tok(Token::LBrace),
-            tok(id("primary")), tok(Token::Equals), tok(s_("#c9a03d")), tok(Token::Newline),
+            tok(Token::KeywordGameScene),
+            tok(id("ThemeTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("dark")),
+            tok(Token::LBrace),
+            tok(id("primary")),
+            tok(Token::Equals),
+            tok(s_("#c9a03d")),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("base")), tok(Token::LBrace),
-            tok(id("padding")), tok(Token::Equals), tok(n(12.0)), tok(Token::Newline),
+            tok(Token::DirectiveStyle),
+            tok(id("base")),
+            tok(Token::LBrace),
+            tok(id("padding")),
+            tok(Token::Equals),
+            tok(n(12.0)),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("child")), tok(Token::Colon), tok(id("base")), tok(Token::LBrace),
-            tok(id("color")), tok(Token::Equals), tok(s_("red")), tok(Token::Newline),
+            tok(Token::DirectiveStyle),
+            tok(id("child")),
+            tok(Token::Colon),
+            tok(id("base")),
+            tok(Token::LBrace),
+            tok(id("color")),
+            tok(Token::Equals),
+            tok(s_("red")),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.themes.len(), 1);
         assert_eq!(s.styles.len(), 2);
         assert_eq!(s.styles[1].extends.as_deref(), Some("base"));
@@ -2304,40 +3145,133 @@ mod tests {
     #[test]
     fn test_parse_atlas() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("AtlasTest")), tok(Token::LBrace),
-            tok(Token::DirectiveAtlas), tok(s_("ui_atlas")), tok(Token::LBrace),
-            tok(id("source")), tok(Token::Equals), tok(s_("atlas.png")), tok(Token::Newline),
-            tok(id("regions")), tok(Token::Equals), tok(Token::LBrace),
-            tok(id("btn")), tok(Token::Equals),
-            tok(Token::LBracket), tok(n(0.0)), tok(Token::Comma), tok(n(0.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(n(64.0)),
-            tok(Token::Comma), tok(id("slice")), tok(Token::Equals), tok(n(8.0)),
-            tok(Token::RBracket), tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("AtlasTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveAtlas),
+            tok(s_("ui_atlas")),
+            tok(Token::LBrace),
+            tok(id("source")),
+            tok(Token::Equals),
+            tok(s_("atlas.png")),
+            tok(Token::Newline),
+            tok(id("regions")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("btn")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(id("slice")),
+            tok(Token::Equals),
+            tok(n(8.0)),
+            tok(Token::RBracket),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.atlases[0].regions[0].nine_slice, Some([8, 8, 8, 8]));
     }
 
     #[test]
     fn test_parse_full_scene() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("FullScene")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace), tok(id("gold")), tok(Token::Equals), tok(n(500.0)), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen), tok(Token::LBrace), tok(s_("Hello!")), tok(Token::RBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Buy")), tok(Token::RParen), tok(Token::LBrace), tok(id("gold")), tok(Token::Equals), tok(id("gold")), tok(Token::Minus), tok(n(100.0)), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace),
-            tok(Token::KeywordUi), tok(Token::LBrace), tok(id("panel")), tok(Token::LBrace), tok(Token::RBrace), tok(Token::RBrace),
-            tok(Token::DirectiveTheme), tok(id("default")), tok(Token::LBrace), tok(id("bg")), tok(Token::Equals), tok(s_("#000")), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("main")), tok(Token::LBrace), tok(id("pad")), tok(Token::Equals), tok(n(10.0)), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveAtlas), tok(s_("ui")), tok(Token::LBrace), tok(id("source")), tok(Token::Equals), tok(s_("ui.png")), tok(Token::Newline),
-            tok(id("regions")), tok(Token::Equals), tok(Token::LBrace), tok(id("btn")), tok(Token::Equals),
-            tok(Token::LBracket), tok(n(0.0)), tok(Token::Comma), tok(n(0.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::RBracket), tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("FullScene")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("gold")),
+            tok(Token::Equals),
+            tok(n(500.0)),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hello!")),
+            tok(Token::RBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Buy")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("gold")),
+            tok(Token::Equals),
+            tok(id("gold")),
+            tok(Token::Minus),
+            tok(n(100.0)),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::KeywordUi),
+            tok(Token::LBrace),
+            tok(id("panel")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("default")),
+            tok(Token::LBrace),
+            tok(id("bg")),
+            tok(Token::Equals),
+            tok(s_("#000")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("main")),
+            tok(Token::LBrace),
+            tok(id("pad")),
+            tok(Token::Equals),
+            tok(n(10.0)),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveAtlas),
+            tok(s_("ui")),
+            tok(Token::LBrace),
+            tok(id("source")),
+            tok(Token::Equals),
+            tok(s_("ui.png")),
+            tok(Token::Newline),
+            tok(id("regions")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("btn")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::RBracket),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
@@ -2347,17 +3281,36 @@ mod tests {
     #[test]
     fn test_parse_each() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("LoopTest")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveEach), tok(id("item")), tok(id("in")), tok(id("items")), tok(Token::LBrace),
-            tok(id("count")), tok(Token::Equals), tok(n(1.0)), tok(Token::Plus), tok(n(1.0)),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("LoopTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveEach),
+            tok(id("item")),
+            tok(id("in")),
+            tok(id("items")),
+            tok(Token::LBrace),
+            tok(id("count")),
+            tok(Token::Equals),
+            tok(n(1.0)),
+            tok(Token::Plus),
+            tok(n(1.0)),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         match &s.storylines[0].statements[0] {
-            StoryStmt::Each { item_var, body, .. } => { assert_eq!(item_var, "item"); assert_eq!(body.len(), 1); }
+            StoryStmt::Each { item_var, body, .. } => {
+                assert_eq!(item_var, "item");
+                assert_eq!(body.len(), 1);
+            }
             _ => panic!(),
         }
     }
@@ -2365,16 +3318,29 @@ mod tests {
     #[test]
     fn test_parse_expression_binary() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ExprTest")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("result")), tok(Token::Equals), tok(id("x")), tok(Token::Plus), tok(n(5.0)),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("ExprTest")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("result")),
+            tok(Token::Equals),
+            tok(id("x")),
+            tok(Token::Plus),
+            tok(n(5.0)),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         match &s.storylines[0].statements[0] {
-            StoryStmt::Assign { value, .. } => assert!(matches!(value, Expression::BinaryOp { .. })),
+            StoryStmt::Assign { value, .. } => {
+                assert!(matches!(value, Expression::BinaryOp { .. }))
+            }
             _ => panic!(),
         }
     }
@@ -2382,11 +3348,29 @@ mod tests {
     #[test]
     fn test_semantic_undefined_variable() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Undef")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace), tok(id("gold")), tok(Token::Equals), tok(n(500.0)), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("undefined_var")), tok(Token::Gt), tok(n(100.0)), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Undef")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("gold")),
+            tok(Token::Equals),
+            tok(n(500.0)),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("undefined_var")),
+            tok(Token::Gt),
+            tok(n(100.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
         assert!(se.iter().any(|e| matches!(e, SemanticError::UndefinedVariable { name, .. } if name == "undefined_var")),
@@ -2396,36 +3380,79 @@ mod tests {
     #[test]
     fn test_semantic_circular_style() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Circ")), tok(Token::LBrace),
-            tok(Token::DirectiveStyle), tok(id("A")), tok(Token::Colon), tok(id("B")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("B")), tok(Token::Colon), tok(id("A")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Circ")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("A")),
+            tok(Token::Colon),
+            tok(id("B")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("B")),
+            tok(Token::Colon),
+            tok(id("A")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        assert!(se.iter().any(|e| matches!(e, SemanticError::CircularStyleInheritance { .. })), "sem errors: {:?}", se);
+        assert!(
+            se.iter()
+                .any(|e| matches!(e, SemanticError::CircularStyleInheritance { .. })),
+            "sem errors: {:?}",
+            se
+        );
     }
 
     #[test]
     fn test_semantic_empty_choice() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("EmptyC")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("EmptyC")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        assert!(se.iter().any(|e| matches!(e, SemanticError::EmptyChoice { .. })), "sem errors: {:?}", se);
+        assert!(
+            se.iter()
+                .any(|e| matches!(e, SemanticError::EmptyChoice { .. })),
+            "sem errors: {:?}",
+            se
+        );
     }
 
     #[test]
     fn test_syntax_error_recovery() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Errors")), tok(Token::LBrace),
-            tok(Token::KeywordUi), tok(Token::LBrace),
-            tok(id("bad_widget")), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("Errors")),
+            tok(Token::LBrace),
+            tok(Token::KeywordUi),
+            tok(Token::LBrace),
+            tok(id("bad_widget")),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::DirectiveTheme), tok(id("ok")), tok(Token::LBrace), tok(id("clr")), tok(Token::Equals), tok(s_("#fff")), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("ok")),
+            tok(Token::LBrace),
+            tok(id("clr")),
+            tok(Token::Equals),
+            tok(s_("#fff")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.iter().any(|e| matches!(e, ParseError::InvalidComponentType { found, .. } if found == "bad_widget")),
@@ -2437,25 +3464,61 @@ mod tests {
     #[test]
     fn test_unicode_identifiers() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("场景")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace), tok(id("名称")), tok(Token::Equals), tok(s_("小明")), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("博士")), tok(Token::RParen), tok(Token::LBrace), tok(s_("こんにちは")), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("场景")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("名称")),
+            tok(Token::Equals),
+            tok(s_("小明")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("博士")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("こんにちは")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.name, "场景");
     }
 
     #[test]
     fn test_semantic_duplicate_theme() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Dup")), tok(Token::LBrace),
-            tok(Token::DirectiveTheme), tok(id("same")), tok(Token::LBrace), tok(id("a")), tok(Token::Equals), tok(s_("#000")), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveTheme), tok(id("same")), tok(Token::LBrace), tok(id("b")), tok(Token::Equals), tok(s_("#fff")), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Dup")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("same")),
+            tok(Token::LBrace),
+            tok(id("a")),
+            tok(Token::Equals),
+            tok(s_("#000")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("same")),
+            tok(Token::LBrace),
+            tok(id("b")),
+            tok(Token::Equals),
+            tok(s_("#fff")),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
         assert!(se.iter().any(|e| matches!(e, SemanticError::DuplicateName { name, kind, .. } if name == "same" && kind == "@theme")),
@@ -2465,9 +3528,17 @@ mod tests {
     #[test]
     fn test_semantic_missing_style_parent() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Bad")), tok(Token::LBrace),
-            tok(Token::DirectiveStyle), tok(id("child")), tok(Token::Colon), tok(id("nonexistent")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Bad")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("child")),
+            tok(Token::Colon),
+            tok(id("nonexistent")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
         assert!(se.iter().any(|e| matches!(e, SemanticError::MissingStyleParent { parent, .. } if parent == "nonexistent")),
@@ -2477,15 +3548,28 @@ mod tests {
     #[test]
     fn test_parse_screen() {
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("MainMenu")), tok(Token::LBrace),
-            tok(id("panel")), tok(Token::LBrace),
-            tok(id("text")), tok(Token::LParen), tok(s_("Title")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordScreen),
+            tok(id("MainMenu")),
+            tok(Token::LBrace),
+            tok(id("panel")),
+            tok(Token::LBrace),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("Title")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
         match doc.unwrap() {
-            Document::Screen(s) => { assert_eq!(s.name, "MainMenu"); assert_eq!(s.components.len(), 1); }
+            Document::Screen(s) => {
+                assert_eq!(s.name, "MainMenu");
+                assert_eq!(s.components.len(), 1);
+            }
             _ => panic!(),
         }
     }
@@ -2496,17 +3580,32 @@ mod tests {
     fn test_parse_variables_mixed() {
         // number, string, bool variables
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Mixed")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace),
-            tok(id("gold")), tok(Token::Equals), tok(n(500.0)), tok(Token::Newline),
-            tok(id("name")), tok(Token::Equals), tok(s_("Hero")), tok(Token::Newline),
-            tok(id("active")), tok(Token::Equals), tok(Token::BoolLit(true)), tok(Token::Newline),
+            tok(Token::KeywordGameScene),
+            tok(id("Mixed")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("gold")),
+            tok(Token::Equals),
+            tok(n(500.0)),
+            tok(Token::Newline),
+            tok(id("name")),
+            tok(Token::Equals),
+            tok(s_("Hero")),
+            tok(Token::Newline),
+            tok(id("active")),
+            tok(Token::Equals),
+            tok(Token::BoolLit(true)),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let vb = s.variables.unwrap();
         assert_eq!(vb.decls.len(), 3);
         assert!(matches!(vb.decls[0].value, Expression::NumberLit(500.0)));
@@ -2517,18 +3616,41 @@ mod tests {
     #[test]
     fn test_parse_choice_three_options() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ThreeOpts")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("A")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("B")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("C")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("ThreeOpts")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("A")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("B")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("C")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Choice { options, .. } => {
@@ -2545,17 +3667,35 @@ mod tests {
     fn test_parse_choice_option_empty_body() {
         // options with empty body {} (no statements inside)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("EmptyBody")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Skip")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Pass")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("EmptyBody")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Skip")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Pass")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Choice { options, .. } => {
@@ -2571,25 +3711,56 @@ mod tests {
     fn test_parse_if_else_if_chain() {
         // @if / @else @if / @else chain
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Chain")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("a")), tok(Token::Gt), tok(n(10.0)), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("x")), tok(Token::Equals), tok(n(1.0)),
+            tok(Token::KeywordGameScene),
+            tok(id("Chain")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("a")),
+            tok(Token::Gt),
+            tok(n(10.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("x")),
+            tok(Token::Equals),
+            tok(n(1.0)),
             tok(Token::RBrace),
-            tok(Token::DirectiveElse), tok(Token::DirectiveIf), tok(Token::LParen), tok(id("a")), tok(Token::Gt), tok(n(5.0)), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("x")), tok(Token::Equals), tok(n(2.0)),
+            tok(Token::DirectiveElse),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("a")),
+            tok(Token::Gt),
+            tok(n(5.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("x")),
+            tok(Token::Equals),
+            tok(n(2.0)),
             tok(Token::RBrace),
-            tok(Token::DirectiveElse), tok(Token::LBrace),
-            tok(id("x")), tok(Token::Equals), tok(n(3.0)),
+            tok(Token::DirectiveElse),
+            tok(Token::LBrace),
+            tok(id("x")),
+            tok(Token::Equals),
+            tok(n(3.0)),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
-            StoryStmt::If { then_branch, else_branch, .. } => {
+            StoryStmt::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
                 assert!(!then_branch.is_empty());
                 assert!(!else_branch.is_empty());
                 // else_branch should contain another If stmt (the elif)
@@ -2603,20 +3774,38 @@ mod tests {
     fn test_parse_nested_if_in_choice_option() {
         // @choice → @option → @if inside option body
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("NestedIfOpt")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Check")), tok(Token::RParen), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("cond")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("result")), tok(Token::Equals), tok(n(42.0)),
+            tok(Token::KeywordGameScene),
+            tok(id("NestedIfOpt")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Check")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("cond")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("result")),
+            tok(Token::Equals),
+            tok(n(42.0)),
             tok(Token::RBrace),
             tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Choice { options, .. } => {
@@ -2632,19 +3821,41 @@ mod tests {
     fn test_parse_each_with_source_expression() {
         // @each with variable and complex source expression
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("EachExpr")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveEach), tok(id("item")), tok(id("in")), tok(id("items")), tok(Token::Plus), tok(id("bonus")), tok(Token::LBrace),
-            tok(id("count")), tok(Token::Equals), tok(id("count")), tok(Token::Plus), tok(n(1.0)),
+            tok(Token::KeywordGameScene),
+            tok(id("EachExpr")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveEach),
+            tok(id("item")),
+            tok(id("in")),
+            tok(id("items")),
+            tok(Token::Plus),
+            tok(id("bonus")),
+            tok(Token::LBrace),
+            tok(id("count")),
+            tok(Token::Equals),
+            tok(id("count")),
+            tok(Token::Plus),
+            tok(n(1.0)),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
-            StoryStmt::Each { item_var, source, body, .. } => {
+            StoryStmt::Each {
+                item_var,
+                source,
+                body,
+                ..
+            } => {
                 assert_eq!(item_var, "item");
                 assert!(matches!(source, Expression::BinaryOp { .. }));
                 assert_eq!(body.len(), 1);
@@ -2657,26 +3868,52 @@ mod tests {
     fn test_parse_expression_complex_nested() {
         // a + b * c - d / e (tests operator precedence: * and / > + and -)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Complex")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("result")), tok(Token::Equals),
-            tok(id("a")), tok(Token::Plus), tok(id("b")), tok(Token::Star), tok(id("c")),
-            tok(Token::Minus), tok(id("d")), tok(Token::Slash), tok(id("e")),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Complex")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("result")),
+            tok(Token::Equals),
+            tok(id("a")),
+            tok(Token::Plus),
+            tok(id("b")),
+            tok(Token::Star),
+            tok(id("c")),
+            tok(Token::Minus),
+            tok(id("d")),
+            tok(Token::Slash),
+            tok(id("e")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Assign { value, .. } => {
                 // Should be: (a + (b * c)) - (d / e)
                 assert!(matches!(value, Expression::BinaryOp { op: BinOp::Sub, .. }));
-                if let Expression::BinaryOp { op: BinOp::Sub, left, right } = value {
+                if let Expression::BinaryOp {
+                    op: BinOp::Sub,
+                    left,
+                    right,
+                } = value
+                {
                     // left = a + (b * c)
-                    assert!(matches!(**left, Expression::BinaryOp { op: BinOp::Add, .. }));
+                    assert!(matches!(
+                        **left,
+                        Expression::BinaryOp { op: BinOp::Add, .. }
+                    ));
                     // right = d / e
-                    assert!(matches!(**right, Expression::BinaryOp { op: BinOp::Div, .. }));
+                    assert!(matches!(
+                        **right,
+                        Expression::BinaryOp { op: BinOp::Div, .. }
+                    ));
                 }
             }
             _ => panic!(),
@@ -2686,18 +3923,34 @@ mod tests {
     #[test]
     fn test_parse_expression_unary_negation() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Negation")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("temp")), tok(Token::Equals), tok(Token::Minus), tok(n(10.0)),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Negation")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("temp")),
+            tok(Token::Equals),
+            tok(Token::Minus),
+            tok(n(10.0)),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Assign { value, .. } => {
-                assert!(matches!(value, Expression::UnaryOp { op: UnaryOp::Neg, .. }));
+                assert!(matches!(
+                    value,
+                    Expression::UnaryOp {
+                        op: UnaryOp::Neg,
+                        ..
+                    }
+                ));
                 if let Expression::UnaryOp { op, operand } = value {
                     assert_eq!(*op, UnaryOp::Neg);
                     assert!(matches!(**operand, Expression::NumberLit(10.0)));
@@ -2711,22 +3964,38 @@ mod tests {
     fn test_parse_expression_parens() {
         // (a + b) * c  — parentheses override precedence
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ParenExpr")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("result")), tok(Token::Equals),
-            tok(Token::LParen), tok(id("a")), tok(Token::Plus), tok(id("b")), tok(Token::RParen),
-            tok(Token::Star), tok(id("c")),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("ParenExpr")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("result")),
+            tok(Token::Equals),
+            tok(Token::LParen),
+            tok(id("a")),
+            tok(Token::Plus),
+            tok(id("b")),
+            tok(Token::RParen),
+            tok(Token::Star),
+            tok(id("c")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Assign { value, .. } => {
                 assert!(matches!(value, Expression::BinaryOp { op: BinOp::Mul, .. }));
                 if let Expression::BinaryOp { left, .. } = value {
-                    assert!(matches!(**left, Expression::BinaryOp { op: BinOp::Add, .. }));
+                    assert!(matches!(
+                        **left,
+                        Expression::BinaryOp { op: BinOp::Add, .. }
+                    ));
                 }
             }
             _ => panic!(),
@@ -2737,17 +4006,29 @@ mod tests {
     fn test_parse_expression_comparison_chain() {
         // a > b && b < c  (chained comparisons with AND)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmp")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("ok")), tok(Token::Equals),
-            tok(id("a")), tok(Token::Gt), tok(id("b")),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmp")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("ok")),
+            tok(Token::Equals),
+            tok(id("a")),
+            tok(Token::Gt),
+            tok(id("b")),
             tok(Token::AndAnd),
-            tok(id("b")), tok(Token::Lt), tok(id("c")),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(id("b")),
+            tok(Token::Lt),
+            tok(id("c")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Assign { value, .. } => {
@@ -2761,55 +4042,105 @@ mod tests {
     fn test_parse_ui_all_components() {
         // all 8 component types: panel, container, text, button, list, image, input, dropdown
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("AllUI")), tok(Token::LBrace),
-            tok(Token::KeywordUi), tok(Token::LBrace),
-            tok(id("panel")), tok(Token::LBrace),
-            tok(id("title")), tok(Token::Equals), tok(id("text")), tok(Token::LParen), tok(s_("Hello")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(id("child")), tok(Token::Equals), tok(id("panel")), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("AllUI")),
+            tok(Token::LBrace),
+            tok(Token::KeywordUi),
+            tok(Token::LBrace),
+            tok(id("panel")),
+            tok(Token::LBrace),
+            tok(id("title")),
+            tok(Token::Equals),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("Hello")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(id("container")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(id("text")), tok(Token::LParen), tok(s_("World")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("visible")), tok(Token::Equals), tok(Token::BoolLit(true)),
-            tok(Token::RBrace),
-            tok(id("button")), tok(Token::LParen), tok(s_("OK")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("on_click")), tok(Token::Equals), tok(s_("handle_ok")),
-            tok(Token::RBrace),
-            tok(id("list")), tok(Token::LBrace),
-            tok(id("source")), tok(Token::Equals), tok(id("items")),
-            tok(Token::RBrace),
-            tok(id("image")), tok(Token::LParen), tok(s_("sprite.png")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("width")), tok(Token::Equals), tok(n(64.0)),
-            tok(Token::RBrace),
-            tok(id("input")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(id("dropdown")), tok(Token::LBrace),
-            tok(id("on_click")), tok(Token::Equals), tok(s_("handle_select")),
+            tok(id("child")),
+            tok(Token::Equals),
+            tok(id("panel")),
+            tok(Token::LBrace),
             tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(id("container")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("World")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("visible")),
+            tok(Token::Equals),
+            tok(Token::BoolLit(true)),
+            tok(Token::RBrace),
+            tok(id("button")),
+            tok(Token::LParen),
+            tok(s_("OK")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("on_click")),
+            tok(Token::Equals),
+            tok(s_("handle_ok")),
+            tok(Token::RBrace),
+            tok(id("list")),
+            tok(Token::LBrace),
+            tok(id("source")),
+            tok(Token::Equals),
+            tok(id("items")),
+            tok(Token::RBrace),
+            tok(id("image")),
+            tok(Token::LParen),
+            tok(s_("sprite.png")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("width")),
+            tok(Token::Equals),
+            tok(n(64.0)),
+            tok(Token::RBrace),
+            tok(id("input")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(id("dropdown")),
+            tok(Token::LBrace),
+            tok(id("on_click")),
+            tok(Token::Equals),
+            tok(s_("handle_select")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let ui = s.ui.unwrap();
         assert_eq!(ui.components.len(), 8, "expected 8 top-level components");
         // check each type
-        let types: Vec<&str> = ui.components.iter().map(|c| match c {
-            UiComponent::Panel { .. } => "panel",
-            UiComponent::Container { .. } => "container",
-            UiComponent::Text { .. } => "text",
-            UiComponent::Button { .. } => "button",
-            UiComponent::List { .. } => "list",
-            UiComponent::Image { .. } => "image",
-            UiComponent::Input { .. } => "input",
-            UiComponent::Dropdown { .. } => "dropdown",
-            UiComponent::Tile { .. } => "tile",
-            UiComponent::Divider { .. } => "divider",
-            UiComponent::FlexList { .. } => "flex_list",
-            UiComponent::Cursor { .. } => "cursor",
-            UiComponent::Bracket { .. } => "bracket",
-            UiComponent::PixelRect { .. } => "pixel_rect",
-            UiComponent::Custom { .. } => "custom",
-        }).collect();
+        let types: Vec<&str> = ui
+            .components
+            .iter()
+            .map(|c| match c {
+                UiComponent::Panel { .. } => "panel",
+                UiComponent::Container { .. } => "container",
+                UiComponent::Text { .. } => "text",
+                UiComponent::Button { .. } => "button",
+                UiComponent::List { .. } => "list",
+                UiComponent::Image { .. } => "image",
+                UiComponent::Input { .. } => "input",
+                UiComponent::Dropdown { .. } => "dropdown",
+                UiComponent::Tile { .. } => "tile",
+                UiComponent::Divider { .. } => "divider",
+                UiComponent::FlexList { .. } => "flex_list",
+                UiComponent::Cursor { .. } => "cursor",
+                UiComponent::Bracket { .. } => "bracket",
+                UiComponent::PixelRect { .. } => "pixel_rect",
+                UiComponent::Custom { .. } => "custom",
+            })
+            .collect();
         assert!(types.contains(&"panel"));
         assert!(types.contains(&"container"));
         assert!(types.contains(&"text"));
@@ -2824,45 +4155,100 @@ mod tests {
     fn test_parse_theme_many_tokens() {
         // theme with 5+ color tokens
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ManyColors")), tok(Token::LBrace),
-            tok(Token::DirectiveTheme), tok(id("dark")), tok(Token::LBrace),
-            tok(id("primary")), tok(Token::Equals), tok(s_("#c9a03d")), tok(Token::Newline),
-            tok(id("background")), tok(Token::Equals), tok(s_("#1a1a2e")), tok(Token::Newline),
-            tok(id("text")), tok(Token::Equals), tok(s_("#ffffff")), tok(Token::Newline),
-            tok(id("accent")), tok(Token::Equals), tok(s_("#ff6b6b")), tok(Token::Newline),
-            tok(id("border")), tok(Token::Equals), tok(s_("#444444")), tok(Token::Newline),
+            tok(Token::KeywordGameScene),
+            tok(id("ManyColors")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTheme),
+            tok(id("dark")),
+            tok(Token::LBrace),
+            tok(id("primary")),
+            tok(Token::Equals),
+            tok(s_("#c9a03d")),
+            tok(Token::Newline),
+            tok(id("background")),
+            tok(Token::Equals),
+            tok(s_("#1a1a2e")),
+            tok(Token::Newline),
+            tok(id("text")),
+            tok(Token::Equals),
+            tok(s_("#ffffff")),
+            tok(Token::Newline),
+            tok(id("accent")),
+            tok(Token::Equals),
+            tok(s_("#ff6b6b")),
+            tok(Token::Newline),
+            tok(id("border")),
+            tok(Token::Equals),
+            tok(s_("#444444")),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.themes.len(), 1);
         assert_eq!(s.themes[0].tokens.len(), 5);
-        assert_eq!(s.themes[0].tokens.get("primary").map(|s| s.as_str()), Some("#c9a03d"));
-        assert_eq!(s.themes[0].tokens.get("accent").map(|s| s.as_str()), Some("#ff6b6b"));
-        assert_eq!(s.themes[0].tokens.get("border").map(|s| s.as_str()), Some("#444444"));
+        assert_eq!(
+            s.themes[0].tokens.get("primary").map(|s| s.as_str()),
+            Some("#c9a03d")
+        );
+        assert_eq!(
+            s.themes[0].tokens.get("accent").map(|s| s.as_str()),
+            Some("#ff6b6b")
+        );
+        assert_eq!(
+            s.themes[0].tokens.get("border").map(|s| s.as_str()),
+            Some("#444444")
+        );
     }
 
     #[test]
     fn test_parse_style_inheritance_chain() {
         // A : B, B : C — three-level chain (A extends B, B extends C)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("StyleChain")), tok(Token::LBrace),
-            tok(Token::DirectiveStyle), tok(id("C")), tok(Token::LBrace),
-            tok(id("pad")), tok(Token::Equals), tok(n(4.0)), tok(Token::Newline),
+            tok(Token::KeywordGameScene),
+            tok(id("StyleChain")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("C")),
+            tok(Token::LBrace),
+            tok(id("pad")),
+            tok(Token::Equals),
+            tok(n(4.0)),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("B")), tok(Token::Colon), tok(id("C")), tok(Token::LBrace),
-            tok(id("pad")), tok(Token::Equals), tok(n(8.0)), tok(Token::Newline),
+            tok(Token::DirectiveStyle),
+            tok(id("B")),
+            tok(Token::Colon),
+            tok(id("C")),
+            tok(Token::LBrace),
+            tok(id("pad")),
+            tok(Token::Equals),
+            tok(n(8.0)),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("A")), tok(Token::Colon), tok(id("B")), tok(Token::LBrace),
-            tok(id("pad")), tok(Token::Equals), tok(n(12.0)), tok(Token::Newline),
+            tok(Token::DirectiveStyle),
+            tok(id("A")),
+            tok(Token::Colon),
+            tok(id("B")),
+            tok(Token::LBrace),
+            tok(id("pad")),
+            tok(Token::Equals),
+            tok(n(12.0)),
+            tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.styles.len(), 3);
         assert_eq!(s.styles[0].name, "C");
         assert!(s.styles[0].extends.is_none());
@@ -2876,29 +4262,76 @@ mod tests {
     fn test_parse_atlas_three_regions() {
         // atlas with 3 regions
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Atlas3")), tok(Token::LBrace),
-            tok(Token::DirectiveAtlas), tok(s_("ui")), tok(Token::LBrace),
-            tok(id("source")), tok(Token::Equals), tok(s_("atlas.png")), tok(Token::Newline),
-            tok(id("regions")), tok(Token::Equals), tok(Token::LBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("Atlas3")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveAtlas),
+            tok(s_("ui")),
+            tok(Token::LBrace),
+            tok(id("source")),
+            tok(Token::Equals),
+            tok(s_("atlas.png")),
+            tok(Token::Newline),
+            tok(id("regions")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
             // region 1
-            tok(id("btn_normal")), tok(Token::Equals),
-            tok(Token::LBracket), tok(n(0.0)), tok(Token::Comma), tok(n(0.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(id("slice")), tok(Token::Equals), tok(n(8.0)),
-            tok(Token::RBracket), tok(Token::Newline),
+            tok(id("btn_normal")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(id("slice")),
+            tok(Token::Equals),
+            tok(n(8.0)),
+            tok(Token::RBracket),
+            tok(Token::Newline),
             // region 2
-            tok(id("btn_hover")), tok(Token::Equals),
-            tok(Token::LBracket), tok(n(64.0)), tok(Token::Comma), tok(n(0.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(id("slice")), tok(Token::Equals), tok(n(8.0)),
-            tok(Token::RBracket), tok(Token::Newline),
+            tok(id("btn_hover")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(id("slice")),
+            tok(Token::Equals),
+            tok(n(8.0)),
+            tok(Token::RBracket),
+            tok(Token::Newline),
             // region 3 (no slice)
-            tok(id("btn_disabled")), tok(Token::Equals),
-            tok(Token::LBracket), tok(n(128.0)), tok(Token::Comma), tok(n(0.0)), tok(Token::Comma), tok(n(64.0)), tok(Token::Comma), tok(n(64.0)),
-            tok(Token::RBracket), tok(Token::Newline),
+            tok(id("btn_disabled")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(128.0)),
+            tok(Token::Comma),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::Comma),
+            tok(n(64.0)),
+            tok(Token::RBracket),
+            tok(Token::Newline),
             tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.atlases.len(), 1);
         let atlas = &s.atlases[0];
         assert_eq!(atlas.regions.len(), 3);
@@ -2914,11 +4347,22 @@ mod tests {
     fn test_parse_screen_with_theme() {
         // screen with theme reference (screen Main : dark)
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("MainMenu")), tok(Token::Colon), tok(id("dark")), tok(Token::LBrace),
-            tok(id("panel")), tok(Token::LBrace),
-            tok(id("text")), tok(Token::LParen), tok(s_("Title")), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordScreen),
+            tok(id("MainMenu")),
+            tok(Token::Colon),
+            tok(id("dark")),
+            tok(Token::LBrace),
+            tok(id("panel")),
+            tok(Token::LBrace),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("Title")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
@@ -2936,16 +4380,31 @@ mod tests {
     fn test_parse_command_with_args() {
         // command statement with multiple args
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(id("give_item")), tok(Token::LParen), tok(s_("potion")), tok(Token::Comma), tok(n(3.0)), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(id("give_item")),
+            tok(Token::LParen),
+            tok(s_("potion")),
+            tok(Token::Comma),
+            tok(n(3.0)),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(id("set_flag")), tok(Token::LParen), tok(s_("found_rare")), tok(Token::RParen),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(id("set_flag")),
+            tok(Token::LParen),
+            tok(s_("found_rare")),
+            tok(Token::RParen),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         assert_eq!(sb.statements.len(), 2);
         match &sb.statements[0] {
@@ -2969,15 +4428,25 @@ mod tests {
     #[test]
     fn test_parse_directive_command_simple() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveCommand), tok(Token::LParen), tok(s_("heal")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveCommand),
+            tok(Token::LParen),
+            tok(s_("heal")),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         assert_eq!(sb.statements.len(), 1);
         match &sb.statements[0] {
@@ -2992,15 +4461,29 @@ mod tests {
     #[test]
     fn test_parse_directive_command_with_args() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveCommand), tok(Token::LParen), tok(s_("giveMonster")), tok(Token::Comma), tok(s_("SPARKIT")), tok(Token::Comma), tok(n(5.0)), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveCommand),
+            tok(Token::LParen),
+            tok(s_("giveMonster")),
+            tok(Token::Comma),
+            tok(s_("SPARKIT")),
+            tok(Token::Comma),
+            tok(n(5.0)),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Command { name, args, .. } => {
@@ -3016,19 +4499,36 @@ mod tests {
     #[test]
     fn test_parse_directive_command_inside_choice() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace),
-            tok(Token::DirectiveOption), tok(Token::LParen), tok(s_("Yes")), tok(Token::RParen), tok(Token::LBrace),
-            tok(Token::DirectiveCommand), tok(Token::LParen), tok(s_("setFlag")), tok(Token::Comma), tok(s_("FLAG")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
+            tok(Token::DirectiveOption),
+            tok(Token::LParen),
+            tok(s_("Yes")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveCommand),
+            tok(Token::LParen),
+            tok(s_("setFlag")),
+            tok(Token::Comma),
+            tok(s_("FLAG")),
+            tok(Token::RParen),
             tok(Token::Newline),
             tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Choice { options, .. } => {
@@ -3049,41 +4549,74 @@ mod tests {
     #[test]
     fn test_parse_directive_command_no_args_is_error() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveCommand), tok(Token::LParen), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveCommand),
+            tok(Token::LParen),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected error for @command() with no args");
+        assert!(
+            !errors.is_empty(),
+            "expected error for @command() with no args"
+        );
     }
 
     #[test]
     fn test_parse_directive_command_non_string_first_arg_is_error() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveCommand), tok(Token::LParen), tok(n(42.0)), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveCommand),
+            tok(Token::LParen),
+            tok(n(42.0)),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected error for @command(42) with non-string first arg");
+        assert!(
+            !errors.is_empty(),
+            "expected error for @command(42) with non-string first arg"
+        );
     }
 
     #[test]
     fn test_bare_identifier_command_still_works() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Cmd")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::Identifier("heal".into())), tok(Token::LParen), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("Cmd")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::Identifier("heal".into())),
+            tok(Token::LParen),
+            tok(Token::RParen),
             tok(Token::Newline),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
-        assert!(errors.is_empty(), "bare identifier command should still work");
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        assert!(
+            errors.is_empty(),
+            "bare identifier command should still work"
+        );
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let sb = &s.storylines[0];
         match &sb.statements[0] {
             StoryStmt::Command { name, args, .. } => {
@@ -3100,16 +4633,23 @@ mod tests {
     fn test_error_scene_missing_opening_brace() {
         // game_scene without { after name
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Bad")), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Bad")),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(!errors.is_empty(), "expected parse error, got none");
         assert!(doc.is_none(), "expected no document");
         // should be UnexpectedToken or UnexpectedEof (expecting {)
         let has_err = errors.iter().any(|e| {
-            matches!(e, ParseError::UnexpectedToken { .. }) || matches!(e, ParseError::UnexpectedEof { .. })
+            matches!(e, ParseError::UnexpectedToken { .. })
+                || matches!(e, ParseError::UnexpectedEof { .. })
         });
-        assert!(has_err, "expected UnexpectedToken or UnexpectedEof, got: {:?}", errors);
+        assert!(
+            has_err,
+            "expected UnexpectedToken or UnexpectedEof, got: {:?}",
+            errors
+        );
         // verify error has a span
         for err in &errors {
             let display = format!("{}", err);
@@ -3121,13 +4661,23 @@ mod tests {
     fn test_error_variables_without_block() {
         // @variables without { } block
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("BadVar")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("BadVar")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveVariables),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected parse error for missing variables block, got: {:?}", errors);
-        let has_expected = errors.iter().any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
+        assert!(
+            !errors.is_empty(),
+            "expected parse error for missing variables block, got: {:?}",
+            errors
+        );
+        let has_expected = errors
+            .iter()
+            .any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
         assert!(has_expected, "expected UnexpectedToken, got: {:?}", errors);
     }
 
@@ -3135,14 +4685,25 @@ mod tests {
     fn test_error_bad_if_condition_empty() {
         // @if ( ) { } — empty condition expression
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("BadIf")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(Token::RParen), tok(Token::LBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("BadIf")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(Token::RParen),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected error for empty if condition, got none");
+        assert!(
+            !errors.is_empty(),
+            "expected error for empty if condition, got none"
+        );
         // The expression parser should error on the RParen
         let has_err = errors.iter().any(|e| {
             let msg = format!("{}", e);
@@ -3155,45 +4716,101 @@ mod tests {
     fn test_error_duplicate_style_name() {
         // two @style with same name
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("DupStyle")), tok(Token::LBrace),
-            tok(Token::DirectiveStyle), tok(id("same")), tok(Token::LBrace), tok(id("a")), tok(Token::Equals), tok(n(1.0)), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::DirectiveStyle), tok(id("same")), tok(Token::LBrace), tok(id("b")), tok(Token::Equals), tok(n(2.0)), tok(Token::Newline), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("DupStyle")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("same")),
+            tok(Token::LBrace),
+            tok(id("a")),
+            tok(Token::Equals),
+            tok(n(1.0)),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("same")),
+            tok(Token::LBrace),
+            tok(id("b")),
+            tok(Token::Equals),
+            tok(n(2.0)),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        assert!(!se.is_empty(), "expected semantic error for duplicate style, got none");
+        assert!(
+            !se.is_empty(),
+            "expected semantic error for duplicate style, got none"
+        );
         let has_dup = se.iter().any(|e| matches!(e, SemanticError::DuplicateName { name, kind, .. } if name == "same" && kind == "@style"));
-        assert!(has_dup, "expected DuplicateName for @style 'same', got: {:?}", se);
+        assert!(
+            has_dup,
+            "expected DuplicateName for @style 'same', got: {:?}",
+            se
+        );
     }
 
     #[test]
     fn test_error_style_self_reference() {
         // A : A — style references itself
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("SelfRef")), tok(Token::LBrace),
-            tok(Token::DirectiveStyle), tok(id("A")), tok(Token::Colon), tok(id("A")), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("SelfRef")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStyle),
+            tok(id("A")),
+            tok(Token::Colon),
+            tok(id("A")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        assert!(!se.is_empty(), "expected semantic error for self-referencing style");
-        let has_cycle = se.iter().any(|e| matches!(e, SemanticError::CircularStyleInheritance { .. }));
-        assert!(has_cycle, "expected CircularStyleInheritance for A:A, got: {:?}", se);
+        assert!(
+            !se.is_empty(),
+            "expected semantic error for self-referencing style"
+        );
+        let has_cycle = se
+            .iter()
+            .any(|e| matches!(e, SemanticError::CircularStyleInheritance { .. }));
+        assert!(
+            has_cycle,
+            "expected CircularStyleInheritance for A:A, got: {:?}",
+            se
+        );
     }
 
     #[test]
     fn test_error_unexpected_eof_in_expression() {
         // expression that ends prematurely — @if (a +   with no right operand
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("Truncated")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("a")), tok(Token::Plus),
-            tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("Truncated")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("a")),
+            tok(Token::Plus),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected parse error for truncated expression");
+        assert!(
+            !errors.is_empty(),
+            "expected parse error for truncated expression"
+        );
         // The expression parser tries to parse_factor after Plus, gets RParen
-        let has_err = errors.iter().any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
+        let has_err = errors
+            .iter()
+            .any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
         assert!(has_err, "expected UnexpectedToken, got: {:?}", errors);
     }
 
@@ -3201,10 +4818,17 @@ mod tests {
     fn test_error_invalid_top_level_keyword() {
         // unexpected keyword at top level
         let tokens = vec![
-            tok(Token::KeywordUi), tok(id("Foo")), tok(Token::LBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordUi),
+            tok(id("Foo")),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected error for invalid top-level keyword");
+        assert!(
+            !errors.is_empty(),
+            "expected error for invalid top-level keyword"
+        );
         assert!(doc.is_none(), "expected no document");
     }
 
@@ -3212,15 +4836,25 @@ mod tests {
     fn test_error_invalid_story_stmt() {
         // unexpected token inside storylines
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("BadStmt")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("BadStmt")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
             tok(Token::LBrace), // unexpected { in top-level story position
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, errors) = parse(tokens);
-        assert!(!errors.is_empty(), "expected error for unexpected token in storylines");
-        let has_err = errors.iter().any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
+        assert!(
+            !errors.is_empty(),
+            "expected error for unexpected token in storylines"
+        );
+        let has_err = errors
+            .iter()
+            .any(|e| matches!(e, ParseError::UnexpectedToken { .. }));
         assert!(has_err, "expected UnexpectedToken, got: {:?}", errors);
     }
 
@@ -3228,31 +4862,69 @@ mod tests {
     fn test_error_variable_undefined_in_if() {
         // using undeclared variable in @if condition (semantic)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("UndefVar")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(id("unknown")), tok(Token::Gt), tok(n(10.0)), tok(Token::RParen), tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("UndefVar")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(id("unknown")),
+            tok(Token::Gt),
+            tok(n(10.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        assert!(!se.is_empty(), "expected semantic error for undefined variable");
-        let has_undef = se.iter().any(|e| matches!(e, SemanticError::UndefinedVariable { name, .. } if name == "unknown"));
-        assert!(has_undef, "expected UndefinedVariable 'unknown', got: {:?}", se);
+        assert!(
+            !se.is_empty(),
+            "expected semantic error for undefined variable"
+        );
+        let has_undef = se.iter().any(
+            |e| matches!(e, SemanticError::UndefinedVariable { name, .. } if name == "unknown"),
+        );
+        assert!(
+            has_undef,
+            "expected UndefinedVariable 'unknown', got: {:?}",
+            se
+        );
     }
 
     #[test]
     fn test_error_nested_empty_choice() {
         // @choice with no @option inside @if body (semantic)
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("NestedEmpty")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveIf), tok(Token::LParen), tok(Token::BoolLit(true)), tok(Token::RParen), tok(Token::LBrace),
-            tok(Token::DirectiveChoice), tok(Token::LBrace), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("NestedEmpty")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveIf),
+            tok(Token::LParen),
+            tok(Token::BoolLit(true)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveChoice),
+            tok(Token::LBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (_doc, _pe, se) = parse_and_validate(tokens, "");
-        let has_empty = se.iter().any(|e| matches!(e, SemanticError::EmptyChoice { .. }));
-        assert!(has_empty, "expected EmptyChoice semantic error, got: {:?}", se);
+        let has_empty = se
+            .iter()
+            .any(|e| matches!(e, SemanticError::EmptyChoice { .. }));
+        assert!(
+            has_empty,
+            "expected EmptyChoice semantic error, got: {:?}",
+            se
+        );
     }
 
     // ── @storyline("name") + @trigger tests ─────────────────────────────
@@ -3260,17 +4932,30 @@ mod tests {
     #[test]
     fn test_parse_named_storyline() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("delivery")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
             tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen),
-            tok(Token::LBrace), tok(s_("Hi")), tok(Token::RBrace),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("delivery")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hi")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.storylines.len(), 1);
         assert_eq!(s.storylines[0].name, "delivery");
     }
@@ -3278,23 +4963,45 @@ mod tests {
     #[test]
     fn test_parse_named_storyline_with_trigger() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("ask")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
             tok(Token::LBrace),
-            tok(Token::DirectiveTrigger), tok(Token::LParen),
-            tok(id("map")), tok(Token::Equals), tok(s_("ProfLab")), tok(Token::Comma),
-            tok(id("npc")), tok(Token::Equals), tok(s_("Prof")),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("ask")),
             tok(Token::RParen),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen),
-            tok(Token::LBrace), tok(s_("Hi")), tok(Token::RBrace),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTrigger),
+            tok(Token::LParen),
+            tok(id("map")),
+            tok(Token::Equals),
+            tok(s_("ProfLab")),
+            tok(Token::Comma),
+            tok(id("npc")),
+            tok(Token::Equals),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hi")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.storylines.len(), 1);
-        let tr = s.storylines[0].triggers.first().expect("should have @trigger");
+        let tr = s.storylines[0]
+            .triggers
+            .first()
+            .expect("should have @trigger");
         assert_eq!(tr.map, "ProfLab");
         assert_eq!(tr.npc.as_deref(), Some("Prof"));
     }
@@ -3302,22 +5009,44 @@ mod tests {
     #[test]
     fn test_parse_named_storyline_with_on_enter() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("entry")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
             tok(Token::LBrace),
-            tok(Token::DirectiveTrigger), tok(Token::LParen),
-            tok(id("map")), tok(Token::Equals), tok(s_("Mart")), tok(Token::Comma),
-            tok(id("onEnter")), tok(Token::Equals), tok(Token::BoolLit(true)),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("entry")),
             tok(Token::RParen),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Clerk")), tok(Token::RParen),
-            tok(Token::LBrace), tok(s_("Hi")), tok(Token::RBrace),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTrigger),
+            tok(Token::LParen),
+            tok(id("map")),
+            tok(Token::Equals),
+            tok(s_("Mart")),
+            tok(Token::Comma),
+            tok(id("onEnter")),
+            tok(Token::Equals),
+            tok(Token::BoolLit(true)),
+            tok(Token::RParen),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Clerk")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hi")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
-        let tr = s.storylines[0].triggers.first().expect("should have @trigger");
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
+        let tr = s.storylines[0]
+            .triggers
+            .first()
+            .expect("should have @trigger");
         assert!(tr.on_enter, "onEnter should be true");
         assert!(tr.npc.is_none(), "npc should be None for onEnter");
     }
@@ -3325,37 +5054,70 @@ mod tests {
     #[test]
     fn test_parse_named_storyline_with_after() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("step2")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
             tok(Token::LBrace),
-            tok(Token::DirectiveTrigger), tok(Token::LParen),
-            tok(id("map")), tok(Token::Equals), tok(s_("Lab")), tok(Token::Comma),
-            tok(id("npc")), tok(Token::Equals), tok(s_("Prof")), tok(Token::Comma),
-            tok(id("after")), tok(Token::Equals), tok(s_("step1")),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("step2")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTrigger),
+            tok(Token::LParen),
+            tok(id("map")),
+            tok(Token::Equals),
+            tok(s_("Lab")),
+            tok(Token::Comma),
+            tok(id("npc")),
+            tok(Token::Equals),
+            tok(s_("Prof")),
+            tok(Token::Comma),
+            tok(id("after")),
+            tok(Token::Equals),
+            tok(s_("step1")),
             tok(Token::RParen),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
-        let tr = s.storylines[0].triggers.first().expect("should have @trigger");
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
+        let tr = s.storylines[0]
+            .triggers
+            .first()
+            .expect("should have @trigger");
         assert_eq!(tr.after.as_deref(), Some("step1"));
     }
 
     #[test]
     fn test_parse_multiple_named_storylines() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("a")), tok(Token::RParen),
-            tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("b")), tok(Token::RParen),
-            tok(Token::LBrace), tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("a")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("b")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.storylines.len(), 2);
         assert_eq!(s.storylines[0].name, "a");
         assert_eq!(s.storylines[1].name, "b");
@@ -3365,16 +5127,27 @@ mod tests {
     fn test_backward_compat_unnamed_storylines() {
         // Old @storylines { ... } without name → name defaults to "main"
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStorylines), tok(Token::LBrace),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("Prof")), tok(Token::RParen),
-            tok(Token::LBrace), tok(s_("Hi")), tok(Token::RBrace),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("Prof")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("Hi")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         assert_eq!(s.storylines.len(), 1);
         assert_eq!(s.storylines[0].name, "main");
     }
@@ -3382,23 +5155,52 @@ mod tests {
     #[test]
     fn test_parse_trigger_with_name() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("S")), tok(Token::LBrace),
-            tok(Token::DirectiveStoryline), tok(Token::LParen), tok(s_("myHandler")), tok(Token::RParen),
+            tok(Token::KeywordGameScene),
+            tok(id("S")),
             tok(Token::LBrace),
-            tok(Token::DirectiveTrigger), tok(Token::LParen),
-            tok(id("map")), tok(Token::Equals), tok(s_("TestMap")), tok(Token::Comma),
-            tok(id("coord")), tok(Token::Equals), tok(Token::LBracket), tok(n(5.0)), tok(Token::Comma), tok(n(5.0)), tok(Token::RBracket), tok(Token::Comma),
-            tok(id("name")), tok(Token::Equals), tok(s_("testCoord")),
+            tok(Token::DirectiveStoryline),
+            tok(Token::LParen),
+            tok(s_("myHandler")),
             tok(Token::RParen),
-            tok(Token::DirectiveSpeaker), tok(Token::LParen), tok(s_("")), tok(Token::RParen),
-            tok(Token::LBrace), tok(s_("hello")), tok(Token::RBrace),
+            tok(Token::LBrace),
+            tok(Token::DirectiveTrigger),
+            tok(Token::LParen),
+            tok(id("map")),
+            tok(Token::Equals),
+            tok(s_("TestMap")),
+            tok(Token::Comma),
+            tok(id("coord")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(5.0)),
+            tok(Token::Comma),
+            tok(n(5.0)),
+            tok(Token::RBracket),
+            tok(Token::Comma),
+            tok(id("name")),
+            tok(Token::Equals),
+            tok(s_("testCoord")),
+            tok(Token::RParen),
+            tok(Token::DirectiveSpeaker),
+            tok(Token::LParen),
+            tok(s_("")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(s_("hello")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
-        let tr = s.storylines[0].triggers.first().expect("should have @trigger");
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
+        let tr = s.storylines[0]
+            .triggers
+            .first()
+            .expect("should have @trigger");
         assert_eq!(tr.name, "testCoord");
         assert_eq!(tr.map, "TestMap");
         assert_eq!(tr.coords, vec![(5, 5)]);
@@ -3409,20 +5211,32 @@ mod tests {
     #[test]
     fn test_parse_object_literal_expression() {
         let tokens = vec![
-            tok(Token::KeywordGameScene), tok(id("ObjLit")), tok(Token::LBrace),
-            tok(Token::DirectiveVariables), tok(Token::LBrace),
-            tok(id("cfg")), tok(Token::Equals),
+            tok(Token::KeywordGameScene),
+            tok(id("ObjLit")),
             tok(Token::LBrace),
-            tok(id("tile")), tok(Token::Colon), tok(n(223.0)), tok(Token::Comma),
-            tok(id("position")), tok(Token::Colon), tok(s_("left")),
+            tok(Token::DirectiveVariables),
+            tok(Token::LBrace),
+            tok(id("cfg")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("tile")),
+            tok(Token::Colon),
+            tok(n(223.0)),
+            tok(Token::Comma),
+            tok(id("position")),
+            tok(Token::Colon),
+            tok(s_("left")),
             tok(Token::RBrace),
             tok(Token::Newline),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
-        let Document::Scene(s) = doc.unwrap() else { panic!() };
+        let Document::Scene(s) = doc.unwrap() else {
+            panic!()
+        };
         let vb = s.variables.unwrap();
         assert_eq!(vb.decls.len(), 1);
         assert!(matches!(&vb.decls[0].value, Expression::ObjectLit(fields) if fields.len() == 2));
@@ -3431,17 +5245,36 @@ mod tests {
     #[test]
     fn test_parse_gui_with_tile() {
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("Dialog")), tok(Token::LBrace),
-            tok(id("tile")), tok(Token::LParen), tok(n(31.0)), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("rect")), tok(Token::Equals),
+            tok(Token::KeywordScreen),
+            tok(id("Dialog")),
             tok(Token::LBrace),
-            tok(id("tx")), tok(Token::Colon), tok(n(18.0)), tok(Token::Comma),
-            tok(id("ty")), tok(Token::Colon), tok(n(16.0)), tok(Token::Comma),
-            tok(id("tw")), tok(Token::Colon), tok(n(1.0)), tok(Token::Comma),
-            tok(id("th")), tok(Token::Colon), tok(n(1.0)),
+            tok(id("tile")),
+            tok(Token::LParen),
+            tok(n(31.0)),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("rect")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("tx")),
+            tok(Token::Colon),
+            tok(n(18.0)),
+            tok(Token::Comma),
+            tok(id("ty")),
+            tok(Token::Colon),
+            tok(n(16.0)),
+            tok(Token::Comma),
+            tok(id("tw")),
+            tok(Token::Colon),
+            tok(n(1.0)),
+            tok(Token::Comma),
+            tok(id("th")),
+            tok(Token::Colon),
+            tok(n(1.0)),
             tok(Token::RBrace),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
@@ -3468,29 +5301,67 @@ mod tests {
     #[test]
     fn test_parse_gui_with_border_and_text() {
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("Dialog")), tok(Token::LBrace),
-            tok(id("panel")), tok(Token::LBrace),
-            tok(id("rect")), tok(Token::Equals),
+            tok(Token::KeywordScreen),
+            tok(id("Dialog")),
             tok(Token::LBrace),
-            tok(id("tx")), tok(Token::Colon), tok(n(0.0)), tok(Token::Comma),
-            tok(id("ty")), tok(Token::Colon), tok(n(12.0)), tok(Token::Comma),
-            tok(id("tw")), tok(Token::Colon), tok(n(20.0)), tok(Token::Comma),
-            tok(id("th")), tok(Token::Colon), tok(n(6.0)),
-            tok(Token::RBrace),
-            tok(id("style")), tok(Token::Equals), tok(s_("default")),
-            tok(Token::RBrace),
-            tok(id("text")), tok(Token::LParen), tok(s_("{text}")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("rect")), tok(Token::Equals),
+            tok(id("panel")),
             tok(Token::LBrace),
-            tok(id("tx")), tok(Token::Colon), tok(n(1.0)), tok(Token::Comma),
-            tok(id("ty")), tok(Token::Colon), tok(n(13.0)), tok(Token::Comma),
-            tok(id("tw")), tok(Token::Colon), tok(n(18.0)), tok(Token::Comma),
-            tok(id("th")), tok(Token::Colon), tok(n(4.0)),
+            tok(id("rect")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("tx")),
+            tok(Token::Colon),
+            tok(n(0.0)),
+            tok(Token::Comma),
+            tok(id("ty")),
+            tok(Token::Colon),
+            tok(n(12.0)),
+            tok(Token::Comma),
+            tok(id("tw")),
+            tok(Token::Colon),
+            tok(n(20.0)),
+            tok(Token::Comma),
+            tok(id("th")),
+            tok(Token::Colon),
+            tok(n(6.0)),
             tok(Token::RBrace),
-            tok(id("value")), tok(Token::Equals), tok(s_("{text}")),
-            tok(id("wrap")), tok(Token::Equals), tok(s_("word")),
+            tok(id("style")),
+            tok(Token::Equals),
+            tok(s_("default")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(id("text")),
+            tok(Token::LParen),
+            tok(s_("{text}")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("rect")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("tx")),
+            tok(Token::Colon),
+            tok(n(1.0)),
+            tok(Token::Comma),
+            tok(id("ty")),
+            tok(Token::Colon),
+            tok(n(13.0)),
+            tok(Token::Comma),
+            tok(id("tw")),
+            tok(Token::Colon),
+            tok(n(18.0)),
+            tok(Token::Comma),
+            tok(id("th")),
+            tok(Token::Colon),
+            tok(n(4.0)),
+            tok(Token::RBrace),
+            tok(id("value")),
+            tok(Token::Equals),
+            tok(s_("{text}")),
+            tok(id("wrap")),
+            tok(Token::Equals),
+            tok(s_("word")),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
@@ -3521,13 +5392,25 @@ mod tests {
     #[test]
     fn test_parse_gui_with_divider() {
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("DividerTest")), tok(Token::LBrace),
-            tok(id("divider")), tok(Token::LBrace),
-            tok(id("tiles")), tok(Token::Equals), tok(Token::LBracket), tok(n(122.0)), tok(Token::RBracket),
-            tok(id("repeat")), tok(Token::Equals), tok(n(17.0)),
-            tok(id("orientation")), tok(Token::Equals), tok(s_("horizontal")),
+            tok(Token::KeywordScreen),
+            tok(id("DividerTest")),
+            tok(Token::LBrace),
+            tok(id("divider")),
+            tok(Token::LBrace),
+            tok(id("tiles")),
+            tok(Token::Equals),
+            tok(Token::LBracket),
+            tok(n(122.0)),
+            tok(Token::RBracket),
+            tok(id("repeat")),
+            tok(Token::Equals),
+            tok(n(17.0)),
+            tok(id("orientation")),
+            tok(Token::Equals),
+            tok(s_("horizontal")),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
@@ -3552,7 +5435,9 @@ mod tests {
         // `@t("en", "中文")` inside a GUI `text(...)` argument parses to a
         // localized component content.
         let src = "screen S {\n  text(@t(\"YES\", \"是\")) {\n    rect = {tx: 0, ty: 0, tw: 3, th: 1}\n  }\n}";
-        let tokens = crate::lexer::Lexer::new(src, "t.gui").tokenize().expect("lex");
+        let tokens = crate::lexer::Lexer::new(src, "t.gui")
+            .tokenize()
+            .expect("lex");
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
         match doc.unwrap() {
@@ -3572,7 +5457,9 @@ mod tests {
     fn test_parse_t_localized_in_speaker_and_option() {
         // `@t(...)` is accepted both as a `@speaker` line and an `@option` label.
         let src = "game_scene S {\n  @storyline(\"x\") {\n    @speaker(\"\") {\n      @t(\"Hi\", \"你好\")\n    }\n    @choice {\n      @option(@t(\"YES\", \"是\")) {\n      }\n    }\n  }\n}";
-        let tokens = crate::lexer::Lexer::new(src, "t.scene").tokenize().expect("lex");
+        let tokens = crate::lexer::Lexer::new(src, "t.scene")
+            .tokenize()
+            .expect("lex");
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);
         let scene = match doc.unwrap() {
@@ -3599,17 +5486,34 @@ mod tests {
     #[test]
     fn test_parse_gui_with_flex_list() {
         let tokens = vec![
-            tok(Token::KeywordScreen), tok(id("FlexTest")), tok(Token::LBrace),
-            tok(id("flex_list")), tok(Token::LParen), tok(id("items")), tok(Token::RParen), tok(Token::LBrace),
-            tok(id("cursor")), tok(Token::Equals),
+            tok(Token::KeywordScreen),
+            tok(id("FlexTest")),
             tok(Token::LBrace),
-            tok(id("tile")), tok(Token::Colon), tok(n(223.0)), tok(Token::Comma),
-            tok(id("position")), tok(Token::Colon), tok(s_("left")),
+            tok(id("flex_list")),
+            tok(Token::LParen),
+            tok(id("items")),
+            tok(Token::RParen),
+            tok(Token::LBrace),
+            tok(id("cursor")),
+            tok(Token::Equals),
+            tok(Token::LBrace),
+            tok(id("tile")),
+            tok(Token::Colon),
+            tok(n(223.0)),
+            tok(Token::Comma),
+            tok(id("position")),
+            tok(Token::Colon),
+            tok(s_("left")),
             tok(Token::RBrace),
-            tok(id("max_visible")), tok(Token::Equals), tok(n(4.0)),
-            tok(id("gap")), tok(Token::Equals), tok(n(1.0)),
+            tok(id("max_visible")),
+            tok(Token::Equals),
+            tok(n(4.0)),
+            tok(id("gap")),
+            tok(Token::Equals),
+            tok(n(1.0)),
             tok(Token::RBrace),
-            tok(Token::RBrace), tok(Token::Eof),
+            tok(Token::RBrace),
+            tok(Token::Eof),
         ];
         let (doc, errors) = parse(tokens);
         assert!(errors.is_empty(), "errors: {:?}", errors);

@@ -20,10 +20,10 @@
 
 | 输入 | 要求 | 编译产物 |
 |---|---|---|
-| `foo.theme` | 至少一个 `@theme` 块 | 每个 `@theme <name>` → `<name>.json`（`{"name", "tokens"}`） |
-| `bar.style` | 至少一个 `@style` 块 | `_auto_styles.json`（独立的 `.style` 文件总是包装为 `_auto` 场景，与文件名无关；解析出的继承链一并包含在内） |
-| `.scene` 中的内联 `@theme` | — | `<scene名>_theme_<i>.json` |
-| `.scene` 中的内联 `@style` | — | `<scene名>_styles.json` |
+| `dark.theme` | 至少一个 `@theme` 块 | 每个 `@theme <name>` → `<name>.json`（`{"name", "tokens"}`） |
+| `battle.style` | 至少一个 `@style` 块 | `_auto_styles.json`（独立的 `.style` 文件总是包装为 `_auto` 场景，与文件名无关；解析出的继承链一并包含在内） |
+| `.scene` 中的内联 `@theme` | — | `<scene name>_theme_<i>.json` |
+| `.scene` 中的内联 `@style` | — | `<scene name>_styles.json` |
 
 所有产物都带有一个 `// @generated` 头部，后面跟着 JSON。
 

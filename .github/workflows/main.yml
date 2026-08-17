@@ -5,9 +5,14 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
+      # Workflow-only changes (this file, docs-pages.yml, …) must not run
+      # the full suite: GitHub parses every workflow's YAML on push anyway,
+      # and `workflow_dispatch` remains for manual re-runs.
+      - '.github/workflows/*'
   pull_request:
     paths-ignore:
       - '**.md'
+      - '.github/workflows/*'
 
 env:
   CARGO_TERM_COLOR: always

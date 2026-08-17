@@ -1,53 +1,53 @@
 <template>
-  <div class="h-screen relative flex flex-col bg-gray-900 text-gray-100">
-    <header class="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
+  <div class="h-screen relative flex flex-col bg-canvas text-ink">
+    <header class="flex items-center justify-between px-5 py-3 bg-surface border-b border-border shrink-0">
       <div class="flex items-center gap-3">
-        <h1 class="text-lg font-bold text-blue-400">{{ $t('app.title') }}</h1>
-        <span v-if="project.config" class="text-sm text-gray-400">{{ project.config.name }}</span>
+        <h1 class="text-lg font-bold text-accent-ink">{{ $t('app.title') }}</h1>
+        <span v-if="project.config" class="text-sm text-ink-muted">{{ project.config.name }}</span>
       </div>
       <div class="flex items-center gap-2">
         <select
           v-model="locale"
           @change="changeLocale"
-          class="bg-gray-700 text-gray-200 text-xs rounded px-2 py-1 border border-gray-600"
+          class="bg-raised text-ink-secondary text-xs rounded-control px-2 py-1 border border-border-strong"
         >
           <option value="en">English</option>
           <option value="zh">中文</option>
         </select>
-        <button v-if="project.config && sidebarComponent" @click="editor.toggleSidebar()" class="px-2 py-1 text-sm rounded hover:bg-gray-700">
+        <button v-if="project.config && sidebarComponent" @click="editor.toggleSidebar()" class="px-2 py-1 text-sm rounded-control hover:bg-raised">
           {{ editor.sidebarOpen ? '◧' : '◨' }}
         </button>
         <button
           v-if="project.config"
           @click="editor.toggleAssistant()"
           :title="$t('assistant.open')"
-          :class="['px-2 py-1 text-sm rounded', editor.assistantOpen ? 'bg-blue-600 text-white' : 'hover:bg-gray-700']"
+          :class="['px-2 py-1 text-sm rounded-control', editor.assistantOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
         >✨</button>
         <button
           @click="editor.toggleHelp()"
           :title="$t('help.open')"
-          :class="['px-2 py-1 text-sm rounded', editor.helpOpen ? 'bg-blue-600 text-white' : 'hover:bg-gray-700']"
+          :class="['px-2 py-1 text-sm rounded-control', editor.helpOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
         >❓</button>
       </div>
     </header>
 
-    <div v-if="project.loading" class="flex-1 flex items-center justify-center text-gray-500">
+    <div v-if="project.loading" class="flex-1 flex items-center justify-center text-ink-faint">
       {{ $t('app.loading') }}
     </div>
 
     <WelcomeScreen v-else-if="project.error" @created="onProjectCreated" @opened="onProjectOpened" />
 
     <template v-else>
-      <nav class="flex bg-gray-800 border-b border-gray-700 shrink-0 px-2">
+      <nav class="flex bg-surface border-b border-border shrink-0 px-4">
         <button
           v-for="act in visibleActivities"
           :key="act.id"
           @click="selectActivity(act.id)"
           :class="[
-            'px-4 py-2 text-sm border-b-2 transition-colors',
+            'px-5 py-2.5 text-sm border-b-2 transition-colors',
             editor.activeActivity === act.id
-              ? 'border-blue-400 text-blue-400'
-              : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+              ? 'border-accent-ink text-accent-ink'
+              : 'border-transparent text-ink-muted hover:text-ink-secondary hover:border-border-strong'
           ]"
         >
           {{ activityIcon(act.icon) }} {{ localize(act.label) }}
@@ -57,14 +57,14 @@
       <div class="flex-1 flex overflow-hidden">
         <div
           v-if="editor.sidebarOpen && sidebarComponent"
-          class="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto shrink-0"
+          class="w-72 bg-surface border-r border-border overflow-y-auto shrink-0"
         >
           <component :is="sidebarComponent" />
         </div>
 
         <main class="flex-1 overflow-auto">
           <component :is="mainComponent" v-if="mainComponent" />
-          <div v-else class="flex items-center justify-center h-full text-gray-500">
+          <div v-else class="flex items-center justify-center h-full text-ink-faint">
             {{ $t('app.selectActivity') }}
           </div>
         </main>

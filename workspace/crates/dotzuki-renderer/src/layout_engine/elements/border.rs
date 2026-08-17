@@ -5,7 +5,7 @@
 //! independent tile IDs. When no tile style is set (`tiles` is `None`),
 //! the entire rectangle is filled with a solid background color.
 
-use dotzuki_engine::render::{Rgba, Painter, TilePos, TileRect};
+use dotzuki_engine::render::{Painter, Rgba, TilePos, TileRect};
 
 // ── BorderTiles ──────────────────────────────────────────────────────────
 

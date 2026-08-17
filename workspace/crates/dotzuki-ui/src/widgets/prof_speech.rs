@@ -1,10 +1,17 @@
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, Ui};
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 use crate::widgets::dialog::wrap_lines;
 
-pub fn draw_prof_speech_phase<P: Painter>(text: &str, phase: usize, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+pub fn draw_prof_speech_phase<P: Painter>(
+    text: &str,
+    phase: usize,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     ui.text_box(config.area, Rgba::INK_BLACK, true, |frame| {
         let rel_tx = config.content.tx.saturating_sub(config.area.tx + 1);
@@ -18,7 +25,12 @@ pub fn draw_prof_speech_phase<P: Painter>(text: &str, phase: usize, configs: &[M
         let phase_text = format!("[{}]", phase + 1);
         frame.label(rel_tx, rel_ty, &phase_text, Rgba::INK_BLACK);
         for (i, line) in lines.iter().enumerate() {
-            frame.label(rel_tx + 3, rel_ty + (i as u32) * line_height, line, Rgba::INK_BLACK);
+            frame.label(
+                rel_tx + 3,
+                rel_ty + (i as u32) * line_height,
+                line,
+                Rgba::INK_BLACK,
+            );
         }
         if config.cursor.tile.is_some() && !text.is_empty() {
             let arrow_tx = rel_tx + config.content.tw.saturating_sub(1);
@@ -28,8 +40,15 @@ pub fn draw_prof_speech_phase<P: Painter>(text: &str, phase: usize, configs: &[M
     });
 }
 
-pub fn draw_name_choice<P: Painter>(options: &[String], cursor: usize, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+pub fn draw_name_choice<P: Painter>(
+    options: &[String],
+    cursor: usize,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     ui.text_box(config.area, Rgba::INK_BLACK, true, |frame| {
         let rel_tx = config.content.tx.saturating_sub(config.area.tx + 1);
@@ -57,31 +76,50 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
     fn test_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(0,0,20,10), None, TileRect::new(1,1,18,8), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(0, 0, 20, 10),
+            None,
+            TileRect::new(1, 1, 18, 8),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
 
-    #[test] fn draws_phase() {
+    #[test]
+    fn draws_phase() {
         let mut painter = RecordingPainter::default();
         draw_prof_speech_phase("Hello!", 0, &[test_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "[1]"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Hello!"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "[1]"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Hello!"));
     }
-    #[test] fn draws_arrow() {
+    #[test]
+    fn draws_arrow() {
         let mut painter = RecordingPainter::default();
         draw_prof_speech_phase("Hi", 1, &[test_config()], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn name_choice() {
+    #[test]
+    fn name_choice() {
         let mut painter = RecordingPainter::default();
-        draw_name_choice(&["BLUE".into(), "RED".into()], 0, &[test_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "BLUE"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "RED"));
+        draw_name_choice(
+            &["BLUE".into(), "RED".into()],
+            0,
+            &[test_config()],
+            &mut painter,
+        );
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "BLUE"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "RED"));
     }
 }

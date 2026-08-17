@@ -174,9 +174,16 @@ where
                 },
             ) => a == b && ta == tb && am == bm && ca == cb && ea == eb,
             (Faint { who: a }, Faint { who: b }) => a == b,
-            (Switched { side: a, to_slot: ta }, Switched { side: b, to_slot: tb }) => {
-                a == b && ta == tb
-            }
+            (
+                Switched {
+                    side: a,
+                    to_slot: ta,
+                },
+                Switched {
+                    side: b,
+                    to_slot: tb,
+                },
+            ) => a == b && ta == tb,
             (Residual { result: a }, Residual { result: b }) => a == b,
             (Effect { result: a }, Effect { result: b }) => a == b,
             _ => false,
@@ -415,10 +422,7 @@ impl BattleDriver {
         BattlerRef::new(if who.side == 0 { 1 } else { 0 }, who.slot)
     }
 
-    fn battler<P: BattleProvider>(
-        state: &BattleState<P>,
-        who: BattlerRef,
-    ) -> Option<&Battler<P>> {
+    fn battler<P: BattleProvider>(state: &BattleState<P>, who: BattlerRef) -> Option<&Battler<P>> {
         let party = if who.side == 0 {
             &state.player_battlers
         } else {

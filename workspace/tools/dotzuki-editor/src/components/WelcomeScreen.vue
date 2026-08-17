@@ -1,11 +1,11 @@
 <template>
-  <div class="flex-1 flex items-center justify-center bg-gray-900 p-4">
+  <div class="flex-1 flex items-center justify-center bg-canvas p-4">
     <!-- Wizard mode: show the inline wizard with a back link -->
     <div v-if="showWizard" class="flex flex-col flex-1 w-full">
       <div class="flex justify-center pt-4 pb-2">
         <button
           @click="showWizard = false"
-          class="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 transition-colors"
+          class="px-3 py-1.5 text-sm text-ink-muted hover:text-ink-secondary bg-surface border border-border rounded-control hover:bg-raised transition-colors"
         >
           {{ $t('welcome.back') }}
         </button>
@@ -18,7 +18,7 @@
       <div class="flex justify-center pt-4 pb-2 shrink-0">
         <button
           @click="closeAiChat"
-          class="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 transition-colors"
+          class="px-3 py-1.5 text-sm text-ink-muted hover:text-ink-secondary bg-surface border border-border rounded-control hover:bg-raised transition-colors"
         >
           {{ $t('welcome.back') }}
         </button>
@@ -34,35 +34,35 @@
              The user must connect an LLM before the AI hero path is available. ── -->
       <div v-if="!hasProvider" class="grid gap-4 sm:grid-cols-2 pt-8">
         <!-- Provider setup card -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 flex flex-col">
-          <h1 class="text-lg font-bold text-amber-400 mb-1">{{ $t('welcome.providerCardTitle') }}</h1>
-          <p class="text-xs text-gray-400 mb-4 leading-snug">{{ $t('welcome.providerCardDesc') }}</p>
+        <div class="bg-surface border border-border rounded-card p-5 flex flex-col">
+          <h1 class="text-lg font-bold text-warning-ink mb-1">{{ $t('welcome.providerCardTitle') }}</h1>
+          <p class="text-xs text-ink-muted mb-4 leading-snug">{{ $t('welcome.providerCardDesc') }}</p>
 
           <div class="space-y-2.5 flex-1">
             <select v-model="qpVendor" @change="onVendorChange"
               :aria-label="$t('assistant.quickSetup.vendor')"
-              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none">
+              class="w-full bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none">
               <option v-for="p in PROVIDER_PRESETS" :key="p.id" :value="p.id">
                 {{ p.id === 'custom' ? $t('assistant.quickSetup.vendorCustom') : p.label }}
               </option>
             </select>
 
             <input v-model="qp.id" :placeholder="$t('assistant.quickSetup.name')"
-              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+              class="w-full bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none" />
 
             <input v-model="qp.baseURL"
               :placeholder="qpPreset.baseURL ? qpPreset.baseURL : $t('assistant.quickSetup.baseUrl')"
-              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+              class="w-full bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none" />
 
             <input v-model="qp.model"
               :placeholder="qpPreset.modelExample ? $t('assistant.quickSetup.modelExample', { model: qpPreset.modelExample }) : $t('assistant.quickSetup.model')"
-              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+              class="w-full bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none" />
 
             <div class="flex items-center gap-2">
               <input v-model="qp.key" type="password" :placeholder="$t('assistant.quickSetup.key')"
-                class="flex-1 min-w-0 bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-100 focus:border-blue-500 focus:outline-none" />
+                class="flex-1 min-w-0 bg-inset border border-border rounded-control px-2 py-1.5 text-xs text-ink focus:border-accent-strong focus:outline-none" />
               <a v-if="qpPreset.keyUrl" :href="qpPreset.keyUrl" target="_blank" rel="noopener noreferrer"
-                class="shrink-0 text-[10px] text-blue-400 hover:text-blue-300 whitespace-nowrap">
+                class="shrink-0 text-micro text-accent-ink hover:text-accent-ink-strong whitespace-nowrap">
                 {{ $t('assistant.quickSetup.getKey') }}
               </a>
             </div>
@@ -72,10 +72,10 @@
             <button
               @click="saveAndContinue"
               :disabled="!qpReady || qpSaving"
-              class="w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              class="w-full px-4 py-2 rounded-card text-sm font-medium transition-colors"
               :class="qpReady && !qpSaving
-                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
+                : 'bg-raised text-ink-faint cursor-not-allowed'"
             >
               <span v-if="qpSaving" class="flex items-center justify-center gap-1.5">
                 <svg class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
@@ -86,11 +86,11 @@
               </span>
               <span v-else>{{ $t('welcome.providerSave') }}</span>
             </button>
-            <div v-if="qpError" class="text-[11px] text-red-400 text-center">{{ qpError }}</div>
-            <div v-if="savedProvider" class="text-[11px] text-emerald-400 text-center">{{ savedProvider }}</div>
+            <div v-if="qpError" class="text-tiny text-danger-ink text-center">{{ qpError }}</div>
+            <div v-if="savedProvider" class="text-tiny text-success-ink text-center">{{ savedProvider }}</div>
             <button
               @click="showWizard = true"
-              class="w-full text-xs text-gray-400 hover:text-gray-200 transition-colors text-center"
+              class="w-full text-xs text-ink-muted hover:text-ink-secondary transition-colors text-center"
             >
               {{ $t('welcome.skipAi') }}
             </button>
@@ -98,13 +98,13 @@
         </div>
 
         <!-- Wizard card -->
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 flex flex-col">
-          <h2 class="text-lg font-bold text-gray-100 mb-3">{{ $t('welcome.wizardCardTitle') }}</h2>
-          <p class="text-sm text-gray-400 flex-1">{{ $t('welcome.wizardCardDesc') }}</p>
+        <div class="bg-surface border border-border rounded-card p-5 flex flex-col">
+          <h2 class="text-lg font-bold text-ink mb-3">{{ $t('welcome.wizardCardTitle') }}</h2>
+          <p class="text-sm text-ink-muted flex-1">{{ $t('welcome.wizardCardDesc') }}</p>
           <div class="mt-3">
             <button
               @click="showWizard = true"
-              class="px-8 py-2.5 rounded-lg text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+              class="px-8 py-2.5 rounded-card text-sm font-medium bg-success hover:bg-success-hover text-white transition-colors"
             >
               {{ $t('welcome.wizardCardButton') }}
             </button>
@@ -114,25 +114,25 @@
 
       <!-- ── Hero: describe your game in one line, the AI takes it from there ── -->
       <div v-else class="pt-8">
-        <h1 class="text-2xl font-bold text-gray-100 text-center mb-5">{{ $t('welcome.heroTitle') }}</h1>
+        <h1 class="text-2xl font-bold text-ink text-center mb-5">{{ $t('welcome.heroTitle') }}</h1>
         <textarea
           v-model="heroText"
           rows="3"
           :placeholder="$t('welcome.heroPlaceholder')"
           @keydown.enter.exact="onHeroKeydown"
-          class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-100
-                 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1
-                 focus:ring-blue-500/30 transition-colors resize-none"
+          class="w-full px-4 py-3 bg-surface border border-border rounded-card text-sm text-ink
+                 placeholder-gray-500 focus:outline-none focus:border-accent-strong focus:ring-1
+                 focus:ring-accent-strong/30 transition-colors resize-none"
         />
         <div class="mt-3 flex justify-center">
           <button
             :disabled="!heroText.trim()"
             @click="startWithAi"
             :class="[
-              'px-8 py-2.5 rounded-lg text-sm font-medium transition-colors',
+              'px-8 py-2.5 rounded-card text-sm font-medium transition-colors',
               heroText.trim()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
+                : 'bg-raised text-ink-faint cursor-not-allowed'
             ]"
           >
             {{ $t('welcome.heroStart') }}
@@ -143,31 +143,31 @@
       <!-- ── Recent Projects: jump back in ── -->
       <div v-if="recentProjects.length > 0">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-medium text-gray-400">{{ $t('welcome.recentContinue') }}</h3>
+          <h3 class="text-sm font-medium text-ink-muted">{{ $t('welcome.recentContinue') }}</h3>
           <button
             @click="clearRecentProjects"
-            class="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            class="text-xs text-ink-faint hover:text-ink-body transition-colors"
           >
             {{ $t('welcome.recentClear') }}
           </button>
         </div>
 
-        <div class="border border-gray-700 rounded-lg overflow-hidden">
+        <div class="border border-border rounded-card overflow-hidden">
           <button
             v-for="proj in recentProjects"
             :key="proj.path"
             @click="openRecentProject(proj.path)"
             class="w-full flex items-center justify-between px-4 py-3 text-left
-                   hover:bg-gray-700/70 transition-colors border-b border-gray-700/50
+                   hover:bg-raised/70 transition-colors border-b border-border/50
                    last:border-b-0"
           >
             <div class="flex items-center gap-3 min-w-0">
-              <svg class="w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <svg class="w-4 h-4 text-ink-faint shrink-0" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.468A1.997 1.997 0 004 15v-1a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H5a3 3 0 01-3-3V6z" clip-rule="evenodd"/>
               </svg>
               <div class="text-left min-w-0">
-                <div class="text-sm text-gray-200 truncate">{{ proj.name }}</div>
-                <div class="text-xs text-gray-500 truncate">{{ proj.path }}</div>
+                <div class="text-sm text-ink-secondary truncate">{{ proj.name }}</div>
+                <div class="text-xs text-ink-faint truncate">{{ proj.path }}</div>
               </div>
             </div>
           </button>
@@ -181,7 +181,7 @@
           <template v-if="hasProvider">
             <button
               @click="showWizard = true"
-              class="text-gray-400 hover:text-gray-200 transition-colors"
+              class="text-ink-muted hover:text-ink-secondary transition-colors"
             >
               {{ $t('welcome.secondaryWizard') }}
             </button>
@@ -189,7 +189,7 @@
           </template>
           <button
             @click="showOpenRow = !showOpenRow"
-            class="text-gray-400 hover:text-gray-200 transition-colors"
+            class="text-ink-muted hover:text-ink-secondary transition-colors"
           >
             {{ $t('welcome.secondaryOpen') }}
           </button>
@@ -202,17 +202,17 @@
               v-model="openPath"
               type="text"
               :placeholder="$t('welcome.openPlaceholder')"
-              class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-100
-                     placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1
-                     focus:ring-blue-500/30 transition-colors"
+              class="flex-1 px-3 py-2 bg-raised border border-border-strong rounded-control text-sm text-ink
+                     placeholder-gray-500 focus:outline-none focus:border-accent-strong focus:ring-1
+                     focus:ring-accent-strong/30 transition-colors"
               @keyup.enter="handleOpenProject"
             />
             <button
               v-if="canBrowse"
               :disabled="browsing"
               @click="handleBrowseProject"
-              class="px-4 py-2 rounded text-sm font-medium border border-gray-600 text-gray-300
-                     hover:bg-gray-600 hover:text-white transition-colors whitespace-nowrap
+              class="px-4 py-2 rounded-control text-sm font-medium border border-border-strong text-ink-body
+                     hover:bg-overlay hover:text-white transition-colors whitespace-nowrap
                      disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg v-if="!browsing" class="w-4 h-4 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -224,10 +224,10 @@
               :disabled="!openPath.trim() || opening"
               @click="handleOpenProject"
               :class="[
-                'px-4 py-2 rounded text-sm font-medium transition-colors whitespace-nowrap',
+                'px-4 py-2 rounded-control text-sm font-medium transition-colors whitespace-nowrap',
                 openPath.trim() && !opening
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
+                  : 'bg-raised text-ink-faint cursor-not-allowed'
               ]"
             >
               <span v-if="!opening">{{ $t('welcome.openButton') }}</span>
@@ -241,7 +241,7 @@
           <!-- Open error -->
           <div
             v-if="openError"
-            class="bg-red-900/30 border border-red-800 rounded p-2.5 text-xs text-red-400"
+            class="bg-danger-surface border border-danger-deep rounded-control p-2.5 text-xs text-danger-ink"
           >
             {{ openError }}
           </div>

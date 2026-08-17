@@ -213,13 +213,19 @@ impl Camera {
         if visible_w >= bounds.w {
             self.position.x = bounds.x + (bounds.w - visible_w) * 0.5;
         } else {
-            self.position.x = self.position.x.clamp(bounds.x, bounds.x + bounds.w - visible_w);
+            self.position.x = self
+                .position
+                .x
+                .clamp(bounds.x, bounds.x + bounds.w - visible_w);
         }
 
         if visible_h >= bounds.h {
             self.position.y = bounds.y + (bounds.h - visible_h) * 0.5;
         } else {
-            self.position.y = self.position.y.clamp(bounds.y, bounds.y + bounds.h - visible_h);
+            self.position.y = self
+                .position
+                .y
+                .clamp(bounds.y, bounds.y + bounds.h - visible_h);
         }
     }
 
@@ -281,7 +287,6 @@ impl Camera {
             || rect.y > self.position.y + visible_h + margin)
     }
 }
-
 
 // =============================================================================
 // Unit tests
@@ -618,7 +623,7 @@ mod tests {
         assert!(cam.is_visible(Vec2::new(0.0, 0.0)));
         // Point just outside
         assert!(cam.is_visible(Vec2::new(-7.0, 0.0))); // within margin
-        // Point far outside
+                                                       // Point far outside
         assert!(!cam.is_visible(Vec2::new(1000.0, 1000.0)));
     }
 

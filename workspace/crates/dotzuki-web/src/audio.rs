@@ -77,7 +77,11 @@ pub fn render_file_audio(bytes: &[u8], ext_hint: &str, max_seconds: f32) -> Vec<
         // Preview a finite slice: no looping, cap the length.
         loop_audio: false,
     };
-    let ext = if ext_hint.is_empty() { None } else { Some(ext_hint) };
+    let ext = if ext_hint.is_empty() {
+        None
+    } else {
+        Some(ext_hint)
+    };
     if audio.play_sfx_bytes(bytes.to_vec(), ext, opts).is_err() {
         crate::log_error("render_file_audio: failed to decode audio file");
         return Vec::new();
@@ -103,7 +107,8 @@ pub fn render_file_audio(bytes: &[u8], ext_hint: &str, max_seconds: f32) -> Vec<
 /// Mirrors the shipping playback path (`pokered-ios`): power on the APU, start
 /// the track on the sequencer, then per 1/60 s frame advance the sequencer and
 /// pull `OUTPUT_SAMPLE_RATE / 60` stereo samples from the APU.
-fn render_track_samples(track: &TrackDef, max_seconds: f32) -> Vec<f32> {    let mut seq = Sequencer::new();
+fn render_track_samples(track: &TrackDef, max_seconds: f32) -> Vec<f32> {
+    let mut seq = Sequencer::new();
     let mut apu = Apu::new();
     // Power on. new() leaves NR50=0x77 / NR51=0xFF, and power_on() preserves
     // them, so master volume and panning are audible; the sequencer rewrites
@@ -148,9 +153,15 @@ mod tests {
                 hw: HwChannel::Pulse1,
                 commands: vec![
                     AudioCommand::DutyCycle { value: 2 },
-                    AudioCommand::NoteType { speed: 8, param: 0xF0 }, // vol 15, no fade
+                    AudioCommand::NoteType {
+                        speed: 8,
+                        param: 0xF0,
+                    }, // vol 15, no fade
                     AudioCommand::Octave { value: 4 },
-                    AudioCommand::Note { pitch: 0, length: 16 },
+                    AudioCommand::Note {
+                        pitch: 0,
+                        length: 16,
+                    },
                 ],
             }],
         }

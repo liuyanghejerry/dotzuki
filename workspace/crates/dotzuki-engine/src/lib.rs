@@ -46,9 +46,9 @@ pub mod render;
 pub mod render_config;
 pub mod render_data;
 pub mod save;
+pub mod text;
 pub mod tile_meta;
 pub mod tilemap;
-pub mod text;
 pub mod tileset;
 pub mod trigger_manager;
 

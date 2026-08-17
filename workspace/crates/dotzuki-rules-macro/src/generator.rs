@@ -3,19 +3,19 @@
 //! This module takes the parsed rules.ron input and generates Rust code
 //! that directly constructs the Ruleset struct.
 
+use crate::parser::*;
 use proc_macro2::TokenStream;
 use quote::quote;
-use crate::parser::*;
 
 /// Generate Rust code for a Ruleset from a rules.ron file.
 pub fn generate_ruleset_code(path: &str) -> Result<TokenStream, String> {
     // Get the directory of the file being compiled
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
         .map_err(|_| "CARGO_MANIFEST_DIR not set".to_string())?;
-    
+
     // Resolve the path relative to the manifest directory
     let full_path = std::path::Path::new(&manifest_dir).join(path);
-    
+
     let ruleset = parse_rules_ron(&full_path.to_string_lossy())?;
     Ok(generate_ruleset_with_imports(&ruleset))
 }
@@ -31,7 +31,7 @@ fn generate_ruleset_with_imports(ruleset: &RulesetInput) -> TokenStream {
     quote! {
         {
             use dotzuki_rules::{Ruleset, TypeChartEntry, Rational, EffectRecord, EffectKind, HookRecord, ResourceCost, Op, Predicate, Selector, FractionOf, DamageValue, HitCount, FinalHitRider};
-            
+
             Ruleset {
                 stats: #stats,
                 types: #types,
@@ -187,7 +187,13 @@ fn generate_ops(ops: &[OpInput]) -> TokenStream {
 fn generate_op(op: &OpInput) -> TokenStream {
     match op {
         OpInput::DealMoveDamage => quote! { Op::DealMoveDamage },
-        OpInput::DamageFraction { num, den, of, target, unless } => {
+        OpInput::DamageFraction {
+            num,
+            den,
+            of,
+            target,
+            unless,
+        } => {
             let of = generate_fraction_of(of);
             let target = generate_selector(target);
             let unless = generate_predicate_option(unless);
@@ -201,7 +207,13 @@ fn generate_op(op: &OpInput) -> TokenStream {
                 }
             }
         }
-        OpInput::HealFraction { num, den, of, target, unless } => {
+        OpInput::HealFraction {
+            num,
+            den,
+            of,
+            target,
+            unless,
+        } => {
             let of = generate_fraction_of(of);
             let target = generate_selector(target);
             let unless = generate_predicate_option(unless);
@@ -224,7 +236,11 @@ fn generate_op(op: &OpInput) -> TokenStream {
                 }
             }
         }
-        OpInput::Boost { stat, stages, target } => {
+        OpInput::Boost {
+            stat,
+            stages,
+            target,
+        } => {
             let target = generate_selector(target);
             quote! {
                 Op::Boost {
@@ -262,7 +278,11 @@ fn generate_op(op: &OpInput) -> TokenStream {
             }
         }
         OpInput::ApplyTypeChart => quote! { Op::ApplyTypeChart },
-        OpInput::PayResource { resource, amount, target } => {
+        OpInput::PayResource {
+            resource,
+            amount,
+            target,
+        } => {
             let target = generate_selector(target);
             quote! {
                 Op::PayResource {
@@ -272,7 +292,11 @@ fn generate_op(op: &OpInput) -> TokenStream {
                 }
             }
         }
-        OpInput::SetHp { target, value, when } => {
+        OpInput::SetHp {
+            target,
+            value,
+            when,
+        } => {
             let target = generate_selector(target);
             let when = generate_predicates(when);
             quote! {
@@ -303,7 +327,11 @@ fn generate_op(op: &OpInput) -> TokenStream {
                 }
             }
         }
-        OpInput::RepeatHits { count, target, final_hit } => {
+        OpInput::RepeatHits {
+            count,
+            target,
+            final_hit,
+        } => {
             let count = generate_hit_count(count);
             let target = generate_selector(target);
             let final_hit = generate_final_hit_rider(final_hit);

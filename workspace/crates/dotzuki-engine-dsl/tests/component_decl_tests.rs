@@ -10,7 +10,9 @@ use dotzuki_engine_dsl::lexer::Lexer;
 use dotzuki_engine_dsl::parser::{self, ParseError, Parser};
 
 fn lex(src: &str) -> Vec<dotzuki_engine_dsl::lexer::SpannedToken> {
-    Lexer::new(src, "test.gui").tokenize().expect("lexer should accept source")
+    Lexer::new(src, "test.gui")
+        .tokenize()
+        .expect("lexer should accept source")
 }
 
 fn parse_ok(src: &str) -> Document {
@@ -59,7 +61,9 @@ fn declarations_only_file_parses_to_components_document() {
 fn duplicate_declaration_is_an_error() {
     let src = "component a {\n}\ncomponent a {\n}\n";
     let errors = parse_err(src);
-    assert!(matches!(errors[0], ParseError::DuplicateComponentDecl { ref name, .. } if name == "a"));
+    assert!(
+        matches!(errors[0], ParseError::DuplicateComponentDecl { ref name, .. } if name == "a")
+    );
 }
 
 // ── use-site validation ───────────────────────────────────────────────────
@@ -78,7 +82,9 @@ fn declared_component_compiles_to_custom_type() {
     max = "{max_hp}"
   }"#,
     );
-    let Document::Screen(screen) = parse_ok(&src) else { panic!("expected screen") };
+    let Document::Screen(screen) = parse_ok(&src) else {
+        panic!("expected screen")
+    };
     let json = json_ui::compile_screen(&screen).expect("codegen");
     let v: serde_json::Value = serde_json::from_str(&json).unwrap();
     let el = &v["elements"][0];
@@ -90,9 +96,12 @@ fn declared_component_compiles_to_custom_type() {
 
 #[test]
 fn missing_required_prop_is_an_error() {
-    let src = screen_with(GAUGE_DECL, r#"  gauge {
+    let src = screen_with(
+        GAUGE_DECL,
+        r#"  gauge {
     current = "{hp}"
-  }"#);
+  }"#,
+    );
     let errors = parse_err(&src);
     assert!(
         matches!(errors[0], ParseError::MissingRequiredProp { ref prop, .. } if prop == "max"),
@@ -102,11 +111,14 @@ fn missing_required_prop_is_an_error() {
 
 #[test]
 fn undeclared_prop_is_an_error() {
-    let src = screen_with(GAUGE_DECL, r#"  gauge {
+    let src = screen_with(
+        GAUGE_DECL,
+        r#"  gauge {
     current = "{hp}"
     max = "{max_hp}"
     colour = "black"
-  }"#);
+  }"#,
+    );
     let errors = parse_err(&src);
     assert!(
         matches!(errors[0], ParseError::UnknownProp { ref prop, .. } if prop == "colour"),
@@ -116,11 +128,14 @@ fn undeclared_prop_is_an_error() {
 
 #[test]
 fn prop_kind_mismatch_is_an_error() {
-    let src = screen_with(GAUGE_DECL, r#"  gauge {
+    let src = screen_with(
+        GAUGE_DECL,
+        r#"  gauge {
     current = "{hp}"
     max = "{max_hp}"
     segments = "four"
-  }"#);
+  }"#,
+    );
     let errors = parse_err(&src);
     assert!(
         matches!(
@@ -139,7 +154,10 @@ fn undeclared_component_type_still_rejected_and_lists_declared_names() {
     match &errors[0] {
         ParseError::InvalidComponentType { found, valid, .. } => {
             assert_eq!(found, "sparkline");
-            assert!(valid.iter().any(|v| v == "gauge"), "valid list should include declared components");
+            assert!(
+                valid.iter().any(|v| v == "gauge"),
+                "valid list should include declared components"
+            );
         }
         other => panic!("expected InvalidComponentType, got {other:?}"),
     }
@@ -149,7 +167,9 @@ fn undeclared_component_type_still_rejected_and_lists_declared_names() {
 
 #[test]
 fn parse_with_components_accepts_prelude_declared_component() {
-    let Document::Components(decls) = parse_ok(GAUGE_DECL) else { panic!() };
+    let Document::Components(decls) = parse_ok(GAUGE_DECL) else {
+        panic!()
+    };
 
     let screen_src = r#"screen test {
   gauge {
@@ -159,7 +179,9 @@ fn parse_with_components_accepts_prelude_declared_component() {
 }"#;
     let (doc, errors) = parser::parse_with_components(lex(screen_src), &decls);
     assert!(errors.is_empty(), "errors: {errors:?}");
-    let Some(Document::Screen(screen)) = doc else { panic!("expected screen") };
+    let Some(Document::Screen(screen)) = doc else {
+        panic!("expected screen")
+    };
     let json = json_ui::compile_screen(&screen).expect("codegen");
     assert!(json.contains("custom:gauge"));
 
@@ -167,7 +189,9 @@ fn parse_with_components_accepts_prelude_declared_component() {
     let bad_src = "screen test {\n  gauge {\n  }\n}";
     let (_, errors) = parser::parse_with_components(lex(bad_src), &decls);
     assert!(
-        errors.iter().any(|e| matches!(e, ParseError::MissingRequiredProp { .. })),
+        errors
+            .iter()
+            .any(|e| matches!(e, ParseError::MissingRequiredProp { .. })),
         "got: {errors:?}"
     );
 }

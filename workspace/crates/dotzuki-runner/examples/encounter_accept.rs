@@ -168,11 +168,7 @@ fn main() {
         if in_battle {
             // Screenshot the two v2-d narration lines on their first show.
             // Screenshot the two v2-d narration lines on their first show.
-            let line = game
-                .battle()
-                .unwrap()
-                .current_line()
-                .map(str::to_string);
+            let line = game.battle().unwrap().current_line().map(str::to_string);
             if let (Some(dir), Some(line)) = (&shot_dir, line) {
                 let tag = match line.as_str() {
                     l if l.starts_with("Can't escape") => Some("run-blocked"),
@@ -221,7 +217,11 @@ fn main() {
         // Shop-exit edge.
         if shop_step >= 5 && game.shop_lines().is_none() && !shop_done {
             shop_done = true;
-            println!("shop closed: money {}, inventory {:?}", game.money(), game.inventory());
+            println!(
+                "shop closed: money {}, inventory {:?}",
+                game.money(),
+                game.inventory()
+            );
         }
         // Everything done: both battles + the shop, scene finished.
         if battles_done == 2 && shop_done && game.battle().is_none() {

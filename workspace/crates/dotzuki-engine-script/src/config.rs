@@ -139,12 +139,10 @@ mod tests {
                     default_hidden: false,
                 },
             ],
-            signs: vec![
-                SignBinding {
-                    id: 1,
-                    talk: "signLab".into(),
-                },
-            ],
+            signs: vec![SignBinding {
+                id: 1,
+                talk: "signLab".into(),
+            }],
             coord_events: vec![
                 CoordEventBinding {
                     name: "northExit".into(),
@@ -222,7 +220,10 @@ mod tests {
     fn test_coord_event_by_name_found() {
         let config = sample_config();
         assert_eq!(config.coord_event_by_name("northExit"), Some("enterRoute1"));
-        assert_eq!(config.coord_event_by_name("southExit"), Some("enterStartTown"));
+        assert_eq!(
+            config.coord_event_by_name("southExit"),
+            Some("enterStartTown")
+        );
     }
 
     #[test]

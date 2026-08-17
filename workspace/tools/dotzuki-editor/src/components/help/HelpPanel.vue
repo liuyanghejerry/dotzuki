@@ -1,23 +1,23 @@
 <template>
-  <aside class="absolute inset-y-0 right-0 z-50 w-[560px] max-w-full bg-gray-800 border-l border-gray-700 flex flex-col shadow-xl">
-    <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-700 shrink-0">
-      <span class="text-sm font-bold text-blue-400">❓ {{ $t('help.title') }}</span>
+  <aside class="absolute inset-y-0 right-0 z-50 w-[560px] max-w-full bg-surface border-l border-border flex flex-col shadow-popover">
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
+      <span class="text-sm font-bold text-accent-ink">❓ {{ $t('help.title') }}</span>
       <span class="flex-1" />
       <button
-        class="px-2 py-1 text-sm rounded hover:bg-gray-700"
+        class="px-2 py-1 text-sm rounded-control hover:bg-raised"
         :title="$t('help.close')"
         @click="editor.toggleHelp()"
       >✕</button>
     </div>
     <div class="flex-1 flex min-h-0">
-      <nav class="w-44 border-r border-gray-700 overflow-y-auto shrink-0 py-1">
+      <nav class="w-44 border-r border-border overflow-y-auto shrink-0 py-1">
         <button
           v-for="page in HELP_PAGES"
           :key="page.id"
           @click="active = page.id"
           :class="[
             'w-full text-left px-3 py-1.5 text-sm truncate',
-            active === page.id ? 'bg-blue-600/30 text-blue-300' : 'text-gray-300 hover:bg-gray-700'
+            active === page.id ? 'bg-accent-surface text-accent-ink-strong' : 'text-ink-body hover:bg-raised'
           ]"
         >{{ page.title }}</button>
       </nav>

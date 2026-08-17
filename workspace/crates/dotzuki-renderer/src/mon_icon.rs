@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use crate::palette::{GbColor, Palette};
 use crate::asset_provider::ResourceProvider;
+use crate::palette::{GbColor, Palette};
 use crate::tile::{TileSet, TILE_PIXELS};
 use crate::FbSurface;
 
@@ -45,20 +45,90 @@ struct IconAsset {
 
 fn asset_for(kind: IconKind, frame: IconFrame) -> IconAsset {
     match (kind, frame) {
-        (IconKind::Mon, _) => IconAsset { category: "sprites", filename: "monster.png", start_tile: 12, tile_count: 4 },
-        (IconKind::Fairy, _) => IconAsset { category: "sprites", filename: "fairy.png", start_tile: 12, tile_count: 4 },
-        (IconKind::Bird, _) => IconAsset { category: "sprites", filename: "bird.png", start_tile: 12, tile_count: 4 },
-        (IconKind::Water, _) => IconAsset { category: "sprites", filename: "fish.png", start_tile: 0, tile_count: 4 },
-        (IconKind::Ball, _) => IconAsset { category: "sprites", filename: "ball.png", start_tile: 0, tile_count: 4 },
-        (IconKind::Helix, _) => IconAsset { category: "sprites", filename: "ball.png", start_tile: 0, tile_count: 4 },
-        (IconKind::Bug, IconFrame::Frame1) => IconAsset { category: "icons", filename: "bug.png", start_tile: 2, tile_count: 2 },
-        (IconKind::Bug, IconFrame::Frame2) => IconAsset { category: "icons", filename: "bug.png", start_tile: 4, tile_count: 2 },
-        (IconKind::Grass, IconFrame::Frame1) => IconAsset { category: "icons", filename: "plant.png", start_tile: 2, tile_count: 2 },
-        (IconKind::Grass, IconFrame::Frame2) => IconAsset { category: "icons", filename: "plant.png", start_tile: 4, tile_count: 2 },
-        (IconKind::Snake, IconFrame::Frame1) => IconAsset { category: "icons", filename: "snake.png", start_tile: 2, tile_count: 2 },
-        (IconKind::Snake, IconFrame::Frame2) => IconAsset { category: "icons", filename: "snake.png", start_tile: 4, tile_count: 2 },
-        (IconKind::Quadruped, IconFrame::Frame1) => IconAsset { category: "icons", filename: "quadruped.png", start_tile: 2, tile_count: 2 },
-        (IconKind::Quadruped, IconFrame::Frame2) => IconAsset { category: "icons", filename: "quadruped.png", start_tile: 4, tile_count: 2 },
+        (IconKind::Mon, _) => IconAsset {
+            category: "sprites",
+            filename: "monster.png",
+            start_tile: 12,
+            tile_count: 4,
+        },
+        (IconKind::Fairy, _) => IconAsset {
+            category: "sprites",
+            filename: "fairy.png",
+            start_tile: 12,
+            tile_count: 4,
+        },
+        (IconKind::Bird, _) => IconAsset {
+            category: "sprites",
+            filename: "bird.png",
+            start_tile: 12,
+            tile_count: 4,
+        },
+        (IconKind::Water, _) => IconAsset {
+            category: "sprites",
+            filename: "fish.png",
+            start_tile: 0,
+            tile_count: 4,
+        },
+        (IconKind::Ball, _) => IconAsset {
+            category: "sprites",
+            filename: "ball.png",
+            start_tile: 0,
+            tile_count: 4,
+        },
+        (IconKind::Helix, _) => IconAsset {
+            category: "sprites",
+            filename: "ball.png",
+            start_tile: 0,
+            tile_count: 4,
+        },
+        (IconKind::Bug, IconFrame::Frame1) => IconAsset {
+            category: "icons",
+            filename: "bug.png",
+            start_tile: 2,
+            tile_count: 2,
+        },
+        (IconKind::Bug, IconFrame::Frame2) => IconAsset {
+            category: "icons",
+            filename: "bug.png",
+            start_tile: 4,
+            tile_count: 2,
+        },
+        (IconKind::Grass, IconFrame::Frame1) => IconAsset {
+            category: "icons",
+            filename: "plant.png",
+            start_tile: 2,
+            tile_count: 2,
+        },
+        (IconKind::Grass, IconFrame::Frame2) => IconAsset {
+            category: "icons",
+            filename: "plant.png",
+            start_tile: 4,
+            tile_count: 2,
+        },
+        (IconKind::Snake, IconFrame::Frame1) => IconAsset {
+            category: "icons",
+            filename: "snake.png",
+            start_tile: 2,
+            tile_count: 2,
+        },
+        (IconKind::Snake, IconFrame::Frame2) => IconAsset {
+            category: "icons",
+            filename: "snake.png",
+            start_tile: 4,
+            tile_count: 2,
+        },
+        (IconKind::Quadruped, IconFrame::Frame1) => IconAsset {
+            category: "icons",
+            filename: "quadruped.png",
+            start_tile: 2,
+            tile_count: 2,
+        },
+        (IconKind::Quadruped, IconFrame::Frame2) => IconAsset {
+            category: "icons",
+            filename: "quadruped.png",
+            start_tile: 4,
+            tile_count: 2,
+        },
     }
 }
 
@@ -97,7 +167,9 @@ pub fn load_mon_icon_tiles(
 ) -> Result<&TileSet, String> {
     let key = (kind, frame);
     {
-        let guard = CACHE.lock().map_err(|e| format!("cache lock poisoned: {}", e))?;
+        let guard = CACHE
+            .lock()
+            .map_err(|e| format!("cache lock poisoned: {}", e))?;
         if let Some(ref map) = *guard {
             if let Some(tiles) = map.get(&key) {
                 return Ok(tiles);
@@ -132,19 +204,15 @@ pub fn load_mon_icon_tiles(
     };
 
     let leaked: &'static TileSet = Box::leak(Box::new(icon_tiles));
-    let mut guard = CACHE.lock().map_err(|e| format!("cache lock poisoned: {}", e))?;
+    let mut guard = CACHE
+        .lock()
+        .map_err(|e| format!("cache lock poisoned: {}", e))?;
     let map = guard.get_or_insert_with(HashMap::new);
     map.insert(key, leaked);
     Ok(leaked)
 }
 
-pub fn draw_mon_icon(
-    fb: &mut impl FbSurface,
-    tiles: &TileSet,
-    x: u32,
-    y: u32,
-    palette: &Palette,
-) {
+pub fn draw_mon_icon(fb: &mut impl FbSurface, tiles: &TileSet, x: u32, y: u32, palette: &Palette) {
     let fb_h = fb.height();
     let fb_w = fb.width();
     let positions = [(0u32, 0u32), (0, 1), (1, 0), (1, 1)];
@@ -166,7 +234,11 @@ pub fn draw_mon_icon(
                 if color_idx == 0 {
                     continue;
                 }
-                fb.set_pixel(screen_x, screen_y, palette.color(GbColor::from_u8(color_idx)));
+                fb.set_pixel(
+                    screen_x,
+                    screen_y,
+                    palette.color(GbColor::from_u8(color_idx)),
+                );
             }
         }
     }
@@ -188,14 +260,28 @@ mod tests {
 
     #[test]
     fn draw_mon_icon_respects_transparent_color0() {
-        let mut fb = crate::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::BLACK);
+        let mut fb = crate::FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            Rgba::BLACK,
+        );
         let ts = TileSet::blank(4);
-        draw_mon_icon(&mut fb, &ts, 0, 0, &crate::palette::GRAYSCALE_SPRITE_PALETTE);
+        draw_mon_icon(
+            &mut fb,
+            &ts,
+            0,
+            0,
+            &crate::palette::GRAYSCALE_SPRITE_PALETTE,
+        );
         // All blank tiles should be transparent (color 0), so framebuffer stays black
         for dy in 0..16u32 {
             for dx in 0..16u32 {
-                assert_eq!(fb.get_pixel(dx, dy), Some(Rgba::BLACK),
-                    "blank icon area should remain background color at ({},{})", dx, dy);
+                assert_eq!(
+                    fb.get_pixel(dx, dy),
+                    Some(Rgba::BLACK),
+                    "blank icon area should remain background color at ({},{})",
+                    dx,
+                    dy
+                );
             }
         }
     }

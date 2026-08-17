@@ -233,11 +233,7 @@ mod tests {
             }
         }
 
-        fn legal_actions(
-            &self,
-            st: &BattleState<Self>,
-            me: BattlerRef,
-        ) -> Vec<BattleAction<Self>> {
+        fn legal_actions(&self, st: &BattleState<Self>, me: BattlerRef) -> Vec<BattleAction<Self>> {
             let party = if me.side == 0 {
                 &st.player_battlers
             } else {
@@ -253,7 +249,13 @@ mod tests {
 
     fn state_with_moves(weights: &[i32]) -> BattleState<AiMock> {
         let moves: Vec<AMove> = weights.iter().map(|&w| AMove { weight: w }).collect();
-        let opp = BattlerState::new(ASpecies::Mon, 100, 100, EnumMap::new(), vec![AMove { weight: 0 }]);
+        let opp = BattlerState::new(
+            ASpecies::Mon,
+            100,
+            100,
+            EnumMap::new(),
+            vec![AMove { weight: 0 }],
+        );
         let me = BattlerState::new(ASpecies::Mon, 100, 100, EnumMap::new(), moves);
         // The AI acts as the opponent (side 1) in these tests.
         BattleState::new(vec![opp], vec![me])
@@ -313,7 +315,11 @@ mod tests {
         // Re-running with the same script reproduces the same selection.
         let mut rng1b = ScriptedRng::new(vec![1]);
         let c1b = BattleAi::choose(&provider, &st, BattlerRef::OPPONENT, &mut rng1b);
-        assert_eq!(weight_of(&c1), weight_of(&c1b), "deterministic under same rng");
+        assert_eq!(
+            weight_of(&c1),
+            weight_of(&c1b),
+            "deterministic under same rng"
+        );
     }
 
     #[test]

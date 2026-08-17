@@ -10,8 +10,9 @@
 use dotzuki_engine::render::painter::Painter;
 use dotzuki_engine::render::{Rgba, TilePos};
 
-use crate::layout_engine::types::{DataContext, LayoutElement, RenderContext, RenderError, TextAlign,
-    TextParams};
+use crate::layout_engine::types::{
+    DataContext, LayoutElement, RenderContext, RenderError, TextAlign, TextParams,
+};
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -156,7 +157,11 @@ fn parse_hex_color(hex: &str) -> Option<Rgba> {
             byte(b[1], b[1])?,
             byte(b[2], b[2])?,
         )),
-        6 => Some(Rgba::rgb(byte(b[0], b[1])?, byte(b[2], b[3])?, byte(b[4], b[5])?)),
+        6 => Some(Rgba::rgb(
+            byte(b[0], b[1])?,
+            byte(b[2], b[3])?,
+            byte(b[4], b[5])?,
+        )),
         8 => Some(Rgba::new(
             byte(b[0], b[1])?,
             byte(b[2], b[3])?,
@@ -348,12 +353,7 @@ mod tests {
     impl Painter for RecordingPainter {
         fn clear(&mut self, _color: EngineRgba) {}
 
-        fn draw_text_box(
-            &mut self,
-            _rect: dotzuki_engine::render::TileRect,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_text_box(&mut self, _rect: dotzuki_engine::render::TileRect, _color: EngineRgba) {}
 
         fn draw_text(&mut self, pos: TilePos, text: &str, color: EngineRgba) {
             self.texts.push((pos, text.to_string(), color));
@@ -363,15 +363,7 @@ mod tests {
             self.glyphs.push((pos, glyph, color));
         }
 
-        fn draw_pixel_rect(
-            &mut self,
-            _px: u32,
-            _py: u32,
-            _pw: u32,
-            _ph: u32,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: EngineRgba) {}
 
         fn draw_gb_tile(
             &mut self,

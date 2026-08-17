@@ -20,7 +20,9 @@
 
 use std::collections::HashMap;
 
-use dotzuki_engine::battle::stack::{Effect, EffectId, EffectProvider, EffectType, Event, EventHook};
+use dotzuki_engine::battle::stack::{
+    Effect, EffectId, EffectProvider, EffectType, Event, EventHook,
+};
 
 use crate::bindings::RuleBindings;
 use crate::interp::interpret;

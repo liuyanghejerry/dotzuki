@@ -1,39 +1,69 @@
-use boa_engine::js_string;
 use crate::command::{CommandResult, ScriptCommand};
 use crate::cutscene::CutsceneManager;
 use crate::engine::ScriptEngine;
 use crate::ScriptApiRegistrar;
+use boa_engine::js_string;
 use boa_engine::{Context, JsArgs, JsResult, JsValue};
 
 struct TestMonsterApi;
 impl ScriptApiRegistrar for TestMonsterApi {
     fn register_api(&self, engine: &mut ScriptEngine) {
-        engine.register_async_fn("giveItem", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let item_id = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            let quantity = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            Ok(ScriptCommand::GiveItem { item_id, quantity })
-        });
-        engine.register_async_fn("takeItem", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let item_id = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            let quantity = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            Ok(ScriptCommand::TakeItem { item_id, quantity })
-        });
-        engine.register_async_fn("giveMonster", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let species = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            let level = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            Ok(ScriptCommand::GiveMonster { species, level })
-        });
-        engine.register_async_fn("startBattle", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let trainer_id = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            Ok(ScriptCommand::StartBattle { trainer_id })
-        });
-        engine.register_async_fn("showDexEntry", |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let species = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            Ok(ScriptCommand::Custom {
-                name: "showDexEntry".into(),
-                args: vec![serde_json::json!(species)],
-            })
-        });
+        engine.register_async_fn(
+            "giveItem",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let item_id = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                let quantity = args.get_or_undefined(1).to_u32(ctx)? as u8;
+                Ok(ScriptCommand::GiveItem { item_id, quantity })
+            },
+        );
+        engine.register_async_fn(
+            "takeItem",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let item_id = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                let quantity = args.get_or_undefined(1).to_u32(ctx)? as u8;
+                Ok(ScriptCommand::TakeItem { item_id, quantity })
+            },
+        );
+        engine.register_async_fn(
+            "giveMonster",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let species = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                let level = args.get_or_undefined(1).to_u32(ctx)? as u8;
+                Ok(ScriptCommand::GiveMonster { species, level })
+            },
+        );
+        engine.register_async_fn(
+            "startBattle",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let trainer_id = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                Ok(ScriptCommand::StartBattle { trainer_id })
+            },
+        );
+        engine.register_async_fn(
+            "showDexEntry",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let species = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                Ok(ScriptCommand::Custom {
+                    name: "showDexEntry".into(),
+                    args: vec![serde_json::json!(species)],
+                })
+            },
+        );
     }
 }
 
@@ -271,7 +301,10 @@ fn test_show_random_text_picks_from_pool() {
     let cmd = engine.call_function("onEnter", &[]).unwrap();
     match cmd {
         Some(ScriptCommand::ShowText { text }) => {
-            assert!(["a", "b", "c"].contains(&text.as_str()), "unexpected pick: {text}");
+            assert!(
+                ["a", "b", "c"].contains(&text.as_str()),
+                "unexpected pick: {text}"
+            );
         }
         other => panic!("expected ShowText, got {other:?}"),
     }
@@ -302,7 +335,11 @@ fn test_show_random_text_accepts_array_and_covers_pool() {
         }
         engine.signal_done(CommandResult::Void).unwrap();
     }
-    assert_eq!(seen.len(), 3, "all three options should be reachable, saw {seen:?}");
+    assert_eq!(
+        seen.len(),
+        3,
+        "all three options should be reachable, saw {seen:?}"
+    );
 }
 
 #[test]
@@ -1354,21 +1391,37 @@ struct BridgeViewRegistrar;
 impl ScriptApiRegistrar for BridgeViewRegistrar {
     fn register_api(&self, engine: &mut ScriptEngine) {
         engine.register_sync_fn("getTestNumber", |args, ctx, view| {
-            let k = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let k = args
+                .get_or_undefined(0)
+                .to_string(ctx)?
+                .to_std_string_lossy();
             Ok(JsValue::from(view.number(&k)))
         });
         engine.register_sync_fn("getTestText", |args, ctx, view| {
-            let k = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let k = args
+                .get_or_undefined(0)
+                .to_string(ctx)?
+                .to_std_string_lossy();
             Ok(JsValue::from(js_string!(view.text(&k))))
         });
         engine.register_sync_fn("testSetContains", |args, ctx, view| {
-            let k = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-            let v = args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy();
+            let k = args
+                .get_or_undefined(0)
+                .to_string(ctx)?
+                .to_std_string_lossy();
+            let v = args
+                .get_or_undefined(1)
+                .to_string(ctx)?
+                .to_std_string_lossy();
             Ok(JsValue::from(view.set_contains(&k, &v)))
         });
         engine.register_sync_fn("getTestFlag", |args, _ctx, view| {
-            let k = args.get_or_undefined(0).to_string(_ctx).ok()
-                .map(|s| s.to_std_string_lossy()).unwrap_or_default();
+            let k = args
+                .get_or_undefined(0)
+                .to_string(_ctx)
+                .ok()
+                .map(|s| s.to_std_string_lossy())
+                .unwrap_or_default();
             Ok(JsValue::from(view.flag(&k)))
         });
     }
@@ -1388,39 +1441,59 @@ fn new_engine_with_bridge_view() -> ScriptEngine {
 #[test]
 fn test_bridge_view_number() {
     let mut engine = new_engine_with_bridge_view();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const gold = game.getTestNumber("PLAYER_GOLD");
             if (gold === 999) {
                 await game.showText("Gold is 999");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Gold is 999".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Gold is 999".to_string()
+        })
+    );
 }
 
 #[test]
 fn test_bridge_view_text() {
     let mut engine = new_engine_with_bridge_view();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const name = game.getTestText("PLAYER_NAME");
             if (name === "KAI") {
                 await game.showText("Name is KAI");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Name is KAI".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Name is KAI".to_string()
+        })
+    );
 }
 
 #[test]
 fn test_bridge_view_set_contains() {
     let mut engine = new_engine_with_bridge_view();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const hasRock = game.testSetContains("BADGES", "ROCKBADGE");
             const hasEarth = game.testSetContains("BADGES", "EARTHBADGE");
@@ -1428,16 +1501,25 @@ fn test_bridge_view_set_contains() {
                 await game.showText("Correct badges");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Correct badges".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Correct badges".to_string()
+        })
+    );
 }
 
 #[test]
 fn test_bridge_view_flag() {
     let mut engine = new_engine_with_bridge_view();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const hasStarter = game.getTestFlag("GOT_STARTER");
             const hasBadge = game.getTestFlag("NONEXISTENT");
@@ -1445,10 +1527,17 @@ fn test_bridge_view_flag() {
                 await game.showText("Flag check ok");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Flag check ok".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Flag check ok".to_string()
+        })
+    );
 }
 
 #[test]
@@ -1483,10 +1572,14 @@ fn test_seed_flags_additive() {
 #[test]
 fn test_has_function_exists() {
     let mut engine = ScriptEngine::new();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export function foo() {}
         export async function bar() {}
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     assert!(engine.has_function("foo"));
     assert!(engine.has_function("bar"));
@@ -1519,35 +1612,59 @@ fn test_script_syntax_error() {
 #[test]
 fn test_call_with_convenience_methods() {
     let mut engine = ScriptEngine::new();
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function showMsg() { await game.showText("msg"); }
         export async function showLevel(lvl) { await game.showText("Level " + lvl); }
         export async function showPos(x, y) { await game.showText(x + "," + y); }
         export async function showName(name) { await game.showText(name); }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     // call_function_no_args
     let cmd = engine.call_function_no_args("showMsg").unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "msg".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "msg".to_string()
+        })
+    );
 
     // signal done
     engine.signal_done(CommandResult::Void).unwrap();
 
     // call_function_with_u8
     let cmd = engine.call_function_with_u8("showLevel", 42).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Level 42".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Level 42".to_string()
+        })
+    );
 
     engine.signal_done(CommandResult::Void).unwrap();
 
     // call_function_with_xy
     let cmd = engine.call_function_with_xy("showPos", 5, 3).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "5,3".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "5,3".to_string()
+        })
+    );
 
     engine.signal_done(CommandResult::Void).unwrap();
 
     // call_function_with_str
     let cmd = engine.call_function_with_str("showName", "KAI").unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "KAI".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "KAI".to_string()
+        })
+    );
 }
 
 #[test]
@@ -1564,7 +1681,9 @@ fn test_set_player_position_and_lang() {
     engine.set_player_position(7, 4);
     engine.set_lang("en");
 
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const pos = game.getPlayerPosition();
             const lang = game.lang();
@@ -1572,41 +1691,66 @@ fn test_set_player_position_and_lang() {
                 await game.showText("Position and lang OK");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Position and lang OK".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Position and lang OK".to_string()
+        })
+    );
 }
 
 #[test]
 fn test_game_t_i18n() {
     let mut engine = ScriptEngine::new();
     engine.set_lang("zh");
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function check() {
             const greeting = game.t("Hello", "你好");
             if (greeting === "你好") {
                 await game.showText("Chinese OK");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("check", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "Chinese OK".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "Chinese OK".to_string()
+        })
+    );
 
     // Switch to English
     engine.set_lang("en");
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function checkEn() {
             const greeting = game.t("Hello", "你好");
             if (greeting === "Hello") {
                 await game.showText("English OK");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("checkEn", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "English OK".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "English OK".to_string()
+        })
+    );
 }
 
 #[test]
@@ -1618,20 +1762,38 @@ fn test_seed_number_text_set_roundtrip() {
 
     // Verify seeds are accessible via BridgeView through JS sync functions
     engine.register_sync_fn("getNum", |args, ctx, view| {
-        let k = args.get_or_undefined(0).to_string(ctx).unwrap().to_std_string_lossy();
+        let k = args
+            .get_or_undefined(0)
+            .to_string(ctx)
+            .unwrap()
+            .to_std_string_lossy();
         Ok(JsValue::from(view.number(&k)))
     });
     engine.register_sync_fn("getTxt", |args, ctx, view| {
-        let k = args.get_or_undefined(0).to_string(ctx).unwrap().to_std_string_lossy();
+        let k = args
+            .get_or_undefined(0)
+            .to_string(ctx)
+            .unwrap()
+            .to_std_string_lossy();
         Ok(JsValue::from(js_string!(view.text(&k))))
     });
     engine.register_sync_fn("checkSet", |args, ctx, view| {
-        let k = args.get_or_undefined(0).to_string(ctx).unwrap().to_std_string_lossy();
-        let v = args.get_or_undefined(1).to_string(ctx).unwrap().to_std_string_lossy();
+        let k = args
+            .get_or_undefined(0)
+            .to_string(ctx)
+            .unwrap()
+            .to_std_string_lossy();
+        let v = args
+            .get_or_undefined(1)
+            .to_string(ctx)
+            .unwrap()
+            .to_std_string_lossy();
         Ok(JsValue::from(view.set_contains(&k, &v)))
     });
 
-    engine.load_script(r#"
+    engine
+        .load_script(
+            r#"
         export async function verify() {
             const n = game.getNum("KEY_NUM");
             const t = game.getTxt("KEY_TXT");
@@ -1642,10 +1804,17 @@ fn test_seed_number_text_set_roundtrip() {
                 await game.showText("All seeds OK");
             }
         }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let cmd = engine.call_function("verify", &[]).unwrap();
-    assert_eq!(cmd, Some(ScriptCommand::ShowText { text: "All seeds OK".to_string() }));
+    assert_eq!(
+        cmd,
+        Some(ScriptCommand::ShowText {
+            text: "All seeds OK".to_string()
+        })
+    );
 }
 
 #[test]

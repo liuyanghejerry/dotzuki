@@ -1,26 +1,26 @@
 <template>
   <div class="flex flex-col h-full">
-    <div v-if="loading" class="flex-1 flex items-center justify-center text-gray-500">
-      <span class="inline-block w-4 h-4 border-2 border-gray-500 border-t-blue-400 rounded-full animate-spin mr-2" />
+    <div v-if="loading" class="flex-1 flex items-center justify-center text-ink-faint">
+      <span class="inline-block w-4 h-4 border-2 border-border-strongest border-t-accent-ink rounded-pill animate-spin mr-2" />
       {{ $t('data.loading') }}
     </div>
 
-    <div v-else-if="!records.length" class="flex-1 flex items-center justify-center text-gray-500">
+    <div v-else-if="!records.length" class="flex-1 flex items-center justify-center text-ink-faint">
       <div class="text-center">
-        <p class="text-sm text-gray-600">{{ $t('data.noRecords') }}</p>
+        <p class="text-sm text-ink-disabled">{{ $t('data.noRecords') }}</p>
       </div>
     </div>
 
     <template v-else>
       <div class="overflow-auto flex-1">
         <table class="w-full text-sm">
-          <thead class="sticky top-0 bg-gray-800 z-10">
+          <thead class="sticky top-0 bg-surface z-10">
             <tr>
               <th
                 v-for="f in visibleFields"
                 :key="f.key"
                 :style="f.width ? { width: `${(f.width / 12) * 100}%` } : {}"
-                class="text-left px-3 py-2 text-gray-400 font-medium border-b border-gray-700 whitespace-nowrap"
+                class="text-left px-4 py-2.5 text-ink-muted font-medium border-b border-border whitespace-nowrap"
               >
                 {{ localize(f.label) }}
               </th>
@@ -31,12 +31,12 @@
               v-for="(record, i) in records"
               :key="resolveId(record, i)"
               @click="$emit('select', record)"
-              class="cursor-pointer border-b border-gray-800 hover:bg-gray-750 transition-colors"
+              class="cursor-pointer border-b border-border-subtle hover:bg-surface-hover transition-colors"
             >
               <td
                 v-for="f in visibleFields"
                 :key="f.key"
-                class="px-3 py-2 text-gray-300 truncate max-w-xs"
+                class="px-4 py-2.5 text-ink-body truncate max-w-xs"
               >
                 {{ formatCell(record[f.key], f.type) }}
               </td>
@@ -44,7 +44,7 @@
           </tbody>
         </table>
       </div>
-      <div class="px-3 py-1.5 text-xs text-gray-500 border-t border-gray-700 bg-gray-850 shrink-0">
+      <div class="px-4 py-2 text-xs text-ink-faint border-t border-border bg-surface-deep shrink-0">
         {{ records.length }} {{ records.length === 1 ? $t('data.record') : $t('data.records') }}
       </div>
     </template>

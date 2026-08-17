@@ -146,16 +146,12 @@ fn compile_story_stmt(
     depth: usize,
 ) -> String {
     match stmt {
-        StoryStmt::Speaker {
-            name,
-            texts,
-            span,
-        } => compile_speaker(name, texts, span, sourcemap, line, depth),
-        StoryStmt::Say {
-            name,
-            texts,
-            span,
-        } => compile_speaker(name, texts, span, sourcemap, line, depth),
+        StoryStmt::Speaker { name, texts, span } => {
+            compile_speaker(name, texts, span, sourcemap, line, depth)
+        }
+        StoryStmt::Say { name, texts, span } => {
+            compile_speaker(name, texts, span, sourcemap, line, depth)
+        }
         StoryStmt::Choice { options, span } => {
             compile_choice(options, span, sourcemap, line, depth)
         }
@@ -164,7 +160,15 @@ fn compile_story_stmt(
             then_branch,
             else_branch,
             span,
-        } => compile_if(condition, then_branch, else_branch, span, sourcemap, line, depth),
+        } => compile_if(
+            condition,
+            then_branch,
+            else_branch,
+            span,
+            sourcemap,
+            line,
+            depth,
+        ),
         StoryStmt::Each {
             item_var,
             source,
@@ -209,7 +213,11 @@ fn compile_speaker(
     // Join each line's text per-language. Plain lines read identically for
     // every locale; `@t(...)` lines contribute their per-locale variant.
     let has_localized = texts.iter().any(|t| t.is_localized());
-    let en_body = texts.iter().map(|t| t.get("en")).collect::<Vec<_>>().join("\n");
+    let en_body = texts
+        .iter()
+        .map(|t| t.get("en"))
+        .collect::<Vec<_>>()
+        .join("\n");
 
     let text_arg = if !has_localized {
         // Monolingual fast path — byte-for-byte the historical output.
@@ -223,19 +231,29 @@ fn compile_speaker(
             serde_json::to_string(&full).unwrap()
         } else {
             let name_js = compile_expression(name);
-            let escaped_body = body.replace('\\', "\\\\").replace('`', "\\`").replace("${", "\\${");
+            let escaped_body = body
+                .replace('\\', "\\\\")
+                .replace('`', "\\`")
+                .replace("${", "\\${");
             format!("`${{{}}}: {}`", name_js, escaped_body)
         }
     } else {
         // Bilingual — emit `game.t("en", "zh")`. For a string-literal speaker
         // name the "Name: " prefix is baked into each language string; for a
         // variable name it is applied via a template literal.
-        let zh_body = texts.iter().map(|t| t.get("zh")).collect::<Vec<_>>().join("\n");
+        let zh_body = texts
+            .iter()
+            .map(|t| t.get("zh"))
+            .collect::<Vec<_>>()
+            .join("\n");
         if let Some(name_str) = as_string_lit(name) {
             let (en_full, zh_full) = if name_str.is_empty() {
                 (en_body, zh_body)
             } else {
-                (format!("{}: {}", name_str, en_body), format!("{}: {}", name_str, zh_body))
+                (
+                    format!("{}: {}", name_str, en_body),
+                    format!("{}: {}", name_str, zh_body),
+                )
             };
             format!(
                 "game.t({}, {})",
@@ -470,12 +488,7 @@ fn compile_command(
 
     let pad = indent(depth);
     let args_js: Vec<String> = args.iter().map(compile_expression).collect();
-    let js = format!(
-        "{}await game[\"{}\"]({});\n",
-        pad,
-        name,
-        args_js.join(", ")
-    );
+    let js = format!("{}await game[\"{}\"]({});\n", pad, name, args_js.join(", "));
     *line += 1;
     js
 }
@@ -528,10 +541,8 @@ fn compile_named_block(
     // `floor = elevatorMenu([...])`) must stay in their original position:
     // hoisting them would execute the effect (battle, menu, item) before the
     // preceding dialogue/cutscene lines that set the scene.
-    let (decls, rest): (Vec<&StoryStmt>, Vec<&StoryStmt>) = block
-        .statements
-        .iter()
-        .partition(|s| match s {
+    let (decls, rest): (Vec<&StoryStmt>, Vec<&StoryStmt>) =
+        block.statements.iter().partition(|s| match s {
             StoryStmt::Assign { value, .. } => !matches!(value, Expression::Call { .. }),
             _ => false,
         });
@@ -710,8 +721,16 @@ mod tests {
     fn test_choice_localized_label() {
         let stmt = StoryStmt::Choice {
             options: vec![
-                ChoiceOption { label: lt("YES", "是"), body: vec![], span: span(1, 0) },
-                ChoiceOption { label: "NO".into(), body: vec![], span: span(1, 0) },
+                ChoiceOption {
+                    label: lt("YES", "是"),
+                    body: vec![],
+                    span: span(1, 0),
+                },
+                ChoiceOption {
+                    label: "NO".into(),
+                    body: vec![],
+                    span: span(1, 0),
+                },
             ],
             span: span(1, 0),
         };
@@ -728,7 +747,10 @@ mod tests {
     #[test]
     fn test_expression_string_lit() {
         assert_eq!(compile_expression(&s("Hello")), "\"Hello\"");
-        assert_eq!(compile_expression(&s("He said \"hi\"")), "\"He said \\\"hi\\\"\"");
+        assert_eq!(
+            compile_expression(&s("He said \"hi\"")),
+            "\"He said \\\"hi\\\"\""
+        );
         assert_eq!(compile_expression(&s("Line1\nLine2")), "\"Line1\\nLine2\"");
     }
 
@@ -767,7 +789,11 @@ mod tests {
             "(x === true)"
         );
         assert_eq!(
-            compile_expression(&binop(BinOp::And, binop(BinOp::Gt, v("a"), n(0.0)), binop(BinOp::Lt, v("a"), n(10.0)))),
+            compile_expression(&binop(
+                BinOp::And,
+                binop(BinOp::Gt, v("a"), n(0.0)),
+                binop(BinOp::Lt, v("a"), n(10.0))
+            )),
             "((a > 0) && (a < 10))"
         );
     }
@@ -837,13 +863,19 @@ mod tests {
         let (js, sm) = compile_stmt(&stmt);
         assert!(js.contains("await game.showText("));
         assert!(js.contains("\"Prof: Hello!\\nWelcome!\""));
-        assert!(!js.contains("showTextAuto"), "@say must not emit showTextAuto");
+        assert!(
+            !js.contains("showTextAuto"),
+            "@say must not emit showTextAuto"
+        );
         assert_eq!(sm.mappings().len(), 1);
 
         // Bilingual @say routes through game.t, like @speaker.
         let stmt = StoryStmt::Say {
             name: s(""),
-            texts: vec![LocalizedText::Localized(vec![("en".into(), "Hi".into()), ("zh".into(), "你好".into())])],
+            texts: vec![LocalizedText::Localized(vec![
+                ("en".into(), "Hi".into()),
+                ("zh".into(), "你好".into()),
+            ])],
             span: span(1, 0),
         };
         let (js, _) = compile_stmt(&stmt);
@@ -1118,8 +1150,14 @@ mod tests {
         let gold_pos = js.find("let gold = 500;").unwrap();
         let player_pos = js.find("let player = \"RED\";").unwrap();
         let speaker_pos = js.find("await game.showText").unwrap();
-        assert!(gold_pos < speaker_pos, "let declarations should precede story logic");
-        assert!(player_pos < speaker_pos, "let declarations should precede story logic");
+        assert!(
+            gold_pos < speaker_pos,
+            "let declarations should precede story logic"
+        );
+        assert!(
+            player_pos < speaker_pos,
+            "let declarations should precede story logic"
+        );
 
         // Content checks
         assert!(js.contains("Prof: Hello!\\nWelcome!"));
@@ -1218,7 +1256,9 @@ mod tests {
         );
         // Declaration precedes both branches.
         let decl = js.find("let result;").unwrap();
-        let use1 = js.find("result = await game.startBattle(\"OPP_RIVAL1\")").unwrap();
+        let use1 = js
+            .find("result = await game.startBattle(\"OPP_RIVAL1\")")
+            .unwrap();
         assert!(decl < use1);
     }
 
@@ -1265,7 +1305,10 @@ mod tests {
             span: span(1, 0),
         };
         let (js, _sm) = compile_stmt(&stmt);
-        assert!(js.contains("game.setFlag"), "JS should contain the run content");
+        assert!(
+            js.contains("game.setFlag"),
+            "JS should contain the run content"
+        );
         assert!(!js.contains("todo"), "Should NOT have todo macro anymore");
     }
 
@@ -1281,7 +1324,9 @@ mod tests {
         assert!(js.contains("let y = 2;"));
         assert!(js.contains("game.doSomething(x, y);"));
         // Check indentation (depth=0, so no indent)
-        assert!(js.lines().all(|l| l.trim().is_empty() || !l.starts_with(' ')));
+        assert!(js
+            .lines()
+            .all(|l| l.trim().is_empty() || !l.starts_with(' ')));
     }
 
     #[test]

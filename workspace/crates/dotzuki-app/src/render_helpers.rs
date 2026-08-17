@@ -46,7 +46,15 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
     let bg = Rgba::WHITE;
     let t = TILE_SIZE;
 
-    draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, bx, by, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::TOP_LEFT,
+        &box_tiles::outside::TOP_LEFT,
+        bx,
+        by,
+        color,
+        bg,
+        fb,
+    );
     for col in 0..bw {
         draw_box_tile(
             &box_tiles::HORIZONTAL,
@@ -58,11 +66,27 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
             fb,
         );
     }
-    draw_box_tile(&box_tiles::TOP_RIGHT, &box_tiles::outside::TOP_RIGHT, bx + (1 + bw) * t, by, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::TOP_RIGHT,
+        &box_tiles::outside::TOP_RIGHT,
+        bx + (1 + bw) * t,
+        by,
+        color,
+        bg,
+        fb,
+    );
 
     for row in 0..bh {
         let y = by + (1 + row) * t;
-        draw_box_tile(&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT, bx, y, color, bg, fb);
+        draw_box_tile(
+            &box_tiles::VERTICAL_LEFT,
+            &box_tiles::outside::VERTICAL_LEFT,
+            bx,
+            y,
+            color,
+            bg,
+            fb,
+        );
         for col in 0..bw {
             fill_tile(bx + (1 + col) * t, y, bg, fb);
         }
@@ -78,7 +102,15 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
     }
 
     let bot_y = by + (1 + bh) * t;
-    draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, bx, bot_y, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::BOTTOM_LEFT,
+        &box_tiles::outside::BOTTOM_LEFT,
+        bx,
+        bot_y,
+        color,
+        bg,
+        fb,
+    );
     for col in 0..bw {
         draw_box_tile(
             &box_tiles::HORIZONTAL_BOTTOM,

@@ -60,8 +60,7 @@ pub fn render_image(
             let (box_px, box_py) = TilePos::new(tx, ty).to_pixels();
             let box_w = tw * 8;
             let box_h = th * 8;
-            let scale =
-                (box_w as f32 / img.width as f32).min(box_h as f32 / img.height as f32);
+            let scale = (box_w as f32 / img.width as f32).min(box_h as f32 / img.height as f32);
             let dst_w = ((img.width as f32 * scale).round() as u32).max(1);
             let dst_h = ((img.height as f32 * scale).round() as u32).max(1);
             let ox = box_px + (box_w.saturating_sub(dst_w)) / 2;
@@ -101,8 +100,8 @@ fn draw_placeholder(tx: u32, ty: u32, tw: u32, th: u32, painter: &mut dyn Painte
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout_engine::types::{Coord, ElementParams, ElementRect};
     use crate::layout_engine::types::DataValue;
+    use crate::layout_engine::types::{Coord, ElementParams, ElementRect};
     use dotzuki_engine::render::Rgba as EngineRgba;
 
     #[derive(Debug, Default)]
@@ -114,35 +113,17 @@ mod tests {
     impl Painter for RecordingPainter {
         fn clear(&mut self, _color: EngineRgba) {}
 
-        fn draw_text_box(
-            &mut self,
-            _rect: dotzuki_engine::render::TileRect,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_text_box(&mut self, _rect: dotzuki_engine::render::TileRect, _color: EngineRgba) {}
 
         fn draw_text(&mut self, _pos: TilePos, _text: &str, _color: EngineRgba) {}
 
         fn draw_glyph(&mut self, _pos: TilePos, _glyph: char, _color: EngineRgba) {}
 
-        fn draw_pixel_rect(
-            &mut self,
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-            color: EngineRgba,
-        ) {
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, color: EngineRgba) {
             self.pixel_rects.push((px, py, pw, ph, color));
         }
 
-        fn draw_gb_tile(
-            &mut self,
-            pos: TilePos,
-            tile_id: u8,
-            _fallback: &str,
-            _color: EngineRgba,
-        ) {
+        fn draw_gb_tile(&mut self, pos: TilePos, tile_id: u8, _fallback: &str, _color: EngineRgba) {
             self.tile_calls.push((pos.tx, pos.ty, tile_id));
         }
     }
@@ -171,8 +152,7 @@ mod tests {
             Box::leak(Box::new(fonts.clone()));
         let tilesets_ref: &'static std::collections::HashMap<String, ()> =
             Box::leak(Box::new(tilesets.clone()));
-        let theme_ref: &'static crate::layout_engine::types::Theme =
-            Box::leak(Box::new(theme));
+        let theme_ref: &'static crate::layout_engine::types::Theme = Box::leak(Box::new(theme));
         (
             RenderContext {
                 screen: "test",

@@ -69,9 +69,9 @@
 //! win/run returns to the overworld in place, a loss goes straight to the
 //! whiteout). Warp tiles take priority over the roll on the same tile.
 
-use std::collections::{HashMap, VecDeque};
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
 use std::collections::HashSet;
+use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
@@ -393,7 +393,11 @@ impl RunnerGame {
         } else {
             None
         };
-        let mut audio = RunnerAudio::from_files(project.files().as_ref(), project.data_root_rel(), !opts.headless);
+        let mut audio = RunnerAudio::from_files(
+            project.files().as_ref(),
+            project.data_root_rel(),
+            !opts.headless,
+        );
         if opts.pcm_audio {
             audio.set_pcm_render(true);
         }
@@ -589,18 +593,18 @@ impl RunnerGame {
         };
         let (x, y) = (save.player.x, save.player.y);
         let facing = parse_facing(&save.player.facing);
-        let spawn = if map.is_blocked(x, y) || map.objects().npcs.iter().any(|n| (n.x, n.y) == (x, y))
-        {
-            let fallback = find_spawn(&map);
-            log::warn!(
-                "save: position ({x},{y}) on {map_id} is occupied; using ({},{})",
-                fallback.0,
-                fallback.1
-            );
-            fallback
-        } else {
-            (x, y)
-        };
+        let spawn =
+            if map.is_blocked(x, y) || map.objects().npcs.iter().any(|n| (n.x, n.y) == (x, y)) {
+                let fallback = find_spawn(&map);
+                log::warn!(
+                    "save: position ({x},{y}) on {map_id} is occupied; using ({},{})",
+                    fallback.0,
+                    fallback.1
+                );
+                fallback
+            } else {
+                (x, y)
+            };
         self.camera.clamp_to_bounds(Rect::new(
             0.0,
             0.0,
@@ -610,11 +614,7 @@ impl RunnerGame {
         self.map = Some(map);
         self.actor.place(spawn.0, spawn.1, facing);
         // Multi-level maps: restore the saved elevation, clamped to the map.
-        let max_level = self
-            .map
-            .as_ref()
-            .map(|m| m.level_count() - 1)
-            .unwrap_or(0) as u8;
+        let max_level = self.map.as_ref().map(|m| m.level_count() - 1).unwrap_or(0) as u8;
         self.actor.set_elevation(save.player.level.min(max_level));
         self.center_camera();
         self.camera.update(0.0);
@@ -980,7 +980,10 @@ impl RunnerGame {
                         Some(battle) => {
                             // Suspend the scene; Mode::Battle resumes it with
                             // the outcome when the battle ends.
-                            self.mode = Mode::Battle(Box::new(BattleState { engine: Some(engine), battle }));
+                            self.mode = Mode::Battle(Box::new(BattleState {
+                                engine: Some(engine),
+                                battle,
+                            }));
                             return;
                         }
                         None => {
@@ -992,7 +995,10 @@ impl RunnerGame {
                     log::info!("scene → battle: startWildBattle({species}, lv{level}) — level ignored in v1");
                     match self.build_battle(&species) {
                         Some(battle) => {
-                            self.mode = Mode::Battle(Box::new(BattleState { engine: Some(engine), battle }));
+                            self.mode = Mode::Battle(Box::new(BattleState {
+                                engine: Some(engine),
+                                battle,
+                            }));
                             return;
                         }
                         None => {
@@ -1037,7 +1043,11 @@ impl RunnerGame {
     }
 
     /// `signal_done` wrapper translating errors into a stream end.
-    fn signal(&mut self, engine: &mut ScriptEngine, result: CommandResult) -> Option<ScriptCommand> {
+    fn signal(
+        &mut self,
+        engine: &mut ScriptEngine,
+        result: CommandResult,
+    ) -> Option<ScriptCommand> {
         match engine.signal_done(result) {
             Ok(cmd) => cmd,
             Err(e) => {
@@ -1075,10 +1085,8 @@ impl RunnerGame {
                     nanos ^ self.frame_count
                 };
                 #[cfg(target_arch = "wasm32")]
-                let seed = self
-                    .frame_count
-                    .wrapping_mul(0x9E37_79B9_7F4A_7C15)
-                    ^ 0xA076_1D64_78BD_642F;
+                let seed =
+                    self.frame_count.wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ 0xA076_1D64_78BD_642F;
                 Box::new(XorshiftRng::seed(seed))
             }
         };
@@ -1567,7 +1575,10 @@ impl RunnerGame {
     fn start_overworld_battle(&mut self, id: &str) {
         log::info!("random encounter: {id}");
         if let Some(battle) = self.build_battle(id) {
-            self.mode = Mode::Battle(Box::new(BattleState { engine: None, battle }));
+            self.mode = Mode::Battle(Box::new(BattleState {
+                engine: None,
+                battle,
+            }));
         }
     }
 
@@ -1594,10 +1605,7 @@ impl RunnerGame {
         let (dx, dy) = direction_delta(self.actor.facing());
         let (tx, ty) = self.actor.tile();
         let faced = (tx + dx, ty + dy);
-        map.objects()
-            .npcs
-            .iter()
-            .position(|n| (n.x, n.y) == faced)
+        map.objects().npcs.iter().position(|n| (n.x, n.y) == faced)
     }
 
     /// The index of the sign on the tile the player faces, if any.
@@ -1606,10 +1614,7 @@ impl RunnerGame {
         let (dx, dy) = direction_delta(self.actor.facing());
         let (tx, ty) = self.actor.tile();
         let faced = (tx + dx, ty + dy);
-        map.objects()
-            .signs
-            .iter()
-            .position(|s| (s.x, s.y) == faced)
+        map.objects().signs.iter().position(|s| (s.x, s.y) == faced)
     }
 
     /// Read the sign at `index`: its `text` is plain text, shown as one-off
@@ -1699,13 +1704,15 @@ impl RunnerGame {
             let level = self.actor.elevation() as i32;
             // Layers at/below the player's elevation draw under the sprites;
             // higher layers (e.g. wall tops seen from the ground) over them.
-            if let Err(e) = map.render_below(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
+            if let Err(e) =
+                map.render_below(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
             {
                 log::warn!("map render: {e:#}");
             }
             self.draw_npcs(fb, cam_x, cam_y);
             self.draw_player(fb, cam_x, cam_y);
-            if let Err(e) = map.render_above(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
+            if let Err(e) =
+                map.render_above(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
             {
                 log::warn!("map render: {e:#}");
             }
@@ -1785,7 +1792,11 @@ impl RunnerGame {
     }
 
     fn draw_player(&self, fb: &mut FrameBuffer, cam_x: i32, cam_y: i32) {
-        let tile = self.map.as_ref().map(|m| m.tile_size().0 as i32).unwrap_or(16);
+        let tile = self
+            .map
+            .as_ref()
+            .map(|m| m.tile_size().0 as i32)
+            .unwrap_or(16);
         let foot_x = self.actor.px().round() as i32 - cam_x;
         let foot_y = self.actor.py().round() as i32 - cam_y;
         if let Some(sprite) = &self.player_sprite {
@@ -1797,11 +1808,22 @@ impl RunnerGame {
             sprite.draw_on_tile(fb, self.actor.facing_row(), col, foot_x, foot_y, tile);
             return;
         }
-        draw_person(fb, foot_x, foot_y, tile, self.actor.facing(), &PLAYER_COLORS);
+        draw_person(
+            fb,
+            foot_x,
+            foot_y,
+            tile,
+            self.actor.facing(),
+            &PLAYER_COLORS,
+        );
     }
 
     fn center_camera(&mut self) {
-        let tile = self.map.as_ref().map(|m| m.tile_size().0 as i32).unwrap_or(16);
+        let tile = self
+            .map
+            .as_ref()
+            .map(|m| m.tile_size().0 as i32)
+            .unwrap_or(16);
         let cx = self.actor.px() + (tile / 2) as f32;
         let cy = self.actor.py() + (tile / 2) as f32;
         self.camera.follow_target(Vec2::new(
@@ -1827,9 +1849,7 @@ impl RunnerGame {
     pub fn dialogue_text(&self) -> Option<&str> {
         match &self.mode {
             Mode::Text(state) => state.pages.front().map(String::as_str),
-            Mode::Whiteout(state) if state.blackout == 0 => {
-                state.pages.front().map(String::as_str)
-            }
+            Mode::Whiteout(state) if state.blackout == 0 => state.pages.front().map(String::as_str),
             _ => None,
         }
     }
@@ -2117,7 +2137,13 @@ fn draw_end_card(fb: &mut FrameBuffer, game_name: &str, lang: &str) {
         fb,
     );
     let fin_w = embedded_font::measure_text(fin);
-    embedded_font::draw_text(fin, cx.saturating_sub(fin_w / 2), 120, Rgba::rgb(0x90, 0x90, 0xa8), fb);
+    embedded_font::draw_text(
+        fin,
+        cx.saturating_sub(fin_w / 2),
+        120,
+        Rgba::rgb(0x90, 0x90, 0xa8),
+        fb,
+    );
 }
 
 /// Draw the choice menu as a flex box just above the dialogue area,
@@ -2127,11 +2153,7 @@ fn draw_choice_menu(fb: &mut FrameBuffer, options: &[String], cursor: usize) {
     if n == 0 {
         return;
     }
-    let max_len = options
-        .iter()
-        .map(|o| o.chars().count())
-        .max()
-        .unwrap_or(1) as u32;
+    let max_len = options.iter().map(|o| o.chars().count()).max().unwrap_or(1) as u32;
     // +4: left/right border, cursor column, one padding column.
     let w = (max_len + 4).clamp(8, 20);
     let h = n + 2;

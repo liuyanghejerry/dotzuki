@@ -20,7 +20,8 @@ let wasmModule: WasmModule | null = null
 let initPromise: Promise<void> | null = null
 
 export type CompileResult =
-  | { ok: true; json: string }
+  | { ok: true; kind: 'screen'; json: string }
+  | { ok: true; kind: 'components'; names: string[] }
   | { ok: false; error: string; line: number; col: number }
 
 export interface WasmPreview {
@@ -82,7 +83,15 @@ export function useWasmPreview(): WasmPreview {
     const raw = wasmModule!.compile_screen_source(source)
     try {
       const parsed = JSON.parse(raw)
-      if (parsed.ok) return { ok: true, json: parsed.js ?? '' }
+      if (parsed.ok) {
+        // A declarations-only component prelude (`component Foo { ... }`) is a
+        // valid .gui file but has no screen to preview — surfaced as
+        // kind 'components' so callers don't treat it as a compile error.
+        if (parsed.kind === 'components') {
+          return { ok: true, kind: 'components', names: parsed.names ?? [] }
+        }
+        return { ok: true, kind: 'screen', json: parsed.js ?? '' }
+      }
       return { ok: false, error: parsed.error ?? 'compile error', line: parsed.line ?? 1, col: parsed.col ?? 1 }
     } catch (e) {
       return { ok: false, error: `bad compiler response: ${(e as Error).message}`, line: 1, col: 1 }

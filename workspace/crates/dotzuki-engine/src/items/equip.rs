@@ -301,10 +301,7 @@ mod tests {
         assert_eq!(EquipSlot::<&str>::Accessory1.label(), "Accessory 1");
         assert_eq!(EquipSlot::<&str>::Accessory2.label(), "Accessory 2");
         assert_eq!(EquipSlot::<&str>::HeldItem.label(), "Held Item");
-        assert_eq!(
-            EquipSlot::<&str>::Custom("ring").label(),
-            "Custom"
-        );
+        assert_eq!(EquipSlot::<&str>::Custom("ring").label(), "Custom");
     }
 
     // -- EquipmentSlots: construction ---------------------------------------
@@ -491,7 +488,9 @@ mod tests {
             EquipmentSlots::new(EquipSlot::<&str>::standard());
         slots.equip(EquipSlot::Weapon, TestItem::IronSword).unwrap();
         slots.equip(EquipSlot::Head, TestItem::SteelHelm).unwrap();
-        slots.equip(EquipSlot::Body, TestItem::LeatherArmor).unwrap();
+        slots
+            .equip(EquipSlot::Body, TestItem::LeatherArmor)
+            .unwrap();
 
         let mut items = slots.clear();
         items.sort_by_key(|i| format!("{:?}", i));

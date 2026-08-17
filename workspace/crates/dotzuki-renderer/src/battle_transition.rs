@@ -41,30 +41,130 @@ struct HalfCircleEntry {
 
 // HalfCircle1 — the top half of the circle wipe.
 const HALF_CIRCLE_1: [HalfCircleEntry; 10] = [
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_1, x: 18, y: 6 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_2, x: 19, y: 3 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_3, x: 18, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_4, x: 14, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_5, x: 10, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_5, x: 9, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_4, x: 5, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_3, x: 1, y: 0 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_2, x: 0, y: 3 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_1, x: 1, y: 6 },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_1,
+        x: 18,
+        y: 6,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_2,
+        x: 19,
+        y: 3,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_3,
+        x: 18,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_4,
+        x: 14,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_5,
+        x: 10,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_5,
+        x: 9,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_4,
+        x: 5,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_3,
+        x: 1,
+        y: 0,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_2,
+        x: 0,
+        y: 3,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_1,
+        x: 1,
+        y: 6,
+    },
 ];
 
 // HalfCircle2 — the bottom half of the circle wipe.
 const HALF_CIRCLE_2: [HalfCircleEntry; 10] = [
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_1, x: 1, y: 11 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_2, x: 0, y: 14 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_3, x: 1, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_4, x: 5, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_LEFT, data: CIRCLE_DATA_5, x: 9, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_5, x: 10, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_4, x: 14, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_3, x: 18, y: 17 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_2, x: 19, y: 14 },
-    HalfCircleEntry { quadrant_x: CIRCLE_RIGHT, data: CIRCLE_DATA_1, x: 18, y: 11 },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_1,
+        x: 1,
+        y: 11,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_2,
+        x: 0,
+        y: 14,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_3,
+        x: 1,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_4,
+        x: 5,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_LEFT,
+        data: CIRCLE_DATA_5,
+        x: 9,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_5,
+        x: 10,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_4,
+        x: 14,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_3,
+        x: 18,
+        y: 17,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_2,
+        x: 19,
+        y: 14,
+    },
+    HalfCircleEntry {
+        quadrant_x: CIRCLE_RIGHT,
+        data: CIRCLE_DATA_1,
+        x: 18,
+        y: 11,
+    },
 ];
 
 /// State machine for battle screen-wipe transitions.
@@ -231,7 +331,8 @@ impl<C: crate::palette::ColorIndex> TransitionFb for crate::RgbaIndexedFrameBuff
         self.indexed_mut().tile_black(tx, ty);
     }
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
-        self.indexed_mut().tile_copy(tx, ty, src.indexed(), stx, sty);
+        self.indexed_mut()
+            .tile_copy(tx, ty, src.indexed(), stx, sty);
     }
 }
 
@@ -448,7 +549,11 @@ impl BattleTransitionState {
     /// `quadrant_y` selects the row-step direction (0 = down for HalfCircle1,
     /// 1 = up for HalfCircle2).
     fn draw_arc(&mut self, entry: &HalfCircleEntry, quadrant_y: u8) {
-        let fill_dir: i16 = if entry.quadrant_x == CIRCLE_RIGHT { 1 } else { -1 };
+        let fill_dir: i16 = if entry.quadrant_x == CIRCLE_RIGHT {
+            1
+        } else {
+            -1
+        };
         let row_dir: i16 = if quadrant_y == 0 { 1 } else { -1 };
         let mut x = entry.x;
         let mut y = entry.y;

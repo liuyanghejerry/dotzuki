@@ -71,7 +71,17 @@ pub struct BracketSides {
 
 impl BracketSides {
     /// Only the right and bottom edges (corner bracket).
-    pub const RIGHT_BOTTOM: Self = Self { top: false, bottom: true, left: false, right: true };
+    pub const RIGHT_BOTTOM: Self = Self {
+        top: false,
+        bottom: true,
+        left: false,
+        right: true,
+    };
     /// All four edges.
-    pub const ALL: Self = Self { top: true, bottom: true, left: true, right: true };
+    pub const ALL: Self = Self {
+        top: true,
+        bottom: true,
+        left: true,
+        right: true,
+    };
 }

@@ -2,17 +2,17 @@ use std::collections::HashMap;
 
 use wasm_bindgen::prelude::*;
 
-use dotzuki_renderer::{FrameBuffer, RenderConfig};
 use dotzuki_renderer::layout_engine::deserialize::parse_layout;
 use dotzuki_renderer::layout_engine::registry::ElementRegistry;
-use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, Theme};
 use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
+use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, Theme};
+use dotzuki_renderer::{FrameBuffer, RenderConfig};
 
 /// Real-engine audio playback (`render_audio_pcm`, `audio_sample_rate`).
 mod audio;
 
-use dotzuki_ui::FrameBufferPainter;
 use dotzuki_engine::render::Rgba;
+use dotzuki_ui::FrameBufferPainter;
 
 /// Log a warning message (goes to stderr; in WASM this reaches the browser
 /// console when using `wasm-bindgen` test runner or `console_log`).
@@ -59,8 +59,24 @@ pub fn render_gui(
     lang: u32,
 ) -> Vec<u8> {
     // 1. Compile the `.gui` source → schema-v2 JSON → ScreenLayout.
-    let json = match compile_gui_inner(source) {
-        Ok(j) => j,
+    //    A declarations-only component prelude (`component Foo { ... }`) is a
+    //    valid `.gui` file but has no screen to render — return an empty buffer
+    //    silently instead of logging a compile error.
+    let json = match parse_gui_doc(source) {
+        Ok(dotzuki_engine_dsl::ast::Document::Screen(screen)) => {
+            match dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen) {
+                Ok(j) => j,
+                Err(e) => {
+                    log_error(&format!("render_gui: compile failed: {e}"));
+                    return Vec::new();
+                }
+            }
+        }
+        Ok(dotzuki_engine_dsl::ast::Document::Components(_)) => return Vec::new(),
+        Ok(_) => {
+            log_error("render_gui: expected a screen layout (screen { ... })");
+            return Vec::new();
+        }
         Err(e) => {
             log_error(&format!("render_gui: compile failed: {e}"));
             return Vec::new();
@@ -121,9 +137,7 @@ fn json_to_data_value(v: &serde_json::Value) -> DataValue {
             .as_i64()
             .map(DataValue::Int)
             .unwrap_or_else(|| DataValue::Float(n.as_f64().unwrap_or(0.0))),
-        serde_json::Value::Array(a) => {
-            DataValue::List(a.iter().map(json_to_data_value).collect())
-        }
+        serde_json::Value::Array(a) => DataValue::List(a.iter().map(json_to_data_value).collect()),
         serde_json::Value::Object(_) => DataValue::Str(v.to_string()),
         serde_json::Value::Null => DataValue::Str(String::new()),
     }
@@ -209,19 +223,33 @@ pub fn compile_scene_config(source: &str) -> String {
 /// Compile `.gui` DSL source (screen layout) to v2 ScreenLayout JSON.
 ///
 /// Returns a JSON string (parse with `JSON.parse`):
-///   `{ ok: true, js: "<compiled JSON>" }` on success
+///   `{ ok: true, kind: "screen", js: "<compiled JSON>" }` for a screen layout
+///   `{ ok: true, kind: "components", names: ["Foo", ...] }` for a
+///     declarations-only component prelude (a valid `.gui` file with no screen
+///     to preview — the editor shows an informational state, not an error)
 ///   `{ ok: false, error, raw, line, col }` on failure
 #[wasm_bindgen]
 pub fn compile_screen_source(source: &str) -> String {
-    match compile_gui_inner(source) {
-        Ok(json) => dsl_ok_json("js", &json),
+    match parse_gui_doc(source) {
+        Ok(dotzuki_engine_dsl::ast::Document::Screen(screen)) => {
+            match dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen) {
+                Ok(json) => serde_json::json!({ "ok": true, "kind": "screen", "js": json }).to_string(),
+                Err(e) => dsl_err_json(&e.to_string()),
+            }
+        }
+        Ok(dotzuki_engine_dsl::ast::Document::Components(decls)) => {
+            let names: Vec<&str> = decls.iter().map(|d| d.name.as_str()).collect();
+            serde_json::json!({ "ok": true, "kind": "components", "names": names }).to_string()
+        }
+        Ok(_) => dsl_err_json("expected a screen layout (screen { ... })"),
         Err(e) => dsl_err_json(&e),
     }
 }
 
-/// Compile `.gui` DSL source → schema-v2 ScreenLayout JSON, or a `line:col: msg`
-/// error string. Shared by [`compile_screen_source`] and [`render_gui`].
-fn compile_gui_inner(source: &str) -> Result<String, String> {
+/// Parse `.gui` source into a DSL [`Document`](dotzuki_engine_dsl::ast::Document),
+/// or a `line:col: msg` error string. Shared by [`compile_screen_source`] and
+/// [`render_gui`].
+fn parse_gui_doc(source: &str) -> Result<dotzuki_engine_dsl::ast::Document, String> {
     let tokens = dotzuki_engine_dsl::lexer::Lexer::new(source, "editor/screen.gui")
         .tokenize()
         .map_err(|errors| {
@@ -241,12 +269,7 @@ fn compile_gui_inner(source: &str) -> Result<String, String> {
             .join("; "));
     }
 
-    match doc.ok_or_else(|| "parser returned no document".to_string())? {
-        dotzuki_engine_dsl::ast::Document::Screen(screen) => {
-            dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen).map_err(|e| e.to_string())
-        }
-        _ => Err("expected a screen layout (screen { ... })".to_string()),
-    }
+    doc.ok_or_else(|| "parser returned no document".to_string())
 }
 
 #[cfg(test)]
@@ -290,5 +313,39 @@ mod render_gui_tests {
     #[test]
     fn render_gui_bad_source_is_empty() {
         assert!(render_gui("not a screen", 100, 100, "", "{}", 0).is_empty());
+    }
+
+    /// A declarations-only component prelude is a valid `.gui` file:
+    /// `compile_screen_source` reports it as `kind: "components"` (not an error)
+    /// so the editor can show an informational state instead of
+    /// "expected a screen layout (screen { ... })".
+    #[test]
+    fn compile_screen_source_accepts_component_prelude() {
+        let src = r##"component HpGauge {
+  current: int required
+  max: int required
+  color: color
+}
+
+component NamePlate {
+  title: string required
+}"##;
+        let raw = compile_screen_source(src);
+        let parsed: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(parsed["ok"], true, "component prelude must not be an error: {raw}");
+        assert_eq!(parsed["kind"], "components");
+        assert_eq!(parsed["names"], serde_json::json!(["HpGauge", "NamePlate"]));
+        // Nothing to render — empty buffer, and no error logged.
+        assert!(render_gui(src, 100, 100, "", "{}", 0).is_empty());
+    }
+
+    /// Screen sources keep the original success shape, plus `kind: "screen"`.
+    #[test]
+    fn compile_screen_source_marks_screens() {
+        let raw = compile_screen_source(r##"screen Main { text("hi") { rect = {tx: 1, ty: 1, tw: 4, th: 1} } }"##);
+        let parsed: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(parsed["ok"], true, "screen must compile: {raw}");
+        assert_eq!(parsed["kind"], "screen");
+        assert!(parsed["js"].as_str().unwrap().contains("\"screen\""));
     }
 }

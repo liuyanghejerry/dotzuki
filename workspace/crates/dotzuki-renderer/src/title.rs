@@ -29,12 +29,18 @@ pub struct TitleItem {
 impl TitleItem {
     /// An enabled entry.
     pub fn new(label: impl Into<String>) -> Self {
-        Self { label: label.into(), enabled: true }
+        Self {
+            label: label.into(),
+            enabled: true,
+        }
     }
 
     /// An entry whose enabled state is decided at build time (e.g. `has_save`).
     pub fn with_enabled(label: impl Into<String>, enabled: bool) -> Self {
-        Self { label: label.into(), enabled }
+        Self {
+            label: label.into(),
+            enabled,
+        }
     }
 }
 
@@ -71,12 +77,7 @@ impl TitleMenu {
             blink_frame: 0,
         };
         // If the first entry is disabled, seek forward to the first enabled one.
-        if menu
-            .items
-            .first()
-            .map(|i| !i.enabled)
-            .unwrap_or(false)
-        {
+        if menu.items.first().map(|i| !i.enabled).unwrap_or(false) {
             if let Some(i) = menu.next_enabled(0, 1) {
                 menu.cursor = i;
             }

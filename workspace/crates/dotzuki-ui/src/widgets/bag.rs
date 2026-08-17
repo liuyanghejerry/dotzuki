@@ -3,7 +3,7 @@
 //! configs[1] is the scrollable item list box.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, TileRect, Ui};
+use dotzuki_engine::render::{Painter, Rgba, TileRect, Ui};
 
 #[derive(Debug, Clone)]
 pub struct BagItemEntry {
@@ -61,7 +61,12 @@ pub fn draw_bag<P: Painter>(data: &BagData, configs: &[MenuConfig], painter: &mu
         // Cursor
         if list.cursor.tile.is_some() {
             let cur_y = rel_ty + pad_top + data.cursor as u32 * (1 + gap);
-            frame.cursor_glyph_at(rel_tx + pad_left.saturating_sub(1), cur_y, '\u{25B6}', Rgba::INK_BLACK);
+            frame.cursor_glyph_at(
+                rel_tx + pad_left.saturating_sub(1),
+                cur_y,
+                '\u{25B6}',
+                Rgba::INK_BLACK,
+            );
         }
     });
 }
@@ -79,49 +84,93 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn header_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(0,0,8,3), None, TileRect::new(1,1,6,1), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(0, 0, 8, 3),
+            None,
+            TileRect::new(1, 1, 6, 1),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn list_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(0,2,9,2), None, TileRect::new(1,3,7,0), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(0, 2, 9, 2),
+            None,
+            TileRect::new(1, 3, 7, 0),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
     fn test_data() -> BagData {
         BagData {
             items: vec![
-                BagItemEntry { name: "POTION".into(), quantity: 5, index: 0 },
-                BagItemEntry { name: "BALL".into(), quantity: 3, index: 1 },
+                BagItemEntry {
+                    name: "POTION".into(),
+                    quantity: 5,
+                    index: 0,
+                },
+                BagItemEntry {
+                    name: "BALL".into(),
+                    quantity: 3,
+                    index: 1,
+                },
             ],
             cursor: 0,
         }
     }
 
-    #[test] fn draws_header() {
+    #[test]
+    fn draws_header() {
         let mut painter = RecordingPainter::default();
-        draw_bag(&test_data(), &[header_config(), list_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "ITEM"));
+        draw_bag(
+            &test_data(),
+            &[header_config(), list_config()],
+            &mut painter,
+        );
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "ITEM"));
         assert_eq!(painter.text_boxes.len(), 2);
     }
-    #[test] fn draws_items() {
+    #[test]
+    fn draws_items() {
         let mut painter = RecordingPainter::default();
-        draw_bag(&test_data(), &[header_config(), list_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("POTION")));
-        assert!(painter.texts.iter().any(|(_,t,_)| t.contains("BALL")));
+        draw_bag(
+            &test_data(),
+            &[header_config(), list_config()],
+            &mut painter,
+        );
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("POTION")));
+        assert!(painter.texts.iter().any(|(_, t, _)| t.contains("BALL")));
     }
-    #[test] fn draws_cancel() {
+    #[test]
+    fn draws_cancel() {
         let mut painter = RecordingPainter::default();
-        draw_bag(&test_data(), &[header_config(), list_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "CANCEL"));
+        draw_bag(
+            &test_data(),
+            &[header_config(), list_config()],
+            &mut painter,
+        );
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "CANCEL"));
     }
-    #[test] fn draws_cursor() {
+    #[test]
+    fn draws_cursor() {
         let mut painter = RecordingPainter::default();
-        draw_bag(&test_data(), &[header_config(), list_config()], &mut painter);
+        draw_bag(
+            &test_data(),
+            &[header_config(), list_config()],
+            &mut painter,
+        );
         assert!(!painter.glyphs.is_empty());
     }
 }

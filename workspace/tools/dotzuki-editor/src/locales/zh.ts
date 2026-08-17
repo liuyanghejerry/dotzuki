@@ -168,6 +168,7 @@ export default {
     fix: '修复',
     fixHint: '把编译错误反馈给模型重新生成',
     noProvider: '请先在「设置」中配置文本 AI 提供方。',
+    componentLibrary: '组件库文件 —— 仅声明可复用组件，无界面预览',
   },
   titlescreen: {
     background: '背景',

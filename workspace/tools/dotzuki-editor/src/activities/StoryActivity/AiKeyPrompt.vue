@@ -17,9 +17,9 @@ function submit() {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="emit('cancel')">
-    <div class="w-96 bg-gray-850 border border-gray-700 rounded-lg shadow-xl p-5">
-      <h3 class="text-sm font-bold text-blue-400 mb-1">{{ t('story.keyPrompt.title', { provider: providerId }) }}</h3>
-      <p class="text-[11px] text-gray-400 mb-3 leading-snug">
+    <div class="w-96 bg-surface-deep border border-border rounded-card shadow-popover p-5">
+      <h3 class="text-sm font-bold text-accent-ink mb-1">{{ t('story.keyPrompt.title', { provider: providerId }) }}</h3>
+      <p class="text-tiny text-ink-muted mb-3 leading-snug">
         {{ t('story.keyPrompt.desc') }}
       </p>
       <input
@@ -28,20 +28,20 @@ function submit() {
         :placeholder="t('story.keyPrompt.placeholder')"
         autofocus
         @keydown.enter="submit"
-        class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+        class="w-full bg-surface border border-border rounded-control px-2 py-1.5 text-sm text-ink focus:border-accent-strong focus:outline-none"
       />
-      <label class="flex items-center gap-2 mt-3 text-xs text-gray-300">
+      <label class="flex items-center gap-2 mt-3 text-xs text-ink-body">
         <input v-model="remember" type="checkbox" class="accent-blue-500" />
         {{ t('story.keyPrompt.remember') }}
       </label>
       <div class="flex justify-end gap-2 mt-4">
-        <button @click="emit('cancel')" class="px-3 py-1 text-xs rounded text-gray-400 hover:text-gray-200">
+        <button @click="emit('cancel')" class="px-3 py-1 text-xs rounded-control text-ink-muted hover:text-ink-secondary">
           {{ t('story.keyPrompt.cancel') }}
         </button>
         <button
           @click="submit"
           :disabled="!key.trim()"
-          class="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40"
+          class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40"
         >
           {{ t('story.keyPrompt.use') }}
         </button>

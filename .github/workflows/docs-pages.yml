@@ -18,12 +18,16 @@ on:
       - ".github/workflows/docs-pages.yml"
   workflow_dispatch:
 
+# All docs deploys share the gh-pages branch, so they must run serially:
+# a master push and a tag push triggered together would otherwise race the
+# same git ref and one deploy fails with a non-fast-forward rejection.
+# One shared group (no `${{ github.ref }}`) queues master + tag runs.
+concurrency:
+  group: docs-pages
+  cancel-in-progress: false
+
 permissions:
   contents: write
-
-concurrency:
-  group: docs-pages-${{ github.ref }}
-  cancel-in-progress: false
 
 jobs:
   build-and-deploy:

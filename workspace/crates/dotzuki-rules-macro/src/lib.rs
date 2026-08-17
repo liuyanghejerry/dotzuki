@@ -51,14 +51,15 @@ mod parser;
 pub fn rules_ron(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::LitStr);
     let path = input.value();
-    
+
     match generator::generate_ruleset_code(&path) {
         Ok(code) => code.into(),
         Err(err) => {
             let error_msg = format!("Failed to generate rules from '{}': {}", path, err);
             quote! {
                 compile_error!(#error_msg)
-            }.into()
+            }
+            .into()
         }
     }
 }

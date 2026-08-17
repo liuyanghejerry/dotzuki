@@ -3,6 +3,9 @@
 // Copies the checked-in fixture project to a throwaway scratch dir (so tests
 // may freely create/edit/delete records without dirtying the repo), then
 // starts the Vite dev server against that scratch copy on a dedicated port.
+// The port comes from E2E_PORT — playwright.config.ts passes the per-worktree
+// default derived in e2e/ports.ts, so parallel checkouts don't collide; the
+// 5199 fallback below only covers standalone manual runs.
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -20,7 +23,14 @@ fs.rmSync(scratch, { recursive: true, force: true })
 fs.cpSync(fixture, scratch, { recursive: true })
 console.log(`[e2e] fixture copied to ${scratch}`)
 
-const viteBin = path.join(root, 'node_modules', '.bin', 'vite')
+// Vite lives at the pnpm-workspace root (workspace/tools), not in this
+// package's node_modules, so with pnpm's isolated linker the runnable
+// .bin/vite shim sits in the parent directory. Prefer the workspace shim;
+// fall back to a package-local one for setups where vite is a direct
+// devDependency.
+const workspaceBin = path.join(root, '..', 'node_modules', '.bin', 'vite')
+const localBin = path.join(root, 'node_modules', '.bin', 'vite')
+const viteBin = fs.existsSync(workspaceBin) ? workspaceBin : localBin
 const child = spawn(viteBin, ['--port', String(port), '--strictPort'], {
   cwd: root,
   env: { ...process.env, DOTZUKI_PROJECT_ROOT: scratch },

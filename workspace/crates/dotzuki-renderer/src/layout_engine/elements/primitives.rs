@@ -112,7 +112,9 @@ mod tests {
                 with_arrow: false,
             }),
         };
-        let ElementParams::Bracket(ref p) = e.params else { unreachable!() };
+        let ElementParams::Bracket(ref p) = e.params else {
+            unreachable!()
+        };
         let mut painter = PxRec::default();
         render_bracket(&e, p, &DataContext::new(), &mut painter);
         let rects = painter.rects.borrow();

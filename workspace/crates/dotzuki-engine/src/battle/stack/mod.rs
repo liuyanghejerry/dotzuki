@@ -31,10 +31,10 @@ pub mod log;
 pub use ctx::{BattleCtx, EffectHost, EffectProvider, EffectState, MoveContext};
 pub use dispatch::{collect_handlers, compare, run_event, run_event_checked, CollectedHandler};
 pub use driver::{FirstMover, StackDriver, StackTurnResult};
-pub use log::{HpChangeCause, TurnEvent, TurnLog};
 pub use event::{
     Effect, EffectId, EffectType, Event, EventHook, HandlerFn, HandlerResult, RelayVar,
 };
+pub use log::{HpChangeCause, TurnEvent, TurnLog};
 
 #[cfg(test)]
 pub(crate) mod tests_support;
@@ -46,8 +46,8 @@ mod tests {
     use super::*;
     use crate::battle::rng::ScriptedRng;
     use crate::battle::{
-        BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EnumMap, MoveEffect,
-        EffectResult,
+        BattleProvider, BattleState, BattlerRef, BattlerState, DamageResult, EffectResult, EnumMap,
+        MoveEffect,
     };
 
     // ── A tiny game provider for the engine-side compile/run proofs ──────
@@ -199,7 +199,11 @@ mod tests {
     fn make_ctx_parts(
         hp_a: u16,
         hp_b: u16,
-    ) -> (BattleState<TProvider>, Vec<EffectState<TProvider>>, MoveContext) {
+    ) -> (
+        BattleState<TProvider>,
+        Vec<EffectState<TProvider>>,
+        MoveContext,
+    ) {
         let state = BattleState::new(vec![mon(hp_a)], vec![mon(hp_b)]);
         (state, Vec::new(), MoveContext::default())
     }
@@ -365,8 +369,8 @@ mod tests {
     // game-agnostic (only swaps one `BattleAction` for another, names no game-specific
     // volatile) and inert by default (every other test/game gets `None`).
 
-    use crate::battle::BattleAction;
     use crate::battle::rng::ScriptedRng as EngineScriptedRng;
+    use crate::battle::BattleAction;
 
     /// A damaging move effect for the forced-action proof: `ModifyDamage` deals
     /// `move.power` to the defender (the driver applies `ctx.mv.damage`).
@@ -415,7 +419,11 @@ mod tests {
             _r: u8,
             _c: bool,
         ) -> DamageResult {
-            DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+            DamageResult {
+                damage: 0,
+                effectiveness: 1.0,
+                is_miss: false,
+            }
         }
         fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
             b.moves.first().cloned().unwrap()
@@ -448,7 +456,11 @@ mod tests {
             _action: &Self::Move,
         ) -> (i32, i32) {
             // Player always first (no tie → no order byte drawn).
-            if who.side == 0 { (0, 0) } else { (1, 0) }
+            if who.side == 0 {
+                (0, 0)
+            } else {
+                (1, 0)
+            }
         }
         fn forced_action(
             &self,
@@ -489,16 +501,26 @@ mod tests {
             kind: TKind::Toxic { counter: 0 },
         }];
         let actions = [
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         let provider = TForce;
         StackDriver::execute_turn(&provider, &mut state, &mut effects, actions, &mut rng);
         // Player's chosen Fight was overridden to Nothing → opponent UNHARMED.
-        assert_eq!(state.opponent_battlers[0].hp, 100, "locked player forced to Nothing");
+        assert_eq!(
+            state.opponent_battlers[0].hp, 100,
+            "locked player forced to Nothing"
+        );
         // Opponent acted normally → player took 10.
-        assert_eq!(state.player_battlers[0].hp, 90, "unlocked opponent's Fight ran");
+        assert_eq!(
+            state.player_battlers[0].hp, 90,
+            "unlocked opponent's Fight ran"
+        );
     }
 
     #[test]
@@ -507,14 +529,24 @@ mod tests {
         let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
         let mut effects: Vec<EffectState<TForce>> = Vec::new();
         let actions = [
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         let provider = TForce;
         StackDriver::execute_turn(&provider, &mut state, &mut effects, actions, &mut rng);
-        assert_eq!(state.opponent_battlers[0].hp, 90, "player Fight ran (no lock)");
-        assert_eq!(state.player_battlers[0].hp, 90, "opponent Fight ran (no lock)");
+        assert_eq!(
+            state.opponent_battlers[0].hp, 90,
+            "player Fight ran (no lock)"
+        );
+        assert_eq!(
+            state.player_battlers[0].hp, 90,
+            "opponent Fight ran (no lock)"
+        );
     }
 
     // ── P6a: the generic turn-event log (execute_turn_logged) ────────────────
@@ -528,26 +560,47 @@ mod tests {
     fn logged_turn_is_behaviorally_identical_to_plain() {
         let actions = || {
             [
-                BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-                BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+                BattleAction::<TForce>::Fight {
+                    move_: TMove { power: 10 },
+                },
+                BattleAction::<TForce>::Fight {
+                    move_: TMove { power: 10 },
+                },
             ]
         };
         // Plain.
         let mut s_plain = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
         let mut e_plain: Vec<EffectState<TForce>> = Vec::new();
         let mut rng_plain = EngineScriptedRng::new(vec![]);
-        let r_plain =
-            StackDriver::execute_turn(&TForce, &mut s_plain, &mut e_plain, actions(), &mut rng_plain);
+        let r_plain = StackDriver::execute_turn(
+            &TForce,
+            &mut s_plain,
+            &mut e_plain,
+            actions(),
+            &mut rng_plain,
+        );
         // Logged.
         let mut s_log = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
         let mut e_log: Vec<EffectState<TForce>> = Vec::new();
         let mut rng_log = EngineScriptedRng::new(vec![]);
-        let (r_log, log) =
-            StackDriver::execute_turn_logged(&TForce, &mut s_log, &mut e_log, actions(), &mut rng_log);
+        let (r_log, log) = StackDriver::execute_turn_logged(
+            &TForce,
+            &mut s_log,
+            &mut e_log,
+            actions(),
+            &mut rng_log,
+        );
 
         assert_eq!(r_plain, r_log, "same StackTurnResult");
-        assert_eq!(rng_plain.consumed(), rng_log.consumed(), "same rng draw count");
-        assert_eq!(s_plain.player_battlers[0].hp, s_log.player_battlers[0].hp, "same player hp");
+        assert_eq!(
+            rng_plain.consumed(),
+            rng_log.consumed(),
+            "same rng draw count"
+        );
+        assert_eq!(
+            s_plain.player_battlers[0].hp, s_log.player_battlers[0].hp,
+            "same player hp"
+        );
         assert_eq!(
             s_plain.opponent_battlers[0].hp, s_log.opponent_battlers[0].hp,
             "same opponent hp"
@@ -563,8 +616,12 @@ mod tests {
         let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
         let mut effects: Vec<EffectState<TForce>> = Vec::new();
         let actions = [
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         let (_r, log) =
@@ -573,11 +630,27 @@ mod tests {
         let p = BattlerRef::PLAYER;
         let o = BattlerRef::OPPONENT;
         let ev = &log.events;
-        assert!(matches!(ev[0], TurnEvent::MoveUsed { actor, .. } if actor == p), "1: player MoveUsed");
-        assert!(matches!(ev[1], TurnEvent::Damaged { target, amount: 10, .. } if target == o), "2: opponent took 10");
-        assert!(matches!(ev[2], TurnEvent::MoveUsed { actor, .. } if actor == o), "3: opponent MoveUsed");
-        assert!(matches!(ev[3], TurnEvent::Damaged { target, amount: 10, .. } if target == p), "4: player took 10");
-        assert_eq!(ev.len(), 4, "exactly MoveUsed+Damaged ×2 (no crit/miss/status)");
+        assert!(
+            matches!(ev[0], TurnEvent::MoveUsed { actor, .. } if actor == p),
+            "1: player MoveUsed"
+        );
+        assert!(
+            matches!(ev[1], TurnEvent::Damaged { target, amount: 10, .. } if target == o),
+            "2: opponent took 10"
+        );
+        assert!(
+            matches!(ev[2], TurnEvent::MoveUsed { actor, .. } if actor == o),
+            "3: opponent MoveUsed"
+        );
+        assert!(
+            matches!(ev[3], TurnEvent::Damaged { target, amount: 10, .. } if target == p),
+            "4: player took 10"
+        );
+        assert_eq!(
+            ev.len(),
+            4,
+            "exactly MoveUsed+Damaged ×2 (no crit/miss/status)"
+        );
     }
 
     /// A KO logs `Damaged` then `Fainted`, and the second mover is cancelled (so it
@@ -587,8 +660,12 @@ mod tests {
         let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(10)]);
         let mut effects: Vec<EffectState<TForce>> = Vec::new();
         let actions = [
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         let (r, log) =
@@ -597,11 +674,21 @@ mod tests {
         assert!(r.second_cancelled, "defender KO'd → second move cancelled");
         let o = BattlerRef::OPPONENT;
         let ev = &log.events;
-        assert!(matches!(ev[0], TurnEvent::MoveUsed { .. }), "player MoveUsed");
-        assert!(matches!(ev[1], TurnEvent::Damaged { target, amount: 10, .. } if target == o), "opponent took 10");
-        assert!(matches!(ev[2], TurnEvent::Fainted { who } if who == o), "opponent fainted");
         assert!(
-            !ev.iter().any(|e| matches!(e, TurnEvent::MoveUsed { actor, .. } if *actor == o)),
+            matches!(ev[0], TurnEvent::MoveUsed { .. }),
+            "player MoveUsed"
+        );
+        assert!(
+            matches!(ev[1], TurnEvent::Damaged { target, amount: 10, .. } if target == o),
+            "opponent took 10"
+        );
+        assert!(
+            matches!(ev[2], TurnEvent::Fainted { who } if who == o),
+            "opponent fainted"
+        );
+        assert!(
+            !ev.iter()
+                .any(|e| matches!(e, TurnEvent::MoveUsed { actor, .. } if *actor == o)),
             "cancelled opponent never logs a MoveUsed"
         );
     }
@@ -648,13 +735,29 @@ mod tests {
         type Species = TSpecies;
         type Type = TType;
         type Item = ();
-        fn calculate_damage(&self, _m: &Self::Move, _a: &BattlerState<Self>, _d: &BattlerState<Self>, _r: u8, _c: bool) -> DamageResult {
-            DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+        fn calculate_damage(
+            &self,
+            _m: &Self::Move,
+            _a: &BattlerState<Self>,
+            _d: &BattlerState<Self>,
+            _r: u8,
+            _c: bool,
+        ) -> DamageResult {
+            DamageResult {
+                damage: 0,
+                effectiveness: 1.0,
+                is_miss: false,
+            }
         }
         fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
             b.moves.first().cloned().unwrap()
         }
-        fn apply_move_effect(&self, _e: MoveEffect, _u: &mut BattlerState<Self>, _t: &mut BattlerState<Self>) -> EffectResult {
+        fn apply_move_effect(
+            &self,
+            _e: MoveEffect,
+            _u: &mut BattlerState<Self>,
+            _t: &mut BattlerState<Self>,
+        ) -> EffectResult {
             EffectResult::NoEffect
         }
         fn create_monster(&self, s: Self::Species, _l: u8) -> BattlerState<Self> {
@@ -669,21 +772,44 @@ mod tests {
         fn effect_for_status(&self, _s: &Self::Status) -> Option<&'static Effect<Self>> {
             None
         }
-        fn turn_order_rank(&self, _state: &BattleState<Self>, who: BattlerRef, _action: &Self::Move) -> (i32, i32) {
-            if who.side == 0 { (0, 0) } else { (1, 0) }
+        fn turn_order_rank(
+            &self,
+            _state: &BattleState<Self>,
+            who: BattlerRef,
+            _action: &Self::Move,
+        ) -> (i32, i32) {
+            if who.side == 0 {
+                (0, 0)
+            } else {
+                (1, 0)
+            }
         }
     }
 
     #[test]
     fn log_records_stat_status_and_heal_diffs() {
         // Player at 50/100 so the +20 self-heal is observable; opponent does Nothing.
-        let mut player = BattlerState::<TRich>::new(TSpecies::Mon, 50, 100, EnumMap::new(), vec![TMove { power: 10 }]);
+        let mut player = BattlerState::<TRich>::new(
+            TSpecies::Mon,
+            50,
+            100,
+            EnumMap::new(),
+            vec![TMove { power: 10 }],
+        );
         player.max_hp = 100;
-        let opponent = BattlerState::<TRich>::new(TSpecies::Mon, 100, 100, EnumMap::new(), vec![TMove { power: 10 }]);
+        let opponent = BattlerState::<TRich>::new(
+            TSpecies::Mon,
+            100,
+            100,
+            EnumMap::new(),
+            vec![TMove { power: 10 }],
+        );
         let mut state = BattleState::new(vec![player], vec![opponent]);
         let mut effects: Vec<EffectState<TRich>> = Vec::new();
         let actions = [
-            BattleAction::<TRich>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TRich>::Fight {
+                move_: TMove { power: 10 },
+            },
             BattleAction::<TRich>::Nothing,
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
@@ -693,11 +819,33 @@ mod tests {
         let p = BattlerRef::PLAYER;
         let o = BattlerRef::OPPONENT;
         let ev = &log.events;
-        assert!(ev.iter().any(|e| matches!(e, TurnEvent::MoveUsed { actor, .. } if *actor == p)), "MoveUsed");
-        assert!(ev.iter().any(|e| matches!(e, TurnEvent::Damaged { target, amount: 10, .. } if *target == o)), "Damaged target");
-        assert!(ev.iter().any(|e| matches!(e, TurnEvent::StatusInflicted { target, .. } if *target == o)), "StatusInflicted target");
-        assert!(ev.iter().any(|e| matches!(e, TurnEvent::StatChanged { target, delta: 1, .. } if *target == p)), "StatChanged actor +1");
-        assert!(ev.iter().any(|e| matches!(e, TurnEvent::Healed { target, amount: 20, .. } if *target == p)), "Healed actor +20");
+        assert!(
+            ev.iter()
+                .any(|e| matches!(e, TurnEvent::MoveUsed { actor, .. } if *actor == p)),
+            "MoveUsed"
+        );
+        assert!(
+            ev.iter().any(
+                |e| matches!(e, TurnEvent::Damaged { target, amount: 10, .. } if *target == o)
+            ),
+            "Damaged target"
+        );
+        assert!(
+            ev.iter()
+                .any(|e| matches!(e, TurnEvent::StatusInflicted { target, .. } if *target == o)),
+            "StatusInflicted target"
+        );
+        assert!(
+            ev.iter().any(
+                |e| matches!(e, TurnEvent::StatChanged { target, delta: 1, .. } if *target == p)
+            ),
+            "StatChanged actor +1"
+        );
+        assert!(
+            ev.iter()
+                .any(|e| matches!(e, TurnEvent::Healed { target, amount: 20, .. } if *target == p)),
+            "Healed actor +20"
+        );
     }
 
     // ── RESOURCE COST GATE (doc 13 §4): the generic MP/SP/mana cost check ──
@@ -746,7 +894,11 @@ mod tests {
             _r: u8,
             _c: bool,
         ) -> DamageResult {
-            DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+            DamageResult {
+                damage: 0,
+                effectiveness: 1.0,
+                is_miss: false,
+            }
         }
         fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
             b.moves.first().cloned().unwrap()
@@ -783,7 +935,11 @@ mod tests {
             _action: &Self::Move,
         ) -> (i32, i32) {
             // Player always first (no tie → no order byte drawn).
-            if who.side == 0 { (0, 0) } else { (1, 0) }
+            if who.side == 0 {
+                (0, 0)
+            } else {
+                (1, 0)
+            }
         }
     }
 
@@ -804,23 +960,39 @@ mod tests {
         let mut state = BattleState::new(vec![cost_mon(100, 10)], vec![cost_mon(100, 0)]);
         let mut effects: Vec<EffectState<TCost>> = Vec::new();
         let actions = [
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&TCost, &mut state, &mut effects, actions, &mut rng);
 
         // Player paid: 10 - 4 = 6 MP left, and its move connected (opp took 10).
-        assert_eq!(state.player_battlers[0].resources.current(MP), Some(6),
-            "affordable: 10 MP - 4 cost = 6 left");
-        assert_eq!(state.opponent_battlers[0].hp, 90, "paid move dealt its 10 damage");
+        assert_eq!(
+            state.player_battlers[0].resources.current(MP),
+            Some(6),
+            "affordable: 10 MP - 4 cost = 6 left"
+        );
+        assert_eq!(
+            state.opponent_battlers[0].hp, 90,
+            "paid move dealt its 10 damage"
+        );
 
         // Opponent could NOT pay (0 MP, undeclared/zero) → move prevented → player
         // unharmed, opponent MP unchanged (still absent → current() None... it WAS
         // declared with max 0, so current is Some(0), and stays Some(0)).
-        assert_eq!(state.player_battlers[0].hp, 100, "insufficient opp move prevented → no damage");
-        assert_eq!(state.opponent_battlers[0].resources.current(MP), Some(0),
-            "insufficient: MP unchanged (no deduction on a prevented move)");
+        assert_eq!(
+            state.player_battlers[0].hp, 100,
+            "insufficient opp move prevented → no damage"
+        );
+        assert_eq!(
+            state.opponent_battlers[0].resources.current(MP),
+            Some(0),
+            "insufficient: MP unchanged (no deduction on a prevented move)"
+        );
     }
 
     #[test]
@@ -830,16 +1002,25 @@ mod tests {
         let mut state = BattleState::new(vec![cost_mon(100, 3)], vec![cost_mon(100, 0)]);
         let mut effects: Vec<EffectState<TCost>> = Vec::new();
         let actions = [
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&TCost, &mut state, &mut effects, actions, &mut rng);
 
-        assert_eq!(state.opponent_battlers[0].hp, 100,
-            "player could not pay → its move was prevented → opp unharmed");
-        assert_eq!(state.player_battlers[0].resources.current(MP), Some(3),
-            "prevented move deducts NOTHING → MP unchanged at 3");
+        assert_eq!(
+            state.opponent_battlers[0].hp, 100,
+            "player could not pay → its move was prevented → opp unharmed"
+        );
+        assert_eq!(
+            state.player_battlers[0].resources.current(MP),
+            Some(3),
+            "prevented move deducts NOTHING → MP unchanged at 3"
+        );
     }
 
     #[test]
@@ -852,13 +1033,20 @@ mod tests {
         let mut state = BattleState::new(vec![cost_mon(100, 10)], vec![cost_mon(100, 1)]);
         let mut effects: Vec<EffectState<TCost>> = Vec::new();
         let actions = [
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TCost>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TCost>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&TCost, &mut state, &mut effects, actions, &mut rng);
-        assert_eq!(rng.consumed(), 0,
-            "the resource cost check + deduction consume NO randomness");
+        assert_eq!(
+            rng.consumed(),
+            0,
+            "the resource cost check + deduction consume NO randomness"
+        );
     }
 
     #[test]
@@ -870,14 +1058,27 @@ mod tests {
         let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
         let mut effects: Vec<EffectState<TForce>> = Vec::new();
         let actions = [
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
-            BattleAction::<TForce>::Fight { move_: TMove { power: 10 } },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
+            BattleAction::<TForce>::Fight {
+                move_: TMove { power: 10 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&TForce, &mut state, &mut effects, actions, &mut rng);
-        assert_eq!(state.opponent_battlers[0].hp, 90, "no-cost move ran (inert gate)");
-        assert_eq!(state.player_battlers[0].hp, 90, "no-cost move ran (inert gate)");
-        assert!(state.player_battlers[0].resources.is_empty(), "pool defaulted EMPTY");
+        assert_eq!(
+            state.opponent_battlers[0].hp, 90,
+            "no-cost move ran (inert gate)"
+        );
+        assert_eq!(
+            state.player_battlers[0].hp, 90,
+            "no-cost move ran (inert gate)"
+        );
+        assert!(
+            state.player_battlers[0].resources.is_empty(),
+            "pool defaulted EMPTY"
+        );
     }
 
     // ── speed_sort_tiebreak: draws a byte ONLY on a tie, permutes the run ──
@@ -900,7 +1101,11 @@ mod tests {
         let mut distinct = vec![mk(0), mk(1)];
         let mut rng = ScriptedRng::new(vec![200, 200]);
         dispatch::speed_sort_tiebreak(&mut distinct, &mut rng);
-        assert_eq!(rng.consumed(), 0, "distinct effect_order ⇒ no tie ⇒ no draw");
+        assert_eq!(
+            rng.consumed(),
+            0,
+            "distinct effect_order ⇒ no tie ⇒ no draw"
+        );
 
         // identical effect_order → equal → one byte drawn for the pair.
         let mut tied = vec![mk(0), mk(0)];
@@ -946,9 +1151,7 @@ mod tests {
 #[cfg(test)]
 mod multi_source_tests {
     use super::dispatch::{collect_handlers, run_event, run_event_checked};
-    use super::tests_support::{
-        marker, mon, parts, TKind, TProvider, TSpecies, MOCK_VOLATILE,
-    };
+    use super::tests_support::{marker, mon, parts, TKind, TProvider, TSpecies, MOCK_VOLATILE};
     use super::*;
     use crate::battle::stack::ctx::EffectHost;
     use crate::battle::{BattlerRef, EffectResult};
@@ -959,7 +1162,12 @@ mod multi_source_tests {
         mv: &'a mut MoveContext,
         rng: &'a mut crate::battle::rng::ScriptedRng,
     ) -> BattleCtx<'a, TProvider> {
-        BattleCtx { state, effects, mv, rng }
+        BattleCtx {
+            state,
+            effects,
+            mv,
+            rng,
+        }
     }
 
     // ── Proof 1: multi-source collection gathers from ability + item + field,
@@ -990,8 +1198,16 @@ mod multi_source_tests {
         // ability marks player (target of the ability hook is the host = player),
         // item marks player, field marks OPPONENT (target). Read both:
         // ability(1) + item(10) on player → 11; field(100) on opponent → 100.
-        assert_eq!(marker(&state, BattlerRef::PLAYER), 11, "ability+item fired on host");
-        assert_eq!(marker(&state, BattlerRef::OPPONENT), 100, "field fired on target");
+        assert_eq!(
+            marker(&state, BattlerRef::PLAYER),
+            11,
+            "ability+item fired on host"
+        );
+        assert_eq!(
+            marker(&state, BattlerRef::OPPONENT),
+            100,
+            "field fired on target"
+        );
     }
 
     // ── Proof 1b: multi-source ordering is by the comparator. Manually verify
@@ -1056,20 +1272,36 @@ mod multi_source_tests {
         // First handler (order 1) KOs OPPONENT; second (order 2) would mark it.
         let hs = vec![
             CollectedHandler {
-                order: 1, priority: 0, speed: 0, sub_order: 6, effect_order: 0,
-                target: BattlerRef::OPPONENT, source: BattlerRef::PLAYER,
-                source_effect: EffectId(1), call: ko_target::<TProvider>,
+                order: 1,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 0,
+                target: BattlerRef::OPPONENT,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(1),
+                call: ko_target::<TProvider>,
             },
             CollectedHandler {
-                order: 2, priority: 0, speed: 0, sub_order: 6, effect_order: 1,
-                target: BattlerRef::OPPONENT, source: BattlerRef::PLAYER,
-                source_effect: EffectId(2), call: touch_target::<TProvider>,
+                order: 2,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 1,
+                target: BattlerRef::OPPONENT,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(2),
+                call: touch_target::<TProvider>,
             },
         ];
         run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
-        assert_eq!(state.opponent_battlers[0].hp, 0, "first handler KO'd target");
         assert_eq!(
-            marker(&state, BattlerRef::OPPONENT), 0,
+            state.opponent_battlers[0].hp, 0,
+            "first handler KO'd target"
+        );
+        assert_eq!(
+            marker(&state, BattlerRef::OPPONENT),
+            0,
             "re-check SKIPPED the second handler (dead target)"
         );
     }
@@ -1085,19 +1317,32 @@ mod multi_source_tests {
         let mut ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
         let hs = vec![
             CollectedHandler {
-                order: 1, priority: 0, speed: 0, sub_order: 6, effect_order: 0,
-                target: BattlerRef::OPPONENT, source: BattlerRef::PLAYER,
-                source_effect: EffectId(1), call: ko_target::<TProvider>,
+                order: 1,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 0,
+                target: BattlerRef::OPPONENT,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(1),
+                call: ko_target::<TProvider>,
             },
             CollectedHandler {
-                order: 2, priority: 0, speed: 0, sub_order: 6, effect_order: 1,
-                target: BattlerRef::OPPONENT, source: BattlerRef::PLAYER,
-                source_effect: EffectId(2), call: touch_target::<TProvider>,
+                order: 2,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 1,
+                target: BattlerRef::OPPONENT,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(2),
+                call: touch_target::<TProvider>,
             },
         ];
         run_event(&mut ctx, hs, RelayVar::Unit, false);
         assert_eq!(
-            marker(&state, BattlerRef::OPPONENT), 7,
+            marker(&state, BattlerRef::OPPONENT),
+            7,
             "plain run_event fired the second handler (no re-check) — slice contract"
         );
     }
@@ -1132,20 +1377,33 @@ mod multi_source_tests {
         // First handler removes the volatile; second still runs from the snapshot.
         let hs = vec![
             CollectedHandler {
-                order: 1, priority: 0, speed: 0, sub_order: 6, effect_order: 0,
-                target: BattlerRef::PLAYER, source: BattlerRef::PLAYER,
-                source_effect: EffectId(1), call: remove_other_effect::<TProvider>,
+                order: 1,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 0,
+                target: BattlerRef::PLAYER,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(1),
+                call: remove_other_effect::<TProvider>,
             },
             CollectedHandler {
-                order: 2, priority: 0, speed: 0, sub_order: 6, effect_order: 1,
-                target: BattlerRef::PLAYER, source: BattlerRef::PLAYER,
-                source_effect: EffectId(2), call: touch_target::<TProvider>,
+                order: 2,
+                priority: 0,
+                speed: 0,
+                sub_order: 6,
+                effect_order: 1,
+                target: BattlerRef::PLAYER,
+                source: BattlerRef::PLAYER,
+                source_effect: EffectId(2),
+                call: touch_target::<TProvider>,
             },
         ];
         run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
         assert!(effects.is_empty(), "volatile removed mid-fold");
         assert_eq!(
-            marker(&state, BattlerRef::PLAYER), 7,
+            marker(&state, BattlerRef::PLAYER),
+            7,
             "second handler still fired from the owned snapshot (no invalidation)"
         );
     }
@@ -1178,12 +1436,21 @@ mod multi_source_tests {
         let mut ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
         let mut hs = Vec::new();
         collect_handlers(
-            &ctx, &provider, None, Event::DamagingHit,
-            BattlerRef::PLAYER, BattlerRef::PLAYER, &mut hs,
+            &ctx,
+            &provider,
+            None,
+            Event::DamagingHit,
+            BattlerRef::PLAYER,
+            BattlerRef::PLAYER,
+            &mut hs,
         );
         assert_eq!(hs.len(), 1, "only the field effect (no ability/item)");
         run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
-        assert_eq!(marker(&state, BattlerRef::PLAYER), 100, "field residual routed");
+        assert_eq!(
+            marker(&state, BattlerRef::PLAYER),
+            100,
+            "field residual routed"
+        );
     }
 
     // ── Proof 4: an event with no subscribers is a no-op. ──
@@ -1195,8 +1462,13 @@ mod multi_source_tests {
         let ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
         let mut hs = Vec::new();
         collect_handlers(
-            &ctx, &provider, None, Event::DamagingHit,
-            BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut hs,
+            &ctx,
+            &provider,
+            None,
+            Event::DamagingHit,
+            BattlerRef::OPPONENT,
+            BattlerRef::PLAYER,
+            &mut hs,
         );
         assert!(hs.is_empty(), "no live source ⇒ no handlers ⇒ no-op");
         drop(ctx);
@@ -1231,13 +1503,22 @@ mod multi_source_tests {
 
         let mut single = Vec::new();
         collect_from_effect(
-            &ctx, &SRC, Event::DamagingHit,
-            BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut single,
+            &ctx,
+            &SRC,
+            Event::DamagingHit,
+            BattlerRef::OPPONENT,
+            BattlerRef::PLAYER,
+            &mut single,
         );
         let mut multi = Vec::new();
         collect_handlers(
-            &ctx, &provider, Some(&SRC), Event::DamagingHit,
-            BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut multi,
+            &ctx,
+            &provider,
+            Some(&SRC),
+            Event::DamagingHit,
+            BattlerRef::OPPONENT,
+            BattlerRef::PLAYER,
+            &mut multi,
         );
         assert_eq!(single.len(), 1);
         assert_eq!(multi.len(), single.len(), "identity: same count");
@@ -1330,7 +1611,11 @@ mod effectiveness_fold_tests {
             _r: u8,
             _c: bool,
         ) -> DamageResult {
-            DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+            DamageResult {
+                damage: 0,
+                effectiveness: 1.0,
+                is_miss: false,
+            }
         }
         fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
             b.moves.first().cloned().unwrap()
@@ -1370,7 +1655,11 @@ mod effectiveness_fold_tests {
             _action: &Self::Move,
         ) -> (i32, i32) {
             // Player always first (no tie ⇒ no order byte drawn).
-            if who.side == 0 { (0, 0) } else { (1, 0) }
+            if who.side == 0 {
+                (0, 0)
+            } else {
+                (1, 0)
+            }
         }
     }
 
@@ -1449,7 +1738,11 @@ mod effectiveness_fold_tests {
             _r: u8,
             _c: bool,
         ) -> DamageResult {
-            DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+            DamageResult {
+                damage: 0,
+                effectiveness: 1.0,
+                is_miss: false,
+            }
         }
         fn select_move(&self, b: &BattlerState<Self>, _s: &BattleState<Self>) -> Self::Move {
             b.moves.first().cloned().unwrap()
@@ -1480,7 +1773,11 @@ mod effectiveness_fold_tests {
             who: BattlerRef,
             _action: &Self::Move,
         ) -> (i32, i32) {
-            if who.side == 0 { (0, 0) } else { (1, 0) }
+            if who.side == 0 {
+                (0, 0)
+            } else {
+                (1, 0)
+            }
         }
     }
     fn eff_modify_damage_ns(
@@ -1521,8 +1818,12 @@ mod effectiveness_fold_tests {
         let mut state = BattleState::new(vec![mon_eff(attacker)], vec![mon_eff(ESpecies::NoSub)]);
         let mut effects: Vec<EffectState<EProvider>> = Vec::new();
         let actions = [
-            BattleAction::<EProvider>::Fight { move_: EMove { power: 80 } },
-            BattleAction::<EProvider>::Fight { move_: EMove { power: 80 } },
+            BattleAction::<EProvider>::Fight {
+                move_: EMove { power: 80 },
+            },
+            BattleAction::<EProvider>::Fight {
+                move_: EMove { power: 80 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&EProvider, &mut state, &mut effects, actions, &mut rng);
@@ -1540,18 +1841,29 @@ mod effectiveness_fold_tests {
         );
         let mut effects: Vec<EffectState<EProviderNoSub>> = Vec::new();
         let actions = [
-            BattleAction::<EProviderNoSub>::Fight { move_: EMove { power: 80 } },
-            BattleAction::<EProviderNoSub>::Fight { move_: EMove { power: 80 } },
+            BattleAction::<EProviderNoSub>::Fight {
+                move_: EMove { power: 80 },
+            },
+            BattleAction::<EProviderNoSub>::Fight {
+                move_: EMove { power: 80 },
+            },
         ];
         let mut rng = EngineScriptedRng::new(vec![]);
         StackDriver::execute_turn(&EProviderNoSub, &mut state, &mut effects, actions, &mut rng);
         let dmg = 200 - state.opponent_battlers[0].hp;
-        assert_eq!(dmg, 80, "no Effectiveness subscriber ⇒ damage unchanged (inert 1×)");
+        assert_eq!(
+            dmg, 80,
+            "no Effectiveness subscriber ⇒ damage unchanged (inert 1×)"
+        );
     }
 
     #[test]
     fn effectiveness_subscriber_scale_2_1_doubles() {
-        assert_eq!(run_player_turn(ESpecies::Double), 160, "scale(2,1): 80 → 160");
+        assert_eq!(
+            run_player_turn(ESpecies::Double),
+            160,
+            "scale(2,1): 80 → 160"
+        );
     }
 
     #[test]
@@ -1561,6 +1873,10 @@ mod effectiveness_fold_tests {
 
     #[test]
     fn effectiveness_subscriber_scale_0_1_zeroes() {
-        assert_eq!(run_player_turn(ESpecies::Zero), 0, "scale(0,1): 80 → 0 (immune)");
+        assert_eq!(
+            run_player_turn(ESpecies::Zero),
+            0,
+            "scale(0,1): 80 → 0 (immune)"
+        );
     }
 }

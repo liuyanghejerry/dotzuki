@@ -59,7 +59,10 @@ pub enum AudioCommand {
     /// Set vibrato: `delay` before onset, `depth_rate` = packed (depth<<4 | rate).
     Vibrato { delay: u8, depth_rate: u8 },
     /// Begin a pitch slide. `octave_pitch` = packed (octave<<4 | pitch).
-    PitchSlide { length_modifier: u8, octave_pitch: u8 },
+    PitchSlide {
+        length_modifier: u8,
+        octave_pitch: u8,
+    },
     /// Set duty cycle (0-3).
     DutyCycle { value: u8 },
     /// Set tempo (8.8 fixed-point; high byte = integer part).
@@ -83,9 +86,17 @@ pub enum AudioCommand {
     /// Pitch sweep (channel 1 / NR10). SFX channels only.
     PitchSweep { param: u8 },
     /// SFX square note with explicit envelope + 11-bit frequency.
-    SfxSquareNote { length: u8, volume_envelope: u8, frequency: u16 },
+    SfxSquareNote {
+        length: u8,
+        volume_envelope: u8,
+        frequency: u16,
+    },
     /// SFX noise note with explicit envelope + polynomial-counter byte.
-    SfxNoiseNote { length: u8, volume_envelope: u8, noise_params: u8 },
+    SfxNoiseNote {
+        length: u8,
+        volume_envelope: u8,
+        noise_params: u8,
+    },
     /// End of data / terminator.
     EndOfData,
 }
@@ -102,9 +113,13 @@ impl From<&Command> for AudioCommand {
             Command::Octave(value) => AudioCommand::Octave { value },
             Command::TogglePerfectPitch => AudioCommand::TogglePerfectPitch,
             Command::Vibrato { delay, depth_rate } => AudioCommand::Vibrato { delay, depth_rate },
-            Command::PitchSlide { length_modifier, octave_pitch } => {
-                AudioCommand::PitchSlide { length_modifier, octave_pitch }
-            }
+            Command::PitchSlide {
+                length_modifier,
+                octave_pitch,
+            } => AudioCommand::PitchSlide {
+                length_modifier,
+                octave_pitch,
+            },
             Command::DutyCycle(value) => AudioCommand::DutyCycle { value },
             Command::Tempo(value) => AudioCommand::Tempo { value },
             Command::StereoPanning(value) => AudioCommand::StereoPanning { value },
@@ -116,12 +131,24 @@ impl From<&Command> for AudioCommand {
             Command::SoundLoop { count, offset } => AudioCommand::SoundLoop { count, offset },
             Command::SoundRet => AudioCommand::SoundRet,
             Command::PitchSweep { param } => AudioCommand::PitchSweep { param },
-            Command::SfxSquareNote { length, volume_envelope, frequency } => {
-                AudioCommand::SfxSquareNote { length, volume_envelope, frequency }
-            }
-            Command::SfxNoiseNote { length, volume_envelope, noise_params } => {
-                AudioCommand::SfxNoiseNote { length, volume_envelope, noise_params }
-            }
+            Command::SfxSquareNote {
+                length,
+                volume_envelope,
+                frequency,
+            } => AudioCommand::SfxSquareNote {
+                length,
+                volume_envelope,
+                frequency,
+            },
+            Command::SfxNoiseNote {
+                length,
+                volume_envelope,
+                noise_params,
+            } => AudioCommand::SfxNoiseNote {
+                length,
+                volume_envelope,
+                noise_params,
+            },
             Command::EndOfData => AudioCommand::EndOfData,
         }
     }
@@ -140,9 +167,13 @@ impl AudioCommand {
             AudioCommand::Octave { value } => Command::Octave(value),
             AudioCommand::TogglePerfectPitch => Command::TogglePerfectPitch,
             AudioCommand::Vibrato { delay, depth_rate } => Command::Vibrato { delay, depth_rate },
-            AudioCommand::PitchSlide { length_modifier, octave_pitch } => {
-                Command::PitchSlide { length_modifier, octave_pitch }
-            }
+            AudioCommand::PitchSlide {
+                length_modifier,
+                octave_pitch,
+            } => Command::PitchSlide {
+                length_modifier,
+                octave_pitch,
+            },
             AudioCommand::DutyCycle { value } => Command::DutyCycle(value),
             AudioCommand::Tempo { value } => Command::Tempo(value),
             AudioCommand::StereoPanning { value } => Command::StereoPanning(value),
@@ -154,12 +185,24 @@ impl AudioCommand {
             AudioCommand::SoundLoop { count, offset } => Command::SoundLoop { count, offset },
             AudioCommand::SoundRet => Command::SoundRet,
             AudioCommand::PitchSweep { param } => Command::PitchSweep { param },
-            AudioCommand::SfxSquareNote { length, volume_envelope, frequency } => {
-                Command::SfxSquareNote { length, volume_envelope, frequency }
-            }
-            AudioCommand::SfxNoiseNote { length, volume_envelope, noise_params } => {
-                Command::SfxNoiseNote { length, volume_envelope, noise_params }
-            }
+            AudioCommand::SfxSquareNote {
+                length,
+                volume_envelope,
+                frequency,
+            } => Command::SfxSquareNote {
+                length,
+                volume_envelope,
+                frequency,
+            },
+            AudioCommand::SfxNoiseNote {
+                length,
+                volume_envelope,
+                noise_params,
+            } => Command::SfxNoiseNote {
+                length,
+                volume_envelope,
+                noise_params,
+            },
             AudioCommand::EndOfData => Command::EndOfData,
         }
     }
@@ -262,7 +305,13 @@ impl TrackDef {
             .iter()
             .map(|(hw, bytes)| ChannelDef::from_bytes(*hw, bytes, is_sfx))
             .collect();
-        TrackDef { id: id.into(), kind, name: None, tempo, channels }
+        TrackDef {
+            id: id.into(),
+            kind,
+            name: None,
+            tempo,
+            channels,
+        }
     }
 
     /// Start this track playing on `seq` (music → channels 1-4, SFX → its
@@ -289,14 +338,29 @@ mod tests {
     #[test]
     fn command_dto_roundtrips_all_variants() {
         let cases = [
-            Command::Note { pitch: 5, length: 8 },
-            Command::DrumNote { length: 2, instrument: 7 },
+            Command::Note {
+                pitch: 5,
+                length: 8,
+            },
+            Command::DrumNote {
+                length: 2,
+                instrument: 7,
+            },
             Command::Rest { length: 16 },
-            Command::NoteType { speed: 12, param: 0x92 },
+            Command::NoteType {
+                speed: 12,
+                param: 0x92,
+            },
             Command::Octave(3),
             Command::TogglePerfectPitch,
-            Command::Vibrato { delay: 4, depth_rate: 0x21 },
-            Command::PitchSlide { length_modifier: 8, octave_pitch: 0x34 },
+            Command::Vibrato {
+                delay: 4,
+                depth_rate: 0x21,
+            },
+            Command::PitchSlide {
+                length_modifier: 8,
+                octave_pitch: 0x34,
+            },
             Command::DutyCycle(2),
             Command::Tempo(0x0140),
             Command::StereoPanning(0xF0),
@@ -305,11 +369,22 @@ mod tests {
             Command::ExecuteMusic,
             Command::DutyCyclePattern(0x1B),
             Command::SoundCall { offset: 0x00AB },
-            Command::SoundLoop { count: 0, offset: 0x1234 },
+            Command::SoundLoop {
+                count: 0,
+                offset: 0x1234,
+            },
             Command::SoundRet,
             Command::PitchSweep { param: 0x15 },
-            Command::SfxSquareNote { length: 3, volume_envelope: 0xA2, frequency: 0x0567 },
-            Command::SfxNoiseNote { length: 1, volume_envelope: 0x91, noise_params: 0x33 },
+            Command::SfxSquareNote {
+                length: 3,
+                volume_envelope: 0xA2,
+                frequency: 0x0567,
+            },
+            Command::SfxNoiseNote {
+                length: 1,
+                volume_envelope: 0x91,
+                noise_params: 0x33,
+            },
             Command::EndOfData,
         ];
         for cmd in cases {
@@ -324,7 +399,11 @@ mod tests {
 
     #[test]
     fn json_shape_is_internally_tagged() {
-        let json = serde_json::to_string(&AudioCommand::Note { pitch: 0, length: 8 }).unwrap();
+        let json = serde_json::to_string(&AudioCommand::Note {
+            pitch: 0,
+            length: 8,
+        })
+        .unwrap();
         assert_eq!(json, r#"{"type":"note","pitch":0,"length":8}"#);
         let json = serde_json::to_string(&AudioCommand::Octave { value: 3 }).unwrap();
         assert_eq!(json, r#"{"type":"octave","value":3}"#);
@@ -343,9 +422,15 @@ mod tests {
                 hw: HwChannel::Pulse1,
                 commands: vec![
                     AudioCommand::Tempo { value: 0x00A0 },
-                    AudioCommand::NoteType { speed: 12, param: 0x92 },
+                    AudioCommand::NoteType {
+                        speed: 12,
+                        param: 0x92,
+                    },
                     AudioCommand::Octave { value: 4 },
-                    AudioCommand::Note { pitch: 0, length: 8 },
+                    AudioCommand::Note {
+                        pitch: 0,
+                        length: 8,
+                    },
                     AudioCommand::Rest { length: 4 },
                 ],
             }],

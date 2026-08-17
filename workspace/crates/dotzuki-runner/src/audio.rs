@@ -85,7 +85,10 @@ const CYCLES_PER_SAMPLE: u32 = CPU_CLOCK_HZ / SAMPLE_RATE;
 enum Fade {
     None,
     /// Fading out: `counter` frames until the next volume step down.
-    Out { counter: u8, reload: u8 },
+    Out {
+        counter: u8,
+        reload: u8,
+    },
 }
 
 /// Advance a fade by one frame.
@@ -103,13 +106,25 @@ fn step_fade(fade: Fade, master_volume: u8) -> (Fade, u8, bool) {
             if mv == 0 {
                 (Fade::None, FULL_VOLUME, true) // faded out — stop, restore volume
             } else {
-                (Fade::Out { counter: reload, reload }, mv, false)
+                (
+                    Fade::Out {
+                        counter: reload,
+                        reload,
+                    },
+                    mv,
+                    false,
+                )
             }
         }
         // Still counting down to the next step.
-        Fade::Out { counter, reload } => {
-            (Fade::Out { counter: counter - 1, reload }, master_volume, false)
-        }
+        Fade::Out { counter, reload } => (
+            Fade::Out {
+                counter: counter - 1,
+                reload,
+            },
+            master_volume,
+            false,
+        ),
     }
 }
 
@@ -336,17 +351,16 @@ impl RunnerAudio {
     /// Whether a track with this id exists in either library (JSON first,
     /// then files, when the `modern-audio` feature is on).
     pub fn has_track(&self, id: &str) -> bool {
-        self.library.get(id).is_some()
-            || {
-                #[cfg(feature = "modern-audio")]
-                {
-                    self.file_tracks.contains_key(id)
-                }
-                #[cfg(not(feature = "modern-audio"))]
-                {
-                    false
-                }
+        self.library.get(id).is_some() || {
+            #[cfg(feature = "modern-audio")]
+            {
+                self.file_tracks.contains_key(id)
             }
+            #[cfg(not(feature = "modern-audio"))]
+            {
+                false
+            }
+        }
     }
 
     /// Whether the cpal output stream is live (test/debug introspection).
@@ -389,18 +403,16 @@ impl RunnerAudio {
         if let Some(engine) = &self.engine {
             return Some(Arc::clone(engine));
         }
-        if self.library.is_empty()
-            && {
-                #[cfg(feature = "modern-audio")]
-                {
-                    self.file_tracks.is_empty()
-                }
-                #[cfg(not(feature = "modern-audio"))]
-                {
-                    true
-                }
+        if self.library.is_empty() && {
+            #[cfg(feature = "modern-audio")]
+            {
+                self.file_tracks.is_empty()
             }
-        {
+            #[cfg(not(feature = "modern-audio"))]
+            {
+                true
+            }
+        } {
             return None;
         }
         if self.pcm_render {
@@ -484,9 +496,15 @@ impl RunnerAudio {
             // music command owns the music slot.
             e.seq.stop_music();
             e.current_music = None;
-            let modern = e.modern.get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
+            let modern = e
+                .modern
+                .get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
             if modern
-                .play_music_bytes(track.bytes.clone(), Some(&track.ext), ModernPlayOptions::default())
+                .play_music_bytes(
+                    track.bytes.clone(),
+                    Some(&track.ext),
+                    ModernPlayOptions::default(),
+                )
                 .is_ok()
             {
                 e.modern_music = Some(id.to_string());
@@ -520,9 +538,15 @@ impl RunnerAudio {
             let Some(track) = self.file_tracks.get(id) else {
                 return;
             };
-            let modern = e.modern.get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
+            let modern = e
+                .modern
+                .get_or_insert_with(|| ModernAudio::new(SAMPLE_RATE));
             if modern
-                .play_sfx_bytes(track.bytes.clone(), Some(&track.ext), ModernPlayOptions::default())
+                .play_sfx_bytes(
+                    track.bytes.clone(),
+                    Some(&track.ext),
+                    ModernPlayOptions::default(),
+                )
                 .is_err()
             {
                 log::warn!("audio: failed to decode sfx track '{id}'");
@@ -596,8 +620,8 @@ fn load_library(files: &dyn ProjectFiles, prefix: &str) -> anyhow::Result<AudioL
             continue;
         }
         let bytes = files.read(&path)?;
-        let track: TrackDef = serde_json::from_slice(&bytes)
-            .map_err(|e| anyhow::anyhow!("{path}: {e}"))?;
+        let track: TrackDef =
+            serde_json::from_slice(&bytes).map_err(|e| anyhow::anyhow!("{path}: {e}"))?;
         lib.insert(track);
     }
     Ok(lib)
@@ -611,7 +635,10 @@ const AUDIO_FILE_EXTS: [&str; 4] = ["wav", "ogg", "flac", "mp3"];
 /// VFS. Track ids are the extension-stripped `prefix`-relative path, e.g.
 /// `"data/audio/music/town.ogg"` → `"music/town"`.
 #[cfg(feature = "modern-audio")]
-fn load_file_tracks(files: &dyn ProjectFiles, prefix: &str) -> anyhow::Result<BTreeMap<String, FileTrack>> {
+fn load_file_tracks(
+    files: &dyn ProjectFiles,
+    prefix: &str,
+) -> anyhow::Result<BTreeMap<String, FileTrack>> {
     let mut out = BTreeMap::new();
     for path in files.list(prefix) {
         let ext = match path.rsplit('.').next() {
@@ -680,18 +707,57 @@ mod tests {
     #[test]
     fn fade_counts_down_then_steps_volume() {
         // reload 2: counter 2 → 1 → 0 (holds volume), then the 0 tick steps it.
-        let (f, v, done) = step_fade(Fade::Out { counter: 2, reload: 2 }, 7);
-        assert_eq!((f, v, done), (Fade::Out { counter: 1, reload: 2 }, 7, false));
+        let (f, v, done) = step_fade(
+            Fade::Out {
+                counter: 2,
+                reload: 2,
+            },
+            7,
+        );
+        assert_eq!(
+            (f, v, done),
+            (
+                Fade::Out {
+                    counter: 1,
+                    reload: 2
+                },
+                7,
+                false
+            )
+        );
         let (f, v, done) = step_fade(f, v);
-        assert_eq!((f, v, done), (Fade::Out { counter: 0, reload: 2 }, 7, false));
+        assert_eq!(
+            (f, v, done),
+            (
+                Fade::Out {
+                    counter: 0,
+                    reload: 2
+                },
+                7,
+                false
+            )
+        );
         let (f, v, done) = step_fade(f, v);
-        assert_eq!((f, v, done), (Fade::Out { counter: 2, reload: 2 }, 6, false));
+        assert_eq!(
+            (f, v, done),
+            (
+                Fade::Out {
+                    counter: 2,
+                    reload: 2
+                },
+                6,
+                false
+            )
+        );
     }
 
     #[test]
     fn fade_completes_and_restores_full_volume() {
         // Drive a whole fade from full volume with the fastest reload.
-        let mut fade = Fade::Out { counter: 0, reload: 0 };
+        let mut fade = Fade::Out {
+            counter: 0,
+            reload: 0,
+        };
         let mut vol = FULL_VOLUME;
         let mut completed = false;
         for _ in 0..64 {
@@ -727,7 +793,10 @@ mod tests {
         let mut audio = pcm_audio();
         audio.play_music("theme");
         assert!(!audio.has_output(), "pcm mode must not open a device");
-        assert!(audio.engine.is_some(), "pcm mode creates the engine on play");
+        assert!(
+            audio.engine.is_some(),
+            "pcm mode creates the engine on play"
+        );
 
         // A few video frames so the sequencer triggers the first note.
         for _ in 0..5 {
@@ -775,7 +844,10 @@ mod tests {
         let e = audio.engine.as_ref().unwrap().lock().unwrap();
         assert_eq!(e.fade, Fade::None, "fade state machine completed");
         assert!(e.current_music.is_none(), "music stopped after fade-out");
-        assert_eq!(e.master_volume, FULL_VOLUME, "volume restored for next track");
+        assert_eq!(
+            e.master_volume, FULL_VOLUME,
+            "volume restored for next track"
+        );
     }
 
     // ── Modern file audio (feature `modern-audio`) ───────────────────────
@@ -815,10 +887,7 @@ mod tests {
     fn file_audio() -> RunnerAudio {
         use std::collections::HashMap;
         let mut map = HashMap::new();
-        map.insert(
-            "data/audio/music/town.wav".to_string(),
-            test_wav_bytes(),
-        );
+        map.insert("data/audio/music/town.wav".to_string(), test_wav_bytes());
         let files = MemoryFiles::from(map);
         let mut audio = RunnerAudio::from_files(&files, "data", false);
         audio.set_pcm_render(true);
@@ -889,7 +958,10 @@ mod tests {
     fn json_track_wins_over_file_track() {
         use std::collections::HashMap;
         let mut map = HashMap::new();
-        map.insert("data/audio/theme.json".to_string(), THEME_JSON.as_bytes().to_vec());
+        map.insert(
+            "data/audio/theme.json".to_string(),
+            THEME_JSON.as_bytes().to_vec(),
+        );
         map.insert("data/audio/theme.wav".to_string(), test_wav_bytes());
         let files = MemoryFiles::from(map);
         let mut audio = RunnerAudio::from_files(&files, "data", false);
@@ -897,7 +969,11 @@ mod tests {
         // Same id "theme" in both libraries → JSON wins.
         audio.play_music("theme");
         let e = audio.engine.as_ref().unwrap().lock().unwrap();
-        assert_eq!(e.current_music.as_deref(), Some("theme"), "JSON track played");
+        assert_eq!(
+            e.current_music.as_deref(),
+            Some("theme"),
+            "JSON track played"
+        );
         assert!(e.modern_music.is_none(), "file track not used");
     }
 }

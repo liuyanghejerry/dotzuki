@@ -166,7 +166,10 @@ impl GameSave {
                 None
             }
             Err(e) => {
-                log::warn!("save: {} is corrupt ({e:#}) — starting fresh", path.display());
+                log::warn!(
+                    "save: {} is corrupt ({e:#}) — starting fresh",
+                    path.display()
+                );
                 None
             }
         }
@@ -184,8 +187,7 @@ impl GameSave {
         let mut tmp = path.as_os_str().to_owned();
         tmp.push(".tmp");
         let tmp = Path::new(&tmp);
-        std::fs::write(tmp, text)
-            .with_context(|| format!("failed to write {}", tmp.display()))?;
+        std::fs::write(tmp, text).with_context(|| format!("failed to write {}", tmp.display()))?;
         std::fs::rename(tmp, path)
             .with_context(|| format!("failed to rename save into {}", path.display()))?;
         Ok(())
@@ -253,7 +255,10 @@ mod tests {
         let loaded = GameSave::load(&path).expect("v2 save loads");
         let party = loaded.party.expect("party");
         assert_eq!(party.len(), 2);
-        assert_eq!((party[0].id.as_str(), party[0].hp, party[0].mp), ("aria", 32, 20));
+        assert_eq!(
+            (party[0].id.as_str(), party[0].hp, party[0].mp),
+            ("aria", 32, 20)
+        );
         assert_eq!(party[0].status.as_deref(), Some("poison"));
         assert_eq!((party[1].id.as_str(), party[1].hp), ("bryn", 0));
         assert_eq!(loaded.inventory.as_ref().unwrap().get("potion"), Some(&2));

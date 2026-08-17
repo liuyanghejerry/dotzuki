@@ -39,7 +39,7 @@ listed.
 
 ## In shops
 
-Item records are read through the `battle.items` table. **Buy** lists the
+The runner reads item records through the `battle.items` table. **Buy** lists the
 given items with their record `price` (default 0) and the player's money.
 **Sell** lists the player's inventory entries with a positive count, each at
 **`floor(price / 2)`** (there is no separate sellPrice field; items priced 0

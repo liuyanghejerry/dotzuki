@@ -12,8 +12,8 @@ use crate::palette::Palette;
 use crate::tile::TileSet;
 use crate::tilemap::BG_MAP_PIXEL_HEIGHT;
 use crate::tilemap::BG_MAP_PIXEL_WIDTH;
-use dotzuki_engine::tilemap::Tilemap;
 use crate::{FbSurface, TILE_SIZE};
+use dotzuki_engine::tilemap::Tilemap;
 
 /// Window layer state.
 #[derive(Debug, Clone)]

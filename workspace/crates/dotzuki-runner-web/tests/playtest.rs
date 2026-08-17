@@ -69,7 +69,10 @@ fn fixture_files() -> HashMap<String, String> {
     let mut files = HashMap::new();
     walk(&fixture, &fixture, &mut files);
     for map in ["Town", "Cave"] {
-        files.insert(format!("data/maps/{map}/tileset.png"), BASE64.encode(tileset_png()));
+        files.insert(
+            format!("data/maps/{map}/tileset.png"),
+            BASE64.encode(tileset_png()),
+        );
     }
     files
 }

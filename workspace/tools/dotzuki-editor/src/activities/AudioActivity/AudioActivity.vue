@@ -1,7 +1,7 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-900 text-gray-100">
+  <div class="h-full flex flex-col bg-canvas text-ink">
     <!-- Error banner (both edit and file-preview states) -->
-    <div v-if="error || playback.error.value" class="px-4 py-1.5 bg-red-900/40 text-red-300 text-xs shrink-0">
+    <div v-if="error || playback.error.value" class="px-4 py-1.5 bg-danger-surface/40 text-danger-ink-strong text-xs shrink-0">
       {{ error || playback.error.value }}
     </div>
 
@@ -10,21 +10,21 @@
       <div class="w-full max-w-md space-y-6">
         <div>
           <div class="text-4xl mb-3">🎵</div>
-          <p class="text-sm text-gray-400">{{ $t('audio.selectPrompt') }}</p>
+          <p class="text-sm text-ink-muted">{{ $t('audio.selectPrompt') }}</p>
         </div>
 
         <!-- File audio preview (real WAV/OGG/FLAC/MP3, rendered by the engine) -->
-        <div class="border border-gray-700 rounded bg-gray-850 p-4 text-left">
-          <h3 class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">{{ $t('audio.fileAudio') }}</h3>
-          <p class="text-[11px] text-gray-500 mb-3">{{ $t('audio.fileAudioHint') }}</p>
+        <div class="border border-border rounded-control bg-surface-deep p-4 text-left">
+          <h3 class="text-micro uppercase tracking-wider text-ink-faint mb-1">{{ $t('audio.fileAudio') }}</h3>
+          <p class="text-tiny text-ink-faint mb-3">{{ $t('audio.fileAudioHint') }}</p>
           <div class="flex items-center gap-2 flex-wrap">
-            <label class="px-3 py-1 text-xs rounded bg-gray-700 text-gray-100 hover:bg-gray-600 cursor-pointer">
+            <label class="px-3 py-1 text-xs rounded-control bg-raised text-ink hover:bg-overlay cursor-pointer">
               {{ fileAudioName ?? $t('audio.fileAudioPick') }}
               <input type="file" accept=".wav,.ogg,.flac,.mp3,audio/*" class="hidden" @change="onFilePicked" />
             </label>
             <button
               v-if="fileAudioBytes"
-              class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600 disabled:opacity-40"
+              class="px-3 py-1 text-xs rounded-control bg-success-hover text-white hover:bg-success disabled:opacity-40"
               :disabled="playback.rendering.value"
               @click="playback.playing.value ? playback.stop() : playback.playFile(fileAudioBytes, fileAudioExt, 10)"
             >{{ playback.playing.value ? '⏹ ' + $t('audio.stop') : (playback.rendering.value ? $t('audio.rendering') : '▶ ' + $t('audio.play')) }}</button>
@@ -35,43 +35,43 @@
 
     <template v-else>
       <!-- Header / toolbar -->
-      <div class="flex items-center gap-3 px-4 py-2 border-b border-gray-700 bg-gray-850 shrink-0 flex-wrap">
+      <div class="flex items-center gap-3 px-4 py-2 border-b border-border bg-surface-deep shrink-0 flex-wrap">
         <span
-          class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-          :class="current.kind === 'music' ? 'bg-blue-900/50 text-blue-300' : 'bg-purple-900/50 text-purple-300'"
+          class="text-micro uppercase tracking-wider px-1.5 py-0.5 rounded-control"
+          :class="current.kind === 'music' ? 'bg-accent-selected text-accent-ink-strong' : 'bg-ai-surface text-ai-ink-strong'"
         >{{ current.kind }}</span>
-        <span class="text-sm font-medium text-gray-200">{{ current.id }}</span>
-        <span v-if="dirty" class="text-xs text-amber-400" :title="$t('audio.unsaved')">●</span>
+        <span class="text-sm font-medium text-ink-secondary">{{ current.id }}</span>
+        <span v-if="dirty" class="text-xs text-warning-ink" :title="$t('audio.unsaved')">●</span>
 
-        <label class="flex items-center gap-1 text-xs text-gray-400">
+        <label class="flex items-center gap-1 text-xs text-ink-muted">
           {{ $t('audio.name') }}
           <input
             :value="current.name ?? ''"
             @input="setName(($event.target as HTMLInputElement).value)"
-            class="px-2 py-0.5 w-32 text-xs rounded bg-gray-900 border border-gray-700 text-gray-100"
+            class="px-2 py-0.5 w-32 text-xs rounded-control bg-canvas border border-border text-ink"
           />
         </label>
 
-        <label v-if="current.kind === 'music'" class="flex items-center gap-1 text-xs text-gray-400">
+        <label v-if="current.kind === 'music'" class="flex items-center gap-1 text-xs text-ink-muted">
           {{ $t('audio.tempo') }}
           <input
             type="number" min="1" max="65535"
             :value="current.tempo ?? 256"
             @input="setTempo(Number(($event.target as HTMLInputElement).value))"
-            class="px-2 py-0.5 w-20 text-xs rounded bg-gray-900 border border-gray-700 text-gray-100"
+            class="px-2 py-0.5 w-20 text-xs rounded-control bg-canvas border border-border text-ink"
           />
         </label>
 
         <div class="flex-1"></div>
 
         <button
-          class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600 disabled:opacity-40"
+          class="px-3 py-1 text-xs rounded-control bg-success-hover text-white hover:bg-success disabled:opacity-40"
           :disabled="playback.rendering.value"
           @click="playback.playing.value ? playback.stop() : playCurrent()"
         >{{ playback.playing.value ? '⏹ ' + $t('audio.stop') : (playback.rendering.value ? $t('audio.rendering') : '▶ ' + $t('audio.play')) }}</button>
 
         <button
-          class="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-40"
+          class="px-3 py-1 text-xs rounded-control bg-accent text-white hover:bg-accent-strong disabled:opacity-40"
           :disabled="!dirty || saving"
           @click="save()"
         >{{ saving ? $t('audio.saving') : $t('audio.save') }}</button>
@@ -82,74 +82,74 @@
         <div
           v-for="(ch, ci) in current.channels"
           :key="ci"
-          class="border border-gray-700 rounded bg-gray-850"
+          class="border border-border rounded-control bg-surface-deep"
         >
-          <div class="flex items-center gap-2 px-3 py-1.5 border-b border-gray-700 bg-gray-800">
-            <span class="text-xs text-gray-500">{{ $t('audio.channel') }}</span>
+          <div class="flex items-center gap-2 px-3 py-1.5 border-b border-border bg-surface">
+            <span class="text-xs text-ink-faint">{{ $t('audio.channel') }}</span>
             <select
               :value="ch.hw"
               @change="setHw(ci, ($event.target as HTMLSelectElement).value)"
-              class="px-2 py-0.5 text-xs rounded bg-gray-900 border border-gray-700 text-gray-100"
+              class="px-2 py-0.5 text-xs rounded-control bg-canvas border border-border text-ink"
             >
               <option v-for="hw in HW_CHANNELS" :key="hw" :value="hw">{{ hw }}</option>
             </select>
-            <span class="text-[11px] text-gray-600">{{ ch.commands.length }} {{ $t('audio.commands') }}</span>
+            <span class="text-tiny text-ink-disabled">{{ ch.commands.length }} {{ $t('audio.commands') }}</span>
             <div class="flex-1"></div>
-            <button class="text-xs text-gray-500 hover:text-red-400" @click="removeChannel(ci)">✕ {{ $t('audio.removeChannel') }}</button>
+            <button class="text-xs text-ink-faint hover:text-danger-ink" @click="removeChannel(ci)">✕ {{ $t('audio.removeChannel') }}</button>
           </div>
 
           <!-- Command rows -->
-          <div class="divide-y divide-gray-800">
+          <div class="divide-y divide-border">
             <div
               v-for="(cmd, ii) in ch.commands"
               :key="ii"
-              class="flex items-center gap-2 px-3 py-1 hover:bg-gray-800/50"
+              class="flex items-center gap-2 px-3 py-1 hover:bg-surface/50"
             >
-              <span class="text-[10px] text-gray-600 w-6 text-right tabular-nums">{{ ii }}</span>
+              <span class="text-micro text-ink-disabled w-6 text-right tabular-nums">{{ ii }}</span>
               <select
                 :value="cmd.type"
                 @change="changeType(ci, ii, ($event.target as HTMLSelectElement).value)"
-                class="px-1.5 py-0.5 text-xs rounded bg-gray-900 border border-gray-700 text-gray-200 w-36"
+                class="px-1.5 py-0.5 text-xs rounded-control bg-canvas border border-border text-ink-secondary w-36"
               >
                 <option v-for="ct in COMMAND_TYPES" :key="ct" :value="ct">{{ ct }}</option>
               </select>
 
               <!-- Dynamic fields -->
               <template v-for="f in fieldsFor(cmd.type)" :key="f.key">
-                <label class="flex items-center gap-1 text-[11px] text-gray-500">
+                <label class="flex items-center gap-1 text-tiny text-ink-faint">
                   {{ f.key }}
                   <input
                     type="number" :min="f.min" :max="f.max"
                     :value="cmd[f.key] as number"
                     @input="setField(cmd, f.key, Number(($event.target as HTMLInputElement).value))"
-                    class="px-1 py-0.5 w-16 text-xs rounded bg-gray-900 border border-gray-700 text-gray-100 tabular-nums"
+                    class="px-1 py-0.5 w-16 text-xs rounded-control bg-canvas border border-border text-ink tabular-nums"
                   />
                 </label>
               </template>
 
               <!-- Read-only helper (note name / musical octave) -->
-              <span v-if="hint(cmd)" class="text-[11px] text-gray-500 italic">{{ hint(cmd) }}</span>
+              <span v-if="hint(cmd)" class="text-tiny text-ink-faint italic">{{ hint(cmd) }}</span>
 
               <div class="flex-1"></div>
-              <button class="text-[11px] text-gray-600 hover:text-gray-300 disabled:opacity-30" :disabled="ii === 0" @click="move(ci, ii, -1)">↑</button>
-              <button class="text-[11px] text-gray-600 hover:text-gray-300 disabled:opacity-30" :disabled="ii === ch.commands.length - 1" @click="move(ci, ii, 1)">↓</button>
-              <button class="text-[11px] text-gray-600 hover:text-red-400" @click="removeCommand(ci, ii)">✕</button>
+              <button class="text-tiny text-ink-disabled hover:text-ink-body disabled:opacity-30" :disabled="ii === 0" @click="move(ci, ii, -1)">↑</button>
+              <button class="text-tiny text-ink-disabled hover:text-ink-body disabled:opacity-30" :disabled="ii === ch.commands.length - 1" @click="move(ci, ii, 1)">↓</button>
+              <button class="text-tiny text-ink-disabled hover:text-danger-ink" @click="removeCommand(ci, ii)">✕</button>
             </div>
 
-            <div v-if="!ch.commands.length" class="px-3 py-2 text-[11px] text-gray-600">{{ $t('audio.noCommands') }}</div>
+            <div v-if="!ch.commands.length" class="px-3 py-2 text-tiny text-ink-disabled">{{ $t('audio.noCommands') }}</div>
           </div>
 
           <!-- Add command -->
-          <div class="flex items-center gap-2 px-3 py-1.5 border-t border-gray-800">
-            <select v-model="addType[ci]" class="px-1.5 py-0.5 text-xs rounded bg-gray-900 border border-gray-700 text-gray-200 w-36">
+          <div class="flex items-center gap-2 px-3 py-1.5 border-t border-border-subtle">
+            <select v-model="addType[ci]" class="px-1.5 py-0.5 text-xs rounded-control bg-canvas border border-border text-ink-secondary w-36">
               <option v-for="ct in COMMAND_TYPES" :key="ct" :value="ct">{{ ct }}</option>
             </select>
-            <button class="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-100 hover:bg-gray-600" @click="addCommand(ci)">＋ {{ $t('audio.addCommand') }}</button>
+            <button class="px-2 py-0.5 text-xs rounded-control bg-raised text-ink hover:bg-overlay" @click="addCommand(ci)">＋ {{ $t('audio.addCommand') }}</button>
           </div>
         </div>
 
         <button
-          class="px-3 py-1.5 text-xs rounded border border-dashed border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500"
+          class="px-3 py-1.5 text-xs rounded-control border border-dashed border-border text-ink-muted hover:text-ink-secondary hover:border-border-strongest"
           @click="addChannel()"
         >＋ {{ $t('audio.addChannel') }}</button>
       </div>
@@ -302,5 +302,5 @@ function playCurrent() {
 </script>
 
 <style scoped>
-.bg-gray-850 { background-color: #1a1f2b; }
+.bg-surface-deep { background-color: #1a1f2b; }
 </style>

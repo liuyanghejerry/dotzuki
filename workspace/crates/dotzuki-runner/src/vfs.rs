@@ -113,7 +113,8 @@ impl ProjectFiles for MemoryFiles {
             .filter(|k| {
                 prefix.is_empty()
                     || k.as_str() == prefix
-                    || k.strip_prefix(prefix).is_some_and(|rest| rest.starts_with('/'))
+                    || k.strip_prefix(prefix)
+                        .is_some_and(|rest| rest.starts_with('/'))
             })
             .cloned()
             .collect();

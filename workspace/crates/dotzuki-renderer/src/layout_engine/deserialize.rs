@@ -89,8 +89,7 @@ fn validate_layout(layout: &ScreenLayout) {
         // Warn on unknown element types so the user knows the renderer
         // will skip them.
         match element.element_type.as_str() {
-            "group" | "border" | "text" | "tile" | "divider" | "image"
-            | "list" | "flex_list" => {}
+            "group" | "border" | "text" | "tile" | "divider" | "image" | "list" | "flex_list" => {}
             t if t.starts_with("custom:") => {}
             _ => {
                 log::warn!(
@@ -397,8 +396,7 @@ mod tests {
         assert_eq!(layout.elements[0].id, "container");
 
         // Verify group params
-        if let crate::layout_engine::types::ElementParams::Group(ref gp) =
-            layout.elements[0].params
+        if let crate::layout_engine::types::ElementParams::Group(ref gp) = layout.elements[0].params
         {
             assert_eq!(gp.children.len(), 2);
             assert!(gp.clip);

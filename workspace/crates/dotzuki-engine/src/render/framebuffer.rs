@@ -43,17 +43,35 @@ pub struct DirtyRegion {
 impl DirtyRegion {
     /// An empty dirty region (nothing to redraw).
     pub fn empty() -> Self {
-        Self { x: 0, y: 0, width: 0, height: 0, present: false }
+        Self {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            present: false,
+        }
     }
 
     /// A dirty region covering the entire screen.
     pub fn full(width: u32, height: u32) -> Self {
-        Self { x: 0, y: 0, width, height, present: true }
+        Self {
+            x: 0,
+            y: 0,
+            width,
+            height,
+            present: true,
+        }
     }
 
     /// Create a dirty region at (x, y) with the given dimensions.
     pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self {
-        Self { x, y, width, height, present: true }
+        Self {
+            x,
+            y,
+            width,
+            height,
+            present: true,
+        }
     }
 
     /// Union this region with another, producing the bounding box of both.
@@ -91,8 +109,16 @@ impl DirtyRegion {
             return (0, 0, 0, 0);
         }
         let ts = tile_size as i32;
-        let tx = if self.x >= 0 { self.x / ts } else { (self.x - ts + 1) / ts };
-        let ty = if self.y >= 0 { self.y / ts } else { (self.y - ts + 1) / ts };
+        let tx = if self.x >= 0 {
+            self.x / ts
+        } else {
+            (self.x - ts + 1) / ts
+        };
+        let ty = if self.y >= 0 {
+            self.y / ts
+        } else {
+            (self.y - ts + 1) / ts
+        };
         let right = self.x + self.width as i32;
         let bottom = self.y + self.height as i32;
         let tw = ((right + ts - 1) / ts - tx).max(0) as u32;
@@ -132,9 +158,8 @@ pub struct FrameBuffer {
 impl FrameBuffer {
     /// Create a new framebuffer with the given render config, cleared to the given color.
     pub fn new(config: RenderConfig, clear_color: Rgba) -> Self {
-        let fb_size = (config.screen_width as usize)
-            * (config.screen_height as usize)
-            * BYTES_PER_PIXEL;
+        let fb_size =
+            (config.screen_width as usize) * (config.screen_height as usize) * BYTES_PER_PIXEL;
         let mut fb = Self {
             data: vec![0; fb_size],
             width: config.screen_width,
@@ -281,5 +306,3 @@ impl FrameBuffer {
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
     }
 }
-
-

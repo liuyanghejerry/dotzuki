@@ -176,7 +176,11 @@ fn new_instance_resumes_saved_map_position_and_flags() {
 
     // A new instance over the same project resumes instead of booting fresh.
     let mut game2 = boot_saving(&root);
-    assert_eq!(game2.current_map_id(), Some("Cave"), "resumed into saved map");
+    assert_eq!(
+        game2.current_map_id(),
+        Some("Cave"),
+        "resumed into saved map"
+    );
     assert_eq!(game2.player_tile(), (2, 3), "resumed at saved tile");
     assert!(game2.flag("TOOK_TORCH"), "flags restored");
     assert!(
@@ -184,7 +188,10 @@ fn new_instance_resumes_saved_map_position_and_flags() {
         "resume skips the opening dispatch (no cave_enter/main replay)"
     );
     idle(&mut game2, 10);
-    assert!(game2.dialogue_text().is_none(), "nothing fires later either");
+    assert!(
+        game2.dialogue_text().is_none(),
+        "nothing fires later either"
+    );
 }
 
 // ── (b) corrupt save → fresh boot, no panic ─────────────────────────────────
@@ -217,7 +224,11 @@ fn fresh_option_ignores_save() {
             ..RunnerOptions::default()
         },
     );
-    assert_eq!(game2.current_map_id(), Some("Town"), "fresh boots the entry map");
+    assert_eq!(
+        game2.current_map_id(),
+        Some("Town"),
+        "fresh boots the entry map"
+    );
     assert!(!game2.flag("TOOK_TORCH"), "fresh does not restore flags");
     let page = game2.dialogue_text().expect("fresh boot plays Town main");
     assert!(page.contains("Welcome to Town"), "page: {page:?}");
@@ -240,7 +251,11 @@ fn version_mismatch_boots_fresh() {
     .unwrap();
 
     let game = boot_saving(&root);
-    assert_eq!(game.current_map_id(), Some("Town"), "incompatible save ignored");
+    assert_eq!(
+        game.current_map_id(),
+        Some("Town"),
+        "incompatible save ignored"
+    );
     assert!(!game.flag("TOOK_TORCH"));
 }
 
@@ -264,7 +279,10 @@ fn v1_save_resumes_with_fresh_party_state() {
     assert_eq!(game.current_map_id(), Some("Cave"), "v1 saves still resume");
     assert_eq!(game.player_tile(), (3, 4));
     assert!(game.flag("TOOK_TORCH"));
-    assert!(game.party_state().is_none(), "v1 ⇒ fresh party at the first battle");
+    assert!(
+        game.party_state().is_none(),
+        "v1 ⇒ fresh party at the first battle"
+    );
     assert!(game.inventory().is_none(), "v1 ⇒ starting inventory");
 }
 
@@ -316,7 +334,10 @@ fn export_save_is_none_mid_scene() {
     let game = boot_game(&root, RunnerOptions::default());
     // Fresh boot plays Town main → a textbox owns the screen: transient.
     assert!(game.dialogue_text().is_some());
-    assert!(game.export_save().is_none(), "mid-scene state cannot round-trip");
+    assert!(
+        game.export_save().is_none(),
+        "mid-scene state cannot round-trip"
+    );
 }
 
 // ── (f) --map overrides the save's map ─────────────────────────────────────
@@ -336,6 +357,14 @@ fn map_option_overrides_save() {
             ..RunnerOptions::default()
         },
     );
-    assert_eq!(game2.current_map_id(), Some("Town"), "--map wins over the save");
-    assert_eq!(game2.player_tile(), (1, 1), "spawn scan on the override map");
+    assert_eq!(
+        game2.current_map_id(),
+        Some("Town"),
+        "--map wins over the save"
+    );
+    assert_eq!(
+        game2.player_tile(),
+        (1, 1),
+        "spawn scan on the override map"
+    );
 }

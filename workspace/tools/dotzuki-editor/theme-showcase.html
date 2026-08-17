@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<title>dotzuki-editor — 新主题效果（Modern Workbench v1）</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px;
+    background: #e5e7eb;
+    font: 14px/1.5 system-ui, sans-serif;
+    color: #111827;
+  }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .intro { margin: 0 0 24px; max-width: 900px; color: #4b5563; }
+  .intro code { background: #fff; padding: 1px 5px; border-radius: 4px; border: 1px solid #d1d5db; }
+
+  /* ── 与 src/design-tokens.css 当前值一一对应 ─────────────── */
+  :root {
+    --canvas: #f3f4f6;        /* gray-100 */
+    --canvas-deep: #e5e7eb;   /* gray-200 */
+    --surface: #ffffff;
+    --surface-deep: #f9fafb;  /* gray-50 */
+    --surface-hover: #f3f4f6;
+    --raised: #e5e7eb;
+    --overlay: #d1d5db;       /* gray-300 */
+    --inset: #f9fafb;
+    --border: #e5e7eb;        /* gray-200 */
+    --border-strong: #d1d5db; /* gray-300 */
+    --border-subtle: #f3f4f6; /* gray-100 */
+    --ink: #111827;           /* gray-900 */
+    --ink-body: #374151;      /* gray-700 */
+    --ink-muted: #4b5563;     /* gray-600 */
+    --ink-faint: #6b7280;     /* gray-500 */
+    --accent: #ea580c;        /* orange-600 */
+    --accent-hover: #c2410c;  /* orange-700 */
+    --accent-strong: #f97316; /* orange-500 */
+    --accent-ink: #ea580c;
+    --accent-ink-strong: #c2410c;
+    --accent-selected: rgb(249 115 22 / .18);
+    --accent-surface: rgb(234 88 12 / .10);
+    --ai: #9333ea;            /* purple-600 */
+    --ai-hover: #7e22ce;
+    --ai-ink-strong: #7e22ce;
+    --ai-surface: rgb(147 51 234 / .10);
+    --danger: #dc2626;        /* red-600 */
+    --danger-hover: #b91c1c;
+    --danger-ink: #dc2626;
+    --danger-surface: rgb(220 38 38 / .10);
+    --success: #16a34a;       /* green-600 */
+    --success-ink: #15803d;   /* green-700 */
+    --success-ink-strong: #166534;
+    --success-surface: rgb(22 163 74 / .12);
+    --warning: #f59e0b;       /* amber-500 */
+    --warning-ink: #b45309;   /* amber-700 */
+    --warning-surface: rgb(245 158 11 / .15);
+    --radius-control: 6px;
+    --radius-card: 12px;
+    --radius-pill: 999px;
+    --shadow-popover: 0 20px 25px -5px rgb(0 0 0 / .08), 0 8px 10px -6px rgb(0 0 0 / .05);
+  }
+
+  .layout { display: flex; gap: 24px; align-items: flex-start; max-width: 1200px; flex-wrap: wrap; }
+
+  /* ── mockup：模拟编辑器外壳，全部只用 token ─────────────── */
+  .mock {
+    flex: 1 1 640px; min-width: 560px;
+    background: var(--canvas); color: var(--ink);
+    border: 1px solid var(--border); border-radius: var(--radius-card);
+    overflow: hidden; font-size: 12px;
+    box-shadow: var(--shadow-popover);
+  }
+  .mock header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .mock header .title { font-weight: 700; color: var(--accent-ink); font-size: 15px; }
+  .mock header .name { color: var(--ink-muted); font-size: 13px; }
+  .chip {
+    padding: 4px 10px; border-radius: var(--radius-control);
+    background: var(--surface-deep); border: 1px solid var(--border-strong);
+    color: var(--ink-body); font-size: 11px;
+  }
+  .tabs {
+    display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 18px;
+  }
+  .tab { padding: 10px 18px; border-bottom: 2px solid transparent; color: var(--ink-muted); font-size: 13px; }
+  .tab.active { border-bottom-color: var(--accent-ink); color: var(--accent-ink); font-weight: 600; }
+  .body { display: flex; }
+  .sidebar {
+    width: 180px; background: var(--surface); border-right: 1px solid var(--border);
+    padding: 14px 10px; min-height: 280px;
+  }
+  .side-title { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); padding: 4px 10px 8px; }
+  .side-item { padding: 8px 12px; border-radius: var(--radius-control); color: var(--ink-body); margin-bottom: 3px; font-size: 12.5px; }
+  .side-item.sel {
+    background: var(--accent-selected); color: var(--accent-ink-strong);
+    border-left: 2px solid var(--accent-ink); font-weight: 600;
+  }
+  .main { flex: 1; padding: 16px 18px; background: var(--canvas); }
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn {
+    padding: 6px 15px; border-radius: var(--radius-control); font-size: 11.5px;
+    background: var(--accent); color: #fff; border: 1px solid transparent; cursor: default;
+  }
+  .btn.ghost { background: var(--surface); color: var(--ink-body); border-color: var(--border-strong); }
+  .btn.ai { background: var(--ai); }
+  .btn.danger-ghost { background: var(--danger-surface); color: var(--danger-ink); border-color: transparent; }
+  input {
+    padding: 6px 12px; border-radius: var(--radius-control); font-size: 11.5px;
+    background: var(--inset); color: var(--ink); border: 1px solid var(--border-strong);
+    outline: none; width: 140px;
+  }
+  input:focus { border-color: var(--accent-strong); box-shadow: 0 0 0 3px rgb(249 115 22 / .25); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); padding: 9px 14px; background: var(--surface-deep); border-bottom: 1px solid var(--border); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border-subtle); color: var(--ink-body); }
+  tr:hover td { background: var(--surface-hover); }
+  .badges { display: flex; gap: 8px; margin: 14px 0; flex-wrap: wrap; }
+  .badge { padding: 3px 10px; border-radius: var(--radius-pill); font-size: 10px; font-weight: 600; }
+  .b-success { background: var(--success-surface); color: var(--success-ink-strong); }
+  .b-warning { background: var(--warning-surface); color: var(--warning-ink); }
+  .b-danger  { background: var(--danger-surface); color: var(--danger-ink); }
+  .b-ai      { background: var(--ai-surface); color: var(--ai-ink-strong); }
+  .code {
+    margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control);
+    padding: 10px 14px; font: 11px/1.7 ui-monospace, monospace; color: var(--ink-body);
+  }
+  .code .kw { color: #0550ae; } .code .str { color: #0a3069; } .code .com { color: var(--ink-faint); font-style: italic; }
+
+  /* ── 右侧：token 色板 ─────────────────────────────────── */
+  .panel { flex: 0 0 300px; background: #fff; border: 1px solid var(--border-strong); border-radius: var(--radius-card); padding: 14px; box-shadow: var(--shadow-popover); }
+  .panel h3 { margin: 0 0 10px; font-size: 13px; }
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 14px; }
+  .sw { aspect-ratio: 1; border-radius: var(--radius-control); border: 1px solid rgb(0 0 0 / .08); position: relative; }
+  .sw span { position: absolute; left: 0; right: 0; top: 100%; margin-top: 3px; font-size: 9px; color: var(--ink-faint); text-align: center; white-space: nowrap; }
+  .sw-group { margin-bottom: 22px; }
+  .sw-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+  <h1>新主题效果 · Modern Workbench v1</h1>
+  <p class="intro">
+    已写入 <code>src/design-tokens.css</code> 的浅色珊瑚橙主题（含 +12.5% 全局间距基准 <code>--spacing</code>）。
+    左侧模拟编辑器外壳（头部 / 标签页 / 侧栏 / 工具栏 / 表格 / 徽章 / 代码块），右侧是核心 token 色板。
+  </p>
+
+  <div class="layout">
+    <div class="mock">
+      <header>
+        <span><span class="title">JRPG Editor</span> <span class="name">· wuxia</span></span>
+        <span class="chip">English ▾</span>
+      </header>
+      <div class="tabs">
+        <span class="tab">Data</span><span class="tab active">Scripts</span><span class="tab">Maps</span>
+      </div>
+      <div class="body">
+        <div class="sidebar">
+          <div class="side-title">Scripts</div>
+          <div class="side-item sel">intro.scene</div>
+          <div class="side-item">town.scene</div>
+          <div class="side-item">battle.scene</div>
+        </div>
+        <div class="main">
+          <div class="toolbar">
+            <span class="btn">＋ New Record</span>
+            <span class="btn ghost">Save</span>
+            <span class="btn ai">✨ Generate</span>
+            <span class="btn danger-ghost">Delete</span>
+            <input value="intro.scene" />
+          </div>
+          <table>
+            <tr><th>ID</th><th>Name</th><th>Element</th><th>HP</th></tr>
+            <tr><td>hero</td><td>Chen Mo</td><td>Metal</td><td>120</td></tr>
+            <tr><td>villager</td><td>Aunt Lin</td><td>Earth</td><td>60</td></tr>
+          </table>
+          <div class="badges">
+            <span class="badge b-success">● saved</span>
+            <span class="badge b-warning">● 2 warnings</span>
+            <span class="badge b-danger">● broken link</span>
+            <span class="badge b-ai">● AI draft</span>
+          </div>
+          <div class="code"><span class="com">// intro.scene</span><br/><span class="kw">game_scene</span> Intro {<br/>&nbsp;&nbsp;@storyline(<span class="str">"main"</span>) { … }<br/>}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>核心 tokens</h3>
+      <div class="sw-group">
+        <div class="sw-label">Surfaces</div>
+        <div class="swatches">
+          <div class="sw" style="background:var(--canvas)"><span>canvas</span></div>
+          <div class="sw" style="background:var(--surface)"><span>surface</span></div>
+          <div class="sw" style="background:var(--surface-deep)"><span>deep</span></div>
+          <div class="sw" style="background:var(--raised)"><span>raised</span></div>
+          <div class="sw" style="background:var(--border-strong)"><span>border</span></div>
+          <div class="sw" style="background:var(--ink)"><span>ink</span></div>
+        </div>
+      </div>
+      <div class="sw-group">
+        <div class="sw-label">Accent（珊瑚橙）</div>
+        <div class="swatches">
+          <div class="sw" style="background:var(--accent)"><span>accent</span></div>
+          <div class="sw" style="background:var(--accent-hover)"><span>hover</span></div>
+          <div class="sw" style="background:var(--accent-strong)"><span>strong</span></div>
+          <div class="sw" style="background:var(--accent-selected)"><span>selected</span></div>
+          <div class="sw" style="background:var(--accent-surface)"><span>surface</span></div>
+        </div>
+      </div>
+      <div class="sw-group">
+        <div class="sw-label">Status</div>
+        <div class="swatches">
+          <div class="sw" style="background:var(--success)"><span>success</span></div>
+          <div class="sw" style="background:var(--warning)"><span>warning</span></div>
+          <div class="sw" style="background:var(--danger)"><span>danger</span></div>
+          <div class="sw" style="background:var(--ai)"><span>ai</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

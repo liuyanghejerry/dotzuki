@@ -167,7 +167,7 @@ fn recalc_preserves_absolute_hp_clamped() {
 fn gain_exp_crosses_one_level_boundary() {
     let mut m = mk(2); // exp_for_level(2) = 8
     m.exp = 8; // exactly at L2 threshold
-    // Need exp_for_level(3) = 27 to reach L3.
+               // Need exp_for_level(3) = 27 to reach L3.
     let result = m.gain_exp(&MockGame, 27 - 8);
     assert_eq!(result.old_level, 2);
     assert_eq!(result.new_level, 3);
@@ -179,7 +179,7 @@ fn gain_exp_crosses_one_level_boundary() {
 fn gain_exp_crosses_multiple_levels() {
     let mut m = mk(1);
     m.exp = 1; // L1 = 1
-    // Jump straight to L5: exp_for_level(5) = 125.
+               // Jump straight to L5: exp_for_level(5) = 125.
     let result = m.gain_exp(&MockGame, 125 - 1);
     assert_eq!(result.old_level, 1);
     assert_eq!(result.new_level, 5);
@@ -380,7 +380,11 @@ impl crate::battle::BattleProvider for MockBattle {
         crate::battle::EffectResult::NoEffect
     }
 
-    fn create_monster(&self, species: Self::Species, level: u8) -> crate::battle::BattlerState<Self> {
+    fn create_monster(
+        &self,
+        species: Self::Species,
+        level: u8,
+    ) -> crate::battle::BattlerState<Self> {
         crate::battle::BattlerState::new(
             species,
             level as u16,

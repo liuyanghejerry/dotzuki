@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.1.1
 
 Declarative JSON track files describe music and SFX for the four GB hardware
 channels; the 22-command list lives in [the audio commands

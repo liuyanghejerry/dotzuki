@@ -123,25 +123,25 @@ async function revert() {
 </script>
 
 <template>
-  <div class="border border-purple-900/40 bg-purple-950/15 rounded-lg">
+  <div class="border border-ai-deep/40 bg-ai-surface rounded-card">
     <button @click="open = !open" class="w-full flex items-center gap-2 px-4 py-2.5 text-left">
       <span>🪄</span>
-      <h3 class="text-sm font-semibold text-purple-300 flex-1">{{ t('story.scene.title') }}</h3>
-      <span class="text-gray-500 text-xs">{{ open ? '▾' : '▸' }}</span>
+      <h3 class="text-sm font-semibold text-ai-ink-strong flex-1">{{ t('story.scene.title') }}</h3>
+      <span class="text-ink-faint text-xs">{{ open ? '▾' : '▸' }}</span>
     </button>
 
     <div v-if="open" class="px-4 pb-4 space-y-3">
-      <p class="text-[11px] text-gray-400">{{ t('story.scene.desc') }}</p>
+      <p class="text-tiny text-ink-muted">{{ t('story.scene.desc') }}</p>
 
       <div class="grid grid-cols-3 gap-2">
-        <label class="text-[11px] text-gray-500">{{ t('story.scene.scene') }}
-          <input v-model="sceneName" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
+        <label class="text-tiny text-ink-faint">{{ t('story.scene.scene') }}
+          <input v-model="sceneName" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
         </label>
-        <label class="text-[11px] text-gray-500">{{ t('story.scene.storyline') }}
-          <input v-model="storyline" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100" />
+        <label class="text-tiny text-ink-faint">{{ t('story.scene.storyline') }}
+          <input v-model="storyline" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink" />
         </label>
-        <label class="text-[11px] text-gray-500">{{ t('story.scene.provider') }}
-          <select v-model="providerId" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-100">
+        <label class="text-tiny text-ink-faint">{{ t('story.scene.provider') }}
+          <select v-model="providerId" class="mt-1 w-full bg-surface border border-border rounded-control px-2 py-1 text-xs text-ink">
             <option value="">—</option>
             <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.id }}</option>
           </select>
@@ -149,50 +149,50 @@ async function revert() {
       </div>
 
       <div class="flex items-center gap-2">
-        <button @click="generate()" :disabled="busy || !providerId" class="px-3 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-40">
+        <button @click="generate()" :disabled="busy || !providerId" class="px-3 py-1 text-xs rounded-control bg-ai text-white hover:bg-ai-hover disabled:opacity-40">
           {{ busy ? t('story.scene.working') : t('story.scene.generate') }}
         </button>
-        <button v-if="!providers.length" @click="nav.goToType('settings')" class="text-[11px] text-blue-400 hover:text-blue-300">
+        <button v-if="!providers.length" @click="nav.goToType('settings')" class="text-tiny text-accent-ink hover:text-accent-ink-strong">
           {{ t('story.ai.addProvider') }}
         </button>
       </div>
 
-      <p v-if="error" class="text-xs text-red-400">{{ error }}</p>
+      <p v-if="error" class="text-xs text-danger-ink">{{ error }}</p>
 
       <!-- agent activity log -->
-      <div v-if="log.length" class="max-h-40 overflow-y-auto bg-gray-900/60 rounded p-2 text-[11px] font-mono space-y-1">
+      <div v-if="log.length" class="max-h-40 overflow-y-auto bg-canvas/60 rounded-control p-2 text-tiny font-mono space-y-1">
         <div v-for="(l, i) in log" :key="i" :class="{
-          'text-gray-400': l.kind === 'text',
-          'text-gray-600 italic': l.kind === 'reasoning',
-          'text-purple-400': l.kind === 'tool',
+          'text-ink-muted': l.kind === 'text',
+          'text-ink-disabled italic': l.kind === 'reasoning',
+          'text-ai-ink': l.kind === 'tool',
         }">{{ l.text }}</div>
       </div>
 
       <!-- generated content -->
       <div v-if="content">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-[11px] text-gray-500">{{ targetPath || sceneName }}</span>
+          <span class="text-tiny text-ink-faint">{{ targetPath || sceneName }}</span>
           <div class="flex gap-2">
-            <button v-if="applied && backup !== null" @click="revert" class="text-[11px] text-gray-400 hover:text-amber-400">{{ t('story.scene.revert') }}</button>
-            <button @click="apply" :disabled="busy" class="px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600 disabled:opacity-40">
+            <button v-if="applied && backup !== null" @click="revert" class="text-tiny text-ink-muted hover:text-warning-ink">{{ t('story.scene.revert') }}</button>
+            <button @click="apply" :disabled="busy" class="px-3 py-1 text-xs rounded-control bg-success-hover text-white hover:bg-success disabled:opacity-40">
               {{ applied ? t('story.scene.reapply') : t('story.scene.apply') }}
             </button>
           </div>
         </div>
-        <pre class="max-h-72 overflow-auto bg-gray-900 border border-gray-700 rounded p-2 text-[11px] text-gray-200 whitespace-pre-wrap">{{ content }}</pre>
+        <pre class="max-h-72 overflow-auto bg-inset border border-border rounded-control p-2 text-tiny text-ink-secondary whitespace-pre-wrap">{{ content }}</pre>
       </div>
 
       <!-- validation result -->
-      <div v-if="validation" class="rounded p-2 text-[11px]" :class="validation.ok ? 'bg-green-900/20 text-green-300' : 'bg-red-900/20 text-red-300'">
+      <div v-if="validation" class="rounded-control p-2 text-tiny" :class="validation.ok ? 'bg-success-surface text-success-ink-strong' : 'bg-danger-surface text-danger-ink-strong'">
         <div class="flex items-center justify-between mb-1">
           <span class="font-semibold">{{ validation.ok ? t('story.scene.valid') : t('story.scene.invalid') }}</span>
-          <button v-if="!validation.ok" @click="generate(validation.output)" :disabled="busy" class="text-[11px] underline hover:no-underline">
+          <button v-if="!validation.ok" @click="generate(validation.output)" :disabled="busy" class="text-tiny underline hover:no-underline">
             {{ t('story.scene.fix') }}
           </button>
         </div>
         <pre v-if="validation.output" class="whitespace-pre-wrap opacity-80 max-h-32 overflow-auto">{{ validation.output }}</pre>
       </div>
-      <p v-else-if="applied" class="text-[11px] text-gray-500">{{ t('story.scene.appliedNoValidate') }}</p>
+      <p v-else-if="applied" class="text-tiny text-ink-faint">{{ t('story.scene.appliedNoValidate') }}</p>
     </div>
 
     <AiKeyPrompt v-if="showKeyPrompt" :provider-id="providerId" @submit="onKeySubmit" @cancel="showKeyPrompt = false" />
