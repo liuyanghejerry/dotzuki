@@ -172,12 +172,8 @@ impl Group {
 
         let (rel_tx, rel_ty) = match self.layout {
             GroupLayout::Absolute => (child.rect.tx.resolve(ctx), child.rect.ty.resolve(ctx)),
-            GroupLayout::Horizontal { .. } => {
-                (0, 0)
-            }
-            GroupLayout::Vertical { .. } => {
-                (0, 0)
-            }
+            GroupLayout::Horizontal { .. } => (0, 0),
+            GroupLayout::Vertical { .. } => (0, 0),
         };
 
         TileRect::new(
@@ -223,7 +219,11 @@ impl Group {
     ///
     /// Returns a vector of [`ChildRect`] in the same order as `children`,
     /// each with a computed absolute position based on the layout mode.
-    pub fn resolve_children(&self, children: &[LayoutElement], ctx: &DataContext) -> Vec<ChildRect> {
+    pub fn resolve_children(
+        &self,
+        children: &[LayoutElement],
+        ctx: &DataContext,
+    ) -> Vec<ChildRect> {
         children
             .iter()
             .enumerate()
@@ -285,8 +285,7 @@ impl Group {
         let resolved = self.resolve_children(children, ctx);
 
         // 3. Sort by z_index (stable sort preserves original order for equal z)
-        let mut sorted: Vec<(usize, &ChildRect)> =
-            resolved.iter().enumerate().collect();
+        let mut sorted: Vec<(usize, &ChildRect)> = resolved.iter().enumerate().collect();
         sorted.sort_by_key(|(_, cr)| cr.z_index);
 
         // 4. Render children
@@ -326,7 +325,7 @@ impl Group {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout_engine::types::{Coord, ElementRect, EdgeInsets};
+    use crate::layout_engine::types::{Coord, EdgeInsets, ElementRect};
     use dotzuki_engine::render::{Rgba, TileRect};
 
     // Helper: create a minimal LayoutElement for testing
@@ -342,9 +341,7 @@ mod tests {
             },
             visible: crate::layout_engine::types::Visibility::Static(true),
             z_index: 0,
-            params: crate::layout_engine::types::ElementParams::Custom(
-                serde_json::Value::Null,
-            ),
+            params: crate::layout_engine::types::ElementParams::Custom(serde_json::Value::Null),
         }
     }
 
@@ -453,8 +450,8 @@ mod tests {
 
     #[test]
     fn horizontal_layout_offset_accumulates_widths() {
-        let g = Group::new(TileRect::new(0, 0, 20, 18))
-            .with_layout(GroupLayout::Horizontal { gap: 1 });
+        let g =
+            Group::new(TileRect::new(0, 0, 20, 18)).with_layout(GroupLayout::Horizontal { gap: 1 });
         let children = vec![
             make_element(0, 0, 5, 2), // index 0: x=0
             make_element(0, 0, 3, 2), // index 1: x=5+1=6
@@ -468,8 +465,8 @@ mod tests {
 
     #[test]
     fn vertical_layout_offset_accumulates_heights() {
-        let g = Group::new(TileRect::new(0, 0, 20, 18))
-            .with_layout(GroupLayout::Vertical { gap: 2 });
+        let g =
+            Group::new(TileRect::new(0, 0, 20, 18)).with_layout(GroupLayout::Vertical { gap: 2 });
         let children = vec![
             make_element(0, 0, 10, 3), // index 0: y=0
             make_element(0, 0, 10, 5), // index 1: y=3+2=5
@@ -483,8 +480,8 @@ mod tests {
 
     #[test]
     fn horizontal_layout_no_gap() {
-        let g = Group::new(TileRect::new(0, 0, 20, 18))
-            .with_layout(GroupLayout::Horizontal { gap: 0 });
+        let g =
+            Group::new(TileRect::new(0, 0, 20, 18)).with_layout(GroupLayout::Horizontal { gap: 0 });
         let children = vec![make_element(0, 0, 3, 1), make_element(0, 0, 7, 1)];
         assert_eq!(g.layout_offset(1, &children), (3, 0));
     }
@@ -494,10 +491,7 @@ mod tests {
     #[test]
     fn resolve_absolute_children_preserves_positions() {
         let g = Group::new(TileRect::new(2, 3, 10, 10));
-        let children = vec![
-            make_element(0, 0, 4, 2),
-            make_element(1, 1, 6, 3),
-        ];
+        let children = vec![make_element(0, 0, 4, 2), make_element(1, 1, 6, 3)];
         let ctx = DataContext::new();
 
         let resolved = g.resolve_children(&children, &ctx);
@@ -511,8 +505,8 @@ mod tests {
 
     #[test]
     fn resolve_horizontal_children() {
-        let g = Group::new(TileRect::new(1, 1, 20, 10))
-            .with_layout(GroupLayout::Horizontal { gap: 1 });
+        let g =
+            Group::new(TileRect::new(1, 1, 20, 10)).with_layout(GroupLayout::Horizontal { gap: 1 });
         let children = vec![
             make_element(0, 0, 5, 3),
             make_element(0, 0, 4, 3),
@@ -532,12 +526,9 @@ mod tests {
 
     #[test]
     fn resolve_vertical_children() {
-        let g = Group::new(TileRect::new(0, 2, 10, 15))
-            .with_layout(GroupLayout::Vertical { gap: 0 });
-        let children = vec![
-            make_element(0, 0, 10, 3),
-            make_element(0, 0, 10, 4),
-        ];
+        let g =
+            Group::new(TileRect::new(0, 2, 10, 15)).with_layout(GroupLayout::Vertical { gap: 0 });
+        let children = vec![make_element(0, 0, 10, 3), make_element(0, 0, 10, 4)];
         let ctx = DataContext::new();
 
         let resolved = g.resolve_children(&children, &ctx);
@@ -633,8 +624,8 @@ mod tests {
 
     #[test]
     fn child_rect_horizontal_mode() {
-        let g = Group::new(TileRect::new(1, 1, 20, 10))
-            .with_layout(GroupLayout::Horizontal { gap: 1 });
+        let g =
+            Group::new(TileRect::new(1, 1, 20, 10)).with_layout(GroupLayout::Horizontal { gap: 1 });
         let child = make_element(99, 99, 4, 3); // explicit tx/ty ignored
         let ctx = DataContext::new();
         let cr = g.child_rect(&child, 0, &ctx);
@@ -646,8 +637,8 @@ mod tests {
 
     #[test]
     fn child_rect_vertical_mode() {
-        let g = Group::new(TileRect::new(2, 2, 10, 20))
-            .with_layout(GroupLayout::Vertical { gap: 2 });
+        let g =
+            Group::new(TileRect::new(2, 2, 10, 20)).with_layout(GroupLayout::Vertical { gap: 2 });
         let child = make_element(42, 42, 6, 5);
         let ctx = DataContext::new();
         let cr = g.child_rect(&child, 0, &ctx);

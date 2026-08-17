@@ -2,17 +2,17 @@ use std::collections::HashMap;
 
 use wasm_bindgen::prelude::*;
 
-use dotzuki_renderer::{FrameBuffer, RenderConfig};
 use dotzuki_renderer::layout_engine::deserialize::parse_layout;
 use dotzuki_renderer::layout_engine::registry::ElementRegistry;
-use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, Theme};
 use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
+use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, Theme};
+use dotzuki_renderer::{FrameBuffer, RenderConfig};
 
 /// Real-engine audio playback (`render_audio_pcm`, `audio_sample_rate`).
 mod audio;
 
-use dotzuki_ui::FrameBufferPainter;
 use dotzuki_engine::render::Rgba;
+use dotzuki_ui::FrameBufferPainter;
 
 /// Log a warning message (goes to stderr; in WASM this reaches the browser
 /// console when using `wasm-bindgen` test runner or `console_log`).
@@ -121,9 +121,7 @@ fn json_to_data_value(v: &serde_json::Value) -> DataValue {
             .as_i64()
             .map(DataValue::Int)
             .unwrap_or_else(|| DataValue::Float(n.as_f64().unwrap_or(0.0))),
-        serde_json::Value::Array(a) => {
-            DataValue::List(a.iter().map(json_to_data_value).collect())
-        }
+        serde_json::Value::Array(a) => DataValue::List(a.iter().map(json_to_data_value).collect()),
         serde_json::Value::Object(_) => DataValue::Str(v.to_string()),
         serde_json::Value::Null => DataValue::Str(String::new()),
     }

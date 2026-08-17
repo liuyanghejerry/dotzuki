@@ -3,7 +3,7 @@
 //! configs[1] is the 2×2 menu grid.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, Ui};
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 #[derive(Debug, Clone)]
 pub struct BattleMainData {
@@ -11,7 +11,11 @@ pub struct BattleMainData {
     pub cursor: usize,
 }
 
-pub fn draw_battle_main<P: Painter>(data: &BattleMainData, configs: &[MenuConfig], painter: &mut P) {
+pub fn draw_battle_main<P: Painter>(
+    data: &BattleMainData,
+    configs: &[MenuConfig],
+    painter: &mut P,
+) {
     let mut ui = Ui::new(painter);
 
     // Base background box (just the border, no interior content)
@@ -61,47 +65,71 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn base_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(8,11,12,5), None, TileRect::new(9,12,10,3), dotzuki_engine::menu::CursorStyle::new(None, Default::default()))
+        MenuConfig::new(
+            TileRect::new(8, 11, 12, 5),
+            None,
+            TileRect::new(9, 12, 10, 3),
+            dotzuki_engine::menu::CursorStyle::new(None, Default::default()),
+        )
     }
     fn menu_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(8,11,12,5), None, TileRect::new(9,12,10,3), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(8, 11, 12, 5),
+            None,
+            TileRect::new(9, 12, 10, 3),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
     fn test_data() -> BattleMainData {
-        BattleMainData { options: vec!["FIGHT".into(), "BAG".into(), "PKMN".into(), "RUN".into()], cursor: 0 }
+        BattleMainData {
+            options: vec!["FIGHT".into(), "BAG".into(), "PKMN".into(), "RUN".into()],
+            cursor: 0,
+        }
     }
 
-    #[test] fn draws_both_boxes() {
+    #[test]
+    fn draws_both_boxes() {
         let mut painter = RecordingPainter::default();
         draw_battle_main(&test_data(), &[base_config(), menu_config()], &mut painter);
         assert_eq!(painter.text_boxes.len(), 2);
     }
-    #[test] fn draws_options() {
+    #[test]
+    fn draws_options() {
         let mut painter = RecordingPainter::default();
         draw_battle_main(&test_data(), &[base_config(), menu_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "FIGHT"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "BAG"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "RUN"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "FIGHT"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "BAG"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "RUN"));
     }
-    #[test] fn draws_pkmn_composite() {
+    #[test]
+    fn draws_pkmn_composite() {
         let mut painter = RecordingPainter::default();
         draw_battle_main(&test_data(), &[base_config(), menu_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "PK"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "MN"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "PK"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "MN"));
     }
-    #[test] fn draws_cursor() {
+    #[test]
+    fn draws_cursor() {
         let mut painter = RecordingPainter::default();
         draw_battle_main(&test_data(), &[base_config(), menu_config()], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn no_menu_config() {
+    #[test]
+    fn no_menu_config() {
         let mut painter = RecordingPainter::default();
         draw_battle_main(&test_data(), &[base_config()], &mut painter);
         assert_eq!(painter.text_boxes.len(), 1); // only base box

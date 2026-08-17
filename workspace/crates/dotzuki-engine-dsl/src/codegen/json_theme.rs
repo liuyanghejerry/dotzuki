@@ -43,8 +43,7 @@ pub fn compile_style(style: &Style) -> String {
 /// 3. Merge ancestor properties first, then child properties (child overrides)
 /// 4. Return JSON array of resolved styles with clean value representations
 pub fn compile_styles_resolved(styles: &[Style]) -> String {
-    let style_map: HashMap<&str, &Style> =
-        styles.iter().map(|s| (s.name.as_str(), s)).collect();
+    let style_map: HashMap<&str, &Style> = styles.iter().map(|s| (s.name.as_str(), s)).collect();
 
     let resolved: Vec<Value> = styles
         .iter()

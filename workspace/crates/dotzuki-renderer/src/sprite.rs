@@ -13,7 +13,7 @@
 //! The classic Game Boy games use 8×8 sprites assembled into 16×16 characters
 //! (4 OAM entries per sprite). Color 0 in sprite palettes is transparent.
 
-use crate::palette::{ColorIndex, GbaColor, GbColor, Palette};
+use crate::palette::{ColorIndex, GbColor, GbaColor, Palette};
 use crate::tile::{TileFormat, TileSet, TILE_PIXELS};
 use crate::FbSurface;
 
@@ -241,8 +241,7 @@ fn render_sprite(
             // BG priority check: if set, only draw over BG color 0 pixels
             if entry.bg_priority() {
                 if let Some(bg_buf) = bg_color_buffer {
-                    let pixel_offset =
-                        screen_y as usize * fb_w + screen_x as usize;
+                    let pixel_offset = screen_y as usize * fb_w + screen_x as usize;
                     if pixel_offset < bg_buf.len() && bg_buf[pixel_offset] != 0 {
                         continue;
                     }

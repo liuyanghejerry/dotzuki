@@ -100,7 +100,9 @@ fn battle_diagnostics(manifest: &Manifest, root: &Path) -> Vec<String> {
     // The mapped stat fields must exist in the combatant table schemas.
     let stats = battle.stats.clone().unwrap_or_default();
     for (what, table) in [("party", &party), ("enemies", &enemies)] {
-        let Some(table) = table.as_ref() else { continue };
+        let Some(table) = table.as_ref() else {
+            continue;
+        };
         for (role, field) in [
             ("hp", &stats.hp),
             ("attack", &stats.attack),
@@ -117,7 +119,13 @@ fn battle_diagnostics(manifest: &Manifest, root: &Path) -> Vec<String> {
         }
         // The combatant resource field.
         if let Some(resource) = &battle.resource {
-            require_field(&mut diags, "battle.resource", resource.as_str(), table, what);
+            require_field(
+                &mut diags,
+                "battle.resource",
+                resource.as_str(),
+                table,
+                what,
+            );
         }
         // The combatant skill-list field.
         let skills_field = battle
@@ -126,13 +134,7 @@ fn battle_diagnostics(manifest: &Manifest, root: &Path) -> Vec<String> {
             .map(|s| s.field.as_str())
             .unwrap_or(dotzuki_runner::manifest::DEFAULT_SKILLS_FIELD);
         if battle.skills.is_some() {
-            require_field(
-                &mut diags,
-                "battle.skills.field",
-                skills_field,
-                table,
-                what,
-            );
+            require_field(&mut diags, "battle.skills.field", skills_field, table, what);
         }
     }
 
@@ -243,8 +245,10 @@ mod tests {
     impl TestDir {
         fn new(test: &str) -> Self {
             let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-            let dir = std::env::temp_dir()
-                .join(format!("dotzuki-cli-check-{test}-{}-{id}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!(
+                "dotzuki-cli-check-{test}-{}-{id}",
+                std::process::id()
+            ));
             let _ = fs::remove_dir_all(&dir);
             fs::create_dir_all(&dir).unwrap();
             TestDir(dir)
@@ -347,7 +351,9 @@ mod tests {
         let (tmp, manifest) = write_project("badtable", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("beasts") && d.contains("battle.enemies.table")),
+            diags
+                .iter()
+                .any(|d| d.contains("beasts") && d.contains("battle.enemies.table")),
             "{diags:?}"
         );
     }
@@ -359,7 +365,9 @@ mod tests {
         let (tmp, manifest) = write_project("badstat", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.stats.attack") && d.contains("attack")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.stats.attack") && d.contains("attack")),
             "{diags:?}"
         );
     }
@@ -371,7 +379,9 @@ mod tests {
         let (tmp, manifest) = write_project("badcost", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.skills.costField") && d.contains("cost")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.skills.costField") && d.contains("cost")),
             "{diags:?}"
         );
     }
@@ -379,8 +389,7 @@ mod tests {
     #[test]
     fn valid_items_block_passes() {
         let mut battle = valid_battle();
-        battle["items"] =
-            serde_json::json!({ "table": "items", "healField": "healHp", "starting": { "potion": 3 } });
+        battle["items"] = serde_json::json!({ "table": "items", "healField": "healHp", "starting": { "potion": 3 } });
         let (tmp, manifest) = write_project("gooditems", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(diags.is_empty(), "{diags:?}");
@@ -393,7 +402,9 @@ mod tests {
         let (tmp, manifest) = write_project("baditemtable", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("goods") && d.contains("battle.items.table")),
+            diags
+                .iter()
+                .any(|d| d.contains("goods") && d.contains("battle.items.table")),
             "{diags:?}"
         );
     }
@@ -405,7 +416,9 @@ mod tests {
         let (tmp, manifest) = write_project("badhealfield", battle, None);
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.items.healField") && d.contains("healAmount")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.items.healField") && d.contains("healAmount")),
             "{diags:?}"
         );
     }
@@ -453,7 +466,9 @@ mod tests {
         let (tmp, manifest) = write_project("badron", valid_battle(), Some("Ruleset(types: ["));
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.rules") && d.contains("rules.ron")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("rules.ron")),
             "{diags:?}"
         );
     }
@@ -488,7 +503,9 @@ mod tests {
         let (tmp, manifest) = write_project("declaredbad", battle, Some("Ruleset(types: ["));
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.rules") && d.contains("rules.ron")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("rules.ron")),
             "{diags:?}"
         );
     }
@@ -533,7 +550,9 @@ mod tests {
         );
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.rules") && d.contains("speed")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("speed")),
             "{diags:?}"
         );
 
@@ -545,7 +564,9 @@ mod tests {
         );
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.rules") && d.contains("OnHit")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("OnHit")),
             "{diags:?}"
         );
 
@@ -553,11 +574,15 @@ mod tests {
         let (tmp, manifest) = write_project(
             "badtype",
             valid_battle(),
-            Some(r#"Ruleset(types: ["fire"], type_chart: [(atk: "fire", def: "grass", mult: [2, 1])])"#),
+            Some(
+                r#"Ruleset(types: ["fire"], type_chart: [(atk: "fire", def: "grass", mult: [2, 1])])"#,
+            ),
         );
         let diags = battle_diagnostics(&manifest, &tmp.0.join("proj"));
         assert!(
-            diags.iter().any(|d| d.contains("battle.rules") && d.contains("grass")),
+            diags
+                .iter()
+                .any(|d| d.contains("battle.rules") && d.contains("grass")),
             "{diags:?}"
         );
     }

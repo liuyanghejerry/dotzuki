@@ -20,10 +20,8 @@ struct TestDir(PathBuf);
 impl TestDir {
     fn new(test: &str) -> Self {
         let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "dotzuki-runner-{test}-{}-{id}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("dotzuki-runner-{test}-{}-{id}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         TestDir(dir)
@@ -136,10 +134,9 @@ fn entry_falls_back_when_game_section_absent() {
     let (_tmp, root) = demo_project("fallback");
     // Strip the game section: entry resolution must fall back to the first
     // map dir (sorted) and the first scene by source path.
-    let manifest: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(root.join(".dotzuki-editor.json")).unwrap(),
-    )
-    .unwrap();
+    let manifest: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(root.join(".dotzuki-editor.json")).unwrap())
+            .unwrap();
     let mut manifest = manifest;
     manifest.as_object_mut().unwrap().remove("game");
     fs::write(
@@ -149,7 +146,10 @@ fn entry_falls_back_when_game_section_absent() {
     .unwrap();
 
     let project = LoadedProject::load(&root).expect("load");
-    assert_eq!(project.map_ids(), vec!["Cave".to_string(), "Town".to_string()]);
+    assert_eq!(
+        project.map_ids(),
+        vec!["Cave".to_string(), "Town".to_string()]
+    );
     // First map dir (sorted) wins without a game section.
     assert_eq!(project.entry_map().unwrap(), "Cave");
     // assets/scenes/main.scene sorts before data/maps/Town/script.scene.
@@ -174,7 +174,9 @@ fn load_fails_on_dsl_diagnostics() {
 #[test]
 fn load_fails_without_manifest() {
     let tmp = TestDir::new("nomanifest");
-    let err = LoadedProject::load(tmp.path()).err().expect("load should fail");
+    let err = LoadedProject::load(tmp.path())
+        .err()
+        .expect("load should fail");
     assert!(format!("{err:#}").contains(".dotzuki-editor.json"));
 }
 
@@ -208,7 +210,10 @@ fn runtime_map_loads_tmx_collision_and_tileset() {
 
     // The collision layer is excluded from the visual render state.
     assert_eq!(map.render_state().layers.len(), 1);
-    assert_eq!(map.render_state().background_color, (0x30, 0x68, 0x50, 0xFF));
+    assert_eq!(
+        map.render_state().background_color,
+        (0x30, 0x68, 0x50, 0xFF)
+    );
 
     // Tileset sliced: four 16×16 tiles, 1-based GIDs.
     let ts = map.tileset();
@@ -217,7 +222,11 @@ fn runtime_map_loads_tmx_collision_and_tileset() {
     for (i, &[r, g, b, a]) in TILE_COLORS.iter().enumerate() {
         let gid = (i + 1) as u16;
         assert_eq!(map.gid_pixel(gid, 0, 0), Rgba::new(r, g, b, a), "GID {gid}");
-        assert_eq!(map.gid_pixel(gid, 15, 15), Rgba::new(r, g, b, a), "GID {gid}");
+        assert_eq!(
+            map.gid_pixel(gid, 15, 15),
+            Rgba::new(r, g, b, a),
+            "GID {gid}"
+        );
     }
     // GID 0 (empty) and out-of-range GIDs are transparent.
     assert_eq!(map.gid_pixel(0, 0, 0), Rgba::TRANSPARENT);
@@ -292,11 +301,7 @@ fn legacy_map_json_sidecar_is_read_as_fallback() {
 
     // objects.json wins when both exist (Town has objects.json only, so check
     // precedence directly via MapObjects::load on a dir holding both files).
-    fs::write(
-        dir.join("objects.json"),
-        r#"{ "npcs": [], "warps": [] }"#,
-    )
-    .unwrap();
+    fs::write(dir.join("objects.json"), r#"{ "npcs": [], "warps": [] }"#).unwrap();
     let objects = MapObjects::load(&dir).unwrap();
     assert!(objects.npcs.is_empty(), "objects.json takes precedence");
 }
@@ -305,7 +310,9 @@ fn legacy_map_json_sidecar_is_read_as_fallback() {
 fn missing_tileset_is_a_clear_error() {
     let (_tmp, root) = demo_project("notileset");
     fs::remove_file(root.join("data/maps/Town/tileset.png")).unwrap();
-    let err = RuntimeMap::load(&root.join("data/maps"), "Town").err().expect("load should fail");
+    let err = RuntimeMap::load(&root.join("data/maps"), "Town")
+        .err()
+        .expect("load should fail");
     let msg = format!("{err:#}");
     assert!(msg.contains("tileset.png"), "{msg}");
 }

@@ -51,11 +51,19 @@ pub struct PropSpec {
 
 impl PropSpec {
     pub const fn required(name: &'static str, ty: PropType) -> Self {
-        Self { name, ty, required: true }
+        Self {
+            name,
+            ty,
+            required: true,
+        }
     }
 
     pub const fn optional(name: &'static str, ty: PropType) -> Self {
-        Self { name, ty, required: false }
+        Self {
+            name,
+            ty,
+            required: false,
+        }
     }
 }
 
@@ -496,7 +504,10 @@ mod tests {
         let violations = gauge_registry().validate_layout(&layout).unwrap_err();
         assert_eq!(violations.len(), 1);
         assert!(violations[0].message.contains("not registered"));
-        assert!(violations[0].message.contains("custom:gauge"), "lists registered types");
+        assert!(
+            violations[0].message.contains("custom:gauge"),
+            "lists registered types"
+        );
     }
 
     #[test]
@@ -508,7 +519,9 @@ mod tests {
         let violations = gauge_registry().validate_layout(&layout).unwrap_err();
         assert_eq!(violations.len(), 1);
         assert_eq!(violations[0].element, "hp");
-        assert!(violations[0].message.contains("missing required prop 'max'"));
+        assert!(violations[0]
+            .message
+            .contains("missing required prop 'max'"));
     }
 
     #[test]
@@ -519,7 +532,9 @@ mod tests {
         );
         let violations = gauge_registry().validate_layout(&layout).unwrap_err();
         assert_eq!(violations.len(), 1);
-        assert!(violations[0].message.contains("'segments' expects a int value"));
+        assert!(violations[0]
+            .message
+            .contains("'segments' expects a int value"));
     }
 
     #[test]
@@ -531,7 +546,11 @@ mod tests {
                  ] }"#,
         );
         let violations = gauge_registry().validate_layout(&layout).unwrap_err();
-        assert_eq!(violations.len(), 2, "missing current AND max: {violations:?}");
+        assert_eq!(
+            violations.len(),
+            2,
+            "missing current AND max: {violations:?}"
+        );
     }
 
     #[test]

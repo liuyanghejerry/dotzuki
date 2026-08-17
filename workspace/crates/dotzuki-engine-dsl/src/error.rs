@@ -89,7 +89,9 @@ pub enum DslError {
     #[error("Invalid component type `{found}`")]
     #[diagnostic(
         code("E005"),
-        help("Valid component types: panel, container, text, button, list, image, input, dropdown")
+        help(
+            "Valid component types: panel, container, text, button, list, image, input, dropdown"
+        )
     )]
     InvalidComponent {
         /// The invalid type name that was found.
@@ -105,10 +107,7 @@ pub enum DslError {
 
     /// Reference to an atlas region that doesn't exist.
     #[error("Missing atlas region `{region}`")]
-    #[diagnostic(
-        code("E006"),
-        help("Available regions: {available}")
-    )]
+    #[diagnostic(code("E006"), help("Available regions: {available}"))]
     MissingRegion {
         /// The region name that was requested but not found.
         region: String,
@@ -125,10 +124,7 @@ pub enum DslError {
 
     /// A `@choice` block contains zero `@option` entries.
     #[error("Empty @choice block")]
-    #[diagnostic(
-        code("E007"),
-        help("A @choice must have at least one @option")
-    )]
+    #[diagnostic(code("E007"), help("A @choice must have at least one @option"))]
     EmptyChoice {
         /// Byte-offset span of the choice block.
         #[label]
@@ -186,10 +182,8 @@ pub enum DslError {
 /// span coordinates fall outside the source text (e.g. an empty source string
 /// or out-of-bounds line).
 pub fn to_miette_span(span: &crate::ast::SourceSpan, source_text: &str) -> MietteSpan {
-    let start_offset =
-        line_col_to_byte_offset(source_text, span.line_start, span.col_start);
-    let end_offset =
-        line_col_to_byte_offset(source_text, span.line_end, span.col_end);
+    let start_offset = line_col_to_byte_offset(source_text, span.line_start, span.col_start);
+    let end_offset = line_col_to_byte_offset(source_text, span.line_end, span.col_end);
     let len = end_offset.saturating_sub(start_offset);
     MietteSpan::new(start_offset.into(), len)
 }
@@ -304,7 +298,10 @@ mod tests {
         assert_eq!(error_code(&err).as_deref(), Some("E001"));
         assert!(error_help(&err).unwrap().contains("block delimiters"));
         // Metadata fields are preserved.
-        if let DslError::Syntax { file, line, col, .. } = &err {
+        if let DslError::Syntax {
+            file, line, col, ..
+        } = &err
+        {
             assert_eq!(file, "test.scene");
             assert_eq!(*line, 1);
             assert_eq!(*col, 13);
@@ -321,10 +318,7 @@ mod tests {
             file: "test.scene".into(),
             line: 5,
         };
-        assert_eq!(
-            err.to_string(),
-            "Unknown directive `banana`"
-        );
+        assert_eq!(err.to_string(), "Unknown directive `banana`");
         assert_eq!(error_code(&err).as_deref(), Some("E002"));
         let help = error_help(&err).unwrap();
         assert!(
@@ -345,8 +339,14 @@ mod tests {
         assert_eq!(err.to_string(), "Undefined variable `gold`");
         assert_eq!(error_code(&err).as_deref(), Some("E003"));
         let help = error_help(&err).unwrap();
-        assert!(help.contains("gold"), "help should mention the variable name");
-        assert!(help.contains("@variables"), "help should reference @variables");
+        assert!(
+            help.contains("gold"),
+            "help should mention the variable name"
+        );
+        assert!(
+            help.contains("@variables"),
+            "help should reference @variables"
+        );
     }
 
     #[test]
@@ -373,10 +373,7 @@ mod tests {
             file: "test.gui".into(),
             line: 3,
         };
-        assert_eq!(
-            err.to_string(),
-            "Invalid component type `widget`"
-        );
+        assert_eq!(err.to_string(), "Invalid component type `widget`");
         assert_eq!(error_code(&err).as_deref(), Some("E005"));
         let help = error_help(&err).unwrap();
         assert!(help.contains("panel"), "help should list valid components");
@@ -391,10 +388,7 @@ mod tests {
             file: "test.scene".into(),
             line: 7,
         };
-        assert_eq!(
-            err.to_string(),
-            "Indentation error: Tabs are not allowed"
-        );
+        assert_eq!(err.to_string(), "Indentation error: Tabs are not allowed");
         assert_eq!(error_code(&err).as_deref(), Some("E008"));
         assert!(error_help(&err).unwrap().contains("spaces"));
     }
@@ -421,10 +415,7 @@ mod tests {
             file: "test.scene".into(),
             line: 15,
         };
-        assert_eq!(
-            err.to_string(),
-            "Missing atlas region `btn_hover`"
-        );
+        assert_eq!(err.to_string(), "Missing atlas region `btn_hover`");
         assert_eq!(error_code(&err).as_deref(), Some("E006"));
         assert!(error_help(&err).unwrap().contains("btn_normal"));
     }
@@ -453,23 +444,67 @@ mod tests {
 
         // Construct one of each variant and collect error codes.
         let errors: Vec<DslError> = vec![
-            DslError::Syntax { src: "".into(), span: dummy_span(), file: "".into(), line: 1, col: 0 },
-            DslError::UnknownDirective { name: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::UndefinedVariable { name: "".into(), defined_vars: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::CircularStyle { chain: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::InvalidComponent { found: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::MissingRegion { region: "".into(), available: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::EmptyChoice { span: dummy_span(), file: "".into(), line: 1 },
-            DslError::IndentationError { msg: "".into(), span: dummy_span(), file: "".into(), line: 1 },
-            DslError::InternalError { msg: "".into(), span: Some(dummy_span()), file: "".into(), line: 1 },
+            DslError::Syntax {
+                src: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+                col: 0,
+            },
+            DslError::UnknownDirective {
+                name: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::UndefinedVariable {
+                name: "".into(),
+                defined_vars: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::CircularStyle {
+                chain: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::InvalidComponent {
+                found: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::MissingRegion {
+                region: "".into(),
+                available: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::EmptyChoice {
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::IndentationError {
+                msg: "".into(),
+                span: dummy_span(),
+                file: "".into(),
+                line: 1,
+            },
+            DslError::InternalError {
+                msg: "".into(),
+                span: Some(dummy_span()),
+                file: "".into(),
+                line: 1,
+            },
         ];
 
         for err in &errors {
             let code = error_code(err).expect("every variant must have an error code");
-            assert!(
-                codes.insert(code.clone()),
-                "duplicate error code: {code}"
-            );
+            assert!(codes.insert(code.clone()), "duplicate error code: {code}");
         }
         assert_eq!(codes.len(), errors.len(), "all codes must be unique");
     }

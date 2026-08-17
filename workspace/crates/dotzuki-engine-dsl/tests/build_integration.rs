@@ -60,9 +60,12 @@ game_scene IdempotentTest {
     let mut hashes1 = Vec::new();
     for (ext, path) in &files1 {
         let content = fs::read_to_string(path).unwrap();
-        let result =
-            dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
-        assert!(result.is_ok(), "First compile should succeed: {:?}", result.err());
+        let result = dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
+        assert!(
+            result.is_ok(),
+            "First compile should succeed: {:?}",
+            result.err()
+        );
         let js_path = dsl_out.join("IdempotentTest.js");
         let js = fs::read_to_string(&js_path).unwrap();
         hashes1.push(dotzuki_engine_dsl::compiler::content_hash(&js));
@@ -72,8 +75,7 @@ game_scene IdempotentTest {
     let mut hashes2 = Vec::new();
     for (ext, path) in &files1 {
         let content = fs::read_to_string(path).unwrap();
-        let result =
-            dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
+        let result = dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
         assert!(result.is_ok(), "Second compile should succeed");
         let js_path = dsl_out.join("IdempotentTest.js");
         let js = fs::read_to_string(&js_path).unwrap();
@@ -99,18 +101,26 @@ fn test_incremental_only_changed_recompiled() {
     let scenes_dir = root.join("assets").join("scenes");
 
     // Create 2 .scene files
-    fs::write(scenes_dir.join("a.scene"), "\
+    fs::write(
+        scenes_dir.join("a.scene"),
+        "\
 game_scene A {
   @storylines {
     @speaker(\"A\") { \"first\" }
   }
-}").unwrap();
-    fs::write(scenes_dir.join("b.scene"), "\
+}",
+    )
+    .unwrap();
+    fs::write(
+        scenes_dir.join("b.scene"),
+        "\
 game_scene B {
   @storylines {
     @speaker(\"B\") { \"first\" }
   }
-}").unwrap();
+}",
+    )
+    .unwrap();
 
     let out_dir = root.join("out");
     let dsl_out = out_dir.join("dsl");
@@ -134,12 +144,16 @@ game_scene B {
     );
 
     // Modify only file A
-    fs::write(scenes_dir.join("a.scene"), "\
+    fs::write(
+        scenes_dir.join("a.scene"),
+        "\
 game_scene A {
   @storylines {
     @speaker(\"A2\") { \"modified\" }
   }
-}").unwrap();
+}",
+    )
+    .unwrap();
 
     // Second compilation
     let files2 = dotzuki_engine_dsl::compiler::discover_dsl_files(&root);
@@ -185,8 +199,7 @@ fn test_error_handling_no_panic() {
     let files = dotzuki_engine_dsl::compiler::discover_dsl_files(&root);
     for (ext, path) in &files {
         let content = fs::read_to_string(path).unwrap();
-        let result =
-            dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
+        let result = dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
         // Should be Err with a useful message (not a panic)
         match result {
             Err(err_msg) => {
@@ -213,23 +226,27 @@ fn test_mixed_valid_invalid() {
     let scenes_dir = root.join("assets").join("scenes");
 
     // 2 valid + 1 invalid
-    fs::write(scenes_dir.join("good_a.scene"), "\
+    fs::write(
+        scenes_dir.join("good_a.scene"),
+        "\
 game_scene GoodA {
   @storylines {
     @speaker(\"A\") { \"ok\" }
   }
-}").unwrap();
-    fs::write(
-        scenes_dir.join("bad.scene"),
-        "game_scene Bad { @@bad }",
+}",
     )
     .unwrap();
-    fs::write(scenes_dir.join("good_b.scene"), "\
+    fs::write(scenes_dir.join("bad.scene"), "game_scene Bad { @@bad }").unwrap();
+    fs::write(
+        scenes_dir.join("good_b.scene"),
+        "\
 game_scene GoodB {
   @storylines {
     @speaker(\"B\") { \"ok\" }
   }
-}").unwrap();
+}",
+    )
+    .unwrap();
 
     let out_dir = root.join("out");
     let dsl_out = out_dir.join("dsl");
@@ -243,8 +260,7 @@ game_scene GoodB {
 
     for (ext, path) in &files {
         let content = fs::read_to_string(path).unwrap();
-        let result =
-            dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
+        let result = dotzuki_engine_dsl::compiler::compile_dsl_file(ext, &content, path, &dsl_out);
         match result {
             Ok(_) => success_count += 1,
             Err(_) => error_count += 1,
@@ -258,10 +274,7 @@ game_scene GoodB {
     assert!(dsl_out.join("GoodA.js").exists(), "GoodA.js should exist");
     assert!(dsl_out.join("GoodB.js").exists(), "GoodB.js should exist");
     // Bad.scene should NOT produce a .js file
-    assert!(
-        !dsl_out.join("Bad.js").exists(),
-        "Bad.js should NOT exist"
-    );
+    assert!(!dsl_out.join("Bad.js").exists(), "Bad.js should NOT exist");
 
     let _ = fs::remove_dir_all(&root);
 }

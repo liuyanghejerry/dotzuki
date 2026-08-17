@@ -565,45 +565,109 @@ mod tests {
     #[test]
     fn pound_animation_has_frames() {
         let results = run_animation(0x00);
-        let has_frames = results.iter().any(|r| matches!(r, AnimTickResult::Playing { .. } | AnimTickResult::WaitDelay { .. }));
+        let has_frames = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Playing { .. } | AnimTickResult::WaitDelay { .. }
+            )
+        });
         assert!(has_frames, "Pound should have animation frames");
     }
 
     #[test]
     fn earthquake_has_screen_shake() {
         let results = run_animation(0x58);
-        let shake_count = results.iter().filter(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::ShakeScreen, .. })).count();
+        let shake_count = results
+            .iter()
+            .filter(|r| {
+                matches!(
+                    r,
+                    AnimTickResult::Effect {
+                        effect: SpecialEffect::ShakeScreen,
+                        ..
+                    }
+                )
+            })
+            .count();
         assert_eq!(shake_count, 2, "Earthquake should have 2 screen shakes");
     }
 
     #[test]
     fn thunder_punch_has_palette_effects() {
         let results = run_animation(0x08);
-        let dark_palette = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::DarkScreenPalette, .. }));
-        let reset_palette = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::ResetScreenPalette, .. }));
+        let dark_palette = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::DarkScreenPalette,
+                    ..
+                }
+            )
+        });
+        let reset_palette = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::ResetScreenPalette,
+                    ..
+                }
+            )
+        });
         assert!(dark_palette, "ThunderPunch should have dark screen palette");
-        assert!(reset_palette, "ThunderPunch should have reset screen palette");
+        assert!(
+            reset_palette,
+            "ThunderPunch should have reset screen palette"
+        );
     }
 
     #[test]
     fn selfdestruct_has_explosion() {
         let results = run_animation(0x77);
-        let has_frames = results.iter().any(|r| matches!(r, AnimTickResult::Playing { .. } | AnimTickResult::WaitDelay { .. }));
+        let has_frames = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Playing { .. } | AnimTickResult::WaitDelay { .. }
+            )
+        });
         assert!(has_frames, "Selfdestruct should have explosion frames");
     }
 
     #[test]
     fn splash_has_bounce() {
         let results = run_animation(0x95);
-        let bounce = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::BounceUpAndDown, .. }));
+        let bounce = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::BounceUpAndDown,
+                    ..
+                }
+            )
+        });
         assert!(bounce, "Splash should have bounce effect");
     }
 
     #[test]
     fn teleport_has_squish_and_balls() {
         let results = run_animation(0x63);
-        let squish = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SquishMonPic, .. }));
-        let balls = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::ShootBallsUpward, .. }));
+        let squish = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SquishMonPic,
+                    ..
+                }
+            )
+        });
+        let balls = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::ShootBallsUpward,
+                    ..
+                }
+            )
+        });
         assert!(squish, "Teleport should have squish effect");
         assert!(balls, "Teleport should have shoot balls upward");
     }
@@ -611,71 +675,159 @@ mod tests {
     #[test]
     fn acid_armor_slides_down() {
         let results = run_animation(0x96);
-        let slide = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SlideMonDownAndHide, .. }));
+        let slide = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SlideMonDownAndHide,
+                    ..
+                }
+            )
+        });
         assert!(slide, "Acid Armor should have slide down and hide");
     }
 
     #[test]
     fn minimize_has_minimize_effect() {
         let results = run_animation(0x6A);
-        let minimize = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::MinimizeMon, .. }));
+        let minimize = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::MinimizeMon,
+                    ..
+                }
+            )
+        });
         assert!(minimize, "Minimize should have minimize effect");
     }
 
     #[test]
     fn transform_has_transform_effect() {
         let results = run_animation(0x8F);
-        let transform = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::TransformMon, .. }));
+        let transform = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::TransformMon,
+                    ..
+                }
+            )
+        });
         assert!(transform, "Transform should have transform effect");
     }
 
     #[test]
     fn substitute_has_substitute_effect() {
         let results = run_animation(0xA3);
-        let substitute = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SubstituteMon, .. }));
+        let substitute = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SubstituteMon,
+                    ..
+                }
+            )
+        });
         assert!(substitute, "Substitute should have substitute effect");
     }
 
     #[test]
     fn double_team_has_shake() {
         let results = run_animation(0x67);
-        let shake = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::ShakeBackAndForth, .. }));
+        let shake = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::ShakeBackAndForth,
+                    ..
+                }
+            )
+        });
         assert!(shake, "Double Team should have shake back and forth");
     }
 
     #[test]
     fn recover_has_blink() {
         let results = run_animation(0x68);
-        let blink = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::BlinkMon, .. }));
+        let blink = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::BlinkMon,
+                    ..
+                }
+            )
+        });
         assert!(blink, "Recover should have blink effect");
     }
 
     #[test]
     fn whirlwind_slides_enemy_off() {
         let results = run_animation(0x11);
-        let slide = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SlideEnemyMonOff, .. }));
+        let slide = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SlideEnemyMonOff,
+                    ..
+                }
+            )
+        });
         assert!(slide, "Whirlwind should slide enemy off");
     }
 
     #[test]
     fn dig_slides_mon_up() {
         let results = run_animation(0x5A);
-        let slide = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SlideMonUp, .. }));
+        let slide = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SlideMonUp,
+                    ..
+                }
+            )
+        });
         assert!(slide, "Dig should slide mon up");
     }
 
     #[test]
     fn confusion_has_flash() {
         let results = run_animation(0x5C);
-        let flash = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::FlashScreenLong, .. }));
+        let flash = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::FlashScreenLong,
+                    ..
+                }
+            )
+        });
         assert!(flash, "Confusion should have screen flash");
     }
 
     #[test]
     fn psychic_has_flash_and_wavy() {
         let results = run_animation(0x5D);
-        let flash = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::FlashScreenLong, .. }));
-        let wavy = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::WavyScreen, .. }));
+        let flash = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::FlashScreenLong,
+                    ..
+                }
+            )
+        });
+        let wavy = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::WavyScreen,
+                    ..
+                }
+            )
+        });
         assert!(flash, "Psychic should have screen flash");
         assert!(wavy, "Psychic should have wavy screen");
     }
@@ -683,9 +835,33 @@ mod tests {
     #[test]
     fn hyper_beam_has_complex_sequence() {
         let results = run_animation(0x3E);
-        let dark_palette = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::DarkScreenPalette, .. }));
-        let spiral = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::SpiralBallsInward, .. }));
-        let reset = results.iter().any(|r| matches!(r, AnimTickResult::Effect { effect: SpecialEffect::ResetScreenPalette, .. }));
+        let dark_palette = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::DarkScreenPalette,
+                    ..
+                }
+            )
+        });
+        let spiral = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::SpiralBallsInward,
+                    ..
+                }
+            )
+        });
+        let reset = results.iter().any(|r| {
+            matches!(
+                r,
+                AnimTickResult::Effect {
+                    effect: SpecialEffect::ResetScreenPalette,
+                    ..
+                }
+            )
+        });
         assert!(dark_palette, "Hyper Beam should have dark palette");
         assert!(spiral, "Hyper Beam should have spiral balls");
         assert!(reset, "Hyper Beam should have reset palette");
@@ -888,7 +1064,11 @@ mod tests {
                     }
                 }
             }
-            assert!(has_frames, "Move 0x{:02X} should produce animation frames", move_id);
+            assert!(
+                has_frames,
+                "Move 0x{:02X} should produce animation frames",
+                move_id
+            );
         }
     }
 }

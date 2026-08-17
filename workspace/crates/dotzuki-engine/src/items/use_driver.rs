@@ -57,7 +57,10 @@ impl UsageContext {
                 matches!(self, UsageContext::FieldOnly | UsageContext::FieldAndBattle)
             }
             UsageContext::BattleOnly => {
-                matches!(self, UsageContext::BattleOnly | UsageContext::FieldAndBattle)
+                matches!(
+                    self,
+                    UsageContext::BattleOnly | UsageContext::FieldAndBattle
+                )
             }
         }
     }

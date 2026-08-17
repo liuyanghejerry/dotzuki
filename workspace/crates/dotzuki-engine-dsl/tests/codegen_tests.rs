@@ -16,9 +16,7 @@ use dotzuki_engine_dsl::sourcemap::SourceMapBuilder;
 /// Parse a DSL string into a `Document::Scene(GameScene)`, expecting success.
 fn parse_scene(dsl: &str) -> Document {
     let mut lexer = Lexer::new(dsl, "test.scene");
-    let tokens = lexer
-        .tokenize()
-        .expect("Lexer should tokenize valid DSL");
+    let tokens = lexer.tokenize().expect("Lexer should tokenize valid DSL");
     let (doc, errors) = Parser::new(tokens, dsl).parse();
     assert!(
         errors.is_empty(),
@@ -98,7 +96,10 @@ game_scene Test {
     let doc = parse_scene(dsl);
     let (js, _sm) = compile_storylines(&doc);
 
-    assert!(js.contains("await game.showText("), "Expected game.showText call");
+    assert!(
+        js.contains("await game.showText("),
+        "Expected game.showText call"
+    );
     assert!(js.contains("Prof:"), "Expected speaker prefix");
     assert!(js.contains("Hello!"), "Expected text content");
     assert!(
@@ -483,8 +484,7 @@ game_scene Test {
     let scene = expect_scene(&doc);
     let ui = scene.ui.as_ref().expect("Missing ui block");
     let json = codegen::json_ui::compile_ui(ui).expect("UI compile should succeed");
-    let parsed: serde_json::Value =
-        serde_json::from_str(&json).expect("Must be valid JSON");
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("Must be valid JSON");
 
     let panel = &parsed["children"][0];
     assert_eq!(panel["width"], 200);
@@ -669,7 +669,10 @@ game_scene Test {
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     let region = &parsed["regions"][0];
     assert_eq!(region["name"], "icon");
-    assert!(region.get("nineSlice").is_none(), "Should omit nineSlice for no-slice regions");
+    assert!(
+        region.get("nineSlice").is_none(),
+        "Should omit nineSlice for no-slice regions"
+    );
 }
 
 #[test]
@@ -753,7 +756,10 @@ game_scene Test {
     );
 
     for m in mappings {
-        assert!(m.generated_line < 100, "Generated line should be reasonable");
+        assert!(
+            m.generated_line < 100,
+            "Generated line should be reasonable"
+        );
     }
 }
 
@@ -781,14 +787,10 @@ fn test_codegen_sourcemap_roundtrip() {
     let payload = data_url
         .strip_prefix("data:application/json;charset=utf-8;base64,")
         .expect("Not a base64 data URL");
-    let decoded = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
-        payload,
-    )
-    .expect("Base64 decode failed");
+    let decoded = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, payload)
+        .expect("Base64 decode failed");
 
-    let sm = sourcemap::SourceMap::from_reader(decoded.as_slice())
-        .expect("SourceMap parse failed");
+    let sm = sourcemap::SourceMap::from_reader(decoded.as_slice()).expect("SourceMap parse failed");
 
     assert_eq!(sm.get_token_count() as usize, mappings.len());
 
@@ -800,13 +802,15 @@ fn test_codegen_sourcemap_roundtrip() {
             token.get_src_line(),
             *sl,
             "Generated ({},{}) → source line mismatch",
-            gl, gc
+            gl,
+            gc
         );
         assert_eq!(
             token.get_src_col(),
             *sc,
             "Generated ({},{}) → source column mismatch",
-            gl, gc
+            gl,
+            gc
         );
     }
 }
@@ -1000,7 +1004,11 @@ game_scene Test {
     );
     // The binding is declared at function scope (`let result;`) so branches
     // can read it — see the block-scoping regression test in js_storyline.
-    assert!(js.contains("let result;"), "function-scoped decl, got:\n{}", js);
+    assert!(
+        js.contains("let result;"),
+        "function-scoped decl, got:\n{}",
+        js
+    );
 }
 
 #[test]
@@ -1027,6 +1035,12 @@ game_scene Test {
     let ui = scene.ui.as_ref().expect("Missing ui block");
     let json = codegen::json_ui::compile_ui(ui).expect("UI compile should succeed");
 
-    assert!(json.contains("\"visible\": \"{r0_active}\""), "template visible must survive: {json}");
-    assert!(json.contains("\"visible\": false"), "bool visible must survive: {json}");
+    assert!(
+        json.contains("\"visible\": \"{r0_active}\""),
+        "template visible must survive: {json}"
+    );
+    assert!(
+        json.contains("\"visible\": false"),
+        "bool visible must survive: {json}"
+    );
 }

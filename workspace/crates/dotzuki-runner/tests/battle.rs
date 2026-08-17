@@ -163,13 +163,19 @@ fn battle_section_parses_and_resolves_tables() {
     assert_eq!(skills.cost_field, "mpCost");
     let stats = section.stats.as_ref().unwrap();
     assert_eq!((stats.hp.as_str(), stats.attack.as_str()), ("hp", "atk"));
-    assert_eq!((stats.defense.as_str(), stats.speed.as_str()), ("def", "spd"));
+    assert_eq!(
+        (stats.defense.as_str(), stats.speed.as_str()),
+        ("def", "spd")
+    );
     assert_eq!(section.resource.as_deref(), Some("mp"));
     assert_eq!(section.rules.as_deref(), Some("data/rules.ron"));
 
     // Table ids resolve to record dirs via the data activity.
     assert_eq!(project.table_dir("heroes"), Some(root.join("data/heroes")));
-    assert_eq!(project.table_dir("monsters"), Some(root.join("data/monsters")));
+    assert_eq!(
+        project.table_dir("monsters"),
+        Some(root.join("data/monsters"))
+    );
     assert_eq!(project.table_dir("spells"), Some(root.join("data/spells")));
     assert_eq!(project.table_dir("nope"), None);
 
@@ -196,7 +202,12 @@ fn setup_loads_records_and_chart() {
     assert_eq!(battle.enemy().max_mp, 3);
 
     // Aria's move list comes from the skills table, in authored order.
-    let names: Vec<&str> = battle.player().skills.iter().map(|s| s.name.as_str()).collect();
+    let names: Vec<&str> = battle
+        .player()
+        .skills
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
     assert_eq!(names, ["Slash", "Fire Bolt", "Heal", "Focus"]);
     assert_eq!(battle.player().skills[1].cost, 5);
     assert_eq!(battle.player().skills[1].element.as_deref(), Some("fire"));
@@ -285,7 +296,10 @@ fn scene_battle_win_path_resumes_scene_and_harvests_flags() {
     let page = game.dialogue_text().expect("post-battle text");
     assert!(page.contains("path is clear"), "page: {page:?}");
     dismiss_dialogue(&mut game);
-    assert!(game.flag("BEAT_SLIME"), "scene flags harvested after battle");
+    assert!(
+        game.flag("BEAT_SLIME"),
+        "scene flags harvested after battle"
+    );
     assert!(game.battle().is_none());
 }
 
@@ -294,7 +308,8 @@ fn scene_battle_without_battle_section_autowins() {
     let (_tmp, root) = demo_project("nobattle");
     // Strip the battle section: startBattle must warn and continue "win".
     let mut manifest: serde_json::Value =
-        serde_json::from_str(&fs::read_to_string(root.join(".dotzuki-editor.json")).unwrap()).unwrap();
+        serde_json::from_str(&fs::read_to_string(root.join(".dotzuki-editor.json")).unwrap())
+            .unwrap();
     manifest.as_object_mut().unwrap().remove("battle");
     fs::write(
         root.join(".dotzuki-editor.json"),
@@ -308,7 +323,10 @@ fn scene_battle_without_battle_section_autowins() {
 
     press_a(&mut game); // boss intro
     press_a(&mut game); // past the intro → startBattle auto-wins
-    assert!(game.battle().is_none(), "no battle without a battle section");
+    assert!(
+        game.battle().is_none(),
+        "no battle without a battle section"
+    );
     let page = game.dialogue_text().expect("post-battle text still plays");
     assert!(page.contains("path is clear"), "page: {page:?}");
     dismiss_dialogue(&mut game);
@@ -375,7 +393,10 @@ fn ron_record_overrides_table_power_element_and_cost() {
     assert_eq!(battle.player().mp, 13);
     assert_eq!(battle.outcome(), Some(dotzuki_runner::BattleOutcome::Win));
     let log = battle.log();
-    assert!(log.contains(&"It's super effective!".to_string()), "{log:?}");
+    assert!(
+        log.contains(&"It's super effective!".to_string()),
+        "{log:?}"
+    );
     assert!(log.contains(&"160 damage!".to_string()), "{log:?}");
 }
 
@@ -576,10 +597,13 @@ fn write_items(root: &Path) {
             .iter_mut()
             .find(|a| a["id"] == "data")
             .expect("data activity");
-        data["config"]["tables"].as_array_mut().unwrap().push(serde_json::json!({
-            "id": "items", "label": "Items", "dir": "items", "icon": "", "idField": "id",
-            "fields": [ {"id": "name"}, {"id": "healHp"}, {"id": "effect"} ]
-        }));
+        data["config"]["tables"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "id": "items", "label": "Items", "dir": "items", "icon": "", "idField": "id",
+                "fields": [ {"id": "name"}, {"id": "healHp"}, {"id": "effect"} ]
+            }));
     }
     manifest["battle"]["items"] =
         serde_json::json!({ "table": "items", "healField": "healHp", "starting": { "potion": 3 } });
@@ -631,15 +655,25 @@ fn party_hp_persists_across_two_battles() {
     // Battle 1 (auto-A Slash): the v1 numbers — Aria takes 28 once, then
     // KOs the Slime. Bryn never fights.
     arm_boss_battle(&mut game);
-    assert_eq!(game.battle().unwrap().party().len(), 2, "the whole table is the party");
+    assert_eq!(
+        game.battle().unwrap().party().len(),
+        2,
+        "the whole table is the party"
+    );
     let narration = auto_battle(&mut game);
     assert_eq!(narration.last(), Some(&"You won the battle!".to_string()));
 
     // The runner harvested the party state: Aria at 32/60, Bryn untouched.
     let party = game.party_state().expect("party state after battle");
     assert_eq!(party.len(), 2);
-    assert_eq!((party[0].id.as_str(), party[0].hp, party[0].mp), ("aria", 32, 20));
-    assert_eq!((party[1].id.as_str(), party[1].hp, party[1].mp), ("bryn", 80, 60));
+    assert_eq!(
+        (party[0].id.as_str(), party[0].hp, party[0].mp),
+        ("aria", 32, 20)
+    );
+    assert_eq!(
+        (party[1].id.as_str(), party[1].hp, party[1].mp),
+        ("bryn", 80, 60)
+    );
 
     // Battle 2 starts from the carried-over state — NOT rebuilt at full HP.
     arm_boss_battle(&mut game);
@@ -676,10 +710,19 @@ fn party_switch_mid_battle_via_runner() {
     );
     press_a(&mut game); // switch to Bryn
     let narration = auto_battle(&mut game);
-    assert!(narration.contains(&"Come back, Aria!".to_string()), "{narration:?}");
-    assert!(narration.contains(&"Go, Bryn!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"Come back, Aria!".to_string()),
+        "{narration:?}"
+    );
+    assert!(
+        narration.contains(&"Go, Bryn!".to_string()),
+        "{narration:?}"
+    );
     let party = game.party_state().unwrap();
-    assert_eq!(party[1].hp, 57, "the Slime's hit landed on Bryn: {narration:?}");
+    assert_eq!(
+        party[1].hp, 57,
+        "the Slime's hit landed on Bryn: {narration:?}"
+    );
     assert_eq!(party[0].hp, 60, "Aria was never hit");
 }
 
@@ -704,7 +747,12 @@ fn item_menu_uses_starting_inventory_and_writes_back() {
     );
     assert_eq!(
         game.battle().unwrap().menu_items(),
-        vec!["Fight".to_string(), "Party".to_string(), "Item".to_string(), "Run".to_string()]
+        vec![
+            "Fight".to_string(),
+            "Party".to_string(),
+            "Item".to_string(),
+            "Run".to_string()
+        ]
     );
 
     // Round 1: take a hit first so the heal is visible — auto-A Slash once.
@@ -731,14 +779,23 @@ fn item_menu_uses_starting_inventory_and_writes_back() {
     );
     press_a(&mut game); // use it
     let narration = auto_battle(&mut game);
-    assert!(narration.contains(&"Aria used Potion!".to_string()), "{narration:?}");
-    assert!(narration.contains(&"Aria recovered 28 HP!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"Aria used Potion!".to_string()),
+        "{narration:?}"
+    );
+    assert!(
+        narration.contains(&"Aria recovered 28 HP!".to_string()),
+        "{narration:?}"
+    );
     assert_eq!(narration.last(), Some(&"You won the battle!".to_string()));
 
     // The used potion left the persistent inventory; Aria is back near full.
     assert_eq!(game.inventory().unwrap().get("potion"), Some(&2));
     let party = game.party_state().unwrap();
-    assert_eq!(party[0].hp, 32, "healed to 60, then the Slime's 28 (60 → 32)");
+    assert_eq!(
+        party[0].hp, 32,
+        "healed to 60, then the Slime's 28 (60 → 32)"
+    );
 }
 
 #[test]
@@ -841,13 +898,24 @@ fn status_persists_across_two_battles() {
         narration.contains(&"Aria was afflicted with poison!".to_string()),
         "{narration:?}"
     );
-    assert_eq!(narration.last(), Some(&"You won the battle!".to_string()), "{narration:?}");
+    assert_eq!(
+        narration.last(),
+        Some(&"You won the battle!".to_string()),
+        "{narration:?}"
+    );
     let party = game.party_state().unwrap();
-    assert_eq!(party[0].status.as_deref(), Some("poison"), "status harvested");
+    assert_eq!(
+        party[0].status.as_deref(),
+        Some("poison"),
+        "status harvested"
+    );
 
     // Battle 2: Aria starts poisoned — the chip fires after her first action.
     arm_boss_battle(&mut game);
-    assert_eq!(game.battle().unwrap().player().status.as_deref(), Some("poison"));
+    assert_eq!(
+        game.battle().unwrap().player().status.as_deref(),
+        Some("poison")
+    );
     let narration = auto_battle(&mut game);
     assert!(
         narration.contains(&"Aria is hurt by poison!".to_string()),
@@ -904,7 +972,14 @@ fn levels_block_parses_with_per_key_defaults() {
     manifest["battle"]["levels"] = serde_json::json!({ "growth": 0.1, "curve": { "base": 4 } });
     fs::write(&path, serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
     let project = LoadedProject::load(&root).expect("load demo project");
-    let levels = project.manifest().battle.as_ref().unwrap().levels.as_ref().unwrap();
+    let levels = project
+        .manifest()
+        .battle
+        .as_ref()
+        .unwrap()
+        .levels
+        .as_ref()
+        .unwrap();
     assert_eq!(levels.growth, 0.1);
     assert_eq!((levels.curve.base, levels.curve.exponent), (4, 3));
     assert_eq!(levels.exp_field, "exp");
@@ -926,7 +1001,10 @@ fn win_awards_exp_level_up_and_it_persists_into_the_next_battle() {
     // ⇒ ×1) — 53/28 — then the award narrates after the win text.
     arm_boss_battle(&mut game);
     let narration = auto_battle(&mut game);
-    assert!(narration.contains(&"53 damage!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"53 damage!".to_string()),
+        "{narration:?}"
+    );
     let win = narration
         .iter()
         .position(|l| l == "You won the battle!")
@@ -948,8 +1026,14 @@ fn win_awards_exp_level_up_and_it_persists_into_the_next_battle() {
     assert_eq!(battle.player().max_mp, 21);
     let narration = auto_battle(&mut game);
     // 8 more EXP (needs 64 at level 2) ⇒ no second level-up.
-    assert!(narration.contains(&"Aria gained 8 EXP!".to_string()), "{narration:?}");
-    assert!(!narration.iter().any(|l| l.contains("grew to level")), "{narration:?}");
+    assert!(
+        narration.contains(&"Aria gained 8 EXP!".to_string()),
+        "{narration:?}"
+    );
+    assert!(
+        !narration.iter().any(|l| l.contains("grew to level")),
+        "{narration:?}"
+    );
     let party = game.party_state().unwrap();
     assert_eq!((party[0].level, party[0].exp), (2, 8));
 }
@@ -1005,12 +1089,28 @@ fn fainted_member_gains_no_exp() {
     }
     press_a(&mut game); // forced pick: Aria
     narration.extend(auto_battle(&mut game));
-    assert!(narration.contains(&"Bryn fainted!".to_string()), "{narration:?}");
-    assert_eq!(narration.last(), Some(&"Aria grew to level 2!".to_string()), "{narration:?}");
-    assert!(!narration.iter().any(|l| l.contains("Bryn gained")), "{narration:?}");
+    assert!(
+        narration.contains(&"Bryn fainted!".to_string()),
+        "{narration:?}"
+    );
+    assert_eq!(
+        narration.last(),
+        Some(&"Aria grew to level 2!".to_string()),
+        "{narration:?}"
+    );
+    assert!(
+        !narration.iter().any(|l| l.contains("Bryn gained")),
+        "{narration:?}"
+    );
     let party = game.party_state().unwrap();
-    assert_eq!((party[0].id.as_str(), party[0].level, party[0].exp), ("aria", 2, 0));
-    assert_eq!((party[1].id.as_str(), party[1].level, party[1].exp), ("bryn", 1, 0));
+    assert_eq!(
+        (party[0].id.as_str(), party[0].level, party[0].exp),
+        ("aria", 2, 0)
+    );
+    assert_eq!(
+        (party[1].id.as_str(), party[1].level, party[1].exp),
+        ("bryn", 1, 0)
+    );
 }
 
 #[test]
@@ -1054,7 +1154,10 @@ fn level_and_exp_round_trip_through_the_save() {
     reach_boss(&mut game);
     arm_boss_battle(&mut game);
     let narration = auto_battle(&mut game);
-    assert!(narration.contains(&"Aria grew to level 2!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"Aria grew to level 2!".to_string()),
+        "{narration:?}"
+    );
     drop(game);
 
     // The save carries level/exp as optional fields (version stays 3; a 0
@@ -1063,7 +1166,10 @@ fn level_and_exp_round_trip_through_the_save() {
     let raw: serde_json::Value = serde_json::from_str(&text).unwrap();
     assert_eq!(raw["version"], dotzuki_runner::SAVE_VERSION);
     assert_eq!(raw["party"][0]["level"], 2);
-    assert!(raw["party"][0].get("exp").is_none(), "0 EXP is the omitted default");
+    assert!(
+        raw["party"][0].get("exp").is_none(),
+        "0 EXP is the omitted default"
+    );
 
     // A fresh boot resumes level/exp; the next battle starts grown.
     let project = LoadedProject::load(&root).expect("load demo project");
@@ -1094,7 +1200,10 @@ fn party_view_shows_level_and_exp_with_a_levels_block() {
     reach_boss(&mut game);
     arm_boss_battle(&mut game);
     let narration = auto_battle(&mut game);
-    assert!(narration.contains(&"Aria grew to level 2!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"Aria grew to level 2!".to_string()),
+        "{narration:?}"
+    );
 
     // Start → Party: the member row carries Lv, an EXP progress line shows.
     frame(&mut game, GbButton::Start.bit_mask());
@@ -1229,7 +1338,10 @@ fn encounter_resolution_order_and_validation() {
     assert!(!b.is_trainer());
 
     // An encounter referencing an unknown enemy id is a clear error.
-    let err = setup.start("broken", rng()).err().expect("broken must fail");
+    let err = setup
+        .start("broken", rng())
+        .err()
+        .expect("broken must fail");
     let msg = format!("{err:#}");
     assert!(msg.contains("broken"), "{msg}");
     assert!(msg.contains("dragon"), "{msg}");
@@ -1279,7 +1391,10 @@ fn scene_encounter_queue_send_out_and_exp_sum() {
         .position(|l| l == "Slime fainted!")
         .expect("slime fainted");
     assert_eq!(narration[faint + 1], "Foe sent out Bat!");
-    assert!(narration.contains(&"Bat used Attack!".to_string()), "{narration:?}");
+    assert!(
+        narration.contains(&"Bat used Attack!".to_string()),
+        "{narration:?}"
+    );
     let win = narration
         .iter()
         .position(|l| l == "You won the battle!")
@@ -1326,7 +1441,11 @@ fn scene_trainer_battle_blocks_run_and_pays_money() {
 
     // Fight on and win: the trainer pays 80 G, narrated.
     let narration = auto_battle(&mut game);
-    assert_eq!(narration.last(), Some(&"Got 80 G for winning!".to_string()), "{narration:?}");
+    assert_eq!(
+        narration.last(),
+        Some(&"Got 80 G for winning!".to_string()),
+        "{narration:?}"
+    );
     assert_eq!(game.money(), 180, "100 start + 80 trainer reward");
     assert!(game.flag("BEAT_SLIME"));
 }
@@ -1343,7 +1462,10 @@ fn scene_wild_run_reaches_the_scene_as_run() {
     let mut game = RunnerGame::new(project, opts).expect("boot game");
     reach_boss(&mut game);
     arm_boss_battle(&mut game);
-    assert!(!game.battle().unwrap().is_trainer(), "no encounters block ⇒ wild");
+    assert!(
+        !game.battle().unwrap().is_trainer(),
+        "no encounters block ⇒ wild"
+    );
 
     // Root → Run: the wild battle ends immediately.
     frame(&mut game, GbButton::Down.bit_mask());

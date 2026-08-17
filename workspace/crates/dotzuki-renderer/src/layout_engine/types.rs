@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use dotzuki_engine::render::Rgba;
 use serde::de::{self, Deserializer};
 use serde::Deserialize;
+use std::collections::HashMap;
 use thiserror::Error;
 
 // ============================================================================
@@ -28,7 +28,11 @@ pub struct ImageData {
 
 impl ImageData {
     pub fn new(width: u32, height: u32, pixels: Vec<Rgba>) -> Self {
-        Self { width, height, pixels }
+        Self {
+            width,
+            height,
+            pixels,
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -346,7 +350,8 @@ impl<'de> Deserialize<'de> for Coord {
             fn visit_i64<E: de::Error>(self, v: i64) -> Result<Coord, E> {
                 if v < 0 {
                     return Err(de::Error::custom(format!(
-                        "negative coordinate {} not allowed", v
+                        "negative coordinate {} not allowed",
+                        v
                     )));
                 }
                 Ok(Coord::Literal(v as u32))
@@ -768,20 +773,28 @@ impl<'de> Deserialize<'de> for ListCursor {
             }
 
             fn visit_u64<E: de::Error>(self, v: u64) -> Result<ListCursor, E> {
-                Ok(ListCursor { tile: Some(v as u32), position: None })
+                Ok(ListCursor {
+                    tile: Some(v as u32),
+                    position: None,
+                })
             }
 
             fn visit_i64<E: de::Error>(self, v: i64) -> Result<ListCursor, E> {
-                Ok(ListCursor { tile: Some(v.max(0) as u32), position: None })
+                Ok(ListCursor {
+                    tile: Some(v.max(0) as u32),
+                    position: None,
+                })
             }
 
             fn visit_map<A: serde::de::MapAccess<'de>>(
                 self,
                 map: A,
             ) -> Result<ListCursor, A::Error> {
-                let obj =
-                    CursorObj::deserialize(de::value::MapAccessDeserializer::new(map))?;
-                Ok(ListCursor { tile: obj.tile, position: obj.position })
+                let obj = CursorObj::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(ListCursor {
+                    tile: obj.tile,
+                    position: obj.position,
+                })
             }
 
             fn visit_unit<E: de::Error>(self) -> Result<ListCursor, E> {

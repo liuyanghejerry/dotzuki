@@ -83,9 +83,7 @@ macro_rules! effect {
 #[cfg(test)]
 mod tests {
     use crate::battle::stack::ctx::{BattleCtx, EffectProvider};
-    use crate::battle::stack::event::{
-        EffectId, EffectType, Event, HandlerResult, RelayVar,
-    };
+    use crate::battle::stack::event::{EffectId, EffectType, Event, HandlerResult, RelayVar};
     use crate::battle::BattlerRef;
 
     // A generic zero-capture handler usable by any provider.

@@ -104,41 +104,17 @@ mod tests {
     impl Painter for RecordingPainter {
         fn clear(&mut self, _color: EngineRgba) {}
 
-        fn draw_text_box(
-            &mut self,
-            _rect: dotzuki_engine::render::TileRect,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_text_box(&mut self, _rect: dotzuki_engine::render::TileRect, _color: EngineRgba) {}
 
-        fn draw_text(
-            &mut self,
-            _pos: TilePos,
-            _text: &str,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_text(&mut self, _pos: TilePos, _text: &str, _color: EngineRgba) {}
 
         fn draw_glyph(&mut self, _pos: TilePos, _glyph: char, _color: EngineRgba) {}
 
-        fn draw_pixel_rect(
-            &mut self,
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-            color: EngineRgba,
-        ) {
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, color: EngineRgba) {
             self.pixel_rects.push((px, py, pw, ph, color));
         }
 
-        fn draw_gb_tile(
-            &mut self,
-            pos: TilePos,
-            tile_id: u8,
-            _fallback: &str,
-            _color: EngineRgba,
-        ) {
+        fn draw_gb_tile(&mut self, pos: TilePos, tile_id: u8, _fallback: &str, _color: EngineRgba) {
             self.tile_calls.push((pos.tx, pos.ty, tile_id));
         }
     }
@@ -178,7 +154,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 5);
         assert_eq!(painter.tile_calls[0], (2, 3, 10));
@@ -212,7 +199,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 1);
         assert_eq!(painter.tile_calls[0], (0, 0, 99));
@@ -242,7 +240,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 4);
         assert_eq!(painter.tile_calls[0], (5, 1, 1));
@@ -275,7 +284,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 1);
         assert_eq!(painter.tile_calls[0], (1, 2, 42));
@@ -305,7 +325,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 10);
         assert_eq!(painter.tile_calls[0], (0, 0, 1));
@@ -339,7 +370,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 2);
     }
@@ -368,7 +410,18 @@ mod tests {
         };
 
         let mut painter = RecordingPainter::new();
-        render_divider(&elem, if let ElementParams::Divider(ref p) = elem.params { p } else { unreachable!() }, &ctx, &rc, &mut painter).unwrap();
+        render_divider(
+            &elem,
+            if let ElementParams::Divider(ref p) = elem.params {
+                p
+            } else {
+                unreachable!()
+            },
+            &ctx,
+            &rc,
+            &mut painter,
+        )
+        .unwrap();
 
         assert_eq!(painter.tile_calls.len(), 0);
     }

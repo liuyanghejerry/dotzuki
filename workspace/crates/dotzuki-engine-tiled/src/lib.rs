@@ -163,26 +163,30 @@ pub fn parse_tile_properties_with_config(
     props: &HashMap<String, String>,
     config: &PropertyConfig,
 ) -> TileProperties {
-    let collision = props.get(&config.collision_key).and_then(|s| match s.as_str() {
-        "passable" => Some(CollisionType::Passable),
-        "impassable" => Some(CollisionType::Impassable),
-        "ledge" => Some(CollisionType::Ledge { direction: 0 }),
-        "water" => Some(CollisionType::Water),
-        "grass" => Some(CollisionType::Grass(None)),
-        "door" => Some(CollisionType::Door),
-        "warp" => Some(CollisionType::Warp),
-        "counter" => Some(CollisionType::Counter),
-        _ => None,
-    });
+    let collision = props
+        .get(&config.collision_key)
+        .and_then(|s| match s.as_str() {
+            "passable" => Some(CollisionType::Passable),
+            "impassable" => Some(CollisionType::Impassable),
+            "ledge" => Some(CollisionType::Ledge { direction: 0 }),
+            "water" => Some(CollisionType::Water),
+            "grass" => Some(CollisionType::Grass(None)),
+            "door" => Some(CollisionType::Door),
+            "warp" => Some(CollisionType::Warp),
+            "counter" => Some(CollisionType::Counter),
+            _ => None,
+        });
 
     let trigger = props.get(&config.trigger_key).cloned();
 
-    let trigger_type = props.get(&config.trigger_type_key).and_then(|s| match s.as_str() {
-        "on_step" => Some(TriggerType::OnStep),
-        "on_enter" => Some(TriggerType::OnEnter),
-        "on_interact" => Some(TriggerType::OnInteract),
-        _ => None,
-    });
+    let trigger_type = props
+        .get(&config.trigger_type_key)
+        .and_then(|s| match s.as_str() {
+            "on_step" => Some(TriggerType::OnStep),
+            "on_enter" => Some(TriggerType::OnEnter),
+            "on_interact" => Some(TriggerType::OnInteract),
+            _ => None,
+        });
 
     let animation_group = props
         .get(&config.animation_key)
@@ -691,10 +695,7 @@ mod tests {
 
     #[test]
     fn hex_8_digit() {
-        assert_eq!(
-            parse_hex_color(Some("#80FF0000")),
-            Some((255, 0, 0, 128))
-        );
+        assert_eq!(parse_hex_color(Some("#80FF0000")), Some((255, 0, 0, 128)));
     }
 
     #[test]
@@ -1091,7 +1092,10 @@ mod tests {
     // ---------------------------------------------------------------
 
     fn make_props(entries: &[(&str, &str)]) -> HashMap<String, String> {
-        entries.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+        entries
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
     }
 
     #[test]
@@ -1296,12 +1300,10 @@ mod tests {
             height: 1,
             visible: true,
             opacity: 1.0,
-            properties: vec![
-                TmxProperty {
-                    name: "collision".into(),
-                    value: serde_json::Value::String("impassable".into()),
-                },
-            ],
+            properties: vec![TmxProperty {
+                name: "collision".into(),
+                value: serde_json::Value::String("impassable".into()),
+            }],
         };
         let tp = layer.tile_properties();
         assert_eq!(tp.collision, Some(CollisionType::Impassable));

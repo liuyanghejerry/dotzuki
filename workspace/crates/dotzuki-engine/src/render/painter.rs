@@ -1,4 +1,4 @@
-use crate::render::{Rgba, BracketSides, TilePos, TileRect};
+use crate::render::{BracketSides, Rgba, TilePos, TileRect};
 
 pub trait Painter {
     fn clear(&mut self, color: Rgba);
@@ -104,7 +104,11 @@ pub struct Ui<'p, P: Painter> {
 
 impl<'p, P: Painter> Ui<'p, P> {
     pub fn new(painter: &'p mut P) -> Self {
-        Self { painter, origin_tx: 0, origin_ty: 0 }
+        Self {
+            painter,
+            origin_tx: 0,
+            origin_ty: 0,
+        }
     }
 
     /// Returns a mutable reference to the underlying [`Painter`].
@@ -167,7 +171,8 @@ impl<'p, P: Painter> Frame<'p, P> {
     /// the border edge of a box (where frame-relative coordinates would be
     /// negative and thus inexpressible as u32).
     pub fn abs_glyph(&mut self, tx: u32, ty: u32, glyph: char, color: impl Into<Rgba>) {
-        self.painter.draw_glyph(TilePos::new(tx, ty), glyph, color.into());
+        self.painter
+            .draw_glyph(TilePos::new(tx, ty), glyph, color.into());
     }
 
     pub fn menu_list(
@@ -189,7 +194,14 @@ impl<'p, P: Painter> Frame<'p, P> {
         }
     }
 
-    pub fn pixel_rect(&mut self, dx_px: u32, dy_px: u32, w_px: u32, h_px: u32, color: impl Into<Rgba>) {
+    pub fn pixel_rect(
+        &mut self,
+        dx_px: u32,
+        dy_px: u32,
+        w_px: u32,
+        h_px: u32,
+        color: impl Into<Rgba>,
+    ) {
         let (ox_px, oy_px) = TilePos::new(self.origin_tx, self.origin_ty).to_pixels();
         self.painter
             .draw_pixel_rect(ox_px + dx_px, oy_px + dy_px, w_px, h_px, color.into());
@@ -209,7 +221,14 @@ impl<'p, P: Painter> Frame<'p, P> {
         body(&mut child);
     }
 
-    pub fn gb_tile(&mut self, tx: u32, ty: u32, tile_id: u8, fallback: &str, color: impl Into<Rgba>) {
+    pub fn gb_tile(
+        &mut self,
+        tx: u32,
+        ty: u32,
+        tile_id: u8,
+        fallback: &str,
+        color: impl Into<Rgba>,
+    ) {
         self.painter.draw_gb_tile(
             TilePos::new(self.origin_tx + tx, self.origin_ty + ty),
             tile_id,
@@ -310,6 +329,9 @@ pub struct LabelValue<'a> {
 
 impl<'a> LabelValue<'a> {
     pub fn new(label: &'a str, value: impl Into<String>) -> Self {
-        Self { label, value: value.into() }
+        Self {
+            label,
+            value: value.into(),
+        }
     }
 }

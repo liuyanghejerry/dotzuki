@@ -63,16 +63,15 @@ Run `dotzuki check <this folder>` to compile-check every DSL file in the project
 /// scaffolds (map/script/data/story/assets/tiles), with the same config
 /// shapes and order.
 fn activities() -> Vec<Activity> {
-    let activity = |id: &str, kind: &str, label: &str, icon: &str, config: serde_json::Value| {
-        Activity {
+    let activity =
+        |id: &str, kind: &str, label: &str, icon: &str, config: serde_json::Value| Activity {
             id: id.to_string(),
             kind: kind.to_string(),
             label: label.to_string(),
             icon: icon.to_string(),
             enabled: true,
             config,
-        }
-    };
+        };
     vec![
         activity("maps", "map", "Maps", "map", json!({ "mapsDir": "maps" })),
         activity(
@@ -91,7 +90,13 @@ fn activities() -> Vec<Activity> {
             "book",
             json!({ "storiesDir": "stories", "scenesDir": "maps", "locales": ["en", "zh"] }),
         ),
-        activity("assets", "assets", "Assets", "image", json!({ "roots": ["gfx"] })),
+        activity(
+            "assets",
+            "assets",
+            "Assets",
+            "image",
+            json!({ "roots": ["gfx"] }),
+        ),
         activity(
             "tiles",
             "tiles",
@@ -168,8 +173,15 @@ pub fn run(
         ),
     }
 
-    println!("Created new JRPG project '{}' in {}", title, target.display());
-    println!("Next: open the folder in dotzuki-editor, or run `dotzuki check {}`.", target.display());
+    println!(
+        "Created new JRPG project '{}' in {}",
+        title,
+        target.display()
+    );
+    println!(
+        "Next: open the folder in dotzuki-editor, or run `dotzuki check {}`.",
+        target.display()
+    );
 
     Ok(target)
 }
@@ -213,8 +225,8 @@ fn scaffold_template(target: &Path, title: &str) -> Result<()> {
                 .with_context(|| format!("failed to create {}", parent.display()))?;
         }
         if *rel == ".dotzuki-editor.json" {
-            let mut value: serde_json::Value = serde_json::from_slice(bytes)
-                .context("template manifest is not valid JSON")?;
+            let mut value: serde_json::Value =
+                serde_json::from_slice(bytes).context("template manifest is not valid JSON")?;
             value["name"] = serde_json::Value::String(title.to_string());
             let text = serde_json::to_string_pretty(&value)?;
             fs::write(&path, text)
@@ -262,7 +274,12 @@ mod tests {
             if path.is_dir() {
                 collect_files(&path, base, out);
             } else {
-                out.push(path.strip_prefix(base).unwrap().to_string_lossy().into_owned());
+                out.push(
+                    path.strip_prefix(base)
+                        .unwrap()
+                        .to_string_lossy()
+                        .into_owned(),
+                );
             }
         }
     }
@@ -294,8 +311,14 @@ mod tests {
             .iter()
             .filter(|f| !vendored.contains(&f.as_str()))
             .collect();
-        assert!(missing.is_empty(), "vendored files missing from examples/: {missing:?}");
-        assert!(drifted.is_empty(), "vendored files drifted from examples/: {drifted:?}");
+        assert!(
+            missing.is_empty(),
+            "vendored files missing from examples/: {missing:?}"
+        );
+        assert!(
+            drifted.is_empty(),
+            "vendored files drifted from examples/: {drifted:?}"
+        );
         assert!(extra.is_empty(), "example files not vendored: {extra:?}");
     }
 
@@ -307,10 +330,9 @@ mod tests {
         assert!(target.join(".dotzuki-editor.json").is_file());
         assert!(target.join("data/maps/Hometown/tileset.png").is_file());
         assert!(target.join("assets/scenes/main.scene").is_file());
-        let manifest: serde_json::Value = serde_json::from_slice(
-            &fs::read(target.join(".dotzuki-editor.json")).unwrap(),
-        )
-        .unwrap();
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(target.join(".dotzuki-editor.json")).unwrap())
+                .unwrap();
         assert_eq!(manifest["name"], "first-game");
         crate::check::run(&target).unwrap();
     }

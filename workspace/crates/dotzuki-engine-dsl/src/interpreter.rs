@@ -176,9 +176,14 @@ enum Suspended {
     /// on resume.
     AwaitPlain,
     /// `name = await game.x(...)`: bind the result into the frame's locals.
-    AwaitAssign { frame: usize, name: String },
+    AwaitAssign {
+        frame: usize,
+        name: String,
+    },
     /// `await game.showChoice(...)`: the result picks an option body frame.
-    AwaitChoice { frame: usize },
+    AwaitChoice {
+        frame: usize,
+    },
 }
 
 /// One execution frame: a statement list with a cursor and its own `let`
@@ -392,12 +397,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     return Ok(None);
                 }
                 Some(top) if top.index < top.stmts.len() => {}
-                Some(top)
-                    if top
-                        .each
-                        .as_ref()
-                        .is_some_and(|e| e.next < e.source.len()) =>
-                {
+                Some(top) if top.each.as_ref().is_some_and(|e| e.next < e.source.len()) => {
                     // Next loop iteration: re-run the body with the item var
                     // rebound in a fresh scope.
                     let (item_var, value) = {
@@ -571,7 +571,11 @@ impl<H: ScriptHost> Interpreter<H> {
     /// a non-empty string-literal name is prefixed `"Name: "`, an empty name
     /// is the narrator form (verbatim), per-language lines joined with `\n`,
     /// localized lines resolved through `game.t` (host lang).
-    fn speaker_text(&mut self, name: &Expression, texts: &[LocalizedText]) -> Result<String, String> {
+    fn speaker_text(
+        &mut self,
+        name: &Expression,
+        texts: &[LocalizedText],
+    ) -> Result<String, String> {
         let name_str = match name {
             Expression::StringLit(s) => Some(s.clone()),
             _ => None,
@@ -845,10 +849,7 @@ mod tests {
             s
         }
         fn enqueue(&mut self, name: &str, cmd: ScriptCommand) {
-            self.commands
-                .entry(name.to_string())
-                .or_default()
-                .push(cmd);
+            self.commands.entry(name.to_string()).or_default().push(cmd);
         }
     }
 
@@ -896,13 +897,19 @@ mod tests {
         host.enqueue("showText", ScriptCommand::ShowText { text: "hi".into() });
         host.enqueue("delay", ScriptCommand::Delay { frames: 5 });
         let mut interp = Interpreter::new(host);
-        interp.load_function(&[text_stmt("hi"), cmd_stmt("delay", vec![Expression::NumberLit(5.0)])]);
+        interp.load_function(&[
+            text_stmt("hi"),
+            cmd_stmt("delay", vec![Expression::NumberLit(5.0)]),
+        ]);
         let cmd = interp.tick().unwrap().expect("first command");
         assert_eq!(cmd, ScriptCommand::ShowText { text: "hi".into() });
         assert!(interp.is_waiting());
         // tick while waiting returns the same command (mirrors Boa).
         assert_eq!(interp.tick().unwrap(), Some(cmd.clone()));
-        let next = interp.signal_done(CommandResult::Void).unwrap().expect("second command");
+        let next = interp
+            .signal_done(CommandResult::Void)
+            .unwrap()
+            .expect("second command");
         assert_eq!(next, ScriptCommand::Delay { frames: 5 });
         assert!(interp.is_waiting());
         assert!(interp.signal_done(CommandResult::Void).unwrap().is_none());
@@ -950,8 +957,18 @@ mod tests {
     #[test]
     fn choice_routes_option_body() {
         let mut host = FakeHost::new();
-        host.enqueue("showChoice", ScriptCommand::ShowChoice { options: vec!["A".into(), "B".into()] });
-        host.enqueue("showText", ScriptCommand::ShowText { text: "picked B".into() });
+        host.enqueue(
+            "showChoice",
+            ScriptCommand::ShowChoice {
+                options: vec!["A".into(), "B".into()],
+            },
+        );
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "picked B".into(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::Choice {
             options: vec![
@@ -969,17 +986,40 @@ mod tests {
             span: span(),
         }]);
         let cmd = interp.tick().unwrap().expect("choice command");
-        assert_eq!(cmd, ScriptCommand::ShowChoice { options: vec!["A".into(), "B".into()] });
-        let next = interp.signal_done(CommandResult::Number(1.0)).unwrap().expect("option body");
-        assert_eq!(next, ScriptCommand::ShowText { text: "picked B".into() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::ShowChoice {
+                options: vec!["A".into(), "B".into()]
+            }
+        );
+        let next = interp
+            .signal_done(CommandResult::Number(1.0))
+            .unwrap()
+            .expect("option body");
+        assert_eq!(
+            next,
+            ScriptCommand::ShowText {
+                text: "picked B".into()
+            }
+        );
         assert!(interp.signal_done(CommandResult::Void).unwrap().is_none());
     }
 
     #[test]
     fn out_of_range_choice_hits_last_option() {
         let mut host = FakeHost::new();
-        host.enqueue("showChoice", ScriptCommand::ShowChoice { options: vec!["A".into(), "B".into(), "C".into()] });
-        host.enqueue("showText", ScriptCommand::ShowText { text: "body2".into() });
+        host.enqueue(
+            "showChoice",
+            ScriptCommand::ShowChoice {
+                options: vec!["A".into(), "B".into(), "C".into()],
+            },
+        );
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "body2".into(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::Choice {
             options: (0..3)
@@ -992,15 +1032,33 @@ mod tests {
             span: span(),
         }]);
         interp.tick().unwrap();
-        let next = interp.signal_done(CommandResult::Number(7.0)).unwrap().expect("fallback");
-        assert_eq!(next, ScriptCommand::ShowText { text: "body2".into() });
+        let next = interp
+            .signal_done(CommandResult::Number(7.0))
+            .unwrap()
+            .expect("fallback");
+        assert_eq!(
+            next,
+            ScriptCommand::ShowText {
+                text: "body2".into()
+            }
+        );
     }
 
     #[test]
     fn assignment_binds_awaited_result() {
         let mut host = FakeHost::new();
-        host.enqueue("startBattle", ScriptCommand::StartBattle { trainer_id: "RIVAL".into() });
-        host.enqueue("showText", ScriptCommand::ShowText { text: "result: win".into() });
+        host.enqueue(
+            "startBattle",
+            ScriptCommand::StartBattle {
+                trainer_id: "RIVAL".into(),
+            },
+        );
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "result: win".into(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[
             StoryStmt::Assign {
@@ -1023,15 +1081,33 @@ mod tests {
             },
         ]);
         let cmd = interp.tick().unwrap().expect("battle command");
-        assert_eq!(cmd, ScriptCommand::StartBattle { trainer_id: "RIVAL".into() });
-        let next = interp.signal_done(CommandResult::Text("win".into())).unwrap().expect("branch");
-        assert_eq!(next, ScriptCommand::ShowText { text: "result: win".into() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::StartBattle {
+                trainer_id: "RIVAL".into()
+            }
+        );
+        let next = interp
+            .signal_done(CommandResult::Text("win".into()))
+            .unwrap()
+            .expect("branch");
+        assert_eq!(
+            next,
+            ScriptCommand::ShowText {
+                text: "result: win".into()
+            }
+        );
     }
 
     #[test]
     fn sync_assignment_binds_immediately() {
         let mut host = FakeHost::with_sync("getMoney", Value::Number(5000.0));
-        host.enqueue("showText", ScriptCommand::ShowText { text: "rich".into() });
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "rich".into(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[
             StoryStmt::Assign {
@@ -1054,7 +1130,12 @@ mod tests {
             },
         ]);
         let cmd = interp.tick().unwrap().expect("no suspension");
-        assert_eq!(cmd, ScriptCommand::ShowText { text: "rich".into() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::ShowText {
+                text: "rich".into()
+            }
+        );
     }
 
     #[test]
@@ -1081,7 +1162,10 @@ mod tests {
         // next, then the branch text.
         let cmd = interp.tick().unwrap().expect("placeholder");
         assert_eq!(cmd, ScriptCommand::Delay { frames: 0 });
-        let next = interp.signal_done(CommandResult::Void).unwrap().expect("branch");
+        let next = interp
+            .signal_done(CommandResult::Void)
+            .unwrap()
+            .expect("branch");
         assert_eq!(next, ScriptCommand::ShowText { text: "500".into() });
     }
 
@@ -1089,7 +1173,12 @@ mod tests {
     fn speaker_name_prefix_and_localized() {
         let mut host = FakeHost::new();
         host.lang = "zh".into();
-        host.enqueue("showText", ScriptCommand::ShowText { text: String::new() });
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: String::new(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::Speaker {
             name: Expression::StringLit("PROF".into()),
@@ -1100,7 +1189,12 @@ mod tests {
             span: span(),
         }]);
         let cmd = interp.tick().unwrap().expect("speaker");
-        assert_eq!(cmd, ScriptCommand::ShowText { text: "PROF: 你好".into() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::ShowText {
+                text: "PROF: 你好".into()
+            }
+        );
     }
 
     #[test]
@@ -1121,9 +1215,22 @@ mod tests {
             span: span(),
         }]);
         let c1 = interp.tick().unwrap().expect("first iteration");
-        assert_eq!(c1, ScriptCommand::ShowText { text: "a: x".into() });
-        let c2 = interp.signal_done(CommandResult::Void).unwrap().expect("second iteration");
-        assert_eq!(c2, ScriptCommand::ShowText { text: "b: x".into() });
+        assert_eq!(
+            c1,
+            ScriptCommand::ShowText {
+                text: "a: x".into()
+            }
+        );
+        let c2 = interp
+            .signal_done(CommandResult::Void)
+            .unwrap()
+            .expect("second iteration");
+        assert_eq!(
+            c2,
+            ScriptCommand::ShowText {
+                text: "b: x".into()
+            }
+        );
         assert!(interp.signal_done(CommandResult::Void).unwrap().is_none());
         assert!(interp.is_idle());
     }
@@ -1142,16 +1249,32 @@ mod tests {
             text_stmt("after"),
         ]);
         let c1 = interp.tick().unwrap().expect("loop body");
-        assert_eq!(c1, ScriptCommand::ShowText { text: "in loop".into() });
-        let c2 = interp.signal_done(CommandResult::Void).unwrap().expect("after loop");
-        assert_eq!(c2, ScriptCommand::ShowText { text: "after".into() });
+        assert_eq!(
+            c1,
+            ScriptCommand::ShowText {
+                text: "in loop".into()
+            }
+        );
+        let c2 = interp
+            .signal_done(CommandResult::Void)
+            .unwrap()
+            .expect("after loop");
+        assert_eq!(
+            c2,
+            ScriptCommand::ShowText {
+                text: "after".into()
+            }
+        );
     }
 
     #[test]
     fn run_block_is_rejected() {
         let mut host = FakeHost::new();
         let mut interp = Interpreter::new(host);
-        interp.load_function(&[StoryStmt::Run { js: "let x = 1;".into(), span: span() }]);
+        interp.load_function(&[StoryStmt::Run {
+            js: "let x = 1;".into(),
+            span: span(),
+        }]);
         let err = interp.tick().unwrap_err();
         assert!(err.contains("unsupported"), "got: {}", err);
         assert_eq!(interp.state(), InterpState::Finished);
@@ -1160,7 +1283,12 @@ mod tests {
     #[test]
     fn js_truthiness_zero_is_falsy() {
         let mut host = FakeHost::with_sync("getMoney", Value::Number(0.0));
-        host.enqueue("showText", ScriptCommand::ShowText { text: "poor".into() });
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "poor".into(),
+            },
+        );
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::If {
             condition: Expression::Call {
@@ -1172,7 +1300,12 @@ mod tests {
             span: span(),
         }]);
         let cmd = interp.tick().unwrap().expect("else branch");
-        assert_eq!(cmd, ScriptCommand::ShowText { text: "poor".into() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::ShowText {
+                text: "poor".into()
+            }
+        );
     }
 
     #[test]

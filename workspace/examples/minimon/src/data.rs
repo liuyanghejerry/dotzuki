@@ -37,7 +37,7 @@ use dotzuki_engine::battle::stack::{
     MoveContext, RelayVar,
 };
 use dotzuki_engine::battle::{BattleProvider, BattleState, BattlerRef, BattlerState};
-use dotzuki_rules::{CompiledRuleset, RuleBindings, RuleSource, Ruleset, RulesHost, RulesProvider};
+use dotzuki_rules::{CompiledRuleset, RuleBindings, RuleSource, RulesHost, RulesProvider, Ruleset};
 
 use crate::{MType, MinimonProvider, Move, Stat, Status};
 
@@ -386,7 +386,9 @@ impl DataBattle {
         let dmg = {
             let a = self.battler_ref(attacker).clone();
             let d = self.battler_ref(target).clone();
-            self.provider.calculate_damage(move_, &a, &d, 0, false).damage
+            self.provider
+                .calculate_damage(move_, &a, &d, 0, false)
+                .damage
         };
         self.mv.damage = dmg;
 
@@ -407,7 +409,15 @@ impl DataBattle {
         // ModifyDamage (the move's DealMoveDamage marker rides here).
         let mut hs = Vec::new();
         for eff in &effs {
-            collect_handlers(&ctx, provider, Some(eff), Event::ModifyDamage, target, attacker, &mut hs);
+            collect_handlers(
+                &ctx,
+                provider,
+                Some(eff),
+                Event::ModifyDamage,
+                target,
+                attacker,
+                &mut hs,
+            );
         }
         run_event(&mut ctx, hs, RelayVar::Unit, false);
 
@@ -415,7 +425,15 @@ impl DataBattle {
         // Damage lane, fire Effectiveness (the chart hook scales it), write back.
         let mut hs = Vec::new();
         for eff in &effs {
-            collect_handlers(&ctx, provider, Some(eff), Event::Effectiveness, target, attacker, &mut hs);
+            collect_handlers(
+                &ctx,
+                provider,
+                Some(eff),
+                Event::Effectiveness,
+                target,
+                attacker,
+                &mut hs,
+            );
         }
         let eff_in = RelayVar::Damage(ctx.mv.damage);
         let eff_out = run_event(&mut ctx, hs, eff_in, false);
@@ -429,7 +447,15 @@ impl DataBattle {
         }
         let mut hs = Vec::new();
         for eff in &effs {
-            collect_handlers(&ctx, provider, Some(eff), Event::DamagingHit, target, attacker, &mut hs);
+            collect_handlers(
+                &ctx,
+                provider,
+                Some(eff),
+                Event::DamagingHit,
+                target,
+                attacker,
+                &mut hs,
+            );
         }
         run_event(&mut ctx, hs, RelayVar::Damage(dmg), false);
     }
@@ -460,7 +486,15 @@ impl DataBattle {
                 _ => false,
             };
             if include {
-                collect_handlers(&ctx, provider, Some(eff), Event::Residual, who, who, &mut hs);
+                collect_handlers(
+                    &ctx,
+                    provider,
+                    Some(eff),
+                    Event::Residual,
+                    who,
+                    who,
+                    &mut hs,
+                );
             }
         }
         run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
@@ -484,7 +518,15 @@ impl DataBattle {
             };
             let mut hs = Vec::new();
             for eff in &effs {
-                collect_handlers(&ctx, provider, Some(eff), Event::FieldResidual, who, who, &mut hs);
+                collect_handlers(
+                    &ctx,
+                    provider,
+                    Some(eff),
+                    Event::FieldResidual,
+                    who,
+                    who,
+                    &mut hs,
+                );
             }
             run_event_checked(&mut ctx, hs, RelayVar::Unit, false);
         }
@@ -517,7 +559,15 @@ impl DataBattle {
         };
         let mut hs = Vec::new();
         for eff in &effs {
-            collect_handlers(&ctx, provider, Some(eff), Event::WeatherModifyStat, who, who, &mut hs);
+            collect_handlers(
+                &ctx,
+                provider,
+                Some(eff),
+                Event::WeatherModifyStat,
+                who,
+                who,
+                &mut hs,
+            );
         }
         let out = run_event(&mut ctx, hs, RelayVar::Int(base_spd as i64), false);
         self.mv.last_damage = 0; // clear the scratch
@@ -577,7 +627,15 @@ impl DataBattle {
             {
                 // target = entrant: the `Foe` selector inside the Boost op then
                 // resolves to the entrant's foe (the same battler native drops).
-                collect_handlers(&ctx, provider, Some(eff), Event::SwitchIn, entrant, entrant, &mut hs);
+                collect_handlers(
+                    &ctx,
+                    provider,
+                    Some(eff),
+                    Event::SwitchIn,
+                    entrant,
+                    entrant,
+                    &mut hs,
+                );
             }
         }
         run_event(&mut ctx, hs, RelayVar::Unit, false);
@@ -603,7 +661,15 @@ impl DataBattle {
             if sid.as_deref() == Some("ability.clearbody")
                 && ctx.battler(target).species.ability == crate::Ability::ClearBody
             {
-                collect_handlers(&ctx, provider, Some(eff), Event::TryBoost, target, source, &mut hs);
+                collect_handlers(
+                    &ctx,
+                    provider,
+                    Some(eff),
+                    Event::TryBoost,
+                    target,
+                    source,
+                    &mut hs,
+                );
             }
         }
         let out = run_event(&mut ctx, hs, RelayVar::Int(delta), false);
@@ -694,11 +760,11 @@ fn opposing(who: BattlerRef) -> BattlerRef {
 #[cfg(test)]
 mod data_tests {
     use super::*;
+    use crate::Battle; // the native oracle
     use crate::{
         battler, Ability, Item, MType, MinimonProvider, Species, Stat, Status, BLADE, EMBER, MP,
         TACKLE, TORRENT,
     };
-    use crate::Battle; // the native oracle
     use dotzuki_engine::battle::rng::ScriptedRng;
 
     /// Install the canonical compiled ruleset on the current thread (idempotent).
@@ -713,17 +779,21 @@ mod data_tests {
         battler(Species::plain(), 100, 100, 100, 100, 100, 100, moves)
     }
     fn chart_defender(t: MType, hp: u16) -> BattlerState<MinimonProvider> {
-        battler(Species::plain().with_type(t), hp, 100, 100, 100, 100, 100, vec![])
+        battler(
+            Species::plain().with_type(t),
+            hp,
+            100,
+            100,
+            100,
+            100,
+            100,
+            vec![],
+        )
     }
 
     /// Run one typed hit through BOTH paths; assert identical damage dealt AND
     /// identical RNG draw counts. Returns the (native, data) damage for callers.
-    fn both_paths_one_hit(
-        move_: &Move,
-        move_id: &str,
-        def_type: MType,
-        def_hp: u16,
-    ) -> (u16, u16) {
+    fn both_paths_one_hit(move_: &Move, move_id: &str, def_type: MType, def_hp: u16) -> (u16, u16) {
         install_canonical();
         // native
         let mut nb = Battle::new(
@@ -744,7 +814,10 @@ mod data_tests {
         let data = def_hp - db.battler_ref(BattlerRef::OPPONENT).hp;
         let data_draws = db.rng.consumed();
         // PARITY: identical outcome AND identical draws (both 0 — chart has no gate).
-        assert_eq!(native, data, "native vs data damage parity for {move_id} vs {def_type:?}");
+        assert_eq!(
+            native, data,
+            "native vs data damage parity for {move_id} vs {def_type:?}"
+        );
         assert_eq!(native_draws, data_draws, "draw-count parity for {move_id}");
         assert_eq!(native_draws, 0, "chart moves consume zero RNG draws");
         (native, data)
@@ -764,7 +837,11 @@ mod data_tests {
     #[test]
     fn chart_resisted_40_parity() {
         let (native, data) = both_paths_one_hit(&BLADE, "move.blade", MType::Fire, 100);
-        assert_eq!((native, data), (40, 40), "resisted: 80*1/2 = 40 on both paths");
+        assert_eq!(
+            (native, data),
+            (40, 40),
+            "resisted: 80*1/2 = 40 on both paths"
+        );
     }
 
     #[test]
@@ -778,7 +855,11 @@ mod data_tests {
     fn chart_neutral_80_parity() {
         // Metal → Earth is OMITTED ⇒ [1,1] ⇒ identity 80 (the load-bearing control).
         let (native, data) = both_paths_one_hit(&BLADE, "move.blade", MType::Earth, 100);
-        assert_eq!((native, data), (80, 80), "neutral (omitted ⇒ [1,1]): 80 on both paths");
+        assert_eq!(
+            (native, data),
+            (80, 80),
+            "neutral (omitted ⇒ [1,1]): 80 on both paths"
+        );
     }
 
     /// The full doc 12 §4 ordering asserted via BOTH paths in one go: 160/80/40/0.
@@ -788,9 +869,21 @@ mod data_tests {
         let (nt_n, nt_d) = both_paths_one_hit(&BLADE, "move.blade", MType::Earth, 100);
         let (rs_n, rs_d) = both_paths_one_hit(&BLADE, "move.blade", MType::Fire, 100);
         let (im_n, im_d) = both_paths_one_hit(&TORRENT, "move.torrent", MType::Wood, 100);
-        assert_eq!((se_n, nt_n, rs_n, im_n), (160, 80, 40, 0), "native chart ordering");
-        assert_eq!((se_d, nt_d, rs_d, im_d), (160, 80, 40, 0), "data chart ordering");
-        assert_eq!((se_n, nt_n, rs_n, im_n), (se_d, nt_d, rs_d, im_d), "native == data, full ordering");
+        assert_eq!(
+            (se_n, nt_n, rs_n, im_n),
+            (160, 80, 40, 0),
+            "native chart ordering"
+        );
+        assert_eq!(
+            (se_d, nt_d, rs_d, im_d),
+            (160, 80, 40, 0),
+            "data chart ordering"
+        );
+        assert_eq!(
+            (se_n, nt_n, rs_n, im_n),
+            (se_d, nt_d, rs_d, im_d),
+            "native == data, full ordering"
+        );
     }
 
     /// Normal-typed move is inert through the chart fold (1×) on BOTH paths — the
@@ -801,14 +894,26 @@ mod data_tests {
         let split_def = || battler(Species::plain(), 100, 50, 50, 50, 100, 50, vec![]);
         let split_atk = |m: Vec<Move>| battler(Species::plain(), 100, 100, 50, 100, 50, 50, m);
         // native
-        let mut nb = Battle::new(MinimonProvider::default(), split_atk(vec![TACKLE]), split_def());
+        let mut nb = Battle::new(
+            MinimonProvider::default(),
+            split_atk(vec![TACKLE]),
+            split_def(),
+        );
         nb.fire_move(BattlerRef::PLAYER, &TACKLE);
         let native = 100 - nb.battler_ref(BattlerRef::OPPONENT).hp;
         // data
-        let mut db = DataBattle::new(MinimonProvider::default(), split_atk(vec![TACKLE]), split_def());
+        let mut db = DataBattle::new(
+            MinimonProvider::default(),
+            split_atk(vec![TACKLE]),
+            split_def(),
+        );
         db.fire_move(BattlerRef::PLAYER, &TACKLE, "move.tackle");
         let data = 100 - db.battler_ref(BattlerRef::OPPONENT).hp;
-        assert_eq!((native, data), (80, 80), "Normal move: identity 1× ⇒ 40*100/50 = 80 on both");
+        assert_eq!(
+            (native, data),
+            (80, 80),
+            "Normal move: identity 1× ⇒ 40*100/50 = 80 on both"
+        );
     }
 
     /// The phys/special split survives the data path: same power, different
@@ -820,10 +925,18 @@ mod data_tests {
         let split_atk = |m: Vec<Move>| battler(Species::plain(), 100, 100, 50, 100, 50, 50, m);
         // Physical (tackle) reads Def(50) → 80; Special (ember) reads SpD(100) → 40.
         for (m, id, expect) in [(TACKLE, "move.tackle", 80u16), (EMBER, "move.ember", 40u16)] {
-            let mut nb = Battle::new(MinimonProvider::default(), split_atk(vec![m.clone()]), split_def());
+            let mut nb = Battle::new(
+                MinimonProvider::default(),
+                split_atk(vec![m.clone()]),
+                split_def(),
+            );
             nb.fire_move(BattlerRef::PLAYER, &m);
             let native = 100 - nb.battler_ref(BattlerRef::OPPONENT).hp;
-            let mut db = DataBattle::new(MinimonProvider::default(), split_atk(vec![m.clone()]), split_def());
+            let mut db = DataBattle::new(
+                MinimonProvider::default(),
+                split_atk(vec![m.clone()]),
+                split_def(),
+            );
             db.fire_move(BattlerRef::PLAYER, &m, id);
             let data = 100 - db.battler_ref(BattlerRef::OPPONENT).hp;
             assert_eq!((native, data), (expect, expect), "split parity for {id}");
@@ -838,7 +951,13 @@ mod data_tests {
         let holder = || {
             let mut h = battler(
                 Species::plain().with_item(Item::Leftovers),
-                100, 50, 50, 50, 50, 50, vec![],
+                100,
+                50,
+                50,
+                50,
+                50,
+                50,
+                vec![],
             );
             h.status = Some(Status::Poisoned);
             h
@@ -854,10 +973,23 @@ mod data_tests {
         db.end_of_turn_residual(BattlerRef::PLAYER);
         let data = db.battler_ref(BattlerRef::PLAYER).hp;
         let data_draws = db.rng.consumed();
-        assert_eq!(native, 94, "native: chip(10) -12 then heal(20) +6 ⇒ 100-12+6 = 94");
-        assert_eq!(data, 94, "data: SAME cross-source ordering via source_effect keys ⇒ 94");
-        assert_eq!((native, data), (94, 94), "the single must-pass: chip-before-heal parity");
-        assert_eq!(native_draws, data_draws, "residual draw-count parity (both 0)");
+        assert_eq!(
+            native, 94,
+            "native: chip(10) -12 then heal(20) +6 ⇒ 100-12+6 = 94"
+        );
+        assert_eq!(
+            data, 94,
+            "data: SAME cross-source ordering via source_effect keys ⇒ 94"
+        );
+        assert_eq!(
+            (native, data),
+            (94, 94),
+            "the single must-pass: chip-before-heal parity"
+        );
+        assert_eq!(
+            native_draws, data_draws,
+            "residual draw-count parity (both 0)"
+        );
     }
 
     /// Control: poison chip alone (no Leftovers) ⇒ 88 on both paths.
@@ -875,7 +1007,10 @@ mod data_tests {
         let mut db = DataBattle::new(MinimonProvider::default(), poisoned(), dummy());
         db.end_of_turn_residual(BattlerRef::PLAYER);
         assert_eq!(
-            (nb.battler_ref(BattlerRef::PLAYER).hp, db.battler_ref(BattlerRef::PLAYER).hp),
+            (
+                nb.battler_ref(BattlerRef::PLAYER).hp,
+                db.battler_ref(BattlerRef::PLAYER).hp
+            ),
             (88, 88),
             "chip only: 100-12 = 88 on both paths"
         );
@@ -886,17 +1021,53 @@ mod data_tests {
     #[test]
     fn sandstorm_chip_and_spd_parity() {
         install_canonical();
-        let normal = || battler(Species::plain().with_type(MType::Normal), 100, 50, 50, 50, 100, 50, vec![]);
-        let rock = || battler(Species::plain().with_type(MType::Rock), 100, 50, 50, 50, 100, 50, vec![]);
+        let normal = || {
+            battler(
+                Species::plain().with_type(MType::Normal),
+                100,
+                50,
+                50,
+                50,
+                100,
+                50,
+                vec![],
+            )
+        };
+        let rock = || {
+            battler(
+                Species::plain().with_type(MType::Rock),
+                100,
+                50,
+                50,
+                50,
+                100,
+                50,
+                vec![],
+            )
+        };
         // native
-        let mut nb = Battle::new(MinimonProvider { weather_on: true, ..Default::default() }, normal(), rock());
+        let mut nb = Battle::new(
+            MinimonProvider {
+                weather_on: true,
+                ..Default::default()
+            },
+            normal(),
+            rock(),
+        );
         nb.weather_residual();
         let n_normal_hp = nb.battler_ref(BattlerRef::PLAYER).hp;
         let n_rock_hp = nb.battler_ref(BattlerRef::OPPONENT).hp;
         let n_rock_spd = nb.effective_spd_with_weather(BattlerRef::OPPONENT);
         let n_normal_spd = nb.effective_spd_with_weather(BattlerRef::PLAYER);
         // data
-        let mut db = DataBattle::new(MinimonProvider { weather_on: true, ..Default::default() }, normal(), rock());
+        let mut db = DataBattle::new(
+            MinimonProvider {
+                weather_on: true,
+                ..Default::default()
+            },
+            normal(),
+            rock(),
+        );
         db.weather_residual();
         let d_normal_hp = db.battler_ref(BattlerRef::PLAYER).hp;
         let d_rock_hp = db.battler_ref(BattlerRef::OPPONENT).hp;
@@ -904,8 +1075,16 @@ mod data_tests {
         let d_normal_spd = db.effective_spd_with_weather(BattlerRef::PLAYER);
         // native expected (lib.rs tests): Normal chipped 6 ⇒ 94; Rock immune ⇒ 100;
         // Rock SpD ×1.5 ⇒ 150; Normal SpD unboosted ⇒ 100.
-        assert_eq!((n_normal_hp, n_rock_hp, n_rock_spd, n_normal_spd), (94, 100, 150, 100), "native sandstorm");
-        assert_eq!((d_normal_hp, d_rock_hp, d_rock_spd, d_normal_spd), (94, 100, 150, 100), "data sandstorm");
+        assert_eq!(
+            (n_normal_hp, n_rock_hp, n_rock_spd, n_normal_spd),
+            (94, 100, 150, 100),
+            "native sandstorm"
+        );
+        assert_eq!(
+            (d_normal_hp, d_rock_hp, d_rock_spd, d_normal_spd),
+            (94, 100, 150, 100),
+            "data sandstorm"
+        );
         assert_eq!(
             (n_normal_hp, n_rock_hp, n_rock_spd, n_normal_spd),
             (d_normal_hp, d_rock_hp, d_rock_spd, d_normal_spd),
@@ -918,29 +1097,90 @@ mod data_tests {
     #[test]
     fn intimidate_drops_foe_atk_parity() {
         install_canonical();
-        let intimidator = || battler(Species::plain().with_ability(Ability::Intimidate), 100, 50, 50, 50, 50, 50, vec![]);
+        let intimidator = || {
+            battler(
+                Species::plain().with_ability(Ability::Intimidate),
+                100,
+                50,
+                50,
+                50,
+                50,
+                50,
+                vec![],
+            )
+        };
         let foe = || battler(Species::plain(), 100, 100, 50, 50, 50, 50, vec![TACKLE]);
         let mut nb = Battle::new(MinimonProvider::default(), intimidator(), foe());
         nb.switch_in(BattlerRef::PLAYER);
         let mut db = DataBattle::new(MinimonProvider::default(), intimidator(), foe());
         db.switch_in(BattlerRef::PLAYER);
-        let n = nb.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied().unwrap_or(0);
-        let d = db.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied().unwrap_or(0);
-        assert_eq!((n, d), (-1, -1), "Intimidate drops foe Atk -1 on both paths (no veto)");
+        let n = nb
+            .battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied()
+            .unwrap_or(0);
+        let d = db
+            .battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied()
+            .unwrap_or(0);
+        assert_eq!(
+            (n, d),
+            (-1, -1),
+            "Intimidate drops foe Atk -1 on both paths (no veto)"
+        );
     }
 
     #[test]
     fn clear_body_vetoes_intimidate_parity() {
         install_canonical();
-        let intimidator = || battler(Species::plain().with_ability(Ability::Intimidate), 100, 50, 50, 50, 50, 50, vec![]);
-        let cb_foe = || battler(Species::plain().with_ability(Ability::ClearBody), 100, 100, 50, 50, 50, 50, vec![]);
+        let intimidator = || {
+            battler(
+                Species::plain().with_ability(Ability::Intimidate),
+                100,
+                50,
+                50,
+                50,
+                50,
+                50,
+                vec![],
+            )
+        };
+        let cb_foe = || {
+            battler(
+                Species::plain().with_ability(Ability::ClearBody),
+                100,
+                100,
+                50,
+                50,
+                50,
+                50,
+                vec![],
+            )
+        };
         let mut nb = Battle::new(MinimonProvider::default(), intimidator(), cb_foe());
         nb.switch_in(BattlerRef::PLAYER);
         let mut db = DataBattle::new(MinimonProvider::default(), intimidator(), cb_foe());
         db.switch_in(BattlerRef::PLAYER);
-        let n = nb.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied().unwrap_or(0);
-        let d = db.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied().unwrap_or(0);
-        assert_eq!((n, d), (0, 0), "Clear Body vetoes the drop ⇒ Atk stays 0 on both paths");
+        let n = nb
+            .battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied()
+            .unwrap_or(0);
+        let d = db
+            .battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied()
+            .unwrap_or(0);
+        assert_eq!(
+            (n, d),
+            (0, 0),
+            "Clear Body vetoes the drop ⇒ Atk stays 0 on both paths"
+        );
     }
 
     // ── DUAL-MODE: baked text and disk text yield the SAME runtime ruleset. ──
@@ -950,22 +1190,57 @@ mod data_tests {
         // BAKED: include_str!'d text compiled into the binary (zero file IO).
         let baked = load_ruleset(false).load().expect("baked parses");
         // DISK: read the SAME rules.ron from its on-disk path.
-        let disk = RuleSource::from_path(RULES_RON_PATH).load().expect("disk parses");
+        let disk = RuleSource::from_path(RULES_RON_PATH)
+            .load()
+            .expect("disk parses");
         // The decisive dual-mode invariant: both compile to an identical registry.
         let cb = compile(&baked).expect("baked compiles");
         let cd = compile(&disk).expect("disk compiles");
         assert_eq!(baked.effects.len(), disk.effects.len(), "same effect count");
-        assert_eq!(baked.type_chart.len(), disk.type_chart.len(), "same chart-edge count");
+        assert_eq!(
+            baked.type_chart.len(),
+            disk.type_chart.len(),
+            "same chart-edge count"
+        );
         assert_eq!(cb.hooks.len(), cd.hooks.len(), "same compiled-hook count");
         assert_eq!(cb.types, cd.types, "same interned types");
         assert_eq!(cb.stats, cd.stats, "same interned stats");
         assert_eq!(cb.statuses, cd.statuses, "same interned status vocabulary");
         // The synthesized EffectId → (event, source_id, ops) maps are identical.
-        let mut a: Vec<_> = cb.hooks.values().map(|h| (h.id.0, h.event, h.source_id.clone(), h.ops.clone(), h.order, h.chance)).collect();
-        let mut b: Vec<_> = cd.hooks.values().map(|h| (h.id.0, h.event, h.source_id.clone(), h.ops.clone(), h.order, h.chance)).collect();
+        let mut a: Vec<_> = cb
+            .hooks
+            .values()
+            .map(|h| {
+                (
+                    h.id.0,
+                    h.event,
+                    h.source_id.clone(),
+                    h.ops.clone(),
+                    h.order,
+                    h.chance,
+                )
+            })
+            .collect();
+        let mut b: Vec<_> = cd
+            .hooks
+            .values()
+            .map(|h| {
+                (
+                    h.id.0,
+                    h.event,
+                    h.source_id.clone(),
+                    h.ops.clone(),
+                    h.order,
+                    h.chance,
+                )
+            })
+            .collect();
         a.sort_by_key(|t| t.0);
         b.sort_by_key(|t| t.0);
-        assert_eq!(a, b, "baked and disk compile to byte-identical compiled hooks");
+        assert_eq!(
+            a, b,
+            "baked and disk compile to byte-identical compiled hooks"
+        );
     }
 
     /// Drive the SAME battle through a baked-built registry AND a disk-built
@@ -996,7 +1271,10 @@ mod data_tests {
         );
         disk_b.fire_move(BattlerRef::PLAYER, &BLADE, "move.blade");
         let disk_dmg = 100 - disk_b.battler_ref(BattlerRef::OPPONENT).hp;
-        assert_eq!(baked_dmg, disk_dmg, "baked and disk drive identical battle outcome");
+        assert_eq!(
+            baked_dmg, disk_dmg,
+            "baked and disk drive identical battle outcome"
+        );
         assert_eq!(baked_dmg, 40, "and it is the resisted 40");
         install_canonical(); // restore canonical for any later test on this thread
     }
@@ -1031,12 +1309,19 @@ mod data_tests {
             r#"( atk: "Metal", def: "Wood",  mult: [2, 1] ),   // 金克木"#,
             r#"( atk: "Metal", def: "Wood",  mult: [1, 1] ),   // 金克木 (nerfed by reload)"#,
         );
-        assert_ne!(mutated_text, RULES_RON_BAKED, "the mutation actually changed the text");
+        assert_ne!(
+            mutated_text, RULES_RON_BAKED,
+            "the mutation actually changed the text"
+        );
         let mutated = Ruleset::from_ron(&mutated_text).expect("mutated parses");
         install_compiled(compile(&mutated).expect("mutated compiles"));
 
         // 3. The SAME scenario now yields the changed outcome: 80*1/1 = 80.
-        assert_eq!(run(), 80, "after reload: nerfed 金克木 = neutral 80 (the registry swap took effect)");
+        assert_eq!(
+            run(),
+            80,
+            "after reload: nerfed 金克木 = neutral 80 (the registry swap took effect)"
+        );
 
         // 4. Restore the canonical registry (the next reload would do this on
         //    reverting the file) ⇒ back to 160. Proves the swap is reversible.
@@ -1058,8 +1343,16 @@ mod data_tests {
             );
             b.rng = ScriptedRng::new(vec![]);
             b.fire_move(BattlerRef::PLAYER, &BLADE, "move.blade");
-            assert_eq!(b.rng.consumed(), 0, "chart path consumes zero RNG draws (hot={hot})");
-            assert_eq!(500 - b.battler_ref(BattlerRef::OPPONENT).hp, 160, "and still 160 (hot={hot})");
+            assert_eq!(
+                b.rng.consumed(),
+                0,
+                "chart path consumes zero RNG draws (hot={hot})"
+            );
+            assert_eq!(
+                500 - b.battler_ref(BattlerRef::OPPONENT).hp,
+                160,
+                "and still 160 (hot={hot})"
+            );
         }
         install_canonical();
     }
@@ -1078,14 +1371,21 @@ mod data_tests {
 
         // A unique temp rules.ron (avoid /tmp collisions across parallel tests).
         let mut dir = std::env::temp_dir();
-        dir.push(format!("minimon_rules_{}_{:?}", std::process::id(), std::thread::current().id()));
+        dir.push(format!(
+            "minimon_rules_{}_{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("rules.ron");
         std::fs::write(&path, RULES_RON_BAKED).unwrap();
 
         // A DISK source with a live watcher.
         let mut source = RuleSource::from_path(&path);
-        assert!(source.is_hot_reloadable(), "disk source + hot-reload feature ⇒ watchable");
+        assert!(
+            source.is_hot_reloadable(),
+            "disk source + hot-reload feature ⇒ watchable"
+        );
 
         // Install the initial (canonical) compiled registry from the temp file.
         install_compiled(compile(&source.load().unwrap()).unwrap());
@@ -1125,7 +1425,11 @@ mod data_tests {
         // file IS changed on disk; the watcher is the *signal*, the reload is the
         // *action* — both proven, the signal best-effort under CI fs timing).
         install_compiled(compile(&source.load().unwrap()).unwrap());
-        assert_eq!(run(), 80, "after file edit + reload: nerfed 金克木 = neutral 80");
+        assert_eq!(
+            run(),
+            80,
+            "after file edit + reload: nerfed 金克木 = neutral 80"
+        );
 
         // Cleanup + restore canonical for any later test on this thread.
         let _ = std::fs::remove_dir_all(&dir);
@@ -1172,14 +1476,21 @@ mod data_tests {
             100 - db.battler_ref(BattlerRef::OPPONENT).hp,
             "native vs data damage parity (both 80)"
         );
-        assert_eq!(nb.battler_ref(BattlerRef::OPPONENT).hp, 20, "neutral 80 dealt");
+        assert_eq!(
+            nb.battler_ref(BattlerRef::OPPONENT).hp,
+            20,
+            "neutral 80 dealt"
+        );
         assert_eq!(
             nb.battler_ref(BattlerRef::PLAYER).resources.current(MP),
             db.battler_ref(BattlerRef::PLAYER).resources.current(MP),
             "native vs data MP parity"
         );
-        assert_eq!(nb.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(7),
-            "BLADE deducted 3 MP on both paths: 10 - 3 = 7");
+        assert_eq!(
+            nb.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+            Some(7),
+            "BLADE deducted 3 MP on both paths: 10 - 3 = 7"
+        );
     }
 
     #[test]
@@ -1199,12 +1510,26 @@ mod data_tests {
         );
         db.fire_move(BattlerRef::PLAYER, &BLADE, "move.blade");
 
-        assert_eq!(nb.battler_ref(BattlerRef::OPPONENT).hp, 100, "native: prevented ⇒ unharmed");
-        assert_eq!(db.battler_ref(BattlerRef::OPPONENT).hp, 100, "data: prevented ⇒ unharmed");
-        assert_eq!(nb.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(2),
-            "native: prevented move ⇒ MP unchanged at 2");
-        assert_eq!(db.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(2),
-            "data: prevented move ⇒ MP unchanged at 2");
+        assert_eq!(
+            nb.battler_ref(BattlerRef::OPPONENT).hp,
+            100,
+            "native: prevented ⇒ unharmed"
+        );
+        assert_eq!(
+            db.battler_ref(BattlerRef::OPPONENT).hp,
+            100,
+            "data: prevented ⇒ unharmed"
+        );
+        assert_eq!(
+            nb.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+            Some(2),
+            "native: prevented move ⇒ MP unchanged at 2"
+        );
+        assert_eq!(
+            db.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+            Some(2),
+            "data: prevented move ⇒ MP unchanged at 2"
+        );
     }
 
     #[test]
@@ -1226,12 +1551,26 @@ mod data_tests {
 
         // Both deal the neutral 40 (TACKLE power 40, atk==def==100 ⇒ 40*100/100=40,
         // Normal ⇒ identity chart). hp 100 - 40 = 60.
-        assert_eq!(nb.battler_ref(BattlerRef::OPPONENT).hp, 60, "native: no-cost move connected");
-        assert_eq!(db.battler_ref(BattlerRef::OPPONENT).hp, 60, "data: no-cost move connected");
-        assert_eq!(nb.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(0),
-            "native: no-cost move left MP untouched");
-        assert_eq!(db.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(0),
-            "data: no-cost move left MP untouched");
+        assert_eq!(
+            nb.battler_ref(BattlerRef::OPPONENT).hp,
+            60,
+            "native: no-cost move connected"
+        );
+        assert_eq!(
+            db.battler_ref(BattlerRef::OPPONENT).hp,
+            60,
+            "data: no-cost move connected"
+        );
+        assert_eq!(
+            nb.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+            Some(0),
+            "native: no-cost move left MP untouched"
+        );
+        assert_eq!(
+            db.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+            Some(0),
+            "data: no-cost move left MP untouched"
+        );
     }
 
     #[test]
@@ -1239,13 +1578,25 @@ mod data_tests {
         // The loader interned blade/torrent's `cost:` to (resource_index 0, amount).
         install_canonical();
         let host = MinimonProvider::rules_host().expect("rules host installed");
-        assert_eq!(host.compiled.move_cost("move.blade"), &[(0usize, 3u16)],
-            "blade costs 3 MP (resource index 0)");
-        assert_eq!(host.compiled.move_cost("move.torrent"), &[(0usize, 5u16)],
-            "torrent costs 5 MP");
-        assert_eq!(host.compiled.move_cost("move.tackle"), &[],
-            "tackle has no cost (inert)");
-        assert_eq!(host.compiled.resources, vec!["MP".to_string()],
-            "the resources: vocabulary interned MP at index 0");
+        assert_eq!(
+            host.compiled.move_cost("move.blade"),
+            &[(0usize, 3u16)],
+            "blade costs 3 MP (resource index 0)"
+        );
+        assert_eq!(
+            host.compiled.move_cost("move.torrent"),
+            &[(0usize, 5u16)],
+            "torrent costs 5 MP"
+        );
+        assert_eq!(
+            host.compiled.move_cost("move.tackle"),
+            &[],
+            "tackle has no cost (inert)"
+        );
+        assert_eq!(
+            host.compiled.resources,
+            vec!["MP".to_string()],
+            "the resources: vocabulary interned MP at index 0"
+        );
     }
 }

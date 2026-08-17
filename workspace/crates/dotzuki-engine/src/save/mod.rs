@@ -271,7 +271,11 @@ impl SaveStorage for InMemoryStorage {
     }
 
     fn slot_exists(&self, slot: usize) -> bool {
-        self.slots.borrow().get(slot).map(|s| s.is_some()).unwrap_or(false)
+        self.slots
+            .borrow()
+            .get(slot)
+            .map(|s| s.is_some())
+            .unwrap_or(false)
     }
 
     fn delete_slot(&self, slot: usize) -> Result<(), SaveError> {
@@ -330,7 +334,10 @@ mod tests {
             }
             let name_bytes = &data[..Self::NAME_LEN];
             // Find the first zero byte as terminator
-            let name_end = name_bytes.iter().position(|&b| b == 0).unwrap_or(Self::NAME_LEN);
+            let name_end = name_bytes
+                .iter()
+                .position(|&b| b == 0)
+                .unwrap_or(Self::NAME_LEN);
             let player_name = String::from_utf8(name_bytes[..name_end].to_vec())
                 .map_err(|_| SaveError::InvalidData)?;
             let level = data[Self::NAME_LEN];
@@ -341,7 +348,11 @@ mod tests {
                 data[gold_start + 2],
                 data[gold_start + 3],
             ]);
-            Ok(MockSave { player_name, level, gold })
+            Ok(MockSave {
+                player_name,
+                level,
+                gold,
+            })
         }
 
         fn save_size() -> usize {
@@ -382,7 +393,9 @@ mod tests {
         };
 
         // Save to slot 1
-        manager.save(SaveSlot::Slot1, &original).expect("save should succeed");
+        manager
+            .save(SaveSlot::Slot1, &original)
+            .expect("save should succeed");
 
         // Load from slot 1
         let loaded = manager.load(SaveSlot::Slot1).expect("load should succeed");
@@ -395,9 +408,21 @@ mod tests {
         let storage = Box::new(InMemoryStorage::new());
         let manager = SaveManager::<MockSave>::new(storage);
 
-        let save1 = MockSave { player_name: "Red".to_string(), level: 50, gold: 5000 };
-        let save2 = MockSave { player_name: "Blue".to_string(), level: 48, gold: 4800 };
-        let save3 = MockSave { player_name: "Green".to_string(), level: 55, gold: 5500 };
+        let save1 = MockSave {
+            player_name: "Red".to_string(),
+            level: 50,
+            gold: 5000,
+        };
+        let save2 = MockSave {
+            player_name: "Blue".to_string(),
+            level: 48,
+            gold: 4800,
+        };
+        let save3 = MockSave {
+            player_name: "Green".to_string(),
+            level: 55,
+            gold: 5500,
+        };
 
         manager.save(SaveSlot::Slot1, &save1).unwrap();
         manager.save(SaveSlot::Slot2, &save2).unwrap();
@@ -431,7 +456,11 @@ mod tests {
         let storage = Box::new(InMemoryStorage::new());
 
         // Manually write corrupted data (valid payload but wrong checksum)
-        let mock = MockSave { player_name: "Ash".to_string(), level: 10, gold: 100 };
+        let mock = MockSave {
+            player_name: "Ash".to_string(),
+            level: 10,
+            gold: 100,
+        };
         let raw = mock.serialize();
         let mut payload = raw.clone();
         // Append a deliberately wrong checksum
@@ -460,7 +489,11 @@ mod tests {
             assert!(!has_data, "all slots should be empty initially");
         }
 
-        let mock = MockSave { player_name: "Test".to_string(), level: 1, gold: 0 };
+        let mock = MockSave {
+            player_name: "Test".to_string(),
+            level: 1,
+            gold: 0,
+        };
         manager.save(SaveSlot::Slot2, &mock).unwrap();
 
         let slots = manager.list_slots();
@@ -478,12 +511,19 @@ mod tests {
         let storage = Box::new(InMemoryStorage::new());
         let manager = SaveManager::<MockSave>::new(storage);
 
-        let mock = MockSave { player_name: "Del".to_string(), level: 7, gold: 77 };
+        let mock = MockSave {
+            player_name: "Del".to_string(),
+            level: 7,
+            gold: 77,
+        };
         manager.save(SaveSlot::Slot1, &mock).unwrap();
         assert!(manager.list_slots()[0].1, "slot 1 should have data");
 
         manager.delete(SaveSlot::Slot1).unwrap();
-        assert!(!manager.list_slots()[0].1, "slot 1 should be empty after delete");
+        assert!(
+            !manager.list_slots()[0].1,
+            "slot 1 should be empty after delete"
+        );
 
         let result = manager.load(SaveSlot::Slot1);
         assert_eq!(result.unwrap_err(), SaveError::SlotEmpty);
@@ -518,10 +558,18 @@ mod tests {
         let storage = Box::new(InMemoryStorage::new());
         let manager = SaveManager::<MockSave>::new(storage);
 
-        let first = MockSave { player_name: "First".to_string(), level: 10, gold: 100 };
+        let first = MockSave {
+            player_name: "First".to_string(),
+            level: 10,
+            gold: 100,
+        };
         manager.save(SaveSlot::Slot1, &first).unwrap();
 
-        let second = MockSave { player_name: "Second".to_string(), level: 20, gold: 200 };
+        let second = MockSave {
+            player_name: "Second".to_string(),
+            level: 20,
+            gold: 200,
+        };
         manager.save(SaveSlot::Slot1, &second).unwrap();
 
         let loaded = manager.load(SaveSlot::Slot1).unwrap();

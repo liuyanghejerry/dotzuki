@@ -195,7 +195,10 @@ mod tests {
 
     #[test]
     fn transport_error_display() {
-        assert_eq!(TransportError::Disconnected.to_string(), "peer disconnected");
+        assert_eq!(
+            TransportError::Disconnected.to_string(),
+            "peer disconnected"
+        );
         assert_eq!(TransportError::Timeout.to_string(), "operation timed out");
         assert_eq!(
             TransportError::SerializationError("bad json".into()).to_string(),

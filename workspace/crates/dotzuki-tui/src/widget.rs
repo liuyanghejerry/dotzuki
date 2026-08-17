@@ -83,13 +83,7 @@ impl<F: FbSurface> Widget for HalfblockImage<'_, F> {
 ///
 /// Each terminal cell represents `scale` frame pixels horizontally and
 /// `scale / 2` frame pixels vertically (because of halfblock `▀` rendering).
-pub fn auto_scale(
-    cols: u16,
-    rows: u16,
-    cell_ratio: f64,
-    fb_width: u32,
-    fb_height: u32,
-) -> u32 {
+pub fn auto_scale(cols: u16, rows: u16, cell_ratio: f64, fb_width: u32, fb_height: u32) -> u32 {
     let cols = cols as f64;
     let rows = rows as f64;
     let w = fb_width as f64;

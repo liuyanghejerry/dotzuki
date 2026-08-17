@@ -13,7 +13,9 @@
 use dotzuki_engine::render::painter::Painter;
 use dotzuki_engine::render::{Rgba, TilePos};
 
-use crate::layout_engine::types::{DataContext, LayoutElement, RenderContext, RenderError, TileParams};
+use crate::layout_engine::types::{
+    DataContext, LayoutElement, RenderContext, RenderError, TileParams,
+};
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -182,34 +184,15 @@ mod tests {
     impl Painter for RecordingPainter {
         fn clear(&mut self, _color: EngineRgba) {}
 
-        fn draw_text_box(
-            &mut self,
-            _rect: dotzuki_engine::render::TileRect,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_text_box(&mut self, _rect: dotzuki_engine::render::TileRect, _color: EngineRgba) {}
 
         fn draw_text(&mut self, _pos: TilePos, _text: &str, _color: EngineRgba) {}
 
         fn draw_glyph(&mut self, _pos: TilePos, _glyph: char, _color: EngineRgba) {}
 
-        fn draw_pixel_rect(
-            &mut self,
-            _px: u32,
-            _py: u32,
-            _pw: u32,
-            _ph: u32,
-            _color: EngineRgba,
-        ) {
-        }
+        fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: EngineRgba) {}
 
-        fn draw_gb_tile(
-            &mut self,
-            pos: TilePos,
-            tile_id: u8,
-            fallback: &str,
-            color: EngineRgba,
-        ) {
+        fn draw_gb_tile(&mut self, pos: TilePos, tile_id: u8, fallback: &str, color: EngineRgba) {
             self.tile_calls
                 .push((pos, tile_id, fallback.to_string(), color));
         }
@@ -341,7 +324,11 @@ mod tests {
 
     #[test]
     fn render_single_tile() {
-        let elem = make_element(serde_json::Value::Number(serde_json::Number::from(10)), 3, 5);
+        let elem = make_element(
+            serde_json::Value::Number(serde_json::Number::from(10)),
+            3,
+            5,
+        );
         let params = match &elem.params {
             ElementParams::Tile(p) => p,
             _ => unreachable!(),
@@ -428,11 +415,7 @@ mod tests {
 
     #[test]
     fn render_from_template() {
-        let elem = make_element(
-            serde_json::Value::String("{id}".to_string()),
-            0,
-            0,
-        );
+        let elem = make_element(serde_json::Value::String("{id}".to_string()), 0, 0);
         let params = match &elem.params {
             ElementParams::Tile(p) => p,
             _ => unreachable!(),
@@ -498,7 +481,10 @@ mod tests {
         let data = [0u8; 16]; // blank tile
         let tileset = crate::tile::TileSet::from_2bpp(&data);
         let palette = crate::palette::GRAYSCALE_PALETTE;
-        let mut fb = dotzuki_engine::render::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), dotzuki_engine::render::Rgba::WHITE);
+        let mut fb = dotzuki_engine::render::FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render::Rgba::WHITE,
+        );
 
         let result = render_tile_with_tiles(&elem, params, &ctx, &tileset, &palette, &mut fb);
         assert!(result.is_ok());
@@ -519,7 +505,10 @@ mod tests {
         let data = [0xFFu8; 16]; // all color 3
         let tileset = crate::tile::TileSet::from_2bpp(&data);
         let palette = crate::palette::GRAYSCALE_PALETTE;
-        let mut fb = dotzuki_engine::render::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), dotzuki_engine::render::Rgba::WHITE);
+        let mut fb = dotzuki_engine::render::FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render::Rgba::WHITE,
+        );
 
         let result = render_tile_with_tiles(&elem, &params, &ctx, &tileset, &palette, &mut fb);
         assert!(result.is_ok());
@@ -542,7 +531,10 @@ mod tests {
         let data = [0xFFu8; 16];
         let tileset = crate::tile::TileSet::from_2bpp(&data);
         let palette = crate::palette::GRAYSCALE_PALETTE;
-        let mut fb = dotzuki_engine::render::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), dotzuki_engine::render::Rgba::WHITE);
+        let mut fb = dotzuki_engine::render::FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render::Rgba::WHITE,
+        );
 
         let result = render_tile_with_tiles(&elem, &params, &ctx, &tileset, &palette, &mut fb);
         assert!(result.is_ok());
@@ -573,7 +565,10 @@ mod tests {
         let data = [0u8; 16]; // only 1 tile
         let tileset = crate::tile::TileSet::from_2bpp(&data);
         let palette = crate::palette::GRAYSCALE_PALETTE;
-        let mut fb = dotzuki_engine::render::FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160, 144), dotzuki_engine::render::Rgba::WHITE);
+        let mut fb = dotzuki_engine::render::FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render::Rgba::WHITE,
+        );
 
         let result = render_tile_with_tiles(&elem, params, &ctx, &tileset, &palette, &mut fb);
         assert!(result.is_ok());

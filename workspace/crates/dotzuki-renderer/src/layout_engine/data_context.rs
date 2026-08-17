@@ -1,5 +1,5 @@
-use crate::layout_engine::types::DataValue;
 use crate::layout_engine::types::DataContext;
+use crate::layout_engine::types::DataValue;
 
 impl DataContext {
     /// Create a new empty data context.

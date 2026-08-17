@@ -131,7 +131,11 @@ impl Lexer {
             }
         }
 
-        if errors.is_empty() { Ok(tokens) } else { Err(errors) }
+        if errors.is_empty() {
+            Ok(tokens)
+        } else {
+            Err(errors)
+        }
     }
 
     fn emit_remaining_dedents(&self, tokens: &mut Vec<SpannedToken>) {
@@ -151,8 +155,12 @@ impl Lexer {
         let c = self.input.get(self.pos).copied();
         if let Some(ch) = c {
             self.pos += 1;
-            if ch == '\n' { self.line += 1; self.col = 0; }
-            else { self.col += 1; }
+            if ch == '\n' {
+                self.line += 1;
+                self.col = 0;
+            } else {
+                self.col += 1;
+            }
         }
         c
     }
@@ -162,23 +170,35 @@ impl Lexer {
     }
 
     fn span(&self, start_line: usize, start_col: usize, start_byte: usize) -> SourceSpan {
-        SourceSpan::new(&self.file, start_line, start_col, self.line, self.col, start_byte, self.pos)
+        SourceSpan::new(
+            &self.file, start_line, start_col, self.line, self.col, start_byte, self.pos,
+        )
     }
 
     fn next_token_inner(&mut self) -> Result<(Token, SourceSpan), LexError> {
         if self.col == 0 {
             let mut p = self.pos;
             if self.input.get(p).copied() == Some('\t') {
-                return Err(self.error("Tabs are not allowed for indentation. Use spaces (2 or 4)."));
+                return Err(
+                    self.error("Tabs are not allowed for indentation. Use spaces (2 or 4).")
+                );
             }
-            while self.input.get(p).copied() == Some(' ') { p += 1; }
+            while self.input.get(p).copied() == Some(' ') {
+                p += 1;
+            }
             if self.input.get(p).copied() == Some('\t') {
-                return Err(self.error("Tabs are not allowed for indentation. Use spaces (2 or 4)."));
+                return Err(
+                    self.error("Tabs are not allowed for indentation. Use spaces (2 or 4).")
+                );
             }
         }
 
         while let Some(c) = self.current_char() {
-            if c == ' ' || c == '\r' { self.advance(); } else { break; }
+            if c == ' ' || c == '\r' {
+                self.advance();
+            } else {
+                break;
+            }
         }
 
         let start_line = self.line;
@@ -194,11 +214,17 @@ impl Lexer {
 
         match self.current_char() {
             None => Ok((Token::Eof, self.span(start_line, start_col, start_byte))),
-            Some('\n') => { self.advance(); self.handle_newline() }
+            Some('\n') => {
+                self.advance();
+                self.handle_newline()
+            }
             Some('/') => match self.peek(1) {
                 Some('/') => self.lex_single_line_comment(start_line, start_col, start_byte),
                 Some('*') => self.lex_multi_line_comment(start_line, start_col, start_byte),
-                _ => { self.advance(); Ok((Token::Slash, self.span(start_line, start_col, start_byte))) }
+                _ => {
+                    self.advance();
+                    Ok((Token::Slash, self.span(start_line, start_col, start_byte)))
+                }
             },
             Some('"') => self.lex_string('"', start_line, start_col, start_byte),
             Some('\'') => self.lex_string('\'', start_line, start_col, start_byte),
@@ -218,58 +244,132 @@ impl Lexer {
                     Ok((Token::LBrace, self.span(start_line, start_col, start_byte)))
                 }
             }
-            Some('}') => { self.advance(); Ok((Token::RBrace, self.span(start_line, start_col, start_byte))) }
-            Some('(') => { self.advance(); Ok((Token::LParen, self.span(start_line, start_col, start_byte))) }
-            Some(')') => { self.advance(); Ok((Token::RParen, self.span(start_line, start_col, start_byte))) }
-            Some('[') => { self.advance(); Ok((Token::LBracket, self.span(start_line, start_col, start_byte))) }
-            Some(']') => { self.advance(); Ok((Token::RBracket, self.span(start_line, start_col, start_byte))) }
+            Some('}') => {
+                self.advance();
+                Ok((Token::RBrace, self.span(start_line, start_col, start_byte)))
+            }
+            Some('(') => {
+                self.advance();
+                Ok((Token::LParen, self.span(start_line, start_col, start_byte)))
+            }
+            Some(')') => {
+                self.advance();
+                Ok((Token::RParen, self.span(start_line, start_col, start_byte)))
+            }
+            Some('[') => {
+                self.advance();
+                Ok((
+                    Token::LBracket,
+                    self.span(start_line, start_col, start_byte),
+                ))
+            }
+            Some(']') => {
+                self.advance();
+                Ok((
+                    Token::RBracket,
+                    self.span(start_line, start_col, start_byte),
+                ))
+            }
             Some('=') => {
                 self.advance();
-                if self.current_char() == Some('=') { self.advance(); Ok((Token::EqEq, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::Equals, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('=') {
+                    self.advance();
+                    Ok((Token::EqEq, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::Equals, self.span(start_line, start_col, start_byte)))
+                }
             }
-            Some(',') => { self.advance(); Ok((Token::Comma, self.span(start_line, start_col, start_byte))) }
-            Some('?') => { self.advance(); Ok((Token::Question, self.span(start_line, start_col, start_byte))) }
-            Some(':') => { self.advance(); Ok((Token::Colon, self.span(start_line, start_col, start_byte))) }
-            Some('+') => { self.advance(); Ok((Token::Plus, self.span(start_line, start_col, start_byte))) }
+            Some(',') => {
+                self.advance();
+                Ok((Token::Comma, self.span(start_line, start_col, start_byte)))
+            }
+            Some('?') => {
+                self.advance();
+                Ok((
+                    Token::Question,
+                    self.span(start_line, start_col, start_byte),
+                ))
+            }
+            Some(':') => {
+                self.advance();
+                Ok((Token::Colon, self.span(start_line, start_col, start_byte)))
+            }
+            Some('+') => {
+                self.advance();
+                Ok((Token::Plus, self.span(start_line, start_col, start_byte)))
+            }
             Some('-') => {
-                if self.peek(1).map_or(false, |c| c.is_ascii_digit() || c == '.') {
+                if self
+                    .peek(1)
+                    .map_or(false, |c| c.is_ascii_digit() || c == '.')
+                {
                     self.lex_number(start_line, start_col, start_byte)
-                } else { self.advance(); Ok((Token::Minus, self.span(start_line, start_col, start_byte))) }
+                } else {
+                    self.advance();
+                    Ok((Token::Minus, self.span(start_line, start_col, start_byte)))
+                }
             }
-            Some('*') => { self.advance(); Ok((Token::Star, self.span(start_line, start_col, start_byte))) }
+            Some('*') => {
+                self.advance();
+                Ok((Token::Star, self.span(start_line, start_col, start_byte)))
+            }
             Some('!') => {
                 self.advance();
-                if self.current_char() == Some('=') { self.advance(); Ok((Token::NotEq, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::Not, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('=') {
+                    self.advance();
+                    Ok((Token::NotEq, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::Not, self.span(start_line, start_col, start_byte)))
+                }
             }
             Some('>') => {
                 self.advance();
-                if self.current_char() == Some('=') { self.advance(); Ok((Token::GtEq, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::Gt, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('=') {
+                    self.advance();
+                    Ok((Token::GtEq, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::Gt, self.span(start_line, start_col, start_byte)))
+                }
             }
             Some('<') => {
                 self.advance();
-                if self.current_char() == Some('=') { self.advance(); Ok((Token::LtEq, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::Lt, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('=') {
+                    self.advance();
+                    Ok((Token::LtEq, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::Lt, self.span(start_line, start_col, start_byte)))
+                }
             }
             Some('&') => {
                 self.advance();
-                if self.current_char() == Some('&') { self.advance(); Ok((Token::AndAnd, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::BitAnd, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('&') {
+                    self.advance();
+                    Ok((Token::AndAnd, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::BitAnd, self.span(start_line, start_col, start_byte)))
+                }
             }
             Some('|') => {
                 self.advance();
-                if self.current_char() == Some('|') { self.advance(); Ok((Token::OrOr, self.span(start_line, start_col, start_byte))) }
-                else { Ok((Token::BitOr, self.span(start_line, start_col, start_byte))) }
+                if self.current_char() == Some('|') {
+                    self.advance();
+                    Ok((Token::OrOr, self.span(start_line, start_col, start_byte)))
+                } else {
+                    Ok((Token::BitOr, self.span(start_line, start_col, start_byte)))
+                }
             }
-            Some(c) if c.is_ascii_digit() || (c == '.' && self.peek(1).map_or(false, |cc| cc.is_ascii_digit())) => {
+            Some(c)
+                if c.is_ascii_digit()
+                    || (c == '.' && self.peek(1).map_or(false, |cc| cc.is_ascii_digit())) =>
+            {
                 self.lex_number(start_line, start_col, start_byte)
             }
             Some('0') if self.peek(1) == Some('x') || self.peek(1) == Some('X') => {
                 self.lex_number(start_line, start_col, start_byte)
             }
-            Some(c) if c.is_alphabetic() || c == '_' => self.lex_identifier_or_keyword(start_line, start_col, start_byte),
+            Some(c) if c.is_alphabetic() || c == '_' => {
+                self.lex_identifier_or_keyword(start_line, start_col, start_byte)
+            }
             Some(c) => Err(self.error(&format!("Unexpected character: '{}'", c))),
         }
     }
@@ -281,7 +381,10 @@ impl Lexer {
         let indent_spaces = self.count_leading_spaces();
 
         if self.is_empty_or_comment_line() {
-            return Ok((Token::Newline, SourceSpan::point(&self.file, start_line, start_col)));
+            return Ok((
+                Token::Newline,
+                SourceSpan::point(&self.file, start_line, start_col),
+            ));
         }
 
         self.validate_indent_unit(indent_spaces)?;
@@ -289,27 +392,44 @@ impl Lexer {
         let current = *self.indent_stack.last().unwrap_or(&0);
         if indent_spaces > current {
             self.indent_stack.push(indent_spaces);
-            Ok((Token::Indent(indent_spaces - current), SourceSpan::point(&self.file, start_line, start_col)))
+            Ok((
+                Token::Indent(indent_spaces - current),
+                SourceSpan::point(&self.file, start_line, start_col),
+            ))
         } else if indent_spaces < current {
-            while self.indent_stack.last().map_or(false, |&t| t > indent_spaces) {
+            while self
+                .indent_stack
+                .last()
+                .map_or(false, |&t| t > indent_spaces)
+            {
                 self.indent_stack.pop();
             }
             let new_top = *self.indent_stack.last().unwrap_or(&0);
             if new_top != indent_spaces {
                 return Err(self.error(&format!(
-                    "Invalid dedent: expected indent level {}, found {}", new_top, indent_spaces
+                    "Invalid dedent: expected indent level {}, found {}",
+                    new_top, indent_spaces
                 )));
             }
-            Ok((Token::Dedent(current - indent_spaces), SourceSpan::point(&self.file, start_line, start_col)))
+            Ok((
+                Token::Dedent(current - indent_spaces),
+                SourceSpan::point(&self.file, start_line, start_col),
+            ))
         } else {
-            Ok((Token::Newline, SourceSpan::point(&self.file, start_line, start_col)))
+            Ok((
+                Token::Newline,
+                SourceSpan::point(&self.file, start_line, start_col),
+            ))
         }
     }
 
     fn count_leading_spaces(&self) -> u32 {
         let mut pos = self.pos;
         let mut spaces = 0u32;
-        while self.input.get(pos).copied() == Some(' ') { spaces += 1; pos += 1; }
+        while self.input.get(pos).copied() == Some(' ') {
+            spaces += 1;
+            pos += 1;
+        }
         spaces
     }
 
@@ -317,7 +437,9 @@ impl Lexer {
         let mut pos = self.pos;
         loop {
             match self.input.get(pos).copied() {
-                Some(' ') => { pos += 1; }
+                Some(' ') => {
+                    pos += 1;
+                }
                 Some('\n') | None => return true,
                 Some('/') if self.input.get(pos + 1).copied() == Some('/') => return true,
                 _ => return false,
@@ -326,54 +448,91 @@ impl Lexer {
     }
 
     fn validate_indent_unit(&mut self, spaces: u32) -> Result<(), LexError> {
-        if spaces == 0 { return Ok(()); }
+        if spaces == 0 {
+            return Ok(());
+        }
         match self.indent_unit {
             None => {
                 if spaces == 2 || spaces == 4 {
                     self.indent_unit = Some(spaces);
                     Ok(())
                 } else {
-                    Err(self.error(&format!("Invalid indentation: {} spaces. Use 2 or 4 spaces.", spaces)))
+                    Err(self.error(&format!(
+                        "Invalid indentation: {} spaces. Use 2 or 4 spaces.",
+                        spaces
+                    )))
                 }
             }
-            Some(unit) if spaces % unit != 0 => {
-                Err(self.error(&format!(
-                    "Inconsistent indentation: expected multiple of {} spaces, found {}.", unit, spaces
-                )))
-            }
+            Some(unit) if spaces % unit != 0 => Err(self.error(&format!(
+                "Inconsistent indentation: expected multiple of {} spaces, found {}.",
+                unit, spaces
+            ))),
             _ => Ok(()),
         }
     }
 
-    fn lex_single_line_comment(&mut self, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
-        self.advance(); self.advance();
+    fn lex_single_line_comment(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
+        self.advance();
+        self.advance();
         let mut text = String::new();
         while let Some(c) = self.current_char() {
-            if c == '\n' { break; }
+            if c == '\n' {
+                break;
+            }
             text.push(c);
             self.advance();
         }
-        Ok((Token::Comment(text), self.span(start_line, start_col, start_byte)))
+        Ok((
+            Token::Comment(text),
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
-    fn lex_multi_line_comment(&mut self, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
-        self.advance(); self.advance();
+    fn lex_multi_line_comment(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
+        self.advance();
+        self.advance();
         let mut text = String::new();
         loop {
             match self.current_char() {
                 None => return Err(self.error("Unterminated multi-line comment")),
                 Some('*') => {
                     self.advance();
-                    if self.current_char() == Some('/') { self.advance(); break; }
-                    else { text.push('*'); }
+                    if self.current_char() == Some('/') {
+                        self.advance();
+                        break;
+                    } else {
+                        text.push('*');
+                    }
                 }
-                Some(c) => { text.push(c); self.advance(); }
+                Some(c) => {
+                    text.push(c);
+                    self.advance();
+                }
             }
         }
-        Ok((Token::Comment(text), self.span(start_line, start_col, start_byte)))
+        Ok((
+            Token::Comment(text),
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
-    fn lex_string(&mut self, quote: char, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
+    fn lex_string(
+        &mut self,
+        quote: char,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
         self.advance();
         let mut value = String::new();
         loop {
@@ -382,45 +541,102 @@ impl Lexer {
                 Some('\\') => {
                     self.advance();
                     match self.current_char() {
-                        Some('"') => { value.push('"'); self.advance(); }
-                        Some('\'') => { value.push('\''); self.advance(); }
-                        Some('\\') => { value.push('\\'); self.advance(); }
-                        Some('n') => { value.push('\n'); self.advance(); }
-                        Some('t') => { value.push('\t'); self.advance(); }
-                        Some('r') => { value.push('\r'); self.advance(); }
-                        Some(c) => { value.push('\\'); value.push(c); self.advance(); }
+                        Some('"') => {
+                            value.push('"');
+                            self.advance();
+                        }
+                        Some('\'') => {
+                            value.push('\'');
+                            self.advance();
+                        }
+                        Some('\\') => {
+                            value.push('\\');
+                            self.advance();
+                        }
+                        Some('n') => {
+                            value.push('\n');
+                            self.advance();
+                        }
+                        Some('t') => {
+                            value.push('\t');
+                            self.advance();
+                        }
+                        Some('r') => {
+                            value.push('\r');
+                            self.advance();
+                        }
+                        Some(c) => {
+                            value.push('\\');
+                            value.push(c);
+                            self.advance();
+                        }
                         None => return Err(self.error("Unterminated escape sequence")),
                     }
                 }
-                Some(c) if c == quote => { self.advance(); break; }
-                Some(c) => { value.push(c); self.advance(); }
+                Some(c) if c == quote => {
+                    self.advance();
+                    break;
+                }
+                Some(c) => {
+                    value.push(c);
+                    self.advance();
+                }
             }
         }
-        Ok((Token::StringLit(value), self.span(start_line, start_col, start_byte)))
+        Ok((
+            Token::StringLit(value),
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
-    fn lex_number(&mut self, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
-        let sign = if self.current_char() == Some('-') { self.advance(); -1.0 } else { 1.0 };
+    fn lex_number(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
+        let sign = if self.current_char() == Some('-') {
+            self.advance();
+            -1.0
+        } else {
+            1.0
+        };
         let mut int_part = String::new();
         let mut frac_part = String::new();
         let mut has_dot = false;
 
         if self.current_char() == Some('0') && matches!(self.peek(1), Some('x') | Some('X')) {
-            self.advance(); self.advance();
+            self.advance();
+            self.advance();
             while let Some(c) = self.current_char() {
-                if c.is_ascii_hexdigit() { int_part.push(c); self.advance(); }
-                else { break; }
+                if c.is_ascii_hexdigit() {
+                    int_part.push(c);
+                    self.advance();
+                } else {
+                    break;
+                }
             }
             let value = u64::from_str_radix(&int_part, 16).unwrap_or(0) as f64;
-            return Ok((Token::NumberLit(sign * value), self.span(start_line, start_col, start_byte)));
+            return Ok((
+                Token::NumberLit(sign * value),
+                self.span(start_line, start_col, start_byte),
+            ));
         }
 
         while let Some(c) = self.current_char() {
             if c.is_ascii_digit() {
-                if has_dot { frac_part.push(c); } else { int_part.push(c); }
+                if has_dot {
+                    frac_part.push(c);
+                } else {
+                    int_part.push(c);
+                }
                 self.advance();
-            } else if c == '.' && !has_dot { has_dot = true; self.advance(); }
-            else { break; }
+            } else if c == '.' && !has_dot {
+                has_dot = true;
+                self.advance();
+            } else {
+                break;
+            }
         }
 
         if int_part.is_empty() && frac_part.is_empty() {
@@ -428,22 +644,41 @@ impl Lexer {
         }
 
         let num_str = if has_dot {
-            format!("{}.{}", if int_part.is_empty() { "0" } else { &int_part }, frac_part)
-        } else { int_part.clone() };
+            format!(
+                "{}.{}",
+                if int_part.is_empty() { "0" } else { &int_part },
+                frac_part
+            )
+        } else {
+            int_part.clone()
+        };
 
         let value: f64 = num_str.parse().unwrap_or(0.0);
-        Ok((Token::NumberLit(sign * value), self.span(start_line, start_col, start_byte)))
+        Ok((
+            Token::NumberLit(sign * value),
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
-    fn lex_identifier_or_keyword(&mut self, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
+    fn lex_identifier_or_keyword(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
         let mut ident = String::new();
         while let Some(c) = self.current_char() {
             if c.is_alphanumeric() || c == '_' || c == '.' || c == '-' {
                 ident.push(c);
                 self.advance();
-            } else { break; }
+            } else {
+                break;
+            }
         }
-        Ok((self.keyword_or_ident(&ident), self.span(start_line, start_col, start_byte)))
+        Ok((
+            self.keyword_or_ident(&ident),
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
     fn keyword_or_ident(&self, s: &str) -> Token {
@@ -457,35 +692,49 @@ impl Lexer {
         }
     }
 
-    fn lex_directive(&mut self, start_line: usize, start_col: usize, start_byte: usize) -> Result<(Token, SourceSpan), LexError> {
+    fn lex_directive(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+        start_byte: usize,
+    ) -> Result<(Token, SourceSpan), LexError> {
         self.advance();
         let mut name = String::new();
         while let Some(c) = self.current_char() {
-            if c.is_alphanumeric() || c == '_' { name.push(c); self.advance(); }
-            else { break; }
+            if c.is_alphanumeric() || c == '_' {
+                name.push(c);
+                self.advance();
+            } else {
+                break;
+            }
         }
-        if name.is_empty() { return Err(self.error("Expected directive name after '@'")); }
-        Ok((match name.as_str() {
-            "variables" => Token::DirectiveVariables,
-            "theme" => Token::DirectiveTheme,
-            "style" => Token::DirectiveStyle,
-            "atlas" => Token::DirectiveAtlas,
-            "storylines" => Token::DirectiveStorylines,
-            "storyline" => Token::DirectiveStoryline,
-            "load" => Token::DirectiveOnLoad,
-            "speaker" => Token::DirectiveSpeaker,
-            "say" => Token::DirectiveSay,
-            "choice" => Token::DirectiveChoice,
-            "option" => Token::DirectiveOption,
-            "run" => Token::DirectiveRun,
-            "if" => Token::DirectiveIf,
-            "else" => Token::DirectiveElse,
-            "each" => Token::DirectiveEach,
-            "command" => Token::DirectiveCommand,
-            "trigger" => Token::DirectiveTrigger,
-            "t" => Token::DirectiveT,
-            _ => Token::Identifier(format!("@{}", name)),
-        }, self.span(start_line, start_col, start_byte)))
+        if name.is_empty() {
+            return Err(self.error("Expected directive name after '@'"));
+        }
+        Ok((
+            match name.as_str() {
+                "variables" => Token::DirectiveVariables,
+                "theme" => Token::DirectiveTheme,
+                "style" => Token::DirectiveStyle,
+                "atlas" => Token::DirectiveAtlas,
+                "storylines" => Token::DirectiveStorylines,
+                "storyline" => Token::DirectiveStoryline,
+                "load" => Token::DirectiveOnLoad,
+                "speaker" => Token::DirectiveSpeaker,
+                "say" => Token::DirectiveSay,
+                "choice" => Token::DirectiveChoice,
+                "option" => Token::DirectiveOption,
+                "run" => Token::DirectiveRun,
+                "if" => Token::DirectiveIf,
+                "else" => Token::DirectiveElse,
+                "each" => Token::DirectiveEach,
+                "command" => Token::DirectiveCommand,
+                "trigger" => Token::DirectiveTrigger,
+                "t" => Token::DirectiveT,
+                _ => Token::Identifier(format!("@{}", name)),
+            },
+            self.span(start_line, start_col, start_byte),
+        ))
     }
 
     /// Consume the raw content of an `@run { ... }` block.
@@ -531,19 +780,18 @@ impl Lexer {
 
         let raw: String = self.input[content_start..content_end].iter().collect();
         let span = SourceSpan::new(
-            &self.file,
-            start_line,
-            start_col,
-            self.line,
-            self.col,
-            start_byte,
-            self.pos,
+            &self.file, start_line, start_col, self.line, self.col, start_byte, self.pos,
         );
         Ok((Token::RawBlock(raw), span))
     }
 
     fn error(&self, message: &str) -> LexError {
-        LexError { file: self.file.clone(), line: self.line, col: self.col, message: message.to_string() }
+        LexError {
+            file: self.file.clone(),
+            line: self.line,
+            col: self.col,
+            message: message.to_string(),
+        }
     }
 }
 
@@ -576,8 +824,14 @@ mod tests {
         let input = "game_scene Test {\n  ui {\n    color = \"red\"\n  }\n}";
         let tokens = lex(input).unwrap();
         let types = token_types(&tokens);
-        let indent_count = types.iter().filter(|t| matches!(t, Token::Indent(_))).count();
-        let dedent_count = types.iter().filter(|t| matches!(t, Token::Dedent(_))).count();
+        let indent_count = types
+            .iter()
+            .filter(|t| matches!(t, Token::Indent(_)))
+            .count();
+        let dedent_count = types
+            .iter()
+            .filter(|t| matches!(t, Token::Dedent(_)))
+            .count();
         assert!(indent_count > 0, "Expected Indent tokens");
         assert!(dedent_count > 0, "Expected Dedent tokens");
         assert_eq!(indent_count, dedent_count, "Indent/Dedent must balance");
@@ -588,8 +842,14 @@ mod tests {
         let input = "game_scene Test {\n    ui {\n        color = \"red\"\n    }\n}";
         let tokens = lex(input).unwrap();
         let types = token_types(&tokens);
-        let indent_count = types.iter().filter(|t| matches!(t, Token::Indent(_))).count();
-        assert!(indent_count > 0, "Expected Indent tokens with 4-space indentation");
+        let indent_count = types
+            .iter()
+            .filter(|t| matches!(t, Token::Indent(_)))
+            .count();
+        assert!(
+            indent_count > 0,
+            "Expected Indent tokens with 4-space indentation"
+        );
     }
 
     #[test]
@@ -598,12 +858,18 @@ mod tests {
         let result = lex(input);
         match result {
             Ok(tokens) => {
-                let has_tab = tokens.iter().any(|t| matches!(&t.token, Token::Error(msg) if msg.contains("Tabs")));
+                let has_tab = tokens
+                    .iter()
+                    .any(|t| matches!(&t.token, Token::Error(msg) if msg.contains("Tabs")));
                 assert!(has_tab, "Expected tab error token");
             }
             Err(errors) => {
                 assert!(!errors.is_empty(), "Expected errors for tab");
-                assert!(errors.iter().any(|e| e.message.contains("Tabs")), "{:?}", errors);
+                assert!(
+                    errors.iter().any(|e| e.message.contains("Tabs")),
+                    "{:?}",
+                    errors
+                );
             }
         }
     }
@@ -622,11 +888,19 @@ mod tests {
 
     #[test]
     fn test_comments() {
-        let input = "// top comment\ngame_scene Test {\n  /* multi\n     line */\n  color = \"red\"\n}";
+        let input =
+            "// top comment\ngame_scene Test {\n  /* multi\n     line */\n  color = \"red\"\n}";
         let tokens = lex(input).unwrap();
         let types = token_types(&tokens);
-        let comment_count = types.iter().filter(|t| matches!(t, Token::Comment(_))).count();
-        assert!(comment_count >= 2, "Expected >=2 comments, got {}", comment_count);
+        let comment_count = types
+            .iter()
+            .filter(|t| matches!(t, Token::Comment(_)))
+            .count();
+        assert!(
+            comment_count >= 2,
+            "Expected >=2 comments, got {}",
+            comment_count
+        );
         assert!(types.contains(&Token::StringLit("red".to_string())));
     }
 
@@ -655,8 +929,14 @@ mod tests {
         let input = "game_scene Test {\n  @storylines {\n    @if (true) {\n      @speaker(\"A\") \"text\"\n    }\n  }\n}";
         let tokens = lex(input).unwrap();
         let types = token_types(&tokens);
-        let indents = types.iter().filter(|t| matches!(t, Token::Indent(_))).count();
-        let dedents = types.iter().filter(|t| matches!(t, Token::Dedent(_))).count();
+        let indents = types
+            .iter()
+            .filter(|t| matches!(t, Token::Indent(_)))
+            .count();
+        let dedents = types
+            .iter()
+            .filter(|t| matches!(t, Token::Dedent(_)))
+            .count();
         assert!(indents >= 3, "Expected >=3 Indents, got {}", indents);
         assert_eq!(indents, dedents, "Balanced: {} vs {}", indents, dedents);
     }
@@ -691,7 +971,20 @@ mod tests {
     fn test_operators() {
         let tokens = lex("a == b c != d e > f g < h i >= j k <= l m && n p || q + - * /").unwrap();
         let types = token_types(&tokens);
-        for expected in &[Token::EqEq, Token::NotEq, Token::Gt, Token::Lt, Token::GtEq, Token::LtEq, Token::AndAnd, Token::OrOr, Token::Plus, Token::Minus, Token::Star, Token::Slash] {
+        for expected in &[
+            Token::EqEq,
+            Token::NotEq,
+            Token::Gt,
+            Token::Lt,
+            Token::GtEq,
+            Token::LtEq,
+            Token::AndAnd,
+            Token::OrOr,
+            Token::Plus,
+            Token::Minus,
+            Token::Star,
+            Token::Slash,
+        ] {
             assert!(types.contains(expected), "Missing {:?}", expected);
         }
     }
@@ -743,4 +1036,3 @@ mod tests {
         assert!(types.contains(&Token::DirectiveCommand));
     }
 }
-

@@ -7,9 +7,9 @@
 // `gpu` feature, which is default-on, AND `not(target_arch = "wasm32")`). dotzuki-app
 // has no features of its own, so gate this re-export on the target only — present on
 // native desktop (where pokered-app uses it), absent on wasm (fixes E0432).
+pub use dotzuki_renderer::input::{GbButton, InputState};
 #[cfg(not(target_arch = "wasm32"))]
 pub use dotzuki_renderer::window::{run, GameLoop, GameWindowConfig};
-pub use dotzuki_renderer::input::{InputState, GbButton};
 pub use dotzuki_renderer::*;
 
 pub mod hot_reload;

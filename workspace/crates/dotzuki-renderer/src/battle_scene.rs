@@ -466,10 +466,7 @@ impl BallIndicators {
     /// Drawn left-to-right starting at (10, 11).
     pub fn draw_player(buf: &mut ScreenTileBuffer, party_status: &[BallStatus]) {
         for i in 0..6 {
-            let status = party_status
-                .get(i)
-                .copied()
-                .unwrap_or(BallStatus::Empty);
+            let status = party_status.get(i).copied().unwrap_or(BallStatus::Empty);
             let x = Self::PLAYER_BASE_X + i as u32;
             if x < buf.width_tiles {
                 buf.set(x, Self::PLAYER_BASE_Y, status.tile());
@@ -483,10 +480,7 @@ impl BallIndicators {
     /// Drawn right-to-left starting at (7, 4).
     pub fn draw_enemy(buf: &mut ScreenTileBuffer, party_status: &[BallStatus]) {
         for i in 0..6 {
-            let status = party_status
-                .get(i)
-                .copied()
-                .unwrap_or(BallStatus::Empty);
+            let status = party_status.get(i).copied().unwrap_or(BallStatus::Empty);
             let x = Self::ENEMY_BASE_X.wrapping_sub(i as u32);
             if x < buf.width_tiles {
                 buf.set(x, Self::ENEMY_BASE_Y, status.tile());
@@ -503,10 +497,10 @@ impl BallIndicators {
 ///   Stage 3: single ball tile $4C at (5,11)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RetreatStage {
-    Full,     // 7×7 at (1,5)
-    Medium,   // 5×5 at (3,7)
-    Small,    // 3×3 at (4,9)
-    Ball,     // single tile at (5,11)
+    Full,   // 7×7 at (1,5)
+    Medium, // 5×5 at (3,7)
+    Small,  // 3×3 at (4,9)
+    Ball,   // single tile at (5,11)
 }
 
 impl RetreatStage {

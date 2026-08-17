@@ -171,7 +171,10 @@ impl OverworldActor {
 
         let mut arrived = None;
         if self.moving {
-            let (tx, ty) = ((self.tile_x * self.tile) as f32, (self.tile_y * self.tile) as f32);
+            let (tx, ty) = (
+                (self.tile_x * self.tile) as f32,
+                (self.tile_y * self.tile) as f32,
+            );
             let speed = if self.running { RUN_SPEED } else { WALK_SPEED };
             self.px = step_toward(self.px, tx, speed);
             self.py = step_toward(self.py, ty, speed);
@@ -229,7 +232,11 @@ impl OverworldActor {
     /// Which of the two step frames to show (`0` or `1`), alternating faster while
     /// running. Pair with [`frame_col`] to resolve the actual sheet column.
     pub fn step_phase(&self) -> u32 {
-        let phase = if self.running { RUN_ANIM_PHASE } else { ANIM_PHASE };
+        let phase = if self.running {
+            RUN_ANIM_PHASE
+        } else {
+            ANIM_PHASE
+        };
         (self.anim / phase) % 2
     }
 }
@@ -314,13 +321,19 @@ mod tests {
 
         let mut ground = OverworldActor::new(5, 5, 16);
         assert_eq!(ground.update(Some(Direction::Right), &map), None);
-        assert!(!ground.is_moving(), "solid at level 0 blocks the ground actor");
+        assert!(
+            !ground.is_moving(),
+            "solid at level 0 blocks the ground actor"
+        );
         assert_eq!(ground.tile(), (5, 5));
 
         let mut upper = OverworldActor::new(5, 5, 16);
         upper.set_elevation(1);
         assert!(matches!(upper.update(Some(Direction::Right), &map), None));
-        assert!(upper.is_moving(), "passable at level 1 lets the upper actor move");
+        assert!(
+            upper.is_moving(),
+            "passable at level 1 lets the upper actor move"
+        );
         assert_eq!(upper.tile(), (6, 5));
     }
 
@@ -368,7 +381,10 @@ mod tests {
                 seen.insert(a.walk_frame());
             }
         }
-        assert!(seen.contains(&1) && seen.contains(&2), "both step frames appear");
+        assert!(
+            seen.contains(&1) && seen.contains(&2),
+            "both step frames appear"
+        );
         assert!(!seen.contains(&0), "never neutral while walking");
     }
 

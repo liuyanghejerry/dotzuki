@@ -71,7 +71,12 @@ impl Default for Rgba {
 impl From<[u8; 4]> for Rgba {
     /// Convert a `[r, g, b, a]` byte array into an [`Rgba`].
     fn from(arr: [u8; 4]) -> Self {
-        Self { r: arr[0], g: arr[1], b: arr[2], a: arr[3] }
+        Self {
+            r: arr[0],
+            g: arr[1],
+            b: arr[2],
+            a: arr[3],
+        }
     }
 }
 
@@ -81,17 +86,41 @@ mod tests {
 
     #[test]
     fn const_white() {
-        assert_eq!(Rgba::WHITE, Rgba { r: 0xFF, g: 0xFF, b: 0xFF, a: 0xFF });
+        assert_eq!(
+            Rgba::WHITE,
+            Rgba {
+                r: 0xFF,
+                g: 0xFF,
+                b: 0xFF,
+                a: 0xFF
+            }
+        );
     }
 
     #[test]
     fn const_black() {
-        assert_eq!(Rgba::BLACK, Rgba { r: 0x00, g: 0x00, b: 0x00, a: 0xFF });
+        assert_eq!(
+            Rgba::BLACK,
+            Rgba {
+                r: 0x00,
+                g: 0x00,
+                b: 0x00,
+                a: 0xFF
+            }
+        );
     }
 
     #[test]
     fn const_transparent() {
-        assert_eq!(Rgba::TRANSPARENT, Rgba { r: 0, g: 0, b: 0, a: 0 });
+        assert_eq!(
+            Rgba::TRANSPARENT,
+            Rgba {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 0
+            }
+        );
     }
 
     #[test]

@@ -166,7 +166,10 @@ fn unknown_ids_are_noops_without_a_device() {
     audio.play_music("nope");
     audio.play_music("nope");
     audio.play_sound("also-nope");
-    assert!(!audio.has_output(), "unknown ids must not trigger device init");
+    assert!(
+        !audio.has_output(),
+        "unknown ids must not trigger device init"
+    );
 }
 
 #[test]
@@ -255,7 +258,9 @@ fn play_commands_resolve_and_the_scene_continues() {
     assert_eq!(game.audio().track_count(), 2);
 
     // The on_enter storyline fires on boot: audio commands resolve silently…
-    let page = game.dialogue_text().expect("scene continues past audio commands");
+    let page = game
+        .dialogue_text()
+        .expect("scene continues past audio commands");
     assert!(page.contains("cold wind"), "page: {page:?}");
     dismiss_dialogue(&mut game);
     idle(&mut game, 30);
@@ -300,7 +305,10 @@ fn pcm_mode_renders_audio_headless() {
     // The on_enter storyline fires on boot; give the sequencer a few video
     // frames to trigger the first note.
     idle(&mut game, 10);
-    assert!(!game.audio().has_output(), "pcm mode must never open a device");
+    assert!(
+        !game.audio().has_output(),
+        "pcm mode must never open a device"
+    );
 
     let pcm = game.render_audio(4410);
     assert_eq!(pcm.len(), 8820, "stereo frames: 2 * frames");

@@ -9,7 +9,9 @@ use boa_engine::module::IdleModuleLoader;
 use boa_engine::module::SimpleModuleLoader;
 use boa_engine::object::builtins::{JsFunction, JsPromise};
 use boa_engine::property::Attribute;
-use boa_engine::{js_string, Context, JsArgs, JsNativeError, JsResult, JsValue, Module, NativeFunction, Source};
+use boa_engine::{
+    js_string, Context, JsArgs, JsNativeError, JsResult, JsValue, Module, NativeFunction, Source,
+};
 
 use crate::api_registrar::ScriptApiRegistrar;
 use crate::command::{CommandResult, ScriptCommand};
@@ -252,11 +254,10 @@ impl ScriptEngine {
     pub fn load_script(&mut self, source: &str) -> Result<(), ScriptEngineError> {
         log::info!(target: "dotzuki::overworld", "[ScriptEngine] load_script: {} bytes", source.len());
         let src = Source::from_reader(source.as_bytes(), Some(Path::new("script.mjs")));
-        let module = Module::parse(src, None, &mut self.context)
-            .map_err(|e| {
-                log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Module parse failed: {}", e);
-                ScriptEngineError::JsError(e.to_string())
-            })?;
+        let module = Module::parse(src, None, &mut self.context).map_err(|e| {
+            log::warn!(target: "dotzuki::overworld", "[ScriptEngine] Module parse failed: {}", e);
+            ScriptEngineError::JsError(e.to_string())
+        })?;
 
         self.context
             .module_loader()
@@ -287,8 +288,14 @@ impl ScriptEngine {
         self.current_module = Some(module);
 
         if let Some(ref m) = self.current_module {
-            for name in &["enterMap", "talkNurse", "talkLinkReceptionist", "talkGentleman"] {
-                let has = m.get_value(js_string!(*name), &mut self.context)
+            for name in &[
+                "enterMap",
+                "talkNurse",
+                "talkLinkReceptionist",
+                "talkGentleman",
+            ] {
+                let has = m
+                    .get_value(js_string!(*name), &mut self.context)
                     .map(|v| v.is_callable())
                     .unwrap_or(false);
                 log::info!(target: "dotzuki::overworld", "[ScriptEngine] Export check: {} = {}", name, has);
@@ -381,9 +388,8 @@ impl ScriptEngine {
             })?;
 
         log::info!(target: "dotzuki::overworld", "[ScriptEngine] Calling function '{}'...", fn_name);
-        let result = func_obj
-            .call(&JsValue::undefined(), args, &mut self.context);
-        
+        let result = func_obj.call(&JsValue::undefined(), args, &mut self.context);
+
         match result {
             Ok(_) => {
                 log::info!(target: "dotzuki::overworld", "[ScriptEngine] Function '{}' call succeeded", fn_name);
@@ -634,25 +640,52 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
 
     let lang_bridge = bridge.clone();
     let lang_fn = unsafe {
-        NativeFunction::from_closure(move |_this: &JsValue, _args: &[JsValue], _ctx: &mut Context| -> JsResult<JsValue> {
-            Ok(JsValue::from(js_string!(lang_bridge.borrow().lang.as_str())))
-        })
+        NativeFunction::from_closure(
+            move |_this: &JsValue, _args: &[JsValue], _ctx: &mut Context| -> JsResult<JsValue> {
+                Ok(JsValue::from(js_string!(lang_bridge
+                    .borrow()
+                    .lang
+                    .as_str())))
+            },
+        )
     };
     game_obj
-        .set(js_string!("lang"), lang_fn.to_js_function(context.realm()), true, context)
+        .set(
+            js_string!("lang"),
+            lang_fn.to_js_function(context.realm()),
+            true,
+            context,
+        )
         .expect("failed to register game.lang");
 
     let t_bridge = bridge.clone();
     let t_fn = unsafe {
-        NativeFunction::from_closure(move |_this: &JsValue, args: &[JsValue], ctx: &mut Context| -> JsResult<JsValue> {
-        let en = args.get_or_undefined(0).to_string(ctx).map_or(String::new(), |s| s.to_std_string_lossy());
-        let zh = args.get_or_undefined(1).to_string(ctx).map_or(String::new(), |s| s.to_std_string_lossy());
-        let result = if t_bridge.borrow().lang == "zh" { zh } else { en };
-            Ok(JsValue::from(js_string!(result)))
-        })
+        NativeFunction::from_closure(
+            move |_this: &JsValue, args: &[JsValue], ctx: &mut Context| -> JsResult<JsValue> {
+                let en = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)
+                    .map_or(String::new(), |s| s.to_std_string_lossy());
+                let zh = args
+                    .get_or_undefined(1)
+                    .to_string(ctx)
+                    .map_or(String::new(), |s| s.to_std_string_lossy());
+                let result = if t_bridge.borrow().lang == "zh" {
+                    zh
+                } else {
+                    en
+                };
+                Ok(JsValue::from(js_string!(result)))
+            },
+        )
     };
     game_obj
-        .set(js_string!("t"), t_fn.to_js_function(context.realm()), true, context)
+        .set(
+            js_string!("t"),
+            t_fn.to_js_function(context.realm()),
+            true,
+            context,
+        )
         .expect("failed to register game.t");
 
     // game.showRandomText(a, b, c, ...) OR game.showRandomText([a, b, c])
@@ -996,9 +1029,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let frame = args
-                .get_or_undefined(1)
-                .to_number(ctx)? as u8;
+            let frame = args.get_or_undefined(1).to_number(ctx)? as u8;
             Ok(ScriptCommand::SetNpcFrame { npc_id, frame })
         }
     );
@@ -1082,7 +1113,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
 
     // game.heal() -> Promise<void>
     register_async_command!("heal", bridge, context, game_obj, |_args: &[JsValue],
-                                                                 _ctx: &mut Context|
+                                                                _ctx: &mut Context|
      -> JsResult<
         ScriptCommand,
     > {
@@ -1150,7 +1181,10 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
         context,
         game_obj,
         |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let toggle_id = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let toggle_id = args
+                .get_or_undefined(0)
+                .to_string(ctx)?
+                .to_std_string_lossy();
             Ok(ScriptCommand::ShowObjectByName { toggle_id })
         }
     );
@@ -1162,7 +1196,10 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
         context,
         game_obj,
         |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let toggle_id = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
+            let toggle_id = args
+                .get_or_undefined(0)
+                .to_string(ctx)?
+                .to_std_string_lossy();
             Ok(ScriptCommand::HideObjectByName { toggle_id })
         }
     );

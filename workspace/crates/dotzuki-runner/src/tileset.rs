@@ -42,9 +42,7 @@ impl PngTileset {
             .to_rgba8();
         let (w, h) = img.dimensions();
         if w == 0 || h == 0 || w % tile_w != 0 || h % tile_h != 0 {
-            bail!(
-                "tileset image {w}x{h} is not a multiple of tile size {tile_w}x{tile_h}"
-            );
+            bail!("tileset image {w}x{h} is not a multiple of tile size {tile_w}x{tile_h}");
         }
         let rgba: Vec<Rgba> = img
             .pixels()

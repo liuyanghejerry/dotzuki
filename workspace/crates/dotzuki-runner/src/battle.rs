@@ -171,8 +171,8 @@ use crate::manifest::{BattleLevels, BattleStats, DEFAULT_RULES_FILE};
 use crate::project::LoadedProject;
 use crate::vfs::{join_path, ProjectFiles};
 
-use hooks::{GenericProvider, HookState};
 use dotzuki_rules::RulesProvider;
+use hooks::{GenericProvider, HookState};
 
 pub mod hooks;
 
@@ -200,7 +200,11 @@ pub struct XorshiftRng(u64);
 impl XorshiftRng {
     /// Seed a generator (a zero seed is remapped — xorshift sticks at 0).
     pub fn seed(seed: u64) -> Self {
-        Self(if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed })
+        Self(if seed == 0 {
+            0x9E37_79B9_7F4A_7C15
+        } else {
+            seed
+        })
     }
 }
 
@@ -745,37 +749,44 @@ impl BattleSetup {
             .as_ref()
             .context("manifest has no battle section")?;
 
-        let table_dir = |reference: Option<&crate::manifest::BattleTableRef>,
-                         what: &str|
-         -> Result<String> {
-            let id = reference
-                .map(|r| r.table.as_str())
-                .with_context(|| format!("battle.{what}.table is required when a battle starts"))?;
-            project
-                .table_dir_rel(id)
-                .with_context(|| format!("battle.{what}.table '{id}' is not a declared data table"))
-        };
+        let table_dir =
+            |reference: Option<&crate::manifest::BattleTableRef>, what: &str| -> Result<String> {
+                let id = reference.map(|r| r.table.as_str()).with_context(|| {
+                    format!("battle.{what}.table is required when a battle starts")
+                })?;
+                project.table_dir_rel(id).with_context(|| {
+                    format!("battle.{what}.table '{id}' is not a declared data table")
+                })
+            };
         let party_dir = table_dir(section.party.as_ref(), "party")?;
         let enemies_dir = table_dir(section.enemies.as_ref(), "enemies")?;
         let encounters_dir = match &section.encounters {
-            Some(encounters) => Some(project.table_dir_rel(&encounters.table).with_context(|| {
-                format!(
-                    "battle.encounters.table '{}' is not a declared data table",
-                    encounters.table
-                )
-            })?),
+            Some(encounters) => {
+                Some(project.table_dir_rel(&encounters.table).with_context(|| {
+                    format!(
+                        "battle.encounters.table '{}' is not a declared data table",
+                        encounters.table
+                    )
+                })?)
+            }
             None => None,
         };
         let skills_dir = match &section.skills {
             Some(skills) => Some(project.table_dir_rel(&skills.table).with_context(|| {
-                format!("battle.skills.table '{}' is not a declared data table", skills.table)
+                format!(
+                    "battle.skills.table '{}' is not a declared data table",
+                    skills.table
+                )
             })?),
             None => None,
         };
         let items = match &section.items {
             Some(items) => Some(ItemsSetup {
                 dir: project.table_dir_rel(&items.table).with_context(|| {
-                    format!("battle.items.table '{}' is not a declared data table", items.table)
+                    format!(
+                        "battle.items.table '{}' is not a declared data table",
+                        items.table
+                    )
                 })?,
                 heal_field: items.heal_field.clone(),
                 starting: items.starting.clone(),
@@ -928,7 +939,11 @@ impl BattleSetup {
                 }
                 let mut enemies = enemies.into_iter();
                 let first = enemies.next().expect("encounter enemies non-empty");
-                let money = if encounter.trainer { encounter.money } else { 0 };
+                let money = if encounter.trainer {
+                    encounter.money
+                } else {
+                    0
+                };
                 log::info!(
                     "encounter '{}' ({}): {} enemies, trainer {}",
                     enemy_id,
@@ -945,8 +960,8 @@ impl BattleSetup {
                 {
                     enemy_id.to_string()
                 } else {
-                    let fallback =
-                        first_record_id(self.files.as_ref(), &self.enemies_dir).with_context(|| {
+                    let fallback = first_record_id(self.files.as_ref(), &self.enemies_dir)
+                        .with_context(|| {
                             format!("enemies table {} has no records", self.enemies_dir)
                         })?;
                     log::warn!(
@@ -954,7 +969,12 @@ impl BattleSetup {
                     );
                     fallback
                 };
-                (self.load_combatant(&self.enemies_dir, &enemy_id)?, Vec::new(), false, 0)
+                (
+                    self.load_combatant(&self.enemies_dir, &enemy_id)?,
+                    Vec::new(),
+                    false,
+                    0,
+                )
             }
         };
 
@@ -1004,7 +1024,14 @@ impl BattleSetup {
             }
         });
         let mut battle = Battle::full(
-            party, active, enemy, items, inventory, self.chart.clone(), rng, hook_state,
+            party,
+            active,
+            enemy,
+            items,
+            inventory,
+            self.chart.clone(),
+            rng,
+            hook_state,
         );
         battle.set_levels(self.levels.clone());
         battle.set_enemy_party(rest, trainer, money);
@@ -1328,7 +1355,10 @@ enum Phase {
     /// Forced replacement after a faint (no backing out; the pick is free).
     ForcedSwitch,
     /// Narration lines are showing; A advances, `after` runs when drained.
-    Narrate { lines: VecDeque<String>, after: After },
+    Narrate {
+        lines: VecDeque<String>,
+        after: After,
+    },
 }
 
 /// The outcome of a faint check after an action or residual.
@@ -1529,7 +1559,11 @@ impl Battle {
         let mut lines = VecDeque::new();
         if let Some(weather) = self.weather.clone() {
             if self.record_has_hooks(&weather) {
-                narrate(&mut self.log, &mut lines, weather_start_line(&self.lang, &weather));
+                narrate(
+                    &mut self.log,
+                    &mut lines,
+                    weather_start_line(&self.lang, &weather),
+                );
             } else {
                 log::warn!("weather '{weather}' names no rules.ron record — ignored");
                 self.weather = None;
@@ -1974,7 +2008,11 @@ impl Battle {
     /// ending.
     fn faint_flow(&mut self, lines: &mut VecDeque<String>) -> FaintFlow {
         if self.enemy.hp == 0 {
-            narrate(&mut self.log, lines, format!("{} fainted!", self.enemy.name));
+            narrate(
+                &mut self.log,
+                lines,
+                format!("{} fainted!", self.enemy.name),
+            );
             // v2-d: the EXP of every defeated enemy accumulates into the
             // end-of-battle award.
             self.exp_pool = self.exp_pool.saturating_add(self.enemy.exp_reward);
@@ -2096,7 +2134,11 @@ impl Battle {
             }
         }
         let name = self.player().name.clone();
-        narrate(&mut self.log, &mut lines, format!("{name} used {}!", item.name));
+        narrate(
+            &mut self.log,
+            &mut lines,
+            format!("{name} used {}!", item.name),
+        );
         narrate(
             &mut self.log,
             &mut lines,
@@ -2191,12 +2233,24 @@ impl Battle {
 
         // The MP gate is re-checked at resolution time.
         if skill.cost > attacker.mp {
-            narrate(&mut self.log, lines, format!("{} tried to use {}!", attacker.name, skill.name));
-            narrate(&mut self.log, lines, "But there wasn't enough MP!".to_string());
+            narrate(
+                &mut self.log,
+                lines,
+                format!("{} tried to use {}!", attacker.name, skill.name),
+            );
+            narrate(
+                &mut self.log,
+                lines,
+                "But there wasn't enough MP!".to_string(),
+            );
             return;
         }
         attacker.mp -= skill.cost;
-        narrate(&mut self.log, lines, format!("{} used {}!", attacker.name, skill.name));
+        narrate(
+            &mut self.log,
+            lines,
+            format!("{} used {}!", attacker.name, skill.name),
+        );
 
         if !accuracy_roll(skill.accuracy, self.rng.as_mut()) {
             narrate(&mut self.log, lines, "But it missed!".to_string());
@@ -2229,19 +2283,25 @@ impl Battle {
             SkillCategory::Heal => {
                 let before = attacker.hp;
                 attacker.hp = (attacker.hp + skill.power).min(attacker.max_hp);
-                narrate(&mut self.log, lines,
+                narrate(
+                    &mut self.log,
+                    lines,
                     format!("{} recovered {} HP!", attacker.name, attacker.hp - before),
                 );
             }
             SkillCategory::Buff => {
                 attacker.stages.bump(&skill.stat, 1);
-                narrate(&mut self.log, lines,
+                narrate(
+                    &mut self.log,
+                    lines,
                     format!("{}'s {} rose!", attacker.name, stat_label(&skill.stat)),
                 );
             }
             SkillCategory::Debuff => {
                 defender.stages.bump(&skill.stat, -1);
-                narrate(&mut self.log, lines,
+                narrate(
+                    &mut self.log,
+                    lines,
                     format!("{}'s {} fell!", defender.name, stat_label(&skill.stat)),
                 );
             }
@@ -2332,7 +2392,12 @@ impl Battle {
     /// Narrate the state changes a fire produced (status inflicted/cured,
     /// stat stages, HP/MP moved) by diffing the mirror snapshots. `residual`
     /// flavors HP loss as the status chip ("… is hurt by poison!").
-    fn narrate_diffs(&mut self, before: &[MirrorSnap; 2], lines: &mut VecDeque<String>, residual: bool) {
+    fn narrate_diffs(
+        &mut self,
+        before: &[MirrorSnap; 2],
+        lines: &mut VecDeque<String>,
+        residual: bool,
+    ) {
         let names = [self.player().name.clone(), self.enemy.name.clone()];
         let Some(hooks) = &self.hooks else { return };
         let produced = diff_lines(hooks, before, [&names[0], &names[1]], residual);
@@ -2355,12 +2420,24 @@ impl Battle {
         // The MP gate is re-checked at resolution time (v1 parity); the RON
         // record's `cost:` already fed `skill.cost` at load.
         if skill.cost > attacker.mp {
-            narrate(&mut self.log, lines, format!("{} tried to use {}!", attacker.name, skill.name));
-            narrate(&mut self.log, lines, "But there wasn't enough MP!".to_string());
+            narrate(
+                &mut self.log,
+                lines,
+                format!("{} tried to use {}!", attacker.name, skill.name),
+            );
+            narrate(
+                &mut self.log,
+                lines,
+                "But there wasn't enough MP!".to_string(),
+            );
             return;
         }
         attacker.mp -= skill.cost;
-        narrate(&mut self.log, lines, format!("{} used {}!", attacker.name, skill.name));
+        narrate(
+            &mut self.log,
+            lines,
+            format!("{} used {}!", attacker.name, skill.name),
+        );
 
         if !accuracy_roll(skill.accuracy, self.rng.as_mut()) {
             narrate(&mut self.log, lines, "But it missed!".to_string());
@@ -2395,7 +2472,13 @@ impl Battle {
         // yields `Bool(false)`, a silent veto `Unit`.
         if self.subscribes_any(&ids, Event::BeforeMove) {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());
-            let out = self.fire(Event::BeforeMove, &ids, target, source, RelayVar::Bool(true));
+            let out = self.fire(
+                Event::BeforeMove,
+                &ids,
+                target,
+                source,
+                RelayVar::Bool(true),
+            );
             self.narrate_diffs(&before, lines, false);
             match out {
                 RelayVar::Bool(false) => {
@@ -2424,8 +2507,7 @@ impl Battle {
                     .mult(skill.element.as_deref(), def_element.as_deref())
             };
             let roll = damage_roll(skill.power, eff_atk, eff_def, mult, self.rng.as_mut());
-            self.hooks.as_mut().unwrap().mv.damage =
-                roll.damage.min(u32::from(u16::MAX)) as u16;
+            self.hooks.as_mut().unwrap().mv.damage = roll.damage.min(u32::from(u16::MAX)) as u16;
             if roll.crit {
                 narrate(&mut self.log, lines, "Critical hit!".to_string());
             }
@@ -2629,7 +2711,13 @@ impl Battle {
     /// the bottom.
     pub fn draw(&self, fb: &mut FrameBuffer) {
         // Field.
-        fb.fill_rect(0, 0, SCREEN_W as u32, SCREEN_H as u32, Rgba::rgb(0x18, 0x18, 0x28));
+        fb.fill_rect(
+            0,
+            0,
+            SCREEN_W as u32,
+            SCREEN_H as u32,
+            Rgba::rgb(0x18, 0x18, 0x28),
+        );
         fb.fill_rect(
             0,
             130,
@@ -2652,7 +2740,13 @@ impl Battle {
 
         // Player panel (the ACTIVE member): name + HP bar + numbers + MP.
         draw_panel(fb, 132, 136, 180, 46);
-        text(fb, &self.player().name, 140, 142, Rgba::rgb(0xF0, 0xF0, 0xF0));
+        text(
+            fb,
+            &self.player().name,
+            140,
+            142,
+            Rgba::rgb(0xF0, 0xF0, 0xF0),
+        );
         draw_bar(fb, 140, 156, 104, 6, self.player().hp, self.player().max_hp);
         text(
             fb,
@@ -2871,7 +2965,12 @@ fn snap_mirrors(hooks: &HookState) -> [MirrorSnap; 2] {
 /// The narration lines for the difference between `before` and the mirrors'
 /// current state: status inflicted/cured, stat stages, HP movement. With
 /// `residual`, HP loss on a statused combatant reads as the status chip.
-fn diff_lines(hooks: &HookState, before: &[MirrorSnap; 2], names: [&str; 2], residual: bool) -> Vec<String> {
+fn diff_lines(
+    hooks: &HookState,
+    before: &[MirrorSnap; 2],
+    names: [&str; 2],
+    residual: bool,
+) -> Vec<String> {
     let after = snap_mirrors(hooks);
     let mut out = Vec::new();
     for i in 0..2 {
@@ -2891,9 +2990,15 @@ fn diff_lines(hooks: &HookState, before: &[MirrorSnap; 2], names: [&str; 2], res
         for (s, stat) in hooks.stat_names.iter().enumerate() {
             let (bv, av) = (b.stages[s], a.stages[s]);
             if av > bv {
-                out.push(format!("{name}'s {} rose!", stat_label(&normalize_stat_key(stat))));
+                out.push(format!(
+                    "{name}'s {} rose!",
+                    stat_label(&normalize_stat_key(stat))
+                ));
             } else if av < bv {
-                out.push(format!("{name}'s {} fell!", stat_label(&normalize_stat_key(stat))));
+                out.push(format!(
+                    "{name}'s {} fell!",
+                    stat_label(&normalize_stat_key(stat))
+                ));
             }
         }
         if a.hp < b.hp {
@@ -2944,11 +3049,15 @@ fn draw_bar(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, hp: u32, max_h
 
 /// A blob color derived from a record id (distinct ids read as distinct monsters).
 fn blob_color(id: &str) -> Rgba {
-    let hash = id
-        .bytes()
-        .fold(0x811C_9DC5_u32, |h, b| h.wrapping_mul(16_777_619) ^ b as u32);
+    let hash = id.bytes().fold(0x811C_9DC5_u32, |h, b| {
+        h.wrapping_mul(16_777_619) ^ b as u32
+    });
     let hue = (hash >> 8) as u8;
-    Rgba::rgb(0x60 + hue % 0x70, 0x60 + (hue / 3) % 0x70, 0x60 + (hue / 7) % 0x70)
+    Rgba::rgb(
+        0x60 + hue % 0x70,
+        0x60 + (hue / 3) % 0x70,
+        0x60 + (hue / 7) % 0x70,
+    )
 }
 
 /// A round-ish solid placeholder combatant blob.

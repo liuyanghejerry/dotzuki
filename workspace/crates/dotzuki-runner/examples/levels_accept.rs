@@ -56,7 +56,9 @@ fn press_a(game: &mut RunnerGame) {
 }
 
 fn print_party(game: &RunnerGame, when: &str) {
-    let Some(party) = game.party_state() else { return };
+    let Some(party) = game.party_state() else {
+        return;
+    };
     println!("party state {when}:");
     for m in party {
         println!(
@@ -68,7 +70,9 @@ fn print_party(game: &RunnerGame, when: &str) {
 
 fn main() {
     let mut args = std::env::args().skip(1);
-    let dir = args.next().expect("usage: levels_accept <project-dir> [shot-dir]");
+    let dir = args
+        .next()
+        .expect("usage: levels_accept <project-dir> [shot-dir]");
     let shot_dir = args.next().map(PathBuf::from);
 
     let save_file = Path::new(&dir).join(".dotzuki-save.json");

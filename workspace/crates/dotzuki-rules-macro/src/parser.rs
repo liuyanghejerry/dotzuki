@@ -219,10 +219,7 @@ pub enum PredicateInput {
     MoveTypeIsDefenderType,
     TargetHasStatus(String),
     LevelGE,
-    SelfHpBelow {
-        num: u32,
-        den: u32,
-    },
+    SelfHpBelow { num: u32, den: u32 },
     SourceHasStatus(String),
 }
 
@@ -230,10 +227,7 @@ pub enum PredicateInput {
 pub enum DamageValueInput {
     Const(u16),
     UserLevel,
-    RngScaledLevel {
-        num: u32,
-        den: u32,
-    },
+    RngScaledLevel { num: u32, den: u32 },
 }
 
 #[derive(Debug, Deserialize)]
@@ -259,12 +253,12 @@ impl Default for FinalHitRiderInput {
 
 /// Read and parse a rules.ron file.
 pub fn parse_rules_ron(path: &str) -> Result<RulesetInput, String> {
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| format!("Failed to read {}: {}", path, e))?;
-    
-    let opts = ron::Options::default()
-        .with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME);
-    
+    let content =
+        std::fs::read_to_string(path).map_err(|e| format!("Failed to read {}: {}", path, e))?;
+
+    let opts =
+        ron::Options::default().with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME);
+
     opts.from_str(&content)
         .map_err(|e| format!("Failed to parse RON: {}", e))
 }

@@ -387,11 +387,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (32, 8, 0x1F, 0x20),
         (40, 8, 0x1E, 0x20),
     ], // 11 FrameBlock11
-    &[
-        (0, 0, 0x37, 0x00),
-        (16, 8, 0x37, 0x00),
-        (32, 0, 0x37, 0x00),
-    ], // 12 FrameBlock12
+    &[(0, 0, 0x37, 0x00), (16, 8, 0x37, 0x00), (32, 0, 0x37, 0x00)], // 12 FrameBlock12
     &[
         (0, 0, 0x36, 0x00),
         (8, 0, 0x36, 0x20),
@@ -438,37 +434,14 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x18, 0x00),
         (8, 8, 0x19, 0x00),
     ], // 17 FrameBlock17
-    &[
-        (0, 24, 0x45, 0x60),
-    ], // 18 FrameBlock18
-    &[
-        (8, 24, 0x45, 0x00),
-        (8, 16, 0x46, 0x60),
-    ], // 19 FrameBlock19
-    &[
-        (16, 16, 0x45, 0x60),
-        (16, 24, 0x46, 0x00),
-    ], // 1A FrameBlock1a
-    &[
-        (24, 16, 0x45, 0x00),
-        (24, 8, 0x46, 0x60),
-    ], // 1B FrameBlock1b
-    &[
-        (32, 8, 0x45, 0x60),
-        (32, 16, 0x46, 0x00),
-    ], // 1C FrameBlock1c
-    &[
-        (40, 8, 0x45, 0x00),
-        (40, 0, 0x46, 0x60),
-    ], // 1D FrameBlock1d
-    &[
-        (48, 0, 0x45, 0x60),
-        (48, 8, 0x46, 0x00),
-    ], // 1E FrameBlock1e
-    &[
-        (0, 0, 0x03, 0x00),
-        (48, 0, 0x03, 0x20),
-    ], // 1F FrameBlock1f
+    &[(0, 24, 0x45, 0x60)], // 18 FrameBlock18
+    &[(8, 24, 0x45, 0x00), (8, 16, 0x46, 0x60)], // 19 FrameBlock19
+    &[(16, 16, 0x45, 0x60), (16, 24, 0x46, 0x00)], // 1A FrameBlock1a
+    &[(24, 16, 0x45, 0x00), (24, 8, 0x46, 0x60)], // 1B FrameBlock1b
+    &[(32, 8, 0x45, 0x60), (32, 16, 0x46, 0x00)], // 1C FrameBlock1c
+    &[(40, 8, 0x45, 0x00), (40, 0, 0x46, 0x60)], // 1D FrameBlock1d
+    &[(48, 0, 0x45, 0x60), (48, 8, 0x46, 0x00)], // 1E FrameBlock1e
+    &[(0, 0, 0x03, 0x00), (48, 0, 0x03, 0x20)], // 1F FrameBlock1f
     &[
         (0, 0, 0x03, 0x00),
         (48, 0, 0x03, 0x20),
@@ -518,10 +491,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x1A, 0x00),
         (8, 8, 0x1B, 0x00),
     ], // 23 FrameBlock23
-    &[
-        (0, 8, 0x0A, 0x00),
-        (8, 8, 0x0B, 0x00),
-    ], // 24 FrameBlock24
+    &[(0, 8, 0x0A, 0x00), (8, 8, 0x0B, 0x00)], // 24 FrameBlock24
     &[
         (0, 16, 0x0A, 0x00),
         (8, 16, 0x0B, 0x00),
@@ -569,13 +539,8 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x44, 0x40),
         (8, 8, 0x44, 0x60),
     ], // 2A FrameBlock2a
-    &[
-        (2, 6, 0x47, 0x00),
-        (8, 0, 0x47, 0x00),
-    ], // 2B FrameBlock2b
-    &[
-        (0, 160, 0x4D, 0x00),
-    ], // 2C FrameBlock2c
+    &[(2, 6, 0x47, 0x00), (8, 0, 0x47, 0x00)], // 2B FrameBlock2b
+    &[(0, 160, 0x4D, 0x00)], // 2C FrameBlock2c
     &[
         (0, 0, 0x26, 0x00),
         (8, 0, 0x27, 0x00),
@@ -608,9 +573,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x44, 0x40),
         (8, 8, 0x44, 0x60),
     ], // 30 FrameBlock30
-    &[
-        (0, 0, 0x45, 0x00),
-    ], // 31 FrameBlock31
+    &[(0, 0, 0x45, 0x00)], // 31 FrameBlock31
     &[
         (0, 0, 0x4D, 0x00),
         (8, 0, 0x2F, 0x00),
@@ -629,9 +592,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (8, 16, 0x2F, 0x40),
         (16, 16, 0x4D, 0x60),
     ], // 33 FrameBlock33
-    &[
-        (0, 160, 0x00, 0x10),
-    ], // 34 FrameBlock34
+    &[(0, 160, 0x00, 0x10)], // 34 FrameBlock34
     &[
         (0, 0, 0x2A, 0x00),
         (8, 0, 0x2B, 0x00),
@@ -714,11 +675,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (4, 32, 0x41, 0x00),
         (4, 40, 0x41, 0x00),
     ], // 3F FrameBlock3f
-    &[
-        (0, 0, 0x3D, 0x00),
-        (8, 0, 0x3D, 0x00),
-        (8, 8, 0x3D, 0x00),
-    ], // 40 FrameBlock40
+    &[(0, 0, 0x3D, 0x00), (8, 0, 0x3D, 0x00), (8, 8, 0x3D, 0x00)], // 40 FrameBlock40
     &[
         (0, 0, 0x06, 0x00),
         (8, 0, 0x06, 0x20),
@@ -873,11 +830,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x3A, 0x00),
         (8, 8, 0x3B, 0x00),
     ], // 52 FrameBlock52
-    &[
-        (0, 0, 0x3F, 0x00),
-        (8, 0, 0x3F, 0x00),
-        (6, 8, 0x3F, 0x00),
-    ], // 53 FrameBlock53
+    &[(0, 0, 0x3F, 0x00), (8, 0, 0x3F, 0x00), (6, 8, 0x3F, 0x00)], // 53 FrameBlock53
     &[
         (0, 0, 0x0E, 0x00),
         (8, 0, 0x0E, 0x20),
@@ -917,9 +870,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (5, 40, 0x48, 0x00),
         (5, 48, 0x48, 0x00),
     ], // 58 FrameBlock58
-    &[
-        (0, 0, 0x42, 0x00),
-    ], // 59 FrameBlock59
+    &[(0, 0, 0x42, 0x00)], // 59 FrameBlock59
     &[
         (0, 0, 0x24, 0x00),
         (8, 0, 0x25, 0x00),
@@ -1051,22 +1002,15 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 32, 0x1C, 0x00),
         (8, 32, 0x1D, 0x00),
     ], // 65 FrameBlock65
-    &[
-        (0, 0, 0x03, 0x00),
-        (0, 8, 0x13, 0x00),
-    ], // 66 FrameBlock66
-    &[
-        (0, 0, 0x03, 0x00),
-    ], // 67 FrameBlock67
+    &[(0, 0, 0x03, 0x00), (0, 8, 0x13, 0x00)], // 66 FrameBlock66
+    &[(0, 0, 0x03, 0x00)], // 67 FrameBlock67
     &[
         (0, 0, 0x03, 0x00),
         (8, 0, 0x03, 0x20),
         (0, 8, 0x13, 0x00),
         (8, 8, 0x13, 0x20),
     ], // 68 FrameBlock68
-    &[
-        (0, 0, 0x06, 0x00),
-    ], // 69 FrameBlock69
+    &[(0, 0, 0x06, 0x00)], // 69 FrameBlock69
     &[
         (0, 0, 0x2E, 0x00),
         (48, 0, 0x2E, 0x20),
@@ -1097,10 +1041,7 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x3E, 0x00),
         (16, 8, 0x3E, 0x20),
     ], // 6C FrameBlock6c
-    &[
-        (0, 0, 0x1E, 0x00),
-        (8, 0, 0x1F, 0x00),
-    ], // 6D FrameBlock6d
+    &[(0, 0, 0x1E, 0x00), (8, 0, 0x1F, 0x00)], // 6D FrameBlock6d
     &[
         (0, 0, 0x48, 0x00),
         (8, 0, 0x48, 0x20),
@@ -1188,12 +1129,8 @@ pub static FRAME_BLOCK_DATA: [&[(u8, u8, u8, u8)]; 122] = [
         (0, 8, 0x4C, 0x60),
         (8, 8, 0x4B, 0x60),
     ], // 77 FrameBlock77
-    &[
-        (0, 0, 0x4D, 0x00),
-    ], // 78 FrameBlock78
-    &[
-        (0, 0, 0x4E, 0x00),
-    ], // 79 FrameBlock79
+    &[(0, 0, 0x4D, 0x00)], // 78 FrameBlock78
+    &[(0, 0, 0x4E, 0x00)], // 79 FrameBlock79
 ];
 
 // ─── Subanimation data ───────────────────────────────────────────────
@@ -2502,25 +2439,45 @@ mod tests {
 
     #[test]
     fn base_coords_count() {
-        assert_eq!(BASE_COORDS.len(), NUM_BASECOORDS, "BASE_COORDS should have {} entries", NUM_BASECOORDS);
+        assert_eq!(
+            BASE_COORDS.len(),
+            NUM_BASECOORDS,
+            "BASE_COORDS should have {} entries",
+            NUM_BASECOORDS
+        );
         assert_eq!(NUM_BASECOORDS, 177, "NUM_BASECOORDS should be 177");
     }
 
     #[test]
     fn frame_block_data_count() {
-        assert_eq!(FRAME_BLOCK_DATA.len(), NUM_FRAMEBLOCKS, "FRAME_BLOCK_DATA should have {} entries", NUM_FRAMEBLOCKS);
+        assert_eq!(
+            FRAME_BLOCK_DATA.len(),
+            NUM_FRAMEBLOCKS,
+            "FRAME_BLOCK_DATA should have {} entries",
+            NUM_FRAMEBLOCKS
+        );
         assert_eq!(NUM_FRAMEBLOCKS, 122, "NUM_FRAMEBLOCKS should be 122");
     }
 
     #[test]
     fn subanim_data_count() {
-        assert_eq!(SUBANIM_DATA.len(), NUM_SUBANIMS, "SUBANIM_DATA should have {} entries", NUM_SUBANIMS);
+        assert_eq!(
+            SUBANIM_DATA.len(),
+            NUM_SUBANIMS,
+            "SUBANIM_DATA should have {} entries",
+            NUM_SUBANIMS
+        );
         assert_eq!(NUM_SUBANIMS, 86, "NUM_SUBANIMS should be 86");
     }
 
     #[test]
     fn move_anim_data_count() {
-        assert_eq!(MOVE_ANIM_DATA.len(), NUM_MOVE_ANIMS, "MOVE_ANIM_DATA should have {} entries", NUM_MOVE_ANIMS);
+        assert_eq!(
+            MOVE_ANIM_DATA.len(),
+            NUM_MOVE_ANIMS,
+            "MOVE_ANIM_DATA should have {} entries",
+            NUM_MOVE_ANIMS
+        );
         assert_eq!(NUM_MOVE_ANIMS, 203, "NUM_MOVE_ANIMS should be 203");
     }
 
@@ -2603,7 +2560,11 @@ mod tests {
         let (transform, frames) = SUBANIM_DATA[0];
         assert_eq!(transform, 2, "Subanim_0Star should be HFLIP (2)");
         assert_eq!(frames.len(), 1);
-        assert_eq!(frames[0], (0x01, 0x17, 0), "Should be FRAMEBLOCK_01, BASECOORD_17, MODE_00");
+        assert_eq!(
+            frames[0],
+            (0x01, 0x17, 0),
+            "Should be FRAMEBLOCK_01, BASECOORD_17, MODE_00"
+        );
     }
 
     #[test]
@@ -2612,8 +2573,16 @@ mod tests {
         let (transform, frames) = SUBANIM_DATA[1];
         assert_eq!(transform, 2, "Subanim_0StarTwice should be HFLIP (2)");
         assert_eq!(frames.len(), 2);
-        assert_eq!(frames[0], (0x01, 0x0F, 0), "First frame: FRAMEBLOCK_01, BASECOORD_0F, MODE_00");
-        assert_eq!(frames[1], (0x01, 0x1D, 0), "Second frame: FRAMEBLOCK_01, BASECOORD_1D, MODE_00");
+        assert_eq!(
+            frames[0],
+            (0x01, 0x0F, 0),
+            "First frame: FRAMEBLOCK_01, BASECOORD_0F, MODE_00"
+        );
+        assert_eq!(
+            frames[1],
+            (0x01, 0x1D, 0),
+            "Second frame: FRAMEBLOCK_01, BASECOORD_1D, MODE_00"
+        );
     }
 
     #[test]
@@ -2751,9 +2720,15 @@ mod tests {
         // Verify transform type values match SUBANIMTYPE_* constants
         assert_eq!(SUBANIM_DATA[0x06].0, 0, "BallTossHigh should be NORMAL (0)");
         assert_eq!(SUBANIM_DATA[0x0A].0, 2, "BallPoofEnemy should be HFLIP (2)");
-        assert_eq!(SUBANIM_DATA[0x12].0, 3, "Heart_Music should be COORDFLIP (3)");
+        assert_eq!(
+            SUBANIM_DATA[0x12].0, 3,
+            "Heart_Music should be COORDFLIP (3)"
+        );
         assert_eq!(SUBANIM_DATA[0x10].0, 4, "Tornado should be REVERSE (4)");
-        assert_eq!(SUBANIM_DATA[0x18].0, 5, "SwordsCircling should be ENEMY (5)");
+        assert_eq!(
+            SUBANIM_DATA[0x18].0, 5,
+            "SwordsCircling should be ENEMY (5)"
+        );
     }
 
     // === Frame block mode verification ===
@@ -2774,11 +2749,20 @@ mod tests {
     fn special_effect_ids() {
         // Verify special effect IDs match SE_* constants
         // SE_WAVY_SCREEN = 0xD8 = 216
-        assert_eq!(MOVE_ANIM_DATA[0xCA][0].2, 0xD8, "ZigZagScreen should use SE_WAVY_SCREEN");
+        assert_eq!(
+            MOVE_ANIM_DATA[0xCA][0].2, 0xD8,
+            "ZigZagScreen should use SE_WAVY_SCREEN"
+        );
         // SE_SHAKE_SCREEN = 0xFB = 251
-        assert_eq!(MOVE_ANIM_DATA[0x58][0].2, 0xFB, "Earthquake should use SE_SHAKE_SCREEN");
+        assert_eq!(
+            MOVE_ANIM_DATA[0x58][0].2, 0xFB,
+            "Earthquake should use SE_SHAKE_SCREEN"
+        );
         // SE_DARK_SCREEN_FLASH = 0xFE = 254
-        assert_eq!(MOVE_ANIM_DATA[0x0E][0].2, 0xFE, "Cut should use SE_DARK_SCREEN_FLASH");
+        assert_eq!(
+            MOVE_ANIM_DATA[0x0E][0].2, 0xFE,
+            "Cut should use SE_DARK_SCREEN_FLASH"
+        );
     }
 
     // === Comprehensive data integrity checks ===
@@ -2787,13 +2771,34 @@ mod tests {
     fn all_subanim_frames_valid() {
         // Verify all subanimation frames reference valid frame blocks and base coords
         for (i, &(transform, frames)) in SUBANIM_DATA.iter().enumerate() {
-            assert!(transform <= 5, "Subanim {}: transform {} out of range", i, transform);
+            assert!(
+                transform <= 5,
+                "Subanim {}: transform {} out of range",
+                i,
+                transform
+            );
             for (j, &(fb_id, bc_id, mode)) in frames.iter().enumerate() {
-                assert!((fb_id as usize) < NUM_FRAMEBLOCKS,
-                    "Subanim {} frame {}: frame_block_id {} out of range", i, j, fb_id);
-                assert!((bc_id as usize) < NUM_BASECOORDS,
-                    "Subanim {} frame {}: base_coord_id {} out of range", i, j, bc_id);
-                assert!(mode <= 4, "Subanim {} frame {}: mode {} out of range", i, j, mode);
+                assert!(
+                    (fb_id as usize) < NUM_FRAMEBLOCKS,
+                    "Subanim {} frame {}: frame_block_id {} out of range",
+                    i,
+                    j,
+                    fb_id
+                );
+                assert!(
+                    (bc_id as usize) < NUM_BASECOORDS,
+                    "Subanim {} frame {}: base_coord_id {} out of range",
+                    i,
+                    j,
+                    bc_id
+                );
+                assert!(
+                    mode <= 4,
+                    "Subanim {} frame {}: mode {} out of range",
+                    i,
+                    j,
+                    mode
+                );
             }
         }
     }
@@ -2803,18 +2808,47 @@ mod tests {
         // Verify all move animation commands have valid encoding
         for (i, cmds) in MOVE_ANIM_DATA.iter().enumerate() {
             for (j, &(kind, a, b, c)) in cmds.iter().enumerate() {
-                assert!(kind <= 1, "Move {} cmd {}: kind {} out of range", i, j, kind);
+                assert!(
+                    kind <= 1,
+                    "Move {} cmd {}: kind {} out of range",
+                    i,
+                    j,
+                    kind
+                );
                 if kind == 0 {
                     // SubAnim: verify subanim_id is valid
-                    assert!((b as usize) < NUM_SUBANIMS,
-                        "Move {} cmd {}: subanim_id {} out of range", i, j, b);
+                    assert!(
+                        (b as usize) < NUM_SUBANIMS,
+                        "Move {} cmd {}: subanim_id {} out of range",
+                        i,
+                        j,
+                        b
+                    );
                     // Verify tileset is 0, 1, or 2 (trade animations use tileset 2)
                     let tileset = c >> 6;
-                    assert!(tileset <= 2, "Move {} cmd {}: tileset {} out of range", i, j, tileset);
+                    assert!(
+                        tileset <= 2,
+                        "Move {} cmd {}: tileset {} out of range",
+                        i,
+                        j,
+                        tileset
+                    );
                 } else {
                     // Effect: verify effect_id is in SE range
-                    assert!(b >= 0xD8, "Move {} cmd {}: effect_id {} below SE range", i, j, b);
-                    assert!(b <= 0xFE, "Move {} cmd {}: effect_id {} above SE range", i, j, b);
+                    assert!(
+                        b >= 0xD8,
+                        "Move {} cmd {}: effect_id {} below SE range",
+                        i,
+                        j,
+                        b
+                    );
+                    assert!(
+                        b <= 0xFE,
+                        "Move {} cmd {}: effect_id {} above SE range",
+                        i,
+                        j,
+                        b
+                    );
                     assert_eq!(c, 0, "Move {} cmd {}: extra byte should be 0", i, j);
                 }
             }

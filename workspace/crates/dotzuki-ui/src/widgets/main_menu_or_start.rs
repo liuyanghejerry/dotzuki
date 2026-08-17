@@ -2,7 +2,7 @@
 //! Uses `&[MenuConfig]` — configs[0] is the menu box.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, Ui};
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 #[derive(Debug, Clone)]
 pub struct ListMenuData {
@@ -12,14 +12,23 @@ pub struct ListMenuData {
 }
 
 pub fn draw_list_menu<P: Painter>(data: &ListMenuData, configs: &[MenuConfig], painter: &mut P) {
-    let Some(config) = configs.first() else { return };
+    let Some(config) = configs.first() else {
+        return;
+    };
     let mut ui = Ui::new(painter);
     let num_items = data.items.len() as u32;
-    if num_items == 0 { return; }
+    if num_items == 0 {
+        return;
+    }
 
     let content_h = num_items; // 1 row per item, no gap
     let eff_h = content_h + 2; // +2 for border
-    let rect = dotzuki_engine::render::TileRect::new(config.area.tx, config.area.ty, config.area.tw, eff_h);
+    let rect = dotzuki_engine::render::TileRect::new(
+        config.area.tx,
+        config.area.ty,
+        config.area.tw,
+        eff_h,
+    );
 
     ui.text_box(rect, Rgba::INK_BLACK, true, |frame| {
         let rel_tx = config.content.tx.saturating_sub(rect.tx + 1);
@@ -36,7 +45,11 @@ pub fn draw_list_menu<P: Painter>(data: &ListMenuData, configs: &[MenuConfig], p
             }
         }
 
-        let start_y = if data.title.as_ref().map_or(false, |t| !t.is_empty()) { rel_ty + 2 } else { rel_ty };
+        let start_y = if data.title.as_ref().map_or(false, |t| !t.is_empty()) {
+            rel_ty + 2
+        } else {
+            rel_ty
+        };
 
         for (i, item) in data.items.iter().enumerate() {
             let y = start_y + i as u32;
@@ -61,39 +74,59 @@ mod tests {
     }
     impl Painter for RecordingPainter {
         fn clear(&mut self, _: Rgba) {}
-        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) { self.text_boxes.push((rect, color)); }
-        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) { self.texts.push((pos, text.to_string(), color)); }
-        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) { self.glyphs.push((pos, glyph, color)); }
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.text_boxes.push((rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
+            self.texts.push((pos, text.to_string(), color));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
+            self.glyphs.push((pos, glyph, color));
+        }
         fn draw_pixel_rect(&mut self, _: u32, _: u32, _: u32, _: u32, _: Rgba) {}
         fn draw_gb_tile(&mut self, _: TilePos, _: u8, _: &str, _: Rgba) {}
     }
 
     fn test_config() -> MenuConfig {
-        MenuConfig::new(TileRect::new(5,3,10,1), None, TileRect::new(6,4,8,0), dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()))
+        MenuConfig::new(
+            TileRect::new(5, 3, 10, 1),
+            None,
+            TileRect::new(6, 4, 8, 0),
+            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default()),
+        )
     }
     fn test_data() -> ListMenuData {
-        ListMenuData { title: None, items: vec!["New Game".into(), "Continue".into(), "Quit".into()], cursor: 0 }
+        ListMenuData {
+            title: None,
+            items: vec!["New Game".into(), "Continue".into(), "Quit".into()],
+            cursor: 0,
+        }
     }
 
-    #[test] fn draws_items() {
+    #[test]
+    fn draws_items() {
         let mut painter = RecordingPainter::default();
         draw_list_menu(&test_data(), &[test_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "New Game"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Continue"));
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "Quit"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "New Game"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Continue"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "Quit"));
     }
-    #[test] fn draws_title() {
-        let mut data = test_data(); data.title = Some("POKERED".into());
+    #[test]
+    fn draws_title() {
+        let mut data = test_data();
+        data.title = Some("POKERED".into());
         let mut painter = RecordingPainter::default();
         draw_list_menu(&data, &[test_config()], &mut painter);
-        assert!(painter.texts.iter().any(|(_,t,_)| t == "POKERED"));
+        assert!(painter.texts.iter().any(|(_, t, _)| t == "POKERED"));
     }
-    #[test] fn draws_cursor() {
+    #[test]
+    fn draws_cursor() {
         let mut painter = RecordingPainter::default();
         draw_list_menu(&test_data(), &[test_config()], &mut painter);
         assert!(!painter.glyphs.is_empty());
     }
-    #[test] fn no_configs() {
+    #[test]
+    fn no_configs() {
         let mut painter = RecordingPainter::default();
         draw_list_menu(&test_data(), &[], &mut painter);
         assert!(painter.text_boxes.is_empty());

@@ -556,7 +556,8 @@ pub fn decode_channel(data: &[u8], is_noise_channel: bool, is_sfx_channel: bool)
     let mut pos = 0;
     let mut execute_music = false;
     while pos < data.len() {
-        let (cmd, next) = decode_command(data, pos, is_noise_channel, is_sfx_channel, execute_music);
+        let (cmd, next) =
+            decode_command(data, pos, is_noise_channel, is_sfx_channel, execute_music);
         if next <= pos {
             break; // safety: guarantee forward progress
         }
@@ -584,25 +585,43 @@ mod encode_tests {
     fn note_roundtrips() {
         for pitch in 0..=11u8 {
             for length in 1..=16u8 {
-                assert_eq!(rt_music(Command::Note { pitch, length }), Command::Note { pitch, length });
+                assert_eq!(
+                    rt_music(Command::Note { pitch, length }),
+                    Command::Note { pitch, length }
+                );
             }
         }
     }
 
     #[test]
     fn control_commands_roundtrip() {
-        assert_eq!(rt_music(Command::Rest { length: 4 }), Command::Rest { length: 4 });
+        assert_eq!(
+            rt_music(Command::Rest { length: 4 }),
+            Command::Rest { length: 4 }
+        );
         assert_eq!(rt_music(Command::Octave(3)), Command::Octave(3));
         assert_eq!(rt_music(Command::Tempo(0x0140)), Command::Tempo(0x0140));
         assert_eq!(rt_music(Command::DutyCycle(2)), Command::DutyCycle(2));
         assert_eq!(rt_music(Command::Volume(0x77)), Command::Volume(0x77));
         assert_eq!(
-            rt_music(Command::NoteType { speed: 12, param: 0x92 }),
-            Command::NoteType { speed: 12, param: 0x92 }
+            rt_music(Command::NoteType {
+                speed: 12,
+                param: 0x92
+            }),
+            Command::NoteType {
+                speed: 12,
+                param: 0x92
+            }
         );
         assert_eq!(
-            rt_music(Command::SoundLoop { count: 0, offset: 0x1234 }),
-            Command::SoundLoop { count: 0, offset: 0x1234 }
+            rt_music(Command::SoundLoop {
+                count: 0,
+                offset: 0x1234
+            }),
+            Command::SoundLoop {
+                count: 0,
+                offset: 0x1234
+            }
         );
         assert_eq!(
             rt_music(Command::SoundCall { offset: 0x00AB }),
@@ -625,18 +644,29 @@ mod encode_tests {
 
     #[test]
     fn drum_note_roundtrips_on_noise() {
-        let cmd = Command::DrumNote { length: 2, instrument: 5 };
+        let cmd = Command::DrumNote {
+            length: 2,
+            instrument: 5,
+        };
         let bytes = encode_channel(std::slice::from_ref(&cmd), true);
         assert_eq!(decode_channel(&bytes, true, false), vec![cmd]);
     }
 
     #[test]
     fn sfx_notes_roundtrip() {
-        let square = Command::SfxSquareNote { length: 3, volume_envelope: 0xA2, frequency: 0x0567 };
+        let square = Command::SfxSquareNote {
+            length: 3,
+            volume_envelope: 0xA2,
+            frequency: 0x0567,
+        };
         let bytes = encode_channel(std::slice::from_ref(&square), false);
         assert_eq!(decode_channel(&bytes, false, true), vec![square]);
 
-        let noise = Command::SfxNoiseNote { length: 1, volume_envelope: 0x91, noise_params: 0x33 };
+        let noise = Command::SfxNoiseNote {
+            length: 1,
+            volume_envelope: 0x91,
+            noise_params: 0x33,
+        };
         let bytes = encode_channel(std::slice::from_ref(&noise), true);
         assert_eq!(decode_channel(&bytes, true, true), vec![noise]);
     }

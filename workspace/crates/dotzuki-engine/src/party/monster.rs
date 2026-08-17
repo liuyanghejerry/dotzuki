@@ -133,8 +133,13 @@ impl<P: MonsterProvider> MonsterInstance<P> {
     /// by ratio on a stat recompute).
     pub fn recalc_stats(&mut self, provider: &P) {
         for &stat in provider.stats() {
-            let value =
-                provider.calc_stat(self.species, stat, self.level, &self.genetics, &self.training);
+            let value = provider.calc_stat(
+                self.species,
+                stat,
+                self.level,
+                &self.genetics,
+                &self.training,
+            );
             self.stats.set(stat, value);
         }
         let max = self.max_hp(provider);

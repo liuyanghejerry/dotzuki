@@ -91,13 +91,13 @@ impl SourceMapBuilder {
     ///
     /// Only the start of the span (`line_start`, `col_start`) is used; the
     /// end is ignored for mapping purposes (source maps map points, not ranges).
-    pub fn record_span(
-        &mut self,
-        span: &SourceSpan,
-        generated_line: u32,
-        generated_col: u32,
-    ) {
-        self.add_mapping(generated_line, generated_col, span.line_start, span.col_start);
+    pub fn record_span(&mut self, span: &SourceSpan, generated_line: u32, generated_col: u32) {
+        self.add_mapping(
+            generated_line,
+            generated_col,
+            span.line_start,
+            span.col_start,
+        );
     }
 
     /// Finalise the builder and produce the

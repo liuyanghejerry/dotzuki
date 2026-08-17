@@ -5,11 +5,11 @@
 //! tile-to-colour callback, then composites all layers bottom-to-top onto a
 //! single output framebuffer.
 
-use crate::{FbSurface, FrameBuffer, DirtyRegion, TILE_SIZE};
+use crate::tile::RgbaTile;
+use crate::{DirtyRegion, FbSurface, FrameBuffer, TILE_SIZE};
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render::{BlendMode, MapLayer};
 use dotzuki_engine::tilemap::TilemapEntry;
-use crate::tile::RgbaTile;
 use std::collections::HashMap;
 
 const TILE_PIXELS: u32 = TILE_SIZE;
@@ -24,7 +24,9 @@ pub struct LayerTileCache {
 
 impl LayerTileCache {
     pub fn new() -> Self {
-        Self { entries: HashMap::new() }
+        Self {
+            entries: HashMap::new(),
+        }
     }
 
     /// Invalidate all cached entries (call when tileset or palette changes).
@@ -87,7 +89,16 @@ pub fn render_layers<F>(
 ) where
     F: Fn(u16, u8, u8, u8) -> Rgba,
 {
-    render_layers_sized(fb, layers, camera_x, camera_y, width, height, TILE_PIXELS, tile_color)
+    render_layers_sized(
+        fb,
+        layers,
+        camera_x,
+        camera_y,
+        width,
+        height,
+        TILE_PIXELS,
+        tile_color,
+    )
 }
 
 /// Like [`render_layers`] but with a caller-specified `tile_size` (pixels per
@@ -126,7 +137,15 @@ pub fn render_layers_with_cache<F>(
     F: Fn(u16, u8, u8, u8) -> Rgba,
 {
     render_layers_with_cache_sized(
-        fb, layers, camera_x, camera_y, width, height, TILE_PIXELS, tile_color, cache,
+        fb,
+        layers,
+        camera_x,
+        camera_y,
+        width,
+        height,
+        TILE_PIXELS,
+        tile_color,
+        cache,
     )
 }
 
@@ -168,7 +187,17 @@ pub fn render_layers_with_cache_sized<F>(
     // `fb.clear()` here — that is what makes single-layer transparency show
     // through; the >=2-layer path below clears + composites self-contained.)
     if visible.len() == 1 {
-        render_single_layer(fb, visible[0], camera_x, camera_y, width, height, tile_size, &tile_color, &mut cache);
+        render_single_layer(
+            fb,
+            visible[0],
+            camera_x,
+            camera_y,
+            width,
+            height,
+            tile_size,
+            &tile_color,
+            &mut cache,
+        );
         return;
     }
 
@@ -183,7 +212,17 @@ pub fn render_layers_with_cache_sized<F>(
 
     for layer in &visible {
         temp.clear(Rgba::TRANSPARENT);
-        render_single_layer(&mut temp, layer, camera_x, camera_y, width, height, tile_size, &tile_color, &mut cache);
+        render_single_layer(
+            &mut temp,
+            layer,
+            camera_x,
+            camera_y,
+            width,
+            height,
+            tile_size,
+            &tile_color,
+            &mut cache,
+        );
         composite_onto(fb, &temp, layer.opacity, layer.blend_mode);
     }
 }
@@ -274,7 +313,12 @@ fn effective_pixel(px: u8, py: u8, entry: &TilemapEntry, tile_size: u32) -> (u8,
 /// so compositing must only run while the display palette is the base
 /// palette — a fade/flash palette active here would shift indices on
 /// round-trip. Not reachable today; documented as a constraint.
-fn composite_onto(dst: &mut impl FbSurface, src: &FrameBuffer, opacity: f32, blend_mode: BlendMode) {
+fn composite_onto(
+    dst: &mut impl FbSurface,
+    src: &FrameBuffer,
+    opacity: f32,
+    blend_mode: BlendMode,
+) {
     let (w, h) = (dst.width(), dst.height());
     assert_eq!(w, src.width);
     assert_eq!(h, src.height);
@@ -432,15 +476,37 @@ mod tests {
         // x=4 lands in tile (0,0) → green. (At the default 8px grid, x=20
         // would be tile 2 — out of range — proving the size is honoured.)
         let mut tm = Tilemap::new(2, 1);
-        tm.set(0, 0, TilemapEntry { tile_id: 2, ..Default::default() });
-        tm.set(1, 0, TilemapEntry { tile_id: 3, ..Default::default() });
+        tm.set(
+            0,
+            0,
+            TilemapEntry {
+                tile_id: 2,
+                ..Default::default()
+            },
+        );
+        tm.set(
+            1,
+            0,
+            TilemapEntry {
+                tile_id: 3,
+                ..Default::default()
+            },
+        );
         let layer = MapLayer::new(tm, 0);
 
         let mut fb = make_fb(32, 16, Rgba::WHITE);
         render_layers_sized(&mut fb, &[layer], 0, 0, 32, 16, 16, test_tile_color);
 
-        assert_eq!(fb.get_pixel(4, 8), Some(Rgba::rgb(0, 255, 0)), "left half = green tile 0");
-        assert_eq!(fb.get_pixel(20, 8), Some(Rgba::rgb(0, 0, 255)), "right half = blue tile 1");
+        assert_eq!(
+            fb.get_pixel(4, 8),
+            Some(Rgba::rgb(0, 255, 0)),
+            "left half = green tile 0"
+        );
+        assert_eq!(
+            fb.get_pixel(20, 8),
+            Some(Rgba::rgb(0, 0, 255)),
+            "right half = blue tile 1"
+        );
     }
 
     // ------------------------------------------------------------------
@@ -544,8 +610,22 @@ mod tests {
     fn single_layer_respects_camera_offset() {
         // 2×1 tilemap: tile (0,0) = id 2 (green), tile (1,0) = id 3 (blue).
         let mut tm = Tilemap::new(2, 1);
-        tm.set(0, 0, TilemapEntry { tile_id: 2, ..Default::default() });
-        tm.set(1, 0, TilemapEntry { tile_id: 3, ..Default::default() });
+        tm.set(
+            0,
+            0,
+            TilemapEntry {
+                tile_id: 2,
+                ..Default::default()
+            },
+        );
+        tm.set(
+            1,
+            0,
+            TilemapEntry {
+                tile_id: 3,
+                ..Default::default()
+            },
+        );
 
         let layer = MapLayer::new(tm, 0);
         // 8×8 viewport, camera scrolled right by 8 pixels.
@@ -571,8 +651,22 @@ mod tests {
         // 2×1 tilemap: (0,0)=red(1), (1,0)=green(2). Camera moves 16px right
         // but scroll_factor=0.5 → effective scroll=8px → tile (1,0) visible.
         let mut tm = Tilemap::new(2, 1);
-        tm.set(0, 0, TilemapEntry { tile_id: 1, ..Default::default() });
-        tm.set(1, 0, TilemapEntry { tile_id: 2, ..Default::default() });
+        tm.set(
+            0,
+            0,
+            TilemapEntry {
+                tile_id: 1,
+                ..Default::default()
+            },
+        );
+        tm.set(
+            1,
+            0,
+            TilemapEntry {
+                tile_id: 2,
+                ..Default::default()
+            },
+        );
 
         let mut layer = MapLayer::new(tm, 0);
         layer.scroll_factor = (0.5, 0.5);
@@ -604,19 +698,49 @@ mod tests {
         // The caller pre-fills the framebuffer blue; the left tile must keep the
         // blue background and the right (opaque) tile must overwrite it.
         let mut tm = Tilemap::new(2, 1);
-        tm.set(0, 0, TilemapEntry { tile_id: 0, ..Default::default() }); // transparent
-        tm.set(1, 0, TilemapEntry { tile_id: 1, ..Default::default() }); // red, opaque
+        tm.set(
+            0,
+            0,
+            TilemapEntry {
+                tile_id: 0,
+                ..Default::default()
+            },
+        ); // transparent
+        tm.set(
+            1,
+            0,
+            TilemapEntry {
+                tile_id: 1,
+                ..Default::default()
+            },
+        ); // red, opaque
         let layer = MapLayer::new(tm, 0);
 
         let mut fb = make_fb(16, 8, Rgba::rgb(0, 0, 255)); // blue background
         render_layers(&mut fb, &[layer], 0, 0, 16, 8, test_tile_color);
 
         // Left half (transparent tile) → blue background shows through.
-        assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0, 0, 255)), "transparent tile keeps background");
-        assert_eq!(fb.get_pixel(7, 7), Some(Rgba::rgb(0, 0, 255)), "transparent tile keeps background");
+        assert_eq!(
+            fb.get_pixel(0, 0),
+            Some(Rgba::rgb(0, 0, 255)),
+            "transparent tile keeps background"
+        );
+        assert_eq!(
+            fb.get_pixel(7, 7),
+            Some(Rgba::rgb(0, 0, 255)),
+            "transparent tile keeps background"
+        );
         // Right half (opaque red tile) → covers background.
-        assert_eq!(fb.get_pixel(8, 0), Some(Rgba::rgb(255, 0, 0)), "opaque tile overwrites background");
-        assert_eq!(fb.get_pixel(15, 7), Some(Rgba::rgb(255, 0, 0)), "opaque tile overwrites background");
+        assert_eq!(
+            fb.get_pixel(8, 0),
+            Some(Rgba::rgb(255, 0, 0)),
+            "opaque tile overwrites background"
+        );
+        assert_eq!(
+            fb.get_pixel(15, 7),
+            Some(Rgba::rgb(255, 0, 0)),
+            "opaque tile overwrites background"
+        );
     }
 
     // ------------------------------------------------------------------
@@ -782,8 +906,22 @@ mod tests {
     fn scroll_factor_vertical() {
         // 1×2 tilemap: (0,0)=red(1), (0,1)=green(2). Camera at y=8.
         let mut tm = Tilemap::new(1, 2);
-        tm.set(0, 0, TilemapEntry { tile_id: 1, ..Default::default() });
-        tm.set(0, 1, TilemapEntry { tile_id: 2, ..Default::default() });
+        tm.set(
+            0,
+            0,
+            TilemapEntry {
+                tile_id: 1,
+                ..Default::default()
+            },
+        );
+        tm.set(
+            0,
+            1,
+            TilemapEntry {
+                tile_id: 2,
+                ..Default::default()
+            },
+        );
 
         let layer = MapLayer::new(tm, 0);
 
@@ -914,7 +1052,14 @@ mod tests {
         let tiles = [1u16, 2, 3, 1, 2, 1, 3, 2, 3, 1, 2, 1, 1, 3, 2, 3];
         for y in 0..4u16 {
             for x in 0..4u16 {
-                tm.set(x, y, TilemapEntry { tile_id: tiles[(y * 4 + x) as usize], ..Default::default() });
+                tm.set(
+                    x,
+                    y,
+                    TilemapEntry {
+                        tile_id: tiles[(y * 4 + x) as usize],
+                        ..Default::default()
+                    },
+                );
             }
         }
 
@@ -923,18 +1068,40 @@ mod tests {
 
         // Render without cache
         let mut fb_uncached = make_fb(32, 32, Rgba::WHITE);
-        render_layers(&mut fb_uncached, &[layer.clone()], 0, 0, 32, 32, test_tile_color);
+        render_layers(
+            &mut fb_uncached,
+            &[layer.clone()],
+            0,
+            0,
+            32,
+            32,
+            test_tile_color,
+        );
 
         // Render with cache
         let mut fb_cached = make_fb(32, 32, Rgba::WHITE);
         let mut cache = LayerTileCache::new();
-        render_layers_with_cache(&mut fb_cached, &[layer], 0, 0, 32, 32, test_tile_color, Some(&mut cache));
+        render_layers_with_cache(
+            &mut fb_cached,
+            &[layer],
+            0,
+            0,
+            32,
+            32,
+            test_tile_color,
+            Some(&mut cache),
+        );
 
         // Outputs must be identical
         for y in 0..32 {
             for x in 0..32 {
-                assert_eq!(fb_uncached.get_pixel(x, y), fb_cached.get_pixel(x, y),
-                    "pixel ({},{}) differs", x, y);
+                assert_eq!(
+                    fb_uncached.get_pixel(x, y),
+                    fb_cached.get_pixel(x, y),
+                    "pixel ({},{}) differs",
+                    x,
+                    y
+                );
             }
         }
     }
@@ -947,7 +1114,16 @@ mod tests {
 
         let mut cache = LayerTileCache::new();
         let mut fb = make_fb(8, 8, Rgba::WHITE);
-        render_layers_with_cache(&mut fb, &[layer.clone()], 0, 0, 8, 8, test_tile_color, Some(&mut cache));
+        render_layers_with_cache(
+            &mut fb,
+            &[layer.clone()],
+            0,
+            0,
+            8,
+            8,
+            test_tile_color,
+            Some(&mut cache),
+        );
 
         // Cache should have entries now
         assert!(!cache.entries.is_empty());
@@ -958,7 +1134,16 @@ mod tests {
 
         // Can still render (cache rebuilds)
         let mut fb2 = make_fb(8, 8, Rgba::WHITE);
-        render_layers_with_cache(&mut fb2, &[layer], 0, 0, 8, 8, test_tile_color, Some(&mut cache));
+        render_layers_with_cache(
+            &mut fb2,
+            &[layer],
+            0,
+            0,
+            8,
+            8,
+            test_tile_color,
+            Some(&mut cache),
+        );
         assert!(!cache.entries.is_empty());
     }
 
@@ -977,8 +1162,13 @@ mod tests {
         // The whole framebuffer must be redrawn red regardless of dirty state.
         for y in 0..16 {
             for x in 0..16 {
-                assert_eq!(fb.get_pixel(x, y), Some(Rgba::rgb(255, 0, 0)),
-                    "pixel ({},{}) should be red after full redraw", x, y);
+                assert_eq!(
+                    fb.get_pixel(x, y),
+                    Some(Rgba::rgb(255, 0, 0)),
+                    "pixel ({},{}) should be red after full redraw",
+                    x,
+                    y
+                );
             }
         }
     }
@@ -991,7 +1181,16 @@ mod tests {
 
         let mut cache = LayerTileCache::new();
         let mut fb = make_fb(8, 8, Rgba::WHITE);
-        render_layers_with_cache(&mut fb, &[layer], 0, 0, 8, 8, test_tile_color, Some(&mut cache));
+        render_layers_with_cache(
+            &mut fb,
+            &[layer],
+            0,
+            0,
+            8,
+            8,
+            test_tile_color,
+            Some(&mut cache),
+        );
 
         // Cache should be empty because no_animation was false
         assert!(cache.entries.is_empty());

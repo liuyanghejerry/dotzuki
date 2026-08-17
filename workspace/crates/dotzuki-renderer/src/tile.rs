@@ -289,7 +289,9 @@ impl TileSet {
                     rgba_pixels[row][col] = pixels[base + row * TILE_PIXELS + col];
                 }
             }
-            rgba_tiles.push(RgbaTile { pixels: rgba_pixels });
+            rgba_tiles.push(RgbaTile {
+                pixels: rgba_pixels,
+            });
         }
         Self {
             tiles: vec![Tile::blank(); tile_count],

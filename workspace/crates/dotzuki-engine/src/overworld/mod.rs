@@ -33,9 +33,9 @@ pub mod types;
 pub use collision::{
     check_movement_collision, check_sprite_collision, check_warp_at_position,
     direction_to_pad_input, direction_to_sprite_facing, get_block_at, get_target_coords,
-    is_facing_map_edge, CollisionProvider, CollisionResult, SpritePosition,
-    PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_UP,
-    SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
+    is_facing_map_edge, CollisionProvider, CollisionResult, SpritePosition, PAD_DOWN, PAD_LEFT,
+    PAD_RIGHT, PAD_UP, SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT,
+    SPRITE_FACING_UP,
 };
 pub use encounter::{EncounterEngine, EncounterMode, EncounterProvider, EncounterStep};
 pub use npc_interaction::{

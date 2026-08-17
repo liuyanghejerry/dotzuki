@@ -76,8 +76,11 @@ fn from_4bpp_decodes_single_tile() {
         for col in 0..8 {
             // Plane 0: 2bpp color 1, Plane 1: 2bpp color 1
             // Combined: (1 << 2) | 1 = 5
-            assert_eq!(tile.pixels[row][col], 5,
-                "pixel ({},{}) should be 5", row, col);
+            assert_eq!(
+                tile.pixels[row][col], 5,
+                "pixel ({},{}) should be 5",
+                row, col
+            );
         }
     }
 }
@@ -104,9 +107,7 @@ fn from_4bpp_zero_data_is_all_color_0() {
 
 #[test]
 fn from_rgba_creates_fullcolor_tileset() {
-    let rgba_pixels: Vec<Rgba> = (0..64).map(|i| {
-        Rgba::new(i as u8, 0, 0, 255)
-    }).collect();
+    let rgba_pixels: Vec<Rgba> = (0..64).map(|i| Rgba::new(i as u8, 0, 0, 255)).collect();
 
     let ts = TileSet::from_rgba(&rgba_pixels, 1);
     assert_eq!(ts.tile_format(), TileFormat::FullColor);
@@ -114,14 +115,17 @@ fn from_rgba_creates_fullcolor_tileset() {
 
     let rgba_tile = ts.get_rgba(0).expect("should have rgba tile");
     assert_eq!(rgba_tile.pixels[0][0], Rgba::new(0, 0, 0, 255));
-    assert_eq!(rgba_tile.pixels[0][63 & 7], Rgba::new((63 & 7) as u8, 0, 0, 255));
+    assert_eq!(
+        rgba_tile.pixels[0][63 & 7],
+        Rgba::new((63 & 7) as u8, 0, 0, 255)
+    );
 }
 
 #[test]
 fn from_rgba_multiple_tiles() {
-    let rgba_pixels: Vec<Rgba> = (0..128).map(|i| {
-        Rgba::new((i % 256) as u8, 100, 200, 255)
-    }).collect();
+    let rgba_pixels: Vec<Rgba> = (0..128)
+        .map(|i| Rgba::new((i % 256) as u8, 100, 200, 255))
+        .collect();
 
     let ts = TileSet::from_rgba(&rgba_pixels, 2);
     assert_eq!(ts.tile_format(), TileFormat::FullColor);

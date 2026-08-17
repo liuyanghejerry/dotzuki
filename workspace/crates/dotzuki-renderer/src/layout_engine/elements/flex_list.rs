@@ -77,7 +77,7 @@ pub fn render_flex_list(
         let ink = theme.ink_color();
         let cur = theme.cursor_ink();
         let cursor_adv = 10u32; // ▶ glyph advance
-        // Rows must clear the full CJK glyph height; `gap` (tiles) adds leading.
+                                // Rows must clear the full CJK glyph height; `gap` (tiles) adds leading.
         let row_pitch = ((1 + gap) * 8).max(13);
         let mut y = content_ty * 8;
         for (row_idx, item) in items.iter().enumerate() {
@@ -139,7 +139,12 @@ pub fn render_flex_list(
             let display_text = format!("{}{}", prefix, value);
             let align = column.align.as_ref().unwrap_or(&TextAlign::Left);
 
-            let text_x = align_text(column_positions[col_idx], column.width, &display_text, align);
+            let text_x = align_text(
+                column_positions[col_idx],
+                column.width,
+                &display_text,
+                align,
+            );
 
             // First column text shifts right by cursor width when cursor is active
             let col_x = if col_idx == 0 && is_active {
@@ -202,8 +207,10 @@ fn split_row_into_columns(s: &str, ncols: usize) -> DataValue {
     }
     let tokens: Vec<&str> = s.split_whitespace().collect();
     let cols: Vec<DataValue> = if tokens.len() <= ncols {
-        let mut v: Vec<DataValue> =
-            tokens.iter().map(|t| DataValue::Str(t.to_string())).collect();
+        let mut v: Vec<DataValue> = tokens
+            .iter()
+            .map(|t| DataValue::Str(t.to_string()))
+            .collect();
         while v.len() < ncols {
             v.push(DataValue::Str(String::new()));
         }
@@ -213,7 +220,11 @@ fn split_row_into_columns(s: &str, ncols: usize) -> DataValue {
         let split_at = tokens.len() - trailing;
         let first = tokens[..split_at].join(" ");
         let mut v = vec![DataValue::Str(first)];
-        v.extend(tokens[split_at..].iter().map(|t| DataValue::Str(t.to_string())));
+        v.extend(
+            tokens[split_at..]
+                .iter()
+                .map(|t| DataValue::Str(t.to_string())),
+        );
         v
     };
     DataValue::List(cols)
@@ -254,28 +265,10 @@ mod tests {
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum DrawOp {
-        Text {
-            tx: u32,
-            ty: u32,
-            text: String,
-        },
-        Glyph {
-            tx: u32,
-            ty: u32,
-            glyph: char,
-        },
-        TextBox {
-            tx: u32,
-            ty: u32,
-            tw: u32,
-            th: u32,
-        },
-        PixelRect {
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-        },
+        Text { tx: u32, ty: u32, text: String },
+        Glyph { tx: u32, ty: u32, glyph: char },
+        TextBox { tx: u32, ty: u32, tw: u32, th: u32 },
+        PixelRect { px: u32, py: u32, pw: u32, ph: u32 },
     }
 
     struct MockPainter {
@@ -309,9 +302,7 @@ mod tests {
             self.ops()
                 .iter()
                 .filter_map(|op| match op {
-                    DrawOp::Glyph { tx, ty, glyph } if *glyph == needle => {
-                        Some((*tx, *ty))
-                    }
+                    DrawOp::Glyph { tx, ty, glyph } if *glyph == needle => Some((*tx, *ty)),
                     _ => None,
                 })
                 .collect()
@@ -342,24 +333,12 @@ mod tests {
                 glyph,
             });
         }
-        fn draw_pixel_rect(
-            &mut self,
-            px: u32,
-            py: u32,
-            pw: u32,
-            ph: u32,
-            _color: Rgba,
-        ) {
-            self.ops.borrow_mut().push(DrawOp::PixelRect { px, py, pw, ph });
+        fn draw_pixel_rect(&mut self, px: u32, py: u32, pw: u32, ph: u32, _color: Rgba) {
+            self.ops
+                .borrow_mut()
+                .push(DrawOp::PixelRect { px, py, pw, ph });
         }
-        fn draw_gb_tile(
-            &mut self,
-            _pos: TilePos,
-            _tile_id: u8,
-            _fallback: &str,
-            _color: Rgba,
-        ) {
-        }
+        fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
     }
 
     fn make_flex_list_params(
@@ -558,14 +537,8 @@ mod tests {
         ctx.set(
             "shop",
             DataValue::List(vec![
-                DataValue::List(vec![
-                    DataValue::Str("A".into()),
-                    DataValue::Int(1),
-                ]),
-                DataValue::List(vec![
-                    DataValue::Str("B".into()),
-                    DataValue::Int(2),
-                ]),
+                DataValue::List(vec![DataValue::Str("A".into()), DataValue::Int(1)]),
+                DataValue::List(vec![DataValue::Str("B".into()), DataValue::Int(2)]),
             ]),
         );
 
@@ -636,9 +609,7 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set(
             "shop",
-            DataValue::List(vec![DataValue::List(vec![DataValue::Str(
-                "ITEM".into(),
-            )])]),
+            DataValue::List(vec![DataValue::List(vec![DataValue::Str("ITEM".into())])]),
         );
 
         let cols = vec![ColumnDef {
@@ -689,10 +660,7 @@ mod tests {
     #[test]
     fn empty_columns_no_render() {
         let mut ctx = DataContext::new();
-        ctx.set(
-            "shop",
-            DataValue::List(vec![DataValue::Str("X".into())]),
-        );
+        ctx.set("shop", DataValue::List(vec![DataValue::Str("X".into())]));
 
         let params = make_flex_list_params("shop", vec![], 0, 0, default_padding());
         let mut painter = MockPainter::new();
@@ -722,9 +690,7 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set(
             "shop",
-            DataValue::List(vec![DataValue::List(vec![
-                DataValue::Str("AB".into()),
-            ])]),
+            DataValue::List(vec![DataValue::List(vec![DataValue::Str("AB".into())])]),
         );
 
         let cols = vec![ColumnDef {
@@ -751,9 +717,7 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set(
             "shop",
-            DataValue::List(vec![DataValue::List(vec![
-                DataValue::Str("AB".into()),
-            ])]),
+            DataValue::List(vec![DataValue::List(vec![DataValue::Str("AB".into())])]),
         );
 
         let cols = vec![ColumnDef {
@@ -780,9 +744,7 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set(
             "shop",
-            DataValue::List(vec![DataValue::List(vec![DataValue::Int(
-                5,
-            )])]),
+            DataValue::List(vec![DataValue::List(vec![DataValue::Int(5)])]),
         );
 
         let cols = vec![ColumnDef {

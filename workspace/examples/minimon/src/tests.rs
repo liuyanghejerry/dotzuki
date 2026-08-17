@@ -15,7 +15,16 @@ use dotzuki_engine::battle::stack::EffectHost;
 /// A defender whose Def (50) differs from its SpD (100) so a physical move and a
 /// special move of equal power deal **different** damage.
 fn split_defender() -> BattlerState<MinimonProvider> {
-    battler(Species::plain(), 100, /*atk*/ 50, /*def*/ 50, /*spa*/ 50, /*spd*/ 100, /*spe*/ 50, vec![])
+    battler(
+        Species::plain(),
+        100,
+        /*atk*/ 50,
+        /*def*/ 50,
+        /*spa*/ 50,
+        /*spd*/ 100,
+        /*spe*/ 50,
+        vec![],
+    )
 }
 
 /// An attacker with Atk == SpA == 100 (so only the *defensive* stat read differs).
@@ -53,7 +62,10 @@ fn physical_and_special_moves_deal_different_damage_via_the_split() {
     assert_eq!(spec_dmg, 40, "special move read SpA/SpD: 40*100/100 = 40");
 
     // The split is real: the SAME power deals DIFFERENT damage by category.
-    assert_ne!(phys_dmg, spec_dmg, "phys vs special outcomes differ → the split works");
+    assert_ne!(
+        phys_dmg, spec_dmg,
+        "phys vs special outcomes differ → the split works"
+    );
 }
 
 // ── System 2: Intimidate (design §4.2b/§6.1 #2). ──
@@ -65,7 +77,13 @@ fn physical_and_special_moves_deal_different_damage_via_the_split() {
 fn intimidate_drops_foe_attack_so_its_physical_move_hits_softer() {
     let intimidator = battler(
         Species::plain().with_ability(Ability::Intimidate),
-        100, 50, 50, 50, 50, 50, vec![],
+        100,
+        50,
+        50,
+        50,
+        50,
+        50,
+        vec![],
     );
     // The FOE (opponent) is the attacker whose Atk gets dropped.
     let foe = battler(Species::plain(), 100, 100, 50, 50, 50, 50, vec![TACKLE]);
@@ -74,7 +92,10 @@ fn intimidate_drops_foe_attack_so_its_physical_move_hits_softer() {
     // The intimidator (player) switches in → drops the opponent's Atk one stage.
     b.switch_in(BattlerRef::PLAYER);
     assert_eq!(
-        b.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied(),
+        b.battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied(),
         Some(-1),
         "Intimidate routed a -1 Atk through TryBoost (no veto) → foe Atk = -1 stage"
     );
@@ -83,7 +104,10 @@ fn intimidate_drops_foe_attack_so_its_physical_move_hits_softer() {
     // 40*66/50 = 52.8 → 52 (truncated). Without Intimidate it would be 80.
     b.fire_move(BattlerRef::OPPONENT, &TACKLE);
     let dmg = 100 - b.battler_ref(BattlerRef::PLAYER).hp;
-    assert_eq!(dmg, 52, "Intimidated foe (Atk -1) deals 40*66/50 = 52, softer than 80");
+    assert_eq!(
+        dmg, 52,
+        "Intimidated foe (Atk -1) deals 40*66/50 = 52, softer than 80"
+    );
     assert!(dmg < 80, "softer than the un-intimidated 80");
 }
 
@@ -98,17 +122,33 @@ fn intimidate_drops_foe_attack_so_its_physical_move_hits_softer() {
 fn clear_body_cancels_intimidate() {
     let intimidator = battler(
         Species::plain().with_ability(Ability::Intimidate),
-        100, 50, 50, 50, 50, 50, vec![],
+        100,
+        50,
+        50,
+        50,
+        50,
+        50,
+        vec![],
     );
     let clear_body_foe = battler(
         Species::plain().with_ability(Ability::ClearBody),
-        100, 100, 50, 50, 50, 50, vec![TACKLE],
+        100,
+        100,
+        50,
+        50,
+        50,
+        50,
+        vec![TACKLE],
     );
 
     let mut b = Battle::new(MinimonProvider::default(), intimidator, clear_body_foe);
     b.switch_in(BattlerRef::PLAYER);
     assert_eq!(
-        b.battler_ref(BattlerRef::OPPONENT).stat_stages.get(Stat::Atk).copied().unwrap_or(0),
+        b.battler_ref(BattlerRef::OPPONENT)
+            .stat_stages
+            .get(Stat::Atk)
+            .copied()
+            .unwrap_or(0),
         0,
         "Clear Body vetoed the TryBoost → foe Atk stage unchanged (0)"
     );
@@ -126,11 +166,23 @@ fn clear_body_cancels_intimidate() {
 fn both_abilities_collected_on_one_try_boost_in_order() {
     let intimidator = battler(
         Species::plain().with_ability(Ability::Intimidate),
-        100, 50, 50, 50, 50, 50, vec![],
+        100,
+        50,
+        50,
+        50,
+        50,
+        50,
+        vec![],
     );
     let clear_body_foe = battler(
         Species::plain().with_ability(Ability::ClearBody),
-        100, 100, 50, 50, 50, 50, vec![],
+        100,
+        100,
+        50,
+        50,
+        50,
+        50,
+        vec![],
     );
     let mut b = Battle::new(MinimonProvider::default(), intimidator, clear_body_foe);
 
@@ -145,8 +197,13 @@ fn both_abilities_collected_on_one_try_boost_in_order() {
     };
     let mut hs = Vec::new();
     collect_handlers(
-        &ctx, provider, None, Event::TryBoost,
-        BattlerRef::OPPONENT, BattlerRef::PLAYER, &mut hs,
+        &ctx,
+        provider,
+        None,
+        Event::TryBoost,
+        BattlerRef::OPPONENT,
+        BattlerRef::PLAYER,
+        &mut hs,
     );
     // Only Clear Body subscribes to TryBoost (Intimidate subscribes to SwitchIn
     // and *fires* TryBoost via the driver) — so the veto is present on the foe's
@@ -154,7 +211,11 @@ fn both_abilities_collected_on_one_try_boost_in_order() {
     // battlers, the prefix-synthesis path of design §2.2).
     hs.sort_by(dotzuki_engine::battle::stack::compare);
     let orders: Vec<u32> = hs.iter().map(|h| h.order).collect();
-    assert_eq!(orders, vec![5], "Clear Body (order 5) collected on the foe's TryBoost");
+    assert_eq!(
+        orders,
+        vec![5],
+        "Clear Body (order 5) collected on the foe's TryBoost"
+    );
     // And it is hosted on the TARGET (the foe), proving cross-battler collection.
     assert_eq!(hs[0].target, BattlerRef::OPPONENT);
 }
@@ -171,7 +232,13 @@ fn both_abilities_collected_on_one_try_boost_in_order() {
 fn leftovers_heals_after_the_status_chip_in_the_right_order() {
     let mut holder = battler(
         Species::plain().with_item(Item::Leftovers),
-        100, 50, 50, 50, 50, 50, vec![],
+        100,
+        50,
+        50,
+        50,
+        50,
+        50,
+        vec![],
     );
     holder.status = Some(Status::Poisoned);
     let dummy = battler(Species::plain(), 100, 50, 50, 50, 50, 50, vec![]);
@@ -196,7 +263,11 @@ fn poison_chip_alone_is_lower_than_with_leftovers() {
     let dummy = battler(Species::plain(), 100, 50, 50, 50, 50, 50, vec![]);
     let mut b = Battle::new(MinimonProvider::default(), poisoned, dummy);
     b.end_of_turn_residual(BattlerRef::PLAYER);
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).hp, 88, "chip only: 100 - 12 = 88");
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).hp,
+        88,
+        "chip only: 100 - 12 = 88"
+    );
 }
 
 // ── System 5: Sandstorm (design §4.2d/§6.1 #5). ──
@@ -207,27 +278,57 @@ fn poison_chip_alone_is_lower_than_with_leftovers() {
 
 #[test]
 fn sandstorm_chips_non_rock_and_boosts_rock_spd() {
-    let normal = battler(Species::plain().with_type(MType::Normal), 100, 50, 50, 50, 100, 50, vec![]);
-    let rock = battler(Species::plain().with_type(MType::Rock), 100, 50, 50, 50, 100, 50, vec![]);
+    let normal = battler(
+        Species::plain().with_type(MType::Normal),
+        100,
+        50,
+        50,
+        50,
+        100,
+        50,
+        vec![],
+    );
+    let rock = battler(
+        Species::plain().with_type(MType::Rock),
+        100,
+        50,
+        50,
+        50,
+        100,
+        50,
+        vec![],
+    );
 
     // weather_on = true → Sandstorm is live on the field.
-    let mut b = Battle::new(MinimonProvider { weather_on: true, ..Default::default() }, normal, rock);
+    let mut b = Battle::new(
+        MinimonProvider {
+            weather_on: true,
+            ..Default::default()
+        },
+        normal,
+        rock,
+    );
 
     // FieldResidual chip: Normal loses 100/16 = 6; Rock is immune.
     b.weather_residual();
     assert_eq!(
-        b.battler_ref(BattlerRef::PLAYER).hp, 94,
+        b.battler_ref(BattlerRef::PLAYER).hp,
+        94,
         "Sandstorm chipped the Normal battler 100/16 = 6 → 94"
     );
     assert_eq!(
-        b.battler_ref(BattlerRef::OPPONENT).hp, 100,
+        b.battler_ref(BattlerRef::OPPONENT).hp,
+        100,
         "Rock is immune to the Sandstorm chip"
     );
 
     // WeatherModifyStat: Rock SpD ×1.5 (100 → 150); Normal unchanged (100).
     let rock_spd = b.effective_spd_with_weather(BattlerRef::OPPONENT);
     let normal_spd = b.effective_spd_with_weather(BattlerRef::PLAYER);
-    assert_eq!(rock_spd, 150, "Sandstorm boosts Rock SpD ×1.5 (ModifyStat→WeatherModifyStat layering)");
+    assert_eq!(
+        rock_spd, 150,
+        "Sandstorm boosts Rock SpD ×1.5 (ModifyStat→WeatherModifyStat layering)"
+    );
     assert_eq!(normal_spd, 100, "non-Rock SpD unboosted");
 }
 
@@ -235,12 +336,38 @@ fn sandstorm_chips_non_rock_and_boosts_rock_spd() {
 /// returns empty, so neither Sandstorm hook is ever collected).
 #[test]
 fn no_weather_means_no_chip_and_no_boost() {
-    let normal = battler(Species::plain().with_type(MType::Normal), 100, 50, 50, 50, 100, 50, vec![]);
-    let rock = battler(Species::plain().with_type(MType::Rock), 100, 50, 50, 50, 100, 50, vec![]);
+    let normal = battler(
+        Species::plain().with_type(MType::Normal),
+        100,
+        50,
+        50,
+        50,
+        100,
+        50,
+        vec![],
+    );
+    let rock = battler(
+        Species::plain().with_type(MType::Rock),
+        100,
+        50,
+        50,
+        50,
+        100,
+        50,
+        vec![],
+    );
     let mut b = Battle::new(MinimonProvider::default(), normal, rock); // weather_on = false
     b.weather_residual();
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).hp, 100, "no weather → no chip");
-    assert_eq!(b.effective_spd_with_weather(BattlerRef::OPPONENT), 100, "no weather → no Rock SpD boost");
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).hp,
+        100,
+        "no weather → no chip"
+    );
+    assert_eq!(
+        b.effective_spd_with_weather(BattlerRef::OPPONENT),
+        100,
+        "no weather → no Rock SpD boost"
+    );
 }
 
 // ── System 6: the 金木水火土 (Metal/Wood/Water/Fire/Earth) type chart (doc 12). ──
@@ -261,7 +388,16 @@ fn chart_attacker(moves: Vec<Move>) -> BattlerState<MinimonProvider> {
 }
 /// A 100-stat defender of the given element.
 fn chart_defender(t: MType) -> BattlerState<MinimonProvider> {
-    battler(Species::plain().with_type(t), 100, 100, 100, 100, 100, 100, vec![])
+    battler(
+        Species::plain().with_type(t),
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        vec![],
+    )
 }
 /// Fire one typed move from the player at a defender of `def_type`, return the
 /// damage the defender took (100 - hp).
@@ -283,7 +419,16 @@ fn metal_super_effective_doubles() {
     let mut b = Battle::new(
         MinimonProvider::default(),
         chart_attacker(vec![BLADE]),
-        battler(Species::plain().with_type(MType::Wood), 500, 100, 100, 100, 100, 100, vec![]),
+        battler(
+            Species::plain().with_type(MType::Wood),
+            500,
+            100,
+            100,
+            100,
+            100,
+            100,
+            vec![],
+        ),
     );
     b.fire_move(BattlerRef::PLAYER, &BLADE);
     let dealt = 500 - b.battler_ref(BattlerRef::OPPONENT).hp;
@@ -305,8 +450,16 @@ fn water_immune_to_wood_deals_zero() {
         chart_defender(MType::Wood),
     );
     b.fire_move(BattlerRef::PLAYER, &TORRENT);
-    assert_eq!(b.battler_ref(BattlerRef::OPPONENT).hp, 100, "immune: hp unchanged");
-    assert_eq!(100 - b.battler_ref(BattlerRef::OPPONENT).hp, 0, "immune: 80 * 0/1 = 0");
+    assert_eq!(
+        b.battler_ref(BattlerRef::OPPONENT).hp,
+        100,
+        "immune: hp unchanged"
+    );
+    assert_eq!(
+        100 - b.battler_ref(BattlerRef::OPPONENT).hp,
+        0,
+        "immune: 80 * 0/1 = 0"
+    );
 }
 
 #[test]
@@ -327,7 +480,16 @@ fn chart_outcomes_are_ordered() {
         let mut b = Battle::new(
             MinimonProvider::default(),
             chart_attacker(vec![BLADE]),
-            battler(Species::plain().with_type(MType::Wood), 500, 100, 100, 100, 100, 100, vec![]),
+            battler(
+                Species::plain().with_type(MType::Wood),
+                500,
+                100,
+                100,
+                100,
+                100,
+                100,
+                vec![],
+            ),
         );
         b.fire_move(BattlerRef::PLAYER, &BLADE);
         500 - b.battler_ref(BattlerRef::OPPONENT).hp
@@ -336,8 +498,10 @@ fn chart_outcomes_are_ordered() {
     let resisted = run_one_hit(&BLADE, MType::Fire);
     let immune = run_one_hit(&TORRENT, MType::Wood);
     assert_eq!((super_eff, neutral, resisted, immune), (160, 80, 40, 0));
-    assert!(super_eff > neutral && neutral > resisted && resisted > immune,
-        "super-effective(160) > neutral(80) > resisted(40) > immune(0)");
+    assert!(
+        super_eff > neutral && neutral > resisted && resisted > immune,
+        "super-effective(160) > neutral(80) > resisted(40) > immune(0)"
+    );
 }
 
 /// Inertness witness: a `Normal`-type move (TACKLE) has NO chart edge ⇒ the
@@ -351,8 +515,11 @@ fn normal_move_is_inert_through_the_chart_fold() {
         split_defender(),
     );
     b.fire_move(BattlerRef::PLAYER, &TACKLE);
-    assert_eq!(100 - b.battler_ref(BattlerRef::OPPONENT).hp, 80,
-        "Normal move: chart fold is identity (1×) ⇒ unchanged 40*100/50 = 80");
+    assert_eq!(
+        100 - b.battler_ref(BattlerRef::OPPONENT).hp,
+        80,
+        "Normal move: chart fold is identity (1×) ⇒ unchanged 40*100/50 = 80"
+    );
 }
 
 // ── System 7: the generic MP / resource cost gate (doc 13 §4). ──
@@ -384,10 +551,16 @@ fn special_move_costs_mp_and_deducts_it() {
         chart_defender(MType::Earth),
     );
     b.fire_move(BattlerRef::PLAYER, &BLADE);
-    assert_eq!(100 - b.battler_ref(BattlerRef::OPPONENT).hp, 80,
-        "affordable special move connected (neutral 80)");
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(7),
-        "BLADE deducted its 3 MP: 10 - 3 = 7");
+    assert_eq!(
+        100 - b.battler_ref(BattlerRef::OPPONENT).hp,
+        80,
+        "affordable special move connected (neutral 80)"
+    );
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+        Some(7),
+        "BLADE deducted its 3 MP: 10 - 3 = 7"
+    );
 }
 
 #[test]
@@ -400,10 +573,16 @@ fn insufficient_mp_prevents_the_move_and_leaves_mp_unchanged() {
         chart_defender(MType::Earth),
     );
     b.fire_move(BattlerRef::PLAYER, &BLADE);
-    assert_eq!(b.battler_ref(BattlerRef::OPPONENT).hp, 100,
-        "insufficient MP ⇒ move prevented ⇒ defender unharmed");
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(2),
-        "prevented move deducts NOTHING ⇒ MP unchanged at 2");
+    assert_eq!(
+        b.battler_ref(BattlerRef::OPPONENT).hp,
+        100,
+        "insufficient MP ⇒ move prevented ⇒ defender unharmed"
+    );
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+        Some(2),
+        "prevented move deducts NOTHING ⇒ MP unchanged at 2"
+    );
 }
 
 #[test]
@@ -417,10 +596,16 @@ fn physical_move_with_no_cost_is_unaffected_by_mp() {
         split_defender(),
     );
     b.fire_move(BattlerRef::PLAYER, &TACKLE);
-    assert_eq!(100 - b.battler_ref(BattlerRef::OPPONENT).hp, 80,
-        "physical no-cost move connected (40*100/50 = 80) despite 0 MP");
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(0),
-        "no-cost move left MP untouched");
+    assert_eq!(
+        100 - b.battler_ref(BattlerRef::OPPONENT).hp,
+        80,
+        "physical no-cost move connected (40*100/50 = 80) despite 0 MP"
+    );
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+        Some(0),
+        "no-cost move left MP untouched"
+    );
 }
 
 #[test]
@@ -433,10 +618,16 @@ fn torrent_costs_5_mp_exact_balance_is_payable() {
         chart_defender(MType::Earth),
     );
     b.fire_move(BattlerRef::PLAYER, &TORRENT);
-    assert_eq!(100 - b.battler_ref(BattlerRef::OPPONENT).hp, 40,
-        "Water→Earth resisted: 80*1/2 = 40");
-    assert_eq!(b.battler_ref(BattlerRef::PLAYER).resources.current(MP), Some(0),
-        "exact 5 MP paid in full ⇒ 0 left");
+    assert_eq!(
+        100 - b.battler_ref(BattlerRef::OPPONENT).hp,
+        40,
+        "Water→Earth resisted: 80*1/2 = 40"
+    );
+    assert_eq!(
+        b.battler_ref(BattlerRef::PLAYER).resources.current(MP),
+        Some(0),
+        "exact 5 MP paid in full ⇒ 0 left"
+    );
 }
 
 // ── Agnosticism witness: the field effect routes through EffectHost::Field. ──
@@ -449,7 +640,10 @@ fn sandstorm_is_field_hosted() {
     // The Sandstorm effect is resolved via field_effects (the EffectHost::Field
     // path), NOT via a battler/side resolver. Witness: it is absent from
     // effect_for_ability/item and present in field_effects when weather_on.
-    let provider = MinimonProvider { weather_on: true, ..Default::default() };
+    let provider = MinimonProvider {
+        weather_on: true,
+        ..Default::default()
+    };
     let mut state = BattleState::new(
         vec![battler(Species::plain(), 100, 50, 50, 50, 50, 50, vec![])],
         vec![battler(Species::plain(), 100, 50, 50, 50, 50, 50, vec![])],
@@ -457,10 +651,18 @@ fn sandstorm_is_field_hosted() {
     let mut effects: Vec<EffectState<MinimonProvider>> = Vec::new();
     let mut mv = MoveContext::default();
     let mut rng = ScriptedRng::new(vec![]);
-    let ctx = BattleCtx { state: &mut state, effects: &mut effects, mv: &mut mv, rng: &mut rng };
+    let ctx = BattleCtx {
+        state: &mut state,
+        effects: &mut effects,
+        mv: &mut mv,
+        rng: &mut rng,
+    };
     let fields = provider.field_effects(&ctx);
     assert_eq!(fields.len(), 1, "Sandstorm is the one live field effect");
-    assert_eq!(fields[0].id, SANDSTORM.id, "and it is the Sandstorm effect (field-hosted)");
+    assert_eq!(
+        fields[0].id, SANDSTORM.id,
+        "and it is the Sandstorm effect (field-hosted)"
+    );
 
     // EffectHost::Field is a distinct scope from Battler/Side (the widened
     // 3-way addressing).

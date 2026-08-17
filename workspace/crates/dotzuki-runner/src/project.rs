@@ -85,7 +85,8 @@ impl LoadedProject {
                 }
             )
         })?;
-        let text = String::from_utf8(bytes).with_context(|| format!("{MANIFEST_FILE} is not UTF-8"))?;
+        let text =
+            String::from_utf8(bytes).with_context(|| format!("{MANIFEST_FILE} is not UTF-8"))?;
         let manifest: Manifest = serde_json::from_str(&text)
             .with_context(|| format!("failed to parse {MANIFEST_FILE}"))?;
 
@@ -197,7 +198,9 @@ impl LoadedProject {
     /// `gfxRoot`, default `"gfx"`).
     #[inline]
     pub fn gfx_root_rel(&self) -> String {
-        self.gfx_root_rel.clone().unwrap_or_else(|| "gfx".to_string())
+        self.gfx_root_rel
+            .clone()
+            .unwrap_or_else(|| "gfx".to_string())
     }
 
     /// Registry of compiled scene JS, keyed by scene name.
@@ -263,7 +266,8 @@ impl LoadedProject {
                 // Only files INSIDE a subdirectory name a map (a direct file
                 // under the maps dir is not a map).
                 let rest = p.strip_prefix(&prefix)?;
-                rest.contains('/').then(|| rest.split('/').next().unwrap().to_string())
+                rest.contains('/')
+                    .then(|| rest.split('/').next().unwrap().to_string())
             })
             .collect();
         ids.sort();
@@ -309,9 +313,9 @@ impl LoadedProject {
             .as_ref()
             .and_then(|g| g.entry_scene.as_deref())
         {
-            return self.scene_name_for_stem(stem).with_context(|| {
-                format!("game.entryScene '{stem}' did not compile to any scene")
-            });
+            return self
+                .scene_name_for_stem(stem)
+                .with_context(|| format!("game.entryScene '{stem}' did not compile to any scene"));
         }
         self.report
             .scenes

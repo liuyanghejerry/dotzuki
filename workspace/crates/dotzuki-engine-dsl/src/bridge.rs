@@ -1,5 +1,5 @@
-use crate::loader::DslSceneRegistrar;
 use crate::loader::load_dsl_scenes;
+use crate::loader::DslSceneRegistrar;
 
 impl DslSceneRegistrar for dotzuki_engine_script::loader::ScriptLoader {
     fn register_scene_js(&mut self, name: &str, js: &str) {

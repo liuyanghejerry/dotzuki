@@ -197,7 +197,12 @@ mod tests {
         let cmd = ScriptCommand::ShowText {
             text: "Hello".to_string(),
         };
-        assert_eq!(cmd, ScriptCommand::ShowText { text: "Hello".to_string() });
+        assert_eq!(
+            cmd,
+            ScriptCommand::ShowText {
+                text: "Hello".to_string()
+            }
+        );
     }
 
     #[test]
@@ -216,23 +221,52 @@ mod tests {
     #[test]
     fn test_serialize_deserialize_roundtrip() {
         let cmds: Vec<ScriptCommand> = vec![
-            ScriptCommand::ShowText { text: "Hello".into() },
-            ScriptCommand::ShowChoice { options: vec!["A".into(), "B".into()] },
-            ScriptCommand::GiveItem { item_id: "POTION".into(), quantity: 5 },
-            ScriptCommand::GiveMonster { species: "SPARKIT".into(), level: 5 },
+            ScriptCommand::ShowText {
+                text: "Hello".into(),
+            },
+            ScriptCommand::ShowChoice {
+                options: vec!["A".into(), "B".into()],
+            },
+            ScriptCommand::GiveItem {
+                item_id: "POTION".into(),
+                quantity: 5,
+            },
+            ScriptCommand::GiveMonster {
+                species: "SPARKIT".into(),
+                level: 5,
+            },
             ScriptCommand::Heal,
             ScriptCommand::StopMusic,
             ScriptCommand::ClearJoyIgnore,
-            ScriptCommand::WarpTo { map: "START_TOWN".into(), x: 5, y: 3 },
+            ScriptCommand::WarpTo {
+                map: "START_TOWN".into(),
+                x: 5,
+                y: 3,
+            },
             ScriptCommand::Delay { frames: 60 },
-            ScriptCommand::PlayMusic { music_id: "START_TOWN".into() },
-            ScriptCommand::PlaySound { sound_id: "SFX_BALL".into() },
+            ScriptCommand::PlayMusic {
+                music_id: "START_TOWN".into(),
+            },
+            ScriptCommand::PlaySound {
+                sound_id: "SFX_BALL".into(),
+            },
             ScriptCommand::FadeOutMusic,
-            ScriptCommand::FadeScreen { fade_type: "out".into() },
+            ScriptCommand::FadeScreen {
+                fade_type: "out".into(),
+            },
             ScriptCommand::SetJoyIgnore { mask: 0xFF },
-            ScriptCommand::MoveNpc { npc_id: "prof".into(), path: vec![(2, 3), (4, 5)] },
-            ScriptCommand::FollowNpc { npc_id: "rival".into(), target_x: 10, target_y: 8 },
-            ScriptCommand::OpenShop { items: vec!["POTION".into()] },
+            ScriptCommand::MoveNpc {
+                npc_id: "prof".into(),
+                path: vec![(2, 3), (4, 5)],
+            },
+            ScriptCommand::FollowNpc {
+                npc_id: "rival".into(),
+                target_x: 10,
+                target_y: 8,
+            },
+            ScriptCommand::OpenShop {
+                items: vec!["POTION".into()],
+            },
             ScriptCommand::GiveMoney { amount: 500 },
             ScriptCommand::TakeMoney { amount: 100 },
             ScriptCommand::GiveBadge { badge: 0 },
@@ -241,8 +275,12 @@ mod tests {
                 args: vec![serde_json::json!("SPARKIT")],
             },
             ScriptCommand::ShowObject { object_index: 1 },
-            ScriptCommand::HideObjectByName { toggle_id: "HIDDEN_ITEM".into() },
-            ScriptCommand::SetWeather { weather: Some("sandstorm".into()) },
+            ScriptCommand::HideObjectByName {
+                toggle_id: "HIDDEN_ITEM".into(),
+            },
+            ScriptCommand::SetWeather {
+                weather: Some("sandstorm".into()),
+            },
             ScriptCommand::SetWeather { weather: None },
         ];
 

@@ -3,7 +3,7 @@
 //! Uses absolute tile positions matching the classic Game Boy Dex screen layout.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Rgba, Painter, TilePos, Ui};
+use dotzuki_engine::render::{Painter, Rgba, TilePos, Ui};
 
 #[derive(Debug, Clone)]
 pub struct DexEntry {
@@ -140,24 +140,64 @@ pub fn draw_dex<P: Painter>(entry: &DexEntry, _configs: &[MenuConfig], painter: 
 /// Draw the full-screen Dex border using GB tile indices.
 fn draw_border<P: Painter>(painter: &mut P) {
     // Top row: $63, $64 repeated × 18, $65
-    painter.draw_gb_tile(TilePos::new(0, 0), border_tiles::TOP_LEFT, "\u{250C}", Rgba::INK_BLACK);
+    painter.draw_gb_tile(
+        TilePos::new(0, 0),
+        border_tiles::TOP_LEFT,
+        "\u{250C}",
+        Rgba::INK_BLACK,
+    );
     for x in 1..19u32 {
-        painter.draw_gb_tile(TilePos::new(x, 0), border_tiles::TOP_HORIZ, "\u{2500}", Rgba::INK_BLACK);
+        painter.draw_gb_tile(
+            TilePos::new(x, 0),
+            border_tiles::TOP_HORIZ,
+            "\u{2500}",
+            Rgba::INK_BLACK,
+        );
     }
-    painter.draw_gb_tile(TilePos::new(19, 0), border_tiles::TOP_RIGHT, "\u{2510}", Rgba::INK_BLACK);
+    painter.draw_gb_tile(
+        TilePos::new(19, 0),
+        border_tiles::TOP_RIGHT,
+        "\u{2510}",
+        Rgba::INK_BLACK,
+    );
 
     // Side rows: $66 at col 0, $67 at col 19, for rows 1..17 (1–16 inclusive)
     for y in 1..17u32 {
-        painter.draw_gb_tile(TilePos::new(0, y), border_tiles::SIDE_LEFT, "\u{2502}", Rgba::INK_BLACK);
-        painter.draw_gb_tile(TilePos::new(19, y), border_tiles::SIDE_RIGHT, "\u{2502}", Rgba::INK_BLACK);
+        painter.draw_gb_tile(
+            TilePos::new(0, y),
+            border_tiles::SIDE_LEFT,
+            "\u{2502}",
+            Rgba::INK_BLACK,
+        );
+        painter.draw_gb_tile(
+            TilePos::new(19, y),
+            border_tiles::SIDE_RIGHT,
+            "\u{2502}",
+            Rgba::INK_BLACK,
+        );
     }
 
     // Bottom row (row 17): $6C, $6F repeated × 18, $6E
-    painter.draw_gb_tile(TilePos::new(0, 17), border_tiles::BOT_LEFT, "\u{2514}", Rgba::INK_BLACK);
+    painter.draw_gb_tile(
+        TilePos::new(0, 17),
+        border_tiles::BOT_LEFT,
+        "\u{2514}",
+        Rgba::INK_BLACK,
+    );
     for x in 1..19u32 {
-        painter.draw_gb_tile(TilePos::new(x, 17), border_tiles::BOT_HORIZ, "\u{2500}", Rgba::INK_BLACK);
+        painter.draw_gb_tile(
+            TilePos::new(x, 17),
+            border_tiles::BOT_HORIZ,
+            "\u{2500}",
+            Rgba::INK_BLACK,
+        );
     }
-    painter.draw_gb_tile(TilePos::new(19, 17), border_tiles::BOT_RIGHT, "\u{2518}", Rgba::INK_BLACK);
+    painter.draw_gb_tile(
+        TilePos::new(19, 17),
+        border_tiles::BOT_RIGHT,
+        "\u{2518}",
+        Rgba::INK_BLACK,
+    );
 }
 
 #[cfg(test)]
@@ -191,7 +231,8 @@ mod tests {
             self.pixel_rects.push((px, py, pw, ph, color));
         }
         fn draw_gb_tile(&mut self, pos: TilePos, tile_id: u8, fallback: &str, color: Rgba) {
-            self.gb_tiles.push((pos, tile_id, fallback.to_string(), color));
+            self.gb_tiles
+                .push((pos, tile_id, fallback.to_string(), color));
         }
     }
 
@@ -227,11 +268,23 @@ mod tests {
         assert_eq!(painter.text_boxes.len(), 0);
         assert!(!painter.gb_tiles.is_empty(), "Should draw GB border tiles");
         // Top row
-        assert!(painter.gb_tiles.iter().any(|(p, id, _, _)| p.tx == 0 && p.ty == 0 && *id == 0x63));
-        assert!(painter.gb_tiles.iter().any(|(p, id, _, _)| p.tx == 19 && p.ty == 0 && *id == 0x65));
+        assert!(painter
+            .gb_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 0 && p.ty == 0 && *id == 0x63));
+        assert!(painter
+            .gb_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 19 && p.ty == 0 && *id == 0x65));
         // Bottom row
-        assert!(painter.gb_tiles.iter().any(|(p, id, _, _)| p.tx == 0 && p.ty == 17 && *id == 0x6C));
-        assert!(painter.gb_tiles.iter().any(|(p, id, _, _)| p.tx == 19 && p.ty == 17 && *id == 0x6E));
+        assert!(painter
+            .gb_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 0 && p.ty == 17 && *id == 0x6C));
+        assert!(painter
+            .gb_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 19 && p.ty == 17 && *id == 0x6E));
     }
 
     #[test]
@@ -239,13 +292,22 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // Divider at row 9
-        let divider_tiles: Vec<_> = painter.gb_tiles.iter()
+        let divider_tiles: Vec<_> = painter
+            .gb_tiles
+            .iter()
             .filter(|(p, _, _, _)| p.ty == 9)
             .collect();
-        assert!(!divider_tiles.is_empty(), "Should draw divider tiles at row 9");
+        assert!(
+            !divider_tiles.is_empty(),
+            "Should draw divider tiles at row 9"
+        );
         // Check first and last tile IDs
-        assert!(divider_tiles.iter().any(|(p, id, _, _)| p.tx == 0 && *id == 0x68));
-        assert!(divider_tiles.iter().any(|(p, id, _, _)| p.tx == 19 && *id == 0x6A));
+        assert!(divider_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 0 && *id == 0x68));
+        assert!(divider_tiles
+            .iter()
+            .any(|(p, id, _, _)| p.tx == 19 && *id == 0x6A));
     }
 
     // ── Content tests ─────────────────────────────────────────────────
@@ -254,14 +316,20 @@ mod tests {
     fn draws_name() {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 9 && p.ty == 2 && t == "SPARKIT"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 9 && p.ty == 2 && t == "SPARKIT"));
     }
 
     #[test]
     fn draws_species() {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 9 && p.ty == 4 && t == "MOUSE"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 9 && p.ty == 4 && t == "MOUSE"));
     }
 
     #[test]
@@ -269,9 +337,15 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // HT label
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 9 && p.ty == 6 && t == "HT"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 9 && p.ty == 6 && t == "HT"));
         // Height value at (12,6): "1,04"
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 12 && p.ty == 6 && t == "1,04"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 12 && p.ty == 6 && t == "1,04"));
     }
 
     #[test]
@@ -279,9 +353,15 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // WT label
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 9 && p.ty == 7 && t == "WT"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 9 && p.ty == 7 && t == "WT"));
         // Weight at (11,7): "13.2 lb"
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 11 && p.ty == 7 && t == "13.2 lb"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 11 && p.ty == 7 && t == "13.2 lb"));
     }
 
     #[test]
@@ -289,7 +369,10 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // At (2,8): "No.025"
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 2 && p.ty == 8 && t == "No.025"));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 2 && p.ty == 8 && t == "No.025"));
     }
 
     #[test]
@@ -297,8 +380,14 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // First 6 lines at rows 11..16
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 1 && p.ty == 11 && t.contains("When several")));
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 1 && p.ty == 16 && t.contains("lightning storms")));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 1 && p.ty == 11 && t.contains("When several")));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 1 && p.ty == 16 && t.contains("lightning storms")));
     }
 
     #[test]
@@ -308,7 +397,10 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&entry, &[], &mut painter);
         // Page 2 lines at rows 11..12
-        assert!(painter.texts.iter().any(|(p, t, _)| p.tx == 1 && p.ty == 11 && t.contains("Page 2 line 1")));
+        assert!(painter
+            .texts
+            .iter()
+            .any(|(p, t, _)| p.tx == 1 && p.ty == 11 && t.contains("Page 2 line 1")));
     }
 
     #[test]
@@ -316,7 +408,10 @@ mod tests {
         let mut painter = RecordingPainter::default();
         draw_dex(&test_entry(), &[], &mut painter);
         // Arrow at (18,16) when more pages exist
-        assert!(painter.glyphs.iter().any(|(p, g, _)| p.tx == 18 && p.ty == 16 && *g == '\u{25BC}'));
+        assert!(painter
+            .glyphs
+            .iter()
+            .any(|(p, g, _)| p.tx == 18 && p.ty == 16 && *g == '\u{25BC}'));
     }
 
     #[test]

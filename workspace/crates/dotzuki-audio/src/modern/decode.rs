@@ -55,7 +55,8 @@ pub struct StreamInfo {
 impl StreamInfo {
     /// Approximate duration in seconds, when the total frame count is known.
     pub fn duration_secs(&self) -> Option<f64> {
-        self.total_frames.map(|f| f as f64 / self.sample_rate as f64)
+        self.total_frames
+            .map(|f| f as f64 / self.sample_rate as f64)
     }
 }
 
@@ -202,7 +203,9 @@ impl SymphoniaDecoder {
         loop {
             let packet = match self.format.next_packet() {
                 Ok(p) => p,
-                Err(SError::IoError(e)) if e.kind() == io::ErrorKind::UnexpectedEof => return false,
+                Err(SError::IoError(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return false
+                }
                 Err(SError::DecodeError(_)) => continue, // skip corrupt packet
                 Err(_) => return false,
             };
@@ -284,7 +287,8 @@ pub(crate) mod tests {
         wav.extend_from_slice(&data_len.to_le_bytes());
         for i in 0..samples {
             let v = (i as f32 * 2.0 * std::f32::consts::PI * 440.0 / rate as f32).sin();
-            wav.write_all(&((v * 32000.0) as i16).to_le_bytes()).unwrap();
+            wav.write_all(&((v * 32000.0) as i16).to_le_bytes())
+                .unwrap();
         }
         wav
     }
@@ -343,7 +347,10 @@ pub(crate) mod tests {
         assert_eq!(info.sample_rate, 8000);
         let mut out = vec![0.0f32; 8000 * 2];
         let frames = dec.next_frames(&mut out);
-        assert!(frames >= 7500, "~1 s of audio expected, got {frames} frames");
+        assert!(
+            frames >= 7500,
+            "~1 s of audio expected, got {frames} frames"
+        );
         assert!(out.iter().any(|&s| s.abs() > 0.1), "tone must be audible");
         // Loop works on compressed sources too. Note: Vorbis is lossy — a
         // rewind lands on the same *signal* but not on sample-identical
@@ -354,6 +361,9 @@ pub(crate) mod tests {
         let n3 = dec.next_frames(&mut again);
         assert!(n3 >= n2, "seek restarts the stream ({n3} >= {n2} frames)");
         let peak = again[..n3 * 2].iter().fold(0.0f32, |a, &s| a.max(s.abs()));
-        assert!(peak > 0.3, "seeked stream plays the same tone (peak {peak})");
+        assert!(
+            peak > 0.3,
+            "seeked stream plays the same tone (peak {peak})"
+        );
     }
 }

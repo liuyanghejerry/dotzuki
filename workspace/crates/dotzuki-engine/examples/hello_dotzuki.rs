@@ -5,64 +5,123 @@
 //! Zero pokered-* imports. Zero imports from `examples/` crates.
 
 use dotzuki_engine::battle::{
-    BattleAI, BattleProvider, BattleState, BattlerState, DamageResult, EffectHandler,
-    EffectResult, EnumMap, MoveEffect, TypeChart,
+    BattleAI, BattleProvider, BattleState, BattlerState, DamageResult, EffectHandler, EffectResult,
+    EnumMap, MoveEffect, TypeChart,
 };
 use dotzuki_engine::items::{ItemProvider, ItemResult, ShopProvider};
 use dotzuki_engine::map::MapTrait;
 use dotzuki_engine::menu::{MenuInput, MenuLayout, MenuOption, MenuProvider, MenuSystem};
 use dotzuki_engine::overworld::{
-    CollisionProvider, Direction, MapConnections, MapData, NpcDefinition, NpcMovementType,
-    NpcRuntimeState, OverworldState, try_move,
+    try_move, CollisionProvider, Direction, MapConnections, MapData, NpcDefinition,
+    NpcMovementType, NpcRuntimeState, OverworldState,
 };
 use dotzuki_engine::save::{InMemoryStorage, SaveData, SaveError, SaveManager, SaveSlot};
-use dotzuki_engine::text::{
-    ControlAction, DialogEngine, DialogState, TextProvider, TileBuffer,
-};
+use dotzuki_engine::text::{ControlAction, DialogEngine, DialogState, TextProvider, TileBuffer};
 use dotzuki_engine::tileset::TilesetTrait;
 
 // ── Game-specific types ───────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Element { Physical, Magical }
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-enum Species { Warrior, Mage }
-
-impl Species {
-    fn name(&self) -> &str { match self { Self::Warrior => "Warrior", Self::Mage => "Mage" } }
-    fn element(&self) -> Element { match self { Self::Warrior => Element::Physical, Self::Mage => Element::Magical } }
+enum Element {
+    Physical,
+    Magical,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum MoveKind { Slash, Fireball }
+enum Species {
+    Warrior,
+    Mage,
+}
+
+impl Species {
+    fn name(&self) -> &str {
+        match self {
+            Self::Warrior => "Warrior",
+            Self::Mage => "Mage",
+        }
+    }
+    fn element(&self) -> Element {
+        match self {
+            Self::Warrior => Element::Physical,
+            Self::Mage => Element::Magical,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum MoveKind {
+    Slash,
+    Fireball,
+}
 
 impl MoveKind {
-    fn name(&self) -> &str { match self { Self::Slash => "Slash", Self::Fireball => "Fireball" } }
-    fn power(&self) -> u16 { match self { Self::Slash => 10, Self::Fireball => 12 } }
-    fn element(&self) -> Element { match self { Self::Slash => Element::Physical, Self::Fireball => Element::Magical } }
+    fn name(&self) -> &str {
+        match self {
+            Self::Slash => "Slash",
+            Self::Fireball => "Fireball",
+        }
+    }
+    fn power(&self) -> u16 {
+        match self {
+            Self::Slash => 10,
+            Self::Fireball => 12,
+        }
+    }
+    fn element(&self) -> Element {
+        match self {
+            Self::Slash => Element::Physical,
+            Self::Fireball => Element::Magical,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum StatId { HP, ATK, DEF, SPD }
+enum StatId {
+    HP,
+    ATK,
+    DEF,
+    SPD,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum StatusKind { Healthy, Burned }
+enum StatusKind {
+    Healthy,
+    Burned,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum Ability { Brave, Arcane }
+enum Ability {
+    Brave,
+    Arcane,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-enum ItemKind { Potion, Elixir }
+enum ItemKind {
+    Potion,
+    Elixir,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum ItemEffect { Heal(u16), CureStatus, None }
+enum ItemEffect {
+    Heal(u16),
+    CureStatus,
+    None,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct MonsterData { species: Species, max_hp: u16, current_hp: u16 }
+struct MonsterData {
+    species: Species,
+    max_hp: u16,
+    current_hp: u16,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum AsciiChar { Char(char), Newline, WaitInput, Done }
+enum AsciiChar {
+    Char(char),
+    Newline,
+    WaitInput,
+    Done,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 struct MapId(u8);
@@ -71,12 +130,18 @@ impl MapTrait for MapId {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 struct Tileset(u8);
 impl TilesetTrait for Tileset {
-    fn id(&self) -> u8 { self.0 }
-    fn name(&self) -> &'static str { "TownTiles" }
+    fn id(&self) -> u8 {
+        self.0
+    }
+    fn name(&self) -> &'static str {
+        "TownTiles"
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum MenuScreen { Main }
+enum MenuScreen {
+    Main,
+}
 
 // ── HelloConfig — implements all engine traits ─────────────────────
 
@@ -130,14 +195,22 @@ impl BattleProvider for HelloConfig {
     type Item = ItemKind;
 
     fn calculate_damage(
-        &self, move_: &MoveKind, attacker: &BattlerState<Self>,
-        defender: &BattlerState<Self>, _random: u8, _is_critical: bool,
+        &self,
+        move_: &MoveKind,
+        attacker: &BattlerState<Self>,
+        defender: &BattlerState<Self>,
+        _random: u8,
+        _is_critical: bool,
     ) -> DamageResult {
         let atk = attacker.stats.get(StatId::ATK).copied().unwrap_or(10);
         let def = defender.stats.get(StatId::DEF).copied().unwrap_or(5).max(1);
         let eff = HelloConfig::effectiveness(&move_.element(), &[defender.species.element()]);
         let raw = (move_.power() as f32 * eff * atk as f32 / def as f32) as u16;
-        DamageResult { damage: raw.max(1), effectiveness: eff, is_miss: false }
+        DamageResult {
+            damage: raw.max(1),
+            effectiveness: eff,
+            is_miss: false,
+        }
     }
 
     fn select_move(&self, battler: &BattlerState<Self>, _state: &BattleState<Self>) -> MoveKind {
@@ -145,7 +218,9 @@ impl BattleProvider for HelloConfig {
     }
 
     fn apply_move_effect(
-        &self, effect: MoveEffect, user: &mut BattlerState<Self>,
+        &self,
+        effect: MoveEffect,
+        user: &mut BattlerState<Self>,
         target: &mut BattlerState<Self>,
     ) -> EffectResult {
         match effect {
@@ -153,7 +228,9 @@ impl BattleProvider for HelloConfig {
                 let mv = user.moves.first().cloned().unwrap_or(MoveKind::Slash);
                 let result = self.calculate_damage(&mv, user, target, 100, false);
                 target.take_damage(result.damage);
-                EffectResult::DamageDealt { amount: result.damage }
+                EffectResult::DamageDealt {
+                    amount: result.damage,
+                }
             }
             MoveEffect::Heal => {
                 let amount = target.max_hp / 4;
@@ -183,19 +260,30 @@ impl BattleProvider for HelloConfig {
 // ── BattleAI ───────────────────────────────────────────────────────
 
 impl BattleAI<HelloConfig> for HelloConfig {
-    fn select_move(&self, battler: &BattlerState<HelloConfig>, _state: &BattleState<HelloConfig>) -> MoveKind {
+    fn select_move(
+        &self,
+        battler: &BattlerState<HelloConfig>,
+        _state: &BattleState<HelloConfig>,
+    ) -> MoveKind {
         battler.moves.first().cloned().unwrap_or(MoveKind::Slash)
     }
-    fn should_switch(&self, _battler: &BattlerState<HelloConfig>) -> bool { false }
-    fn should_use_item(&self, _battler: &BattlerState<HelloConfig>) -> Option<ItemKind> { None }
+    fn should_switch(&self, _battler: &BattlerState<HelloConfig>) -> bool {
+        false
+    }
+    fn should_use_item(&self, _battler: &BattlerState<HelloConfig>) -> Option<ItemKind> {
+        None
+    }
 }
 
 // ── EffectHandler ──────────────────────────────────────────────────
 
 impl EffectHandler<HelloConfig> for HelloConfig {
     fn handle_effect(
-        &self, effect: MoveEffect, user: &mut BattlerState<HelloConfig>,
-        target: &mut BattlerState<HelloConfig>, _provider: &HelloConfig,
+        &self,
+        effect: MoveEffect,
+        user: &mut BattlerState<HelloConfig>,
+        target: &mut BattlerState<HelloConfig>,
+        _provider: &HelloConfig,
     ) -> EffectResult {
         // Delegate to the BattleProvider impl.
         self.apply_move_effect(effect, user, target)
@@ -211,23 +299,41 @@ impl ItemProvider for HelloConfig {
     type CustomKind = ();
 
     fn item_name(&self, item: &ItemKind) -> &str {
-        match item { ItemKind::Potion => "Potion", ItemKind::Elixir => "Elixir" }
+        match item {
+            ItemKind::Potion => "Potion",
+            ItemKind::Elixir => "Elixir",
+        }
     }
     fn item_description(&self, item: &ItemKind) -> &str {
-        match item { ItemKind::Potion => "Restores 20 HP.", ItemKind::Elixir => "Cures status." }
+        match item {
+            ItemKind::Potion => "Restores 20 HP.",
+            ItemKind::Elixir => "Cures status.",
+        }
     }
     fn item_effect(&self, item: &ItemKind) -> ItemEffect {
-        match item { ItemKind::Potion => ItemEffect::Heal(20), ItemKind::Elixir => ItemEffect::CureStatus }
+        match item {
+            ItemKind::Potion => ItemEffect::Heal(20),
+            ItemKind::Elixir => ItemEffect::CureStatus,
+        }
     }
     fn item_price(&self, item: &ItemKind) -> u32 {
-        match item { ItemKind::Potion => 100, ItemKind::Elixir => 300 }
+        match item {
+            ItemKind::Potion => 100,
+            ItemKind::Elixir => 300,
+        }
     }
-    fn can_use_outside_battle(&self, _item: &ItemKind) -> bool { true }
-    fn can_use_in_battle(&self, _item: &ItemKind) -> bool { true }
+    fn can_use_outside_battle(&self, _item: &ItemKind) -> bool {
+        true
+    }
+    fn can_use_in_battle(&self, _item: &ItemKind) -> bool {
+        true
+    }
     fn use_on_monster(&self, item: &ItemKind, monster: &mut MonsterData) -> ItemResult {
         match self.item_effect(item) {
             ItemEffect::Heal(amount) => {
-                if monster.current_hp >= monster.max_hp { return ItemResult::NoEffect; }
+                if monster.current_hp >= monster.max_hp {
+                    return ItemResult::NoEffect;
+                }
                 monster.current_hp = (monster.current_hp + amount).min(monster.max_hp);
                 ItemResult::Used
             }
@@ -235,7 +341,9 @@ impl ItemProvider for HelloConfig {
             ItemEffect::None => ItemResult::NoEffect,
         }
     }
-    fn consume(&self, _item: &ItemKind) -> bool { true }
+    fn consume(&self, _item: &ItemKind) -> bool {
+        true
+    }
     fn item_kind(&self, item: &ItemKind) -> dotzuki_engine::items::ItemKind<()> {
         let _ = item;
         dotzuki_engine::items::ItemKind::Consumable
@@ -250,7 +358,9 @@ impl ShopProvider for HelloConfig {
     fn shop_inventory(&self, _shop_id: &()) -> Vec<(ItemKind, u32)> {
         vec![(ItemKind::Potion, 100), (ItemKind::Elixir, 300)]
     }
-    fn shop_name(&self, _shop_id: &()) -> &str { "Town Shop" }
+    fn shop_name(&self, _shop_id: &()) -> &str {
+        "Town Shop"
+    }
 }
 
 // ── TextProvider — ASCII charmap ──────────────────────────────────
@@ -275,9 +385,14 @@ impl TextProvider for HelloConfig {
         }
     }
     fn string_width(&self, text: &[AsciiChar]) -> u16 {
-        text.iter().filter(|c| matches!(c, AsciiChar::Char(_))).count() as u16 * 8
+        text.iter()
+            .filter(|c| matches!(c, AsciiChar::Char(_)))
+            .count() as u16
+            * 8
     }
-    fn is_control_code(&self, c: &AsciiChar) -> bool { !matches!(c, AsciiChar::Char(_)) }
+    fn is_control_code(&self, c: &AsciiChar) -> bool {
+        !matches!(c, AsciiChar::Char(_))
+    }
     fn process_control(&self, c: &AsciiChar, _state: &mut DialogState) -> ControlAction {
         match c {
             AsciiChar::Newline => ControlAction::Newline,
@@ -291,10 +406,18 @@ impl TextProvider for HelloConfig {
 impl MenuProvider for HelloConfig {
     type MenuId = MenuScreen;
 
-    fn title(&self, _menu: MenuScreen) -> &str { "Hello JRPG" }
-    fn options(&self, _menu: MenuScreen) -> &[MenuOption] { &self.main_menu_options }
-    fn option_count(&self, _menu: MenuScreen) -> u8 { self.main_menu_options.len() as u8 }
-    fn scrollable(&self, _menu: MenuScreen) -> bool { false }
+    fn title(&self, _menu: MenuScreen) -> &str {
+        "Hello JRPG"
+    }
+    fn options(&self, _menu: MenuScreen) -> &[MenuOption] {
+        &self.main_menu_options
+    }
+    fn option_count(&self, _menu: MenuScreen) -> u8 {
+        self.main_menu_options.len() as u8
+    }
+    fn scrollable(&self, _menu: MenuScreen) -> bool {
+        false
+    }
     fn layout(&self, _menu: MenuScreen) -> MenuLayout {
         MenuLayout::new(5, 5, 10, 8)
     }
@@ -303,7 +426,10 @@ impl MenuProvider for HelloConfig {
 // ── SaveData — binary format: [1B name_len][0..32B name][1B level] ─
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct GameSave { player_name: String, player_level: u8 }
+struct GameSave {
+    player_name: String,
+    player_level: u8,
+}
 
 impl SaveData for GameSave {
     fn serialize(&self) -> Vec<u8> {
@@ -316,15 +442,24 @@ impl SaveData for GameSave {
         v
     }
     fn deserialize(data: &[u8]) -> Result<Self, SaveError> {
-        if data.len() < 2 { return Err(SaveError::InvalidData); }
+        if data.len() < 2 {
+            return Err(SaveError::InvalidData);
+        }
         let name_len = data[0] as usize;
-        if data.len() < 1 + name_len + 1 { return Err(SaveError::InvalidData); }
+        if data.len() < 1 + name_len + 1 {
+            return Err(SaveError::InvalidData);
+        }
         let name = String::from_utf8(data[1..1 + name_len].to_vec())
             .map_err(|_| SaveError::InvalidData)?;
         let level = data[1 + name_len];
-        Ok(GameSave { player_name: name, player_level: level })
+        Ok(GameSave {
+            player_name: name,
+            player_level: level,
+        })
     }
-    fn save_size() -> usize { 35 }
+    fn save_size() -> usize {
+        35
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -334,18 +469,38 @@ impl SaveData for GameSave {
 struct SimpleCollision;
 
 impl CollisionProvider<Tileset> for SimpleCollision {
-    fn is_tile_passable(&self, _tileset: Tileset, tile_id: u8) -> bool { tile_id != 0xFF }
-    fn check_tile_pair_collision(&self, _t: Tileset, _a: u8, _b: u8, _w: bool) -> bool { false }
-    fn check_ledge_jump(&self, _t: Tileset, _f: u8, _s: u8, _tg: u8, _i: u8) -> bool { false }
-    fn is_counter_tile(&self, _t: Tileset, _id: u8) -> bool { false }
-    fn get_tile_at_position(&self, _t: Tileset, blk: &[u8], w: u8, x: u16, y: u16) -> u8 {
-        blk.get((y as usize * w as usize + x as usize).min(blk.len().saturating_sub(1))).copied().unwrap_or(0)
+    fn is_tile_passable(&self, _tileset: Tileset, tile_id: u8) -> bool {
+        tile_id != 0xFF
     }
-    fn is_door_tile(&self, _t: Tileset, _id: u8) -> bool { false }
-    fn is_warp_tile(&self, _t: Tileset, _id: u8) -> bool { false }
-    fn is_warp_carpet_tile_in_front(&self, _t: Tileset, _f: u8, _id: u8) -> bool { false }
-    fn uses_warp_tile_in_front_check(&self, _t: Tileset) -> bool { false }
-    fn check_extra_warp_special(&self, _t: Tileset, _id: u8) -> Option<bool> { None }
+    fn check_tile_pair_collision(&self, _t: Tileset, _a: u8, _b: u8, _w: bool) -> bool {
+        false
+    }
+    fn check_ledge_jump(&self, _t: Tileset, _f: u8, _s: u8, _tg: u8, _i: u8) -> bool {
+        false
+    }
+    fn is_counter_tile(&self, _t: Tileset, _id: u8) -> bool {
+        false
+    }
+    fn get_tile_at_position(&self, _t: Tileset, blk: &[u8], w: u8, x: u16, y: u16) -> u8 {
+        blk.get((y as usize * w as usize + x as usize).min(blk.len().saturating_sub(1)))
+            .copied()
+            .unwrap_or(0)
+    }
+    fn is_door_tile(&self, _t: Tileset, _id: u8) -> bool {
+        false
+    }
+    fn is_warp_tile(&self, _t: Tileset, _id: u8) -> bool {
+        false
+    }
+    fn is_warp_carpet_tile_in_front(&self, _t: Tileset, _f: u8, _id: u8) -> bool {
+        false
+    }
+    fn uses_warp_tile_in_front_check(&self, _t: Tileset) -> bool {
+        false
+    }
+    fn check_extra_warp_special(&self, _t: Tileset, _id: u8) -> Option<bool> {
+        None
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -360,35 +515,58 @@ impl CollisionProvider<Tileset> for SimpleCollision {
 
 fn build_town_map() -> MapData<MapId, Tileset, ()> {
     let blocks: Vec<u8> = vec![
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0x01, 0x01, 0x01, 0xFF,
-        0xFF, 0x01, 0x01, 0x01, 0xFF,
-        0xFF, 0x01, 0x01, 0x01, 0xFF,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x01, 0x01, 0xFF, 0xFF, 0x01, 0x01, 0x01, 0xFF,
+        0xFF, 0x01, 0x01, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     ];
-    let npcs = vec![NpcDefinition::new(0, 2, 2, NpcMovementType::Stationary, Direction::Down, 0, 0)];
+    let npcs = vec![NpcDefinition::new(
+        0,
+        2,
+        2,
+        NpcMovementType::Stationary,
+        Direction::Down,
+        0,
+        0,
+    )];
     MapData::new(
-        MapId(0), 5, 5, Tileset(0), (),
-        blocks, vec![], npcs, vec![],
+        MapId(0),
+        5,
+        5,
+        Tileset(0),
+        (),
+        blocks,
+        vec![],
+        npcs,
+        vec![],
         MapConnections::default(),
     )
 }
 
 /// Build NPC runtime states from the map's NPC definitions.
 fn build_npc_states(npcs: &[NpcDefinition]) -> Vec<NpcRuntimeState> {
-    npcs.iter().enumerate().map(|(i, def)| {
-        let s = NpcRuntimeState {
-            npc_index: i as u8, sprite_id: def.sprite_id,
-            x: def.x as u16, y: def.y as u16,
-            home_x: def.x as u16, home_y: def.y as u16,
-            facing: def.facing, scripted_frame: None,
-            movement_type: def.movement, range: def.range,
-            walk_counter: 0, delay_counter: 0, text_id: def.text_id,
-            defeated: false, visible: true,
-            scripted_path: std::collections::VecDeque::new(),
-        };
-        s
-    }).collect()
+    npcs.iter()
+        .enumerate()
+        .map(|(i, def)| {
+            let s = NpcRuntimeState {
+                npc_index: i as u8,
+                sprite_id: def.sprite_id,
+                x: def.x as u16,
+                y: def.y as u16,
+                home_x: def.x as u16,
+                home_y: def.y as u16,
+                facing: def.facing,
+                scripted_frame: None,
+                movement_type: def.movement,
+                range: def.range,
+                walk_counter: 0,
+                delay_counter: 0,
+                text_id: def.text_id,
+                defeated: false,
+                visible: true,
+                scripted_path: std::collections::VecDeque::new(),
+            };
+            s
+        })
+        .collect()
 }
 
 /// Print the map as ASCII with player position.
@@ -424,34 +602,69 @@ fn demo_overworld() {
     let npc_positions = dotzuki_engine::overworld::get_npc_positions(&npcs);
 
     // Start at (3, 3) — bottom center
-    state.player.x = 3; state.player.y = 3;
+    state.player.x = 3;
+    state.player.y = 3;
     println!("║ Initial map:");
     show_map(&map.blocks, 5, state.player.x, state.player.y, &npcs);
 
     // Move right → blocked by wall at (4, 3)
     let standing = collision.get_tile_at_position(Tileset(0), &map.blocks, 5, 3, 3);
     let target = collision.get_tile_at_position(Tileset(0), &map.blocks, 5, 4, 3);
-    let result = try_move(&mut state, Direction::Right, Tileset(0), 5, 5, standing, target, &npc_positions, 0, &collision);
+    let result = try_move(
+        &mut state,
+        Direction::Right,
+        Tileset(0),
+        5,
+        5,
+        standing,
+        target,
+        &npc_positions,
+        0,
+        &collision,
+    );
     println!("║ Move Right → {:?}", result);
 
     // Move up to (3, 2) — floor is passable
     let standing = collision.get_tile_at_position(Tileset(0), &map.blocks, 5, 3, 3);
     let target = collision.get_tile_at_position(Tileset(0), &map.blocks, 5, 3, 2);
-    let result = try_move(&mut state, Direction::Up, Tileset(0), 5, 5, standing, target, &npc_positions, 0, &collision);
+    let result = try_move(
+        &mut state,
+        Direction::Up,
+        Tileset(0),
+        5,
+        5,
+        standing,
+        target,
+        &npc_positions,
+        0,
+        &collision,
+    );
     println!("║ Move Up   → {:?}", result);
-    println!("║ Player at ({}, {}), facing {:?}", state.player.x, state.player.y, state.player.facing);
+    println!(
+        "║ Player at ({}, {}), facing {:?}",
+        state.player.x, state.player.y, state.player.facing
+    );
 
     // Advance the walk step
     dotzuki_engine::overworld::advance_step(&mut state);
     dotzuki_engine::overworld::advance_step(&mut state);
     // ...walking finishes after WALK_COUNTER_INIT (8) frames
-    for _ in 0..8 { dotzuki_engine::overworld::advance_step(&mut state); }
-    println!("║ After walk: player at ({}, {})", state.player.x, state.player.y);
+    for _ in 0..8 {
+        dotzuki_engine::overworld::advance_step(&mut state);
+    }
+    println!(
+        "║ After walk: player at ({}, {})",
+        state.player.x, state.player.y
+    );
 
     // NPC interaction: check if NPC is nearby
     let interaction = dotzuki_engine::overworld::try_interact(
-        &npcs, state.player.x, state.player.y, state.player.facing,
-        Some(&map), &collision,
+        &npcs,
+        state.player.x,
+        state.player.y,
+        state.player.facing,
+        Some(&map),
+        &collision,
     );
     println!("║ Interact → {:?}", interaction);
     println!("╚══════════════════════════════════════════╝");
@@ -469,12 +682,16 @@ fn demo_dialog() {
     full.push(0xFF); // DONE
 
     engine.open_dialog(&full);
-    while engine.is_active() { engine.update(&mut buffer); }
+    while engine.is_active() {
+        engine.update(&mut buffer);
+    }
 
     print!("║ Merlin: \"");
     for i in 0..20usize {
         let t = buffer.tiles[i].tile_id;
-        if (0x20..=0x7E).contains(&t) { print!("{}", t as u8 as char); }
+        if (0x20..=0x7E).contains(&t) {
+            print!("{}", t as u8 as char);
+        }
     }
     println!("\"");
     println!("╚══════════════════════════════════════════╝");
@@ -486,14 +703,24 @@ fn demo_battle() {
     let warrior = provider.create_monster(Species::Warrior, 5);
     let mage = provider.create_monster(Species::Mage, 5);
 
-    println!("║ {} (HP:{}/{}) vs {} (HP:{}/{})",
-        warrior.species.name(), warrior.hp, warrior.max_hp,
-        mage.species.name(), mage.hp, mage.max_hp);
+    println!(
+        "║ {} (HP:{}/{}) vs {} (HP:{}/{})",
+        warrior.species.name(),
+        warrior.hp,
+        warrior.max_hp,
+        mage.species.name(),
+        mage.hp,
+        mage.max_hp
+    );
 
     // Warrior attacks with Slash → super effective (2×) vs Mage
     let result = provider.calculate_damage(&MoveKind::Slash, &warrior, &mage, 100, false);
-    println!("║ {} uses Slash! {} damage ({}x effective)",
-        warrior.species.name(), result.damage, result.effectiveness);
+    println!(
+        "║ {} uses Slash! {} damage ({}x effective)",
+        warrior.species.name(),
+        result.damage,
+        result.effectiveness
+    );
 
     let mut enemy = mage.clone();
     enemy.take_damage(result.damage);
@@ -501,17 +728,31 @@ fn demo_battle() {
 
     // Mage attacks with Fireball → not very effective (0.5×) vs Warrior
     let result = provider.calculate_damage(&MoveKind::Fireball, &mage, &warrior, 100, false);
-    println!("║ {} uses Fireball! {} damage ({}x effective)",
-        mage.species.name(), result.damage, result.effectiveness);
+    println!(
+        "║ {} uses Fireball! {} damage ({}x effective)",
+        mage.species.name(),
+        result.damage,
+        result.effectiveness
+    );
 
     let mut hero = warrior.clone();
     hero.take_damage(result.damage);
-    println!("║ {} HP: {} → {}", warrior.species.name(), warrior.hp, hero.hp);
+    println!(
+        "║ {} HP: {} → {}",
+        warrior.species.name(),
+        warrior.hp,
+        hero.hp
+    );
 
     // EffectHandler
     let mut user = warrior.clone();
     let mut target = mage.clone();
-    let eff_result = HelloConfig::new().handle_effect(MoveEffect::Damage, &mut user, &mut target, &HelloConfig::new());
+    let eff_result = HelloConfig::new().handle_effect(
+        MoveEffect::Damage,
+        &mut user,
+        &mut target,
+        &HelloConfig::new(),
+    );
     println!("║ EffectHandler(Damage) → {:?}", eff_result);
 
     // BattleAI
@@ -530,18 +771,37 @@ fn demo_menu() {
     println!("║ Menu '{}' — 3 options", provider.title(MenuScreen::Main));
     for (i, opt) in provider.main_menu_options.iter().enumerate() {
         let marker = if i == menu.cursor as usize { ">" } else { " " };
-        println!("║  {} {}{}", marker, opt.label, if opt.enabled { "" } else { " (disabled)" });
+        println!(
+            "║  {} {}{}",
+            marker,
+            opt.label,
+            if opt.enabled { "" } else { " (disabled)" }
+        );
     }
 
     // Navigate down × 2
-    menu.handle_input(&MenuInput { down: true, ..Default::default() });
-    menu.handle_input(&MenuInput { down: true, ..Default::default() });
+    menu.handle_input(&MenuInput {
+        down: true,
+        ..Default::default()
+    });
+    menu.handle_input(&MenuInput {
+        down: true,
+        ..Default::default()
+    });
     println!("║ Cursor after 2× Down: {}", menu.cursor);
 
     // Select
-    let action = menu.handle_input(&MenuInput { confirm: true, ..Default::default() });
-    println!("║ Confirm → {:?} ('{}')", action,
-        menu.selected_option().map(|o| o.label.as_str()).unwrap_or("?"));
+    let action = menu.handle_input(&MenuInput {
+        confirm: true,
+        ..Default::default()
+    });
+    println!(
+        "║ Confirm → {:?} ('{}')",
+        action,
+        menu.selected_option()
+            .map(|o| o.label.as_str())
+            .unwrap_or("?")
+    );
     println!("╚══════════════════════════════════════════╝");
 }
 
@@ -549,10 +809,22 @@ fn demo_items() {
     println!("\n╔══ ITEM SYSTEM ═════════════════════════╗");
     let provider = HelloConfig::new();
 
-    let mut monster = MonsterData { species: Species::Warrior, max_hp: 100, current_hp: 30 };
-    println!("║ {} HP before: {}/{}", monster.species.name(), monster.current_hp, monster.max_hp);
+    let mut monster = MonsterData {
+        species: Species::Warrior,
+        max_hp: 100,
+        current_hp: 30,
+    };
+    println!(
+        "║ {} HP before: {}/{}",
+        monster.species.name(),
+        monster.current_hp,
+        monster.max_hp
+    );
     let r = provider.use_on_monster(&ItemKind::Potion, &mut monster);
-    println!("║ Used Potion → {:?}, HP now: {}/{}", r, monster.current_hp, monster.max_hp);
+    println!(
+        "║ Used Potion → {:?}, HP now: {}/{}",
+        r, monster.current_hp, monster.max_hp
+    );
 
     let shop = provider.shop_inventory(&());
     println!("║ Shop inventory: {:?}", shop);
@@ -564,7 +836,10 @@ fn demo_save_load() {
     let storage = Box::new(InMemoryStorage::new());
     let manager = SaveManager::<GameSave>::new(storage);
 
-    let save = GameSave { player_name: "Hero".to_string(), player_level: 7 };
+    let save = GameSave {
+        player_name: "Hero".to_string(),
+        player_level: 7,
+    };
     manager.save(SaveSlot::Slot1, &save).expect("save");
     let loaded = manager.load(SaveSlot::Slot1).expect("load");
     println!("║ Saved: {:?}", save);
@@ -657,7 +932,9 @@ mod tests {
 
         // "A" + NEWLINE + "B" + DONE
         engine.open_dialog(&[b'A', 0xFE, b'B', 0xFF]);
-        for _ in 0..4 { engine.update(&mut buffer); }
+        for _ in 0..4 {
+            engine.update(&mut buffer);
+        }
         assert_eq!(buffer.tiles[0].tile_id, b'A' as u16);
         assert_eq!(buffer.tiles[20].tile_id, b'B' as u16); // row 1, col 0
     }
@@ -671,16 +948,25 @@ mod tests {
         menu.open(MenuScreen::Main);
         assert_eq!(menu.cursor, 0);
 
-        let a = menu.handle_input(&MenuInput { down: true, ..Default::default() });
+        let a = menu.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(a, MenuAction::Down);
         assert_eq!(menu.cursor, 1);
 
-        let a = menu.handle_input(&MenuInput { down: true, ..Default::default() });
+        let a = menu.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(a, MenuAction::Down);
         assert_eq!(menu.cursor, 2);
 
         // Stop at last
-        let a = menu.handle_input(&MenuInput { down: true, ..Default::default() });
+        let a = menu.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
         assert_eq!(a, MenuAction::None);
     }
 
@@ -691,13 +977,22 @@ mod tests {
         menu.open(MenuScreen::Main);
 
         // Move to "Battle"
-        menu.handle_input(&MenuInput { down: true, ..Default::default() });
-        let a = menu.handle_input(&MenuInput { confirm: true, ..Default::default() });
+        menu.handle_input(&MenuInput {
+            down: true,
+            ..Default::default()
+        });
+        let a = menu.handle_input(&MenuInput {
+            confirm: true,
+            ..Default::default()
+        });
         assert_eq!(a, MenuAction::Selected(1));
 
         // Re-open and cancel
         menu.open(MenuScreen::Main);
-        let a = menu.handle_input(&MenuInput { cancel: true, ..Default::default() });
+        let a = menu.handle_input(&MenuInput {
+            cancel: true,
+            ..Default::default()
+        });
         assert_eq!(a, MenuAction::Cancelled);
         assert!(!menu.is_open());
     }
@@ -708,7 +1003,10 @@ mod tests {
     fn test_save_load_roundtrip() {
         let storage = Box::new(InMemoryStorage::new());
         let manager = SaveManager::<GameSave>::new(storage);
-        let save = GameSave { player_name: "Hero".to_string(), player_level: 42 };
+        let save = GameSave {
+            player_name: "Hero".to_string(),
+            player_level: 42,
+        };
 
         manager.save(SaveSlot::Slot1, &save).expect("save");
         let loaded = manager.load(SaveSlot::Slot1).expect("load");
@@ -729,16 +1027,30 @@ mod tests {
     #[test]
     fn test_potion_heals() {
         let provider = HelloConfig::new();
-        let mut m = MonsterData { species: Species::Warrior, max_hp: 100, current_hp: 50 };
-        assert_eq!(provider.use_on_monster(&ItemKind::Potion, &mut m), ItemResult::Used);
+        let mut m = MonsterData {
+            species: Species::Warrior,
+            max_hp: 100,
+            current_hp: 50,
+        };
+        assert_eq!(
+            provider.use_on_monster(&ItemKind::Potion, &mut m),
+            ItemResult::Used
+        );
         assert_eq!(m.current_hp, 70);
     }
 
     #[test]
     fn test_potion_no_effect_full_hp() {
         let provider = HelloConfig::new();
-        let mut m = MonsterData { species: Species::Warrior, max_hp: 100, current_hp: 100 };
-        assert_eq!(provider.use_on_monster(&ItemKind::Potion, &mut m), ItemResult::NoEffect);
+        let mut m = MonsterData {
+            species: Species::Warrior,
+            max_hp: 100,
+            current_hp: 100,
+        };
+        assert_eq!(
+            provider.use_on_monster(&ItemKind::Potion, &mut m),
+            ItemResult::NoEffect
+        );
     }
 
     // ── Test: TypeChart ─────────────────────────────────────────────

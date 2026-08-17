@@ -48,7 +48,10 @@ const DEFAULT_COLUMNS: u32 = 16;
 
 #[derive(Parser, Debug)]
 #[command(name = "asset-converter")]
-#[command(version, about = "Convert GB 2bpp tilesets to RGBA tilesets with Tiled .tsx output")]
+#[command(
+    version,
+    about = "Convert GB 2bpp tilesets to RGBA tilesets with Tiled .tsx output"
+)]
 struct Cli {
     /// Input 2bpp tileset PNG (grayscale, 4 shades)
     #[arg(short, long, required_unless_present_any = ["all", "all_monster"])]
@@ -145,10 +148,30 @@ impl PaletteDef {
 
 fn default_palette() -> [PaletteColor; 4] {
     [
-        PaletteColor { r: 0x9B, g: 0xBC, b: 0x0F, a: 255 },
-        PaletteColor { r: 0x8B, g: 0xAC, b: 0x0F, a: 255 },
-        PaletteColor { r: 0x30, g: 0x62, b: 0x30, a: 255 },
-        PaletteColor { r: 0x0F, g: 0x38, b: 0x0F, a: 255 },
+        PaletteColor {
+            r: 0x9B,
+            g: 0xBC,
+            b: 0x0F,
+            a: 255,
+        },
+        PaletteColor {
+            r: 0x8B,
+            g: 0xAC,
+            b: 0x0F,
+            a: 255,
+        },
+        PaletteColor {
+            r: 0x30,
+            g: 0x62,
+            b: 0x30,
+            a: 255,
+        },
+        PaletteColor {
+            r: 0x0F,
+            g: 0x38,
+            b: 0x0F,
+            a: 255,
+        },
     ]
 }
 
@@ -247,8 +270,7 @@ fn generate_tsx(
     let tile_width = TILE_PIXELS;
     let tile_height = TILE_PIXELS;
     let image_width = columns * TILE_PIXELS;
-    let image_height =
-        ((tile_count as u32 + columns - 1) / columns) * TILE_PIXELS;
+    let image_height = ((tile_count as u32 + columns - 1) / columns) * TILE_PIXELS;
 
     let escaped_name = escape_xml(name);
 
@@ -387,13 +409,8 @@ fn run_batch(cli: &Cli) -> Result<(), String> {
     };
 
     let mut png_files: Vec<PathBuf> = Vec::new();
-    let entries = std::fs::read_dir(input_dir).map_err(|e| {
-        format!(
-            "Failed to read directory '{}': {}",
-            input_dir.display(),
-            e
-        )
-    })?;
+    let entries = std::fs::read_dir(input_dir)
+        .map_err(|e| format!("Failed to read directory '{}': {}", input_dir.display(), e))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("Directory entry error: {}", e))?;
@@ -417,7 +434,11 @@ fn run_batch(cli: &Cli) -> Result<(), String> {
 
     png_files.sort();
     let total = png_files.len();
-    println!("Batch converting {} tileset(s) from '{}'...", total, input_dir.display());
+    println!(
+        "Batch converting {} tileset(s) from '{}'...",
+        total,
+        input_dir.display()
+    );
 
     let mut converted = 0usize;
     let mut errors = 0usize;
@@ -436,7 +457,10 @@ fn run_batch(cli: &Cli) -> Result<(), String> {
                 println!(
                     "  ✓ {} → {} ({} tiles, {}×{})",
                     input_path.file_name().unwrap_or_default().to_string_lossy(),
-                    output_path.file_name().unwrap_or_default().to_string_lossy(),
+                    output_path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy(),
                     tile_count,
                     tiles_x,
                     _tiles_y,
@@ -450,8 +474,7 @@ fn run_batch(cli: &Cli) -> Result<(), String> {
                         .to_string_lossy()
                         .to_string();
                     let name = tileset_name_from_path(&output_path);
-                    if let Err(e) = generate_tsx(&tsx_path, &img_name, &name, tile_count, columns)
-                    {
+                    if let Err(e) = generate_tsx(&tsx_path, &img_name, &name, tile_count, columns) {
                         eprintln!("  ⚠ Failed to generate .tsx for '{}': {}", stem, e);
                     } else {
                         println!("    .tsx: {}", tsx_path.display());
