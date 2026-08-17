@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -194,10 +194,6 @@
 the renderer. <code>dotzuki check</code> validates them in memory without writing
 artifacts; disk outputs are produced only when an output directory is given
 (e.g. a game crate’s <code>build.rs</code> via <code>compiler::compile_dirs</code>).</p>
-<p>Before you start, read <a href="../reference/dsl/theme-style.html">the theme &amp; style syntax
-reference</a> for the syntax and codegen
-contract, and <a href="../reference/dsl/gui.html">the GUI DSL reference</a> for how
-layouts reference styles.</p>
 <h2 id="file-types-and-outputs"><a class="header" href="#file-types-and-outputs">File types and outputs</a></h2>
 <div class="table-wrapper">
 <table>
@@ -205,10 +201,10 @@ layouts reference styles.</p>
 <tr><th>Input</th><th>Requirement</th><th>Compiled output</th></tr>
 </thead>
 <tbody>
-<tr><td><code>dark.theme</code></td><td>At least one <code>@theme</code> block</td><td>Each <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code> (<code>{"name", "tokens"}</code>)</td></tr>
-<tr><td><code>battle.style</code></td><td>At least one <code>@style</code> block</td><td><code>_auto_styles.json</code> (a standalone <code>.style</code> file is always wrapped as scene <code>_auto</code>, independent of the file name; the resolved inheritance chain is included)</td></tr>
-<tr><td>Inline <code>@theme</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene name&gt;_theme_&lt;i&gt;.json</code></td></tr>
-<tr><td>Inline <code>@style</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene name&gt;_styles.json</code></td></tr>
+<tr><td><code>foo.theme</code></td><td>At least one <code>@theme</code> block</td><td>Each <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code> (<code>{"name", "tokens"}</code>)</td></tr>
+<tr><td><code>bar.style</code></td><td>At least one <code>@style</code> block</td><td><code>_auto_styles.json</code> (a standalone <code>.style</code> file is always wrapped as scene <code>_auto</code>, independent of the file name; the resolved inheritance chain is included)</td></tr>
+<tr><td>Inline <code>@theme</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene名&gt;_theme_&lt;i&gt;.json</code></td></tr>
+<tr><td>Inline <code>@style</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene名&gt;_styles.json</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -221,8 +217,8 @@ DSL directories; <code>dotzuki check</code> compiles them.</li>
 compiled together with the scene.</li>
 <li><strong>Referencing from the GUI</strong> — <code>.gui</code> / <code>ui {}</code> components apply styles via
 <code>style = "&lt;name&gt;"</code>; theme tokens are referenced in property values as
-<code>@theme.&lt;key&gt;</code> (the compiler passes the value through verbatim into the
-JSON, and the consumer/renderer interprets it).</li>
+<code>@theme.&lt;key&gt;</code> (the value is passed through verbatim into the JSON and
+interpreted by the consumer/renderer).</li>
 </ol>
 <p>A minimal standalone theme:</p>
 <pre><code class="language-dsl">@theme dark {

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -201,13 +201,13 @@ objects sidecar — <code>objects.json</code> (editor-written) with
 <code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>, <code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>,
 <code>signs: [{x,y,text}]</code> (face the sign tile + A reads its text as paged
 dialogue) and an optional <code>encounters</code> block (below)
-(the runner reads legacy <code>map.json</code> as a fallback). Walking onto a warp tile fades to
+(legacy <code>map.json</code> is read as a fallback). Walking onto a warp tile fades to
 the destination map.</p>
 <h2 id="elevation-levels"><a class="header" href="#elevation-levels">Elevation levels</a></h2>
 <p>Maps may be multi-level (walk on the ground <em>and</em> on
 wall tops). Collision per level: layers named <code>collision</code> (level 0),
 <code>collision1</code>, <code>collision2</code>, … — a non-zero GID is solid at that level; these
-layers never render. Missing intermediate levels count as all-solid.
+layers never render. Missing intermediate levels are treated as all-solid.
 A layer named <code>stairs</code> marks transition tiles (never rendered): GID 1
 ascends one level on arrival, GID 2 descends one (clamped to the map’s
 levels). Visual layers carry an optional integer custom property <code>level</code>

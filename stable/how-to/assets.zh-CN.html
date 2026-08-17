@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -200,7 +200,7 @@
 <pre><code class="language-json">{ "id": "assets", "type": "assets",
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 </code></pre>
-<p>脚手架项目自带一套可用的布局：<code>data/maps/</code>（起始地图的 <code>tileset.png</code> 位于地图自己的目录，例如 <code>data/maps/Hometown/tileset.png</code>）、共享的 <code>data/tiles/</code> 库——支撑地图编辑器选 tile 面板（Backdrop/Trace）——以及 <code>gfx/</code>（散件图形）和 <code>assets/scenes/</code>（场景脚本）。声明根目录之外的一切都是项目数据，不是受管素材。</p>
+<p>脚手架项目自带一套可用的布局：<code>assets/tileset.png</code>（32×8 演示图）、<code>assets/scenes/</code>，以及 <code>data/tiles/</code>——支撑地图编辑器选 tile 面板（Backdrop/Trace）的共享 tile 库。声明根目录之外的一切都是项目数据，不是受管素材。</p>
 <h2 id="tileset"><a class="header" href="#tileset">Tileset</a></h2>
 <p>tileset 是 <code>tileset.png</code> 图集加它的 Tiled 元数据：全彩 RGBA、8×8 像素 tile 横向排列、<a href="../reference/glossary.html">GID</a> 从 1 起、行优先。地图的 <code>map.tmx.json</code> 引用自己 <code>tileset.png</code> 里的 GID；collision 层用非零 GID 标记阻挡 tile——完整地图契约见<a href="./maps.html">制作地图</a>。</p>
 <p><code>.tsx</code> 文件为 Tiled 命名同一张图，让地图编辑器能把 tile 当调色板用。脚手架为每张地图在 <code>script.scene</code> 旁生成一份 <code>tileset.png</code>；可复用的图放在共享的 <code>data/tiles/</code> 库里。</p>

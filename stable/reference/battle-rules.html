@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -211,12 +211,12 @@ the defaults shown):</p>
 <li><code>party</code> / <code>enemies</code> name <strong>data-table ids</strong> from the data activity’s
 <code>config.tables[]</code> (their <code>dir</code>s hold the records). A battle needs both;
 a referenced id that names no declared table is a boot-time error <em>when a
-battle starts</em> (projects that never battle are unaffected) — and a
+battle actually starts</em> (projects that never battle are unaffected) — and a
 <code>dotzuki check</code> diagnostic regardless.</li>
 <li><code>encounters</code> (optional) names an <strong>encounter table</strong>: its records describe
 enemy parties and trainer battles — <code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>.
 <code>enemies</code> is an ordered list of enemy-table record ids (an empty list or
-an unknown id inside it is a definite error at battle start), <code>trainer</code>
+an unknown id inside it is a clear error at battle start), <code>trainer</code>
 defaults to <code>false</code>, and <code>money</code> (the win reward, paid only by trainer
 encounters) defaults to 0. Absent ⇒ every battle is a single wild enemy
 (v1 behavior). See <strong>Encounters</strong> below.</li>
@@ -273,8 +273,7 @@ current HP by 3; MP likewise).</li>
 <li><strong>Persistence</strong> — per-member <code>level</code> + <code>exp</code> ride the runner’s party
 state and the save (<code>party[].level</code> / <code>party[].exp</code> are OPTIONAL fields;
 absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
-keep loading). The menu Party view shows <code>Lv</code> and an
-<code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
+keep loading). The menu Party view shows <code>Lv</code> and an <code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
 </ul>
 </li>
 </ul>
@@ -488,8 +487,8 @@ battles blocking Run, EXP sums, abilities/weather — are identical to a
 scene-triggered battle.</p>
 <h2 id="remaining-limits"><a class="header" href="#remaining-limits">Remaining limits</a></h2>
 <p>Every RON <code>EffectKind</code> now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles never expire
-(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing removes them);
+Ability / Item / Weather); what remains: volatiles are basic
+(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing expires them);
 HP/MP clamp into the engine’s <code>u16</code> pools for RON skills; items only heal
 (no status cures / revives / battle-only effects) and held items are never
 consumed; a defender’s ability/held-item hooks don’t join the attacker’s

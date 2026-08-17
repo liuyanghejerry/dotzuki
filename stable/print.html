@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-66886069.js";
+            window.path_to_searchindex_js = "searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-466b9ebb.js"></script>
@@ -392,7 +392,7 @@ means the scenes are valid.</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: tutorial</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.1</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
 </ul>
 </blockquote>
 <p>Build the project committed at
@@ -1123,9 +1123,6 @@ through the dotzuki-editor and the AI Story Designer.</li>
 in — no Rust, no code required.</p>
 <p>You can even <strong>play</strong> what you built: <code>dotzuki run</code> boots your project in a
 window (overworld, dialogue, warps).</p>
-<p>Before you start, install Node.js and pnpm, and put a <code>dotzuki</code> binary on
-your PATH — build it once per <a href="#quickstart--your-first-zero-rust-game-in-5-minutes">the quickstart</a>; step 5 uses
-it to run the finished project.</p>
 <h2 id="1-start-the-editor"><a class="header" href="#1-start-the-editor">1. Start the editor</a></h2>
 <pre><code class="language-bash">cd tools/dotzuki-editor
 pnpm install
@@ -1264,13 +1261,13 @@ objects sidecar — <code>objects.json</code> (editor-written) with
 <code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>, <code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>,
 <code>signs: [{x,y,text}]</code> (face the sign tile + A reads its text as paged
 dialogue) and an optional <code>encounters</code> block (below)
-(the runner reads legacy <code>map.json</code> as a fallback). Walking onto a warp tile fades to
+(legacy <code>map.json</code> is read as a fallback). Walking onto a warp tile fades to
 the destination map.</p>
 <h2 id="elevation-levels"><a class="header" href="#elevation-levels">Elevation levels</a></h2>
 <p>Maps may be multi-level (walk on the ground <em>and</em> on
 wall tops). Collision per level: layers named <code>collision</code> (level 0),
 <code>collision1</code>, <code>collision2</code>, … — a non-zero GID is solid at that level; these
-layers never render. Missing intermediate levels count as all-solid.
+layers never render. Missing intermediate levels are treated as all-solid.
 A layer named <code>stairs</code> marks transition tiles (never rendered): GID 1
 ascends one level on arrival, GID 2 descends one (clamped to the map’s
 levels). Visual layers carry an optional integer custom property <code>level</code>
@@ -1651,11 +1648,10 @@ engine edits</strong>, depending on <code>dotzuki-engine</code> (and, for the da
 <h2 id="1-tutorial-stand-up-a-minimal-ruleset-the-minimon-walkthrough"><a class="header" href="#1-tutorial-stand-up-a-minimal-ruleset-the-minimon-walkthrough">1. Tutorial: stand up a minimal ruleset (the minimon walkthrough)</a></h2>
 <p><a href="../examples/minimon"><code>examples/minimon</code></a> authors a Gen-4-shaped battle system —
 phys/special split + Intimidate + Clear Body + Leftovers + Sandstorm — on the
-stack with <strong>zero engine edits</strong> and only game-agnostic dependencies:</p>
+stack with <strong>zero engine edits</strong>. Its only dependency is the engine:</p>
 <pre><code class="language-toml"># examples/minimon/Cargo.toml
 [dependencies]
 dotzuki-engine = { path = "../../crates/dotzuki-engine" }
-dotzuki-rules  = { path = "../../crates/dotzuki-rules" }
 </code></pre>
 <h3 id="step-1--define-the-id-enums-the-6-stat-split-shape"><a class="header" href="#step-1--define-the-id-enums-the-6-stat-split-shape">Step 1 — Define the id enums (the 6-stat split shape)</a></h3>
 <p>The engine indexes <code>EnumMap&lt;P::Stat&gt;</code> by an opaque key, so choosing the split
@@ -1700,7 +1696,7 @@ read:</p>
 <span class="boring">}</span></code></pre>
 <p><code>EffectProvider</code> supplies <code>EffectStateKind = Kind</code> and the resolvers that map
 opaque ids to authored <code>&amp;'static Effect</code>s — this is “abilities/items/weather are
-Effects hosted somewhere”:</p>
+just Effects hosted somewhere”:</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl EffectProvider for MinimonProvider {
@@ -1944,8 +1940,7 @@ each step.</p>
 const table of <code>(atk_index, def_index, num, den)</code> rows (<code>lib.rs:120-135</code>):</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>&lt;!-- not verified: elided rows, illustrative only --&gt;
-pub const TYPE_CHART: &amp;[(usize, usize, u32, u32)] = &amp;[
+</span>pub const TYPE_CHART: &amp;[(usize, usize, u32, u32)] = &amp;[
     (0, 1, 2, 1), // 金克木  Metal → Wood
     (1, 4, 2, 1), // 木克土  Wood  → Earth
     (4, 2, 2, 1), // 土克水  Earth → Water
@@ -2013,8 +2008,7 @@ effect — <code>MOVE_DAMAGE_EFFECT</code> (Normal/untyped ⇒ neutral identity)
 list of <code>( atk:, def:, mult: [n, d] )</code> rows, applied by the <code>ApplyTypeChart</code>
 primitive op on an <code>Effectiveness</code> hook (<code>rules.ron:39-54</code>, see
 <a href="#3-no-code-authoring-with-rulesron-the-dotzuki-rules-loader">§3</a>):</p>
-<pre><code class="language-ron">&lt;!-- not verified: excerpt, not loadable standalone --&gt;
-type_chart: [
+<pre><code class="language-ron">type_chart: [
     ( atk: "Metal", def: "Wood",  mult: [2, 1] ),   // 金克木
     ( atk: "Water", def: "Fire",  mult: [2, 1] ),   // 水克火
     ( atk: "Water", def: "Wood",  mult: [0, 1] ),   // 水→木 immunity
@@ -2043,7 +2037,7 @@ add <strong>moves, abilities, items, types, and resource costs with zero Rust</s
 <strong>Option A</strong> — a single <code>interpret()</code> fn keyed by <code>EffectId</code>, registered as the
 <code>call</code> of each generated <code>Effect</code>. There is <strong>zero engine change</strong>: the engine
 already threads <code>source_effect: eff.id</code> to every handler (<code>dispatch.rs:128</code>), and
-<code>interpret</code> is another <code>HandlerFn</code>.</p>
+<code>interpret</code> is just another <code>HandlerFn</code>.</p>
 <h3 id="31-the-data-model--effect-records--a-closed-primitive-vocabulary"><a class="header" href="#31-the-data-model--effect-records--a-closed-primitive-vocabulary">3.1 The data model — effect records + a closed primitive vocabulary</a></h3>
 <p>The top-level shape is
 <code>Ruleset( stats: […], resources: […], types: […], type_chart: […], effects: […] )</code>
@@ -2083,7 +2077,7 @@ all still closed and game-agnostic:</p>
 <ul>
 <li><code>Selector { Target, Foe, Host, Source }</code> (<code>model.rs:201</code>).</li>
 <li><code>FractionOf { MaxHp, CurHp, LastDamage }</code> (default <code>MaxHp</code>; <code>LastDamage</code> = the
-most recent damage dealt — the drain/recoil base; <code>model.rs:214</code>).</li>
+damage just dealt — the drain/recoil base; <code>model.rs:214</code>).</li>
 <li><code>Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String), MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }</code> (<code>model.rs:268</code>) —
 used by the <code>unless</code> / <code>when</code> / <code>cond</code> guards. (The last four were added for the
 migration: side-status Substitute/same-type vetoes, Dream Eater’s sleep gate, the
@@ -2105,7 +2099,7 @@ its element (<code>type</code>), an optional <code>cost:</code>, and the hooks t
     ]),
 </code></pre>
 <p>A status chip and a Leftovers heal show cross-source <code>order</code> interleaving — and
-that an ability/item/weather is another record keyed by <code>kind</code>
+that an ability/item/weather is just another record keyed by <code>kind</code>
 (<code>rules.ron:93-121</code>):</p>
 <pre><code class="language-ron">Effect(id: "status.poison", kind: Status,
     hooks: [ Hook(on: "Residual", order: 10, do: [
@@ -2445,10 +2439,6 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 the renderer. <code>dotzuki check</code> validates them in memory without writing
 artifacts; disk outputs are produced only when an output directory is given
 (e.g. a game crate’s <code>build.rs</code> via <code>compiler::compile_dirs</code>).</p>
-<p>Before you start, read <a href="#theme--style-dsl-reference-theme--style">the theme &amp; style syntax
-reference</a> for the syntax and codegen
-contract, and <a href="#gui-dsl-reference">the GUI DSL reference</a> for how
-layouts reference styles.</p>
 <h2 id="file-types-and-outputs"><a class="header" href="#file-types-and-outputs">File types and outputs</a></h2>
 <div class="table-wrapper">
 <table>
@@ -2456,10 +2446,10 @@ layouts reference styles.</p>
 <tr><th>Input</th><th>Requirement</th><th>Compiled output</th></tr>
 </thead>
 <tbody>
-<tr><td><code>dark.theme</code></td><td>At least one <code>@theme</code> block</td><td>Each <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code> (<code>{"name", "tokens"}</code>)</td></tr>
-<tr><td><code>battle.style</code></td><td>At least one <code>@style</code> block</td><td><code>_auto_styles.json</code> (a standalone <code>.style</code> file is always wrapped as scene <code>_auto</code>, independent of the file name; the resolved inheritance chain is included)</td></tr>
-<tr><td>Inline <code>@theme</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene name&gt;_theme_&lt;i&gt;.json</code></td></tr>
-<tr><td>Inline <code>@style</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene name&gt;_styles.json</code></td></tr>
+<tr><td><code>foo.theme</code></td><td>At least one <code>@theme</code> block</td><td>Each <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code> (<code>{"name", "tokens"}</code>)</td></tr>
+<tr><td><code>bar.style</code></td><td>At least one <code>@style</code> block</td><td><code>_auto_styles.json</code> (a standalone <code>.style</code> file is always wrapped as scene <code>_auto</code>, independent of the file name; the resolved inheritance chain is included)</td></tr>
+<tr><td>Inline <code>@theme</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene名&gt;_theme_&lt;i&gt;.json</code></td></tr>
+<tr><td>Inline <code>@style</code> in a <code>.scene</code></td><td>—</td><td><code>&lt;scene名&gt;_styles.json</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -2472,8 +2462,8 @@ DSL directories; <code>dotzuki check</code> compiles them.</li>
 compiled together with the scene.</li>
 <li><strong>Referencing from the GUI</strong> — <code>.gui</code> / <code>ui {}</code> components apply styles via
 <code>style = "&lt;name&gt;"</code>; theme tokens are referenced in property values as
-<code>@theme.&lt;key&gt;</code> (the compiler passes the value through verbatim into the
-JSON, and the consumer/renderer interprets it).</li>
+<code>@theme.&lt;key&gt;</code> (the value is passed through verbatim into the JSON and
+interpreted by the consumer/renderer).</li>
 </ol>
 <p>A minimal standalone theme:</p>
 <pre><code class="language-dsl">@theme dark {
@@ -2495,7 +2485,7 @@ JSON, and the consumer/renderer interprets it).</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.1</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
 </ul>
 </blockquote>
 <p>Declarative JSON track files describe music and SFX for the four GB hardware
@@ -2664,12 +2654,10 @@ and the editor’s Assets activity lists exactly those roots. By convention
 <pre><code class="language-json">{ "id": "assets", "type": "assets",
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 </code></pre>
-<p>The scaffolded project ships a working layout: <code>data/maps/</code> with a starter
-map (its <code>tileset.png</code> lives in the map’s own directory, e.g.
-<code>data/maps/Hometown/tileset.png</code>), the shared <code>data/tiles/</code> library that
-backs the map editor’s tile picker (Backdrop/Trace), <code>gfx/</code> for loose
-graphics, and <code>assets/scenes/</code> for scene scripts. Everything outside the
-declared roots is project data, not managed assets.</p>
+<p>The scaffolded project ships a working layout: <code>assets/tileset.png</code> (a 32×8
+demo sheet), <code>assets/scenes/</code>, and <code>data/tiles/</code> — the shared tile library
+that backs the map editor’s tile picker (Backdrop/Trace). Everything
+outside the declared roots is project data, not managed assets.</p>
 <h2 id="tilesets"><a class="header" href="#tilesets">Tilesets</a></h2>
 <p>A tileset is the <code>tileset.png</code> atlas plus its Tiled metadata: full-color
 RGBA, 8×8-pixel tiles laid out horizontally, <a href="#glossary">GIDs</a>
@@ -2883,7 +2871,7 @@ installs.</li>
 dotzuki run . --headless --map StartTown --screenshot shot.png --save
 </code></pre>
 <p><code>--headless</code> never opens an audio device or window; <code>--screenshot</code> dumps the
-real rendered final frame. See <a href="#dotzuki-cli-reference">the CLI reference</a>.</p>
+real rendered final frame. See <a href="#dotzuki-cli-reference"><code>CLI_REFERENCE.md</code></a>.</p>
 <h2 id="3-playable-demo-in-a-web-page-wasm"><a class="header" href="#3-playable-demo-in-a-web-page-wasm">3. Playable demo in a web page (WASM)</a></h2>
 <p>The same runner compiles to WASM (<code>dotzuki-runner-web</code>) and boots against an
 <strong>in-memory filesystem</strong> — the editor’s Play activity uses exactly this path,
@@ -3401,7 +3389,7 @@ enemy parties and trainer battles — <code>{ "id": "gym-leader-1", "name": "Lea
 <tbody>
 <tr><td><code>id</code></td><td>string</td><td>—</td><td>Record id; resolved by <code>startBattle(id)</code> and by random-encounter zone tables.</td></tr>
 <tr><td><code>name</code></td><td>string</td><td>—</td><td>Present in the spec’s example record.</td></tr>
-<tr><td><code>enemies</code></td><td>array of enemy-table record ids</td><td>—</td><td>The ordered enemy queue. An empty list or an unknown id inside it is a definite error at battle start.</td></tr>
+<tr><td><code>enemies</code></td><td>array of enemy-table record ids</td><td>—</td><td>The ordered enemy queue. An empty list or an unknown id inside it is a clear error at battle start.</td></tr>
 <tr><td><code>trainer</code></td><td>boolean</td><td><code>false</code></td><td>Trainer battle: pays <code>money</code> on a win and blocks the Run action.</td></tr>
 <tr><td><code>money</code></td><td>number</td><td><code>0</code></td><td>The win reward, paid only by trainer encounters.</td></tr>
 </tbody>
@@ -3526,7 +3514,7 @@ heals the ACTIVE member by that amount (capped at max HP), decrements the
 count, and consumes the player’s turn. An item at count 0 is no longer
 listed.</p>
 <h2 id="in-shops"><a class="header" href="#in-shops">In shops</a></h2>
-<p>The runner reads item records through the <code>battle.items</code> table. <strong>Buy</strong> lists the
+<p>Item records are read through the <code>battle.items</code> table. <strong>Buy</strong> lists the
 given items with their record <code>price</code> (default 0) and the player’s money.
 <strong>Sell</strong> lists the player’s inventory entries with a positive count, each at
 <strong><code>floor(price / 2)</code></strong> (there is no separate sellPrice field; items priced 0
@@ -3595,8 +3583,7 @@ current HP by 3; MP likewise).</li>
 <li><strong>Persistence</strong> — per-member <code>level</code> + <code>exp</code> ride the runner’s party
 state and the save (<code>party[].level</code> / <code>party[].exp</code> are OPTIONAL fields;
 absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
-keep loading). The menu Party view shows <code>Lv</code> and an
-<code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
+keep loading). The menu Party view shows <code>Lv</code> and an <code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
 </ul>
 <p><code>levels</code> is a manifest config block, not a data table: the records it
 reads are combatant and enemy records in the party and enemy tables. The
@@ -3635,12 +3622,12 @@ the defaults shown):</p>
 <li><code>party</code> / <code>enemies</code> name <strong>data-table ids</strong> from the data activity’s
 <code>config.tables[]</code> (their <code>dir</code>s hold the records). A battle needs both;
 a referenced id that names no declared table is a boot-time error <em>when a
-battle starts</em> (projects that never battle are unaffected) — and a
+battle actually starts</em> (projects that never battle are unaffected) — and a
 <code>dotzuki check</code> diagnostic regardless.</li>
 <li><code>encounters</code> (optional) names an <strong>encounter table</strong>: its records describe
 enemy parties and trainer battles — <code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>.
 <code>enemies</code> is an ordered list of enemy-table record ids (an empty list or
-an unknown id inside it is a definite error at battle start), <code>trainer</code>
+an unknown id inside it is a clear error at battle start), <code>trainer</code>
 defaults to <code>false</code>, and <code>money</code> (the win reward, paid only by trainer
 encounters) defaults to 0. Absent ⇒ every battle is a single wild enemy
 (v1 behavior). See <strong>Encounters</strong> below.</li>
@@ -3697,8 +3684,7 @@ current HP by 3; MP likewise).</li>
 <li><strong>Persistence</strong> — per-member <code>level</code> + <code>exp</code> ride the runner’s party
 state and the save (<code>party[].level</code> / <code>party[].exp</code> are OPTIONAL fields;
 absent ⇒ level 1 / 0 EXP, so the save version stays 3 and older saves
-keep loading). The menu Party view shows <code>Lv</code> and an
-<code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
+keep loading). The menu Party view shows <code>Lv</code> and an <code>EXP &lt;progress&gt;/&lt;need&gt;</code> line (only with the block).</li>
 </ul>
 </li>
 </ul>
@@ -3912,8 +3898,8 @@ battles blocking Run, EXP sums, abilities/weather — are identical to a
 scene-triggered battle.</p>
 <h2 id="remaining-limits"><a class="header" href="#remaining-limits">Remaining limits</a></h2>
 <p>Every RON <code>EffectKind</code> now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles never expire
-(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing removes them);
+Ability / Item / Weather); what remains: volatiles are basic
+(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing expires them);
 HP/MP clamp into the engine’s <code>u16</code> pools for RON skills; items only heal
 (no status cures / revives / battle-only effects) and held items are never
 consumed; a defender’s ability/held-item hooks don’t join the attacker’s
@@ -5914,9 +5900,7 @@ text.</li>
 <li><strong>Last verified</strong>: v0.1.0</li>
 </ul>
 </blockquote>
-<p>The crate map and where each crate’s API documentation lives; rustdoc is
-the authoritative API reference, the pages below are the prose
-counterpart.</p>
+<p>The crate map and where each crate’s API documentation lives; rustdoc is the authoritative API reference, the pages below are the prose counterpart.</p>
 <p>All <code>dotzuki-*</code> crates share one version (currently <code>0.1.0</code>) and are published
 on crates.io, so their API docs live on docs.rs. Local copy:</p>
 <pre><code class="language-bash">cd workspace
@@ -5993,7 +5977,7 @@ current-architecture walkthrough.</p>
 <ul>
 <li>Games are <strong>zero-Rust</strong>: the engine never probes a game’s data directory.
 Rust games embed compiled artifacts via <code>compiler::compile_dirs</code> /
-<code>loader::register_compiled</code>; the runner loads zero-Rust projects.</li>
+<code>loader::register_compiled</code>; zero-Rust projects are loaded by the runner.</li>
 <li>Game repositories consume the engine as crates.io deps or tag-pinned git
 deps (see the repo <code>README.md</code>).</li>
 </ul>
@@ -6001,12 +5985,12 @@ deps (see the repo <code>README.md</code>).</li>
 <p><code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code> files compile through
 <code>dotzuki-engine-dsl</code>:</p>
 <ul>
-<li><code>.scene</code> → JavaScript that <code>dotzuki-engine-script</code> (Boa-based) consumes;
+<li><code>.scene</code> → JavaScript consumed by <code>dotzuki-engine-script</code> (Boa-based);
 <code>dotzuki-engine-dsl</code> also ships a native AST interpreter
 (<code>crates/dotzuki-engine-dsl/src/interpreter.rs</code>) that executes scenes with
 no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
 scene semantics (see <code>AGENTS.md</code> for the interpreter-vs-Boa policy).</li>
-<li><code>.gui</code> → JSON the renderer layout engine consumes.</li>
+<li><code>.gui</code> → JSON consumed by the renderer layout engine.</li>
 <li><code>.theme</code> / <code>.style</code> → JSON token/stylesheet files (see
 <a href="#theme--style-dsl-reference-theme--style">the theme &amp; style reference</a>).</li>
 </ul>
@@ -6016,8 +6000,8 @@ with the compiled project.</p>
 <p>Live battle turns run through <code>dotzuki_engine::battle::stack::StackDriver</code>:
 events, effects and handlers form a stack, and <code>dotzuki-rules</code> compiles
 declarative <code>rules.ron</code> into those runtime stacks. The model and its RNG
-determinism rationale live in <a href="#the-effect-stack-battle-engine">the effect stack page</a>;
-the <a href="#authoring-battles-on-the-effect-stack">battle rules guide</a> covers authoring.</p>
+determinism rationale are covered in <a href="#the-effect-stack-battle-engine">the effect stack page</a>;
+authoring is covered in <a href="#authoring-battles-on-the-effect-stack">the battle rules guide</a>.</p>
 <h2 id="provider-pattern"><a class="header" href="#provider-pattern">Provider pattern</a></h2>
 <p>Game data reaches the engine through the <code>GameData</code> trait. All identifier
 types (Map, Item, Species, …) are generic associated types on that trait, so
@@ -6098,7 +6082,7 @@ scripting VM). One sentence holds the whole design:</p>
 the events and folds the handlers; your handlers decide what happens.</strong></p>
 </blockquote>
 <p>There is <strong>no <code>Ability</code> system, no <code>Item</code> system, no weather system, no
-hazard system</strong> inside the engine. Each of those is <em>an <code>Effect</code> hosted
+hazard system</strong> inside the engine. Each of those is <em>just an <code>Effect</code> hosted
 somewhere</em> (on a battler, a side, or the field) that registers handlers for the
 events it cares about. The engine reaches them through <strong>defaulted resolver
 methods</strong> you implement on a provider trait — nothing more.</p>
@@ -6301,7 +6285,7 @@ via <code>den.max(1)</code>):</p>
 fn as_accuracy(self) -&gt; u8;    fn as_bool(self) -&gt; bool;
 fn scale(self, num: u32, den: u32) -&gt; RelayVar;   // e.g. ×1.5 == relay.scale(3, 2)
 <span class="boring">}</span></code></pre>
-<p>A handler that contributes a ×1.5 boost returns <code>Set(relay.scale(3, 2))</code>; a
+<p>A handler that contributes a ×1.5 boost just returns <code>Set(relay.scale(3, 2))</code>; a
 veto returns <code>Fail</code>; an observer that only side-effects (residual chip, recoil)
 mutates through <code>ctx</code> and returns <code>Unchanged</code>.</p>
 <h3 id="24-ordering--order--priority-and-the-comparepriority-knobs"><a class="header" href="#24-ordering--order--priority-and-the-comparepriority-knobs">2.4 Ordering — <code>order</code> / <code>priority</code> and the comparePriority knobs</a></h3>
@@ -6428,7 +6412,7 @@ last byte after exhaustion) and exposes <code>consumed() -&gt; usize</code> for 
 parity assertions.</p>
 <h3 id="29-the-provider-resolvers-you-implement"><a class="header" href="#29-the-provider-resolvers-you-implement">2.9 The provider resolvers you implement</a></h3>
 <p>You implement <strong><code>EffectProvider</code></strong> (which extends <code>BattleProvider</code>). This is the
-entire “abilities/items/weather/side-conditions are Effects” mechanism: a
+entire “abilities/items/weather/side-conditions are just Effects” mechanism: a
 set of resolvers + the collection pass. There is <strong>no <code>Ability</code> dispatcher</strong>.</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -11732,7 +11716,7 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 <p>同一 (map, npc) 路由没有 <code>after</code> 链会在编译期告警为冲突；措辞与完整 trigger 表见<a href="#scene-dsl-reference-scene">语法参考</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="ui-布局"><a class="header" href="#ui-布局">UI 布局</a></h1>
-<p>如何制作 <code>.gui</code> 布局：20×18 tile 网格、面板与文本、模板绑定、双语标签、自定义组件，以及预览-检查循环。</p>
+<p>如何制作 <code>.gui</code> 布局：20×18 瓦片网格、面板与文本、模板绑定、双语标签、自定义组件，以及预览-检查循环。</p>
 <blockquote>
 <p>本文是 <code>how-to/ui.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
@@ -11751,8 +11735,8 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 <pre><code class="language-json">{ "id": "ui", "type": "ui", "config": { "guiRoot": "ui", "extension": ".gui" } }
 </code></pre>
 <p>一个文件也可以只含 <code>component</code> 声明——共享前奏模式，按惯例是同目录下的 <code>components.gui</code>。此外，<code>.scene</code> 文件里的 <code>ui { }</code> 块声明内联布局；它与场景一起编译为 <code>&lt;SceneName&gt;_ui.json</code>（见<a href="#scenes">编写场景</a>）。所有形式都编译为渲染器期望的同一种 schema-v2 JSON。</p>
-<h2 id="tile-网格"><a class="header" href="#tile-网格">tile 网格</a></h2>
-<p>所有定位都是绝对定位，画布是 20×18 的 tile 网格。每个组件都带一个 <code>rect</code>：</p>
+<h2 id="瓦片网格"><a class="header" href="#瓦片网格">瓦片网格</a></h2>
+<p>所有定位都是绝对定位，画布是 20×18 的瓦片网格。每个组件都带一个 <code>rect</code>：</p>
 <pre><code>screen Box {
     panel {
         rect = {tx: 0, ty: 12, tw: 20, th: 6}
@@ -11760,8 +11744,8 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 }
 </code></pre>
 <ul>
-<li><code>tx</code> / <code>ty</code> —— 左上角的 tile 列 / 行（从 0 起）。</li>
-<li><code>tw</code> / <code>th</code> —— 宽 / 高，单位为 tile。</li>
+<li><code>tx</code> / <code>ty</code> —— 左上角的瓦片列 / 行（从 0 起）。</li>
+<li><code>tw</code> / <code>th</code> —— 宽 / 高，单位为瓦片。</li>
 </ul>
 <p>宽 20、高 18：全宽底部面板是 <code>tx: 0, ty: 12, tw: 20, th: 6</code>，全屏容器是 <code>tx: 0, ty: 0, tw: 20, th: 18</code>。</p>
 <h2 id="对话框"><a class="header" href="#对话框">对话框</a></h2>
@@ -11780,7 +11764,7 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
     }
 }
 </code></pre>
-<p><code>style</code> 选择边框（<code>"default"</code>、<code>"single"</code>、<code>"double"</code>，或 tile id 的自定义对象）；<code>wrap = "word"</code> 让文本在 <code>rect</code> 内换行。编译出的 JSON 是纯数据——渲染器绘制的形状：</p>
+<p><code>style</code> 选择边框（<code>"default"</code>、<code>"single"</code>、<code>"double"</code>，或瓦片 id 的自定义对象）；<code>wrap = "word"</code> 让文本在 <code>rect</code> 内换行。编译出的 JSON 是纯数据——渲染器绘制的形状：</p>
 <pre><code class="language-json">{
     "schema_version": 2,
     "screen": "Dialog",
@@ -11822,7 +11806,7 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 </code></pre>
 <p><code>@t</code> 可与绑定混用——<code>@t("MONEY ${balance}", "金钱 ${balance}")</code>——语言列表由清单的 <code>story.locales</code> 声明。运行时规则见<a href="#i18n-guide">i18n 指南</a>。</p>
 <h2 id="自定义组件"><a class="header" href="#自定义组件">自定义组件</a></h2>
-<p>内置组件覆盖面板、文本、tile、列表与光标。游戏专属的部件（血条、队伍卡片）在共享文件里声明、按名字使用；编译器对每个使用点做声明校验：</p>
+<p>内置组件覆盖面板、文本、瓦片、列表与光标。游戏专属的部件（血条、队伍卡片）在共享文件里声明、按名字使用；编译器对每个使用点做声明校验：</p>
 <pre><code>// components.gui — 仅属性 schema，所有布局共享
 component hp_bar {
   current: expr required
@@ -12634,10 +12618,10 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 <tr><th>输入</th><th>要求</th><th>编译产物</th></tr>
 </thead>
 <tbody>
-<tr><td><code>dark.theme</code></td><td>至少一个 <code>@theme</code> 块</td><td>每个 <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code>（<code>{"name", "tokens"}</code>）</td></tr>
-<tr><td><code>battle.style</code></td><td>至少一个 <code>@style</code> 块</td><td><code>_auto_styles.json</code>（独立的 <code>.style</code> 文件总是包装为 <code>_auto</code> 场景，与文件名无关；解析出的继承链一并包含在内）</td></tr>
-<tr><td><code>.scene</code> 中的内联 <code>@theme</code></td><td>—</td><td><code>&lt;scene name&gt;_theme_&lt;i&gt;.json</code></td></tr>
-<tr><td><code>.scene</code> 中的内联 <code>@style</code></td><td>—</td><td><code>&lt;scene name&gt;_styles.json</code></td></tr>
+<tr><td><code>foo.theme</code></td><td>至少一个 <code>@theme</code> 块</td><td>每个 <code>@theme &lt;name&gt;</code> → <code>&lt;name&gt;.json</code>（<code>{"name", "tokens"}</code>）</td></tr>
+<tr><td><code>bar.style</code></td><td>至少一个 <code>@style</code> 块</td><td><code>_auto_styles.json</code>（独立的 <code>.style</code> 文件总是包装为 <code>_auto</code> 场景，与文件名无关；解析出的继承链一并包含在内）</td></tr>
+<tr><td><code>.scene</code> 中的内联 <code>@theme</code></td><td>—</td><td><code>&lt;scene名&gt;_theme_&lt;i&gt;.json</code></td></tr>
+<tr><td><code>.scene</code> 中的内联 <code>@style</code></td><td>—</td><td><code>&lt;scene名&gt;_styles.json</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -12823,7 +12807,7 @@ FLAC、MP3），通过引擎的现代混音器流式播放，支持音量/声像
 <pre><code class="language-json">{ "id": "assets", "type": "assets",
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 </code></pre>
-<p>脚手架项目自带一套可用的布局：<code>data/maps/</code>（起始地图的 <code>tileset.png</code> 位于地图自己的目录，例如 <code>data/maps/Hometown/tileset.png</code>）、共享的 <code>data/tiles/</code> 库——支撑地图编辑器选 tile 面板（Backdrop/Trace）——以及 <code>gfx/</code>（散件图形）和 <code>assets/scenes/</code>（场景脚本）。声明根目录之外的一切都是项目数据，不是受管素材。</p>
+<p>脚手架项目自带一套可用的布局：<code>assets/tileset.png</code>（32×8 演示图）、<code>assets/scenes/</code>，以及 <code>data/tiles/</code>——支撑地图编辑器选 tile 面板（Backdrop/Trace）的共享 tile 库。声明根目录之外的一切都是项目数据，不是受管素材。</p>
 <h2 id="tileset"><a class="header" href="#tileset">Tileset</a></h2>
 <p>tileset 是 <code>tileset.png</code> 图集加它的 Tiled 元数据：全彩 RGBA、8×8 像素 tile 横向排列、<a href="#glossary">GID</a> 从 1 起、行优先。地图的 <code>map.tmx.json</code> 引用自己 <code>tileset.png</code> 里的 GID；collision 层用非零 GID 标记阻挡 tile——完整地图契约见<a href="#maps">制作地图</a>。</p>
 <p><code>.tsx</code> 文件为 Tiled 命名同一张图，让地图编辑器能把 tile 当调色板用。脚手架为每张地图在 <code>script.scene</code> 旁生成一份 <code>tileset.png</code>；可复用的图放在共享的 <code>data/tiles/</code> 库里。</p>

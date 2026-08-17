@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -211,7 +211,7 @@ current-architecture walkthrough.</p>
 <ul>
 <li>Games are <strong>zero-Rust</strong>: the engine never probes a game’s data directory.
 Rust games embed compiled artifacts via <code>compiler::compile_dirs</code> /
-<code>loader::register_compiled</code>; the runner loads zero-Rust projects.</li>
+<code>loader::register_compiled</code>; zero-Rust projects are loaded by the runner.</li>
 <li>Game repositories consume the engine as crates.io deps or tag-pinned git
 deps (see the repo <code>README.md</code>).</li>
 </ul>
@@ -219,12 +219,12 @@ deps (see the repo <code>README.md</code>).</li>
 <p><code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code> files compile through
 <code>dotzuki-engine-dsl</code>:</p>
 <ul>
-<li><code>.scene</code> → JavaScript that <code>dotzuki-engine-script</code> (Boa-based) consumes;
+<li><code>.scene</code> → JavaScript consumed by <code>dotzuki-engine-script</code> (Boa-based);
 <code>dotzuki-engine-dsl</code> also ships a native AST interpreter
 (<code>crates/dotzuki-engine-dsl/src/interpreter.rs</code>) that executes scenes with
 no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
 scene semantics (see <code>AGENTS.md</code> for the interpreter-vs-Boa policy).</li>
-<li><code>.gui</code> → JSON the renderer layout engine consumes.</li>
+<li><code>.gui</code> → JSON consumed by the renderer layout engine.</li>
 <li><code>.theme</code> / <code>.style</code> → JSON token/stylesheet files (see
 <a href="../reference/dsl/theme-style.html">the theme &amp; style reference</a>).</li>
 </ul>
@@ -234,8 +234,8 @@ with the compiled project.</p>
 <p>Live battle turns run through <code>dotzuki_engine::battle::stack::StackDriver</code>:
 events, effects and handlers form a stack, and <code>dotzuki-rules</code> compiles
 declarative <code>rules.ron</code> into those runtime stacks. The model and its RNG
-determinism rationale live in <a href="effect-stack.html">the effect stack page</a>;
-the <a href="../how-to/battles.html">battle rules guide</a> covers authoring.</p>
+determinism rationale are covered in <a href="effect-stack.html">the effect stack page</a>;
+authoring is covered in <a href="../how-to/battles.html">the battle rules guide</a>.</p>
 <h2 id="provider-pattern"><a class="header" href="#provider-pattern">Provider pattern</a></h2>
 <p>Game data reaches the engine through the <code>GameData</code> trait. All identifier
 types (Map, Item, Species, …) are generic associated types on that trait, so
