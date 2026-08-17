@@ -1,0 +1,509 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>战斗规则 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/battle-rules.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
+<blockquote>
+<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>项目通过顶层 <code>battle</code> 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
+（所有键均可选；默认值如下）：</p>
+<pre><code class="language-json">"battle": {
+  "party":      { "table": "heroes" },
+  "enemies":    { "table": "monsters" },
+  "encounters": { "table": "encounters" },
+  "skills":   { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+  "stats":    { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+  "resource": "mp",
+  "rules":    "data/rules.ron",
+  "items":    { "table": "items", "healField": "healHp", "starting": { "potion": 3 } },
+  "levels":   { "expField": "exp", "levelField": "level",
+                "curve": { "base": 8, "exponent": 3 }, "growth": 0.05, "maxLevel": 100 }
+}
+</code></pre>
+<h2 id="配置"><a class="header" href="#配置">配置</a></h2>
+<ul>
+<li><code>party</code> / <code>enemies</code> 指向 data 活动 <code>config.tables[]</code> 中的<strong>数据表 id</strong>（表的
+<code>dir</code> 存放记录）。战斗需要两者；引用的 id 若没有对应的已声明表，在<em>战斗真正
+开始</em>时是启动错误（从不战斗的项目不受影响）——并且无论如何都是一条
+<code>dotzuki check</code> 诊断信息。</li>
+<li><code>encounters</code>（可选）指向一张 <strong>encounter 表</strong>：其记录描述敌人队伍和 trainer
+战斗——<code>{ "id": "gym-leader-1", "name": "Leader Kai", "enemies": ["slime", "bat"], "trainer": true, "money": 80 }</code>。<code>enemies</code> 是敌人表记录 id 的有序
+列表（战斗开始时，空列表或其中的未知 id 都是明确错误），<code>trainer</code> 默认为
+<code>false</code>，<code>money</code>（获胜奖励，只有 trainer encounter 才支付）默认为 0。缺失
+⇒ 每场战斗都是单个野生敌人（v1 行为）。见下方 <strong>Encounters</strong>。</li>
+<li><code>skills</code> 指向技能表及字段名：<code>field</code>（战斗者记录中的技能 id 列表，默认
+<code>"skills"</code>）、<code>categoryField</code>（默认 <code>"type"</code>）、<code>costField</code>（默认
+<code>"mpCost"</code>）。没有 <code>skills</code> 键 ⇒ 每个战斗者只有内置的 Attack。</li>
+<li><code>stats</code> 把四个属性角色映射到记录字段名（默认 hp/atk/def/spd）。缺失/无效的
+属性字段按 1 读取。记录上可选的 <code>level</code> 字段（默认 1）供基于等级的 RON
+op/predicate 读取（<code>SetDamage</code>、<code>LevelGE</code>）——并且在有 <code>levels</code> 块时，还
+驱动属性成长（见下文）。</li>
+<li><code>resource</code> 指向保存 MP 池的记录字段；缺失 ⇒ 没有资源门槛（所有技能免费）。</li>
+<li><code>rules</code>（相对项目根目录，默认 <code>data/rules.ron</code>）<strong>仅在文件存在时</strong>用
+dotzuki-rules <code>Ruleset</code> 模型解析。它的 <code>type_chart</code> 提供效果倍率，并且——
+当它声明了 <code>effects</code> 时——那些记录是<strong>生效的</strong>：<code>kind: Move</code> 记录接管匹配的
+技能，<code>kind: Status</code> 记录定义状态，都通过引擎的效果栈解释器执行（见下方
+<strong>RON 效果钩子</strong>）；<code>kind: Ability</code>/<code>Item</code>/<code>Weather</code> 记录支撑战斗者特性、
+携带道具和场景预置的天气（见下方 <strong>Abilities, held items &amp; weather</strong>）。
+解析<em>或编译</em>失败（hook 中出现未知的事件/op/属性/类型/资源/状态名）的规则
+文件在战斗开始时是启动错误，也是一条 <code>dotzuki check</code> 诊断信息。</li>
+<li><code>items</code>（可选）启用战斗 <strong>Item</strong> 菜单：<code>table</code> 指向物品表，<code>healField</code>
+（默认 <code>"healHp"</code>）是那个数值为正即让物品可用于战斗的记录字段（即回复量），
+<code>starting</code> 是游戏启动时携带的背包（记录 id → 数量）。没有 <code>items</code> 键 ⇒ 没有
+Item 菜单。物品记录上的自由文本 <code>effect</code> 字段<strong>仅用于显示</strong>。</li>
+<li><code>levels</code>（可选）启用 <strong>EXP 与等级成长</strong>（每个键均可选，默认值如上所示）。
+缺失 ⇒ 与当前行为一致：不获得 EXP，属性永不成长，记录的 <code>level</code> 字段只供
+RON 等级 op 使用。启用该块后：
+<ul>
+<li><strong>属性成长</strong> —— 每个有效属性（双方都是，凡读取原始记录属性的地方：战斗
+构建、RON mirror、菜单 Party 视图）都按
+<code>floor(raw × (1 + growth × (level − 1)))</code> 计算，其中 <code>level</code> 来自记录的
+<code>levelField</code>（默认 <code>"level"</code>；缺失 ⇒ 1 ⇒ ×1，数值上与没有 levels 的项目
+完全一致）。5 级的敌人记录确实更强。</li>
+<li><strong>EXP 奖励</strong> —— 获胜时，每个未濒死的队伍成员获得所有被击败敌人的
+<code>expField</code> 值之和（记录缺少该字段时按 0 计），每场战斗一次，在获胜文本
+之后叙述（<code>"Aria gained 8 EXP!"</code>）。单敌人战斗的和就是该敌人的数值，与
+v1 一致。</li>
+<li><strong>升级</strong> —— 每个成员记录朝向下一级的 <code>exp</code> 进度；
+<code>exp_to_next(L) = curve.base × L^curve.exponent</code>（整数）。当
+<code>exp &gt;= exp_to_next(level)</code> 且 <code>level &lt; maxLevel</code> 时：升级，
+<code>exp -= exp_to_next(level)</code>（一次奖励可连升多级），并叙述
+（<code>"Aria grew to level 2!"</code>）。升级会用成长倍率重新计算成员的属性，并把
+最大 HP/MP 的<strong>差值</strong>补进当前池（2 级时最大 HP 60 → 63，当前 HP 增加 3；
+MP 同理）。</li>
+<li><strong>持久化</strong> —— 每名成员的 <code>level</code> + <code>exp</code> 随运行器的队伍状态和存档保存
+（<code>party[].level</code> / <code>party[].exp</code> 是可选字段；缺失 ⇒ 等级 1 / 0 EXP，所以
+存档版本保持 3，旧存档继续加载）。菜单 Party 视图显示 <code>Lv</code> 和一行
+<code>EXP &lt;progress&gt;/&lt;need&gt;</code>（仅在有该块时）。</li>
+</ul>
+</li>
+</ul>
+<p><code>levels</code> 块的 schema 见<a href="data-tables/levels.html">等级成长</a>。</p>
+<h2 id="记录"><a class="header" href="#记录">记录</a></h2>
+<p>战斗者记录 schema 见<a href="data-tables/combatants.html">战斗者记录</a>。</p>
+<p>一个战斗者是一条 <code>&lt;dataRoot&gt;/&lt;tableDir&gt;/&lt;id&gt;.json</code> 记录：<code>name</code>（显示名，缺省
+用 id）、四个属性字段、<code>resource</code> 字段、可选的 <code>element</code> 字符串（type chart
+查询中的防守方），以及技能 id 列表。另外两个可选字段接入 RON 效果种类：
+<code>ability</code>（一个 <code>kind: Ability</code> 记录 id）和 <code>heldItem</code>（一个 <code>kind: Item</code>
+记录 id）——见下文。<code>startBattle("x")</code> 按此顺序解析：有 <code>encounters</code> 块时，
+先解析 <strong>encounter 记录</strong> <code>x</code>（一个敌人队伍，见下文）；否则解析单个<strong>敌人
+记录</strong> <code>x</code>（隐式为野生）；两张表都没有该 id 时，回退到第一个敌人记录并给出
+警告。</p>
+<h2 id="encounters敌人队伍--trainer-战斗"><a class="header" href="#encounters敌人队伍--trainer-战斗">Encounters（敌人队伍 + trainer 战斗）</a></h2>
+<p>encounter 记录 schema 见<a href="data-tables/encounters.html">Encounter 记录</a>。</p>
+<p>有 <code>encounters</code> 块时，encounter 战斗的敌方是一个<strong>队列</strong>：当前敌人濒死时，下
+一个敌人上场——叙述（<code>"Foe sent out Bat!"</code>）——作为全新的战斗者（有自己的
+属性/等级，无状态；RON mirror 重建，旧敌人的 volatiles 丢弃），并且该回合
+结束（替补上场的那一回合绝不行动；敌人 AI 不变，按当前战斗者逐个行动）。
+<strong>队列清空即获胜</strong>；EXP 奖励是所有被击败敌人的 <code>expField</code> 之和（见上文）。
+<code>trainer: true</code> 的 encounter 获胜时把它的 <code>money</code> 付给玩家的金钱——叙述
+（<code>"Got 80 G for winning!"</code>）——并禁止逃跑（见下文）。玩家侧不变：队伍/换人/
+物品/whiteout 与野怪战斗表现完全一致，即使敌人还有剩余，全员濒死的队伍仍然
+输。</p>
+<h2 id="队伍"><a class="header" href="#队伍">队伍</a></h2>
+<p>玩家的队伍是 <strong>party 表的每一条记录</strong>（按记录 id 排序；单记录队伍与 v1 表现
+一致）。每场战斗开始时，基准属性都从记录重建，但每名成员的<strong>当前 HP/MP 和
+状态在战斗之间保持</strong>——运行器持有这份队伍状态，在每场战斗结束时（胜、负和
+逃跑）收割，并随存档文件（<code>party</code>）保存。0 HP 的成员保持濒死直到被治疗（目前
+物品是唯一的治疗来源）。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
+中根菜单提供 <strong>Fight</strong>（技能菜单）、<strong>Party</strong>（成员列表，含 HP 和状态——切换
+到一名存活且非当前成员会消耗玩家回合，敌人的行动随后对新成员结算）、<strong>Item</strong>
+（配置了才出现）和 <strong>Run</strong>——野怪战斗中逃跑总是成功：旁白
+<code>"Got away safely!"</code>，战斗以 <code>"run"</code> 结果结束（无 EXP、无金钱；队伍状态与任何
+战斗结束后一样保留）。trainer 战斗中逃跑被禁止——<code>"Can't escape from a trainer battle!"</code>——并且<strong>不</strong>消耗回合（菜单返回）。当前成员濒死时玩家<strong>必须</strong>选一名
+替补：这是回合中的免费行动，之后敌人本回合剩余的行动仍然结算（若濒死先发生，
+则对新成员结算）。没有存活成员时战斗判负。属性等级在换人上场时重置；成员的
+状态随成员保留（切换时 RON mirror 从成员的当前状态重建，旧战斗者的 volatiles
+丢弃）。</p>
+<h2 id="战斗中的物品"><a class="header" href="#战斗中的物品">战斗中的物品</a></h2>
+<p>物品记录 schema 见<a href="data-tables/items.html">物品记录</a>。</p>
+<p>有 <code>items</code> 块时，运行器持有一份持久化的<strong>背包</strong>（记录 id → 数量，首次启动时
+从 <code>starting</code> 初始化，随存档文件保存）。Item 菜单列出仍有数量的可用物品
+（<code>healField</code> 数值为正的记录）；使用一个会按该数值治疗当前成员（上限为最大
+HP），数量减一，并消耗玩家回合。数量为 0 的物品不再列出。</p>
+<h2 id="技能"><a class="header" href="#技能">技能</a></h2>
+<p>技能记录 schema 见<a href="data-tables/skills.html">技能记录</a>。</p>
+<p>一条技能记录：<code>name</code>、<code>power</code>（默认 0）、<code>accuracy</code>（默认 100）、可选的
+<code>element</code>、<code>stat</code>（buff/debuff 移动哪个属性——一个 <code>stats</code> 键，如
+<code>"attack"</code>/<code>"defense"</code>，默认 attack）、category 字段（不区分大小写：
+<code>attack</code>/<code>damage</code> → 伤害，<code>heal</code> → 回复自身 <code>power</code> 点 HP，上限为最大 HP，
+<code>buff</code> → 自身属性等级 +1，<code>debuff</code> → 目标属性等级 −1，无法识别 → attack），
+以及 cost 字段（默认 0）。战斗者列表中未知的技能 id 会跳过并给出警告；空/缺失
+的列表（或根本没有技能表）得到内置的 <strong>Attack</strong>（power 40，accuracy 100，
+无消耗）。</p>
+<h2 id="标准公式"><a class="header" href="#标准公式">标准公式</a></h2>
+<p>每次造成伤害的攻击，使用整数运算：
+<code>base = power × eff_atk / max(1, eff_def)</code>，其中有效属性 = 原始属性 × 等级
+倍率（等级限制在 −4..+4：0 以上为 ×(4+stage)/4，0 以下为 ×4/(4−stage)——+1 =
+×1.25，−1 = ×0.8）；然后是浮动 ×(85+rng%16)/100；再是 1/16 的会心
+（rng%16 == 0）×1.5；最后是 type chart 倍率（技能的 <code>element</code> 对防守方的
+<code>element</code>，无克制 ⇒ 1×）。<code>damage = max(1, …)</code>。命中：当且仅当
+<code>rng % 100 &lt; accuracy</code> 时命中。每次使用技能消耗一个 accuracy 字节；伤害类
+技能随后再消耗浮动和会心字节。</p>
+<h2 id="优先级v2-a"><a class="header" href="#优先级v2-a">优先级（v2-a）</a></h2>
+<p>当规则文件声明了一个 <code>id</code> 与某技能 id 匹配的 <code>kind: Move</code> 记录时，RON 记录
+<strong>接管</strong>该技能：它的 <code>power</code>/<code>type</code>/<code>accuracy</code>/<code>cost</code> 字段覆盖表记录（缺失
+字段回退到表记录），并且行动通过效果栈运行，而非内置的 category 行为。简言
+之：<strong>RON 记录 &gt; 表记录 &gt; 内置 category</strong>。没有匹配 RON 记录的技能与 v1 表现
+完全一致，即使在规则文件带 effects 的项目中也是如此。</p>
+<h2 id="ron-效果钩子v2-a"><a class="header" href="#ron-效果钩子v2-a">RON 效果钩子（v2-a）</a></h2>
+<p>钩子在规则文件的 <code>effects</code> 记录中编写，使用 dotzuki-rules 封闭的
+<code>Op</code>/<code>Predicate</code> 词汇表（<code>workspace/crates/dotzuki-rules/src/model.rs</code>——
+<code>Boost</code>、<code>InflictStatus</code>、<code>DamageFraction</code>、<code>HealFraction</code>、<code>ScaleRelay</code>、
+<code>VetoIf</code>、<code>ApplyTypeChart</code>、<code>PayResource</code>、<code>InflictVolatile</code>、<code>SetHp</code>、
+<code>SetDamage</code>、<code>RepeatHits</code>、<code>RemoveStatus</code>，以及 <code>HasType</code>/
+<code>TargetHasStatus</code>/<code>SourceHasStatus</code>/<code>SelfHpBelow</code>/<code>LevelGE</code>/… predicates）。
+命名约定：</p>
+<ul>
+<li>RON 的 <code>stats</code> 名称是项目清单 <code>battle.stats</code> 的<strong>键</strong>
+（<code>"hp"|"attack"|"defense"|"speed"</code>；常用的 <code>atk</code>/<code>def</code>/<code>spd</code> 别名也能解析），
+所以 <code>Boost { stat: "attack" }</code> 不需要任何游戏专属代码。</li>
+<li>RON 的 <code>resources</code> 名称是项目清单 <code>battle.resource</code> 的字段名（如 <code>"mp"</code>）；
+移动记录的 <code>cost: [Cost(resource: "mp", amount: N)]</code> 与表 cost 一样经过同一
+个 MP 门槛（菜单标记 + 结算时复查），<code>PayResource</code> op 读取同一个池。</li>
+<li>RON 的 <code>types</code> 名称是记录上的 <code>element</code> 字符串（与 chart 一贯要求一致），
+匹配时不区分大小写。</li>
+<li>状态词汇表是规则集 <code>kind: Status</code> 记录的 id；
+<code>InflictStatus { status: "poison" }</code> 施加一个状态，其 <code>Residual</code> 钩子 在
+<strong>中毒战斗者的每次行动之后</strong>运行（中毒扣血），并叙述
+（<code>"Aria was afflicted with poison!"</code>、<code>"Slime is hurt by poison!"</code>、
+<code>"Aria is no longer poison!"</code>）。</li>
+</ul>
+<p>对于被接管的技能，每次行动运行器都会按以下事件序列走效果栈（minimon/wuxia
+harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛（仅当记录订阅时；
+<code>VetoIf</code>/<code>PayResource</code> 的 <code>Fail</code> 阻断行动）→ 伤害预计算（标准公式，写入
+<code>ctx.mv.damage</code>）→ <code>ModifyDamage</code> → <code>Effectiveness</code> → <code>Damage</code> → 结算 →
+<code>DamagingHit</code>（任何落地的攻击之后，无论是否造成伤害——power 为 0 的状态技能
+附加效果在此触发）→ <code>AfterMove</code>。当记录订阅 <code>Effectiveness</code> 时，钩子 全权
+负责倍率——在 <code>Effectiveness</code> hook 里编写 <code>ApplyTypeChart</code> 来获得 type chart；
+当它<strong>不</strong>订阅时，v1 的直接 chart 应用发生在预计算中（因此只覆盖
+<code>power</code>/<code>type</code> 的记录保留你期望的 chart 行为）。</p>
+<h2 id="特性携带道具与天气"><a class="header" href="#特性携带道具与天气">特性、携带道具与天气</a></h2>
+<p>其余 RON 种类均已生效，由记录字段和一条场景命令接入——无需改动项目清单：</p>
+<ul>
+<li><strong>特性</strong>（<code>kind: Ability</code> 记录，由战斗者记录上可选的 <code>ability</code> 字段指定）。
+当前战斗者的特性 钩子 在战斗开始和每次换人上场（玩家主动/被迫换人、
+encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员的特性不生效。换人上场
+触发时，在常规的增减文本（<code>"Slime's Attack fell!"</code>）之前先叙述一行介绍
+（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性
+钩子 也会加入行动战斗者的每次行动事件序列：挂接
+<code>ModifyDamage</code>/<code>DamagingHit</code>/… 的特性与技能自身的 钩子 一起触发，<code>Source</code>
+（行动者）和 <code>Target</code>（对手）相同。</li>
+<li><strong>携带道具</strong>（<code>kind: Item</code> 记录，由战斗者记录上可选的 <code>heldItem</code> 字段指定）。
+它们的触发与特性完全一样，另外其 <code>Residual</code> 钩子 会在持有者每次行动之后
+运行（Leftovers 风格的 <code>HealFraction</code>）。携带道具是<strong>持久性标志——没有东西
+会消耗它们</strong>（树果/消耗品不在范围内）；<code>healField</code> 为 0 的 <code>heldItem</code> id
+绝不会出现在 Item 菜单中。</li>
+<li><strong>天气</strong>（<code>kind: Weather</code> 记录，由场景预置）。
+<code>game.setWeather("sandstorm")</code> 为<strong>下一场</strong>战斗预置一条天气记录，
+<code>game.clearWeather()</code> 取消之前预置的天气（两者都像 flag 命令一样立即生效）。
+天气是<strong>战斗内局部的</strong>：战斗开始时会叙述天气（<code>"A sandstorm rages!"</code>，取自
+记录 id），其 <code>FieldResidual</code> 钩子 在生效期间每回合在每个战斗者的残留效果上
+触发（按 op 的 <code>target</code> 作用于双方），战斗结束时丢弃——从不保存。预置的 id
+若没有对应的已编译记录则警告并忽略。<strong>不</strong>支持在战斗中途设置天气（通过移动
+op）——<code>Op</code> 词汇表中没有天气 op；场景是唯一的触发途径。</li>
+</ul>
+<p>接入的限制：只有行动战斗者的特性/携带道具 钩子 加入它的每次行动序列（防守方
+的特性在它自己的换人/残留效果上触发，不会进入攻击方的那一轮），并且残留效果
+（状态、携带道具、天气）在战斗者自己的行动之后触发——在换人/物品回合中只有
+敌人的残留效果运行，与状态相同。</p>
+<h2 id="回合循环"><a class="header" href="#回合循环">回合循环</a></h2>
+<p>每回合：玩家选择一个根菜单操作——<strong>Fight</strong> 打开技能菜单（名称 + 消耗；付不起
+的技能会被标记且不可选），<strong>Party</strong> 换人（消耗回合），<strong>Item</strong> 使用一个物品
+（消耗回合），<strong>Run</strong> 结束野怪战斗（trainer 战斗中禁止，不消耗回合）；敌人 AI
+选择它能负担的最高威力技能（回退：第一个能负担的技能，再否则是内置 Attack）。
+Fight 回合中较快的一方（有效速度）先行动，平局时玩家先动；换人/物品回合玩家
+先动。每个行动复查 MP 门槛，掷 accuracy，结算（v1 category 或 RON 钩子）并
+叙述（<code>"Slime used Tackle!"</code>、<code>"Critical hit!"</code>、<code>"It's super effective!"</code>、
+<code>"48 damage!"</code>、<code>"Aria's Attack rose!"</code>、<code>"Come back, Aria!"</code>、<code>"Go, Bryn!"</code>、
+<code>"Aria used Potion!"</code>）；随后行动方的状态残留效果触发。敌人 0 HP 时派出队列中
+的下一个敌人（encounters）或战斗以胜利结束；当前成员 0 HP 时，只要队伍还有
+存活成员就强制换人，否则战斗判负；成功逃跑立刻结束战斗：场景以 <code>"win"</code>、
+<code>"lose"</code> 或 <code>"run"</code> 恢复。这个循环是运行器自己的阶段机，不是引擎的
+<code>StackDriver</code>；RON 钩子 按事件经由效果栈解释器触发（<code>collect_handlers</code> +
+<code>run_event</code>），即 minimon/wuxia harness 模式。</p>
+<h2 id="场景集成"><a class="header" href="#场景集成">场景集成</a></h2>
+<p><code>result = startBattle("slime")</code>（或 <code>@command("startBattle", "slime")</code>）挂起
+场景，运行战斗，并以 <code>result == "win" | "lose" | "run"</code> 恢复——照常用 <code>@if</code>
+分支并设置 flags；场景结束时收割 flags。<strong><code>"run"</code> 结果是一项契约变更</strong>：按
+<code>result == "win"</code> 分支的场景把逃跑视为未获胜（走它们的 <code>@else</code> 分支）；显式的
+<code>@if (result == "run")</code> 分支可以把它与战败区分开。逃跑不给 EXP 和金钱，队伍
+状态与任何战斗结束后一样保留。<code>startWildBattle(species, level)</code> 表现相同（v1
+忽略 <code>level</code>）。<code>setWeather(id)</code> / <code>clearWeather()</code> 预置或取消下一场战斗的天气
+（见上方 <strong>Abilities, held items &amp; weather</strong>）。<strong>没有</strong> <code>battle</code> 区块的项目会
+警告并以 <code>"win"</code> 自动完成（保持不败继续，与任何未实现的命令一样）。战败把
+<code>"lose"</code> 返回给场景（播放它的战败文本），然后触发 <strong>game-over whiteout</strong>（见
+<a href="project-manifest.html#game-over">游戏结束</a>）：队伍回复，玩家回到入口出生点。</p>
+<h2 id="无场景战斗随机-encounters"><a class="header" href="#无场景战斗随机-encounters">无场景战斗（随机 encounters）</a></h2>
+<p>走路触发的战斗（objects 伴生文件的 <code>encounters</code> 块——见
+<a href="../how-to/maps.html">地图</a>）没有场景可恢复，因此它的结果直接回到大地图：<strong>胜利</strong>
+或<strong>逃跑</strong>原地返回 <code>Mode::Overworld</code>（玩家从 encounter tile 继续行走；
+EXP/升级/trainer 金钱和队伍状态/背包的收割与场景战斗结束后完全一致），<strong>战败</strong>
+直接触发 game-over whiteout（没有战败文本——没有场景来播放它）。其余所有战斗
+语义——抽中 id 的解析顺序（encounter 记录 → 单个敌人记录）、trainer 战斗禁止
+逃跑、EXP 求和、特性/天气——都与场景触发的战斗相同。</p>
+<h2 id="剩余限制"><a class="header" href="#剩余限制">剩余限制</a></h2>
+<p>现在每种 RON <code>EffectKind</code> 都会触发（Move / Status / Ability / Item / Weather）；
+剩余的部分：volatiles 仅支持安装与读取（<code>InflictVolatile</code> 安装、<code>HasVolatile</code>
+读取——没有东西会清除它们）；RON 技能的 HP/MP 被限制在引擎的 <code>u16</code> 池中；
+物品只能治疗（没有解状态/复活/战斗专属效果），携带道具从不消耗；防守方的
+特性/携带道具 钩子 不加入攻击方的每次行动；天气只能由场景预置（没有战斗中
+的 op 可以设置）。后续 PR：迁移到 <code>StackDriver</code>、回复点系统（whiteout 总是在
+入口出生点重生）。</p>
+<h2 id="dotzuki-check-的校验"><a class="header" href="#dotzuki-check-的校验"><code>dotzuki check</code> 的校验</a></h2>
+<p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
+（party/enemies/encounters/skills/items）必须存在于 data 活动的
+<code>config.tables[]</code> 中，引用的属性/技能字段和物品的 <code>healField</code> 必须存在于表
+schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 字段，并且规则文件（磁盘上
+存在时）必须能按 dotzuki-rules <code>Ruleset</code> 模型解析，且能对着封闭词汇表编译
+通过——hook 中未知的事件、op，或属性/类型/资源/状态名都会产生诊断信息，就像
+它会在战斗开始时成为启动错误一样。
+战斗诊断信息与 DSL 诊断信息一样打印，并让退出码失败。
+记录 JSON 不会被加载——项目清单的表定义就够了。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/project-manifest.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/audio-commands.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/project-manifest.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/audio-commands.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
