@@ -1,0 +1,26 @@
+{
+  "name": "dotzuki-editor-dsh-runtime",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Optional DeepSeek Harness (dsh) runtime for the dotzuki-editor assistant. Installed on demand (`pnpm install` in this directory); the editor falls back to its regular AI SDK providers when this is absent.",
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "@deepseek-ai/dsh-sdk-jsonrpc-demo": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-sdk-jsonrpc-server": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm-deepseek": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-sandbox-local": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-sandbox-policy": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-subprocess-local": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-terminal-bash": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-fs-local": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-bash-persistent": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tool-str-replace-editor": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-invariants": "0.1.0-rc.6",
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-app-boot": "0.1.0-rc.6"
+  }
+}

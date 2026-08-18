@@ -17,6 +17,8 @@ export interface ProviderProfile {
   kind: 'anthropic' | 'openai'
   baseURL: string
   model: string
+  /** Execution backend for assistant chat turns. Absent = 'sdk' (direct). */
+  backend?: 'sdk' | 'dsh'
   /** Optional HTTP(S) proxy for reaching the provider, e.g. http://127.0.0.1:9085. */
   proxyUrl?: string
   /** Optional embedding model id (openai-compatible) — enables retrieval/RAG. */

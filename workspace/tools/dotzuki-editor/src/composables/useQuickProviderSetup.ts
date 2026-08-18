@@ -33,7 +33,9 @@ export function useQuickProviderSetup() {
   const qpReady = computed(() => {
     const v = qp.value
     if (!v.id.trim() || !v.model.trim() || !v.key.trim()) return false
-    // openai-compatible endpoints need a base URL; anthropic uses the SDK default
+    // openai-compatible endpoints need a base URL; anthropic uses the SDK
+    // default. The dsh backend ignores baseURL entirely (local runtime).
+    if (qpPreset.value.backend === 'dsh') return true
     return qpPreset.value.kind !== 'openai' || !!v.baseURL.trim()
   })
 
@@ -57,6 +59,8 @@ export function useQuickProviderSetup() {
       const profile: ProviderProfile = {
         id: qp.value.id.trim(), kind: qpPreset.value.kind,
         baseURL: qp.value.baseURL.trim(), model: qp.value.model.trim(),
+        // The execution backend rides along from the preset (absent = 'sdk').
+        ...(qpPreset.value.backend === 'dsh' ? { backend: 'dsh' as const } : {}),
       }
       await saveProviders([...providers.value, profile])
       setStoredKey(profile.id, qp.value.key.trim())

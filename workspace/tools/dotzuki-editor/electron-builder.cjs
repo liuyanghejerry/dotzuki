@@ -67,6 +67,7 @@ module.exports = {
     '!dist-electron/wasm-pkg/**',
     '!dist-electron/wasm-runner-pkg/**',
     '!dist-electron/wasm-node-pkg/**',
+    '!dist-electron/dsh-runtime/**',
     'electron/**/*',
     'package.json',
   ],
@@ -74,11 +75,14 @@ module.exports = {
   // not inside the asar — the /wasm route reads it via DOTZUKI_WASM_ROOT. Same for
   // the playtest runner pkg (Resources/wasm-runner-pkg ← DOTZUKI_RUNNER_WASM_ROOT)
   // and the nodejs-target scene-compile pkg (Resources/wasm-node-pkg ←
-  // DOTZUKI_WASM_NODE_ROOT, read by sceneCheck's compile layer).
+  // DOTZUKI_WASM_NODE_ROOT, read by sceneCheck's compile layer). The optional
+  // DeepSeek Harness runtime ships the same way (Resources/dsh-runtime ←
+  // DOTZUKI_DSH_BIN / DOTZUKI_DSH_CONFIG, read by server/dsh.ts).
   extraResources: [
     { from: 'dist-electron/wasm-pkg', to: 'wasm-pkg' },
     { from: 'dist-electron/wasm-runner-pkg', to: 'wasm-runner-pkg' },
     { from: 'dist-electron/wasm-node-pkg', to: 'wasm-node-pkg' },
+    { from: 'dist-electron/dsh-runtime', to: 'dsh-runtime' },
   ],
   asar: true,
   mac: {

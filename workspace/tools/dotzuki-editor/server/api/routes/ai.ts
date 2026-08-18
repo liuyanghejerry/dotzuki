@@ -8,6 +8,7 @@ import { resolveDataPath, loadConfig } from '../projectConfig'
 import { providersFile, imageProvidersFile, editorSettingsFile } from '../storyPaths'
 
 import { testProvider } from '../../ai'
+import { testDsh, streamDshChat } from '../../dsh'
 import { testImageProvider } from '../../spriteSheet/generate'
 import { getProjectContext } from '../../context/projectContext'
 import { getAction, runAction, legacyEmit, applyChange, streamChat } from '../../actions'
@@ -35,6 +36,9 @@ export function registerAi(server: any) {
           kind: p.kind === 'anthropic' ? 'anthropic' : 'openai',
           baseURL: String(p.baseURL || ''),
           model: String(p.model || ''),
+          // The execution backend is orthogonal to the wire protocol; only the
+          // non-default 'dsh' value is persisted (absent = 'sdk').
+          ...(p.backend === 'dsh' ? { backend: 'dsh' as const } : {}),
           ...(p.proxyUrl ? { proxyUrl: String(p.proxyUrl) } : {}),
           ...(p.embeddingModel ? { embeddingModel: String(p.embeddingModel) } : {}),
           ...(p.imageModel ? { imageModel: String(p.imageModel) } : {}),
@@ -128,6 +132,14 @@ export function registerAi(server: any) {
     try {
       const { profile, apiKey, prompt } = JSON.parse(await readBody(req))
       if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      // backend 'dsh' routes through the DeepSeek Harness runtime instead of the
+      // AI SDK — it needs an open project (the runtime works on the project).
+      if (profile.backend === 'dsh') {
+        let project = null
+        try { loadConfig(); project = getProjectContext() } catch { /* no project */ }
+        const result = await testDsh({ project, profile, apiKey, prompt })
+        return sendJson(res, result)
+      }
       const result = await testProvider(profile, apiKey, prompt)
       return sendJson(res, result)
     } catch (e) {
@@ -173,11 +185,22 @@ export function registerAi(server: any) {
   server.middlewares.use('/api/ai/chat', async (req, res) => {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
-      const { messages, profile, apiKey, uiContext, imageProviders, debug } = JSON.parse(await readBody(req))
+      const { messages, profile, apiKey, uiContext, imageProviders, debug, threadId } = JSON.parse(await readBody(req))
       if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
       // loadConfig is the no-project probe: it throws when no .dotzuki-editor.json.
       let project = null
       try { loadConfig(); project = getProjectContext() } catch { project = null }
+      // backend 'dsh' delegates the whole turn to a local DeepSeek Harness runtime
+      // (streams the same UI-message format, so the client chat UI is unchanged).
+      if (profile.backend === 'dsh') {
+        const ac = new AbortController()
+        req.on('close', () => ac.abort())
+        await streamDshChat({
+          res, project, profile, apiKey, uiMessages: Array.isArray(messages) ? messages : [],
+          threadId: typeof threadId === 'string' ? threadId : 'default', signal: ac.signal,
+        })
+        return
+      }
       const ac = new AbortController()
       req.on('close', () => ac.abort())
       await streamChat({

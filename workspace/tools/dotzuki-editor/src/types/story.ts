@@ -152,6 +152,12 @@ export type StoryKind = 'characters' | 'quests' | 'arcs'
 /** Which wire protocol a vendor speaks. */
 export type ProviderKind = 'anthropic' | 'openai'
 
+/** How assistant turns are EXECUTED — orthogonal to the provider (which model).
+ *  `sdk` (default) = direct AI SDK calls; `dsh` = a local DeepSeek Harness
+ *  agent runtime subprocess drives the turn (model still comes from this
+ *  profile; today only DeepSeek models are routable through the runtime). */
+export type AssistantBackend = 'sdk' | 'dsh'
+
 /**
  * A named LLM provider profile for TEXT generation (character refine, scene
  * gen). NOTE: never carries an API key — keys live in the browser (localStorage)
@@ -162,6 +168,8 @@ export interface ProviderProfile {
   kind: ProviderKind
   baseURL: string
   model: string
+  /** Execution backend for assistant chat turns. Absent = 'sdk' (direct). */
+  backend?: AssistantBackend
   /** Optional HTTP(S) proxy for reaching the provider, e.g. http://127.0.0.1:9085. */
   proxyUrl?: string
   /** Optional embedding model id (openai-compatible) — enables retrieval/RAG. */

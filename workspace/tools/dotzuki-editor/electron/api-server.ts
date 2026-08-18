@@ -30,6 +30,7 @@ import { registerTiles } from '../server/api/routes/tiles'
 import { registerGroups } from '../server/api/routes/groups'
 import { registerStories } from '../server/api/routes/stories'
 import { registerAi } from '../server/api/routes/ai'
+import { registerDsh } from '../server/api/routes/dsh'
 import { registerCv } from '../server/api/routes/cv'
 import { registerSprites } from '../server/api/routes/sprites'
 import { registerAssets } from '../server/api/routes/assets'
@@ -99,6 +100,7 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   registerGroups(server)
   registerStories(server)
   registerAi(server)
+  registerDsh(server)
   registerCv(server)
   registerSprites(server)
   registerAssets(server)

@@ -224,6 +224,8 @@ export function useAssistantChat() {
     await chat.sendMessage({ text }, {
       body: {
         profile: provider, apiKey: key,
+        // The dsh backend maps chat threads 1:1 to harness sessions server-side.
+        threadId: threadStore.activeThreadId.value,
         ...(uiContext ? { uiContext } : {}),
         ...(imageProvidersWithKeys.length ? { imageProviders: imageProvidersWithKeys } : {}),
         // Prompt inspector is opt-in: only ask the server for the debug stream

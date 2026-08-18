@@ -4,6 +4,9 @@ dist-electron/
 release/
 tsconfig.tsbuildinfo
 pnpm-lock.yaml
+# The optional dsh-runtime is a standalone package (see its README) — its
+# lockfile IS committed so the runtime install resolves a reproducible set.
+!dsh-runtime/pnpm-lock.yaml
 test-project/
 
 # Playwright E2E artifacts (see playwright.config.ts; fixture lives in e2e/fixtures/)
