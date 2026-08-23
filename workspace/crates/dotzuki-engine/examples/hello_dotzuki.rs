@@ -563,6 +563,7 @@ fn build_npc_states(npcs: &[NpcDefinition]) -> Vec<NpcRuntimeState> {
                 defeated: false,
                 visible: true,
                 scripted_path: std::collections::VecDeque::new(),
+                wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
             };
             s
         })

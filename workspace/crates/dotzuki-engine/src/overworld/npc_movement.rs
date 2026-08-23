@@ -12,7 +12,7 @@ use crate::tileset::TilesetTrait;
 
 use super::collision::{CollisionProvider, SpritePosition};
 use super::player_movement::direction_delta;
-use super::types::{Direction, MapData, NpcMovementType};
+use super::types::{Direction, MapData, NpcMovementType, NpcWanderAxis};
 
 // ── NPC Runtime State ──────────────────────────────────────────────
 
@@ -31,6 +31,8 @@ pub struct NpcRuntimeState {
     pub facing: Direction,
     pub scripted_frame: Option<u8>,
     pub movement_type: NpcMovementType,
+    /// Axis restriction for Wander NPCs (classic GB movement byte 2).
+    pub wander_axis: NpcWanderAxis,
     pub range: u8,
     pub walk_counter: u8,
     pub delay_counter: u8,
@@ -42,10 +44,13 @@ pub struct NpcRuntimeState {
 
 // ── Constants ──────────────────────────────────────────────────────
 
-/// Number of frames to walk one tile (8 frames per tile, matching the player).
-pub const NPC_WALK_FRAMES: u8 = 8;
-/// Maximum delay between random NPC movements (~1 second at 60fps).
-pub const NPC_MAX_DELAY: u8 = 63;
+/// Frames to walk one tile. The classic GB walkers take $10 frames per tile —
+/// HALF the player's speed (WALKANIMATIONCOUNTER = $10, movement.asm:296-339).
+pub const NPC_WALK_FRAMES: u8 = 16;
+/// Maximum delay between random NPC movements: `Random & $7F` ∈ 0..=127
+/// (movement.asm:352-361; a rolled 0 becomes 256 — that quirk is preserved
+/// by callers as an immediate re-roll, matching the original's wrap).
+pub const NPC_MAX_DELAY: u8 = 127;
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -229,7 +234,11 @@ pub fn update_npc_movement<T: TilesetTrait>(
                     continue;
                 }
 
-                // Pick a random direction from the lower 2 bits of rng_value
+                // Pick a random direction from the lower 2 bits of rng_value,
+                // filtered by the classic axis byte (movement byte 2:
+                // UP_DOWN $01 → vertical only, LEFT_RIGHT $02 → horizontal
+                // only, ANY $00 → all four — movement.asm:195-251). An
+                // axis-off roll re-rolls the delay instead of moving.
                 let dir_bits = (rng_value.wrapping_add(i as u8)) & 0x03;
                 let dir = match dir_bits {
                     0 => Direction::Down,
@@ -238,27 +247,30 @@ pub fn update_npc_movement<T: TilesetTrait>(
                     3 => Direction::Right,
                     _ => unreachable!(),
                 };
+                let axis_ok = match npc.wander_axis {
+                    NpcWanderAxis::Any => true,
+                    NpcWanderAxis::Vertical => {
+                        dir == Direction::Up || dir == Direction::Down
+                    }
+                    NpcWanderAxis::Horizontal => {
+                        dir == Direction::Left || dir == Direction::Right
+                    }
+                };
+                if !axis_ok {
+                    npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                    continue;
+                }
 
                 let (dx, dy) = direction_delta(dir);
                 let tx = (npc.x as i32 + dx as i32) as u16;
                 let ty = (npc.y as i32 + dy as i32) as u16;
 
-                // Bounds check
+                // Bounds check. (No radial leash: classic random walkers have
+                // none — they walk until blocked.)
                 if tx >= max_x || ty >= max_y {
                     npc.facing = dir;
                     npc.delay_counter = rng_value & NPC_MAX_DELAY;
                     continue;
-                }
-
-                // Range check (distance from home position)
-                if npc.range > 0 {
-                    let dist_x = (tx as i32 - npc.home_x as i32).unsigned_abs();
-                    let dist_y = (ty as i32 - npc.home_y as i32).unsigned_abs();
-                    if dist_x > npc.range as u32 || dist_y > npc.range as u32 {
-                        npc.facing = dir;
-                        npc.delay_counter = rng_value & NPC_MAX_DELAY;
-                        continue;
-                    }
                 }
 
                 // Check occupied tiles (other NPCs)

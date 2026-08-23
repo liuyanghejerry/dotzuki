@@ -167,6 +167,21 @@ pub enum NpcMovementType {
     FacePlayer,
 }
 
+/// Axis restriction for [`NpcMovementType::Wander`] — the classic GB
+/// "movement byte 2" of a random-walk NPC ($00 any / $01 up-down /
+/// $02 left-right). Gen-1 random walkers have NO radial leash: they walk
+/// the allowed axis until blocked, forever.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NpcWanderAxis {
+    /// Any of the four directions (movement byte 2 = $00).
+    #[default]
+    Any,
+    /// Only vertically — up/down (movement byte 2 = $01, UP_DOWN).
+    Vertical,
+    /// Only horizontally — left/right (movement byte 2 = $02, LEFT_RIGHT).
+    Horizontal,
+}
+
 /// Definition of an NPC placed on the map (static data from map objects).
 ///
 /// This is a generic NPC definition with no game-specific fields.
@@ -182,6 +197,9 @@ pub struct NpcDefinition {
     pub y: u8,
     /// Movement type.
     pub movement: NpcMovementType,
+    /// Axis restriction for Wander NPCs (classic movement byte 2). Ignored
+    /// for other movement types.
+    pub wander_axis: NpcWanderAxis,
     /// Facing direction.
     pub facing: Direction,
     /// Range of movement (0 = stationary).
@@ -207,6 +225,32 @@ impl NpcDefinition {
             x,
             y,
             movement,
+            wander_axis: NpcWanderAxis::Any,
+            facing,
+            range,
+            text_id,
+        }
+    }
+
+    /// Create a new NPC definition with an explicit Wander axis (the classic
+    /// GB "movement byte 2"). Only meaningful for [`NpcMovementType::Wander`].
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_axis(
+        sprite_id: u8,
+        x: u8,
+        y: u8,
+        movement: NpcMovementType,
+        wander_axis: NpcWanderAxis,
+        facing: Direction,
+        range: u8,
+        text_id: u8,
+    ) -> Self {
+        Self {
+            sprite_id,
+            x,
+            y,
+            movement,
+            wander_axis,
             facing,
             range,
             text_id,

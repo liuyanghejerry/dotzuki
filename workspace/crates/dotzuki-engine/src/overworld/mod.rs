@@ -53,5 +53,6 @@ pub use player_movement::{
 };
 pub use types::{
     Direction, MapConnection, MapConnections, MapData, MovementState, NpcDefinition,
-    NpcMovementType, OverworldInput, OverworldState, PlayerState, Sign, TransportMode, WarpPoint,
+    NpcMovementType, NpcWanderAxis, OverworldInput, OverworldState, PlayerState, Sign,
+    TransportMode, WarpPoint,
 };

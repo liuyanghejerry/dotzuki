@@ -191,14 +191,26 @@ pub fn advance_step<M: MapTrait>(state: &mut GenericOverworldState<M>) -> bool {
             state.encounter_cooldown -= 1;
         }
 
-        if state.repel_steps > 0 {
-            state.repel_steps -= 1;
-        }
+        // NOTE: REPEL is intentionally NOT decremented here. In the classic
+        // model the counter ticks inside the wild-encounter check itself
+        // (pokered: wild_encounters.asm:19-25), which only runs when the
+        // step may actually roll an encounter (not while warping, ledge
+        // jumping, cooldown-active, or during scripted movement). Games
+        // that want a plain per-step tick may call `tick_repel_step`.
 
         return true;
     }
 
     false
+}
+
+/// Decrement the REPEL counter by one (saturating at 0). Games call this from
+/// their own encounter-roll gating, mirroring the classic TryDoWildEncounter
+/// placement; see the note on [`advance_step`].
+pub fn tick_repel_step<M: MapTrait>(state: &mut GenericOverworldState<M>) {
+    if state.repel_steps > 0 {
+        state.repel_steps -= 1;
+    }
 }
 
 /// Get the x/y delta for a direction.
