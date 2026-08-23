@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+            window.path_to_searchindex_js = "../searchindex-66886069.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="ui-布局"><a class="header" href="#ui-布局">UI 布局</a></h1>
-<p>如何制作 <code>.gui</code> 布局：20×18 瓦片网格、面板与文本、模板绑定、双语标签、自定义组件，以及预览-检查循环。</p>
+<p>如何制作 <code>.gui</code> 布局：20×18 tile 网格、面板与文本、模板绑定、双语标签、自定义组件，以及预览-检查循环。</p>
 <blockquote>
 <p>本文是 <code>how-to/ui.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
@@ -200,8 +200,8 @@
 <pre><code class="language-json">{ "id": "ui", "type": "ui", "config": { "guiRoot": "ui", "extension": ".gui" } }
 </code></pre>
 <p>一个文件也可以只含 <code>component</code> 声明——共享前奏模式，按惯例是同目录下的 <code>components.gui</code>。此外，<code>.scene</code> 文件里的 <code>ui { }</code> 块声明内联布局；它与场景一起编译为 <code>&lt;SceneName&gt;_ui.json</code>（见<a href="./scenes.html">编写场景</a>）。所有形式都编译为渲染器期望的同一种 schema-v2 JSON。</p>
-<h2 id="瓦片网格"><a class="header" href="#瓦片网格">瓦片网格</a></h2>
-<p>所有定位都是绝对定位，画布是 20×18 的瓦片网格。每个组件都带一个 <code>rect</code>：</p>
+<h2 id="tile-网格"><a class="header" href="#tile-网格">tile 网格</a></h2>
+<p>所有定位都是绝对定位，画布是 20×18 的 tile 网格。每个组件都带一个 <code>rect</code>：</p>
 <pre><code>screen Box {
     panel {
         rect = {tx: 0, ty: 12, tw: 20, th: 6}
@@ -209,8 +209,8 @@
 }
 </code></pre>
 <ul>
-<li><code>tx</code> / <code>ty</code> —— 左上角的瓦片列 / 行（从 0 起）。</li>
-<li><code>tw</code> / <code>th</code> —— 宽 / 高，单位为瓦片。</li>
+<li><code>tx</code> / <code>ty</code> —— 左上角的 tile 列 / 行（从 0 起）。</li>
+<li><code>tw</code> / <code>th</code> —— 宽 / 高，单位为 tile。</li>
 </ul>
 <p>宽 20、高 18：全宽底部面板是 <code>tx: 0, ty: 12, tw: 20, th: 6</code>，全屏容器是 <code>tx: 0, ty: 0, tw: 20, th: 18</code>。</p>
 <h2 id="对话框"><a class="header" href="#对话框">对话框</a></h2>
@@ -229,7 +229,7 @@
     }
 }
 </code></pre>
-<p><code>style</code> 选择边框（<code>"default"</code>、<code>"single"</code>、<code>"double"</code>，或瓦片 id 的自定义对象）；<code>wrap = "word"</code> 让文本在 <code>rect</code> 内换行。编译出的 JSON 是纯数据——渲染器绘制的形状：</p>
+<p><code>style</code> 选择边框（<code>"default"</code>、<code>"single"</code>、<code>"double"</code>，或 tile id 的自定义对象）；<code>wrap = "word"</code> 让文本在 <code>rect</code> 内换行。编译出的 JSON 是纯数据——渲染器绘制的形状：</p>
 <pre><code class="language-json">{
     "schema_version": 2,
     "screen": "Dialog",
@@ -271,7 +271,7 @@
 </code></pre>
 <p><code>@t</code> 可与绑定混用——<code>@t("MONEY ${balance}", "金钱 ${balance}")</code>——语言列表由清单的 <code>story.locales</code> 声明。运行时规则见<a href="./i18n.html">i18n 指南</a>。</p>
 <h2 id="自定义组件"><a class="header" href="#自定义组件">自定义组件</a></h2>
-<p>内置组件覆盖面板、文本、瓦片、列表与光标。游戏专属的部件（血条、队伍卡片）在共享文件里声明、按名字使用；编译器对每个使用点做声明校验：</p>
+<p>内置组件覆盖面板、文本、tile、列表与光标。游戏专属的部件（血条、队伍卡片）在共享文件里声明、按名字使用；编译器对每个使用点做声明校验：</p>
 <pre><code>// components.gui — 仅属性 schema，所有布局共享
 component hp_bar {
   current: expr required

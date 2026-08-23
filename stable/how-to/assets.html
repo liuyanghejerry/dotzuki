@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+            window.path_to_searchindex_js = "../searchindex-66886069.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -203,10 +203,12 @@ and the editor’s Assets activity lists exactly those roots. By convention
 <pre><code class="language-json">{ "id": "assets", "type": "assets",
   "config": { "roots": ["gfx"], "extensions": [".png", ".json"] } }
 </code></pre>
-<p>The scaffolded project ships a working layout: <code>assets/tileset.png</code> (a 32×8
-demo sheet), <code>assets/scenes/</code>, and <code>data/tiles/</code> — the shared tile library
-that backs the map editor’s tile picker (Backdrop/Trace). Everything
-outside the declared roots is project data, not managed assets.</p>
+<p>The scaffolded project ships a working layout: <code>data/maps/</code> with a starter
+map (its <code>tileset.png</code> lives in the map’s own directory, e.g.
+<code>data/maps/Hometown/tileset.png</code>), the shared <code>data/tiles/</code> library that
+backs the map editor’s tile picker (Backdrop/Trace), <code>gfx/</code> for loose
+graphics, and <code>assets/scenes/</code> for scene scripts. Everything outside the
+declared roots is project data, not managed assets.</p>
 <h2 id="tilesets"><a class="header" href="#tilesets">Tilesets</a></h2>
 <p>A tileset is the <code>tileset.png</code> atlas plus its Tiled metadata: full-color
 RGBA, 8×8-pixel tiles laid out horizontally, <a href="../reference/glossary.html">GIDs</a>

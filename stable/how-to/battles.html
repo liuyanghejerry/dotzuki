@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f13ae495.js";
+            window.path_to_searchindex_js = "../searchindex-66886069.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -226,10 +226,11 @@ engine edits</strong>, depending on <code>dotzuki-engine</code> (and, for the da
 <h2 id="1-tutorial-stand-up-a-minimal-ruleset-the-minimon-walkthrough"><a class="header" href="#1-tutorial-stand-up-a-minimal-ruleset-the-minimon-walkthrough">1. Tutorial: stand up a minimal ruleset (the minimon walkthrough)</a></h2>
 <p><a href="../../examples/minimon"><code>examples/minimon</code></a> authors a Gen-4-shaped battle system —
 phys/special split + Intimidate + Clear Body + Leftovers + Sandstorm — on the
-stack with <strong>zero engine edits</strong>. Its only dependency is the engine:</p>
+stack with <strong>zero engine edits</strong> and only game-agnostic dependencies:</p>
 <pre><code class="language-toml"># examples/minimon/Cargo.toml
 [dependencies]
 dotzuki-engine = { path = "../../crates/dotzuki-engine" }
+dotzuki-rules  = { path = "../../crates/dotzuki-rules" }
 </code></pre>
 <h3 id="step-1--define-the-id-enums-the-6-stat-split-shape"><a class="header" href="#step-1--define-the-id-enums-the-6-stat-split-shape">Step 1 — Define the id enums (the 6-stat split shape)</a></h3>
 <p>The engine indexes <code>EnumMap&lt;P::Stat&gt;</code> by an opaque key, so choosing the split
@@ -274,7 +275,7 @@ read:</p>
 <span class="boring">}</span></code></pre>
 <p><code>EffectProvider</code> supplies <code>EffectStateKind = Kind</code> and the resolvers that map
 opaque ids to authored <code>&amp;'static Effect</code>s — this is “abilities/items/weather are
-just Effects hosted somewhere”:</p>
+Effects hosted somewhere”:</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl EffectProvider for MinimonProvider {
@@ -518,7 +519,8 @@ each step.</p>
 const table of <code>(atk_index, def_index, num, den)</code> rows (<code>lib.rs:120-135</code>):</p>
 <pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub const TYPE_CHART: &amp;[(usize, usize, u32, u32)] = &amp;[
+</span>&lt;!-- not verified: elided rows, illustrative only --&gt;
+pub const TYPE_CHART: &amp;[(usize, usize, u32, u32)] = &amp;[
     (0, 1, 2, 1), // 金克木  Metal → Wood
     (1, 4, 2, 1), // 木克土  Wood  → Earth
     (4, 2, 2, 1), // 土克水  Earth → Water
@@ -586,7 +588,8 @@ effect — <code>MOVE_DAMAGE_EFFECT</code> (Normal/untyped ⇒ neutral identity)
 list of <code>( atk:, def:, mult: [n, d] )</code> rows, applied by the <code>ApplyTypeChart</code>
 primitive op on an <code>Effectiveness</code> hook (<code>rules.ron:39-54</code>, see
 <a href="#3-no-code-authoring-with-rulesron-the-dotzuki-rules-loader">§3</a>):</p>
-<pre><code class="language-ron">type_chart: [
+<pre><code class="language-ron">&lt;!-- not verified: excerpt, not loadable standalone --&gt;
+type_chart: [
     ( atk: "Metal", def: "Wood",  mult: [2, 1] ),   // 金克木
     ( atk: "Water", def: "Fire",  mult: [2, 1] ),   // 水克火
     ( atk: "Water", def: "Wood",  mult: [0, 1] ),   // 水→木 immunity
@@ -615,7 +618,7 @@ add <strong>moves, abilities, items, types, and resource costs with zero Rust</s
 <strong>Option A</strong> — a single <code>interpret()</code> fn keyed by <code>EffectId</code>, registered as the
 <code>call</code> of each generated <code>Effect</code>. There is <strong>zero engine change</strong>: the engine
 already threads <code>source_effect: eff.id</code> to every handler (<code>dispatch.rs:128</code>), and
-<code>interpret</code> is just another <code>HandlerFn</code>.</p>
+<code>interpret</code> is another <code>HandlerFn</code>.</p>
 <h3 id="31-the-data-model--effect-records--a-closed-primitive-vocabulary"><a class="header" href="#31-the-data-model--effect-records--a-closed-primitive-vocabulary">3.1 The data model — effect records + a closed primitive vocabulary</a></h3>
 <p>The top-level shape is
 <code>Ruleset( stats: […], resources: […], types: […], type_chart: […], effects: […] )</code>
@@ -655,7 +658,7 @@ all still closed and game-agnostic:</p>
 <ul>
 <li><code>Selector { Target, Foe, Host, Source }</code> (<code>model.rs:201</code>).</li>
 <li><code>FractionOf { MaxHp, CurHp, LastDamage }</code> (default <code>MaxHp</code>; <code>LastDamage</code> = the
-damage just dealt — the drain/recoil base; <code>model.rs:214</code>).</li>
+most recent damage dealt — the drain/recoil base; <code>model.rs:214</code>).</li>
 <li><code>Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String), MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }</code> (<code>model.rs:268</code>) —
 used by the <code>unless</code> / <code>when</code> / <code>cond</code> guards. (The last four were added for the
 migration: side-status Substitute/same-type vetoes, Dream Eater’s sleep gate, the
@@ -677,7 +680,7 @@ its element (<code>type</code>), an optional <code>cost:</code>, and the hooks t
     ]),
 </code></pre>
 <p>A status chip and a Leftovers heal show cross-source <code>order</code> interleaving — and
-that an ability/item/weather is just another record keyed by <code>kind</code>
+that an ability/item/weather is another record keyed by <code>kind</code>
 (<code>rules.ron:93-121</code>):</p>
 <pre><code class="language-ron">Effect(id: "status.poison", kind: Status,
     hooks: [ Hook(on: "Residual", order: 10, do: [
