@@ -80,6 +80,10 @@ All `dotzuki-*` crates are published to crates.io under one shared version — t
 - **Non-publishable members**: `minimon`, `run-wasm`, and the `dotzuki-template` dir are excluded from publishing (`publish = false` / workspace `exclude`).
 - **Publishing from a mirrored machine**: the script pins `--registry crates-io`; mirrors like rsproxy lag behind crates.io and can break mid-sequence dependency resolution, so prefer the GitHub Actions workflow for actual releases.
 
+## Releasing (Editor installers)
+
+The same `vX.Y.Z` tag also packages the dotzuki-editor desktop app: `.github/workflows/release-editor.yml` builds the WASM pkgs once (Linux, release profile), packages the Electron app on macOS (arm64 + x64 dmg/zip) and Windows (nsis exe) — unsigned unless cert secrets are set — and attaches the installers to the GitHub Release. The editor's `package.json` version is synced to the workspace version during packaging, and the workflow asserts tag ↔ workspace version exactly like `publish-crates.sh`. Linux AppImages are not CI-built; build locally with `pnpm electron:dist` in `workspace/tools/dotzuki-editor`.
+
 ## Known Gotchas
 - A workspace-wide `cargo test` unifies features across crates and can fail feature-gated suites (e.g. `dotzuki-engine-script` embedded-scripts tests) that pass per-crate — re-run `cargo test -p <crate>` before assuming a real failure
 - `crates/dotzuki-app/` is a workspace member since the repo split; it used to be a path-only dep

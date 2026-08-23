@@ -204,10 +204,11 @@ pnpm electron:dist      # dmg/zip (mac), nsis (win), AppImage (linux)
 
 Tagging the repo `vX.Y.Z` (or publishing a GitHub Release) also triggers
 `.github/workflows/release-editor.yml`, which packages the editor for macOS
-(arm64 + x64) and Windows on CI and attaches the installers to the Release.
-The version comes from `workspace/Cargo.toml` — the same single source the
-crates.io release uses — so the installers always carry the workspace
-version.
+(arm64 + x64) and Windows on CI — release-profile WASM builds — and attaches
+the installers to the Release. (Linux users build the AppImage locally with
+`pnpm electron:dist`; CI doesn't package Linux.) The version comes from
+`workspace/Cargo.toml` — the same single source the crates.io release uses —
+so the installers always carry the workspace version.
 
 > **Code signing & notarization (optional).** Packaging config lives in
 > `electron-builder.cjs`. By default it produces an **unsigned** build — fine to
@@ -249,8 +250,10 @@ built `dist/` on one local HTTP origin (the renderer talks to relative
 > it as an `extraResources` entry (→ `Resources/wasm-pkg`); the packaged app
 > points its `/wasm` route there through `DOTZUKI_WASM_ROOT`. Run `pnpm build:wasm`
 > **before** packaging so the pkg exists — otherwise packaging still succeeds,
-> just without the preview. Dev and `electron:preview` read the in-repo pkg
-> directly.
+> just without the preview. (`build:wasm` is a `--dev` build for fast
+> iteration; `build:wasm:release` / `build:wasm-runner:release` produce the
+> release-profile pkgs CI ships in the installers.) Dev and `electron:preview`
+> read the in-repo pkg directly.
 >
 > The same applies to the `play` activity's runner bundle
 > (`crates/dotzuki-runner-web/pkg`, built by `pnpm build:wasm-runner`, staged to

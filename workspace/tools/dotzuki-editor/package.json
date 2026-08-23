@@ -11,6 +11,8 @@
     "demo": "DOTZUKI_PROJECT_ROOT=$(pwd)/test-project vite",
     "build:wasm": "cd ../../crates/dotzuki-web && wasm-pack build --target web --out-dir pkg --dev -- --features modern-audio && wasm-pack build --target nodejs --out-dir pkg-node --dev -- --features modern-audio",
     "build:wasm-runner": "cd ../../crates/dotzuki-runner-web && wasm-pack build --target web --out-dir pkg --dev -- --features modern-audio",
+    "build:wasm:release": "cd ../../crates/dotzuki-web && wasm-pack build --target web --out-dir pkg --release -- --features modern-audio && wasm-pack build --target nodejs --out-dir pkg-node --release -- --features modern-audio",
+    "build:wasm-runner:release": "cd ../../crates/dotzuki-runner-web && wasm-pack build --target web --out-dir pkg --release -- --features modern-audio",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",

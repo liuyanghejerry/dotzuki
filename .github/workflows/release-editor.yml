@@ -82,10 +82,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build WASM packages
+        # :release variants (wasm-pack --release) — these end up inside the
+        # installers users download; the plain build:wasm scripts are --dev
+        # (debug asserts, much larger) for local iteration.
         working-directory: workspace/tools/dotzuki-editor
         run: |
-          pnpm run build:wasm
-          pnpm run build:wasm-runner
+          pnpm run build:wasm:release
+          pnpm run build:wasm-runner:release
 
       - name: Upload WASM packages
         uses: actions/upload-artifact@v4
@@ -143,11 +146,33 @@ jobs:
 
       - name: Download prebuilt WASM packages
         # Restores the in-repo pkg layout (workspace/crates/…), which
-        # electron/stage-resources.mjs reads directly.
+        # electron/stage-resources.mjs reads directly. upload-artifact v4
+        # roots the artifact at the least-common-ancestor of the uploaded
+        # paths (workspace/crates), so download into workspace/crates with
+        # merge-multiple to strip the single-artifact wrapper dir.
         uses: actions/download-artifact@v4
         with:
           name: wasm-pkgs
-          path: .
+          path: workspace/crates
+          merge-multiple: true
+
+      - name: Verify WASM packages landed in the repo layout
+        # stage-resources.mjs degrades silently when a pkg is missing (a
+        # near-empty dir + warning), so assert the layout here instead of
+        # shipping installers without the layout preview / playtest runner.
+        shell: bash
+        run: |
+          status=0
+          for f in \
+            workspace/crates/dotzuki-web/pkg/dotzuki_web.js \
+            workspace/crates/dotzuki-web/pkg/dotzuki_web_bg.wasm \
+            workspace/crates/dotzuki-web/pkg-node/dotzuki_web.js \
+            workspace/crates/dotzuki-web/pkg-node/dotzuki_web_bg.wasm \
+            workspace/crates/dotzuki-runner-web/pkg/dotzuki_runner_web.js \
+            workspace/crates/dotzuki-runner-web/pkg/dotzuki_runner_web_bg.wasm; do
+            [ -f "$f" ] || { echo "ERROR: missing $f — WASM artifact layout mismatch"; status=1; }
+          done
+          exit $status
 
       - name: Sync editor version with the workspace version
         shell: bash
