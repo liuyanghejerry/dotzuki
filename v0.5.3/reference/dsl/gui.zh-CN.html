@@ -1,0 +1,737 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>GUI DSL - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-66886069.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/dsl/gui.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="gui-dsl-参考"><a class="header" href="#gui-dsl-参考">GUI DSL 参考</a></h1>
+<blockquote>
+<p>本文是 <code>reference/dsl/gui.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p><code>.gui</code> 布局文件与 <code>ui {}</code> 块的权威语法参考：每个已实现的组件、属性与绑定，以及它们
+编译成的 schema v2 JSON。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>旧版 GAME_UI_DSL 文档中的提案保存在 archive/game-ui-dsl.md；本页只记录已实现的表面。</p>
+<h2 id="概览"><a class="header" href="#概览">概览</a></h2>
+<p>GUI DSL 是描述游戏界面的声明式 UI 语言。编译器支持两种使用方式：</p>
+<ol>
+<li><strong>独立的 <code>.gui</code> 文件</strong>——纯 UI 布局定义，编译为 schema v2 JSON</li>
+<li><strong><code>.scene</code> 文件里的 <code>ui</code> 块</strong>——与游戏脚本共存的内联 UI 布局</li>
+</ol>
+<h3 id="已实现的核心特性"><a class="header" href="#已实现的核心特性">已实现的核心特性</a></h3>
+<ul>
+<li><strong>声明式语法</strong>——描述“是什么“而非“怎么做“</li>
+<li><strong>Tile 坐标定位</strong>——在 20×18 tile 网格上绝对定位（通过 <code>rect</code>）</li>
+<li><strong>内置组件类型</strong>——<code>panel</code>、<code>container</code>、<code>text</code>、<code>button</code>、<code>tile</code>、<code>divider</code>、
+<code>list</code>、<code>flex_list</code>、<code>cursor</code>、<code>bracket</code>、<code>pixel_rect</code></li>
+<li><strong>自定义组件</strong>——<code>component</code> 声明（构建期 prop schema）加游戏注册的 <code>custom:*</code> 元素
+（见自定义组件一节）</li>
+<li><strong>对象字面量</strong>——<code>{key: value, ...}</code> 语法用于复杂属性</li>
+<li><strong>模板变量</strong>——<code>{variable}</code> 运行时数据绑定</li>
+<li><strong>双语文本（i18n）</strong>——<code>@t("en", "中文")</code> 内联本地化字符串（见双语文本一节）</li>
+<li><strong>Schema v2 输出</strong>——编译为渲染器期望的 JSON 格式</li>
+</ul>
+<h3 id="双语文本i18n-t"><a class="header" href="#双语文本i18n-t">双语文本（i18n）—— <code>@t</code></a></h3>
+<p>任何 <code>text(...)</code> 或 <code>button(...)</code> 的文本实参都可以用 <code>@t("english", "中文")</code> 包裹以
+支持双语（第一个实参是英文 <code>en</code>，第二个是中文 <code>zh</code>）：</p>
+<pre><code>text(@t("TEXT SPEED", "文字速度")) { rect = {tx: 1, ty: 1, tw: 16, th: 1} }
+button(@t("CANCEL", "取消"))      { rect = {tx: 2, ty: 16, tw: 8, th: 1} }
+</code></pre>
+<p>编译为 schema v2 JSON 时，<code>value</code> 字段变为按语言索引的对象：</p>
+<pre><code class="language-json">{ "type": "text", "value": { "en": "TEXT SPEED", "zh": "文字速度" } }
+</code></pre>
+<p>渲染器按当前语言（<code>DataContext</code> 的 <code>__lang</code>，默认 <code>en</code>）挑选文本；缺失的语言回退到
+<code>en</code>，再回退到任意现成的语言。普通字符串（不用 <code>@t</code>）行为不变，编译为单个字符串。
+<code>@t</code> 也能与模板绑定混用：<code>@t("MONEY ${balance}", "金钱 ${balance}")</code>。</p>
+<blockquote>
+<p>在 <code>.scene</code> 脚本 DSL 中，<code>@t(...)</code> 同样适用于 <code>@speaker</code> 文本与 <code>@option</code> 标签，编译
+为运行时的 <code>game.t("en", "zh")</code> 调用（见 <a href="../../how-to/i18n.html">how-to/i18n.md</a>）。</p>
+</blockquote>
+<h2 id="语法规则"><a class="header" href="#语法规则">语法规则</a></h2>
+<h3 id="文档结构"><a class="header" href="#文档结构">文档结构</a></h3>
+<p>一个 <code>.gui</code> 文件包含一个 <code>screen</code> 声明：</p>
+<pre><code>screen Name {
+    components
+}
+</code></pre>
+<p>文件也可以在 <code>screen</code> 之前声明 <code>component</code>——或者只包含 <code>component</code> 声明（如
+<code>components.gui</code> 这样的共享前奏）。在 <code>screen</code> 块内，每个条目都是一个组件，带可选 id：</p>
+<pre><code>[id =] type[(argument)] { properties and child components }
+</code></pre>
+<p><code>screen</code> 与 <code>ui</code> 块只接受组件。场景级指令（<code>@variables</code>、<code>@theme</code>、<code>@style</code>、<code>@atlas</code>、
+<code>@if</code>、<code>@each</code>）属于 <code>.scene</code> 脚本 DSL，不属于 <code>.gui</code> 文件；这些编译约定见
+<a href="codegen.html">codegen.md</a>。</p>
+<h3 id="缩进"><a class="header" href="#缩进">缩进</a></h3>
+<ul>
+<li>用<strong>空格</strong>缩进（推荐 2 或 4 个）；词法器拒绝 tab。</li>
+<li>同一层的语句必须使用相同的缩进。</li>
+<li><code>{</code> 之后的内容缩进一层；<code>}</code> 减少一层。</li>
+</ul>
+<h3 id="注释"><a class="header" href="#注释">注释</a></h3>
+<pre><code>// 单行注释
+
+/*
+ * 多行注释
+ * 可以跨行
+ */
+</code></pre>
+<h2 id="数据类型"><a class="header" href="#数据类型">数据类型</a></h2>
+<h3 id="基本类型"><a class="header" href="#基本类型">基本类型</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>示例</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>String</td><td><code>"hello"</code>、<code>'world'</code></td><td>双引号或单引号</td></tr>
+<tr><td>Number</td><td><code>42</code>、<code>3.14</code>、<code>-10</code></td><td>整数或小数</td></tr>
+<tr><td>Number (hex)</td><td><code>0xFF</code></td><td>十六进制整数形式</td></tr>
+<tr><td>Boolean</td><td><code>true</code>、<code>false</code></td><td>小写</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="复合类型"><a class="header" href="#复合类型">复合类型</a></h3>
+<pre><code>// Array
+colors = ["red", "green", "blue"]
+margins = [10, 20, 10, 20]
+
+// Object
+style = {
+    color: "red"
+    size: 14
+}
+
+// Multi-line object (recommended)
+item = {
+    name: "Sword"
+    price: 120
+    tags: ["weapon", "melee"]
+}
+</code></pre>
+<p>对象字面量的字段使用 <code>key: value</code>。</p>
+<h3 id="模板变量数据绑定"><a class="header" href="#模板变量数据绑定">模板变量（数据绑定）</a></h3>
+<pre><code>// Binding
+text = "{username}"
+text = "你好，{username}！"
+</code></pre>
+<p>包含 <code>{...}</code> 的字符串原样通过编译器；渲染器在绘制时按运行时数据上下文解析它们。</p>
+<h2 id="tile-坐标系统"><a class="header" href="#tile-坐标系统">Tile 坐标系统</a></h2>
+<h3 id="坐标系统"><a class="header" href="#坐标系统">坐标系统</a></h3>
+<p>游戏屏幕使用 <strong>20×18 tile 网格</strong>：</p>
+<ul>
+<li><code>tx</code>——tile 列（0 = 最左）</li>
+<li><code>ty</code>——tile 行（0 = 最上）</li>
+<li><code>tw</code>——宽度（单位 tile）</li>
+<li><code>th</code>——高度（单位 tile）</li>
+</ul>
+<h3 id="rect-属性"><a class="header" href="#rect-属性"><code>rect</code> 属性</a></h3>
+<p>每个组件都接受用于绝对定位的 <code>rect</code> 属性：</p>
+<pre><code>panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+}
+
+text("Hello") {
+    rect = {tx: 1, ty: 13, tw: 18, th: 4}
+}
+</code></pre>
+<h3 id="rect-中的模板变量"><a class="header" href="#rect-中的模板变量"><code>rect</code> 中的模板变量</a></h3>
+<p><code>rect</code> 的值可以是模板变量：</p>
+<pre><code>tile(223) {
+    rect = {tx: "{cursor_x}", ty: 3, tw: 1, th: 1}
+}
+</code></pre>
+<h2 id="组件"><a class="header" href="#组件">组件</a></h2>
+<h3 id="panel--带边框容器"><a class="header" href="#panel--带边框容器">Panel —— 带边框容器</a></h3>
+<pre><code>panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"              // "default" | "single" | "double" | custom object
+    text("内容") { rect = {tx: 1, ty: 13, tw: 18, th: 4} }
+}
+</code></pre>
+<p><strong><code>style</code> 取值：</strong></p>
+<ul>
+<li><code>"default"</code>——默认边框样式</li>
+<li><code>"single"</code> / <code>"double"</code>——单线 / 双线边框</li>
+<li>自定义对象：
+<pre><code>style = {corner_tl: 99, edge_top: 100, corner_tr: 101, edge_left: 102, edge_right: 103, corner_bl: 108, edge_bottom: 111, corner_br: 110}
+</code></pre>
+</li>
+</ul>
+<h3 id="container--无边框容器"><a class="header" href="#container--无边框容器">Container —— 无边框容器</a></h3>
+<pre><code>container {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry1}"
+    text("子元素") { rect = {tx: 4, ty: 0, tw: 10, th: 1} }
+}
+</code></pre>
+<h3 id="text--文本组件"><a class="header" href="#text--文本组件">Text —— 文本组件</a></h3>
+<pre><code>text("显示内容") {
+    rect = {tx: 1, ty: 1, tw: 6, th: 1}
+    color = "Black"                // "Black" | "DarkGray" | "LightGray" | "White" | "#rrggbb"
+    align = "left"                 // "left" | "center" | "right"
+    font = "pk_glyph"              // font name
+    wrap = "word"                  // "word" enables wrapping
+    line_spacing = 1               // line spacing in tiles
+}
+</code></pre>
+<p><strong>模板变量：</strong></p>
+<pre><code>text("{player_name}") {
+    rect = {tx: 5, ty: 2, tw: 7, th: 1}
+}
+</code></pre>
+<p><strong><code>value</code> 别名：</strong></p>
+<pre><code>// Both forms are equivalent
+text("Hello") { rect = {...} }
+text {
+    value = "Hello"
+    rect = {...}
+}
+</code></pre>
+<h3 id="tile--tile-渲染"><a class="header" href="#tile--tile-渲染">Tile —— tile 渲染</a></h3>
+<pre><code>tile(31) {
+    rect = {tx: 18, ty: 16, tw: 1, th: 1}
+}
+
+tile("{sprite_index}") {
+    rect = {tx: 15, ty: 4, tw: 2, th: 2}
+    visible = "{has_selected}"
+    flip_x = false
+    flip_y = false
+    palette = "name"
+    repeat = 1                     // horizontal repeat count
+}
+</code></pre>
+<h3 id="divider--分隔线"><a class="header" href="#divider--分隔线">Divider —— 分隔线</a></h3>
+<pre><code>divider {
+    rect = {tx: 1, ty: 9, tw: 18, th: 1}
+    tiles = [122]                  // array of tile ids
+    repeat = 17                    // repeat count
+    orientation = "horizontal"     // "horizontal" | "vertical"
+}
+</code></pre>
+<h3 id="list--滚动列表"><a class="header" href="#list--滚动列表">List —— 滚动列表</a></h3>
+<pre><code>list {
+    rect = {tx: 1, ty: 1, tw: 11, th: 3}
+    source = "{items}"             // data-source template variable
+    item_template = {height: 1, gap: 1}
+    cursor = {tile: 223, position: "left"}
+    max_visible = 3
+    selected = 0
+    footer = "text"
+}
+</code></pre>
+<p><strong><code>cursor</code> 属性：</strong></p>
+<ul>
+<li>简写：<code>cursor = {tile: 223}</code>（只有 tile id）</li>
+<li>完整形式：<code>cursor = {tile: 223, position: "left"}</code></li>
+</ul>
+<h3 id="flexlist--多列列表"><a class="header" href="#flexlist--多列列表">FlexList —— 多列列表</a></h3>
+<pre><code>flex_list("{bag_items}") {
+    rect = {tx: 1, ty: 4, tw: 18, th: 13}
+    item_layout = [
+        {field: "name", width: 14, align: "left"},
+        {field: "qty", width: 3, align: "right", prefix: "x"}
+    ]
+    padding = {top: 1, left: 1}
+    gap = 1
+    cursor = {tile: 223, position: "left"}
+    selected = 0
+}
+</code></pre>
+<p><strong><code>item_layout</code> 列定义：</strong></p>
+<ul>
+<li><code>field</code>——数据字段名</li>
+<li><code>width</code>——列宽（单位 tile）</li>
+<li><code>align</code>——对齐方式</li>
+<li><code>prefix</code>——值前缀（如 <code>"x"</code>、<code>"$"</code>）</li>
+</ul>
+<h3 id="button--按钮"><a class="header" href="#button--按钮">Button —— 按钮</a></h3>
+<pre><code>button("确定") {
+    rect = {tx: 10, ty: 15, tw: 5, th: 1}
+    on_click = "handler"
+}
+</code></pre>
+<h3 id="image--图片"><a class="header" href="#image--图片">Image —— 图片</a></h3>
+<pre><code>image("sprite.png") {
+    rect = {tx: 0, ty: 0, tw: 7, th: 7}
+    slice = "[8,8,8,8]"            // nine-slice margins
+}
+</code></pre>
+<h3 id="input--dropdown--输入组件"><a class="header" href="#input--dropdown--输入组件">Input / Dropdown —— 输入组件</a></h3>
+<pre><code>input {
+    rect = {tx: 0, ty: 0, tw: 20, th: 1}
+    placeholder = "请输入..."
+}
+
+dropdown {
+    rect = {tx: 0, ty: 0, tw: 10, th: 1}
+}
+</code></pre>
+<p><code>input</code> 编译为 <code>custom:input</code> 元素，<code>dropdown</code> 编译为 <code>custom:dropdown</code> 元素；渲染器
+由游戏注册。</p>
+<h3 id="cursor--选择光标"><a class="header" href="#cursor--选择光标">Cursor —— 选择光标</a></h3>
+<p>从 <code>rect.tx/ty</code> 基点出发，以“基点 + 网格偏移“的步进绘制选择标记（▶）。最终位置为
+<code>base_tx + col*col_step</code> / <code>base_ty + row*row_step</code>，其中 <code>col</code>/<code>row</code> 是数据绑定：</p>
+<pre><code>cursor {
+    rect = {tx: 5, ty: 14, tw: 1, th: 1}
+    row = "{cursor}"          // 1-D list cursor: set row_step only
+    row_step = 2
+}
+</code></pre>
+<ul>
+<li>1-D 列表光标：设置 <code>row_step</code>、<code>row = "{cursor}"</code></li>
+<li>2-D 网格（战斗 FIGHT/MON/ITEM/RUN）：同时设置 <code>col_step</code> + <code>row_step</code></li>
+<li>枚举偏移选择器（设置界面）：<code>col_step = 1</code>、<code>col = "{opt_index}"</code></li>
+<li>多光标界面（队伍界面的 ▶ + ◆）：放置多个 <code>cursor</code> 元素，各自带自己的 <code>visible</code> 条件</li>
+</ul>
+<h3 id="bracket--pixelrect--像素图元"><a class="header" href="#bracket--pixelrect--像素图元">Bracket / PixelRect —— 像素图元</a></h3>
+<p>pokered-ui <code>Frame</code> 图元（bracket 边框、纯矩形）的声明式版本，基于 painter 的
+<code>draw_pixel_rect</code> 合成：</p>
+<pre><code>bracket {
+    rect = {tx: 0, ty: 8, tw: 10, th: 4}
+}
+
+pixel_rect {
+    rect = {tx: 2, ty: 2, tw: 4, th: 1}
+}
+</code></pre>
+<h3 id="自定义组件--component-声明--custom-元素"><a class="header" href="#自定义组件--component-声明--custom-元素">自定义组件 —— <code>component</code> 声明 + <code>custom:*</code> 元素</a></h3>
+<p>引擎核心不包含游戏特有的图元（例如 Gen-I HP 条）。游戏把它们注册为 <code>custom:*</code> 元素
+（<code>ElementRegistry</code>；pokered 使用 pokered-ui 的 <code>custom_elements</code> 模块），<code>.gui</code> 用
+<code>component</code> 声明它们的构建期 schema。编译器对照声明校验每个使用位置（缺少 required
+prop、prop 类型不符、未声明的 prop 都是编译错误）；运行时加载布局后，实现侧的
+<code>schema()</code> 会再次校验。</p>
+<p>声明（通常收集在共享的 <code>components.gui</code> 中）：</p>
+<pre><code>// Gen-I HP bar: 4px tall, three-color fill by the original GetHealthBarColor thresholds
+component hp_bar {
+  current: expr required
+  max: expr required
+}
+</code></pre>
+<p>prop 类型为 <code>int</code> / <code>string</code> / <code>bool</code> / <code>color</code> / <code>expr</code>，可带可选的 <code>required</code> 标记。
+使用位置把声明的名字写为元素类型：</p>
+<pre><code>hp_bar {
+    rect = {tx: 13, ty: 3, tw: 6, th: 1}
+    current = "{hp}"
+    max = "{max_hp}"
+}
+</code></pre>
+<p>编译出的 JSON 元素 <code>type</code> 为 <code>custom:hp_bar</code>；由游戏注册的实现负责渲染。</p>
+<h2 id="完整示例"><a class="header" href="#完整示例">完整示例</a></h2>
+<h3 id="对话框"><a class="header" href="#对话框">对话框</a></h3>
+<pre><code>screen Dialog {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+        style = "default"
+        text("{text}") {
+            rect = {tx: 1, ty: 13, tw: 18, th: 4}
+            wrap = "word"
+            line_spacing = 1
+        }
+        tile(31) {
+            rect = {tx: 18, ty: 16, tw: 1, th: 1}
+        }
+    }
+}
+</code></pre>
+<p>编译输出：</p>
+<pre><code class="language-json">{
+    "schema_version": 2,
+    "screen": "Dialog",
+    "elements": [
+        {"type": "border", "rect": {"tx": 0, "ty": 12, "tw": 20, "th": 6}, "style": "default", "children": [
+            {"type": "text", "rect": {"tx": 1, "ty": 13, "tw": 18, "th": 4}, "value": "{text}", "wrap": "word", "line_spacing": 1},
+            {"type": "tile", "rect": {"tx": 18, "ty": 16, "tw": 1, "th": 1}, "tile_id": 31}
+        ]}
+    ]
+}
+</code></pre>
+<h3 id="背包界面"><a class="header" href="#背包界面">背包界面</a></h3>
+<pre><code>screen Bag {
+    panel {
+        rect = {tx: 6, ty: 0, tw: 8, th: 3}
+        style = "default"
+    }
+    text("ITEM") {
+        rect = {tx: 7, ty: 1, tw: 6, th: 1}
+    }
+    panel {
+        rect = {tx: 0, ty: 3, tw: 20, th: 15}
+        style = "default"
+    }
+    flex_list("{bag_items}") {
+        rect = {tx: 1, ty: 4, tw: 18, th: 13}
+        item_layout = [
+            {field: "name", width: 14, align: "left"},
+            {field: "qty", width: 3, align: "right", prefix: "x"}
+        ]
+        padding = {top: 1, left: 1}
+        gap = 1
+        cursor = {tile: 223, position: "left"}
+    }
+    text("CANCEL") {
+        rect = {tx: 2, ty: 16, tw: 16, th: 1}
+        color = "DarkGray"
+    }
+}
+</code></pre>
+<h3 id="队伍界面"><a class="header" href="#队伍界面">队伍界面</a></h3>
+<pre><code>screen Party {
+    text("No MONSTER!") {
+        rect = {tx: 3, ty: 8, tw: 10, th: 1}
+        visible = "{show_empty}"
+    }
+    container {
+        rect = {tx: 0, ty: 0, tw: 20, th: 18}
+        layout = {gap: 0}
+        clip = false
+        visible = "{show_entry1}"
+        text("{mon1_name}") {
+            rect = {tx: 4, ty: 0, tw: 10, th: 1}
+        }
+        text("L{mon1_level}") {
+            rect = {tx: 14, ty: 0, tw: 3, th: 1}
+        }
+        text("{mon1_status}") {
+            rect = {tx: 17, ty: 0, tw: 3, th: 1}
+            color = "DarkGray"
+        }
+        text("{mon1_hp}") {
+            rect = {tx: 14, ty: 1, tw: 6, th: 1}
+        }
+    }
+    // ... mon2 through mon6 share this structure
+}
+</code></pre>
+<h2 id="语法一览"><a class="header" href="#语法一览">语法一览</a></h2>
+<p>已实现的语法（pokered UI 布局）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类别</th><th>语法</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>界面</strong></td><td><code>screen</code></td><td><code>screen Dialog { }</code></td></tr>
+<tr><td><strong>组件</strong></td><td><code>type</code>、<code>id = type</code></td><td><code>text("hello")</code>、<code>tile(31)</code></td></tr>
+<tr><td><strong>定位</strong></td><td><code>rect</code></td><td><code>rect = {tx: 0, ty: 12, tw: 20, th: 6}</code></td></tr>
+<tr><td><strong>属性</strong></td><td><code>key = value</code></td><td><code>align = "center"</code></td></tr>
+<tr><td><strong>绑定</strong></td><td><code>{expression}</code></td><td><code>"{player_name}"</code></td></tr>
+<tr><td><strong>对象字面量</strong></td><td><code>{key: value}</code></td><td><code>cursor = {tile: 223, position: "left"}</code></td></tr>
+<tr><td><strong>边框</strong></td><td><code>panel</code></td><td><code>panel { style = "default" }</code></td></tr>
+<tr><td><strong>容器</strong></td><td><code>container</code></td><td><code>container { layout = {gap: 0} }</code></td></tr>
+<tr><td><strong>文本</strong></td><td><code>text</code></td><td><code>text("Hello") { color = "Black" }</code></td></tr>
+<tr><td><strong>Tile</strong></td><td><code>tile</code></td><td><code>tile(31) { rect = {...} }</code></td></tr>
+<tr><td><strong>分隔线</strong></td><td><code>divider</code></td><td><code>divider { tiles = [122] repeat = 17 }</code></td></tr>
+<tr><td><strong>列表</strong></td><td><code>list</code></td><td><code>list { source = "{items}" }</code></td></tr>
+<tr><td><strong>多列列表</strong></td><td><code>flex_list</code></td><td><code>flex_list("{items}") { item_layout = [...] }</code></td></tr>
+<tr><td><strong>按钮</strong></td><td><code>button</code></td><td><code>button("OK") { on_click = "handler" }</code></td></tr>
+<tr><td><strong>图片</strong></td><td><code>image</code></td><td><code>image("sprite.png") { slice = "..." }</code></td></tr>
+<tr><td><strong>输入框</strong></td><td><code>input</code></td><td><code>input { placeholder = "..." }</code></td></tr>
+<tr><td><strong>下拉框</strong></td><td><code>dropdown</code></td><td><code>dropdown { }</code></td></tr>
+<tr><td><strong>光标</strong></td><td><code>cursor</code></td><td><code>cursor { row = "{cursor}" row_step = 2 }</code></td></tr>
+<tr><td><strong>Bracket 边框</strong></td><td><code>bracket</code></td><td><code>bracket { rect = {...} }</code></td></tr>
+<tr><td><strong>像素矩形</strong></td><td><code>pixel_rect</code></td><td><code>pixel_rect { rect = {...} }</code></td></tr>
+<tr><td><strong>自定义组件</strong></td><td><code>component</code> 声明 + 使用</td><td><code>component hp_bar { current: expr required }</code> → <code>hp_bar { current = "{hp}" }</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>on_click</code> 是唯一已实现的事件属性（位于 <code>button</code> 上）；其他 <code>on_*</code> 事件属性、<code>t()</code>
+运行时翻译函数、<code>dir</code>/RTL 与动画仍然是提案。</p>
+<h2 id="设计原则"><a class="header" href="#设计原则">设计原则</a></h2>
+<p>已实现的表面遵循以下原则：</p>
+<ol>
+<li><strong>声明式</strong>——描述“是什么“而非“怎么做“</li>
+<li><strong>Tile 坐标</strong>——在 20×18 网格上绝对定位</li>
+<li><strong>组件化</strong>——内置组件加通过 <code>component</code> 声明定义的游戏自定义组件（<code>custom:*</code>）</li>
+<li><strong>数据绑定</strong>——<code>{var}</code> 模板变量在运行时解析</li>
+<li><strong>对象字面量</strong>——<code>{key: value}</code> 语法用于复杂属性</li>
+<li><strong>Schema v2 输出</strong>——编译为渲染器期望的 JSON 格式</li>
+<li><strong>构建期校验</strong>——使用位置在编译期对照 <code>component</code> schema 检查，运行时加载后再次
+校验</li>
+</ol>
+<h2 id="文件扩展名与编译输出"><a class="header" href="#文件扩展名与编译输出">文件扩展名与编译输出</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文件类型</th><th>扩展名</th><th>用途</th><th>状态</th></tr>
+</thead>
+<tbody>
+<tr><td>场景文件</td><td><code>.scene</code></td><td>游戏场景（脚本 + 可选 UI）</td><td>已实现</td></tr>
+<tr><td>UI 布局</td><td><code>.gui</code></td><td>纯 UI 布局定义</td><td>已实现</td></tr>
+<tr><td>主题文件</td><td><code>.theme</code></td><td>颜色主题定义</td><td>已实现</td></tr>
+<tr><td>样式文件</td><td><code>.style</code></td><td>可复用样式集合</td><td>已实现</td></tr>
+<tr><td>资源清单</td><td><code>.res</code></td><td>资源清单</td><td>未实现</td></tr>
+<tr><td>动画定义</td><td><code>.anim</code></td><td>关键帧动画定义</td><td>未实现</td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>输入</th><th>输出</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.scene</code></td><td><code>name.js</code> + <code>name_ui.json</code></td><td>脚本 + 可选 UI 布局</td></tr>
+<tr><td><code>.gui</code></td><td><code>name.json</code>（schema v2）</td><td>纯 UI 布局</td></tr>
+<tr><td><code>.theme</code></td><td><code>name.json</code></td><td>主题 token</td></tr>
+<tr><td><code>.style</code></td><td><code>name_styles.json</code></td><td>解析后的样式（含继承链）</td></tr>
+</tbody>
+</table>
+</div>
+<p>同时携带 <code>@theme</code>、<code>@style</code> 或 <code>@atlas</code> 块的 <code>.scene</code> 会额外产出 <code>name_theme_N.json</code>、
+<code>name_styles.json</code> 与 <code>name_atlas_N.json</code> 产物。<code>.theme</code> 与 <code>.style</code> 文件语法见
+<a href="theme-style.html">theme-style.md</a>。</p>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="codegen.html">Scene DSL 编译约定</a>——场景层的 <code>@variables</code>、<code>@theme</code>、<code>@style</code>、
+<code>@atlas</code> 与 <code>@if</code>/<code>@each</code></li>
+<li><a href="theme-style.html">主题与样式文件参考</a>——<code>.theme</code> / <code>.style</code> 语法</li>
+<li><a href="../project-manifest.html">项目清单</a>——DSL 文件在游戏项目中的位置</li>
+<li><a href="../../how-to/i18n.html">国际化指南</a></li>
+<li><a href="../../archive/dsl-unified-design.html">设计历史</a></li>
+<li><a href="../../index.html">文档索引</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../reference/dsl/scene.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../reference/dsl/theme-style.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../reference/dsl/scene.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../reference/dsl/theme-style.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

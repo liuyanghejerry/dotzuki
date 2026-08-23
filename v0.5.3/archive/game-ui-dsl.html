@@ -1,0 +1,1646 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Game UI DSL (Historical) - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-66886069.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./archive/game-ui-dsl.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p><strong>本文档描述已实现的 GUI DSL 语法。</strong> 通用 Flex 布局、RTL、动画等高级特性仍为 proposal。（双语文本 <code>@t("en", "中文")</code> 已实现，见 §1.3。）</p>
+<h1 id="game-ui-dsl-语法规范"><a class="header" href="#game-ui-dsl-语法规范">Game UI DSL 语法规范</a></h1>
+<h2 id="一语法概述"><a class="header" href="#一语法概述">一、语法概述</a></h2>
+<p><strong>Game UI DSL</strong> 是一种声明式 UI 描述语言，专为游戏界面设计。当前实现支持两种使用模式：</p>
+<ol>
+<li><strong>独立 <code>.gui</code> 文件</strong> — 纯 UI 布局定义，编译为 schema v2 JSON</li>
+<li><strong><code>.scene</code> 文件中的 <code>ui</code> 块</strong> — 与游戏脚本共存的内联 UI 布局</li>
+</ol>
+<h3 id="11-已实现的核心特性"><a class="header" href="#11-已实现的核心特性">1.1 已实现的核心特性</a></h3>
+<ul>
+<li><strong>声明式语法</strong> — 描述“是什么“而非“怎么做“</li>
+<li><strong>瓦片坐标定位</strong> — 基于 20×18 瓦片网格的绝对定位（<code>rect</code>）</li>
+<li><strong>内置组件类型</strong> — panel, container, text, button, tile, divider, list, flex_list, cursor, bracket, pixel_rect</li>
+<li><strong>自定义组件</strong> — <code>component</code> 声明（构建期 prop schema）+ 游戏侧注册的 <code>custom:*</code> 元素（见 §5.13）</li>
+<li><strong>对象字面量</strong> — <code>{key: value, ...}</code> 语法用于复杂属性</li>
+<li><strong>模板变量</strong> — <code>{variable}</code> 运行时数据绑定</li>
+<li><strong>双语文本（i18n）</strong> — <code>@t("en", "中文")</code> 内联本地化字符串（见 §1.3）</li>
+<li><strong>Schema v2 输出</strong> — 编译为 pokered 渲染器期望的 JSON 格式</li>
+</ul>
+<h3 id="12-未实现的高级特性proposal"><a class="header" href="#12-未实现的高级特性proposal">1.2 未实现的高级特性（Proposal）</a></h3>
+<ul>
+<li>Flex 布局系统</li>
+<li>RTL（从右到左）布局支持</li>
+<li>响应式设计和断点系统</li>
+<li>动画和过渡效果</li>
+<li>九宫格图片资源系统</li>
+<li><code>.gui</code> 内的内联 <code>@theme</code>/<code>@style</code> 块（<code>.theme</code>/<code>.style</code> 独立文件已实现，见 §十六）</li>
+</ul>
+<h3 id="13-双语文本i18n-t"><a class="header" href="#13-双语文本i18n-t">1.3 双语文本（i18n）— <code>@t</code></a></h3>
+<p>任何 <code>text(...)</code> 或 <code>button(...)</code> 的文本参数都可以用 <code>@t("英文", "中文")</code>
+包裹，使其成为双语文本（第一个参数为英文 <code>en</code>，第二个为中文 <code>zh</code>）：</p>
+<pre><code>text(@t("TEXT SPEED", "文字速度")) { rect = {tx: 1, ty: 1, tw: 16, th: 1} }
+button(@t("CANCEL", "取消"))      { rect = {tx: 2, ty: 16, tw: 8, th: 1} }
+</code></pre>
+<p>编译为 schema v2 JSON 时，<code>value</code> 字段会输出为按语言索引的对象：</p>
+<pre><code class="language-json">{ "type": "text", "value": { "en": "TEXT SPEED", "zh": "文字速度" } }
+</code></pre>
+<p>渲染器按当前语言（<code>DataContext</code> 的 <code>__lang</code>，默认 <code>en</code>）选择对应文本；
+未提供的语言回退到 <code>en</code>、再到任意已有语言。普通字符串（无 <code>@t</code>）行为不变，
+仍编译为单个字符串。<code>@t</code> 也可与模板绑定混用：
+<code>@t("MONEY ${balance}", "金钱 ${balance}")</code>。</p>
+<blockquote>
+<p>在 <code>.scene</code> 脚本 DSL 中，<code>@t(...)</code> 同样可用于 <code>@speaker</code> 文本与 <code>@option</code>
+标签，编译为运行时的 <code>game.t("en", "zh")</code> 调用（见 <code>docs/JS_SCRIPT_I18N.md</code>）。</p>
+</blockquote>
+<hr>
+<h2 id="二基础语法规则"><a class="header" href="#二基础语法规则">二、基础语法规则</a></h2>
+<h3 id="21-语法结构"><a class="header" href="#21-语法结构">2.1 语法结构</a></h3>
+<pre><code class="language-ebnf">document            ::= (screen_declaration | component_declaration | global_definition)*
+screen_declaration  ::= "screen" identifier ("{" block_content "}" | "=" screen_extension)
+component_declaration ::= "component" identifier "{" (prop_schema)* "}"
+prop_schema         ::= identifier ":" prop_kind ["required"]
+prop_kind           ::= "int" | "string" | "bool" | "color" | "expr"
+global_definition   ::= "@variables" | "@theme" | "@style" | "@resources" | "@atlas" | "@handlers" "{" block_content "}"
+block_content       ::= (component | property_declaration | conditional_block | loop_block | i18n_declaration)*
+component           ::= identifier? "=" component_type ("(" expression ")")? "{" block_content "}"
+component_type      ::= "panel" | "container" | "text" | "list" | "button" | "image" | "input" | "dropdown"
+                      | "tile" | "divider" | "flex_list" | "cursor" | "bracket" | "pixel_rect"
+                      | declared_component_name        /* 编译为 custom:&lt;name&gt; */
+property_declaration ::= identifier "=" value
+value               ::= string | number | boolean | array | object | object_literal | binding | rtl_aware_value
+object_literal      ::= "{" (identifier ":" value ("," identifier ":" value)*)? "}"
+binding             ::= "{" expression "}"
+expression          ::= variable | function_call | binary_op | ternary_op
+</code></pre>
+<h3 id="22-缩进规则"><a class="header" href="#22-缩进规则">2.2 缩进规则</a></h3>
+<ul>
+<li>使用<strong>空格</strong>缩进（推荐 2 或 4 空格）</li>
+<li>同一层级的语句必须缩进一致</li>
+<li><code>{</code> 后的内容增加一级缩进，<code>}</code> 恢复原缩进</li>
+</ul>
+<h3 id="23-注释"><a class="header" href="#23-注释">2.3 注释</a></h3>
+<pre><code>// 单行注释
+
+/*
+ * 多行注释
+ * 可以跨行
+ */
+</code></pre>
+<hr>
+<h2 id="三数据类型"><a class="header" href="#三数据类型">三、数据类型</a></h2>
+<h3 id="31-基础类型"><a class="header" href="#31-基础类型">3.1 基础类型</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>示例</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>字符串</td><td><code>"hello"</code>, <code>'world'</code>, <code>`template`</code></td><td>支持双引号、单引号、模板字符串</td></tr>
+<tr><td>数字</td><td><code>42</code>, <code>3.14</code>, <code>-10</code>, <code>1.2e5</code></td><td>整数或浮点数</td></tr>
+<tr><td>布尔值</td><td><code>true</code>, <code>false</code></td><td>小写</td></tr>
+<tr><td>空值</td><td><code>null</code></td><td>表示无值</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="32-复合类型"><a class="header" href="#32-复合类型">3.2 复合类型</a></h3>
+<pre><code>// 数组
+colors = ["red", "green", "blue"]
+margins = [10, 20, 10, 20]
+
+// 对象
+style = {
+    color = "red"
+    size = 14
+}
+
+// 多行对象（推荐）
+item = {
+    name = "Sword"
+    price = 120
+    tags = ["weapon", "melee"]
+}
+</code></pre>
+<h3 id="33-数据绑定与表达式"><a class="header" href="#33-数据绑定与表达式">3.3 数据绑定与表达式</a></h3>
+<pre><code>// 简单绑定
+text = "{username}"
+text = "你好，{username}！"
+
+// 表达式
+text = "{price + tax}"
+visible = "{count &gt; 0}"
+text = "{items.length &gt; 0 ? items[0].name : '无'}"
+
+// 嵌套访问
+text = "{user.profile.name}"
+
+// 格式化
+text = "{price:0.2f}"
+text = "{date:YYYY-MM-DD}"
+</code></pre>
+<hr>
+<h2 id="四瓦片坐标系统pokered-特性"><a class="header" href="#四瓦片坐标系统pokered-特性">四、瓦片坐标系统（Pokered 特性）</a></h2>
+<h3 id="41-坐标系"><a class="header" href="#41-坐标系">4.1 坐标系</a></h3>
+<p>游戏画面使用 <strong>20×18 瓦片网格</strong>：</p>
+<ul>
+<li><code>tx</code> — 瓦片列（0=左）</li>
+<li><code>ty</code> — 瓦片行（0=上）</li>
+<li><code>tw</code> — 宽度（瓦片数）</li>
+<li><code>th</code> — 高度（瓦片数）</li>
+</ul>
+<h3 id="42-rect-属性"><a class="header" href="#42-rect-属性">4.2 rect 属性</a></h3>
+<p>所有组件支持 <code>rect</code> 属性进行绝对定位：</p>
+<pre><code>panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+}
+
+text("Hello") {
+    rect = {tx: 1, ty: 13, tw: 18, th: 4}
+}
+</code></pre>
+<h3 id="43-模板变量"><a class="header" href="#43-模板变量">4.3 模板变量</a></h3>
+<p><code>rect</code> 的值可以是模板变量：</p>
+<pre><code>tile(223) {
+    rect = {tx: "{cursor_x}", ty: 3, tw: 1, th: 1}
+}
+</code></pre>
+<hr>
+<h2 id="五组件系统已实现"><a class="header" href="#五组件系统已实现">五、组件系统（已实现）</a></h2>
+<h3 id="51-panel--边框容器"><a class="header" href="#51-panel--边框容器">5.1 Panel — 边框容器</a></h3>
+<pre><code>panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"              // "default" | "single" | "double" | 自定义对象
+    text("内容") { rect = {tx: 1, ty: 13, tw: 18, th: 4} }
+}
+</code></pre>
+<p><strong>style 属性：</strong></p>
+<ul>
+<li><code>"default"</code> — 默认边框样式</li>
+<li><code>"single"</code> / <code>"double"</code> — 单线/双线边框</li>
+<li>自定义对象：
+<pre><code>style = {corner_tl: 99, edge_top: 100, corner_tr: 101, edge_left: 102, edge_right: 103, corner_bl: 108, edge_bottom: 111, corner_br: 110}
+</code></pre>
+</li>
+</ul>
+<h3 id="52-container--无边框容器"><a class="header" href="#52-container--无边框容器">5.2 Container — 无边框容器</a></h3>
+<pre><code>container {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry1}"
+    text("子元素") { rect = {tx: 4, ty: 0, tw: 10, th: 1} }
+}
+</code></pre>
+<h3 id="53-text--文本组件"><a class="header" href="#53-text--文本组件">5.3 Text — 文本组件</a></h3>
+<pre><code>text("显示内容") {
+    rect = {tx: 1, ty: 1, tw: 6, th: 1}
+    color = "Black"                // "Black" | "DarkGray" | "LightGray" | "White" | "#rrggbb"
+    align = "left"                 // "left" | "center" | "right"
+    font = "pk_glyph"              // 字体名称
+    wrap = "word"                  // "word" 启用换行
+    line_spacing = 1               // 行间距（瓦片数）
+}
+</code></pre>
+<p><strong>模板变量：</strong></p>
+<pre><code>text("{player_name}") {
+    rect = {tx: 5, ty: 2, tw: 7, th: 1}
+}
+</code></pre>
+<p><strong>value 别名：</strong></p>
+<pre><code>// 以下两种写法等价
+text("Hello") { rect = {...} }
+text { value = "Hello"; rect = {...} }
+</code></pre>
+<h3 id="54-tile--瓦片渲染"><a class="header" href="#54-tile--瓦片渲染">5.4 Tile — 瓦片渲染</a></h3>
+<pre><code>tile(31) {
+    rect = {tx: 18, ty: 16, tw: 1, th: 1}
+}
+
+tile("{sprite_index}") {
+    rect = {tx: 15, ty: 4, tw: 2, th: 2}
+    visible = "{has_selected}"
+    flip_x = false
+    flip_y = false
+    palette = "name"
+    repeat = 1                     // 水平重复次数
+}
+</code></pre>
+<h3 id="55-divider--分隔线"><a class="header" href="#55-divider--分隔线">5.5 Divider — 分隔线</a></h3>
+<pre><code>divider {
+    rect = {tx: 1, ty: 9, tw: 18, th: 1}
+    tiles = [122]                  // 瓦片 ID 数组
+    repeat = 17                    // 重复次数
+    orientation = "horizontal"     // "horizontal" | "vertical"
+}
+</code></pre>
+<h3 id="56-list--滚动列表"><a class="header" href="#56-list--滚动列表">5.6 List — 滚动列表</a></h3>
+<pre><code>list {
+    rect = {tx: 1, ty: 1, tw: 11, th: 3}
+    source = "{items}"             // 数据源模板变量
+    item_template = {height: 1, gap: 1}
+    cursor = {tile: 223, position: "left"}
+    max_visible = 3
+    selected = 0
+    footer = "text"
+}
+</code></pre>
+<p><strong>cursor 属性：</strong></p>
+<ul>
+<li>简写：<code>cursor = {tile: 223}</code>（仅指定瓦片 ID）</li>
+<li>完整：<code>cursor = {tile: 223, position: "left"}</code></li>
+</ul>
+<h3 id="57-flexlist--弹性列表"><a class="header" href="#57-flexlist--弹性列表">5.7 FlexList — 弹性列表</a></h3>
+<pre><code>flex_list("{bag_items}") {
+    rect = {tx: 1, ty: 4, tw: 18, th: 13}
+    item_layout = [
+        {field: "name", width: 14, align: "left"},
+        {field: "qty", width: 3, align: "right", prefix: "x"}
+    ]
+    padding = {top: 1, left: 1}
+    gap = 1
+    cursor = {tile: 223, position: "left"}
+    selected = 0
+}
+</code></pre>
+<p><strong>item_layout 列定义：</strong></p>
+<ul>
+<li><code>field</code> — 数据字段名</li>
+<li><code>width</code> — 列宽（瓦片数）</li>
+<li><code>align</code> — 对齐方式</li>
+<li><code>prefix</code> — 值前缀（如 <code>"x"</code>, <code>"$"</code>）</li>
+</ul>
+<h3 id="58-button--按钮"><a class="header" href="#58-button--按钮">5.8 Button — 按钮</a></h3>
+<pre><code>button("确定") {
+    rect = {tx: 10, ty: 15, tw: 5, th: 1}
+    on_click = "handler"
+}
+</code></pre>
+<h3 id="59-image--图像"><a class="header" href="#59-image--图像">5.9 Image — 图像</a></h3>
+<pre><code>image("sprite.png") {
+    rect = {tx: 0, ty: 0, tw: 7, th: 7}
+    slice = "[8,8,8,8]"            // 九宫格切片
+}
+</code></pre>
+<h3 id="510-input--dropdown--输入组件"><a class="header" href="#510-input--dropdown--输入组件">5.10 Input / Dropdown — 输入组件</a></h3>
+<pre><code>input {
+    rect = {tx: 0, ty: 0, tw: 20, th: 1}
+    placeholder = "请输入..."
+}
+
+dropdown {
+    rect = {tx: 0, ty: 0, tw: 10, th: 1}
+}
+</code></pre>
+<h3 id="511-cursor--选择光标"><a class="header" href="#511-cursor--选择光标">5.11 Cursor — 选择光标</a></h3>
+<p>在 <code>rect.tx/ty</code> 基准点上按“基准 + 网格偏移“绘制选择符（▶）。最终位置为
+<code>base_tx + col*col_step</code> / <code>base_ty + row*row_step</code>，<code>col</code>/<code>row</code> 为数据绑定：</p>
+<pre><code>cursor {
+    rect = {tx: 5, ty: 14, tw: 1, th: 1}
+    row = "{cursor}"          // 1-D 列表光标：仅设 row_step
+    row_step = 2
+}
+</code></pre>
+<ul>
+<li>1-D 列表光标：设 <code>row_step</code>，<code>row = "{cursor}"</code></li>
+<li>2-D 网格（战斗 FIGHT/MON/ITEM/RUN）：同时设 <code>col_step</code> + <code>row_step</code></li>
+<li>枚举偏移选择器（选项界面）：<code>col_step = 1</code>，<code>col = "{opt_index}"</code></li>
+<li>多光标界面（如 party 的 ▶ + ◆）：放多个 <code>cursor</code> 元素，各自带 <code>visible</code> 条件</li>
+</ul>
+<h3 id="512-bracket--pixelrect--像素图元"><a class="header" href="#512-bracket--pixelrect--像素图元">5.12 Bracket / PixelRect — 像素图元</a></h3>
+<p>复刻 pokered-ui <code>Frame</code> 图元（括号框、原始矩形）的声明式版本，基于
+painter 的 <code>draw_pixel_rect</code> 合成：</p>
+<pre><code>bracket {
+    rect = {tx: 0, ty: 8, tw: 10, th: 4}
+}
+
+pixel_rect {
+    rect = {tx: 2, ty: 2, tw: 4, th: 1}
+}
+</code></pre>
+<h3 id="513-自定义组件--component-声明--custom-元素"><a class="header" href="#513-自定义组件--component-声明--custom-元素">5.13 自定义组件 — <code>component</code> 声明 + <code>custom:*</code> 元素</a></h3>
+<p>游戏特有的图元（如 Gen-I 血条）<strong>不</strong>内置在引擎里，而是由游戏侧注册为
+<code>custom:*</code> 元素（<code>ElementRegistry</code>；pokered 见 pokered-ui 的
+<code>custom_elements</code> 模块），并在 <code>.gui</code> 中用 <code>component</code> 声明其构建期 schema。
+编译器会按声明校验每个使用点（缺必填 prop、prop 类型不符、未声明的 prop
+都报编译错误）；运行时加载布局后还会按实现侧的 <code>schema()</code> 复验。</p>
+<p>声明（通常集中在共享的 <code>components.gui</code>）：</p>
+<pre><code>// Gen-I HP bar：4px 高，按原版 GetHealthBarColor 阈值三色填充
+component hp_bar {
+  current: expr required
+  max: expr required
+}
+</code></pre>
+<p>prop 类型可取 <code>int</code> / <code>string</code> / <code>bool</code> / <code>color</code> / <code>expr</code>，可选 <code>required</code>
+标记。使用点直接以声明名作为元素类型：</p>
+<pre><code>hp_bar {
+    rect = {tx: 13, ty: 3, tw: 6, th: 1}
+    current = "{hp}"
+    max = "{max_hp}"
+}
+</code></pre>
+<p>编译输出的 JSON 元素 <code>type</code> 为 <code>custom:hp_bar</code>，由游戏注册的实现负责渲染。</p>
+<hr>
+<h2 id="六完整示例"><a class="header" href="#六完整示例">六、完整示例</a></h2>
+<h3 id="61-对话框"><a class="header" href="#61-对话框">6.1 对话框</a></h3>
+<pre><code>screen Dialog {
+    panel {
+        rect = {tx: 0, ty: 12, tw: 20, th: 6}
+        style = "default"
+        text("{text}") {
+            rect = {tx: 1, ty: 13, tw: 18, th: 4}
+            wrap = "word"
+            line_spacing = 1
+        }
+        tile(31) {
+            rect = {tx: 18, ty: 16, tw: 1, th: 1}
+        }
+    }
+}
+</code></pre>
+<p>编译输出：</p>
+<pre><code class="language-json">{
+    "schema_version": 2,
+    "screen": "Dialog",
+    "elements": [
+        {"type": "border", "rect": {"tx": 0, "ty": 12, "tw": 20, "th": 6}, "style": "default", "children": [
+            {"type": "text", "rect": {"tx": 1, "ty": 13, "tw": 18, "th": 4}, "value": "{text}", "wrap": "word", "line_spacing": 1},
+            {"type": "tile", "rect": {"tx": 18, "ty": 16, "tw": 1, "th": 1}, "tile_id": 31}
+        ]}
+    ]
+}
+</code></pre>
+<h3 id="62-背包界面"><a class="header" href="#62-背包界面">6.2 背包界面</a></h3>
+<pre><code>screen Bag {
+    panel {
+        rect = {tx: 6, ty: 0, tw: 8, th: 3}
+        style = "default"
+    }
+    text("ITEM") {
+        rect = {tx: 7, ty: 1, tw: 6, th: 1}
+    }
+    panel {
+        rect = {tx: 0, ty: 3, tw: 20, th: 15}
+        style = "default"
+    }
+    flex_list("{bag_items}") {
+        rect = {tx: 1, ty: 4, tw: 18, th: 13}
+        item_layout = [
+            {field: "name", width: 14, align: "left"},
+            {field: "qty", width: 3, align: "right", prefix: "x"}
+        ]
+        padding = {top: 1, left: 1}
+        gap = 1
+        cursor = {tile: 223, position: "left"}
+    }
+    text("CANCEL") {
+        rect = {tx: 2, ty: 16, tw: 16, th: 1}
+        color = "DarkGray"
+    }
+}
+</code></pre>
+<h3 id="63-怪物列表"><a class="header" href="#63-怪物列表">6.3 怪物列表</a></h3>
+<pre><code>screen Party {
+    text("No MONSTER!") {
+        rect = {tx: 3, ty: 8, tw: 10, th: 1}
+        visible = "{show_empty}"
+    }
+    container {
+        rect = {tx: 0, ty: 0, tw: 20, th: 18}
+        layout = {gap: 0}
+        clip = false
+        visible = "{show_entry1}"
+        text("{mon1_name}") {
+            rect = {tx: 4, ty: 0, tw: 10, th: 1}
+        }
+        text("L{mon1_level}") {
+            rect = {tx: 14, ty: 0, tw: 3, th: 1}
+        }
+        text("{mon1_status}") {
+            rect = {tx: 17, ty: 0, tw: 3, th: 1}
+            color = "DarkGray"
+        }
+        text("{mon1_hp}") {
+            rect = {tx: 14, ty: 1, tw: 6, th: 1}
+        }
+    }
+    // ... mon2 到 mon6 结构相同
+}
+</code></pre>
+<hr>
+<h2 id="七全局定义"><a class="header" href="#七全局定义">七、全局定义</a></h2>
+<blockquote>
+<p><strong>分界说明：</strong> 自本章起为旧版全文（含全局定义、组件系统、Flex、i18n、
+RTL、条件渲染、响应式、动画、事件等章节），其子节编号沿用旧版的
+<code>4.x</code>–<code>12.x</code>。这些章节描述的是完整愿景语法，<strong>多数为 proposal</strong>——已实现
+范围以 §1.1–§五、§十三–§十六为准；<code>@theme</code>/<code>@style</code>/<code>@variables</code> 的当前
+编译契约见 DSL_MAPPING.md（Entry 9/10）。旧版章节保留作为语法参考。</p>
+</blockquote>
+<h3 id="41-变量定义"><a class="header" href="#41-变量定义">4.1 变量定义</a></h3>
+<pre><code>@variables {
+    shop_items = [
+        {icon="⚔️", name="铁剑", price=120, description="攻击力+10"},
+        {icon="🛡️", name="木盾", price=80, description="防御力+5"}
+    ]
+    gold = 500
+    config = {
+        max_items = 99
+        discount_rate = 0.1
+    }
+}
+</code></pre>
+<h3 id="42-主题定义"><a class="header" href="#42-主题定义">4.2 主题定义</a></h3>
+<pre><code>@theme dark {
+    primary = "#c9a03d"
+    background = "#1a1a1e"
+    surface = "#2a2a2e"
+    text = "#ffffff"
+    text_muted = "#888888"
+    border = "#3a3a3e"
+}
+
+@theme light {
+    primary = "#0066cc"
+    background = "#f5f5f5"
+    surface = "#ffffff"
+    text = "#333333"
+    text_muted = "#888888"
+    border = "#dddddd"
+}
+
+screen Main {
+    theme = "dark"
+    // ...
+}
+</code></pre>
+<h3 id="43-样式复用"><a class="header" href="#43-样式复用">4.3 样式复用</a></h3>
+<pre><code>@style card {
+    border = "rounded"
+    padding = 12
+    background = "@theme.surface"
+    display = "flex"
+    gap = 8
+}
+
+@style card_hover : card {
+    background = "@theme.primary"
+    scale = 1.02
+}
+
+product_card = container {
+    @style card
+
+    @hover {
+        @style card_hover
+    }
+}
+</code></pre>
+<h3 id="44-资源定义"><a class="header" href="#44-资源定义">4.4 资源定义</a></h3>
+<pre><code>@resources {
+    // 普通图片
+    logo = image("assets/logo.png")
+
+    // 九宫格图片
+    panel_default = image("ui/panel_default.9.png") {
+        slice = [24, 24, 24, 24]
+        scale_mode = "stretch"
+    }
+
+    panel_hover = image("ui/panel_hover.9.png") {
+        slice = 24
+    }
+
+    // 平铺纹理
+    wood_texture = image("ui/wood_tex.jpg") {
+        repeat = "tile"
+        tile_size = [64, 64]
+    }
+}
+</code></pre>
+<h3 id="45-图集定义"><a class="header" href="#45-图集定义">4.5 图集定义</a></h3>
+<pre><code>@atlas "game_ui" {
+    source = "assets/ui/atlas.png"
+    layout = "grid"           // grid | packed
+    cell_size = [128, 128]    // 网格模式
+
+    // 定义图集中的区域
+    regions = {
+        panel_bg = [0, 0, 128, 128, slice=16]
+        panel_bg_hover = [128, 0, 128, 128, slice=16]
+        button = [0, 128, 64, 64, slice=[8,8,8,8]]
+        button_hover = [64, 128, 64, 64, slice=[8,8,8,8]]
+        icon_gold = [0, 192, 32, 32]
+        icon_sword = [32, 192, 32, 32]
+    }
+}
+</code></pre>
+<hr>
+<h2 id="五组件系统"><a class="header" href="#五组件系统">五、组件系统</a></h2>
+<h3 id="51-panel---面板组件"><a class="header" href="#51-panel---面板组件">5.1 Panel - 面板组件</a></h3>
+<pre><code>panel {
+    // 字符边框（轻量级）
+    border = "single"          // single | double | rounded | none
+
+    // 图片背景（九宫格）
+    background_image = "ui/panel.9.png" {
+        slice = [20, 20, 20, 20]   // [top, right, bottom, left]
+        scale = "stretch"           // stretch | repeat | repeat_x | repeat_y | fit | fill
+        tint = "#ffffff"            // 着色
+        opacity = 1.0
+        auto_slice = true           // .9.png 自动读取切片
+    }
+
+    // 多层背景
+    backgrounds = [
+        { type = "gradient", colors = ["#1a1a2e", "#16213e"] },
+        { type = "image", source = "ui/noise.png", blend = "multiply", opacity = 0.3 },
+        { type = "nine_slice", source = "ui/panel_frame.png", slice = 16 }
+    ]
+
+    // 边框图片
+    border_image = "ui/border.png" {
+        slice = [10, 10, 10, 10]
+        inset = 2
+    }
+
+    // 内边距（确保内容在安全区内）
+    padding = 24
+    margin = [4, 8]
+    background = "@theme.background"
+    width = "auto"
+    height = "auto"
+    title = text("标题")
+}
+</code></pre>
+<h3 id="52-container---通用容器"><a class="header" href="#52-container---通用容器">5.2 Container - 通用容器</a></h3>
+<pre><code>container {
+    // 无默认边框，支持所有布局属性
+    display = "flex"           // block | flex | inline
+    // 继承所有布局和样式属性
+}
+</code></pre>
+<h3 id="53-text---文本组件"><a class="header" href="#53-text---文本组件">5.3 Text - 文本组件</a></h3>
+<pre><code>text("显示内容") {
+    align = "left"             // left | center | right | justify | start | end
+    color = "@theme.text"
+    background = "transparent"
+    font_size = "normal"       // small | normal | large | xl
+    weight = "normal"          // normal | bold
+    italic = false
+    underline = false
+    margin = [0, 0, 4, 0]
+    dir = "auto"               // ltr | rtl | auto
+    unicode_bidi = "normal"    // normal | embed | bidi-override
+}
+</code></pre>
+<h3 id="54-list---列表组件"><a class="header" href="#54-list---列表组件">5.4 List - 列表组件</a></h3>
+<pre><code>list(source=items, max_visible=10) {
+    each = "{icon} {name} - ${price}"
+    spacing = 2
+    cursor = "arrow"           // arrow | hand | none
+    selected_bg = "@theme.primary"
+    on_select = "handler"
+    scrollbar_position = "end" // LTR=右侧，RTL=左侧
+}
+</code></pre>
+<h3 id="55-button---按钮组件"><a class="header" href="#55-button---按钮组件">5.5 Button - 按钮组件</a></h3>
+<pre><code>button("确定") {
+    // 样式变体
+    style = "primary"          // primary | secondary | danger | success | ghost
+
+    // 图片背景
+    background_image = "@atlas.game_ui.button" {
+        slice = 8
+    }
+
+    // 状态样式
+    @hover {
+        background_image = "@atlas.game_ui.button_hover"
+        scale = 1.02
+    }
+
+    @pressed {
+        scale = 0.98
+        offset_y = 2
+    }
+
+    @disabled {
+        grayscale = true
+        opacity = 0.6
+    }
+
+    // 基础属性
+    width = 20
+    height = 3
+    action = "submit"
+    disabled = false
+    icon = "✓"
+    icon_position = "start"    // start | end | top | bottom
+    on_click = "handler"
+}
+</code></pre>
+<h3 id="56-image---图像组件"><a class="header" href="#56-image---图像组件">5.6 Image - 图像组件</a></h3>
+<pre><code>image("{url}") {
+    width = 40
+    height = 10
+    object_fit = "cover"       // cover | contain | fill
+    slice = [10, 10, 10, 10]   // 九宫格切片
+    scale_mode = "stretch"
+    repeat = "none"            // none | tile | repeat_x | repeat_y
+}
+</code></pre>
+<h3 id="57-input---输入框组件"><a class="header" href="#57-input---输入框组件">5.7 Input - 输入框组件</a></h3>
+<pre><code>input {
+    placeholder = "请输入..."
+    value = "{input_text}"
+    max_length = 50
+    password = false
+    dir = "auto"
+    on_change = "handler"
+    on_enter = "submit"
+}
+</code></pre>
+<h3 id="58-dropdown---下拉选择器"><a class="header" href="#58-dropdown---下拉选择器">5.8 Dropdown - 下拉选择器</a></h3>
+<pre><code>dropdown(source=languages) {
+    value = "{selected_lang}"
+    placeholder = "选择语言"
+    on_change = "switch_language"
+}
+</code></pre>
+<h3 id="59-progressbar---进度条组件"><a class="header" href="#59-progressbar---进度条组件">5.9 ProgressBar - 进度条组件</a></h3>
+<pre><code>progressbar(value=75, max=100) {
+    width = 200
+    height = 16
+    background_color = "@theme.surface"
+    fill_color = "@theme.primary"
+    border = "single"
+    show_percent = true
+}
+</code></pre>
+<h3 id="510-slider---滑块组件"><a class="header" href="#510-slider---滑块组件">5.10 Slider - 滑块组件</a></h3>
+<pre><code>slider(value=50, min=0, max=100) {
+    width = 200
+    track_image = "ui/slider_track.png" {
+        slice = [4, 4, 4, 4]
+    }
+    handle_image = "ui/slider_handle.png"
+    on_change = "on_volume_change"
+}
+</code></pre>
+<hr>
+<h2 id="六flex-布局系统"><a class="header" href="#六flex-布局系统">六、Flex 布局系统</a></h2>
+<h3 id="61-容器属性"><a class="header" href="#61-容器属性">6.1 容器属性</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>属性</th><th>可选值</th><th>默认值</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>display</code></td><td><code>block</code>, <code>flex</code>, <code>inline</code></td><td><code>block</code></td><td>布局模式</td></tr>
+<tr><td><code>flex_direction</code></td><td><code>row</code>, <code>column</code>, <code>row_reverse</code>, <code>column_reverse</code>, <code>inline</code>, <code>block</code></td><td><code>row</code></td><td>主轴方向</td></tr>
+<tr><td><code>flex_wrap</code></td><td><code>nowrap</code>, <code>wrap</code>, <code>wrap_reverse</code></td><td><code>nowrap</code></td><td>换行行为</td></tr>
+<tr><td><code>justify_content</code></td><td><code>start</code>, <code>end</code>, <code>center</code>, <code>space_between</code>, <code>space_around</code>, <code>space_evenly</code></td><td><code>start</code></td><td>主轴对齐（逻辑值）</td></tr>
+<tr><td><code>align_items</code></td><td><code>start</code>, <code>end</code>, <code>center</code>, <code>stretch</code>, <code>baseline</code></td><td><code>stretch</code></td><td>交叉轴对齐</td></tr>
+<tr><td><code>align_content</code></td><td><code>start</code>, <code>end</code>, <code>center</code>, <code>space_between</code>, <code>space_around</code>, <code>stretch</code></td><td><code>stretch</code></td><td>多行对齐</td></tr>
+<tr><td><code>gap</code></td><td>数值</td><td><code>0</code></td><td>统一间距</td></tr>
+<tr><td><code>row_gap</code></td><td>数值</td><td><code>0</code></td><td>行间距</td></tr>
+<tr><td><code>column_gap</code></td><td>数值</td><td><code>0</code></td><td>列间距</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="62-子项属性"><a class="header" href="#62-子项属性">6.2 子项属性</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>属性</th><th>类型</th><th>默认值</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>flex_grow</code></td><td>数字</td><td><code>0</code></td><td>放大比例</td></tr>
+<tr><td><code>flex_shrink</code></td><td>数字</td><td><code>1</code></td><td>缩小比例</td></tr>
+<tr><td><code>flex_basis</code></td><td>数值/<code>auto</code>/<code>content</code></td><td><code>auto</code></td><td>基础大小</td></tr>
+<tr><td><code>flex</code></td><td>简写</td><td>-</td><td><code>grow shrink basis</code> 或单数字</td></tr>
+<tr><td><code>align_self</code></td><td><code>auto</code>, <code>start</code>, <code>end</code>, <code>center</code>, <code>stretch</code></td><td><code>auto</code></td><td>覆盖对齐</td></tr>
+<tr><td><code>order</code></td><td>整数</td><td><code>0</code></td><td>排列顺序</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="63-简写示例"><a class="header" href="#63-简写示例">6.3 简写示例</a></h3>
+<pre><code>container {
+    flex = 1                // flex-grow: 1, flex-shrink: 1, flex-basis: 0
+    flex = "0 0 200px"      // 固定宽度
+    flex = "1 1 auto"       // 完整形式
+}
+</code></pre>
+<hr>
+<h2 id="七国际化i18n系统"><a class="header" href="#七国际化i18n系统">七、国际化（i18n）系统</a></h2>
+<h3 id="71-资源声明"><a class="header" href="#71-资源声明">7.1 资源声明</a></h3>
+<pre><code>screen Shop {
+    i18n {
+        resources = ["locales/{lang}.i18n"]
+        fallback = "en-US"
+        default_lang = "zh-CN"
+        auto_detect = true
+        rtl_languages = ["ar", "he", "fa", "ur"]
+        auto_rtl = true
+    }
+    // ...
+}
+</code></pre>
+<h3 id="72-翻译函数"><a class="header" href="#72-翻译函数">7.2 翻译函数</a></h3>
+<pre><code>// 基础翻译
+text("{t('shop.title')}")
+
+// 带参数
+text("{t('shop.gold', {amount=gold})}")
+
+// 复数（ICU 格式）
+text("{count, plural, =0{无商品} one{1件商品} other{{count}件商品}}")
+
+// 选择（性别等）
+text("{gender, select, male{他} female{她} other{他们}}购买了{item}")
+
+// 上下文区分
+text("{t('sword', {context='weapon'})}")
+</code></pre>
+<h3 id="73-格式化"><a class="header" href="#73-格式化">7.3 格式化</a></h3>
+<pre><code>// 日期时间
+text("{date, date, long}")
+text("{time, time, medium}")
+
+// 数字
+text("{price, number, currency}")
+text("{rate, number, percent}")
+
+// 自定义
+text("{date, date, ::yyyy年MM月dd日}")
+</code></pre>
+<h3 id="74-组件内嵌翻译"><a class="header" href="#74-组件内嵌翻译">7.4 组件内嵌翻译</a></h3>
+<pre><code>@trans key="welcome_with_link" {
+    link = button("这里") {
+        action = "open_link"
+    }
+}
+</code></pre>
+<hr>
+<h2 id="八rtlright-to-left支持"><a class="header" href="#八rtlright-to-left支持">八、RTL（Right-to-Left）支持</a></h2>
+<h3 id="81-方向声明"><a class="header" href="#81-方向声明">8.1 方向声明</a></h3>
+<pre><code>screen MyScreen {
+    dir = "rtl"              // ltr | rtl | auto
+
+    panel {
+        // 继承屏幕方向
+    }
+}
+</code></pre>
+<h3 id="82-逻辑属性"><a class="header" href="#82-逻辑属性">8.2 逻辑属性</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>物理属性</th><th>逻辑属性</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>margin-left</code></td><td><code>margin-inline-start</code></td><td>内联方向起始边距</td></tr>
+<tr><td><code>margin-right</code></td><td><code>margin-inline-end</code></td><td>内联方向结束边距</td></tr>
+<tr><td><code>margin-left/right</code></td><td><code>margin-inline</code></td><td>内联方向双边距</td></tr>
+<tr><td><code>margin-top/bottom</code></td><td><code>margin-block</code></td><td>块方向边距</td></tr>
+<tr><td><code>padding-left/right</code></td><td><code>padding-inline</code></td><td>内联方向内边距</td></tr>
+<tr><td><code>text-align: left</code></td><td><code>text-align: start</code></td><td>逻辑对齐</td></tr>
+<tr><td><code>inset-left</code></td><td><code>inset-inline-start</code></td><td>逻辑定位</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="83-rtl-条件块"><a class="header" href="#83-rtl-条件块">8.3 RTL 条件块</a></h3>
+<pre><code>container {
+    margin_inline_start = 10
+
+    @rtl {
+        // 仅在 RTL 模式下生效
+        justify_content = "end"
+    }
+
+    @ltr {
+        // 仅在 LTR 模式下生效
+        justify_content = "start"
+    }
+}
+
+// 属性级覆盖
+margin_left = 10 {
+    rtl = "margin_right"
+}
+</code></pre>
+<h3 id="84-图标自动翻转"><a class="header" href="#84-图标自动翻转">8.4 图标自动翻转</a></h3>
+<pre><code>icon("arrow-right") {
+    auto_flip = true         // RTL 下自动翻转
+    flip_in_rtl = true
+}
+
+icon("hand-pointer") {
+    auto_flip = false        // 某些图标不翻转
+}
+</code></pre>
+<hr>
+<h2 id="九条件渲染与循环"><a class="header" href="#九条件渲染与循环">九、条件渲染与循环</a></h2>
+<h3 id="91-条件渲染"><a class="header" href="#91-条件渲染">9.1 条件渲染</a></h3>
+<pre><code>@if (user.is_logged_in) {
+    welcome = text("欢迎回来，{user.name}！")
+} @else if (user.is_guest) {
+    guest = text("访客模式")
+} @else {
+    login_button = button("登录")
+}
+</code></pre>
+<h3 id="92-循环"><a class="header" href="#92-循环">9.2 循环</a></h3>
+<pre><code>// 简单循环
+@each item in items {
+    card = container {
+        text(item.name)
+        text(item.price)
+    }
+}
+
+// 带索引
+@each (item, index) in items {
+    item = text("{index + 1}. {item.name}")
+}
+
+// 内置列表（高性能）
+list(source=items, max_visible=10) {
+    each = "{name} - ${price}"
+}
+</code></pre>
+<hr>
+<h2 id="十响应式设计"><a class="header" href="#十响应式设计">十、响应式设计</a></h2>
+<h3 id="101-断点语法"><a class="header" href="#101-断点语法">10.1 断点语法</a></h3>
+<pre><code>panel {
+    display = "flex"
+    flex_direction = "column"
+
+    @media (min_width = 768px) {
+        flex_direction = "row"
+        gap = 20
+    }
+
+    @media (max_width = 480px) {
+        padding = 8
+    }
+
+    // 命名断点
+    @mobile { flex_direction = "column" }
+    @tablet { flex_direction = "row" }
+    @desktop { justify_content = "center" }
+    @wide { max_width = 1200 }
+
+    // 横竖屏
+    @orientation portrait { /* ... */ }
+    @orientation landscape { /* ... */ }
+}
+</code></pre>
+<h3 id="102-内置断点"><a class="header" href="#102-内置断点">10.2 内置断点</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>断点</th><th>最小宽度</th><th>适用设备</th></tr>
+</thead>
+<tbody>
+<tr><td><code>@mobile</code></td><td>0</td><td>手机</td></tr>
+<tr><td><code>@tablet</code></td><td>768px</td><td>平板</td></tr>
+<tr><td><code>@desktop</code></td><td>1024px</td><td>桌面</td></tr>
+<tr><td><code>@wide</code></td><td>1440px</td><td>宽屏</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="十一动画与过渡"><a class="header" href="#十一动画与过渡">十一、动画与过渡</a></h2>
+<h3 id="111-状态过渡"><a class="header" href="#111-状态过渡">11.1 状态过渡</a></h3>
+<pre><code>panel {
+    background_image = "ui/panel_default.png"
+
+    transitions = {
+        hover = {
+            duration = 0.15
+            easing = "ease_out"
+            properties = ["scale", "opacity", "background_image"]
+        }
+
+        press = {
+            duration = 0.05
+            easing = "linear"
+        }
+    }
+}
+</code></pre>
+<h3 id="112-内置动画"><a class="header" href="#112-内置动画">11.2 内置动画</a></h3>
+<pre><code>panel {
+    background_image = "ui/panel.png" {
+        animation = "pulse" {
+            duration = 2.0
+            from_opacity = 0.8
+            to_opacity = 1.0
+            repeat = "infinite"
+        }
+    }
+}
+
+// 自定义动画
+@keyframes float {
+    0% { transform = "translateY(0px)" }
+    50% { transform = "translateY(-10px)" }
+    100% { transform = "translateY(0px)" }
+}
+
+floating_icon = image("icon.png") {
+    animation = "float" {
+        duration = 2.0
+        repeat = "infinite"
+        easing = "ease_in_out"
+    }
+}
+</code></pre>
+<hr>
+<h2 id="十二事件与交互"><a class="header" href="#十二事件与交互">十二、事件与交互</a></h2>
+<h3 id="121-事件绑定"><a class="header" href="#121-事件绑定">12.1 事件绑定</a></h3>
+<pre><code>button("点击") {
+    on_click = "handle_click"
+    on_hover = "show_tooltip"
+    on_focus = "highlight"
+}
+
+input {
+    on_change = "validate"
+    on_enter = "submit"
+}
+
+list {
+    on_select = "load_details"
+    on_double_click = "open"
+}
+</code></pre>
+<h3 id="122-动作定义"><a class="header" href="#122-动作定义">12.2 动作定义</a></h3>
+<pre><code>button("关闭") {
+    action = "close"                  // 内置动作
+    action = "execute:buy_item"       // 带参数
+    confirm = "确定吗？"               // 确认对话框
+    on_click = "save_and_close"       // 自定义处理
+}
+</code></pre>
+<hr>
+<h2 id="十三完整示例游戏商店界面"><a class="header" href="#十三完整示例游戏商店界面">十三、完整示例：游戏商店界面</a></h2>
+<pre><code>@variables {
+    shop_items = [
+        {icon="⚔️", name_key="items.sword", price=120, description_key="desc.sword", type="weapon"},
+        {icon="🛡️", name_key="items.shield", price=80, description_key="desc.shield", type="armor"},
+        {icon="💊", name_key="items.potion", price=30, description_key="desc.potion", type="consumable"},
+        {icon="📜", name_key="items.scroll", price=200, description_key="desc.scroll", type="consumable"},
+        {icon="👢", name_key="items.boots", price=60, description_key="desc.boots", type="armor"}
+    ]
+    gold = 500
+    selected_item = null
+    item_filter = "all"
+}
+
+@atlas "game_ui" {
+    source = "assets/ui/atlas.png"
+    layout = "packed"
+
+    regions = {
+        panel_bg = [0, 0, 256, 256, slice=32]
+        panel_bg_hover = [256, 0, 256, 256, slice=32]
+        panel_dark = [512, 0, 256, 256, slice=32]
+        button_primary = [0, 256, 128, 64, slice=[12,12,12,12]]
+        button_primary_hover = [128, 256, 128, 64, slice=[12,12,12,12]]
+        button_secondary = [256, 256, 128, 64, slice=[12,12,12,12]]
+        icon_gold = [0, 320, 32, 32]
+        icon_sword = [32, 320, 32, 32]
+        icon_shield = [64, 320, 32, 32]
+        icon_potion = [96, 320, 32, 32]
+        icon_scroll = [128, 320, 32, 32]
+    }
+}
+
+@theme fantasy {
+    primary = "#c9a03d"
+    primary_dark = "#a07828"
+    background = "#1a1a2e"
+    surface = "#16213e"
+    text = "#eeeeee"
+    text_muted = "#888888"
+    success = "#4caf50"
+    error = "#f44336"
+    warning = "#ff9800"
+}
+
+@style card {
+    background_image = "@atlas.game_ui.panel_bg"
+    slice = 16
+    padding = 12
+    border = "none"
+    display = "flex"
+    flex_direction = "column"
+    gap = 8
+
+    @hover {
+        background_image = "@atlas.game_ui.panel_bg_hover"
+        scale = 1.02
+        transition_duration = 0.1
+    }
+}
+
+@style filter_button {
+    background_image = "@atlas.game_ui.button_secondary"
+    slice = 12
+    padding = [4, 12]
+
+    @pressed {
+        scale = 0.95
+    }
+}
+
+@style filter_button_active : filter_button {
+    background_image = "@atlas.game_ui.button_primary"
+    style = "primary"
+}
+
+screen FantasyShop {
+    i18n {
+        resources = ["locales/{lang}.i18n"]
+        fallback = "en-US"
+        default_lang = "zh-CN"
+        rtl_languages = ["ar", "he"]
+        auto_rtl = true
+    }
+
+    theme = "fantasy"
+
+    panel {
+        background_image = "@atlas.game_ui.panel_dark"
+        slice = 32
+        padding = 24
+        width = 900
+        height = 600
+
+        display = "flex"
+        flex_direction = "column"
+        gap = 16
+
+        // 标题栏
+        header = container {
+            display = "flex"
+            justify_content = "space_between"
+            align_items = "center"
+
+            title = text("{t('shop.title')}") {
+                font_size = "xl"
+                weight = "bold"
+                color = "@theme.primary"
+            }
+
+            gold_display = container {
+                display = "flex"
+                align_items = "center"
+                gap = 4
+
+                gold_icon = image("@atlas.game_ui.icon_gold") {
+                    width = 24
+                    height = 24
+                }
+
+                gold_text = text("{t('shop.gold', {amount=gold})}") {
+                    color = "@theme.primary"
+                    weight = "bold"
+                }
+            }
+        }
+
+        // 欢迎语
+        welcome = text("{t('shop.welcome')}") {
+            align = "start"
+            dir = "auto"
+            color = "@theme.text_muted"
+            margin_bottom = 8
+        }
+
+        // 筛选栏
+        filters = container {
+            display = "flex"
+            gap = 8
+            margin_bottom = 8
+
+            @each filter in [
+                {key="all", label="{t('shop.filter.all')}"},
+                {key="weapon", label="{t('shop.filter.weapon')}"},
+                {key="armor", label="{t('shop.filter.armor')}"},
+                {key="consumable", label="{t('shop.filter.consumable')}"}
+            ] {
+                filter_btn = button("{filter.label}") {
+                    @style filter_button
+
+                    @if (item_filter == filter.key) {
+                        @style filter_button_active
+                    }
+
+                    on_click = "set_filter('{filter.key}')"
+                }
+            }
+        }
+
+        // 主体内容区
+        main_area = container {
+            flex_grow = 1
+
+            display = "flex"
+            flex_direction = "row"
+            gap = 20
+
+            @mobile {
+                flex_direction = "column"
+            }
+
+            // 左侧商品列表
+            item_list = list(
+                source="{filtered_items}",
+                max_visible=5
+            ) {
+                each = "{icon} {t(name_key)}  ${price}"
+                spacing = 3
+                cursor = "hand"
+                selected_bg = "@theme.primary_dark"
+                on_select = "update_selected"
+            }
+
+            // 右侧详情卡片
+            details = container {
+                flex_grow = 1
+                @style card
+
+                @if (selected_item != null) {
+                    detail_content = container {
+                        display = "flex"
+                        flex_direction = "column"
+                        gap = 12
+
+                        // 商品图标和名称
+                        header = container {
+                            display = "flex"
+                            gap = 12
+                            align_items = "center"
+
+                            icon = image("{selected_item.icon}") {
+                                width = 48
+                                height = 48
+                            }
+
+                            name = text("{t(selected_item.name_key)}") {
+                                font_size = "large"
+                                weight = "bold"
+                            }
+                        }
+
+                        // 描述
+                        description = text("{t(selected_item.description_key)}") {
+                            color = "@theme.text_muted"
+                            dir = "auto"
+                        }
+
+                        // 类型标签
+                        type_badge = container {
+                            background = "@theme.primary_dark"
+                            padding = [2, 8]
+                            border_radius = 4
+                            width = "fit"
+
+                            type_text = text("{t('shop.type.' + selected_item.type)}") {
+                                font_size = "small"
+                            }
+                        }
+
+                        // 价格行
+                        price_row = container {
+                            display = "flex"
+                            justify_content = "space_between"
+                            align_items = "center"
+                            margin_top = 8
+
+                            price_label = text("{t('shop.price')}:")
+                            price_value = text("${selected_item.price}") {
+                                color = "@theme.primary"
+                                weight = "bold"
+                                font_size = "large"
+                            }
+                        }
+
+                        // 购买按钮
+                        buy_button = button("{t('shop.buy')}") {
+                            background_image = "@atlas.game_ui.button_primary"
+                            slice = 12
+                            width = "100%"
+                            padding = [8, 16]
+                            margin_top = 8
+                            on_click = "buy_item"
+
+                            @hover {
+                                scale = 1.02
+                            }
+
+                            @pressed {
+                                scale = 0.98
+                            }
+                        }
+                    }
+                } @else {
+                    empty_state = container {
+                        align_items = "center"
+                        padding = 32
+
+                        empty_text = text("{t('shop.select_hint')}") {
+                            align = "center"
+                            color = "@theme.text_muted"
+                        }
+                    }
+                }
+            }
+        }
+
+        // 底部操作栏
+        footer = container {
+            display = "flex"
+            justify_content = "space_between"
+            align_items = "center"
+            margin_top = 8
+            padding_top = 8
+            border_top = "single"
+            border_color = "@theme.border"
+
+            info_text = text("{t('shop.items_count', {count=filtered_items.length})}") {
+                font_size = "small"
+                color = "@theme.text_muted"
+            }
+
+            close_button = button("{t('shop.close')}") {
+                style = "secondary"
+                background_image = "@atlas.game_ui.button_secondary"
+                slice = 12
+                action = "close"
+            }
+        }
+
+        // 动画效果
+        @keyframes fade_in {
+            0% { opacity = 0 }
+            100% { opacity = 1 }
+        }
+
+        details {
+            animation = "fade_in" {
+                duration = 0.2
+            }
+        }
+
+        // RTL 调整
+        @rtl {
+            details {
+                margin_inline_start = 8
+            }
+
+            filters {
+                justify_content = "end"
+            }
+        }
+    }
+}
+</code></pre>
+<hr>
+<h2 id="十四语法总览表"><a class="header" href="#十四语法总览表">十四、语法总览表</a></h2>
+<h3 id="已实现pokered-ui-布局"><a class="header" href="#已实现pokered-ui-布局">已实现（Pokered UI 布局）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类别</th><th>语法元素</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>屏幕</strong></td><td><code>screen</code></td><td><code>screen Dialog { }</code></td></tr>
+<tr><td><strong>组件</strong></td><td><code>type</code>, <code>id = type</code></td><td><code>text("hello")</code>, <code>tile(31)</code></td></tr>
+<tr><td><strong>定位</strong></td><td><code>rect</code></td><td><code>rect = {tx: 0, ty: 12, tw: 20, th: 6}</code></td></tr>
+<tr><td><strong>属性</strong></td><td><code>key = value</code></td><td><code>align = "center"</code></td></tr>
+<tr><td><strong>绑定</strong></td><td><code>{expression}</code></td><td><code>"{user.name}"</code></td></tr>
+<tr><td><strong>对象字面量</strong></td><td><code>{key: value}</code></td><td><code>cursor = {tile: 223, position: "left"}</code></td></tr>
+<tr><td><strong>边框</strong></td><td><code>panel</code></td><td><code>panel { style = "default" }</code></td></tr>
+<tr><td><strong>容器</strong></td><td><code>container</code></td><td><code>container { layout = {gap: 0} }</code></td></tr>
+<tr><td><strong>文本</strong></td><td><code>text</code></td><td><code>text("Hello") { color = "Black" }</code></td></tr>
+<tr><td><strong>瓦片</strong></td><td><code>tile</code></td><td><code>tile(31) { rect = {...} }</code></td></tr>
+<tr><td><strong>分隔线</strong></td><td><code>divider</code></td><td><code>divider { tiles = [122]; repeat = 17 }</code></td></tr>
+<tr><td><strong>列表</strong></td><td><code>list</code></td><td><code>list { source = "{items}" }</code></td></tr>
+<tr><td><strong>弹性列表</strong></td><td><code>flex_list</code></td><td><code>flex_list("{items}") { item_layout = [...] }</code></td></tr>
+<tr><td><strong>按钮</strong></td><td><code>button</code></td><td><code>button("OK") { on_click = "handler" }</code></td></tr>
+<tr><td><strong>图像</strong></td><td><code>image</code></td><td><code>image("sprite.png") { slice = "..." }</code></td></tr>
+<tr><td><strong>输入</strong></td><td><code>input</code></td><td><code>input { placeholder = "..." }</code></td></tr>
+<tr><td><strong>下拉</strong></td><td><code>dropdown</code></td><td><code>dropdown { }</code></td></tr>
+<tr><td><strong>光标</strong></td><td><code>cursor</code></td><td><code>cursor { row = "{cursor}"; row_step = 2 }</code></td></tr>
+<tr><td><strong>括号框</strong></td><td><code>bracket</code></td><td><code>bracket { rect = {...} }</code></td></tr>
+<tr><td><strong>像素矩形</strong></td><td><code>pixel_rect</code></td><td><code>pixel_rect { rect = {...} }</code></td></tr>
+<tr><td><strong>自定义组件</strong></td><td><code>component</code> 声明 + 使用</td><td><code>component hp_bar { current: expr required }</code> → <code>hp_bar { current = "{hp}" }</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="未实现proposal"><a class="header" href="#未实现proposal">未实现（Proposal）</a></h3>
+<blockquote>
+<p><strong>核对（2026-08）：</strong> 下表沿用旧版标注，与当前实现有出入。<code>@if/@else</code>、
+<code>@each</code>、<code>@theme</code>、<code>@style</code>、<code>@variables</code>、<code>@atlas</code> 均已实现（见 §1.1、
+DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实现（§1.3），<code>t()</code>
+运行时翻译函数仍为 proposal。按钮的 <code>on_click</code> 已实现（§5.8），其余通用
+<code>on_*</code> 事件仍为 proposal。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类别</th><th>语法元素</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>翻译</strong></td><td><code>t()</code></td><td><code>"{t('key')}"</code></td></tr>
+<tr><td><strong>方向</strong></td><td><code>dir</code>, <code>@rtl/@ltr</code></td><td><code>dir="rtl"</code>, <code>@rtl { ... }</code></td></tr>
+<tr><td><strong>响应式</strong></td><td><code>@media</code></td><td><code>@media (min_width=768) { }</code></td></tr>
+<tr><td><strong>资源</strong></td><td><code>@resources</code></td><td><code>@resources { ... }</code></td></tr>
+<tr><td><strong>事件</strong></td><td><code>on_*</code></td><td><code>on_click = "handler"</code></td></tr>
+<tr><td><strong>动画</strong></td><td><code>@keyframes</code>, <code>animation</code></td><td><code>animation = "pulse" { ... }</code></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="十五设计原则总结"><a class="header" href="#十五设计原则总结">十五、设计原则总结</a></h2>
+<h3 id="已实现"><a class="header" href="#已实现">已实现</a></h3>
+<ol>
+<li><strong>声明式</strong> — 描述“是什么“而非“怎么做“</li>
+<li><strong>瓦片坐标</strong> — 基于 20×18 网格的绝对定位</li>
+<li><strong>组件化</strong> — 内置组件 + <code>component</code> 声明的游戏自定义组件（<code>custom:*</code>）</li>
+<li><strong>数据绑定</strong> — 模板变量 <code>{var}</code> 运行时解析</li>
+<li><strong>对象字面量</strong> — <code>{key: value}</code> 语法用于复杂属性</li>
+<li><strong>Schema v2 输出</strong> — 编译为渲染器期望的 JSON 格式</li>
+<li><strong>构建期校验</strong> — 自定义组件按 <code>component</code> schema 校验使用点，运行时加载后复验</li>
+</ol>
+<h3 id="未实现proposal-1"><a class="header" href="#未实现proposal-1">未实现（Proposal）</a></h3>
+<ol start="8">
+<li><strong>国际化优先</strong> — i18n 和 RTL 作为一等公民</li>
+<li><strong>游戏友好</strong> — 九宫格切片、图集、动画效果</li>
+<li><strong>响应式</strong> — 内置断点系统，适配多种屏幕</li>
+</ol>
+<hr>
+<h2 id="十六文件扩展名与关联"><a class="header" href="#十六文件扩展名与关联">十六、文件扩展名与关联</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文件类型</th><th>扩展名</th><th>说明</th><th>状态</th></tr>
+</thead>
+<tbody>
+<tr><td>场景文件</td><td><code>.scene</code></td><td>游戏场景（脚本 + 可选 UI）</td><td>✅ 已实现</td></tr>
+<tr><td>UI 布局</td><td><code>.gui</code></td><td>纯 UI 布局定义</td><td>✅ 已实现</td></tr>
+<tr><td>主题文件</td><td><code>.theme</code></td><td>颜色主题定义</td><td>✅ 已实现</td></tr>
+<tr><td>样式文件</td><td><code>.style</code></td><td>可复用样式集合</td><td>✅ 已实现</td></tr>
+<tr><td>资源定义</td><td><code>.res</code></td><td>资源清单</td><td>❌ 未实现</td></tr>
+<tr><td>动画定义</td><td><code>.anim</code></td><td>关键帧动画定义</td><td>❌ 未实现</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="编译输出"><a class="header" href="#编译输出">编译输出</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>输入</th><th>输出</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.scene</code></td><td><code>name.js</code> + <code>name_ui.json</code></td><td>脚本 + 可选 UI 布局</td></tr>
+<tr><td><code>.gui</code></td><td><code>name.json</code>（schema v2）</td><td>纯 UI 布局</td></tr>
+<tr><td><code>.theme</code></td><td><code>name.json</code></td><td>主题 token</td></tr>
+<tr><td><code>.style</code></td><td><code>name_styles.json</code></td><td>已解析的样式（含继承链）</td></tr>
+</tbody>
+</table>
+</div>
+<p>这套语法现已具备<strong>生产级</strong>的 UI 描述能力，可广泛应用于游戏界面、终端应用、原型设计等场景。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../archive/dsl-unified-design.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../doc-standard.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../archive/dsl-unified-design.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../doc-standard.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
