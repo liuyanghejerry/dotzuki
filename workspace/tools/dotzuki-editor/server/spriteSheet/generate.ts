@@ -5,6 +5,7 @@
 // testable without a provider.
 // ───────────────────────────────────────────────────────────────────────────
 import type { ImageProviderProfile } from '../ai'
+import { resolveApiKey, usingCloudKey } from '../ai'
 import { type Img, decodePNG, encodePNG, flipH } from './image'
 import { geminiGenerateImage } from './gemini'
 import { proxyFetchFn } from '../proxy'
@@ -41,11 +42,18 @@ export interface AnimatedGenResult {
 
 /** Build the AI image call from an image-provider profile (OpenAI-compatible or Gemini). */
 export function makeGenImage(profile: ImageProviderProfile, apiKey: string): GenerateImageFn {
+  // Resolve once per request: the BYOK key wins, else the cloud env fallback
+  // (DOTZUKI_CLOUD_AI_IMAGE_KEY, with the optional _BASE_URL / _MODEL overrides
+  // re-pointing the profile at the platform gateway — provider type unchanged).
+  const key = resolveApiKey(apiKey, 'image')
+  const cloud = usingCloudKey(apiKey, 'image')
+  const baseURL = (cloud && process.env.DOTZUKI_CLOUD_AI_IMAGE_BASE_URL?.trim()) || profile.baseURL
+  const model = (cloud && process.env.DOTZUKI_CLOUD_AI_IMAGE_MODEL?.trim()) || profile.model
   return async (prompt, aspect, refs) => {
     if (profile.kind === 'gemini') {
       // Gemini generateContent is multimodal — pass the reference images so the
       // base character locks identity across the strip.
-      return geminiGenerateImage({ baseURL: profile.baseURL, apiKey, model: profile.model, prompt, refs, proxyUrl: profile.proxyUrl })
+      return geminiGenerateImage({ baseURL, apiKey: key, model, prompt, refs, proxyUrl: profile.proxyUrl })
     }
     // OpenAI-compatible images API: text→image (refs not supported here; identity
     // comes from the brief + shared-palette quantization + drift-detection retries,
@@ -53,12 +61,12 @@ export function makeGenImage(profile: ImageProviderProfile, apiKey: string): Gen
     const { generateImage } = await import('ai')
     const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible')
     const proxyFetch = await proxyFetchFn(profile.proxyUrl)
-    const provider = createOpenAICompatible({ name: profile.id || 'openai', apiKey, baseURL: profile.baseURL, ...(proxyFetch ? { fetch: proxyFetch } : {}) })
-    const model = provider.imageModel(profile.model)
+    const provider = createOpenAICompatible({ name: profile.id || 'openai', apiKey: key, baseURL, ...(proxyFetch ? { fetch: proxyFetch } : {}) })
+    const imageModel = provider.imageModel(model)
     // Pass aspectRatio (the right concept for variable-width strips); providers
     // that don't support it fall back to their default size and the pipeline
     // still segments by content. Cast: the SDK's param union varies by version.
-    const result = await generateImage({ model, prompt, aspectRatio: aspect, n: 1 } as any)
+    const result = await generateImage({ model: imageModel, prompt, aspectRatio: aspect, n: 1 } as any)
     return decodePNG(Buffer.from(result.image.base64, 'base64'))
   }
 }

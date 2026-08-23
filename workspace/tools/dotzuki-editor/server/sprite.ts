@@ -5,6 +5,7 @@
 // editor's pixel tooling. Heavy deps are imported dynamically.
 // ───────────────────────────────────────────────────────────────────────────
 import type { ProviderProfile } from './ai'
+import { resolveApiKey, usingCloudKey } from './ai'
 
 export interface SpriteGenParams {
   profile: ProviderProfile
@@ -18,16 +19,21 @@ export async function generateSprite(p: SpriteGenParams): Promise<{ base64: stri
   if (p.profile.kind !== 'openai') {
     throw new Error('Sprite generation needs an OpenAI-compatible provider (anthropic has no image model).')
   }
-  const imageModelId = p.profile.imageModel || p.profile.model
+  // Cloud fallback: request key wins, else DOTZUKI_CLOUD_AI_IMAGE_KEY (+ the
+  // optional _BASE_URL / _MODEL overrides) — see resolveApiKey in ./ai.
+  const key = resolveApiKey(p.apiKey, 'image')
+  const cloud = usingCloudKey(p.apiKey, 'image')
+  const imageModelId = (cloud && process.env.DOTZUKI_CLOUD_AI_IMAGE_MODEL?.trim()) || p.profile.imageModel || p.profile.model
   if (!imageModelId) throw new Error('This provider has no image model configured.')
+  const baseURL = (cloud && process.env.DOTZUKI_CLOUD_AI_IMAGE_BASE_URL?.trim()) || p.profile.baseURL
 
   const { generateImage } = await import('ai')
   const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible')
 
   const provider = createOpenAICompatible({
     name: p.profile.id || 'openai',
-    apiKey: p.apiKey,
-    baseURL: p.profile.baseURL,
+    apiKey: key,
+    baseURL,
   })
   const model = provider.imageModel(imageModelId)
 

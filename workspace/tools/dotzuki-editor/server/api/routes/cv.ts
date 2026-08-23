@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'http'
 import { sendJson, sendError, readBody } from '../http'
 import { encodePNG, decodePNG, resample } from '../../spriteSheet/image'
 import { makeGenImage } from '../../spriteSheet/generate'
+import { resolveApiKey } from '../../ai'
 
 export function registerCv(server: any) {
   function nextMiddleware(_req: IncomingMessage, res: ServerResponse) {
@@ -30,7 +31,7 @@ export function registerCv(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { pngBase64, prompt, profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
       if (!pngBase64 || !prompt || !String(prompt).trim()) return sendError(res, 'pngBase64 and prompt are required', 400)
       const src = decodePNG(Buffer.from(String(pngBase64).replace(/^data:image\/\w+;base64,/, ''), 'base64'))
       const editPrompt = `Edit this small pixel-art tile image. ${String(prompt).trim()}. Keep the SAME dimensions, low-resolution pixel-art style, and preserve transparency.`
