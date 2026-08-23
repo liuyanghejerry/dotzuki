@@ -202,6 +202,13 @@ pnpm electron:pack      # unpacked app dir (fast, no installer)
 pnpm electron:dist      # dmg/zip (mac), nsis (win), AppImage (linux)
 ```
 
+Tagging the repo `vX.Y.Z` (or publishing a GitHub Release) also triggers
+`.github/workflows/release-editor.yml`, which packages the editor for macOS
+(arm64 + x64) and Windows on CI and attaches the installers to the Release.
+The version comes from `workspace/Cargo.toml` — the same single source the
+crates.io release uses — so the installers always carry the workspace
+version.
+
 > **Code signing & notarization (optional).** Packaging config lives in
 > `electron-builder.cjs`. By default it produces an **unsigned** build — fine to
 > run locally or share over intranet/USB, but a Mac that *downloads* it will be
