@@ -10,7 +10,7 @@ import {
   PanelLeft, File, Zap, PawPrint, Swords, Backpack, Shapes, User, Leaf,
   RefreshCcw, ScrollText, MessageSquare, ChartColumn, List, Package, Ghost,
   WandSparkles,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 
 /**
  * Shared icon for the editor chrome — Lucide stroke icons instead of emoji,
