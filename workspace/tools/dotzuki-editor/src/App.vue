@@ -16,19 +16,19 @@
           :title="$t('app.toggleSidebar')"
           class="w-7 h-6 text-xs rounded-control hover:bg-raised flex items-center justify-center"
         >
-          {{ editor.sidebarOpen ? '◧' : '◨' }}
+          <AppIcon name="panel-left" :size="14" />
         </button>
         <button
           v-if="project.config"
           @click="editor.toggleAssistant()"
           :title="$t('assistant.open')"
           :class="['w-7 h-6 text-xs rounded-control flex items-center justify-center', editor.assistantOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
-        >✨</button>
+        ><AppIcon name="sparkles" :size="14" /></button>
         <button
           @click="editor.toggleHelp()"
           :title="$t('help.open')"
           :class="['w-7 h-6 text-xs rounded-control flex items-center justify-center', editor.helpOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
-        >❓</button>
+        ><AppIcon name="help" :size="14" /></button>
       </div>
     </header>
 
@@ -60,7 +60,7 @@
               v-if="editor.activeActivity === act.id"
               class="absolute left-[-7px] top-1.5 bottom-1.5 w-[3px] rounded-pill bg-accent-ink"
             ></span>
-            {{ activityIcon(act.icon) }}
+            <AppIcon :name="act.icon" :size="18" />
           </button>
         </nav>
 
@@ -108,6 +108,7 @@ import { useProjectStore } from './stores/project'
 import { useEditorStore } from './stores/editor'
 import { useLocalize } from './composables/useLocalize'
 import WelcomeScreen from './components/WelcomeScreen.vue'
+import AppIcon from './components/AppIcon.vue'
 import AssistantPanel from './components/assistant/AssistantPanel.vue'
 import HelpPanel from './components/help/HelpPanel.vue'
 
@@ -148,15 +149,6 @@ if (savedLocale === 'zh' || savedLocale === 'en') {
 function changeLocale() {
   i18nLocale.value = locale.value
   localStorage.setItem('dotzuki-editor-locale', locale.value)
-}
-
-function activityIcon(icon: string): string {
-  const map: Record<string, string> = {
-    map: '🗺', script: '📝', data: '📊', assets: '🖼',
-    settings: '⚙', layout: '🎨', book: '📖', story: '📖', tiles: '🧩',
-    titlescreen: '🎬', audio: '🎵', music: '🎵', play: '🎮',
-  }
-  return map[icon] ?? '📄'
 }
 
 function selectActivity(id: string) {

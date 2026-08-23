@@ -39,6 +39,7 @@
     "ai": "^6.0.198",
     "codemirror": "^6.0.2",
     "connect": "^3.7.0",
+    "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
     "pngjs": "^7.0.0",
     "sirv": "^3.0.1",
