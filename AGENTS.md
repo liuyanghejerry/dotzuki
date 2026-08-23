@@ -82,7 +82,7 @@ All `dotzuki-*` crates are published to crates.io under one shared version — t
 
 ## Releasing (Editor installers)
 
-The same `vX.Y.Z` tag also packages the dotzuki-editor desktop app: `.github/workflows/release-editor.yml` builds the WASM pkgs once (Linux, release profile), packages the Electron app on macOS (arm64 + x64 dmg/zip) and Windows (nsis exe) — unsigned unless cert secrets are set — and attaches the installers to the GitHub Release. The editor's `package.json` version is synced to the workspace version during packaging, and the workflow asserts tag ↔ workspace version exactly like `publish-crates.sh`. Linux AppImages are not CI-built; build locally with `pnpm electron:dist` in `workspace/tools/dotzuki-editor`.
+The same `vX.Y.Z` tag also packages the dotzuki-editor desktop app: `.github/workflows/release-editor.yml` builds the WASM pkgs once (Linux, release profile), packages the Electron app on macOS (arm64 + x64 dmg/zip) and Windows (nsis exe) — unsigned unless cert secrets are set — and attaches the installers to the GitHub Release. The editor's `package.json` version is synced to the workspace version during packaging, and the workflow asserts tag ↔ workspace version exactly like `publish-crates.sh` (so a `workflow_dispatch` run can only target the workspace version of the checked-out ref — no back-filling older tags). Linux AppImages are not CI-built; build locally with `pnpm electron:dist` in `workspace/tools/dotzuki-editor`.
 
 ## Known Gotchas
 - A workspace-wide `cargo test` unifies features across crates and can fail feature-gated suites (e.g. `dotzuki-engine-script` embedded-scripts tests) that pass per-crate — re-run `cargo test -p <crate>` before assuming a real failure

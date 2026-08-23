@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to attach to (default: workspace version, e.g. v0.1.1)'
+        description: 'Release tag to attach to (default: workspace version, e.g. v0.1.1). Must match the workspace version of the checked-out ref — you cannot back-fill an older tag this way.'
         required: false
         default: ''
         type: string
@@ -206,14 +206,18 @@ jobs:
           pnpm exec electron-builder --config electron-builder.cjs --publish never ${{ matrix.build_args }}
 
       - name: Upload distributables
+        # Single-level globs on purpose: electron-builder also leaves the
+        # unpacked app under release/win-unpacked/ (a bare ~100MB
+        # "Dotzuki Editor.exe"), and ** would sweep it into the artifact —
+        # and from there onto the Release. Installers land at the output root.
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           if-no-files-found: error
           path: |
-            workspace/tools/dotzuki-editor/release/**/*.dmg
-            workspace/tools/dotzuki-editor/release/**/*.zip
-            workspace/tools/dotzuki-editor/release/**/*.exe
+            workspace/tools/dotzuki-editor/release/*.dmg
+            workspace/tools/dotzuki-editor/release/*.zip
+            workspace/tools/dotzuki-editor/release/*.exe
 
   # Attach the installers to the GitHub Release. The release may not exist yet
   # (tag push); action-gh-release creates it, or updates an existing one.
@@ -253,10 +257,20 @@ jobs:
             exit 1
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          # Whether the Release already exists — used below to generate notes
+          # only on creation, so a re-run never clobbers hand-edited notes.
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/${TAG}" >/dev/null 2>&1; then
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Download distributables
+        # Only the two platform distributable artifacts — not wasm-pkgs (an
+        # intermediate of this same run that the installers already embed).
         uses: actions/download-artifact@v4
         with:
+          pattern: editor-dist-*
           path: artifacts
           merge-multiple: true
 
@@ -265,8 +279,11 @@ jobs:
         with:
           tag_name: ${{ steps.resolve.outputs.tag }}
           name: ${{ steps.resolve.outputs.tag }}
-          generate_release_notes: true
+          # Auto notes only when the Release is first created; on updates
+          # (re-runs, duplicate tag-push + release-published triggers) keep
+          # whatever notes are already there.
+          generate_release_notes: ${{ steps.resolve.outputs.release_exists == 'false' }}
           files: |
-            artifacts/**/*.dmg
-            artifacts/**/*.zip
-            artifacts/**/*.exe
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/*.exe
