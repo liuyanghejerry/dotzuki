@@ -14,7 +14,7 @@ export function useAiImageProviders() {
   async function loadImageProviders(force = false): Promise<void> {
     if (loadedOnce && !force) return
     try {
-      const resp = await fetch('/api/ai/image-providers')
+      const resp = await fetch('api/ai/image-providers')
       imageProviders.value = resp.ok ? await resp.json() : []
     } catch {
       imageProviders.value = []
@@ -23,7 +23,7 @@ export function useAiImageProviders() {
   }
 
   async function saveImageProviders(next: ImageProviderProfile[]): Promise<void> {
-    const resp = await fetch('/api/ai/image-providers', {
+    const resp = await fetch('api/ai/image-providers', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(next),

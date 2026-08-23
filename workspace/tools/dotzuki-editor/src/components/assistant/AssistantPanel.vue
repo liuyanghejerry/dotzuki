@@ -191,7 +191,7 @@ let mentionsLoaded = false
 async function ensureMentions() {
   if (mentionsLoaded || props.welcome) return // no project → nothing mentionable
   mentionsLoaded = true
-  try { const r = await fetch('/api/ai/mentions'); mentionItems.value = r.ok ? await r.json() : [] }
+  try { const r = await fetch('api/ai/mentions'); mentionItems.value = r.ok ? await r.json() : [] }
   catch { mentionItems.value = [] }
 }
 

@@ -45,7 +45,9 @@ export function loadRunnerModule(): Promise<WasmRunnerModule> {
   if (initPromise) return initPromise
   initPromise = (async () => {
     try {
-      const wasmJsUrl = new URL('/wasm/dotzuki_runner_web.js', window.location.origin).href
+      // Resolve against the page URL (relative — works under any path prefix;
+      // the hash fragment never participates in URL resolution).
+      const wasmJsUrl = new URL('wasm/dotzuki_runner_web.js', window.location.href).href
       const mod = (await import(/* @vite-ignore */ wasmJsUrl)) as unknown as WasmRunnerModule
       await mod.default()
       wasmModule = mod
@@ -69,7 +71,7 @@ export interface PlayBundle {
 
 /** GET /api/play/bundle — throws an Error carrying the server's message on non-200. */
 export async function loadBundle(): Promise<PlayBundle> {
-  const res = await fetch('/api/play/bundle')
+  const res = await fetch('api/play/bundle')
   if (!res.ok) {
     let msg = `HTTP ${res.status}`
     try {

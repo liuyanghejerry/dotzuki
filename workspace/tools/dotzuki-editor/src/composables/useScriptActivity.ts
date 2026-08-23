@@ -39,7 +39,7 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
     // The dev server prepends the activity's scriptsDir, so the URL carries only
     // the path RELATIVE to it (mirrors /api/maps). Including scriptsDir here too
     // double-prefixes it on the server → resolves to a missing dir → "File not found".
-    return `/api/scripts/${subPath}`.replace(/\/+/g, '/')
+    return `api/scripts/${subPath}`.replace(/\/+/g, '/')
   }
 
   async function fetchFiles(): Promise<void> {

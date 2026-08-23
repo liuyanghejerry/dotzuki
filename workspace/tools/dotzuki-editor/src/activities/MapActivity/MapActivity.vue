@@ -489,7 +489,7 @@ function loadBackdrop(name: string): Promise<void> {
     const img = new Image()
     img.onload = () => { backdropImg.value = img; resolve() }
     img.onerror = () => { backdropImg.value = null; resolve() }
-    img.src = `/api/maps/${encodeURIComponent(name)}/source.png`
+    img.src = `api/maps/${encodeURIComponent(name)}/source.png`
   })
 }
 
@@ -501,7 +501,7 @@ async function onBackdropGenerated(): Promise<void> {
     const img = new Image()
     img.onload = () => { backdropImg.value = img; resolve() }
     img.onerror = () => resolve()
-    img.src = `/api/maps/${encodeURIComponent(name)}/source.png?t=${Date.now()}`
+    img.src = `api/maps/${encodeURIComponent(name)}/source.png?t=${Date.now()}`
   })
   drawMap()
 }
@@ -553,7 +553,7 @@ async function createFromBackdrop(): Promise<void> {
 
 /** Run one deterministic CV op on a base64/data-URL PNG, return the result URL. */
 async function cvProcess(operation: string, pngBase64: string, params: Record<string, unknown>): Promise<string> {
-  const r = await fetch('/api/cv-process', {
+  const r = await fetch('api/cv-process', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ operation, pngBase64, params }),
@@ -872,7 +872,7 @@ function loadTileset(name: string): Promise<void> {
     // so that after a building stamp rebuilds tileset.png we load the fresh image
     // rather than the browser-cached one — otherwise the new slices render against
     // the stale tileset and the stamped building looks wrong.
-    img.src = `/api/maps/${encodeURIComponent(name)}/tileset.png?v=${tilesStore.version}`
+    img.src = `api/maps/${encodeURIComponent(name)}/tileset.png?v=${tilesStore.version}`
   })
 }
 

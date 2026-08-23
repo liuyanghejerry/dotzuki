@@ -101,7 +101,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
     loading.value = true
     error.value = null
     try {
-      const r = await fetch('/api/tiles')
+      const r = await fetch('api/tiles')
       const j = await r.json()
       tiles.value = (j.tiles ?? []) as TileEntry[]
     } catch (e) {
@@ -113,7 +113,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
 
   async function loadBackdrops() {
     try {
-      const r = await fetch('/api/tiles-backdrops')
+      const r = await fetch('api/tiles-backdrops')
       backdrops.value = (await r.json()) as BackdropEntry[]
     } catch (e) {
       error.value = (e as Error).message
@@ -131,7 +131,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   ): Promise<string | null> {
     error.value = null
     try {
-      const r = await fetch('/api/tiles-save', {
+      const r = await fetch('api/tiles-save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pngBase64, ...opts }),
@@ -151,7 +151,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   async function saveTiles(items: { pngBase64: string; source?: string }[]): Promise<string[]> {
     error.value = null
     try {
-      const r = await fetch('/api/tiles-save-batch', {
+      const r = await fetch('api/tiles-save-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tiles: items }),
@@ -171,7 +171,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   async function deleteTile(id: string): Promise<boolean> {
     error.value = null
     try {
-      const r = await fetch('/api/tiles-delete', {
+      const r = await fetch('api/tiles-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
@@ -192,7 +192,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
     if (ids.length === 0) return true
     error.value = null
     try {
-      const r = await fetch('/api/tiles-delete', {
+      const r = await fetch('api/tiles-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
@@ -209,16 +209,16 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   }
 
   function tileUrl(id: string): string {
-    return `/api/tiles/file/${id}.png?v=${version.value}`
+    return `api/tiles/file/${id}.png?v=${version.value}`
   }
   function tileLayersUrl(id: string): string {
-    return `/api/tiles-layers?id=${encodeURIComponent(id)}&v=${version.value}`
+    return `api/tiles-layers?id=${encodeURIComponent(id)}&v=${version.value}`
   }
 
   // ── Building groups (建筑) ──
   async function loadGroups() {
     try {
-      const r = await fetch('/api/groups')
+      const r = await fetch('api/groups')
       const j = await r.json()
       groups.value = (j.groups ?? []) as GroupEntry[]
     } catch (e) {
@@ -227,10 +227,10 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   }
 
   function groupUrl(id: string): string {
-    return `/api/groups/file/${id}.png?v=${version.value}`
+    return `api/groups/file/${id}.png?v=${version.value}`
   }
   function groupLayersUrl(id: string): string {
-    return `/api/groups-layers?id=${encodeURIComponent(id)}&v=${version.value}`
+    return `api/groups-layers?id=${encodeURIComponent(id)}&v=${version.value}`
   }
 
   /**
@@ -249,7 +249,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   }): Promise<string | null> {
     error.value = null
     try {
-      const r = await fetch('/api/groups-save', {
+      const r = await fetch('api/groups-save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(g),
@@ -269,7 +269,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   async function renameGroup(id: string, name: string): Promise<boolean> {
     error.value = null
     try {
-      const r = await fetch('/api/groups-rename', {
+      const r = await fetch('api/groups-rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, name }),
@@ -288,7 +288,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   async function deleteGroup(id: string): Promise<boolean> {
     error.value = null
     try {
-      const r = await fetch('/api/groups-delete', {
+      const r = await fetch('api/groups-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
@@ -309,7 +309,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   /** The saved tile sequence + column count for a map (empty if none yet). */
   async function loadTilesetSeq(map: string): Promise<{ tileIds: string[]; cols: number }> {
     try {
-      const r = await fetch(`/api/tileset?map=${encodeURIComponent(map)}`)
+      const r = await fetch(`api/tileset?map=${encodeURIComponent(map)}`)
       const j = await r.json()
       return { tileIds: j.tileIds ?? [], cols: j.cols ?? 8 }
     } catch {
@@ -326,7 +326,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   ): Promise<boolean> {
     error.value = null
     try {
-      const r = await fetch('/api/tileset-build', {
+      const r = await fetch('api/tileset-build', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ map, pngBase64, tileIds, cols }),

@@ -93,7 +93,7 @@ function flash(m: string) {
 
 async function callTest(profile: ProviderProfile, apiKey: string): Promise<{ ok: boolean; msg: string }> {
   try {
-    const resp = await fetch('/api/ai/test-provider', {
+    const resp = await fetch('api/ai/test-provider', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, apiKey, prompt: testPrompt.value }),

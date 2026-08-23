@@ -163,7 +163,7 @@ const previewH = computed(() => cfg.height * zoom.value)
 const bgUrl = ref('')
 async function refreshBg() {
   // Cache-bust so a freshly generated/uploaded image is picked up immediately.
-  const url = `/api/assets/file?root=&path=${encodeURIComponent(bgRel)}&t=${Date.now()}`
+  const url = `api/assets/file?root=&path=${encodeURIComponent(bgRel)}&t=${Date.now()}`
   try {
     const resp = await fetch(url)
     bgUrl.value = resp.ok ? url : ''
@@ -305,7 +305,7 @@ function onKeySubmit(key: string, remember: boolean) {
 async function runGen(p: ImageProviderProfile, key: string) {
   genBusy.value = true; genError.value = ''
   try {
-    const resp = await fetch('/api/title/generate-bg', {
+    const resp = await fetch('api/title/generate-bg', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: genPrompt.value.trim(), profile: p, apiKey: key }),
     })
@@ -325,7 +325,7 @@ async function onUpload(e: Event) {
   genBusy.value = true; genError.value = ''
   try {
     const buf = await file.arrayBuffer()
-    const resp = await fetch(`/api/assets/upload?root=&path=${encodeURIComponent(bgRel)}`, {
+    const resp = await fetch(`api/assets/upload?root=&path=${encodeURIComponent(bgRel)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf,
     })
     const data = await resp.json()

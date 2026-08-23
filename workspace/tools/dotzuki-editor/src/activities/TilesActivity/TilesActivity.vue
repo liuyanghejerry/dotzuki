@@ -205,7 +205,7 @@
       v-if="editingTileId"
       :tile-id="editingTileId"
       :tile-size="tileSize"
-      :src-url="`/api/tiles/file/${editingTileId}.png?v=${tilesStore.version}`"
+      :src-url="`api/tiles/file/${editingTileId}.png?v=${tilesStore.version}`"
       :src-layers-url="tilesStore.tileLayersUrl(editingTileId)"
       @close="editingTileId = null"
     />

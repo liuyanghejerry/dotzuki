@@ -575,7 +575,7 @@ describe('useMapActivity entity sidecar (objects.json) signs', () => {
 
     await store.saveObjects()
     const put = calls.find(c => c.method === 'PUT')
-    expect(put?.url).toBe('/api/maps/TestMap/objects.json')
+    expect(put?.url).toBe('api/maps/TestMap/objects.json')
     expect(JSON.parse(put!.body!)).toEqual({
       npcs: [],
       warps: [],

@@ -42,7 +42,7 @@ function onKeySubmit(key: string, remember: boolean) {
 async function run(p: ImageProviderProfile, key: string) {
   busy.value = true; error.value = ''
   try {
-    const resp = await fetch('/api/maps/generate-backdrop', {
+    const resp = await fetch('api/maps/generate-backdrop', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mapName: props.mapName, prompt: prompt.value.trim(), profile: p, apiKey: key }),
     })

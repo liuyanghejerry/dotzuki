@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { registerBuiltinActions } from './server/actions'
+import { registerSession } from './server/api/sessionState'
 import { registerProject } from './server/api/routes/project'
 import { registerData } from './server/api/routes/data'
 import { registerContent } from './server/api/routes/content'
@@ -40,7 +41,11 @@ function apiPlugin() {
       // /api/ai/run + the legacy shims can resolve them.
       registerBuiltinActions()
 
-      // ── CORS — must be registered first; it matches all /api/* and falls through. ──
+      // ── Session state (health + activity counters) — FIRST, so every request
+      //    is counted; /api/health answers even with no project open. ──
+      registerSession(server)
+
+      // ── CORS — ahead of the domain routes; it matches all /api/* and falls through. ──
       server.middlewares.use('/api', (req, res, next) => {
         res.setHeader('Access-Control-Allow-Origin', '*')
         res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
@@ -74,6 +79,10 @@ function apiPlugin() {
 }
 
 export default defineConfig({
+  // Relative base so the built SPA can be served under any path prefix (the
+  // cloud gateway mounts it at `/<session-id>/` and strips the prefix before
+  // proxying). Asset URLs in dist/index.html come out as `./assets/...`.
+  base: './',
   plugins: [vue(), tailwindcss(), apiPlugin()],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },

@@ -52,7 +52,7 @@ export function useAiGenerate() {
     busy.value = true
     let result: any = null
     try {
-      await streamSse('/api/ai/run', { actionId, input, profile: prov, apiKey: key }, (ev, data) => {
+      await streamSse('api/ai/run', { actionId, input, profile: prov, apiKey: key }, (ev, data) => {
         if (ev === 'text') handlers.onText?.(data?.delta || '')
         else if (ev === 'tool-call') handlers.onTool?.(data?.name || '')
         else if (ev === 'proposal') handlers.onProposal?.(data)

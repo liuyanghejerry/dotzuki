@@ -132,7 +132,7 @@ let lintTimer: ReturnType<typeof setTimeout> | null = null
 async function runLint() {
   if (!activeFile.value) { lintFindings.value = []; return }
   try {
-    const resp = await fetch('/api/scene-lint', {
+    const resp = await fetch('api/scene-lint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: content.value }),
     })
     const data = await resp.json()
@@ -162,7 +162,7 @@ async function pollExternalChanges() {
   if (!activeFile.value || dirty.value) return
   try {
     // scriptsDir is applied server-side; the URL is the path relative to it.
-    const url = `/api/scripts/${activeFile.value}`.replace(/\/+/g, '/')
+    const url = `api/scripts/${activeFile.value}`.replace(/\/+/g, '/')
     const resp = await fetch(url, { cache: 'no-cache' })
     if (!resp.ok) return
     const text = await resp.text()

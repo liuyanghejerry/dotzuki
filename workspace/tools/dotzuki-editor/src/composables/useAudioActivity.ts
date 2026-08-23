@@ -60,7 +60,7 @@ export function useAudioActivity() {
     loading.value = true
     error.value = null
     try {
-      tracks.value = await jsonOrThrow(await fetch('/api/audio/list'))
+      tracks.value = await jsonOrThrow(await fetch('api/audio/list'))
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to list tracks'
       tracks.value = []
@@ -73,7 +73,7 @@ export function useAudioActivity() {
     loading.value = true
     error.value = null
     try {
-      const track = await jsonOrThrow(await fetch(`/api/audio/record?file=${encodeURIComponent(file)}`))
+      const track = await jsonOrThrow(await fetch(`api/audio/record?file=${encodeURIComponent(file)}`))
       currentFile.value = file
       current.value = track
       dirty.value = false
@@ -90,7 +90,7 @@ export function useAudioActivity() {
     error.value = null
     try {
       await jsonOrThrow(
-        await fetch(`/api/audio/save?file=${encodeURIComponent(currentFile.value)}`, {
+        await fetch(`api/audio/save?file=${encodeURIComponent(currentFile.value)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(current.value),
@@ -109,7 +109,7 @@ export function useAudioActivity() {
     error.value = null
     try {
       const res = await jsonOrThrow(
-        await fetch('/api/audio/create', {
+        await fetch('api/audio/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, kind }),
@@ -127,7 +127,7 @@ export function useAudioActivity() {
   async function remove(file: string) {
     error.value = null
     try {
-      await jsonOrThrow(await fetch(`/api/audio/delete?file=${encodeURIComponent(file)}`, { method: 'DELETE' }))
+      await jsonOrThrow(await fetch(`api/audio/delete?file=${encodeURIComponent(file)}`, { method: 'DELETE' }))
       if (currentFile.value === file) {
         currentFile.value = null
         current.value = null

@@ -85,7 +85,7 @@ function flash(m: string) {
 
 async function callTest(profile: ImageProviderProfile, apiKey: string): Promise<TestResult> {
   try {
-    const resp = await fetch('/api/ai/test-image-provider', {
+    const resp = await fetch('api/ai/test-image-provider', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile, apiKey }),

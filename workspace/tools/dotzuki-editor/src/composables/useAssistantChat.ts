@@ -98,7 +98,7 @@ export function useAssistantChat() {
   const route = useRoute()
 
   const chat = useChat({
-    transport: new DefaultChatTransport({ api: '/api/ai/chat' }),
+    transport: new DefaultChatTransport({ api: 'api/ai/chat' }),
     messages: threadStore.activeSnapshot().messages, // hydrate the active thread across reloads
     onData: (part: any) => {
       if (part?.type === 'data-proposal' && part.data) {

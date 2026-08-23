@@ -61,7 +61,7 @@ async function runGenerate(provider: ProviderProfile, key: string, previousError
   applied.value = false
   try {
     await streamSse(
-      '/api/ai/generate-scene',
+      'api/ai/generate-scene',
       { questId: quest.id, profile: provider, apiKey: key, sceneName: sceneName.value, storyline: storyline.value, previousError },
       (ev, data) => {
         if (ev === 'text') pushLog('text', data.text || '')
@@ -87,7 +87,7 @@ async function apply() {
   busy.value = true
   error.value = ''
   try {
-    const resp = await fetch('/api/ai/apply-scene', {
+    const resp = await fetch('api/ai/apply-scene', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sceneName: sceneName.value, content: content.value }),
@@ -109,7 +109,7 @@ async function revert() {
   if (backup.value == null) return
   busy.value = true
   try {
-    await fetch('/api/ai/apply-scene', {
+    await fetch('api/ai/apply-scene', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sceneName: sceneName.value, content: backup.value }),

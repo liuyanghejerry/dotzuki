@@ -19,7 +19,7 @@ export const useGuiActivity = defineStore('guiActivity', () => {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch('/api/gui')
+      const resp = await fetch('api/gui')
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)
@@ -37,7 +37,7 @@ export const useGuiActivity = defineStore('guiActivity', () => {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/gui/${encodeURIComponent(name)}`)
+      const resp = await fetch(`api/gui/${encodeURIComponent(name)}`)
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)
@@ -57,7 +57,7 @@ export const useGuiActivity = defineStore('guiActivity', () => {
     saving.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/gui/${encodeURIComponent(name)}`, {
+      const resp = await fetch(`api/gui/${encodeURIComponent(name)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'text/plain' },
         body,

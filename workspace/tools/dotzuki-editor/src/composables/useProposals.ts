@@ -26,7 +26,7 @@ export interface AssistantProposal {
 }
 
 async function apiApply(body: unknown): Promise<{ ok: boolean; backup: string | null; path: string; conflict?: boolean }> {
-  const resp = await fetch('/api/ai/apply-change', {
+  const resp = await fetch('api/ai/apply-change', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   })
   const data = await resp.json()

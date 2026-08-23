@@ -107,7 +107,7 @@ export function useStoryActivity() {
 
   // ── Loading ───────────────────────────────────────────────────────────
   async function loadKind(kind: StoryKind) {
-    listRef(kind).value = await getJson(`/api/stories/${kind}`)
+    listRef(kind).value = await getJson(`api/stories/${kind}`)
   }
 
   async function loadAll(force = false) {
@@ -116,12 +116,12 @@ export function useStoryActivity() {
     error.value = null
     try {
       const [c, q, a, g, fl, sc] = await Promise.all([
-        getJson('/api/stories/characters'),
-        getJson('/api/stories/quests'),
-        getJson('/api/stories/arcs'),
-        getJson('/api/stories/graph'),
-        getJson('/api/flags'),
-        getJson('/api/scenes').catch(() => []),
+        getJson('api/stories/characters'),
+        getJson('api/stories/quests'),
+        getJson('api/stories/arcs'),
+        getJson('api/stories/graph'),
+        getJson('api/flags'),
+        getJson('api/scenes').catch(() => []),
       ])
       characters.value = c
       quests.value = q
@@ -167,7 +167,7 @@ export function useStoryActivity() {
     saving.value = true
     error.value = null
     try {
-      await putJson(`/api/stories/${kind}/${encodeURIComponent(record.id)}`, record)
+      await putJson(`api/stories/${kind}/${encodeURIComponent(record.id)}`, record)
       await loadKind(kind)
       selectedRecord.value = JSON.parse(JSON.stringify(record))
     } catch (e) {
@@ -181,7 +181,7 @@ export function useStoryActivity() {
     saving.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/stories/${kind}/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      const resp = await fetch(`api/stories/${kind}/${encodeURIComponent(id)}`, { method: 'DELETE' })
       if (!resp.ok) throw new Error(resp.statusText)
       await loadKind(kind)
       if (selectedRecord.value?.id === id) selectedRecord.value = null
@@ -193,7 +193,7 @@ export function useStoryActivity() {
   }
 
   async function saveGraph(next: StoryGraph) {
-    await putJson('/api/stories/graph', next)
+    await putJson('api/stories/graph', next)
     graph.value = next
   }
 

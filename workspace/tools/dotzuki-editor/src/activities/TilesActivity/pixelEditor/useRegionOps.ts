@@ -107,7 +107,7 @@ export function useRegionOps(ctx: RegionOpsCtx) {
     return async (region, rw, rh) => {
       const oc = document.createElement('canvas'); oc.width = rw; oc.height = rh
       oc.getContext('2d')!.putImageData(new ImageData(new Uint8ClampedArray(region), rw, rh), 0, 0)
-      const resp = await fetch('/api/cv-process', {
+      const resp = await fetch('api/cv-process', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ operation, pngBase64: oc.toDataURL('image/png'), params }),
       })
@@ -156,7 +156,7 @@ export function useRegionOps(ctx: RegionOpsCtx) {
     await runRegionOp(async (region, rw, rh) => {
       const oc = document.createElement('canvas'); oc.width = rw; oc.height = rh
       oc.getContext('2d')!.putImageData(new ImageData(new Uint8ClampedArray(region), rw, rh), 0, 0)
-      const resp = await fetch('/api/cv-inpaint', {
+      const resp = await fetch('api/cv-inpaint', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pngBase64: oc.toDataURL('image/png'), prompt, profile: p, apiKey: key }),
       })
