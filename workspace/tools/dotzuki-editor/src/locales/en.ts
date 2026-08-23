@@ -185,6 +185,7 @@ export default {
     loading: 'Loading project...',
     selectActivity: 'Select an activity',
     language: 'Language',
+    toggleSidebar: 'Toggle sidebar',
   },
   settings: {
     save: 'Save',

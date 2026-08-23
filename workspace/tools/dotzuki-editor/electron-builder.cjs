@@ -69,6 +69,9 @@ module.exports = {
     '!dist-electron/wasm-node-pkg/**',
     'electron/**/*',
     'package.json',
+    // Ships the bundled-deps license texts (e.g. Lucide ISC) inside the
+    // packaged app, as those licenses require.
+    'THIRD-PARTY-NOTICES.md',
   ],
   // The WASM layout-preview pkg rides alongside the app (Resources/wasm-pkg),
   // not inside the asar — the /wasm route reads it via DOTZUKI_WASM_ROOT. Same for

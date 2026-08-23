@@ -15,7 +15,7 @@
             : 'text-ink-muted hover:text-ink-secondary hover:bg-surface-hover border-l-2 border-transparent'
         ]"
       >
-        <span class="text-base shrink-0">{{ tableIcon(table.icon) }}</span>
+        <AppIcon :name="table.icon" :size="15" />
         <span class="truncate">{{ localize(table.label) }}</span>
       </button>
     </nav>
@@ -31,19 +31,10 @@
 import { useI18n } from 'vue-i18n'
 import { useDataActivity } from '@/composables/useDataActivity'
 import { useLocalize } from '@/composables/useLocalize'
+import AppIcon from '@/components/AppIcon.vue'
 
 const { t } = useI18n()
 const { localize } = useLocalize()
 
 const { selectedTableId, tables, selectTable } = useDataActivity()
-
-function tableIcon(icon?: string): string {
-  const map: Record<string, string> = {
-    monster: '⚡', species: '🐾', moves: '⚔️', items: '🎒', types: '🔷',
-    trainers: '👤', maps: '🗺️', encounters: '🌿', evolutions: '🔄',
-    scripts: '📜', text: '💬', config: '⚙️', stats: '📊',
-    list: '📋', database: '🗄️',
-  }
-  return map[icon ?? ''] ?? '📄'
-}
 </script>

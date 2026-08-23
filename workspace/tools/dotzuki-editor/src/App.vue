@@ -1,33 +1,34 @@
 <template>
   <div class="h-screen relative flex flex-col bg-canvas text-ink">
-    <header class="flex items-center justify-between px-5 py-3 bg-surface border-b border-border shrink-0">
-      <div class="flex items-center gap-3 min-w-0">
-        <h1 class="text-lg font-bold text-accent-ink shrink-0">{{ $t('app.title') }}</h1>
-        <span v-if="project.config?.name" class="text-sm text-ink-muted truncate">· {{ project.config.name }}</span>
+    <!-- Native-style titlebar: slim, draggable in the Electron build (the
+         `.titlebar-drag` region), with window-ish controls on the right. -->
+    <header class="titlebar-drag flex items-center h-10 bg-surface border-b border-border shrink-0">
+      <!-- Spacer for the macOS traffic lights (hiddenInset title bar). -->
+      <div v-if="isMacDesktop" class="w-[76px] shrink-0"></div>
+      <div class="flex items-center gap-2 px-3 min-w-0 flex-1">
+        <h1 class="text-xs font-semibold text-accent-ink shrink-0">{{ $t('app.title') }}</h1>
+        <span v-if="project.config?.name" class="text-xs text-ink-muted truncate">— {{ project.config.name }}</span>
       </div>
-      <div class="flex items-center gap-2">
-        <select
-          v-model="locale"
-          @change="changeLocale"
-          class="bg-raised text-ink-secondary text-xs rounded-control px-2 py-1 border border-border-strong"
+      <div class="titlebar-no-drag flex items-center gap-1 px-2">
+        <button
+          v-if="project.config && sidebarComponent"
+          @click="editor.toggleSidebar()"
+          :title="$t('app.toggleSidebar')"
+          class="w-7 h-6 text-xs rounded-control hover:bg-raised flex items-center justify-center"
         >
-          <option value="en">English</option>
-          <option value="zh">中文</option>
-        </select>
-        <button v-if="project.config && sidebarComponent" @click="editor.toggleSidebar()" class="px-2 py-1 text-sm rounded-control hover:bg-raised">
-          {{ editor.sidebarOpen ? '◧' : '◨' }}
+          <AppIcon name="panel-left" :size="14" />
         </button>
         <button
           v-if="project.config"
           @click="editor.toggleAssistant()"
           :title="$t('assistant.open')"
-          :class="['px-2 py-1 text-sm rounded-control', editor.assistantOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
-        >✨</button>
+          :class="['w-7 h-6 text-xs rounded-control flex items-center justify-center', editor.assistantOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
+        ><AppIcon name="sparkles" :size="14" /></button>
         <button
           @click="editor.toggleHelp()"
           :title="$t('help.open')"
-          :class="['px-2 py-1 text-sm rounded-control', editor.helpOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
-        >❓</button>
+          :class="['w-7 h-6 text-xs rounded-control flex items-center justify-center', editor.helpOpen ? 'bg-accent text-white' : 'hover:bg-raised']"
+        ><AppIcon name="help" :size="14" /></button>
       </div>
     </header>
 
@@ -38,23 +39,31 @@
     <WelcomeScreen v-else-if="project.error" @created="onProjectCreated" @opened="onProjectOpened" />
 
     <template v-else>
-      <nav class="flex bg-surface border-b border-border shrink-0 px-4">
-        <button
-          v-for="act in visibleActivities"
-          :key="act.id"
-          @click="selectActivity(act.id)"
-          :class="[
-            'px-5 py-2.5 text-sm border-b-2 transition-colors',
-            editor.activeActivity === act.id
-              ? 'border-accent-ink text-accent-ink'
-              : 'border-transparent text-ink-muted hover:text-ink-secondary hover:border-border-strong'
-          ]"
-        >
-          {{ activityIcon(act.icon) }} {{ localize(act.label) }}
-        </button>
-      </nav>
-
       <div class="flex-1 flex overflow-hidden">
+        <!-- Activity rail (IDE-style icon bar). Labels live in tooltips /
+             aria-labels so assistive tech and e2e tests still see them. -->
+        <nav class="w-12 bg-surface border-r border-border flex flex-col items-center py-1.5 gap-1 shrink-0">
+          <button
+            v-for="act in visibleActivities"
+            :key="act.id"
+            @click="selectActivity(act.id)"
+            :aria-label="localize(act.label)"
+            :title="localize(act.label)"
+            :class="[
+              'relative w-9 h-9 rounded-control flex items-center justify-center text-base transition-colors',
+              editor.activeActivity === act.id
+                ? 'bg-accent-surface text-accent-ink'
+                : 'text-ink-muted hover:bg-raised hover:text-ink-secondary'
+            ]"
+          >
+            <span
+              v-if="editor.activeActivity === act.id"
+              class="absolute left-[-7px] top-1.5 bottom-1.5 w-[3px] rounded-pill bg-accent-ink"
+            ></span>
+            <AppIcon :name="act.icon" :size="18" />
+          </button>
+        </nav>
+
         <div
           v-if="editor.sidebarOpen && sidebarComponent"
           class="w-72 bg-surface border-r border-border overflow-y-auto shrink-0"
@@ -71,6 +80,20 @@
 
         <AssistantPanel v-show="editor.assistantOpen" />
       </div>
+
+      <!-- Status bar -->
+      <footer class="h-6 flex items-center justify-between px-2 bg-surface border-t border-border text-micro text-ink-muted shrink-0">
+        <span class="truncate">{{ activeActivityLabel }}</span>
+        <select
+          v-model="locale"
+          @change="changeLocale"
+          :title="$t('app.language')"
+          class="bg-transparent text-ink-muted text-micro rounded-control px-1 hover:bg-raised border border-transparent hover:border-border-strong cursor-pointer"
+        >
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </footer>
     </template>
 
     <HelpPanel v-show="editor.helpOpen" />
@@ -85,6 +108,7 @@ import { useProjectStore } from './stores/project'
 import { useEditorStore } from './stores/editor'
 import { useLocalize } from './composables/useLocalize'
 import WelcomeScreen from './components/WelcomeScreen.vue'
+import AppIcon from './components/AppIcon.vue'
 import AssistantPanel from './components/assistant/AssistantPanel.vue'
 import HelpPanel from './components/help/HelpPanel.vue'
 
@@ -104,6 +128,17 @@ const visibleActivities = computed(() =>
 const mainComponent = shallowRef<any>(null)
 const sidebarComponent = shallowRef<any>(null)
 
+// Electron on macOS runs with a hiddenInset title bar, so the header must
+// leave room for the traffic lights. window.jrpgDesktop only exists there
+// (see electron/preload.cjs); the plain browser build skips the inset.
+const isMacDesktop = (window as any).jrpgDesktop?.platform === 'darwin'
+
+/** Label of the current activity, shown in the status bar. */
+const activeActivityLabel = computed(() => {
+  const act = project.getActivity(editor.activeActivity)
+  return act ? localize(act.label) : ''
+})
+
 const locale = ref(i18nLocale.value)
 const savedLocale = localStorage.getItem('dotzuki-editor-locale')
 if (savedLocale === 'zh' || savedLocale === 'en') {
@@ -114,15 +149,6 @@ if (savedLocale === 'zh' || savedLocale === 'en') {
 function changeLocale() {
   i18nLocale.value = locale.value
   localStorage.setItem('dotzuki-editor-locale', locale.value)
-}
-
-function activityIcon(icon: string): string {
-  const map: Record<string, string> = {
-    map: '🗺', script: '📝', data: '📊', assets: '🖼',
-    settings: '⚙', layout: '🎨', book: '📖', story: '📖', tiles: '🧩',
-    titlescreen: '🎬', audio: '🎵', music: '🎵', play: '🎮',
-  }
-  return map[icon] ?? '📄'
 }
 
 function selectActivity(id: string) {

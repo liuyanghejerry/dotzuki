@@ -108,12 +108,12 @@ never carry raw colors.
 | Token | Value | Closest default |
 |---|---|---|
 | `radius-control` | `0.375rem` | `rounded-md` |
-| `radius-card` | `0.75rem` | `rounded-xl` |
+| `radius-card` | `0.5rem` | `rounded-lg` |
 | `radius-pill` | `9999px` | `rounded-full` |
 | `shadow-popover` | soft diffuse xl | `shadow-xl` (softened for light theme) |
 | `text-micro` | `0.625rem` | `text-[10px]` |
 | `text-tiny` | `0.6875rem` | `text-[11px]` |
-| `spacing` | `0.28125rem` | `--spacing` base (+12.5% vs Tailwind default — every `p-*`/`m-*`/`gap-*` utility runs looser) |
+| `spacing` | `0.25rem` | `--spacing` base (Tailwind default — desktop-client density) |
 
 Radii deliberately use custom names (`rounded-control` instead of overriding
 `rounded-sm`): overriding a default name would silently restyle every existing

@@ -74,6 +74,14 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#f3f4f6', // matches the app's light bg-canvas (gray-100) shell
     title: 'Dotzuki Editor',
+    // macOS: hide the native title bar but keep the traffic lights floating over
+    // the app's own slim titlebar (the renderer provides the drag region and
+    // leaves a left inset for the lights). Other platforms keep the standard
+    // frame — the app has no custom window controls, so a hidden title bar
+    // there would strand min/max/close.
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 12, y: 14 } }
+      : {}),
     autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
