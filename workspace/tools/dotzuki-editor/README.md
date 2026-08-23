@@ -202,6 +202,49 @@ pnpm electron:pack      # unpacked app dir (fast, no installer)
 pnpm electron:dist      # dmg/zip (mac), nsis (win), AppImage (linux)
 ```
 
+### Releases (CI packaging)
+
+Tagging the repo `vX.Y.Z` (or publishing a GitHub Release) triggers
+`.github/workflows/release-editor.yml`, which packages the editor on CI and
+attaches the installers to the GitHub Release.
+
+**Versioning — the editor follows the workspace.** There is no separate
+editor version: the workflow syncs `package.json` from
+`[workspace.package] version` in `workspace/Cargo.toml` at packaging time
+and asserts the tag matches it (the same rule `publish-crates.sh` enforces
+for crates.io). One consequence: the editor cannot be released on its own
+cadence — it rides along with workspace version bumps, which keeps the
+installers and the published engine crates on one version number.
+
+**What a release produces:**
+
+- macOS: `Dotzuki Editor-<version>-{arm64,x64}.dmg` / `.zip` (unsigned)
+- Windows: `Dotzuki Editor Setup <version>.exe` (nsis, unsigned)
+- Linux is not CI-packaged — build the AppImage locally with `pnpm electron:dist`
+
+**How the workflow runs** — three jobs:
+
+1. `build-wasm` (Linux): compiles the WASM pkgs once with the
+   release-profile scripts (`build:wasm:release` / `build:wasm-runner:release`)
+   and hands them down as an artifact — the mac/win jobs need no Rust toolchain
+2. `build-app` (macOS + Windows matrix): restores the pkgs into the in-repo
+   `crates/*/pkg` layout (with an explicit assertion, since
+   `electron/stage-resources.mjs` degrades silently on a missing pkg), syncs
+   the version, runs electron-builder
+3. `publish`: verifies the tag ↔ workspace version and that the tag exists,
+   then creates or updates the GitHub Release with the installers
+
+**Relationship to the crates.io release.** Same tag, same version source,
+two independent lines: `release.yml` publishes the `dotzuki-*` crates to
+crates.io; `release-editor.yml` attaches the desktop installers to the
+GitHub Release (the crates line never touches the Release). The editor's
+WASM payloads are compiled from the crates' source at that commit — not
+resolved through crates.io — so an editor release implicitly snapshots the
+engine state of the tagged commit. Both lines are idempotent (the crates
+publish skips already-published versions; the editor publish updates the
+same Release), so the duplicate tag-push + release-published triggers and
+re-runs after failures are safe.
+
 > **Code signing & notarization (optional).** Packaging config lives in
 > `electron-builder.cjs`. By default it produces an **unsigned** build — fine to
 > run locally or share over intranet/USB, but a Mac that *downloads* it will be
@@ -242,8 +285,10 @@ built `dist/` on one local HTTP origin (the renderer talks to relative
 > it as an `extraResources` entry (→ `Resources/wasm-pkg`); the packaged app
 > points its `/wasm` route there through `DOTZUKI_WASM_ROOT`. Run `pnpm build:wasm`
 > **before** packaging so the pkg exists — otherwise packaging still succeeds,
-> just without the preview. Dev and `electron:preview` read the in-repo pkg
-> directly.
+> just without the preview. (`build:wasm` is a `--dev` build for fast
+> iteration; `build:wasm:release` / `build:wasm-runner:release` produce the
+> release-profile pkgs CI ships in the installers.) Dev and `electron:preview`
+> read the in-repo pkg directly.
 >
 > The same applies to the `play` activity's runner bundle
 > (`crates/dotzuki-runner-web/pkg`, built by `pnpm build:wasm-runner`, staged to

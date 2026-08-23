@@ -1,0 +1,289 @@
+name: Release Editor (Electron apps)
+
+# Packages the dotzuki-editor desktop app and attaches the installers to the
+# GitHub Release — the Editor half of a `vX.Y.Z` release (the crates.io half
+# lives in release.yml, driven by the same tag).
+#
+# Artifacts:
+#   - macOS: Dotzuki Editor-<version>-{arm64,x64}.dmg / .zip (unsigned)
+#   - Windows: Dotzuki Editor Setup <version>.exe (nsis, unsigned)
+#
+# The version is taken from [workspace.package] version in workspace/Cargo.toml
+# (the single version source) — on tag pushes/release events it must match the
+# tag, exactly like publish-crates.sh asserts. Code signing/notarization stays
+# off (electron-builder.cjs switches on when cert env vars are provided).
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach to (default: workspace version, e.g. v0.1.1). Must match the workspace version of the checked-out ref — you cannot back-fill an older tag this way.'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-editor
+  cancel-in-progress: false
+
+jobs:
+  # Build the WASM packages once (Linux) and hand them to both platform
+  # packaging jobs as an artifact — no Rust toolchain needed on mac/win.
+  build-wasm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust toolchain (wasm32 target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+
+      - name: Cache cargo registry & build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: workspace/tools/pnpm-lock.yaml
+
+      - name: Install dotzuki-editor dependencies
+        # Install from the pnpm workspace root — that is where the committed
+        # lockfile lives. Electron's binary is skipped: this job only compiles
+        # WASM; the packaging jobs install it for real.
+        working-directory: workspace/tools
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+        run: pnpm install --frozen-lockfile
+
+      - name: Build WASM packages
+        # :release variants (wasm-pack --release) — these end up inside the
+        # installers users download; the plain build:wasm scripts are --dev
+        # (debug asserts, much larger) for local iteration.
+        working-directory: workspace/tools/dotzuki-editor
+        run: |
+          pnpm run build:wasm:release
+          pnpm run build:wasm-runner:release
+
+      - name: Upload WASM packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkgs
+          if-no-files-found: error
+          path: |
+            workspace/crates/dotzuki-web/pkg
+            workspace/crates/dotzuki-web/pkg-node
+            workspace/crates/dotzuki-runner-web/pkg
+
+  # Package the editor on each native platform (electron-builder cannot
+  # cross-build dmg/nsis from Linux). Downloads the prebuilt WASM packages so
+  # the packaged app ships the layout preview + playtest runner.
+  build-app:
+    needs: build-wasm
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            build_args: '--x64 --arm64'
+            artifact_name: editor-dist-macos
+          - os: windows-latest
+            build_args: '--x64'
+            artifact_name: editor-dist-windows
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: workspace/tools/pnpm-lock.yaml
+
+      - name: Install dotzuki-editor dependencies
+        working-directory: workspace/tools
+        env:
+          # .npmrc in this folder points Electron downloads at the npmmirror
+          # (China mirror) for local networks; hosted runners are in the US,
+          # where the canonical sources are faster and more reliable.
+          ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+        run: pnpm install --frozen-lockfile
+
+      - name: Download prebuilt WASM packages
+        # Restores the in-repo pkg layout (workspace/crates/…), which
+        # electron/stage-resources.mjs reads directly. upload-artifact v4
+        # roots the artifact at the least-common-ancestor of the uploaded
+        # paths (workspace/crates), so download into workspace/crates with
+        # merge-multiple to strip the single-artifact wrapper dir.
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkgs
+          path: workspace/crates
+          merge-multiple: true
+
+      - name: Verify WASM packages landed in the repo layout
+        # stage-resources.mjs degrades silently when a pkg is missing (a
+        # near-empty dir + warning), so assert the layout here instead of
+        # shipping installers without the layout preview / playtest runner.
+        shell: bash
+        run: |
+          status=0
+          for f in \
+            workspace/crates/dotzuki-web/pkg/dotzuki_web.js \
+            workspace/crates/dotzuki-web/pkg/dotzuki_web_bg.wasm \
+            workspace/crates/dotzuki-web/pkg-node/dotzuki_web.js \
+            workspace/crates/dotzuki-web/pkg-node/dotzuki_web_bg.wasm \
+            workspace/crates/dotzuki-runner-web/pkg/dotzuki_runner_web.js \
+            workspace/crates/dotzuki-runner-web/pkg/dotzuki_runner_web_bg.wasm; do
+            [ -f "$f" ] || { echo "ERROR: missing $f — WASM artifact layout mismatch"; status=1; }
+          done
+          exit $status
+
+      - name: Sync editor version with the workspace version
+        shell: bash
+        run: |
+          VERSION=$(awk '/^\[workspace\.package\]/{f=1} f && /^version *=/{gsub(/"/,"",$3); print $3; exit}' workspace/Cargo.toml)
+          node -e '
+            const fs = require("fs")
+            const p = "workspace/tools/dotzuki-editor/package.json"
+            const j = JSON.parse(fs.readFileSync(p, "utf8"))
+            j.version = process.argv[1]
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n")
+            console.log(`editor package.json version → ${j.version}`)
+          ' "$VERSION"
+
+      - name: Package (electron-builder)
+        # electron:dist = build:renderer + build:server + build:resources +
+        # electron-builder; call electron-builder directly (instead of
+        # `pnpm run electron:dist -- <args>`) because pnpm passes a literal
+        # `--` through to the script, which electron-builder rejects.
+        # --publish never: uploading to the GitHub Release is the explicit
+        # `publish` job's job, not electron-builder's (it auto-publishes when
+        # a GH_TOKEN is present). CSC_IDENTITY_AUTO_DISCOVERY=false keeps the
+        # no-cert CI runner from probing the keychain for a signing identity
+        # (electron-builder.cjs deliberately skips signing without cert envs).
+        working-directory: workspace/tools/dotzuki-editor
+        shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          pnpm run electron:build
+          pnpm exec electron-builder --config electron-builder.cjs --publish never ${{ matrix.build_args }}
+
+      - name: Upload distributables
+        # Single-level globs on purpose: electron-builder also leaves the
+        # unpacked app under release/win-unpacked/ (a bare ~100MB
+        # "Dotzuki Editor.exe"), and ** would sweep it into the artifact —
+        # and from there onto the Release. Installers land at the output root.
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          if-no-files-found: error
+          path: |
+            workspace/tools/dotzuki-editor/release/*.dmg
+            workspace/tools/dotzuki-editor/release/*.zip
+            workspace/tools/dotzuki-editor/release/*.exe
+
+  # Attach the installers to the GitHub Release. The release may not exist yet
+  # (tag push); action-gh-release creates it, or updates an existing one.
+  publish:
+    needs: build-app
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Resolve release tag
+        id: resolve
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(awk '/^\[workspace\.package\]/{f=1} f && /^version *=/{gsub(/"/,"",$3); print $3; exit}' workspace/Cargo.toml)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+            [ -z "$TAG" ] && TAG="v${VERSION}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          # Same assertion publish-crates.sh makes: the tag must name the
+          # workspace version (e.g. tag v0.1.1 → version 0.1.1).
+          TV="${TAG#v}"
+          if [ "$TV" != "$VERSION" ]; then
+            echo "ERROR: tag ${TAG} does not match workspace version ${VERSION}." >&2
+            exit 1
+          fi
+          # Creating a Release needs a real tag in the repo (workflow_dispatch
+          # can name one that was never pushed); fail with a clear message.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            echo "ERROR: tag ${TAG} does not exist — push it first (git tag ${TAG} && git push origin ${TAG})." >&2
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          # Whether the Release already exists — used below to generate notes
+          # only on creation, so a re-run never clobbers hand-edited notes.
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/${TAG}" >/dev/null 2>&1; then
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download distributables
+        # Only the two platform distributable artifacts — not wasm-pkgs (an
+        # intermediate of this same run that the installers already embed).
+        uses: actions/download-artifact@v4
+        with:
+          pattern: editor-dist-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create/update GitHub Release with editor apps
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.resolve.outputs.tag }}
+          name: ${{ steps.resolve.outputs.tag }}
+          # Auto notes only when the Release is first created; on updates
+          # (re-runs, duplicate tag-push + release-published triggers) keep
+          # whatever notes are already there.
+          generate_release_notes: ${{ steps.resolve.outputs.release_exists == 'false' }}
+          files: |
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/*.exe
