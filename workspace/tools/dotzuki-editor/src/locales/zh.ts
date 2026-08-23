@@ -185,6 +185,7 @@ export default {
     loading: '正在加载项目...',
     selectActivity: '请选择一个功能',
     language: '语言',
+    toggleSidebar: '显示/隐藏侧边栏',
   },
   settings: {
     save: '保存',

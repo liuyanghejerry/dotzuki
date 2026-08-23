@@ -14,15 +14,15 @@
  *  - `@theme inline` resolves the references at build time, keeping generated
  *    utilities self-contained.
  *
- * Current theme: light "modern workbench" — white panels on a light-gray
- * canvas, coral-orange accent, soft tinted status surfaces, generous radii.
+ * Current theme: light "desktop workbench" — white panels on a light-gray
+ * canvas, coral-orange accent, soft tinted status surfaces, compact
+ * desktop-client density.
  *
  * See docs/DESIGN-TOKENS.md for the token table and the class migration map.
  */
 @theme inline {
-  /* ── Spacing base (Tailwind default is 0.25rem — this theme runs 12.5%
-   *     looser so every p/m/gap utility gets more breathing room) ─────────── */
-  --spacing: 0.28125rem;
+  /* ── Spacing base (Tailwind default 0.25rem — desktop-client density) ──── */
+  --spacing: 0.25rem;
 
   /* ── Surfaces (light hierarchy) ────────────────────────────────────────── */
   --color-canvas: var(--color-gray-100);        /* page background */
@@ -98,7 +98,7 @@
   /* ── Radii (custom names on purpose — overriding `rounded-sm` etc. would
    *     silently change every existing default utility) ──────────────────── */
   --radius-control: 0.375rem;  /* matches default `rounded-md` (buttons, inputs) */
-  --radius-card: 0.75rem;      /* matches default `rounded-xl` (cards, panels) */
+  --radius-card: 0.5rem;       /* matches default `rounded-lg` (cards, panels) */
   --radius-pill: 9999px;       /* matches default `rounded-full` (badges, dots) */
 
   /* ── Shadows (soft, diffuse — light theme) ─────────────────────────────── */
