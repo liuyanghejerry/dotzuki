@@ -1,5 +1,7 @@
 pub mod widgets;
 
+use std::collections::HashMap;
+
 use dotzuki_renderer::embedded_font::{self, box_tiles, draw_box_tile};
 use dotzuki_renderer::FrameBuffer;
 
@@ -8,11 +10,24 @@ pub use dotzuki_engine::render::{Frame, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub struct FrameBufferPainter<'fb> {
     fb: &'fb mut FrameBuffer,
+    custom_tiles: HashMap<u8, &'static str>,
 }
 
 impl<'fb> FrameBufferPainter<'fb> {
     pub fn new(fb: &'fb mut FrameBuffer) -> Self {
-        Self { fb }
+        Self {
+            fb,
+            custom_tiles: HashMap::new(),
+        }
+    }
+
+    /// Register game-specific GB tile ids that should render as short text
+    /// instead of the `[NNN]` placeholder (e.g. a game might map its
+    /// battle-menu ligature tiles 0xE1/0xE2 to "PK"/"MN"). The engine ships
+    /// no game-specific tile glyphs itself; games inject their own here.
+    pub fn with_custom_tiles(mut self, tiles: impl IntoIterator<Item = (u8, &'static str)>) -> Self {
+        self.custom_tiles.extend(tiles);
+        self
     }
 }
 
@@ -229,8 +244,46 @@ impl Painter for FrameBufferPainter<'_> {
                 self.fb,
             ),
             0x7F => embedded_font::fill_tile(px, py, bg, self.fb),
-            // Unknown tile id — fall back to the placeholder text glyph.
-            _ => embedded_font::draw_text(fallback, px, py, ink, self.fb),
+            // Unknown tile id — game-registered custom text if any, else the
+            // placeholder text glyph.
+            _ => {
+                let custom = self.custom_tiles.get(&tile_id).copied();
+                embedded_font::draw_text(custom.unwrap_or(fallback), px, py, ink, self.fb);
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotzuki_renderer::RenderConfig;
+
+    fn fb() -> FrameBuffer {
+        FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
+    }
+
+    #[test]
+    fn custom_tile_renders_registered_text() {
+        // A registered custom tile renders identically to drawing its text
+        // directly (e.g. a game's 0xE1 → "PK" ligature tile).
+        let mut a = fb();
+        let mut b = fb();
+        FrameBufferPainter::new(&mut a)
+            .with_custom_tiles([(0xE1, "PK")])
+            .draw_gb_tile(TilePos::new(2, 3), 0xE1, "[225]", Rgba::INK_BLACK);
+        FrameBufferPainter::new(&mut b).draw_text(TilePos::new(2, 3), "PK", Rgba::INK_BLACK);
+        assert_eq!(a.data, b.data);
+    }
+
+    #[test]
+    fn unregistered_tile_falls_back_to_placeholder() {
+        let mut a = fb();
+        let mut b = fb();
+        FrameBufferPainter::new(&mut a)
+            .with_custom_tiles([(0xE1, "PK")])
+            .draw_gb_tile(TilePos::new(2, 3), 0x99, "[153]", Rgba::INK_BLACK);
+        FrameBufferPainter::new(&mut b).draw_text(TilePos::new(2, 3), "[153]", Rgba::INK_BLACK);
+        assert_eq!(a.data, b.data);
     }
 }
