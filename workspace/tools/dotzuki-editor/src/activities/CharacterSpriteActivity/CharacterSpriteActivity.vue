@@ -40,7 +40,7 @@ async function loadCharacters(): Promise<void> {
   loadingList.value = true
   loadingErr.value = ''
   try {
-    const resp = await fetch('/api/stories/characters')
+    const resp = await fetch('api/stories/characters')
     if (!resp.ok) throw new Error(await resp.text())
     characters.value = await resp.json()
   } catch (e) {

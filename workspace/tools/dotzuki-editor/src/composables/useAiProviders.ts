@@ -16,7 +16,7 @@ export function useAiProviders() {
   async function loadProviders(force = false): Promise<void> {
     if (loadedOnce && !force) return
     try {
-      const resp = await fetch('/api/ai/providers')
+      const resp = await fetch('api/ai/providers')
       providers.value = resp.ok ? await resp.json() : []
     } catch {
       providers.value = []
@@ -25,7 +25,7 @@ export function useAiProviders() {
   }
 
   async function saveProviders(next: ProviderProfile[]): Promise<void> {
-    const resp = await fetch('/api/ai/providers', {
+    const resp = await fetch('api/ai/providers', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(next),

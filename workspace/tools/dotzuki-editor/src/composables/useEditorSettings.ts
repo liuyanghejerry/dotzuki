@@ -56,7 +56,7 @@ export function useEditorSettings() {
   async function load(force = false): Promise<void> {
     if (loadedOnce && !force) return
     try {
-      const resp = await fetch('/api/editor-settings')
+      const resp = await fetch('api/editor-settings')
       settings.value = resp.ok ? await resp.json() : {}
     } catch {
       settings.value = {}
@@ -65,7 +65,7 @@ export function useEditorSettings() {
   }
 
   async function save(): Promise<void> {
-    const resp = await fetch('/api/editor-settings', {
+    const resp = await fetch('api/editor-settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings.value),

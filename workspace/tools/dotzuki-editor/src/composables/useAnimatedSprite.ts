@@ -62,8 +62,8 @@ export function useAnimatedSprite() {
   async function loadCatalogs(force = false): Promise<void> {
     if (loaded && !force) return
     const [p, d] = await Promise.all([
-      fetch('/api/sprites/presets').then((r) => (r.ok ? r.json() : [])),
-      fetch('/api/sprites/directions').then((r) => (r.ok ? r.json() : [])),
+      fetch('api/sprites/presets').then((r) => (r.ok ? r.json() : [])),
+      fetch('api/sprites/directions').then((r) => (r.ok ? r.json() : [])),
     ])
     presets.value = p
     directions.value = d
@@ -71,18 +71,18 @@ export function useAnimatedSprite() {
   }
 
   async function loadExisting(id: string): Promise<{ exists: boolean; dir: string; manifest?: AnimManifest; frames?: string[] }> {
-    const r = await fetch(`/api/sprites/animated?id=${encodeURIComponent(id)}`)
+    const r = await fetch(`api/sprites/animated?id=${encodeURIComponent(id)}`)
     return r.ok ? r.json() : { exists: false, dir: '' }
   }
 
   /** URL for a file under the animated set's gfx dir (cache-busted by `v`). */
   function gfxUrl(dir: string, name: string, v = 0): string {
-    return `/gfx/${dir}/${name}?v=${v}`
+    return `gfx/${dir}/${name}?v=${v}`
   }
 
   /** Drive the SSE generation; onEvent receives ("progress"|"done"|"error", data). */
   function generate(body: unknown, onEvent: (event: string, data: any) => void): Promise<void> {
-    return streamSse('/api/ai/generate-animated', body, onEvent)
+    return streamSse('api/ai/generate-animated', body, onEvent)
   }
 
   return { presets, directions, loadCatalogs, loadExisting, gfxUrl, generate }

@@ -260,7 +260,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
     loadingList.value = true
     error.value = null
     try {
-      const resp = await fetch('/api/maps')
+      const resp = await fetch('api/maps')
       if (!resp.ok) throw new Error('Failed to list maps')
       const entries = (await resp.json()) as MapFileEntry[]
       mapList.value = entries
@@ -278,7 +278,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   async function createTmxMap(name: string, width: number, height: number): Promise<boolean> {
     error.value = null
     try {
-      const resp = await fetch('/api/maps-create-tmx', {
+      const resp = await fetch('api/maps-create-tmx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, width, height }),
@@ -299,7 +299,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   async function deleteMap(name: string): Promise<boolean> {
     error.value = null
     try {
-      const resp = await fetch('/api/maps-delete', {
+      const resp = await fetch('api/maps-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
@@ -332,7 +332,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
    *  quests) — used to confirm a rename before rewriting them. */
   async function mapReferences(name: string): Promise<{ refs: MapRef[]; total: number }> {
     try {
-      const resp = await fetch(`/api/maps-references?name=${encodeURIComponent(name)}`)
+      const resp = await fetch(`api/maps-references?name=${encodeURIComponent(name)}`)
       const j = await resp.json()
       if (!resp.ok || !j.ok) throw new Error(j.error ?? 'reference scan failed')
       return { refs: j.refs ?? [], total: j.total ?? 0 }
@@ -348,7 +348,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   async function renameMap(name: string, newName: string, updateRefs = false): Promise<{ ok: boolean; updated: number }> {
     error.value = null
     try {
-      const resp = await fetch('/api/maps-rename', {
+      const resp = await fetch('api/maps-rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, newName, updateRefs }),
@@ -369,7 +369,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/maps/${encodeURIComponent(name)}/map.tmx.json`)
+      const resp = await fetch(`api/maps/${encodeURIComponent(name)}/map.tmx.json`)
       if (!resp.ok) throw new Error(`Failed to load ${name}`)
       const raw = (await resp.json()) as TmxMap
       // Pull the collision + stairs layers out into their own grids — in the
@@ -406,7 +406,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
         layers: withCollisionLayer(map.layers, collisionLevels.value, stairsGrid.value, map.width, map.height),
       }
       const resp = await fetch(
-        `/api/maps/${encodeURIComponent(mapName.value)}/map.tmx.json`,
+        `api/maps/${encodeURIComponent(mapName.value)}/map.tmx.json`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -425,7 +425,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   // ── Entity sidecar (objects.json) load / save / mutate ──
   async function loadObjects(name: string): Promise<void> {
     try {
-      const resp = await fetch(`/api/maps/${encodeURIComponent(name)}/objects.json`)
+      const resp = await fetch(`api/maps/${encodeURIComponent(name)}/objects.json`)
       if (resp.ok) {
         const raw = (await resp.json()) as MapObjects
         objects.value = { ...raw, npcs: raw.npcs ?? [], warps: raw.warps ?? [], signs: raw.signs ?? [] }
@@ -441,7 +441,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   async function saveObjects(): Promise<void> {
     if (!objects.value || !mapName.value) return
     try {
-      const resp = await fetch(`/api/maps/${encodeURIComponent(mapName.value)}/objects.json`, {
+      const resp = await fetch(`api/maps/${encodeURIComponent(mapName.value)}/objects.json`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(objects.value, null, 2),

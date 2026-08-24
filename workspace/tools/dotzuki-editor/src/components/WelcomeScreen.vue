@@ -347,7 +347,7 @@ async function handleOpenProject() {
   openError.value = null
 
   try {
-    const resp = await fetch('/api/project/open', {
+    const resp = await fetch('api/project/open', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path }),
@@ -465,7 +465,7 @@ const hasProvider = ref(true)
 
 async function checkProviders() {
   try {
-    const resp = await fetch('/api/ai/providers')
+    const resp = await fetch('api/ai/providers')
     const list = resp.ok ? await resp.json() : []
     hasProvider.value = Array.isArray(list) && list.length > 0
   } catch {

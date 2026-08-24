@@ -54,7 +54,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('useDataActivity save/delete file naming', () => {
   it('saves an existing record back to its _file name', async () => {
-    const calls = mockFetch({ '/api/data/save/': { body: { ok: true } }, '/api/data/list/': { body: [] } })
+    const calls = mockFetch({ 'api/data/save/': { body: { ok: true } }, 'api/data/list/': { body: [] } })
     const api = setup()
     // A record loaded from /api/data/list carries `_file` (e.g. "hero.json");
     // the edit form re-emits schema fields only, so the file name must come
@@ -63,47 +63,47 @@ describe('useDataActivity save/delete file naming', () => {
 
     await api.saveRecord({ id: 'hero', name: 'Chen Mo Edited' })
 
-    const save = calls.find(c => c.url.startsWith('/api/data/save/'))
+    const save = calls.find(c => c.url.startsWith('api/data/save/'))
     expect(save?.method).toBe('PUT')
-    expect(save?.url).toBe('/api/data/save/characters/hero.json')
+    expect(save?.url).toBe('api/data/save/characters/hero.json')
     expect(JSON.parse(save!.body!).name).toBe('Chen Mo Edited')
     expect(api.selectedRecord.value).toBeNull() // panel closes on success
   })
 
   it('saves a new record to "<id>.json"', async () => {
-    const calls = mockFetch({ '/api/data/save/': { body: { ok: true } }, '/api/data/list/': { body: [] } })
+    const calls = mockFetch({ 'api/data/save/': { body: { ok: true } }, 'api/data/list/': { body: [] } })
     const api = setup()
     api.newRecord() // default record from the table schema — no `_file`
 
     await api.saveRecord({ id: 'npc_trader', name: 'Trader' })
 
-    const save = calls.find(c => c.url.startsWith('/api/data/save/'))
-    expect(save?.url).toBe('/api/data/save/characters/npc_trader.json')
+    const save = calls.find(c => c.url.startsWith('api/data/save/'))
+    expect(save?.url).toBe('api/data/save/characters/npc_trader.json')
   })
 
   it('deletes via a bare id, normalized to "<id>.json"', async () => {
-    const calls = mockFetch({ '/api/data/delete/': { body: { ok: true } }, '/api/data/list/': { body: [] } })
+    const calls = mockFetch({ 'api/data/delete/': { body: { ok: true } }, 'api/data/list/': { body: [] } })
     const api = setup()
 
     await api.deleteRecord('hero')
 
-    const del = calls.find(c => c.url.startsWith('/api/data/delete/'))
+    const del = calls.find(c => c.url.startsWith('api/data/delete/'))
     expect(del?.method).toBe('DELETE')
-    expect(del?.url).toBe('/api/data/delete/characters/hero.json')
+    expect(del?.url).toBe('api/data/delete/characters/hero.json')
   })
 
   it('deletes via a full file name unchanged (no double extension)', async () => {
-    const calls = mockFetch({ '/api/data/delete/': { body: { ok: true } }, '/api/data/list/': { body: [] } })
+    const calls = mockFetch({ 'api/data/delete/': { body: { ok: true } }, 'api/data/list/': { body: [] } })
     const api = setup()
 
     await api.deleteRecord('hero.json')
 
-    expect(calls.find(c => c.url.startsWith('/api/data/delete/'))?.url)
-      .toBe('/api/data/delete/characters/hero.json')
+    expect(calls.find(c => c.url.startsWith('api/data/delete/'))?.url)
+      .toBe('api/data/delete/characters/hero.json')
   })
 
   it('keeps the record open and surfaces the error on a failed save', async () => {
-    mockFetch({ '/api/data/save/': { status: 400, body: { error: 'id "hero" is already used by "hero.json"' } } })
+    mockFetch({ 'api/data/save/': { status: 400, body: { error: 'id "hero" is already used by "hero.json"' } } })
     const api = setup()
     api.selectedRecord.value = { _file: 'hero.json', id: 'hero', name: 'Chen Mo' }
 

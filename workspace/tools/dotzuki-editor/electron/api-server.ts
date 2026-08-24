@@ -17,10 +17,12 @@
 // ──────────────────────────────────────────────────────────────────────────
 import http from 'http'
 import path from 'path'
+import { pathToFileURL } from 'url'
 import connect from 'connect'
 import sirv from 'sirv'
 
 import { registerBuiltinActions } from '../server/actions'
+import { registerSession, getActiveRequests } from '../server/api/sessionState'
 import { registerProject } from '../server/api/routes/project'
 import { registerData } from '../server/api/routes/data'
 import { registerContent } from '../server/api/routes/content'
@@ -30,6 +32,7 @@ import { registerTiles } from '../server/api/routes/tiles'
 import { registerGroups } from '../server/api/routes/groups'
 import { registerStories } from '../server/api/routes/stories'
 import { registerAi } from '../server/api/routes/ai'
+import { registerJobs } from '../server/api/routes/jobs'
 import { registerCv } from '../server/api/routes/cv'
 import { registerSprites } from '../server/api/routes/sprites'
 import { registerAssets } from '../server/api/routes/assets'
@@ -78,7 +81,11 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   // them a connect app under the same property name and they register verbatim.
   const server = { middlewares: app }
 
-  // ── CORS — first, matches all /api/* and falls through. ──
+  // ── Session state (health + activity counters) — FIRST, so every request
+  //    is counted; /api/health answers even with no project open. ──
+  registerSession(server)
+
+  // ── CORS — ahead of the domain routes, matches all /api/* and falls through. ──
   app.use('/api', (req: any, res: any, next: any) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
@@ -99,6 +106,7 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   registerGroups(server)
   registerStories(server)
   registerAi(server)
+  registerJobs(server)
   registerCv(server)
   registerSprites(server)
   registerAssets(server)
@@ -132,6 +140,12 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   const port = typeof addr === 'object' && addr ? addr.port : (opts.port ?? 0)
   const url = `http://${host}:${port}`
 
+  // Graceful shutdown is ONLY for the standalone cloud-session process — see
+  // installGracefulShutdown for why Electron must never get these handlers.
+  if (process.env.DOTZUKI_STANDALONE === '1' || !process.versions.electron) {
+    installGracefulShutdown(httpServer)
+  }
+
   return {
     url,
     port,
@@ -139,4 +153,61 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
     close: () =>
       new Promise<void>((resolve) => httpServer.close(() => resolve())),
   }
+}
+
+// ── Graceful shutdown (standalone cloud sessions only) ─────────────────────
+// The cloud platform reclaims a session by signaling this process. Sequence:
+// stop accepting new connections (httpServer.close) → wait for in-flight
+// requests to drain, polled via the session-state counter → after the grace
+// window (DOTZUKI_SHUTDOWN_GRACE_MS, default 5s) force-close whatever is left
+// (closeAllConnections is what actually drops SSE long-connections) → exit 0.
+//
+// NOT installed inside Electron: the desktop shell already closes this server
+// from app 'will-quit' (electron/main.cjs) and owns its own exit path — a
+// process.exit() here would kill Electron mid-shutdown. Standalone is
+// detected by DOTZUKI_STANDALONE=1 (the standalone entry below sets it) or by
+// the absence of process.versions.electron.
+function installGracefulShutdown(httpServer: http.Server): void {
+  const graceMs = Math.max(0, Number(process.env.DOTZUKI_SHUTDOWN_GRACE_MS) || 5000)
+  let shuttingDown = false // idempotent: repeated signals don't re-run
+  const shutdown = () => {
+    if (shuttingDown) return
+    shuttingDown = true
+    httpServer.close() // stop accepting new connections
+    const force = setTimeout(() => {
+      httpServer.closeAllConnections()
+      process.exit(0)
+    }, graceMs)
+    force.unref()
+    // In-flight requests may finish well before the grace window; when the
+    // counter hits zero there is nothing left worth waiting for.
+    const drain = setInterval(() => {
+      if (getActiveRequests() === 0) {
+        clearInterval(drain)
+        clearTimeout(force)
+        httpServer.closeAllConnections()
+        process.exit(0)
+      }
+    }, 50)
+    drain.unref()
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
+}
+
+// ── Standalone entry: `node dist-electron/api-server.mjs` ──────────────────
+// The cloud platform runs the editor backend as one child process per
+// session. The project root comes from DOTZUKI_PROJECT_ROOT (projectConfig's
+// default); port/host optionally from DOTZUKI_PORT / DOTZUKI_HOST. Guarded by
+// "executed directly" so importing this module from Electron's main process
+// never auto-starts a second server.
+const invokedDirectly = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
+if (invokedDirectly) {
+  process.env.DOTZUKI_STANDALONE ||= '1'
+  startApiServer({
+    ...(process.env.DOTZUKI_PORT ? { port: Number(process.env.DOTZUKI_PORT) } : {}),
+    ...(process.env.DOTZUKI_HOST ? { host: process.env.DOTZUKI_HOST } : {}),
+  })
+    .then((s) => console.log(`[dotzuki-api] standalone server listening on ${s.url} (project root: ${getProjectRoot()})`))
+    .catch((e) => { console.error(e); process.exit(1) })
 }

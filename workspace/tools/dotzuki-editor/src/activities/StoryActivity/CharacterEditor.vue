@@ -59,7 +59,7 @@ async function runRefine(provider: ProviderProfile, key: string) {
   aiError.value = ''
   proposal.value = null
   try {
-    const resp = await fetch('/api/ai/refine-character', {
+    const resp = await fetch('api/ai/refine-character', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ characterId: selectedRecord.value.id, profile: provider, apiKey: key }),

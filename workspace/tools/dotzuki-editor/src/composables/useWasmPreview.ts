@@ -51,7 +51,9 @@ export function useWasmPreview(): WasmPreview {
       try {
         // Build the URL at runtime so Vite's import analyzer doesn't pre-resolve
         // it — the request must reach the `/wasm` middleware in vite.config.ts.
-        const wasmJsUrl = new URL('/wasm/dotzuki_web.js', window.location.origin).href
+        // Relative to the page URL so it works under any path prefix (the hash
+        // fragment never participates in URL resolution).
+        const wasmJsUrl = new URL('wasm/dotzuki_web.js', window.location.href).href
         const mod = (await import(/* @vite-ignore */ wasmJsUrl)) as unknown as WasmModule
         await mod.default()
         wasmModule = mod

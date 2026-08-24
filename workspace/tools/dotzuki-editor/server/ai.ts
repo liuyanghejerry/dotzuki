@@ -4,7 +4,10 @@
 // Runs inside the Vite dev-server middleware (Node). Supports any
 // Anthropic-shape or OpenAI-shape vendor via the Vercel AI SDK, with a custom
 // baseURL. API keys are supplied per-request (they live in the browser's
-// localStorage) and are never persisted here.
+// localStorage) and are never persisted here. Cloud sessions may instead
+// inject a platform key via env (DOTZUKI_CLOUD_AI_KEY / DOTZUKI_CLOUD_AI_IMAGE_KEY)
+// — those are likewise only read from the process environment here, never
+// written to disk and never sent back to the client.
 //
 // The heavy deps (ai, @ai-sdk/*, zod) are imported dynamically so the dev
 // server starts fast and works even when AI is never used.
@@ -52,6 +55,32 @@ export interface RefineParams {
   onEvent: (event: string, data: unknown) => void
 }
 
+export type AiKeyKind = 'text' | 'image'
+
+/**
+ * Resolve the effective API key for one request: the per-request BYOK key
+ * wins; when it is absent, fall back to the platform-injected cloud key
+ * (DOTZUKI_CLOUD_AI_KEY for text models, DOTZUKI_CLOUD_AI_IMAGE_KEY for image
+ * models). Returns '' when neither exists — route handlers use this same
+ * helper for their 400 pre-checks, so the rule lives in exactly one place.
+ */
+export function resolveApiKey(apiKey: string | undefined | null, kind: AiKeyKind): string {
+  const direct = typeof apiKey === 'string' ? apiKey.trim() : ''
+  if (direct) return direct
+  const envKey = kind === 'image' ? process.env.DOTZUKI_CLOUD_AI_IMAGE_KEY : process.env.DOTZUKI_CLOUD_AI_KEY
+  return (envKey ?? '').trim()
+}
+
+/**
+ * True when the request carried no key and the cloud env fallback is in use.
+ * The optional cloud endpoint overrides (DOTZUKI_CLOUD_AI_*_BASE_URL / _MODEL)
+ * apply only in that case, so a user's own key always talks to the user's own
+ * endpoint.
+ */
+export function usingCloudKey(apiKey: string | undefined | null, kind: AiKeyKind): boolean {
+  return !(typeof apiKey === 'string' && apiKey.trim()) && !!resolveApiKey(null, kind)
+}
+
 /**
  * Smoke-test a provider profile + transient key with a tiny prompt. Returns the
  * model's reply on success, or a human-readable error. Never throws — the caller
@@ -77,21 +106,28 @@ export async function testProvider(
 
 /** Build a LanguageModel for the given profile + transient key. */
 export async function buildModel(profile: ProviderProfile, apiKey: string): Promise<any> {
+  const key = resolveApiKey(apiKey, 'text')
+  // Cloud endpoint overrides pair with the cloud key: they re-point the
+  // profile's baseURL/model at the platform gateway, while the provider TYPE
+  // still comes from the profile.
+  const cloud = usingCloudKey(apiKey, 'text')
+  const baseURL = (cloud && process.env.DOTZUKI_CLOUD_AI_BASE_URL?.trim()) || profile.baseURL
+  const modelId = (cloud && process.env.DOTZUKI_CLOUD_AI_MODEL?.trim()) || profile.model
   const fetchFn = await proxyFetchFn(profile.proxyUrl)
   if (profile.kind === 'anthropic') {
     const { createAnthropic } = await import('@ai-sdk/anthropic')
-    const provider = createAnthropic({ apiKey, baseURL: profile.baseURL || undefined, ...(fetchFn ? { fetch: fetchFn } : {}) })
-    return provider(profile.model)
+    const provider = createAnthropic({ apiKey: key, baseURL: baseURL || undefined, ...(fetchFn ? { fetch: fetchFn } : {}) })
+    return provider(modelId)
   }
   // openai-compatible covers OpenAI, DeepSeek, Moonshot, OpenRouter, Ollama, vLLM, …
   const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible')
   const provider = createOpenAICompatible({
     name: profile.id || 'openai',
-    apiKey,
-    baseURL: profile.baseURL,
+    apiKey: key,
+    baseURL,
     ...(fetchFn ? { fetch: fetchFn } : {}),
   })
-  return provider(profile.model)
+  return provider(modelId)
 }
 
 /**

@@ -15,7 +15,7 @@ export const useProjectStore = defineStore('project', () => {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch('/api/project')
+      const resp = await fetch('api/project')
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)

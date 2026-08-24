@@ -7,7 +7,7 @@ import { sendJson, sendError, readBody } from '../http'
 import { resolveDataPath, loadConfig } from '../projectConfig'
 import { providersFile, imageProvidersFile, editorSettingsFile } from '../storyPaths'
 
-import { testProvider } from '../../ai'
+import { testProvider, resolveApiKey } from '../../ai'
 import { testImageProvider } from '../../spriteSheet/generate'
 import { getProjectContext } from '../../context/projectContext'
 import { getAction, runAction, legacyEmit, applyChange, streamChat } from '../../actions'
@@ -83,7 +83,8 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      // Request key OR the cloud env fallback (DOTZUKI_CLOUD_AI_IMAGE_KEY) suffices.
+      if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
       const result = await testImageProvider(profile, apiKey)
       return sendJson(res, result)
     } catch (e) {
@@ -127,7 +128,8 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { profile, apiKey, prompt } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      // Request key OR the cloud env fallback (DOTZUKI_CLOUD_AI_KEY) suffices.
+      if (!profile || !resolveApiKey(apiKey, 'text')) return sendError(res, 'profile and apiKey are required', 400)
       const result = await testProvider(profile, apiKey, prompt)
       return sendJson(res, result)
     } catch (e) {
@@ -149,7 +151,7 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { actionId, input, profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'text')) return sendError(res, 'profile and apiKey are required', 400)
       const action = getAction(actionId)
       if (!action) return sendError(res, `Unknown action: ${actionId}`, 404)
       const send = openSse(res)
@@ -174,7 +176,7 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { messages, profile, apiKey, uiContext, imageProviders, debug } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'text')) return sendError(res, 'profile and apiKey are required', 400)
       // loadConfig is the no-project probe: it throws when no .dotzuki-editor.json.
       let project = null
       try { loadConfig(); project = getProjectContext() } catch { project = null }
@@ -231,7 +233,7 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { characterId, profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'text')) return sendError(res, 'profile and apiKey are required', 400)
       const send = openSse(res)
       await runAction(getAction('refine-character')!, {
         actionId: 'refine-character', input: { characterId }, profile, apiKey,
@@ -248,7 +250,7 @@ export function registerAi(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { questId, profile, apiKey, sceneName, storyline, previousError } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'text')) return sendError(res, 'profile and apiKey are required', 400)
       const send = openSse(res)
       await runAction(getAction('generate-scene')!, {
         actionId: 'generate-scene', input: { questId, sceneName, storyline, previousError }, profile, apiKey,

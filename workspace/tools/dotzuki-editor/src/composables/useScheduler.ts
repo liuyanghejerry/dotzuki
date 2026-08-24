@@ -112,7 +112,7 @@ export function clipSummary(text: string, max = SUMMARY_MAX): string {
 
 async function loadJobs(): Promise<void> {
   try {
-    const resp = await fetch('/api/jobs')
+    const resp = await fetch('api/jobs')
     jobs.value = resp.ok ? await resp.json() : []
   } catch {
     jobs.value = []
@@ -123,7 +123,7 @@ async function loadJobs(): Promise<void> {
 /** Whole-array write-back; the server re-sanitizes every entry. */
 async function persist(): Promise<void> {
   try {
-    await fetch('/api/jobs', {
+    await fetch('api/jobs', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(jobs.value),
     })
   } catch { /* best effort — the next mutation retries */ }
@@ -132,7 +132,7 @@ async function persist(): Promise<void> {
 // ── runners ─────────────────────────────────────────────────────────────────
 
 async function runSceneCheckJob(job: ScheduledJob): Promise<void> {
-  const resp = await fetch('/api/jobs/run-scene-check', { method: 'POST' })
+  const resp = await fetch('api/jobs/run-scene-check', { method: 'POST' })
   const report = await resp.json().catch(() => null)
   if (!resp.ok) throw new Error(report?.error || `scene check failed (${resp.status})`)
   job.lastStatus = report.failed ? 'error' : 'ok'
@@ -155,7 +155,7 @@ async function runAgentPromptJob(job: ScheduledJob): Promise<void> {
     return
   }
   const now = Date.now()
-  const resp = await fetch('/api/ai/chat', {
+  const resp = await fetch('api/ai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

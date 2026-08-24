@@ -59,7 +59,7 @@ export function useDataActivity() {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/data/list/${tableId}`)
+      const resp = await fetch(`api/data/list/${tableId}`)
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)
@@ -101,7 +101,7 @@ export function useDataActivity() {
     saving.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/data/save/${tableId}/${fileName}`, {
+      const resp = await fetch(`api/data/save/${tableId}/${fileName}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -129,7 +129,7 @@ export function useDataActivity() {
     saving.value = true
     error.value = null
     try {
-      const resp = await fetch(`/api/data/delete/${tableId}/${file}`, { method: 'DELETE' })
+      const resp = await fetch(`api/data/delete/${tableId}/${file}`, { method: 'DELETE' })
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)

@@ -89,17 +89,17 @@ export function rowLabel(cat: SpriteCategory | SpriteMeta, row: number): string 
 export function useSpriteStudio() {
   async function loadCategories(force = false): Promise<SpriteCategory[]> {
     if (categoriesLoaded && !force) return categories.value
-    categories.value = await getJson('/api/sprites/categories')
+    categories.value = await getJson('api/sprites/categories')
     categoriesLoaded = true
     return categories.value
   }
 
   function loadMeta(category: string, id: string): Promise<SpriteMeta> {
-    return getJson(`/api/sprites/meta?category=${encodeURIComponent(category)}&id=${encodeURIComponent(id)}`)
+    return getJson(`api/sprites/meta?category=${encodeURIComponent(category)}&id=${encodeURIComponent(id)}`)
   }
 
   function fileUrl(category: string, id: string, name = 'sheet.png', v = 0): string {
-    return `/api/sprites/file?category=${encodeURIComponent(category)}&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&v=${v}`
+    return `api/sprites/file?category=${encodeURIComponent(category)}&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&v=${v}`
   }
 
   async function saveSheet(
@@ -108,7 +108,7 @@ export function useSpriteStudio() {
     sheetBase64: string,
     frames: FramePng[],
   ): Promise<{ ok: boolean; dir: string }> {
-    const resp = await fetch('/api/sprites/save', {
+    const resp = await fetch('api/sprites/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category, id, sheetBase64, frames }),
@@ -124,7 +124,7 @@ export function useSpriteStudio() {
     /** Image-provider creds bridged to the generate command's env (GEMINI_KEY, …). */
     auth?: { apiKey?: string; proxyUrl?: string; model?: string },
   ): Promise<{ ok: boolean; output: string; dir: string; frames: string[] }> {
-    const resp = await fetch('/api/sprites/generate', {
+    const resp = await fetch('api/sprites/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category, id, prompt, ...auth }),

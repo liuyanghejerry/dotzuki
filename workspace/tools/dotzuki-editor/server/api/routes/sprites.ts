@@ -7,6 +7,7 @@ import { resolveGfxPath, getProjectRoot } from '../projectConfig'
 import { spriteCategories, spriteCategory, resolveGfxSafe, storyActivityConfig, readStoryRecord } from '../storyPaths'
 import { pngSize } from '../util'
 import { generateSprite } from '../../sprite'
+import { resolveApiKey } from '../../ai'
 import { generateAnimatedSprite, testImageProvider, makeGenImage } from '../../spriteSheet/generate'
 import { buildAsepriteJSON } from '../../spriteSheet/aseprite'
 import { encodePNG, decodePNG } from '../../spriteSheet/image'
@@ -31,7 +32,7 @@ export function registerSprites(server: any) {
       try {
         const sc = storyActivityConfig()
         const { characterId, profile, apiKey, size } = JSON.parse(await readBody(req))
-        if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+        if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
         const character = readStoryRecord('characters', characterId)
         if (!character) return sendError(res, 'Character not found', 404)
 
@@ -142,7 +143,7 @@ export function registerSprites(server: any) {
         const body = JSON.parse(await readBody(req))
         const { profile, apiKey } = body
         const id = path.basename(String(body.id ?? ''))
-        if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+        if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
         if (!id) return sendError(res, 'id is required', 400)
         const states = resolveAnimatedStates(body)
         if (!states.length) return sendError(res, 'Provide `states` or a `preset`.', 400)

@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'http'
 import { sendJson, sendError, readBody } from '../http'
 import { loadConfig, resolveDataPath } from '../projectConfig'
 import { makeGenImage } from '../../spriteSheet/generate'
+import { resolveApiKey } from '../../ai'
 import { encodePNG } from '../../spriteSheet/image'
 
 /** Title-screen editor server surface — currently just AI background generation.
@@ -19,7 +20,7 @@ export function registerTitle(server: any) {
     if (req.method !== 'POST') { res.writeHead(405); res.end('Method Not Allowed'); return }
     try {
       const { prompt, profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
       if (!prompt || !String(prompt).trim()) return sendError(res, 'prompt is required', 400)
 
       // Where does the background live? Prefer the title activity's configured

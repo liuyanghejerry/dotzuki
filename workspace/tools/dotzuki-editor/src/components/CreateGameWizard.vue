@@ -382,7 +382,7 @@ async function browseParentDir() {
 
 async function fetchProjectRoot() {
   try {
-    const resp = await fetch('/api/project/root')
+    const resp = await fetch('api/project/root')
     if (resp.ok) projectRoot.value = (await resp.json()).projectRoot ?? ''
   } catch {
     // Preview only — projectRoot stays empty and the hint shows just the slug.
@@ -404,7 +404,7 @@ async function fetchTemplates() {
   templatesLoading.value = true
   templatesError.value = null
   try {
-    const resp = await fetch(`/api/project/templates?lang=${encodeURIComponent(locale.value)}`)
+    const resp = await fetch(`api/project/templates?lang=${encodeURIComponent(locale.value)}`)
     if (!resp.ok) {
       const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
       throw new Error(msg)
@@ -498,7 +498,7 @@ async function handleCreate() {
       gfxRoot: './gfx',
     }
 
-    const resp = await fetch('/api/project/create', {
+    const resp = await fetch('api/project/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

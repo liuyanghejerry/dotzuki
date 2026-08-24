@@ -26,8 +26,10 @@ function ensureWasm(): Promise<AudioWasm> {
   if (!initPromise) {
     initPromise = (async () => {
       // Runtime URL so Vite doesn't pre-resolve it — the request must reach the
-      // `/wasm` middleware (same package the layout preview loads).
-      const url = new URL('/wasm/dotzuki_web.js', window.location.origin).href
+      // `/wasm` middleware (same package the layout preview loads). Relative to
+      // the page URL so it works under any path prefix (the hash fragment never
+      // participates in URL resolution).
+      const url = new URL('wasm/dotzuki_web.js', window.location.href).href
       const mod = (await import(/* @vite-ignore */ url)) as unknown as AudioWasm
       await mod.default()
       wasm = mod

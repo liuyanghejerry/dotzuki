@@ -68,13 +68,13 @@ export function useAssetBrowser() {
     const params = new URLSearchParams()
     params.set('root', activeRoot.value)
     if (currentPath.value) params.set('path', currentPath.value)
-    return `/api/assets/list?${params.toString()}`
+    return `api/assets/list?${params.toString()}`
   }
 
   /** URL to download/view a specific asset file */
   function fileUrl(file: AssetFile): string {
     const fp = filePath(file)
-    return `/api/assets/file?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(fp)}`
+    return `api/assets/file?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(fp)}`
   }
 
   /** Relative path of a file from the active root */
@@ -137,7 +137,7 @@ export function useAssetBrowser() {
     try {
       for (const file of Array.from(fileList)) {
         const dest = childPath(file.name)
-        const resp = await fetch(`/api/assets/upload?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(dest)}`, {
+        const resp = await fetch(`api/assets/upload?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(dest)}`, {
           method: 'POST', body: file,
         })
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || `Upload failed: ${file.name}`)
@@ -152,7 +152,7 @@ export function useAssetBrowser() {
   async function deleteFile(file: AssetFile): Promise<void> {
     error.value = null
     try {
-      const resp = await fetch(`/api/assets/delete?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(filePath(file))}`, { method: 'DELETE' })
+      const resp = await fetch(`api/assets/delete?root=${encodeURIComponent(activeRoot.value)}&path=${encodeURIComponent(filePath(file))}`, { method: 'DELETE' })
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Delete failed')
       if (selectedFile.value?.name === file.name) selectedFile.value = null
       await fetchFiles()
@@ -166,7 +166,7 @@ export function useAssetBrowser() {
     error.value = null
     if (!newName || newName === file.name) return
     try {
-      const resp = await fetch('/api/assets/rename', {
+      const resp = await fetch('api/assets/rename', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ root: activeRoot.value, from: filePath(file), to: childPath(newName) }),
       })
@@ -182,7 +182,7 @@ export function useAssetBrowser() {
     error.value = null
     if (!name) return
     try {
-      const resp = await fetch('/api/assets/mkdir', {
+      const resp = await fetch('api/assets/mkdir', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ root: activeRoot.value, path: childPath(name) }),
       })

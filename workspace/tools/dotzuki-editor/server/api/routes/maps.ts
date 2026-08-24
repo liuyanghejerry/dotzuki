@@ -7,6 +7,7 @@ import { loadConfig, resolveDataPath } from '../projectConfig'
 import { createMap, createMapTmx } from '../mapCreate'
 import { getProjectContext } from '../../context/projectContext'
 import { makeGenImage } from '../../spriteSheet/generate'
+import { resolveApiKey } from '../../ai'
 import { generateMapBackdrop } from '../../backdropTools'
 
 function escapeRegExp(s: string): string {
@@ -300,7 +301,7 @@ export function registerMaps(server: any) {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
       const { mapName, prompt, profile, apiKey } = JSON.parse(await readBody(req))
-      if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
+      if (!profile || !resolveApiKey(apiKey, 'image')) return sendError(res, 'profile and apiKey are required', 400)
       if (!mapName || !/^[A-Za-z0-9_-]+$/.test(String(mapName))) return sendError(res, 'invalid mapName', 400)
       if (!prompt || !String(prompt).trim()) return sendError(res, 'prompt is required', 400)
       // Shared with the assistant's generate_map_backdrop skill — same prompt
