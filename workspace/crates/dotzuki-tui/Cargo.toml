@@ -7,6 +7,6 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.1", default-features = false }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.5.4", default-features = false }
 ratatui = "0.29"
 crossterm = "0.28"
