@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-466b9ebb.js"></script>
+        <script src="../toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -200,6 +200,76 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<ul>
+<li>Fix: the debug server’s response timeout rises from 5s to 300s, and the
+server drains stale responses before forwarding each command — a slow
+synchronous command (<code>step_frames</code> with a large frame budget) no longer
+skews the FIFO response stream. See
+<a href="../reference/debug-server.html">the debug server reference</a>.</li>
+</ul>
+<h2 id="v054"><a class="header" href="#v054">v0.5.4</a></h2>
+<p>The workspace version returns to the v0.5.x tag series (0.1.1 → 0.5.4); see
+<a href="migration/v0.5.4.html">the migration guide</a> for the version-line story. The
+intermediate <code>v0.5.2</code> / <code>v0.5.3</code> tags failed the release workflows’
+tag↔version assertion while the workspace still read 0.1.1, so they published
+nothing — this tag aligns the two again.</p>
+<p>Breaking changes (all in the overworld NPC API; details and steps in
+<a href="migration/v0.5.4.html">the migration guide</a>):</p>
+<ul>
+<li><code>NpcDefinition</code> and <code>NpcRuntimeState</code> gained the
+<code>wander_axis: NpcWanderAxis</code> field — struct literals need the new field.</li>
+<li><code>advance_step</code> no longer ticks <code>repel_steps</code>; call the new
+<code>tick_repel_step</code> helper from the game’s encounter-check gate.</li>
+<li>Wander NPCs follow their axis and no longer have a radial leash; NPC walk
+cadence is 16 frames per tile (half the player’s speed).</li>
+</ul>
+<p>Game-agnostic systems sunk from the pokered game repo into the engine:</p>
+<ul>
+<li><code>dotzuki-engine</code>: <code>items::mart</code> — interactive shop state machine
+(<code>MartState</code> + <code>MartBackend</code> + a ready-made <code>MartDriver</code>), see
+<a href="../reference/shops.html">shops</a>; <code>overworld::presentation</code> — frame-counted
+animation state machines (teleport spin, elevator rumble, water/flower
+tiles, fishing rod, boulder dust, ship departure), see
+<a href="../reference/overworld-presentation.html">overworld presentation</a>;
+<code>link::codec</code> — shared JSON-line framing codec + broadcast <code>Frame&lt;M&gt;</code>
+envelope, see <a href="../reference/link-play.html">link play</a>.</li>
+<li><code>dotzuki-engine-dsl</code>: <code>disk_loader</code> — disk-backed scene providers with
+mtime hot reload, see <a href="../reference/dsl/runtime-loading.html">runtime loading</a>.</li>
+<li><code>dotzuki-renderer</code>: <code>resource</code> module (feature) — PNG → 2bpp/1bpp/4bpp
+conversion, <code>AssetRoot</code> path resolution, the <code>ResourceManager</code> asset cache,
+and an embedded-asset seam for wasm/mobile, see
+<a href="../reference/resource-manager.html">resource manager</a>.</li>
+<li><code>dotzuki-audio</code>: <code>manager</code> — <code>AudioManager</code> (music fades, NR50 master
+volume, cross-track resume states, post-frame hook); <code>output</code> — device
+output behind the <code>cpal</code> / <code>web-audio</code> features, see
+<a href="../reference/audio-runtime.html">audio runtime</a>.</li>
+<li><code>dotzuki-app</code>: <code>debug_server</code> — generic TCP JSON-line debug server, see
+<a href="../reference/debug-server.html">debug server</a>; <code>link</code> — <code>TcpTransport</code> /
+<code>LinkServer</code> / the <code>LinkSession</code> router, see
+<a href="../reference/link-play.html">link play</a>.</li>
+<li><code>dotzuki-web</code>: <code>game_shell</code> feature — pixels+winit game loop for wasm and
+native, see <a href="../reference/game-shell.html">game shell</a>; <code>link</code> feature —
+<code>BroadcastChannel</code> link transport.</li>
+<li><code>dotzuki-ui</code>: games can inject custom GB tile glyphs into
+<code>FrameBufferPainter</code>.</li>
+</ul>
+<p>Also in this release:</p>
+<ul>
+<li>Editor: native desktop-style shell with Lucide icons, Electron installers
+attached to GitHub Releases, and cloud hosting support (relative base, AI
+key fallback, graceful shutdown, health endpoints).</li>
+</ul>
+<h2 id="v011"><a class="header" href="#v011">v0.1.1</a></h2>
+<ul>
+<li>Modern file audio (WAV/OGG/FLAC/MP3) behind the runner’s <code>modern-audio</code>
+feature.</li>
+<li><code>dotzuki new --template your-first-game</code>; the editor’s Help panel renders
+reference pages in-app.</li>
+<li><code>dotzuki check</code> fails on a missing <code>battle.rules</code>; runner logs surface in
+the CLI.</li>
+<li>Docs site: how-to guides for scenes, UI layouts, and assets (EN + zh-CN),
+plus a glossary backfill.</li>
+</ul>
 <h2 id="v010"><a class="header" href="#v010">v0.1.0</a></h2>
 <p>First published release (crates.io). The engine workspace’s version line
 resets from the v0.5.x pre-release tags (<code>v0.5.0</code>, <code>v0.5.1</code>) to <code>0.1.0</code>;

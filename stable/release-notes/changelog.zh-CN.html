@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-466b9ebb.js"></script>
+        <script src="../toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -190,7 +190,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -203,6 +203,64 @@
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<ul>
+<li>修复：调试服务器的响应超时从 5s 提高到 300s，且服务器在转发每条命令前会排
+空滞留的过期响应——耗时的同步命令（大帧数预算的 <code>step_frames</code>）不会再扰乱
+FIFO 响应流。见<a href="../reference/debug-server.html">调试服务器参考</a>。</li>
+</ul>
+<h2 id="v054"><a class="header" href="#v054">v0.5.4</a></h2>
+<p>workspace 版本回到 v0.5.x tag 序列（0.1.1 → 0.5.4）；版本线的来龙去脉见
+<a href="migration/v0.5.4.html">迁移指南</a>。中间的 <code>v0.5.2</code> / <code>v0.5.3</code> 两个 tag 在
+workspace 版本仍为 0.1.1 时触发了发布工作流的 tag↔version 断言失败，没有发布
+任何内容——本 tag 让两者重新对齐。</p>
+<p>Breaking changes（都在大地图 NPC API；细节与步骤见
+<a href="migration/v0.5.4.html">迁移指南</a>）：</p>
+<ul>
+<li><code>NpcDefinition</code> 与 <code>NpcRuntimeState</code> 新增 <code>wander_axis: NpcWanderAxis</code>
+字段——结构体字面量需要补上该字段。</li>
+<li><code>advance_step</code> 不再推进 <code>repel_steps</code>；改在游戏自己的遇敌检查门槛里调用新的
+<code>tick_repel_step</code> 辅助函数。</li>
+<li>Wander NPC 遵循自己的轴向，不再有半径束缚；NPC 走路节奏为每 tile 16 帧
+（玩家速度的一半）。</li>
+</ul>
+<p>从 pokered 游戏仓库下沉进引擎的游戏无关系统：</p>
+<ul>
+<li><code>dotzuki-engine</code>：<code>items::mart</code>——交互式商店状态机（<code>MartState</code> +
+<code>MartBackend</code> + 现成的 <code>MartDriver</code>），见<a href="../reference/shops.html">商店</a>；
+<code>overworld::presentation</code>——按帧计数的动画状态机（传送旋转、电梯震动、
+水面/花丛 tile、钓竿、推岩尘土、邮轮离港），见
+<a href="../reference/overworld-presentation.html">大地图表现动画</a>；<code>link::codec</code>——
+共享的 JSON-line 分帧 codec 与广播 <code>Frame&lt;M&gt;</code> 信封，见
+<a href="../reference/link-play.html">联机</a>。</li>
+<li><code>dotzuki-engine-dsl</code>：<code>disk_loader</code>——带 mtime 热重载的磁盘场景 provider，
+见<a href="../reference/dsl/runtime-loading.html">运行时加载</a>。</li>
+<li><code>dotzuki-renderer</code>：<code>resource</code> 模块（feature）——PNG → 2bpp/1bpp/4bpp 转
+换、<code>AssetRoot</code> 路径解析、<code>ResourceManager</code> 素材缓存，以及面向 wasm/移动端
+的内嵌素材接缝，见<a href="../reference/resource-manager.html">资源管理器</a>。</li>
+<li><code>dotzuki-audio</code>：<code>manager</code>——<code>AudioManager</code>（音乐淡入淡出、NR50 主音量、
+跨音轨续播状态、帧后钩子）；<code>output</code>——<code>cpal</code> / <code>web-audio</code> feature 门控的
+设备输出，见<a href="../reference/audio-runtime.html">音频运行时</a>。</li>
+<li><code>dotzuki-app</code>：<code>debug_server</code>——通用 TCP JSON-line 调试服务器，见
+<a href="../reference/debug-server.html">调试服务器</a>；<code>link</code>——<code>TcpTransport</code> /
+<code>LinkServer</code> / <code>LinkSession</code> 路由器，见<a href="../reference/link-play.html">联机</a>。</li>
+<li><code>dotzuki-web</code>：<code>game_shell</code> feature——wasm 与原生共用的 pixels+winit 游戏
+循环，见<a href="../reference/game-shell.html">游戏外壳</a>；<code>link</code> feature——
+<code>BroadcastChannel</code> 联机传输。</li>
+<li><code>dotzuki-ui</code>：游戏可以向 <code>FrameBufferPainter</code> 注入自定义 GB tile 字形。</li>
+</ul>
+<p>本 release 还包含：</p>
+<ul>
+<li>编辑器：原生桌面风格外壳（Lucide 图标）、随 GitHub Release 附带的 Electron
+安装包、云托管支持（相对 base、AI key 回退、优雅停机、健康检查端点）。</li>
+</ul>
+<h2 id="v011"><a class="header" href="#v011">v0.1.1</a></h2>
+<ul>
+<li>runner 的 <code>modern-audio</code> feature 带来现代文件音频（WAV/OGG/FLAC/MP3）。</li>
+<li><code>dotzuki new --template your-first-game</code>；编辑器的帮助面板可以在应用内渲染
+reference 页面。</li>
+<li><code>dotzuki check</code> 在缺少 <code>battle.rules</code> 时会失败；CLI 会展示 runner 日志。</li>
+<li>文档站：场景、UI 布局、素材三篇 how-to 指南（中英双语），并补全术语表。</li>
+</ul>
 <h2 id="v010"><a class="header" href="#v010">v0.1.0</a></h2>
 <p>首个发布版本（crates.io）。引擎 workspace 的版本线从 v0.5.x 预发布 tag
 （<code>v0.5.0</code>、<code>v0.5.1</code>）重置为 <code>0.1.0</code>；每个 <code>dotzuki-*</code> crate 以 0.1.0 发布，

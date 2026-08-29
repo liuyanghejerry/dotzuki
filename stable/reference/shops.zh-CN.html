@@ -1,0 +1,513 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>商店 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/shops.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="商店"><a class="header" href="#商店">商店</a></h1>
+<blockquote>
+<p>本文是 <code>reference/shops.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
+</ul>
+</blockquote>
+<p>引擎的<a href="./glossary.html">商店</a>（mart）模块：一个 UI 层的商店交互状态机
+（<code>MartState</code>）、由游戏实现的 <code>MartBackend</code> 回调 trait，
+以及现成的 <code>MartDriver</code> 后端——并给出 Buy / Sell / Quit
+交互的完整相位流程。</p>
+<p>模块位于 <code>crates/dotzuki-engine/src/items/mart.rs</code>，并从
+<code>dotzuki_engine::items</code> 重导出 <code>MartBackend</code>、<code>MartDriver</code>、
+<code>MartState</code>、<code>MartStock</code>。没有 feature 开关。除模块自身的
+单元测试外，仓库内没有消费方；它是面向游戏的 API。</p>
+<h2 id="两个半边"><a class="header" href="#两个半边">两个半边</a></h2>
+<p>一个运行中的商店分成状态机与后端两部分：</p>
+<ul>
+<li><code>MartState&lt;I&gt;</code> 只拥有<em>交互流程</em>：Buy/Sell/Quit 顶层菜单、
+物品列表光标、数量选择、Yes/No 确认子相位以及结果展示。
+它对价格、金钱和背包容量一无所知。</li>
+<li>游戏的 <code>MartBackend</code> 实现拥有全部金钱与背包裹义：定价
+规则、货币、每格上限、不可出售的关键道具。<code>MartState</code>
+从不直接触碰金钱。</li>
+</ul>
+<p>输入使用引擎通用的 <code>MenuInput</code>（<code>up</code> / <code>down</code> / <code>confirm</code> /
+<code>cancel</code> 四个布尔值，见 <code>crates/dotzuki-engine/src/menu/mod.rs</code>）。
+音效提示以类型化的 <code>MartSound</code> 值上报，由游戏映射到自己的
+音频 id；<code>MartSound</code> 只有一个变体 <code>Purchase</code>。</p>
+<h2 id="相位"><a class="header" href="#相位">相位</a></h2>
+<p><code>MartState</code> 有两个公开字段：<code>inventory: MartStock&lt;I&gt;</code>（商店
+库存，按展示顺序）和 <code>phase: MartPhase</code>。<code>MartPhase</code>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>相位</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MainMenu { cursor }</code></td><td>顶层菜单；<code>cursor: MartTopChoice</code> 为 <code>Buy</code>、<code>Sell</code> 或 <code>Quit</code></td></tr>
+<tr><td><code>Buy(BuyMenuState)</code></td><td>处于购买流程中</td></tr>
+<tr><td><code>Sell(SellMenuState)</code></td><td>处于出售流程中</td></tr>
+<tr><td><code>Exiting</code></td><td>终态；<code>update_frame</code> 持续返回 <code>MartUpdate::Exit</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>BuyMenuState</code> 与 <code>SellMenuState</code> 形状相同；出售变体在
+<code>Quantity</code> 与 <code>Confirm</code> 上额外携带 <code>max_quantity: u8</code>
+（所选背包格子的持有数量）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>子相位</th><th>载荷</th></tr>
+</thead>
+<tbody>
+<tr><td><code>SelectItem</code></td><td><code>cursor</code>，指向库存列表（买）或背包（卖）</td></tr>
+<tr><td><code>Quantity</code></td><td><code>item_index</code>、<code>quantity</code></td></tr>
+<tr><td><code>Confirm</code></td><td>数量字段加 <code>selected: ConfirmChoice</code>（<code>Yes</code> / <code>No</code>）</td></tr>
+<tr><td><code>Result</code></td><td><code>dialogue: BuyResult</code> / <code>SellResult</code>、<code>return_to_list: bool</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="逐帧行为"><a class="header" href="#逐帧行为">逐帧行为</a></h2>
+<p><code>MartState::new(inventory)</code> 从 <code>MainMenu</code>（光标在 <code>Buy</code>）开始。
+每个输入帧调用一次 <code>update_frame(input, backend)</code> 驱动状态机；
+返回的 <code>MartUpdate</code> 告知调用方发生了什么：</p>
+<ul>
+<li><code>Continue</code> —— 继续渲染。</li>
+<li><code>PlaySound(MartSound)</code> —— 播放音效；仅购买提交成功时发出
+<code>MartSound::Purchase</code>。</li>
+<li><code>Exit</code> —— 商店交互结束。</li>
+</ul>
+<p>顶层菜单：上/下让光标沿固定顺序 Buy → Sell → Quit 循环
+（<code>MartTopChoice::position()</code> 返回序号）。按取消、或在 <code>Quit</code>
+上确认，会进入 <code>Exiting</code> 并返回 <code>Exit</code>；<code>Exiting</code> 是粘性的，
+之后每帧都返回 <code>Exit</code>。背包为空（<code>bag_len() == 0</code>）时在
+<code>Sell</code> 上确认会停留在顶层菜单。</p>
+<p>购买流程：</p>
+<ol>
+<li><code>SelectItem</code> —— 光标在库存列表上循环；仅当
+<code>backend.can_buy(&amp;item)</code> 成立时确认才进入 <code>Quantity</code>，否则
+停留在列表上。取消返回 <code>MainMenu</code> 的 Buy 页。</li>
+<li><code>Quantity</code> —— 上/下让 <code>quantity</code> 在 1..=99 内循环；取消
+返回 <code>SelectItem</code> 并保留光标；确认进入 <code>Confirm</code>，预选
+<code>Yes</code>。</li>
+<li><code>Confirm</code> —— 上/下切换 Yes/No；取消返回 <code>Quantity</code>；在
+<code>No</code> 上确认返回 <code>SelectItem</code> 并保留光标；在 <code>Yes</code> 上确认
+调用 <code>backend.commit_buy(item, quantity)</code> 并进入
+<code>Result</code>。成功时该帧返回 <code>PlaySound(Purchase)</code>。</li>
+<li><code>Result</code> —— 在<em>下一次</em> <code>update_frame</code> 时自动消失，无论
+输入是什么。<code>return_to_list: true</code>（成功）回到物品列表且
+光标重置为 0；<code>false</code>（失败）回到顶层菜单的 Buy 页。</li>
+</ol>
+<p>出售流程镜像购买流程，但作用在背包上：列表来自
+<code>bag_len()</code> / <code>bag_entry(index)</code>，<code>quantity</code> 在
+1..=<code>max_quantity</code> 内循环（而非 1..=99）。出售失败回到顶层
+菜单的 Sell 页。</p>
+<h2 id="后端契约"><a class="header" href="#后端契约">后端契约</a></h2>
+<p>游戏需要实现的 trait（<code>crates/dotzuki-engine/src/items/mart.rs</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait MartBackend {
+    type Item: Copy + Eq + Hash + Debug;
+    fn bag_len(&amp;self) -&gt; usize;
+    fn bag_entry(&amp;self, index: usize) -&gt; Option&lt;(Self::Item, u8)&gt;;
+    fn can_buy(&amp;self, item: &amp;Self::Item) -&gt; bool { true }
+    fn commit_buy(&amp;mut self, item: Self::Item, quantity: u8) -&gt; BuyResult;
+    fn commit_sell(&amp;mut self, bag_index: usize, quantity: u8) -&gt; SellResult;
+}
+<span class="boring">}</span></code></pre>
+<p><em>由 <code>crates/dotzuki-engine/src/items/mart.rs</code> 中的
+<code>mart_buy_happy_path</code> 验证，其 <code>MockMart</code> 实现了该 trait。</em></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方法</th><th>契约</th></tr>
+</thead>
+<tbody>
+<tr><td><code>bag_len()</code></td><td>已占用的背包格子数；驱动出售列表光标</td></tr>
+<tr><td><code>bag_entry(index)</code></td><td>该格子的 <code>(item, owned_quantity)</code>，若已占用</td></tr>
+<tr><td><code>can_buy(&amp;item)</code></td><td>能否进入数量相位；默认 <code>true</code></td></tr>
+<tr><td><code>commit_buy(item, quantity)</code></td><td>放入背包并扣钱；返回 <code>BuyResult</code></td></tr>
+<tr><td><code>commit_sell(bag_index, quantity)</code></td><td>从背包移除并加钱；返回 <code>SellResult</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>一条硬性规则：<strong>提交失败时不得改动任何状态</strong>——结果不是
+<code>Success</code> 时，金钱和背包都不能变。<code>BuyResult</code> 为
+<code>Success { total_cost }</code> / <code>NotEnoughMoney</code> / <code>BagFull</code> /
+<code>InvalidItem</code>；<code>SellResult</code> 为 <code>Success { total_value }</code> /
+<code>Unsellable</code> / <code>NotInBag</code> / <code>InvalidItem</code>。</p>
+<h2 id="martdriver现成的后端"><a class="header" href="#martdriver现成的后端"><code>MartDriver</code>：现成的后端</a></h2>
+<p><code>MartDriver&lt;'a, S: ShopProvider, const N: usize&gt;</code> 为背包是
+引擎原生 <code>Inventory</code> 的游戏实现 <code>MartBackend</code>。它把交易路由到
+引擎的 <code>buy</code> / <code>sell</code> 驱动器
+（<code>crates/dotzuki-engine/src/items/use_driver.rs</code>）和一个
+<a href="./glossary.html">provider</a> trait（<code>ShopProvider</code>，
+<code>crates/dotzuki-engine/src/items/mod.rs</code>），因此商店专属价格、
+折扣与回收倍率、<code>can_sell</code> 规则全部生效。背包语义特殊的游戏
+（溢出外溢、超出 <code>can_sell</code> 的关键道具规则）应直接实现
+<code>MartBackend</code>。</p>
+<p>字段全部公开，用结构体字面量构造：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>provider: &amp;'a S</code></td><td>游戏的 <code>ShopProvider</code></td></tr>
+<tr><td><code>shop_id: S::ShopId</code></td><td>采用哪家商店的库存与倍率</td></tr>
+<tr><td><code>money: &amp;'a mut u32</code></td><td>玩家的金钱</td></tr>
+<tr><td><code>bag: &amp;'a mut Inventory&lt;S::Item, N&gt;</code></td><td>玩家的背包</td></tr>
+</tbody>
+</table>
+</div>
+<p>驱动器 <code>ShopError</code> 到结果的映射：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>条件</th><th><code>BuyResult</code></th><th><code>SellResult</code></th></tr>
+</thead>
+<tbody>
+<tr><td><code>NotEnoughMoney</code></td><td><code>NotEnoughMoney</code></td><td>—</td></tr>
+<tr><td><code>InventoryFull</code></td><td><code>BagFull</code></td><td>—</td></tr>
+<tr><td><code>CannotSell</code></td><td><code>InvalidItem</code></td><td><code>Unsellable</code></td></tr>
+<tr><td><code>InvalidQuantity</code></td><td><code>InvalidItem</code></td><td><code>InvalidItem</code></td></tr>
+<tr><td>其他驱动器错误</td><td>—</td><td><code>InvalidItem</code></td></tr>
+<tr><td>背包格子为空</td><td>—</td><td><code>NotInBag</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>ShopProvider::sell_price</code> 默认为 <code>buy_price / 2</code>（半价回收）。
+<code>MartDriver::bag_entry</code> 把存储的 <code>u32</code> 数量钳制到 <code>u8</code>，
+超过 255 的格子会上报为 255。</p>
+<h2 id="示例"><a class="header" href="#示例">示例</a></h2>
+<p>一次完整的购买流程——从顶层菜单到提交成交——基于一个最小
+后端：</p>
+<pre class="playground"><code class="language-rust edition2021">use dotzuki_engine::items::mart::{
+    BuyResult, MartBackend, MartSound, MartState, MartStock, MartUpdate, SellResult,
+};
+use dotzuki_engine::menu::MenuInput;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Item {
+    Ball,
+    Potion,
+}
+
+/// Gen-1 风格的商店规则：挂牌价格，半价回收。
+struct MockMart {
+    money: u32,
+    bag: Vec&lt;(Item, u8)&gt;,
+}
+
+impl MockMart {
+    fn price(item: Item) -&gt; u32 {
+        match item {
+            Item::Ball =&gt; 200,
+            Item::Potion =&gt; 300,
+        }
+    }
+}
+
+impl MartBackend for MockMart {
+    type Item = Item;
+
+    fn bag_len(&amp;self) -&gt; usize {
+        self.bag.len()
+    }
+
+    fn bag_entry(&amp;self, index: usize) -&gt; Option&lt;(Item, u8)&gt; {
+        self.bag.get(index).copied()
+    }
+
+    fn commit_buy(&amp;mut self, item: Item, quantity: u8) -&gt; BuyResult {
+        let cost = Self::price(item) * quantity as u32;
+        if self.money &lt; cost {
+            return BuyResult::NotEnoughMoney;
+        }
+        self.bag.push((item, quantity));
+        self.money -= cost;
+        BuyResult::Success { total_cost: cost }
+    }
+
+    fn commit_sell(&amp;mut self, bag_index: usize, quantity: u8) -&gt; SellResult {
+        let Some(&amp;(item, owned)) = self.bag.get(bag_index) else {
+            return SellResult::NotInBag;
+        };
+        let value = Self::price(item) / 2 * quantity as u32;
+        if quantity == owned {
+            self.bag.remove(bag_index);
+        } else {
+            self.bag[bag_index].1 -= quantity;
+        }
+        self.money += value;
+        SellResult::Success { total_value: value }
+    }
+}
+
+fn main() {
+    let mut mart = MartState::new(MartStock::new(vec![Item::Ball, Item::Potion]));
+    let mut shop = MockMart { money: 1000, bag: Vec::new() };
+    let confirm = MenuInput { confirm: true, ..MenuInput::default() };
+    let down = MenuInput { down: true, ..MenuInput::default() };
+
+    mart.update_frame(confirm, &amp;mut shop); // MainMenu → 库存列表
+    mart.update_frame(down, &amp;mut shop);    // 光标 → Potion
+    mart.update_frame(confirm, &amp;mut shop); // Potion → 数量 1
+    mart.update_frame(confirm, &amp;mut shop); // 数量 → Yes/No，预选 Yes
+    let update = mart.update_frame(confirm, &amp;mut shop); // Yes → 提交
+
+    assert_eq!(update, MartUpdate::PlaySound(MartSound::Purchase));
+    assert_eq!(shop.money, 700); // 1000 − 300
+}</code></pre>
+<p><em>由 <code>crates/dotzuki-engine/src/items/mart.rs</code> 中的
+<code>mart_buy_happy_path</code> 验证。</em></p>
+<h2 id="备注"><a class="header" href="#备注">备注</a></h2>
+<ul>
+<li><code>MartStock::from_strings(&amp;[S])</code> 在 id 类型实现 <code>FromStr</code>
+时从物品名构建库存列表；遇到无法解析的名字时返回携带该
+字符串的 <code>Err</code>。<em>由 <code>crates/dotzuki-engine/src/items/mart.rs</code>
+中的 <code>mart_stock_from_strings</code> 验证。</em></li>
+<li><code>MartState</code>、<code>MartPhase</code> 与各子相位枚举都派生了
+<code>PartialEq</code>/<code>Eq</code>：直接对整个 <code>phase</code> 字段做快照断言，
+而不必探测内部细节。</li>
+<li><code>MartDriver</code> 在整个会话期间可变借用 <code>money</code> 与 <code>bag</code>：
+在进入商店时构造它，当 <code>update_frame</code> 返回 <code>Exit</code> 时丢弃。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/audio-runtime.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/overworld-presentation.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/audio-runtime.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/overworld-presentation.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

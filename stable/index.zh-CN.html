@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-466b9ebb.js"></script>
+        <script src="toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -205,7 +205,7 @@
 <tr><td>编写<strong>双语文本</strong></td><td><a href="./how-to/i18n.html"><code>how-to/i18n.md</code></a> —— <code>game.lang()</code> / <code>game.t()</code> / <code>@t</code></td></tr>
 <tr><td>在终端中运行 / 自动化项目</td><td><a href="./reference/cli.html"><code>reference/cli.md</code></a> —— <code>dotzuki new</code> / <code>check</code> / <code>run</code> 及所有 flag</td></tr>
 <tr><td>发布 / 部署 / 升级</td><td><a href="./how-to/publishing.html"><code>how-to/publishing.md</code></a> —— 项目交付、无头模式 CI、WASM 网页试玩、引擎升级、存档兼容</td></tr>
-<tr><td>扩展引擎的 <strong>Rust 开发者</strong></td><td>当前架构见 <a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a>，crate map 与 docs.rs 链接见 <a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a>，<code>GameData</code> trait 见 <a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a></td></tr>
+<tr><td>扩展引擎的 <strong>Rust 开发者</strong></td><td>当前架构见 <a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a>，crate map 与 docs.rs 链接见 <a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a>，<code>GameData</code> trait 见 <a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a>；引擎各系统（商店、联机、调试服务器、音频运行时、资源管理器、游戏外壳）在 <code>reference/</code> 下各有专页</td></tr>
 <tr><td>查询术语</td><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a> —— 权威术语表</td></tr>
 </tbody>
 </table>
@@ -256,7 +256,15 @@
 <tr><td><a href="./reference/dsl/gui.html"><code>reference/dsl/gui.md</code></a></td><td>已实现的 <code>.gui</code> / <code>ui {}</code> 语法、组件 schema v2、<code>@t</code></td></tr>
 <tr><td><a href="./reference/dsl/theme-style.html"><code>reference/dsl/theme-style.md</code></a></td><td><code>@theme</code> / <code>@style</code> 语法与 codegen 输出</td></tr>
 <tr><td><a href="./reference/dsl/codegen.html"><code>reference/dsl/codegen.md</code></a></td><td>DSL → JS/JSON 编译约定，已与代码对齐</td></tr>
+<tr><td><a href="./reference/dsl/runtime-loading.html"><code>reference/dsl/runtime-loading.md</code></a></td><td>带 mtime 热重载的磁盘场景 provider（AST 与 JS 两条路径）</td></tr>
 <tr><td><a href="./reference/audio-commands.html"><code>reference/audio-commands.md</code></a></td><td>22 个 <code>AudioCommand</code> 变体及其字段</td></tr>
+<tr><td><a href="./reference/audio-runtime.html"><code>reference/audio-runtime.md</code></a></td><td><code>AudioManager</code> 运行时 API（淡入淡出、音量、续播状态）+ <code>cpal</code> / <code>web-audio</code> 设备输出层</td></tr>
+<tr><td><a href="./reference/shops.html"><code>reference/shops.md</code></a></td><td><code>items::mart</code> 商店状态机：<code>MartState</code>、<code>MartBackend</code>、<code>MartDriver</code></td></tr>
+<tr><td><a href="./reference/overworld-presentation.html"><code>reference/overworld-presentation.md</code></a></td><td>按帧计数的大地图动画状态机（旋转、震动、tile、钓鱼、尘土、邮轮）</td></tr>
+<tr><td><a href="./reference/link-play.html"><code>reference/link-play.md</code></a></td><td><code>NetworkTransport</code> 接缝、JSON-line codec、TCP 与 BroadcastChannel 传输、会话路由器</td></tr>
+<tr><td><a href="./reference/debug-server.html"><code>reference/debug-server.md</code></a></td><td>TCP JSON-line 调试服务器：核心命令、线路协议、游戏命令扩展</td></tr>
+<tr><td><a href="./reference/resource-manager.html"><code>reference/resource-manager.md</code></a></td><td>PNG → 2bpp/1bpp/4bpp 管线、<code>AssetRoot</code>、<code>ResourceManager</code> 缓存、内嵌素材接缝</td></tr>
+<tr><td><a href="./reference/game-shell.html"><code>reference/game-shell.md</code></a></td><td>面向浏览器 canvas 与原生窗口的 pixels+winit <code>game-shell</code></td></tr>
 <tr><td><a href="./reference/cli.html"><code>reference/cli.md</code></a></td><td>每个 <code>dotzuki</code> 子命令与 flag、退出码</td></tr>
 <tr><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a></td><td>权威术语定义</td></tr>
 <tr><td><a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a></td><td>面向 Rust 开发者的 crate map 与 docs.rs 链接</td></tr>
@@ -279,7 +287,7 @@
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="./release-notes/changelog.html"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（首篇：<a href="./release-notes/migration/v0.1.0.html"><code>release-notes/migration/v0.1.0.md</code></a>）</li>
+<li><a href="./release-notes/changelog.html"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="./release-notes/migration/v0.1.0.html"><code>v0.1.0</code></a>、<a href="./release-notes/migration/v0.5.4.html"><code>v0.5.4</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>

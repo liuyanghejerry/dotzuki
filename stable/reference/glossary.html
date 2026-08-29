@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-466b9ebb.js"></script>
+        <script src="../toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -246,6 +246,26 @@ battle system built entirely on the effect stack, with a data-driven
 <code>rules.ron</code> counterpart, proving the engine is game-agnostic.</li>
 <li><strong>WASM runner</strong>（WASM 运行器）— <code>dotzuki-runner-web</code>, the web build of the
 runner that powers the editor’s Play activity and web playtesting.</li>
+<li><strong>mart</strong>（商店）— the interactive shop state machine in
+<code>dotzuki_engine::items::mart</code>: <code>MartState</code> owns the Buy/Sell/Quit flow while
+the game’s <code>MartBackend</code> implementation owns prices, money, and the bag. See
+<a href="./shops.html">shops</a>.</li>
+<li><strong>link play</strong>（联机）— two-player battles and trades over the engine’s
+transport seam (<code>NetworkTransport&lt;M&gt;</code>); concrete transports live in the
+platform crates (TCP native, <code>BroadcastChannel</code> on web). See
+<a href="./link-play.html">link play</a>.</li>
+<li><strong>transport</strong>（传输层）— a <code>NetworkTransport&lt;M&gt;</code> implementation moving typed
+messages between link-play peers; sends never loop back, and a dropped peer
+surfaces as <code>TransportError::Disconnected</code>.</li>
+<li><strong>session router</strong>（会话路由器）— <code>LinkSession</code>: owns the real transport,
+drains it once per frame, and routes each message into per-activity queues
+(battle / trade) so both activities share one connection.</li>
+<li><strong>debug server</strong>（调试服务器）— the TCP JSON-line endpoint from
+<code>dotzuki-app</code> that lets tests and tooling drive and inspect a running
+native game. See <a href="./debug-server.html">debug server</a>.</li>
+<li><strong>game shell</strong>（游戏外壳）— the pixels+winit shell in <code>dotzuki-web</code>
+(<code>game-shell</code> feature) running a <code>GameLoop</code> in a browser canvas or a native
+window at GB frame pacing. See <a href="./game-shell.html">game shell</a>.</li>
 </ul>
 <h2 id="battle-stack"><a class="header" href="#battle-stack">Battle stack</a></h2>
 <ul>
@@ -375,6 +395,10 @@ tiles.</li>
 bitmap font, games may substitute their own.</li>
 <li><strong>gfx</strong> — the conventional loose-graphics directory (an assets-activity
 root); kept in English in Chinese text.</li>
+<li><strong>embedded asset loader</strong>（内嵌素材加载器）— the
+<code>fn(&amp;str) -&gt; Option&lt;&amp;'static [u8]&gt;</code> seam that resolves gfx-relative paths to
+embedded PNG bytes on wasm/mobile targets, where no filesystem exists. See
+<a href="./resource-manager.html">the resource manager</a>.</li>
 </ul>
 <h2 id="scenes--ui"><a class="header" href="#scenes--ui">Scenes &amp; UI</a></h2>
 <ul>

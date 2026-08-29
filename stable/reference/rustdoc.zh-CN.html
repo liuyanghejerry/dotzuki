@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-466b9ebb.js"></script>
+        <script src="../toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="rust-api-门户"><a class="header" href="#rust-api-门户">Rust API 门户</a></h1>
 <blockquote>
-<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -190,12 +190,12 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
 </ul>
 </blockquote>
 <p>crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。</p>
-<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.1.0</code>）并发布在 crates.io
+<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.5.4</code>）并发布在 crates.io
 上，因此它们的 API 文档位于 docs.rs。本地副本：</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
@@ -207,21 +207,21 @@ cargo doc --workspace --no-deps --open
 <tr><th>Crate</th><th>用途</th><th>API 文档</th><th>文字文档</th></tr>
 </thead>
 <tbody>
-<tr><td><code>dotzuki-engine</code></td><td>核心 trait（<code>GameData</code>）、tilemap/相机/触发器、战斗效果栈、物品/商店/装备</td><td><a href="https://docs.rs/dotzuki-engine">docs.rs</a></td><td><a href="../explanation/architecture.html">架构</a>、<a href="../explanation/effect-stack.html">效果栈</a></td></tr>
+<tr><td><code>dotzuki-engine</code></td><td>核心 trait（<code>GameData</code>）、tilemap/相机/触发器、战斗效果栈、物品/商店/装备、大地图表现动画、联机 codec</td><td><a href="https://docs.rs/dotzuki-engine">docs.rs</a></td><td><a href="../explanation/architecture.html">架构</a>、<a href="../explanation/effect-stack.html">效果栈</a>、<a href="shops.html">商店</a>、<a href="overworld-presentation.html">大地图表现动画</a>、<a href="link-play.html">联机</a></td></tr>
 <tr><td><code>dotzuki-rules</code></td><td>声明式战斗规则：RON → 效果栈</td><td><a href="https://docs.rs/dotzuki-rules">docs.rs</a></td><td><a href="battle-rules.html">战斗规则</a></td></tr>
 <tr><td><code>dotzuki-rules-macro</code></td><td><code>dotzuki-rules</code> 的 derive/辅助工具</td><td><a href="https://docs.rs/dotzuki-rules-macro">docs.rs</a></td><td><a href="battle-rules.html">战斗规则</a></td></tr>
 <tr><td><code>dotzuki-engine-tiled</code></td><td>Tiled <code>.tmx</code>（JSON）→ 引擎类型</td><td><a href="https://docs.rs/dotzuki-engine-tiled">docs.rs</a></td><td><a href="../how-to/maps.html">地图指南</a></td></tr>
 <tr><td><code>dotzuki-engine-script</code></td><td>基于 Boa 的异步 JS 脚本</td><td><a href="https://docs.rs/dotzuki-engine-script">docs.rs</a></td><td><a href="../how-to/i18n.html">i18n 指南</a></td></tr>
-<tr><td><code>dotzuki-engine-dsl</code></td><td>游戏 DSL 编译器（<code>.scene</code>/<code>.gui</code>/<code>.theme</code>/<code>.style</code>）+ 运行时编译 API</td><td><a href="https://docs.rs/dotzuki-engine-dsl">docs.rs</a></td><td><a href="dsl/scene.html">scene</a>、<a href="dsl/gui.html">gui</a>、<a href="dsl/theme-style.html">theme &amp; style</a>、<a href="dsl/codegen.html">codegen</a></td></tr>
-<tr><td><code>dotzuki-renderer</code></td><td>GB 风格的 tile/文字渲染器、CJK 字体</td><td><a href="https://docs.rs/dotzuki-renderer">docs.rs</a></td><td><a href="dsl/gui.html">gui</a></td></tr>
+<tr><td><code>dotzuki-engine-dsl</code></td><td>游戏 DSL 编译器（<code>.scene</code>/<code>.gui</code>/<code>.theme</code>/<code>.style</code>）+ 运行时编译 API + 带热重载的磁盘场景 provider</td><td><a href="https://docs.rs/dotzuki-engine-dsl">docs.rs</a></td><td><a href="dsl/scene.html">scene</a>、<a href="dsl/gui.html">gui</a>、<a href="dsl/theme-style.html">theme &amp; style</a>、<a href="dsl/codegen.html">codegen</a>、<a href="dsl/runtime-loading.html">运行时加载</a></td></tr>
+<tr><td><code>dotzuki-renderer</code></td><td>GB 风格的 tile/文字渲染器、CJK 字体、PNG → tile 数据资源管线（<code>resource</code> feature）</td><td><a href="https://docs.rs/dotzuki-renderer">docs.rs</a></td><td><a href="dsl/gui.html">gui</a>、<a href="resource-manager.html">资源管理器</a></td></tr>
 <tr><td><code>dotzuki-ui</code></td><td>基于 <code>Painter</code> trait 的 UI 组件</td><td><a href="https://docs.rs/dotzuki-ui">docs.rs</a></td><td><a href="dsl/gui.html">gui</a></td></tr>
-<tr><td><code>dotzuki-audio</code></td><td>音频抽象层 + GB-APU 音序器</td><td><a href="https://docs.rs/dotzuki-audio">docs.rs</a></td><td><a href="../how-to/audio.html">音频指南</a>、<a href="audio-commands.html">音频命令</a></td></tr>
-<tr><td><code>dotzuki-app</code></td><td>原生应用外壳（窗口/循环/热重载）</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-audio</code></td><td>音频抽象层 + GB-APU 音序器 + 逐帧管理器 + 设备输出（<code>cpal</code> / <code>web-audio</code> feature）</td><td><a href="https://docs.rs/dotzuki-audio">docs.rs</a></td><td><a href="../how-to/audio.html">音频指南</a>、<a href="audio-commands.html">音频命令</a>、<a href="audio-runtime.html">音频运行时</a></td></tr>
+<tr><td><code>dotzuki-app</code></td><td>原生应用外壳（窗口/循环/热重载）+ 原生联机传输与会话路由 + TCP 调试服务器</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td><a href="link-play.html">联机</a>、<a href="debug-server.html">调试服务器</a></td></tr>
 <tr><td><code>dotzuki-tui</code></td><td>终端外壳（ratatui）</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>零 Rust 项目运行时 + 无头模式驱动</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="project-manifest.html">项目清单</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="../how-to/publishing.html">发布指南</a></td></tr>
 <tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="cli.html">CLI 参考</a></td></tr>
-<tr><td><code>dotzuki-web</code></td><td>WASM 布局预览桥</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-web</code></td><td>WASM 桥：编辑器布局预览、游戏外壳（<code>game-shell</code> feature）、BroadcastChannel 联机传输（<code>link</code> feature）</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="game-shell.html">游戏外壳</a>、<a href="link-play.html">联机</a></td></tr>
 </tbody>
 </table>
 </div>

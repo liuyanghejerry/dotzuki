@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-466b9ebb.js"></script>
+        <script src="../toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,13 +186,13 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
 </ul>
 </blockquote>
 <p>The crate map and where each crate’s API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.</p>
-<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.1.0</code>) and are published
+<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.5.4</code>) and are published
 on crates.io, so their API docs live on docs.rs. Local copy:</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
@@ -204,21 +204,21 @@ cargo doc --workspace --no-deps --open
 <tr><th>Crate</th><th>Purpose</th><th>API docs</th><th>Prose docs</th></tr>
 </thead>
 <tbody>
-<tr><td><code>dotzuki-engine</code></td><td>Core traits (<code>GameData</code>), tilemap/camera/triggers, battle effect stack, item/shop/equip</td><td><a href="https://docs.rs/dotzuki-engine">docs.rs</a></td><td><a href="../explanation/architecture.html">architecture</a>, <a href="../explanation/effect-stack.html">effect stack</a></td></tr>
+<tr><td><code>dotzuki-engine</code></td><td>Core traits (<code>GameData</code>), tilemap/camera/triggers, battle effect stack, item/shop/equip, overworld presentation animations, link codec</td><td><a href="https://docs.rs/dotzuki-engine">docs.rs</a></td><td><a href="../explanation/architecture.html">architecture</a>, <a href="../explanation/effect-stack.html">effect stack</a>, <a href="shops.html">shops</a>, <a href="overworld-presentation.html">overworld presentation</a>, <a href="link-play.html">link play</a></td></tr>
 <tr><td><code>dotzuki-rules</code></td><td>Declarative battle rules: RON → effect stacks</td><td><a href="https://docs.rs/dotzuki-rules">docs.rs</a></td><td><a href="battle-rules.html">battle rules</a></td></tr>
 <tr><td><code>dotzuki-rules-macro</code></td><td>Derive/helpers for <code>dotzuki-rules</code></td><td><a href="https://docs.rs/dotzuki-rules-macro">docs.rs</a></td><td><a href="battle-rules.html">battle rules</a></td></tr>
 <tr><td><code>dotzuki-engine-tiled</code></td><td>Tiled <code>.tmx</code> (JSON) → engine types</td><td><a href="https://docs.rs/dotzuki-engine-tiled">docs.rs</a></td><td><a href="../how-to/maps.html">maps guide</a></td></tr>
 <tr><td><code>dotzuki-engine-script</code></td><td>Boa-based async JS scripting</td><td><a href="https://docs.rs/dotzuki-engine-script">docs.rs</a></td><td><a href="../how-to/i18n.html">i18n guide</a></td></tr>
-<tr><td><code>dotzuki-engine-dsl</code></td><td>Game DSL compiler (<code>.scene</code>/<code>.gui</code>/<code>.theme</code>/<code>.style</code>) + runtime compile API</td><td><a href="https://docs.rs/dotzuki-engine-dsl">docs.rs</a></td><td><a href="dsl/scene.html">scene</a>, <a href="dsl/gui.html">gui</a>, <a href="dsl/theme-style.html">theme &amp; style</a>, <a href="dsl/codegen.html">codegen</a></td></tr>
-<tr><td><code>dotzuki-renderer</code></td><td>GB-style tile/text renderer, CJK fonts</td><td><a href="https://docs.rs/dotzuki-renderer">docs.rs</a></td><td><a href="dsl/gui.html">gui</a></td></tr>
+<tr><td><code>dotzuki-engine-dsl</code></td><td>Game DSL compiler (<code>.scene</code>/<code>.gui</code>/<code>.theme</code>/<code>.style</code>) + runtime compile API + disk scene providers with hot reload</td><td><a href="https://docs.rs/dotzuki-engine-dsl">docs.rs</a></td><td><a href="dsl/scene.html">scene</a>, <a href="dsl/gui.html">gui</a>, <a href="dsl/theme-style.html">theme &amp; style</a>, <a href="dsl/codegen.html">codegen</a>, <a href="dsl/runtime-loading.html">runtime loading</a></td></tr>
+<tr><td><code>dotzuki-renderer</code></td><td>GB-style tile/text renderer, CJK fonts, PNG → tile-data resource pipeline (<code>resource</code> feature)</td><td><a href="https://docs.rs/dotzuki-renderer">docs.rs</a></td><td><a href="dsl/gui.html">gui</a>, <a href="resource-manager.html">resource manager</a></td></tr>
 <tr><td><code>dotzuki-ui</code></td><td>UI widgets on a <code>Painter</code> trait</td><td><a href="https://docs.rs/dotzuki-ui">docs.rs</a></td><td><a href="dsl/gui.html">gui</a></td></tr>
-<tr><td><code>dotzuki-audio</code></td><td>Audio abstraction + GB-APU sequencer</td><td><a href="https://docs.rs/dotzuki-audio">docs.rs</a></td><td><a href="../how-to/audio.html">audio guide</a>, <a href="audio-commands.html">audio commands</a></td></tr>
-<tr><td><code>dotzuki-app</code></td><td>Native app shell (window/loop/hot-reload)</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-audio</code></td><td>Audio abstraction + GB-APU sequencer + per-frame manager + device output (<code>cpal</code> / <code>web-audio</code> features)</td><td><a href="https://docs.rs/dotzuki-audio">docs.rs</a></td><td><a href="../how-to/audio.html">audio guide</a>, <a href="audio-commands.html">audio commands</a>, <a href="audio-runtime.html">audio runtime</a></td></tr>
+<tr><td><code>dotzuki-app</code></td><td>Native app shell (window/loop/hot-reload) + native link transports &amp; session router + TCP debug server</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td><a href="link-play.html">link play</a>, <a href="debug-server.html">debug server</a></td></tr>
 <tr><td><code>dotzuki-tui</code></td><td>Terminal shell (ratatui)</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>Zero-Rust project runtime + headless driver</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="project-manifest.html">project manifest</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="../how-to/publishing.html">publishing guide</a></td></tr>
 <tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="cli.html">CLI reference</a></td></tr>
-<tr><td><code>dotzuki-web</code></td><td>WASM layout-preview bridge</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td>—</td></tr>
+<tr><td><code>dotzuki-web</code></td><td>WASM bridges: editor layout preview, game shell (<code>game-shell</code> feature), BroadcastChannel link transport (<code>link</code> feature)</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="game-shell.html">game shell</a>, <a href="link-play.html">link play</a></td></tr>
 </tbody>
 </table>
 </div>

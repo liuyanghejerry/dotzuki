@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bf4fbc45.js";
+            window.path_to_searchindex_js = "searchindex-73a7a8f9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-466b9ebb.js"></script>
+        <script src="toc-797479cc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -203,7 +203,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td>Writing <strong>bilingual text</strong></td><td><a href="./how-to/i18n.html"><code>how-to/i18n.md</code></a> — <code>game.lang()</code> / <code>game.t()</code> / <code>@t</code></td></tr>
 <tr><td>Running / automating projects from the terminal</td><td><a href="./reference/cli.html"><code>reference/cli.md</code></a> — <code>dotzuki new</code> / <code>check</code> / <code>run</code> and every flag</td></tr>
 <tr><td>Shipping / deploying / upgrading</td><td><a href="./how-to/publishing.html"><code>how-to/publishing.md</code></a> — project delivery, headless CI, WASM web play, engine upgrades, save compatibility</td></tr>
-<tr><td><strong>Rust developer</strong> extending the engine</td><td><a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a> for the current architecture, <a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a> for the crate map + docs.rs links, <a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a> for the <code>GameData</code> trait</td></tr>
+<tr><td><strong>Rust developer</strong> extending the engine</td><td><a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a> for the current architecture, <a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a> for the crate map + docs.rs links, <a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a> for the <code>GameData</code> trait; engine systems (shops, link play, debug server, audio runtime, resource manager, game shell) have their own pages under <code>reference/</code></td></tr>
 <tr><td>Looking up a term</td><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a> — the authoritative term list</td></tr>
 </tbody>
 </table>
@@ -254,7 +254,15 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td><a href="./reference/dsl/gui.html"><code>reference/dsl/gui.md</code></a></td><td>Implemented <code>.gui</code> / <code>ui {}</code> syntax, component schema v2, <code>@t</code></td></tr>
 <tr><td><a href="./reference/dsl/theme-style.html"><code>reference/dsl/theme-style.md</code></a></td><td><code>@theme</code> / <code>@style</code> syntax and codegen output</td></tr>
 <tr><td><a href="./reference/dsl/codegen.html"><code>reference/dsl/codegen.md</code></a></td><td>DSL → JS/JSON compilation contract, reconciled against the code</td></tr>
+<tr><td><a href="./reference/dsl/runtime-loading.html"><code>reference/dsl/runtime-loading.md</code></a></td><td>Disk-backed scene providers with mtime hot reload (AST + JS paths)</td></tr>
 <tr><td><a href="./reference/audio-commands.html"><code>reference/audio-commands.md</code></a></td><td>The 22 <code>AudioCommand</code> variants with fields</td></tr>
+<tr><td><a href="./reference/audio-runtime.html"><code>reference/audio-runtime.md</code></a></td><td>The <code>AudioManager</code> runtime API (fades, volume, resume states) + the <code>cpal</code> / <code>web-audio</code> device-output layer</td></tr>
+<tr><td><a href="./reference/shops.html"><code>reference/shops.md</code></a></td><td>The <code>items::mart</code> shop state machine: <code>MartState</code>, <code>MartBackend</code>, <code>MartDriver</code></td></tr>
+<tr><td><a href="./reference/overworld-presentation.html"><code>reference/overworld-presentation.md</code></a></td><td>Frame-counted overworld animation state machines (spin, rumble, tiles, fishing, dust, ship)</td></tr>
+<tr><td><a href="./reference/link-play.html"><code>reference/link-play.md</code></a></td><td>The <code>NetworkTransport</code> seam, the JSON-line codec, TCP + BroadcastChannel transports, the session router</td></tr>
+<tr><td><a href="./reference/debug-server.html"><code>reference/debug-server.md</code></a></td><td>The TCP JSON-line debug server: core commands, wire protocol, game-command extension</td></tr>
+<tr><td><a href="./reference/resource-manager.html"><code>reference/resource-manager.md</code></a></td><td>PNG → 2bpp/1bpp/4bpp pipeline, <code>AssetRoot</code>, the <code>ResourceManager</code> cache, the embedded-asset seam</td></tr>
+<tr><td><a href="./reference/game-shell.html"><code>reference/game-shell.md</code></a></td><td>The pixels+winit <code>game-shell</code> for a browser canvas or a native window</td></tr>
 <tr><td><a href="./reference/cli.html"><code>reference/cli.md</code></a></td><td>Every <code>dotzuki</code> subcommand and flag, exit codes</td></tr>
 <tr><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a></td><td>Canonical term definitions</td></tr>
 <tr><td><a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a></td><td>Crate map + docs.rs links for Rust developers</td></tr>
@@ -277,7 +285,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="./release-notes/changelog.html"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (first: <a href="./release-notes/migration/v0.1.0.html"><code>release-notes/migration/v0.1.0.md</code></a>)</li>
+<li><a href="./release-notes/changelog.html"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="./release-notes/migration/v0.1.0.html"><code>v0.1.0</code></a>, <a href="./release-notes/migration/v0.5.4.html"><code>v0.5.4</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
