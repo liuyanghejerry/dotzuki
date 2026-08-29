@@ -21,7 +21,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | Writing **bilingual text** | [`how-to/i18n.md`](./how-to/i18n.md) — `game.lang()` / `game.t()` / `@t` |
 | Running / automating projects from the terminal | [`reference/cli.md`](./reference/cli.md) — `dotzuki new` / `check` / `run` and every flag |
 | Shipping / deploying / upgrading | [`how-to/publishing.md`](./how-to/publishing.md) — project delivery, headless CI, WASM web play, engine upgrades, save compatibility |
-| **Rust developer** extending the engine | [`explanation/architecture.md`](./explanation/architecture.md) for the current architecture, [`reference/rustdoc.md`](./reference/rustdoc.md) for the crate map + docs.rs links, [`explanation/game-data.md`](./explanation/game-data.md) for the `GameData` trait |
+| **Rust developer** extending the engine | [`explanation/architecture.md`](./explanation/architecture.md) for the current architecture, [`reference/rustdoc.md`](./reference/rustdoc.md) for the crate map + docs.rs links, [`explanation/game-data.md`](./explanation/game-data.md) for the `GameData` trait; engine systems (shops, link play, debug server, audio runtime, resource manager, game shell) have their own pages under `reference/` |
 | Looking up a term | [`reference/glossary.md`](./reference/glossary.md) — the authoritative term list |
 
 ## Tutorials
@@ -57,7 +57,15 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | [`reference/dsl/gui.md`](./reference/dsl/gui.md) | Implemented `.gui` / `ui {}` syntax, component schema v2, `@t` |
 | [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md) | `@theme` / `@style` syntax and codegen output |
 | [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) | DSL → JS/JSON compilation contract, reconciled against the code |
+| [`reference/dsl/runtime-loading.md`](./reference/dsl/runtime-loading.md) | Disk-backed scene providers with mtime hot reload (AST + JS paths) |
 | [`reference/audio-commands.md`](./reference/audio-commands.md) | The 22 `AudioCommand` variants with fields |
+| [`reference/audio-runtime.md`](./reference/audio-runtime.md) | The `AudioManager` runtime API (fades, volume, resume states) + the `cpal` / `web-audio` device-output layer |
+| [`reference/shops.md`](./reference/shops.md) | The `items::mart` shop state machine: `MartState`, `MartBackend`, `MartDriver` |
+| [`reference/overworld-presentation.md`](./reference/overworld-presentation.md) | Frame-counted overworld animation state machines (spin, rumble, tiles, fishing, dust, ship) |
+| [`reference/link-play.md`](./reference/link-play.md) | The `NetworkTransport` seam, the JSON-line codec, TCP + BroadcastChannel transports, the session router |
+| [`reference/debug-server.md`](./reference/debug-server.md) | The TCP JSON-line debug server: core commands, wire protocol, game-command extension |
+| [`reference/resource-manager.md`](./reference/resource-manager.md) | PNG → 2bpp/1bpp/4bpp pipeline, `AssetRoot`, the `ResourceManager` cache, the embedded-asset seam |
+| [`reference/game-shell.md`](./reference/game-shell.md) | The pixels+winit `game-shell` for a browser canvas or a native window |
 | [`reference/cli.md`](./reference/cli.md) | Every `dotzuki` subcommand and flag, exit codes |
 | [`reference/glossary.md`](./reference/glossary.md) | Canonical term definitions |
 | [`reference/rustdoc.md`](./reference/rustdoc.md) | Crate map + docs.rs links for Rust developers |
@@ -73,7 +81,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 
 ## Release notes
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release (first: [`release-notes/migration/v0.1.0.md`](./release-notes/migration/v0.1.0.md))
+- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release ([`v0.1.0`](./release-notes/migration/v0.1.0.md), [`v0.5.4`](./release-notes/migration/v0.5.4.md))
 
 ## Archive
 

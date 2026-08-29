@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.5.4
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -64,6 +64,26 @@ original form in Chinese text.
   `rules.ron` counterpart, proving the engine is game-agnostic.
 - **WASM runner**（WASM 运行器）— `dotzuki-runner-web`, the web build of the
   runner that powers the editor's Play activity and web playtesting.
+- **mart**（商店）— the interactive shop state machine in
+  `dotzuki_engine::items::mart`: `MartState` owns the Buy/Sell/Quit flow while
+  the game's `MartBackend` implementation owns prices, money, and the bag. See
+  [shops](./shops.md).
+- **link play**（联机）— two-player battles and trades over the engine's
+  transport seam (`NetworkTransport<M>`); concrete transports live in the
+  platform crates (TCP native, `BroadcastChannel` on web). See
+  [link play](./link-play.md).
+- **transport**（传输层）— a `NetworkTransport<M>` implementation moving typed
+  messages between link-play peers; sends never loop back, and a dropped peer
+  surfaces as `TransportError::Disconnected`.
+- **session router**（会话路由器）— `LinkSession`: owns the real transport,
+  drains it once per frame, and routes each message into per-activity queues
+  (battle / trade) so both activities share one connection.
+- **debug server**（调试服务器）— the TCP JSON-line endpoint from
+  `dotzuki-app` that lets tests and tooling drive and inspect a running
+  native game. See [debug server](./debug-server.md).
+- **game shell**（游戏外壳）— the pixels+winit shell in `dotzuki-web`
+  (`game-shell` feature) running a `GameLoop` in a browser canvas or a native
+  window at GB frame pacing. See [game shell](./game-shell.md).
 
 ## Battle stack
 
@@ -194,6 +214,10 @@ original form in Chinese text.
   bitmap font, games may substitute their own.
 - **gfx** — the conventional loose-graphics directory (an assets-activity
   root); kept in English in Chinese text.
+- **embedded asset loader**（内嵌素材加载器）— the
+  `fn(&str) -> Option<&'static [u8]>` seam that resolves gfx-relative paths to
+  embedded PNG bytes on wasm/mobile targets, where no filesystem exists. See
+  [the resource manager](./resource-manager.md).
 
 ## Scenes & UI
 

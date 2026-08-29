@@ -22,7 +22,7 @@
 | 编写**双语文本** | [`how-to/i18n.md`](./how-to/i18n.md) —— `game.lang()` / `game.t()` / `@t` |
 | 在终端中运行 / 自动化项目 | [`reference/cli.md`](./reference/cli.md) —— `dotzuki new` / `check` / `run` 及所有 flag |
 | 发布 / 部署 / 升级 | [`how-to/publishing.md`](./how-to/publishing.md) —— 项目交付、无头模式 CI、WASM 网页试玩、引擎升级、存档兼容 |
-| 扩展引擎的 **Rust 开发者** | 当前架构见 [`explanation/architecture.md`](./explanation/architecture.md)，crate map 与 docs.rs 链接见 [`reference/rustdoc.md`](./reference/rustdoc.md)，`GameData` trait 见 [`explanation/game-data.md`](./explanation/game-data.md) |
+| 扩展引擎的 **Rust 开发者** | 当前架构见 [`explanation/architecture.md`](./explanation/architecture.md)，crate map 与 docs.rs 链接见 [`reference/rustdoc.md`](./reference/rustdoc.md)，`GameData` trait 见 [`explanation/game-data.md`](./explanation/game-data.md)；引擎各系统（商店、联机、调试服务器、音频运行时、资源管理器、游戏外壳）在 `reference/` 下各有专页 |
 | 查询术语 | [`reference/glossary.md`](./reference/glossary.md) —— 权威术语表 |
 
 ## 教程
@@ -58,7 +58,15 @@
 | [`reference/dsl/gui.md`](./reference/dsl/gui.md) | 已实现的 `.gui` / `ui {}` 语法、组件 schema v2、`@t` |
 | [`reference/dsl/theme-style.md`](./reference/dsl/theme-style.md) | `@theme` / `@style` 语法与 codegen 输出 |
 | [`reference/dsl/codegen.md`](./reference/dsl/codegen.md) | DSL → JS/JSON 编译约定，已与代码对齐 |
+| [`reference/dsl/runtime-loading.md`](./reference/dsl/runtime-loading.md) | 带 mtime 热重载的磁盘场景 provider（AST 与 JS 两条路径） |
 | [`reference/audio-commands.md`](./reference/audio-commands.md) | 22 个 `AudioCommand` 变体及其字段 |
+| [`reference/audio-runtime.md`](./reference/audio-runtime.md) | `AudioManager` 运行时 API（淡入淡出、音量、续播状态）+ `cpal` / `web-audio` 设备输出层 |
+| [`reference/shops.md`](./reference/shops.md) | `items::mart` 商店状态机：`MartState`、`MartBackend`、`MartDriver` |
+| [`reference/overworld-presentation.md`](./reference/overworld-presentation.md) | 按帧计数的大地图动画状态机（旋转、震动、tile、钓鱼、尘土、邮轮） |
+| [`reference/link-play.md`](./reference/link-play.md) | `NetworkTransport` 接缝、JSON-line codec、TCP 与 BroadcastChannel 传输、会话路由器 |
+| [`reference/debug-server.md`](./reference/debug-server.md) | TCP JSON-line 调试服务器：核心命令、线路协议、游戏命令扩展 |
+| [`reference/resource-manager.md`](./reference/resource-manager.md) | PNG → 2bpp/1bpp/4bpp 管线、`AssetRoot`、`ResourceManager` 缓存、内嵌素材接缝 |
+| [`reference/game-shell.md`](./reference/game-shell.md) | 面向浏览器 canvas 与原生窗口的 pixels+winit `game-shell` |
 | [`reference/cli.md`](./reference/cli.md) | 每个 `dotzuki` 子命令与 flag、退出码 |
 | [`reference/glossary.md`](./reference/glossary.md) | 权威术语定义 |
 | [`reference/rustdoc.md`](./reference/rustdoc.md) | 面向 Rust 开发者的 crate map 与 docs.rs 链接 |
@@ -74,7 +82,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（首篇：[`release-notes/migration/v0.1.0.md`](./release-notes/migration/v0.1.0.md)）
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)）
 
 ## 归档
 

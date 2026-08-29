@@ -5,7 +5,7 @@
 //!   (the generic JRPG command set, extensible by games) and
 //!   [`DebugResponse`](protocol::DebugResponse) (the ok/error/data envelope).
 //! - [`server`] — the transport machinery: [`DebugServer`](server::DebugServer)
-//!   (TCP listener, JSON-line parsing, 5s response timeout) and
+//!   (TCP listener, JSON-line parsing, 300s response timeout) and
 //!   [`DebugServerHandle`](server::DebugServerHandle) (the game-loop side:
 //!   non-blocking command poll + response send over `mpsc`).
 //!
