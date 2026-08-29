@@ -21,9 +21,11 @@ use std::hash::Hash;
 
 pub mod equip;
 pub mod kind;
+pub mod mart;
 pub mod use_driver;
 pub use equip::{EquipProvider, EquipSlot};
 pub use kind::ItemKind;
+pub use mart::{MartBackend, MartDriver, MartState, MartStock};
 pub use use_driver::{buy, sell, use_item, ItemUseResult, ShopError, ShopReceipt, UsageContext};
 
 // ── Supporting types ──────────────────────────────────────────────────────

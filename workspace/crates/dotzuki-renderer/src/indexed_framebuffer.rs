@@ -13,7 +13,7 @@
 //!
 //! - **VRAM isomorphism.** The packing is the *same planar bitplane layout
 //!   used by Game Boy VRAM tiles* and by this crate's tile pipeline
-//!   ([`crate::tile::Tile::from_2bpp`], `pokered-renderer`'s `png_to_2bpp`):
+//!   ([`crate::tile::Tile::from_2bpp`], [`crate::resource::png_to_2bpp`]):
 //!   each row of 8 pixels is stored as one byte per bitplane, bit 7 =
 //!   leftmost pixel, bitplane 0 first. A [`GbColor`] (2-bit) buffer's raw
 //!   bytes are literally GB 2bpp tile data — tile blits and buffer contents

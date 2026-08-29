@@ -7,5 +7,9 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.1" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.5.4" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.5.4" }
 notify = "6"
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = "0.4"

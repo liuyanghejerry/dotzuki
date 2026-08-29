@@ -11,6 +11,19 @@ use dotzuki_renderer::{FrameBuffer, RenderConfig};
 /// Real-engine audio playback (`render_audio_pcm`, `audio_sample_rate`).
 mod audio;
 
+/// pixels + winit game shell (feature `game-shell`): browser canvas + native
+/// fallback window around a [`GameLoop`].
+#[cfg(feature = "game-shell")]
+pub mod game_shell;
+
+/// BroadcastChannel link transport (feature `link`): serverless tab-to-tab
+/// link play over the game's own message type.
+#[cfg(feature = "link")]
+pub mod link;
+
+#[cfg(feature = "game-shell")]
+pub use game_shell::{GameLoop, GameShellConfig, GameShellError, run_game};
+
 use dotzuki_engine::render::Rgba;
 use dotzuki_ui::FrameBufferPainter;
 

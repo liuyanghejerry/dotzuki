@@ -27,7 +27,7 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
         │            (RON → stacks)  (.scene/.gui/.theme/.style)  (Boa JS)
         ├── dotzuki-engine-tiled (Tiled .tmx → engine types)
         ├── dotzuki-renderer (GB-style tiles/text, CJK fonts) + dotzuki-ui (Painter trait)
-        ├── dotzuki-audio (GB-APU emulation + sequencer)
+        ├── dotzuki-audio (GB-APU emulation + sequencer + fade/volume manager + device output)
         └── dotzuki-app (window/loop) / dotzuki-tui (terminal) / dotzuki-web
 ```
 

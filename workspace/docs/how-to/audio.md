@@ -21,7 +21,10 @@ hardware channels play which commands, and the runtime sequencer plays it
 directly.
 
 `dotzuki-audio` backs the runtime: a game-agnostic GB-APU emulation plus
-sequencer. See `crates/dotzuki-audio/src/format.rs` for the authoritative
+sequencer, a per-frame manager (music fades, master volume, cross-track
+resume states), and the device-output glue the runtime plays through (cpal
+natively, Web Audio in the browser — both behind off-by-default crate
+features). See `crates/dotzuki-audio/src/format.rs` for the authoritative
 schema.
 
 ## Layout

@@ -10,13 +10,18 @@
 //! [`TransportError`], the [`LinkRole`] connection-side identity, and an
 //! in-memory [`ChannelTransport`] pair for local/testing use. Real transports
 //! (TCP sockets, Web `BroadcastChannel`, …) live in the game or platform
-//! layer, never here.
+//! layer, never here. The one exception is [`codec`]: the newline-framed
+//! JSON codec every JSON-line transport shares. It is pure serde (no I/O),
+//! so it lives here where native and wasm transports can both build on it —
+//! keeping the framing byte-identical across transports.
 //!
 //! ## What lives here vs. in the game
 //!
 //! * **Engine (this module):** the [`NetworkTransport<M>`] trait,
-//!   [`TransportError`], [`ChannelTransport<M>`], and [`LinkRole`] (which
-//!   side clocks/hosts the connection — needed by any asymmetric handshake).
+//!   [`TransportError`], [`ChannelTransport<M>`], [`LinkRole`] (which
+//!   side clocks/hosts the connection — needed by any asymmetric handshake),
+//!   and the shared JSON-line [`codec`] ([`codec::encode_line`] /
+//!   [`codec::decode_line`] / [`codec::Frame`]).
 //! * **Game:** the wire message type `M`, the link state machines (battles,
 //!   trades, …), and the concrete transports that implement this trait.
 //!
@@ -43,6 +48,8 @@
 //! ```
 
 use std::sync::mpsc;
+
+pub mod codec;
 
 /// Errors a [`NetworkTransport`] can report.
 #[derive(Debug, Clone, PartialEq, Eq)]

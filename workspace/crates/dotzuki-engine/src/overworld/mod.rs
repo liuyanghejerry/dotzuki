@@ -13,6 +13,9 @@
 //!   overworld: ledge jumps, warps, map-edge connections, tileset-aware collision,
 //!   OAM sprites, NPC movement scripts, wild encounters. Used by pokered (the
 //!   flagship), which drives it directly (`pokered-core::overworld` just re-exports).
+//!   [`presentation`] complements this tier with pure frame-counted animation
+//!   state machines (teleport spins, elevator shake, water/flower tile
+//!   animation, fishing rod, boulder dust, ship departure).
 //!
 //! Both tiers share [`types::Direction`]. They are intentionally **separate**: the
 //! rich tier is a strict superset of behaviour, so collapsing the flagship onto the
@@ -27,6 +30,7 @@ pub mod map_transitions;
 pub mod npc_interaction;
 pub mod npc_movement;
 pub mod player_movement;
+pub mod presentation;
 pub mod sprites;
 pub mod types;
 

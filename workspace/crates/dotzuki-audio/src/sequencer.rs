@@ -74,7 +74,9 @@ pub struct Sequencer {
     /// Tempo modifier for cries (added to base tempo).
     pub tempo_modifier: i16,
 
-    /// Fade counter for music fade out (0 = no fade).
+    /// Fade counter for music fade out (0 = no fade pending this frame).
+    /// Owned by the sequencer (it is part of the sound engine's live state);
+    /// driven by [`crate::manager::AudioManager`]'s fade state machine.
     pub fade_counter: u8,
 
     /// Pending master-volume (NR50) write from a `volume` ($F0) command.

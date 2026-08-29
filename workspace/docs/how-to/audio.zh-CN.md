@@ -19,7 +19,9 @@
 需要编译成的二进制音频格式：一条音轨就是一个 `TrackDef` 文档，描述四个 Game Boy 硬件
 通道中哪些通道播放哪些命令，运行时音序器直接播放它。
 
-运行时背后是 `dotzuki-audio`：一个游戏无关的 GB-APU 仿真加上音序器。权威 schema 见
+运行时背后是 `dotzuki-audio`：一个游戏无关的 GB-APU 仿真加上音序器，外加逐帧管理器
+（音乐淡出、主音量、跨曲目断点续播）与运行时实际出声的设备输出胶水（原生 cpal、浏
+览器 Web Audio，均为默认关闭的 crate feature）。权威 schema 见
 `crates/dotzuki-audio/src/format.rs`。
 
 ## 目录布局

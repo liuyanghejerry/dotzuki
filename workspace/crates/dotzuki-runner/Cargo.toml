@@ -18,18 +18,17 @@ watch = ["dep:notify"]
 modern-audio = ["dotzuki-audio/modern-audio"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.1" }
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.1.1" }
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.1.1" }
-dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.1.1" }
-dotzuki-rules = { path = "../dotzuki-rules", version = "0.1.1" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.1", default-features = false, features = ["image-assets"] }
-dotzuki-ui = { path = "../dotzuki-ui", version = "0.1.1" }
-dotzuki-audio = { path = "../dotzuki-audio", version = "0.1.1", features = ["serde"] }
-# Native audio output (same version as wuxia-app). The APU renders samples on
-# cpal's callback thread; no device (CI/headless/wasm's Null host) ⇒
-# RunnerAudio stays silent.
-cpal = "0.15"
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.5.4" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.5.4" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.5.4" }
+dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.5.4" }
+dotzuki-rules = { path = "../dotzuki-rules", version = "0.5.4" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.5.4", default-features = false, features = ["image-assets"] }
+dotzuki-ui = { path = "../dotzuki-ui", version = "0.5.4" }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.5.4", features = ["serde", "cpal"] }
+# Native audio output comes from dotzuki-audio's `cpal` feature (the APU
+# renders samples on cpal's callback thread; no device (CI/headless/wasm's
+# Null host) ⇒ RunnerAudio stays silent).
 image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -37,5 +36,5 @@ anyhow = { workspace = true }
 log = "0.4"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-dotzuki-app = { path = "../dotzuki-app", version = "0.1.1" }
+dotzuki-app = { path = "../dotzuki-app", version = "0.5.4" }
 notify = { workspace = true, optional = true }

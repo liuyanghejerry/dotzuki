@@ -48,13 +48,11 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-
 use dotzuki_audio::apu::Apu;
 use dotzuki_audio::format::TrackDef;
 use dotzuki_audio::library::AudioLibrary;
+use dotzuki_audio::output::{render_apu_stereo, CpalOutput};
 use dotzuki_audio::sequencer::Sequencer;
-use dotzuki_audio::CPU_CLOCK_HZ;
 
 #[cfg(feature = "modern-audio")]
 use dotzuki_audio::modern::{Bus as ModernBus, ModernAudio, PlayOptions as ModernPlayOptions};
@@ -62,11 +60,9 @@ use dotzuki_audio::modern::{Bus as ModernBus, ModernAudio, PlayOptions as Modern
 use crate::vfs::{join_path, DiskFiles, ProjectFiles};
 
 /// Output rate of the cpal stream (Hz). The GB APU is resampled to this by
-/// ticking `CPU_CLOCK_HZ / SAMPLE_RATE` cycles per output sample.
-const SAMPLE_RATE: u32 = 44_100;
-
-/// APU peak used to normalise `mix_sample`'s `i16` output to `[-1.0, 1.0]`.
-const MAX_AMPLITUDE: f32 = 480.0;
+/// ticking `CPU_CLOCK_HZ / SAMPLE_RATE` cycles per output sample
+/// (`dotzuki_audio::output::render_apu_stereo`).
+const SAMPLE_RATE: u32 = dotzuki_audio::SAMPLE_RATE;
 
 /// Full master volume (NR50 per-side range is 0-7).
 const FULL_VOLUME: u8 = 7;
@@ -75,10 +71,6 @@ const FULL_VOLUME: u8 = 7;
 /// volume 7→0 (8 audible levels), so total ≈ `FADE_STEP_FRAMES * 7` frames
 /// (~1.2 s at 60 fps) before the music is cut.
 const FADE_STEP_FRAMES: u8 = 10;
-
-/// APU clock cycles advanced per output sample (the GB APU is resampled to
-/// `SAMPLE_RATE` by ticking this many cycles per sample).
-const CYCLES_PER_SAMPLE: u32 = CPU_CLOCK_HZ / SAMPLE_RATE;
 
 /// Music fade-out state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -157,12 +149,7 @@ struct Engine {
 /// callback and [`RunnerAudio::render_samples`] so both paths produce
 /// byte-identical audio.
 fn render_into(e: &mut Engine, data: &mut [f32]) {
-    for frame in data.chunks_mut(2) {
-        e.apu.tick_n(CYCLES_PER_SAMPLE);
-        let (left, right) = e.apu.mix_sample();
-        frame[0] = left as f32 / MAX_AMPLITUDE;
-        frame[1] = right as f32 / MAX_AMPLITUDE;
-    }
+    render_apu_stereo(&mut e.apu, data, SAMPLE_RATE);
     #[cfg(feature = "modern-audio")]
     if let Some(modern) = &mut e.modern {
         e.mix_buf.resize(data.len(), 0.0);
@@ -233,33 +220,14 @@ fn new_engine() -> Arc<Mutex<Engine>> {
 }
 
 /// Open the default output device and start streaming from `engine`. Returns
-/// the live stream (kept alive for the lifetime of playback; dropping it
+/// the live output (kept alive for the lifetime of playback; dropping it
 /// stops the stream), or `None` when no device is available or the stream
 /// cannot be built.
-fn open_stream(engine: Arc<Mutex<Engine>>) -> Option<cpal::Stream> {
-    let host = cpal::default_host();
-    let device = host.default_output_device()?;
-    let config = cpal::StreamConfig {
-        channels: 2,
-        sample_rate: cpal::SampleRate(SAMPLE_RATE),
-        buffer_size: cpal::BufferSize::Default,
-    };
-
-    let cb = engine;
-    let stream = device
-        .build_output_stream(
-            &config,
-            move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-                let mut e = cb.lock().unwrap();
-                render_into(&mut e, data);
-            },
-            |err| log::error!("audio stream error: {err}"),
-            None,
-        )
-        .ok()?;
-    stream.play().ok()?;
-
-    Some(stream)
+fn open_stream(engine: Arc<Mutex<Engine>>) -> Option<CpalOutput> {
+    CpalOutput::new(move |data: &mut [f32], _sample_rate: u32| {
+        let mut e = engine.lock().unwrap();
+        render_into(&mut e, data);
+    })
 }
 
 /// A file-backed audio track (loaded into memory as compressed bytes; the
@@ -290,7 +258,7 @@ pub struct RunnerAudio {
     engine: Option<Arc<Mutex<Engine>>>,
     /// The live cpal output, kept alive for the lifetime of playback;
     /// dropping it stops the stream. Always `None` in PCM/headless mode.
-    stream: Option<cpal::Stream>,
+    stream: Option<CpalOutput>,
     /// Set once an init attempt failed: don't retry, stay silent.
     init_failed: bool,
     /// Track ids already warned about (unknown ids warn once each).

@@ -16,6 +16,7 @@ crates/                          # Game-AGNOSTIC engine
 ├── dotzuki-engine-script/          # Boa-based async JS scripting engine
 ├── dotzuki-engine-dsl/             # Game DSL compiler (.scene/.gui/.theme/.style)
 │   │                            #   + runtime compile API (compiler::compile_dirs)
+│   │                            #   + disk scene providers w/ mtime hot reload (disk_loader)
 ├── dotzuki-cli/                    # `dotzuki` bin: scaffold (dotzuki new), compile-check
 │   │                            #   (dotzuki check) & play (dotzuki run) zero-Rust projects
 ├── dotzuki-runner/                 # Zero-Rust project runtime: manifest model,
@@ -26,8 +27,12 @@ crates/                          # Game-AGNOSTIC engine
 ├── dotzuki-ui/                     # Generic UI widgets on a Painter trait
 ├── dotzuki-audio/                  # Audio abstraction layer
 ├── dotzuki-app/                    # Generic native app shell (window/loop/hot-reload)
+│   │                            #   + native link transports & session router (link)
+│   │                            #   + generic TCP/JSON-line debug server (debug_server)
 ├── dotzuki-tui/                    # Generic terminal shell (ratatui)
-└── dotzuki-web/                    # Generic WASM layout-preview bridge
+└── dotzuki-web/                    # Generic WASM bridges: editor layout preview,
+                                 #   pixels+winit game shell (`game-shell` feature),
+                                 #   BroadcastChannel link transport (`link` feature)
 examples/
 └── minimon/                     # Cross-gen battle POC, pure RON rules
 tools/dotzuki-editor/               # Game-agnostic Vue/Vite editor + AI Story Designer

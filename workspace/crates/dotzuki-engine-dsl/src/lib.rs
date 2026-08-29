@@ -9,6 +9,7 @@ pub mod codegen;
 pub mod compiler;
 pub mod config_gen;
 pub mod conflict;
+pub mod disk_loader;
 pub mod error;
 pub mod interpreter;
 pub mod lexer;
