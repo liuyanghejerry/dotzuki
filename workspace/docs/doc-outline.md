@@ -92,8 +92,16 @@ docs/                              # mdBook src
 │   │   ├── scene.md               # [新建] .scene 语法（以 interpreter.rs 为准）
 │   │   ├── gui.md                 # [拆分] ← GAME_UI_DSL.md 的已实现部分
 │   │   ├── theme-style.md         # [拆分] ← THEME_STYLE_DSL.md 的语法部分
-│   │   └── codegen.md             # [调和] ← DSL_MAPPING.md × DSL_UNIFIED_DESIGN.md（按代码裁定）
+│   │   ├── codegen.md             # [调和] ← DSL_MAPPING.md × DSL_UNIFIED_DESIGN.md（按代码裁定）
+│   │   └── runtime-loading.md     # [新建✅] disk_loader：磁盘场景 provider + mtime 热重载（v0.5.4 下沉）
 │   ├── audio-commands.md          # [新建] 21 个 AudioCommand 速查表（自 AUDIO.md 抽出）
+│   ├── audio-runtime.md           # [新建✅] AudioManager + cpal/web-audio 输出层（v0.5.4 下沉）
+│   ├── shops.md                   # [新建✅] items::mart 商店状态机（v0.5.4 下沉）
+│   ├── overworld-presentation.md  # [新建✅] 按帧计数的大地图动画状态机（v0.5.4 下沉）
+│   ├── link-play.md               # [新建✅] NetworkTransport 接缝 + codec + TCP/BroadcastChannel 传输 + 会话路由（v0.5.4 下沉）
+│   ├── debug-server.md            # [新建✅] TCP JSON-line 调试服务器（v0.5.4 下沉）
+│   ├── resource-manager.md        # [新建✅] PNG→tile 管线 + AssetRoot + ResourceManager（v0.5.4 下沉）
+│   ├── game-shell.md              # [新建✅] dotzuki-web 的 pixels+winit 游戏外壳（v0.5.4 下沉）
 │   ├── cli.md                     # [迁移] ← CLI_REFERENCE.md
 │   ├── glossary.md                # [新建] 术语表（doc-standard §11 的唯一术语权威）
 │   └── rustdoc.md                 # [新建] crate 地图 + docs.rs 门户（供 Rust 开发者）
