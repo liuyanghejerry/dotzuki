@@ -1,0 +1,1001 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>在效果栈上编写战斗 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./how-to/battles.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="在效果栈上编写战斗"><a class="header" href="#在效果栈上编写战斗">在效果栈上编写战斗</a></h1>
+<blockquote>
+<p>本文是 <code>how-to/battles.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>本页教战斗作者如何在 <code>dotzuki_engine::battle::stack</code> 上构建一套战斗系统：声明事件、效果和
+处理器（handler），编写 <code>rules.ron</code>，并对照 minimon 示例验证结果。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>开始前，请先阅读 <a href="../explanation/effect-stack.html"><code>explanation/effect-stack.md</code></a>，了解
+效果栈的执行模型以及事件/效果/处理器架构。</p>
+<blockquote>
+<p><strong>范围。</strong> 本页介绍如何在<strong>不分叉引擎</strong>的前提下，在 <strong><code>dotzuki_engine::battle::stack</code></strong>
+——这个 Showdown 风格的<strong>效果栈</strong>战斗引擎——上构建一套 Gen-1 到 Gen-6 <em>风格</em>的战斗系统。
+设计与理由见 <a href="../explanation/effect-stack.html"><code>explanation/effect-stack.md</code></a>。</p>
+<p>全文引用的权威示例代码是 <a href="../../examples/minimon/src/lib.rs"><code>examples/minimon/src/lib.rs</code></a>
+及其 <a href="../../examples/minimon/src/tests.rs"><code>tests.rs</code></a>：一个迷你的模拟游戏，编写了物特分家
+（physical/special split）+ Intimidate + Clear Body + Leftovers + Sandstorm——外加一张
+金木水火土<strong>属性克制表</strong>（<a href="#2-属性克制相克--type-charts">§2</a>）、一个带招式消耗的 <strong>MP
+资源</strong>（<a href="#4-资源mpsp与招式消耗">§4</a>），以及把同一套规则集搬到 <strong><code>rules.ron</code></strong> 里实现无代码
+编写（<a href="../../examples/minimon/rules.ron"><code>examples/minimon/rules.ron</code></a>、
+<a href="#3-用-rulesron-无代码编写dotzuki-rules-加载器">§3</a>）——全程<strong>零引擎改动</strong>，只依赖
+<code>dotzuki-engine</code>（数据路径再依赖 <code>dotzuki-rules</code>）。</p>
+</blockquote>
+<hr>
+<h2 id="目录"><a class="header" href="#目录">目录</a></h2>
+<ol>
+<li><a href="#1-教程搭起一套最小规则集minimon-走读">教程：搭起一套最小规则集（minimon 走读）</a></li>
+<li><a href="#2-属性克制相克--type-charts">属性克制（相克 / type charts）</a></li>
+<li><a href="#3-用-rulesron-无代码编写dotzuki-rules-加载器">用 <code>rules.ron</code> 无代码编写（dotzuki-rules 加载器）</a></li>
+<li><a href="#4-资源mpsp与招式消耗">资源（MP/SP）与招式消耗</a></li>
+<li><a href="#5-cookbook跨世代机制--效果栈配方">Cookbook：跨世代机制 → 效果栈配方</a></li>
+<li><a href="#6-确定性与测试">确定性与测试</a></li>
+</ol>
+<hr>
+<h2 id="1-教程搭起一套最小规则集minimon-走读"><a class="header" href="#1-教程搭起一套最小规则集minimon-走读">1. 教程：搭起一套最小规则集（minimon 走读）</a></h2>
+<p><a href="../../examples/minimon"><code>examples/minimon</code></a> 在效果栈上编写了一套 Gen-4 形态的战斗系统——
+物特分家 + Intimidate + Clear Body + Leftovers + Sandstorm——并且<strong>零引擎改动</strong>。它唯一的
+依赖就是引擎：</p>
+<pre><code class="language-toml"># examples/minimon/Cargo.toml
+[dependencies]
+dotzuki-engine = { path = "../../crates/dotzuki-engine" }
+</code></pre>
+<h3 id="步骤-1--定义-id-枚举六属性分家形态"><a class="header" href="#步骤-1--定义-id-枚举六属性分家形态">步骤 1 —— 定义 id 枚举（六属性分家形态）</a></h3>
+<p>引擎用一个不透明的键索引 <code>EnumMap&lt;P::Stat&gt;</code>，所以选择分家形态纯粹是一次数据决策。minimon
+定义了六项属性，以及属性/状态/特性/道具的不透明 id，外加一个承载身份的 <code>Species</code> 结构体
+（<code>BattlerState</code> 没有特性/道具字段）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Stat { Hp, Atk, Def, SpA, SpD, Spe }      // a Gen-1 game would use {Hp,Atk,Def,Spe,Spc}
+pub enum MType { Normal, Rock }
+pub enum Status { Poisoned }
+pub enum Ability { None, Intimidate, ClearBody }   // opaque — the engine never reads their meaning
+pub enum Item { None, Leftovers }
+pub struct Species { pub ability: Ability, pub item: Item, pub mtype: MType }
+
+pub enum Category { Physical, Special }             // the per-move split flag the engine never sees
+pub struct Move { pub power: u8, pub category: Category, pub id: u32 }
+<span class="boring">}</span></code></pre>
+<p>这里的按效果状态分类的枚举仅仅是一个惰性标记，因为这个证明程序没有承载任何有状态的易变
+状态：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Kind { None }
+<span class="boring">}</span></code></pre>
+<h3 id="步骤-2--实现-battleprovider--effectprovider"><a class="header" href="#步骤-2--实现-battleprovider--effectprovider">步骤 2 —— 实现 <code>BattleProvider</code> + <code>EffectProvider</code></a></h3>
+<p><code>calculate_damage</code> <strong>就是</strong>整个物特分家。引擎把完整的战斗者状态交给它、拿回一个数字；引擎
+从不知道它读了哪些属性：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn calculate_damage(&amp;self, move_: &amp;Self::Move, attacker: &amp;BattlerState&lt;Self&gt;,
+                    defender: &amp;BattlerState&lt;Self&gt;, _random: u8, _is_critical: bool) -&gt; DamageResult {
+    let (atk_stat, def_stat) = match move_.category {
+        Category::Physical =&gt; (Stat::Atk, Stat::Def),
+        Category::Special  =&gt; (Stat::SpA, Stat::SpD),
+    };
+    let atk = read_effective_stat(attacker, atk_stat).max(1);
+    let def = read_effective_stat(defender, def_stat).max(1);
+    let dmg = (move_.power as u32 * atk as u32 / def as u32) as u16;
+    DamageResult { damage: dmg.max(1), effectiveness: 1.0, is_miss: false }
+}
+<span class="boring">}</span></code></pre>
+<p><code>EffectProvider</code> 提供 <code>EffectStateKind = Kind</code> 和一组解析器（resolver），把不透明 id 映射到
+编写好的 <code>&amp;'static Effect</code>——这正是“特性/道具/天气不过是托管在某处的 Effect“：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl EffectProvider for MinimonProvider {
+    type EffectStateKind = Kind;
+
+    fn effect_for_move(&amp;self, m: &amp;Self::Move) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; {
+        match m.id { MOVE_TACKLE_ID | MOVE_EMBER_ID =&gt; Some(&amp;MOVE_DAMAGE_EFFECT), _ =&gt; None }
+    }
+    fn effect_for_status(&amp;self, s: &amp;Self::Status) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; {
+        match s { Status::Poisoned =&gt; Some(&amp;POISON_EFFECT) }
+    }
+    fn effect_for_ability(&amp;self, b: &amp;BattlerState&lt;Self&gt;) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; {
+        match b.species.ability {
+            Ability::Intimidate =&gt; Some(&amp;INTIMIDATE),
+            Ability::ClearBody  =&gt; Some(&amp;CLEAR_BODY),
+            Ability::None       =&gt; None,
+        }
+    }
+    fn effect_for_item(&amp;self, b: &amp;BattlerState&lt;Self&gt;) -&gt; Option&lt;&amp;'static Effect&lt;Self&gt;&gt; {
+        match b.species.item { Item::Leftovers =&gt; Some(&amp;LEFTOVERS), Item::None =&gt; None }
+    }
+    fn field_effects(&amp;self, _ctx: &amp;BattleCtx&lt;'_, Self&gt;) -&gt; &amp;[&amp;'static Effect&lt;Self&gt;] {
+        if self.weather_on { &amp;SANDSTORM_LIST } else { &amp;[] }
+    }
+    fn turn_order_rank(&amp;self, _s: &amp;BattleState&lt;Self&gt;, _w: BattlerRef, _a: &amp;Self::Move) -&gt; (i32, i32) {
+        (0, 0)
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>（其余解析器保持默认实现。）</p>
+<h3 id="步骤-3--把-5-个系统编写为-effect"><a class="header" href="#步骤-3--把-5-个系统编写为-effect">步骤 3 —— 把 5 个系统编写为 <code>Effect</code></a></h3>
+<p>每个处理器都是一个零捕获的 <code>fn(&amp;mut BattleCtx, RelayVar, target, source, source_effect) -&gt; HandlerResult</code>。</p>
+<p><strong>(a) 招式伤害</strong>——所有造成伤害的招式共享同一个搭载在 <code>ModifyDamage</code> 上的效果。伤害数值由
+驱动器（它持有 <code>&amp;P</code>）预先算好写入 <code>ctx.mv.damage</code>；钩子就是订阅点：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub static MOVE_DAMAGE_EFFECT: Effect&lt;MinimonProvider&gt; = Effect {
+    id: EffectId(MOVE_TACKLE_ID), kind: EffectType::Move,
+    hooks: &amp;[EventHook { event: Event::ModifyDamage, call: move_damage_hook::&lt;MinimonProvider&gt;,
+                         order: u32::MAX, priority: 0, sub_order: None }],
+};
+<span class="boring">}</span></code></pre>
+<p><strong>(b) Intimidate</strong>——<code>SwitchIn</code> 处理器无法持有 <code>&amp;P</code>，而且这次下降必须可被否决，所以处理器只
+记录<em>意图</em>（单次行动临时区里的一个哨兵值），由驱动器触发真正的 <code>TryBoost</code>：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;!-- not verified: elided parameters, illustrative only --&gt;
+fn intimidate_switch_in&lt;P: EffectProvider + ?Sized&gt;(ctx: &amp;mut BattleCtx&lt;'_, P&gt;, ..) -&gt; HandlerResult {
+    ctx.mv.damage = INTIMIDATE_PENDING;   // 0xABCD — a boost request is pending
+    HandlerResult::Unchanged
+}
+pub static INTIMIDATE: Effect&lt;MinimonProvider&gt; = Effect {
+    id: EffectId(0xA1), kind: EffectType::Condition,
+    hooks: &amp;[EventHook { event: Event::SwitchIn, call: intimidate_switch_in::&lt;MinimonProvider&gt;,
+                         order: 10, priority: 0, sub_order: None }],
+};
+<span class="boring">}</span></code></pre>
+<p><strong>(c) Clear Body 否决</strong>——监听<em>同一次</em> <code>TryBoost</code> 派发；负增量返回 <code>Fail</code>，折叠为
+<code>Bool(false)</code>，于是驱动器跳过这次强化：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;!-- not verified: elided parameters, illustrative only --&gt;
+fn clear_body_try_boost&lt;P: EffectProvider + ?Sized&gt;(_c: &amp;mut BattleCtx&lt;'_, P&gt;, relay: RelayVar, ..) -&gt; HandlerResult {
+    if relay.as_int() &lt; 0 { HandlerResult::Fail } else { HandlerResult::Unchanged }
+}
+pub static CLEAR_BODY: Effect&lt;MinimonProvider&gt; = Effect {
+    id: EffectId(0xA2), kind: EffectType::Condition,
+    hooks: &amp;[EventHook { event: Event::TryBoost, call: clear_body_try_boost::&lt;MinimonProvider&gt;,
+                         order: 5, priority: 0, sub_order: None }],
+};
+<span class="boring">}</span></code></pre>
+<p><strong>(d) Leftovers</strong>——<code>Residual(20)</code> 的治疗发生在中毒扣血的 <code>Residual(10)</code> <em>之后</em>。跨来源排序
+正是 <code>order</code> 层级存在的意义：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;!-- not verified: elided parameters, illustrative only --&gt;
+fn leftovers_residual&lt;P: EffectProvider&lt;Stat = Stat&gt; + ?Sized&gt;(ctx: &amp;mut BattleCtx&lt;'_, P&gt;, _r, host, ..) -&gt; HandlerResult {
+    let amt = (ctx.battler(host).max_hp / 16).max(1);
+    ctx.battler_mut(host).heal(amt);
+    HandlerResult::Unchanged
+}
+pub static LEFTOVERS: Effect&lt;MinimonProvider&gt; = effect!(EffectId(0xB1), EffectType::Condition, {
+    Residual(20) =&gt; leftovers_residual::&lt;MinimonProvider&gt;,
+});
+pub static POISON_EFFECT: Effect&lt;MinimonProvider&gt; = effect!(EffectId(0xC1), EffectType::Status, {
+    Residual(10) =&gt; poison_residual::&lt;MinimonProvider&gt;,   // chips max_hp/8
+});
+<span class="boring">}</span></code></pre>
+<p><strong>(e) Sandstorm</strong>——由场地托管，两个钩子：<code>FieldResidual</code> 对非 Rock 型扣血，
+<code>WeatherModifyStat</code> 在 <code>ModifyStat</code> <em>之后</em>把 ×1.5 SpD 的强化叠加到 relay 上：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;!-- not verified: elided parameters, illustrative only --&gt;
+fn sandstorm_spd_boost&lt;P: ...&gt;(ctx, relay, target, ..) -&gt; HandlerResult {
+    if ctx.battler(target).species.mtype == MType::Rock {
+        return HandlerResult::Set(relay.scale(3, 2));     // ×1.5 SpD
+    }
+    HandlerResult::Unchanged
+}
+pub static SANDSTORM: Effect&lt;MinimonProvider&gt; = effect!(EffectId(0xF1), EffectType::Condition, {
+    FieldResidual     =&gt; sandstorm_chip::&lt;MinimonProvider&gt;,
+    WeatherModifyStat =&gt; sandstorm_spd_boost::&lt;MinimonProvider&gt;,
+});
+pub static SANDSTORM_LIST: [&amp;Effect&lt;MinimonProvider&gt;; 1] = [&amp;SANDSTORM];   // what field_effects borrows
+<span class="boring">}</span></code></pre>
+<h3 id="步骤-4--通过驱动器重入模式接线效果"><a class="header" href="#步骤-4--通过驱动器重入模式接线效果">步骤 4 —— 通过驱动器重入模式接线效果</a></h3>
+<p>你的驱动器辅助函数负责可重入派发：它们持有 <code>&amp;P</code>，通过 <code>collect_handlers</code> 构建一份自有的
+快照，再用 <code>run_event</code>/<code>run_event_checked</code> 折叠。处理器保持零捕获，只触碰 <code>ctx</code>。
+<code>switch_in</code> 就是权威示例——触发 <code>SwitchIn</code>，若 Intimidate 设置了哨兵值，就对对手触发一次
+真正的 <code>TryBoost</code>；Clear Body 在同一次派发中被收集进来，得以行使否决：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn switch_in(&amp;mut self, who: BattlerRef) {
+    let foe = opposing(who);
+    self.mv.damage = 0;
+    {
+        let provider = &amp;self.provider;
+        let mut ctx = BattleCtx { state: &amp;mut self.state, effects: &amp;mut self.effects,
+                                  mv: &amp;mut self.mv, rng: &amp;mut self.rng };
+        let mut hs = Vec::new();
+        collect_handlers(&amp;ctx, provider, None, Event::SwitchIn, who, who, &amp;mut hs);
+        run_event(&amp;mut ctx, hs, RelayVar::Unit, false);
+    }
+    if self.mv.damage == INTIMIDATE_PENDING {
+        self.mv.damage = 0;
+        let vetoed = self.try_boost(foe, who, Stat::Atk, -1);   // collects Clear Body too
+        if !vetoed { /* apply -1 stage */ }
+    }
+}
+
+pub fn try_boost(&amp;mut self, target: BattlerRef, source: BattlerRef, _stat: Stat, delta: i64) -&gt; bool {
+    let provider = &amp;self.provider;
+    let mut ctx = BattleCtx { state: &amp;mut self.state, effects: &amp;mut self.effects,
+                              mv: &amp;mut self.mv, rng: &amp;mut self.rng };
+    let mut hs = Vec::new();
+    collect_handlers(&amp;ctx, provider, None, Event::TryBoost, target, source, &amp;mut hs);
+    let out = run_event(&amp;mut ctx, hs, RelayVar::Int(delta), false);
+    matches!(out, RelayVar::Bool(false) | RelayVar::Unit)       // Fail/FailSilent ⇒ vetoed
+}
+<span class="boring">}</span></code></pre>
+<p>注意这种不相交字段借用：<code>&amp;self.provider</code> 与一个由<em>其余四个</em>字段构建的 <code>BattleCtx</code> 一起被
+借用。零捕获处理器契约与可重入派发就是这样共存的——驱动器持有 <code>&amp;P</code>，处理器从不持有。</p>
+<p><code>end_of_turn_residual</code> 把状态效果作为这次派发的<em>来源</em>效果传入，而收集器同时收集道具，于是
+<code>order</code> 比较器把它们交错排序；<code>weather_residual</code> 遍历两个在场单位，用 <code>run_event_checked</code>
+触发 <code>FieldResidual</code>；<code>effective_spd_with_weather</code> 先播种 <code>RelayVar::Int(base_spd)</code>，再折叠
+<code>WeatherModifyStat</code>。</p>
+<h3 id="步骤-5--跑一个回合并断言结果"><a class="header" href="#步骤-5--跑一个回合并断言结果">步骤 5 —— 跑一个回合并断言结果</a></h3>
+<p>测试是手工推导的 <code>BattleState</code> 基准值（oracle，Showdown 风格）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>phys.fire_move(BattlerRef::PLAYER, &amp;TACKLE);
+assert_eq!(100 - phys.battler_ref(BattlerRef::OPPONENT).hp, 80);   // 40*100/Def(50)
+spec.fire_move(BattlerRef::PLAYER, &amp;EMBER);
+assert_eq!(100 - spec.battler_ref(BattlerRef::OPPONENT).hp, 40);   // 40*100/SpD(100)
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>使用内置的 <code>StackDriver</code> 代替手写辅助函数。</strong> minimon 手写自己的辅助函数是为了单独演练
+各个事件，但引擎自带完整的回合排序器：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let result: StackTurnResult = StackDriver::execute_turn(
+    &amp;provider, &amp;mut state, &amp;mut effects,
+    [BattleAction::Fight { move_: tackle }, BattleAction::Fight { move_: ember }],
+    &amp;mut rng);
+<span class="boring">}</span></code></pre>
+<p>它解析出手顺序（<code>turn_order_rank</code> + 一个平局决胜字节），触发每个行动者的招式管线
+（<code>BeforeMove → ModifyCritRatio → Accuracy → ModifyDamage → DamagingHit</code>），然后按行动者
+逐个执行 <code>Residual</code>，并带先行动者倒下即短路的逻辑
+（<code>StackTurnResult { first, second_cancelled }</code>）。想要权威的 Gen-1 形态回合就用它；只想
+触发单个事件时用手写辅助函数。</p>
+</blockquote>
+<hr>
+<h2 id="2-属性克制相克--type-charts"><a class="header" href="#2-属性克制相克--type-charts">2. 属性克制（相克 / type charts）</a></h2>
+<p>属性克制表<strong>不是</strong>引擎概念。它是 <a href="../explanation/effect-stack.html#21-the-event-taxonomy--what-fires-and-when"><code>Event::Effectiveness</code></a>
+折叠——把一个<strong>整数</strong>有理数倍率与 provider 已经掷好的伤害合成。内置的 <code>StackDriver</code> 现在会
+在招式管线内部<em>触发</em>这个折叠；没有订阅者时它是个可证明的恒等空操作，因此每个既有游戏保持
+字节级一致。</p>
+<h3 id="21-折叠在哪里触发如何合成"><a class="header" href="#21-折叠在哪里触发如何合成">2.1 折叠在哪里触发、如何合成</a></h3>
+<p>在 <code>resolve_action</code> 中，<code>Effectiveness</code> 在 <strong><code>ModifyDamage</code> 之后</strong>触发（这样光墙（screen）/
+道具/天气倍率先于克制表），在 <strong><code>DamagingHit</code> 之前</strong>触发（这样命中后的反应看到的是克制
+结算后的数值）。这个折叠是围绕单一事实来源 <code>ctx.mv.damage</code> 的三步式<strong>提升（lift）→ 触发 →
+回写</strong>（<code>driver.rs:206-208</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let eff_in = RelayVar::Damage(ctx.mv.damage);
+let eff_out = Self::fire(&amp;mut ctx, eff, Event::Effectiveness, target, actor, eff_in);
+ctx.mv.damage = eff_out.as_damage(); // non-Damage relay ⇒ 0 (event.rs as_damage)
+<span class="boring">}</span></code></pre>
+<p>这个数值随后原样留在 <code>ctx.mv.damage</code> 里，在下一行被应用（<code>driver.rs:213</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>ctx.battler_mut(target).take_damage(dmg);
+<span class="boring">}</span></code></pre>
+<p>有两条推论需要遵守：</p>
+<ul>
+<li><strong>默认惰性。</strong> 没有处理器订阅 <code>Effectiveness</code> 时，空处理器的 <code>run_event</code> 原样返回 relay，
+回写是恒等的，抽取序列不受影响（<code>driver.rs:196-205</code>、<code>event.rs:179-185</code>）。</li>
+<li><strong>待在 <code>Damage</code> 通道里。</strong> 对任何<strong>非 <code>Damage</code></strong> 的 relay，<code>as_damage()</code> 返回 <code>0</code>
+（<code>event.rs:179-185</code>）。把 relay 带出 <code>Damage</code> 通道的处理器会把这次招式归零。请用
+<code>relay.scale(num, den)</code>——它会让 relay 留在自己的通道里。</li>
+</ul>
+<h3 id="22-倍率只用整数"><a class="header" href="#22-倍率只用整数">2.2 倍率只用整数</a></h3>
+<p><code>RelayVar::scale</code> 是<strong>纯整数运算</strong>——伤害路径上不接触任何浮点数。<code>Damage(v)</code> 分支计算
+<code>(v as u64) * num / den</code> 并截断（clamp）到 <code>u16::MAX</code>；<code>den</code> 用 <code>den.max(1)</code> 做了保护
+（<code>event.rs:207-224</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn scale(self, num: u32, den: u32) -&gt; RelayVar {
+    let den = den.max(1);
+    match self {
+        RelayVar::Damage(v) =&gt; {
+            let scaled = (v as u64) * (num as u64) / (den as u64);
+            RelayVar::Damage(scaled.min(u16::MAX as u64) as u16)
+        }
+        // Int / Accuracy arms keep their own lanes; non-numeric relays pass through.
+        other =&gt; other,
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>于是 2× 就是 <code>relay.scale(2, 1)</code>，½× 是 <code>relay.scale(1, 2)</code>，0× 免疫是
+<code>relay.scale(0, 1)</code>。把整张克制表的乘积折叠成<strong>一个</strong>预先合并的有理数，并<strong>只应用一次</strong>
+<code>scale</code>——逐条边折叠会在每一步发生截断。</p>
+<h3 id="23-原生编写一张常量表--一个处理器"><a class="header" href="#23-原生编写一张常量表--一个处理器">2.3 原生编写：一张常量表 + 一个处理器</a></h3>
+<p>minimon 把金木水火土（Metal/Wood/Water/Fire/Earth）相克环做成一张扁平的常量表，行是
+<code>(atk_index, def_index, num, den)</code>（<code>lib.rs:120-135</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub const TYPE_CHART: &amp;[(usize, usize, u32, u32)] = &amp;[
+    (0, 1, 2, 1), // 金克木  Metal → Wood
+    (1, 4, 2, 1), // 木克土  Wood  → Earth
+    (4, 2, 2, 1), // 土克水  Earth → Water
+    (2, 3, 2, 1), // 水克火  Water → Fire
+    (3, 0, 2, 1), // 火克金  Fire  → Metal
+    (1, 0, 1, 2), // Wood  → Metal  (1/2×)
+    // … the other reverse edges …
+    (2, 1, 0, 1), // 水→木  Water → Wood (0× immunity)
+];
+<span class="boring">}</span></code></pre>
+<p>一个纯函数辅助把克制表的<strong>乘积</strong>按防守方的属性折叠成一个有理数（<code>lib.rs:141-153</code>）；双
+属性因此纯粹是一次数据改动，而不是代码改动：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn type_chart_mult(move_index: usize, defender_indices: &amp;[usize]) -&gt; (u32, u32) {
+    let (mut num, mut den) = (1u32, 1u32);
+    for &amp;def in defender_indices {
+        let (n, d) = TYPE_CHART
+            .iter()
+            .find(|(a, b, _, _)| *a == move_index &amp;&amp; *b == def)
+            .map(|(_, _, n, d)| (*n, *d))
+            .unwrap_or((1, 1));   // omitted pair ⇒ 1×
+        num *= n;
+        den *= d;
+    }
+    (num, den)
+}
+<span class="boring">}</span></code></pre>
+<p>这个处理器与 <code>HandlerFn</code> 完全匹配。它从 <code>source_effect</code> 找回进行中招式的元素（经
+<code>move_type_for_effect</code>，<code>lib.rs:576-582</code>），从 <code>Species.mtype</code> 读出防守方的元素，并返回
+<strong>一个</strong>携带合并有理数的 <code>Set</code>（<code>lib.rs:556-572</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn effectiveness_chart_hook(
+    ctx: &amp;mut BattleCtx&lt;'_, MinimonProvider&gt;,
+    relay: RelayVar,
+    target: BattlerRef,
+    _source: BattlerRef,
+    source_effect: EffectId,
+) -&gt; HandlerResult {
+    let move_index = match move_type_for_effect(source_effect) {
+        Some(t) =&gt; t.chart_index(),
+        None =&gt; return HandlerResult::Unchanged, // untyped ⇒ neutral
+    };
+    let def_indices = [ctx.battler(target).species.mtype.chart_index()];
+    let (num, den) = type_chart_mult(move_index, &amp;def_indices);
+    HandlerResult::Set(relay.scale(num, den)) // ONE scale on the combined rational
+}
+<span class="boring">}</span></code></pre>
+<p>它在每个元素的招式效果里以 <code>order: 100</code> 订阅 <code>Event::Effectiveness</code>——
+<code>MOVE_DAMAGE_EFFECT</code>（Normal/无类型 ⇒ 中性恒等）、<code>MOVE_METAL_EFFECT</code>、
+<code>MOVE_WATER_EFFECT</code>（<code>lib.rs:587-651</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>EventHook {
+    event: Event::Effectiveness,
+    call: effectiveness_chart_hook,
+    order: 100, priority: 0, sub_order: None,
+},
+<span class="boring">}</span></code></pre>
+<h3 id="24-改用-ron-数据编写"><a class="header" href="#24-改用-ron-数据编写">2.4 改用 RON 数据编写</a></h3>
+<p>同一张克制表可以<strong>不用 Rust</strong>，在 <code>rules.ron</code> 里表达为一张 <code>type_chart:</code> 列表，行形如
+<code>( atk:, def:, mult: [n, d] )</code>，由 <code>Effectiveness</code> 钩子上的 <code>ApplyTypeChart</code> 原语 op 应用
+（<code>rules.ron:39-54</code>，见 <a href="#3-用-rulesron-无代码编写dotzuki-rules-加载器">§3</a>）：</p>
+<pre><code class="language-ron">type_chart: [
+    ( atk: "Metal", def: "Wood",  mult: [2, 1] ),   // 金克木
+    ( atk: "Water", def: "Fire",  mult: [2, 1] ),   // 水克火
+    ( atk: "Water", def: "Wood",  mult: [0, 1] ),   // 水→木 immunity
+],
+// … and on the move:
+Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+</code></pre>
+<h3 id="25-断言的结果160--80--40--0"><a class="header" href="#25-断言的结果160--80--40--0">2.5 断言的结果（160 / 80 / 40 / 0）</a></h3>
+<p>用威力 80 的 Metal blade 招式，克制表的四种结果都是精确整数——一致性基准测试
+（<code>tests.rs:338</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>assert_eq!((super_eff, neutral, resisted, immune), (160, 80, 40, 0));
+<span class="boring">}</span></code></pre>
+<p><code>160 = 80 ×2/1</code>（金克木，效果绝佳 super-effective），<code>80 = 80 ×1/1</code>（表中省略的对 ⇒ 效果
+一般），<code>40 = 80 ×1/2</code>（效果不佳），<code>0 = 80 ×0/1</code>（水→木免疫）。原生常量表路径与 RON 数据
+路径产出<strong>完全相同</strong>的数字。</p>
+<blockquote>
+<p><strong>设计背景：</strong> §12</p>
+</blockquote>
+<hr>
+<h2 id="3-用-rulesron-无代码编写dotzuki-rules-加载器"><a class="header" href="#3-用-rulesron-无代码编写dotzuki-rules-加载器">3. 用 <code>rules.ron</code> 无代码编写（dotzuki-rules 加载器）</a></h2>
+<p><a href="../../crates/dotzuki-rules/src/"><code>crates/dotzuki-rules</code></a> 是效果栈之上的一层薄薄的编写层：
+它把 <code>rules.ron</code> 文件解析成运行时的 <code>Effect</code>，于是你可以<strong>零 Rust</strong> 地添加<strong>招式、特性、
+道具、属性和资源消耗</strong>。它就是<strong>方案 A</strong>——单个以 <code>EffectId</code> 为键的 <code>interpret()</code> 函数，
+注册为每个生成的 <code>Effect</code> 的 <code>call</code>。<strong>引擎零改动</strong>：引擎本就把 <code>source_effect: eff.id</code>
+传给每个处理器（<code>dispatch.rs:128</code>），而 <code>interpret</code> 不过是另一个 <code>HandlerFn</code>。</p>
+<h3 id="31-数据模型效果记录--封闭的原语词汇表"><a class="header" href="#31-数据模型效果记录--封闭的原语词汇表">3.1 数据模型——效果记录 + 封闭的原语词汇表</a></h3>
+<p>顶层形态是 <code>Ruleset( stats: […], resources: […], types: […], type_chart: […], effects: […] )</code>（<code>rules.ron:20-123</code>；<code>Ruleset::from_ron</code> 启用 RON 的 <code>IMPLICIT_SOME</code>，
+<code>model.rs:436-440</code>）。每个效果是一条 <code>EffectRecord</code>，带一个 <code>kind</code>
+（<code>EffectKind { Move, Status, Ability, Item, Weather }</code>，<code>model.rs:184-196</code>）、可选的
+<code>category</code>/<code>power</code>/<code>type</code>/<code>accuracy</code>/<code>cost</code> 以及一串钩子。每个钩子的 <code>do:</code> 是一张取自
+<strong>封闭原语 op 词汇表</strong>的列表（<code>enum Op</code>，<code>crates/dotzuki-rules/src/model.rs:396</code>）——这个
+封闭集合就是全部的表达力预算。它随着 pokered Gen-1 迁移需要更多原语而从最初的 12 个增长
+到<strong>18 个 op</strong>（<code>SetHp</code>、<code>SetDamage</code>、<code>DamageCurrentHpFraction</code>、<code>RepeatHits</code>、
+<code>InflictVolatile</code>、<code>RemoveStatus</code>）——依旧全部封闭、游戏无关：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Op {                                        // dotzuki-rules/src/model.rs:396
+    DealMoveDamage,                                  // ModifyDamage marker (provider number)
+    DamageFraction { num: u32, den: u32, of: FractionOf, target: Selector, unless: Option&lt;Predicate&gt; },
+    HealFraction   { num: u32, den: u32, of: FractionOf, target: Selector, unless: Option&lt;Predicate&gt; },
+    InflictStatus  { status: String, target: Selector, amount: AmountSpec },
+    InflictVolatile { kind: String, target: Selector, amount: AmountSpec },
+    Boost          { stat: String, stages: i8, target: Selector },
+    ScaleRelay     { num: u32, den: u32, when: Vec&lt;Predicate&gt; },
+    SetRelay(i64), AddRelay(i64), ClampRelay { lo: i64, hi: i64 },
+    VetoIf         { cond: Predicate, silent: bool },   // Fail when cond holds (Clear Body / Mist)
+    ApplyTypeChart,                                  // fold the dual-type product into the relay
+    PayResource    { resource: String, amount: u16, target: Selector }, // MP/SP cost gate
+    // ── added by the pokered Gen-1 migration (still closed, still game-agnostic) ──
+    SetHp          { target: Selector, value: u16, when: Vec&lt;Predicate&gt; }, // absolute HP set
+    SetDamage      { value: DamageValue, of: Selector }, // fixed / level / rng damage
+    DamageCurrentHpFraction { num: u32, den: u32, target: Selector }, // % of CURRENT hp
+    RepeatHits     { count: HitCount, target: Selector, final_hit: FinalHitRider },
+    RemoveStatus   { target: Selector },
+}
+<span class="boring">}</span></code></pre>
+<p>配套的封闭枚举：</p>
+<ul>
+<li><code>Selector { Target, Foe, Host, Source }</code>（<code>model.rs:201</code>）。</li>
+<li><code>FractionOf { MaxHp, CurHp, LastDamage }</code>（默认 <code>MaxHp</code>；<code>LastDamage</code> = 刚刚打出的伤害
+——吸血/反伤的基数；<code>model.rs:214</code>）。</li>
+<li><code>Predicate { HasType(String), StatIs(String), RelayIntLt(i64), HasVolatile(String), MoveTypeIsDefenderType, TargetHasStatus(String), LevelGE }</code>（<code>model.rs:268</code>）——由
+<code>unless</code> / <code>when</code> / <code>cond</code> 守卫使用。（最后四个是为迁移添加的：侧边状态的
+Substitute/同属性否决、Dream Eater 的睡眠门槛、OHKO 的等级门槛。）</li>
+<li><code>DamageValue { Const(u16), UserLevel, RngScaledLevel { num, den } }</code>——<code>SetDamage</code> 的数值
+来源（Sonic Boom 20 / Dragon Rage 40 / Seismic Toss = 等级 / Psywave；<code>model.rs:249</code>）。</li>
+<li><code>HitCount { Fixed(u8), TwoToFive }</code> + <code>FinalHitRider</code>——<code>RepeatHits</code> 的连击次数来源 +
+最后一击的附加效果（<code>model.rs:510</code>）。</li>
+</ul>
+<h3 id="32-一段真实的-rulesron-摘录"><a class="header" href="#32-一段真实的-rulesron-摘录">3.2 一段真实的 <code>rules.ron</code> 摘录</a></h3>
+<p>minimon 的整套规则集就是数据。一个招式声明它的分家（<code>category</code>/<code>power</code>）、它的元素
+（<code>type</code>）、可选的 <code>cost:</code> 以及订阅它的钩子（<code>rules.ron:63-89</code>）：</p>
+<pre><code class="language-ron">Effect(id: "move.tackle", kind: Move, category: "Physical", power: 40, type: "Normal", accuracy: 100,
+    hooks: [
+        Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+        Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+    ]),
+</code></pre>
+<p>一次状态扣血和一次 Leftovers 治疗展示了跨来源的 <code>order</code> 交错——也展示了特性/道具/天气不过
+是另一条以 <code>kind</code> 为键的记录（<code>rules.ron:93-121</code>）：</p>
+<pre><code class="language-ron">Effect(id: "status.poison", kind: Status,
+    hooks: [ Hook(on: "Residual", order: 10, do: [
+        DamageFraction(num: 1, den: 8, of: MaxHp, target: Host) ]) ]),
+Effect(id: "item.leftovers", kind: Item,
+    hooks: [ Hook(on: "Residual", order: 20, do: [
+        HealFraction(num: 1, den: 16, of: MaxHp, target: Host) ]) ]),
+Effect(id: "ability.clearbody", kind: Ability,
+    hooks: [ Hook(on: "TryBoost", order: 5, do: [
+        VetoIf(cond: RelayIntLt(0)) ]) ]),
+</code></pre>
+<h3 id="33-方案-a以-effectid-为键的-interpret"><a class="header" href="#33-方案-a以-effectid-为键的-interpret">3.3 方案 A——以 <code>EffectId</code> 为键的 <code>interpret()</code></a></h3>
+<p>加载器为<strong>每个 <code>(effect, event)</code> 钩子铸造一个独立的 <code>EffectId</code></strong>，并把每个钩子注册为它
+自己的迷你 <code>Effect</code>，其 <code>call</code> 是 <code>interpret::&lt;P&gt;</code>（<code>registry.rs:286-308</code>，
+<code>build_effects</code>，泄漏为 <code>&amp;'static</code>）。<code>interpret</code> 与 <code>HandlerFn&lt;P&gt;</code> 完全匹配
+（<code>interp.rs:30-56</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn interpret&lt;P: RulesProvider&gt;(
+    ctx: &amp;mut BattleCtx&lt;'_, P&gt;,
+    relay: RelayVar,
+    target: BattlerRef,
+    source: BattlerRef,
+    source_effect: EffectId,
+) -&gt; HandlerResult
+<span class="boring">}</span></code></pre>
+<p>它按 <code>source_effect</code> 查找编译好的钩子（<code>host.hook(source_effect)</code>），应用 <code>chance</code> 门槛
+（<strong>唯一</strong>的 rng，<code>ctx.rng.chance(num, den)</code>，<strong>无条件</strong>抽取，于是抽取顺序是 op 列表的纯
+函数），然后 <code>run_ops</code>。不需要任何引擎改动。</p>
+<p>公开 API（从 <code>lib.rs:62-70</code> 再导出）：<code>Ruleset</code>、<code>RuleSource</code>、<code>interpret</code>、<code>run_ops</code>、
+<code>CompiledRuleset</code>、<code>CompiledHook</code>、<code>ResolverKind</code>、<code>RulesHost</code>、<code>RulesProvider</code>、
+<code>RuleBindings</code>，加上模型类型（<code>Op</code>、<code>Predicate</code>、<code>Selector</code>、<code>EffectKind</code>、
+<code>EffectRecord</code>、<code>HookRecord</code>、<code>ResourceCost</code>、<code>TypeChartEntry</code>、<code>Rational</code>、
+<code>FractionOf</code>、<code>StatRef</code>、<code>TypeName</code>、<code>LoadError</code>、<code>parse_event</code>、<code>parse_kind</code>）。</p>
+<h3 id="34-加载期校验绝不在战斗期出其不意"><a class="header" href="#34-加载期校验绝不在战斗期出其不意">3.4 加载期校验——绝不在战斗期出其不意</a></h3>
+<p>每个名字都在<strong>编译时</strong>绑定到封闭词汇表（在 <code>CompiledRuleset::compile</code> 中，
+<code>registry.rs:153-265</code>，以及 <code>validate_op</code>，<code>registry.rs:313-370</code>）。未知的名字是一个
+<code>LoadError</code>，在规则集加载时抛出——从不在战斗中途（<code>model.rs:37-63</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum LoadError {
+    Ron(String),
+    UnknownEvent(String),
+    UnknownType(String),
+    BadChance(u32, u32),
+    UnknownStatus(String),
+    UnknownStat(String),
+    UnknownResource(String),
+}
+<span class="boring">}</span></code></pre>
+<h3 id="35-双模式单一事实来源内置releasevs-热重载dev"><a class="header" href="#35-双模式单一事实来源内置releasevs-热重载dev">3.5 双模式单一事实来源——内置（release）vs 热重载（dev）</a></h3>
+<p><strong>同一份</strong> <code>rules.ron</code> 在两种模式下都是单一事实来源（<code>source.rs</code>），且两种模式都走<strong>同一
+个</strong> <code>Ruleset::from_ron</code>，因此同一文件的内置构建与磁盘构建产出字节级一致的规则集——这就
+是<strong>内置==磁盘一致</strong>不变量：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum RuleSource {
+    Baked { text: &amp;'static str },
+    Disk {
+        path: PathBuf,
+        #[cfg(feature = "hot-reload")]
+        watcher: Option&lt;watch::Watcher&gt;,
+    },
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li><strong>内置 = 默认（release）。</strong> 该 feature <strong>关闭</strong>；调用方传入 <code>include_str!</code> 过的文本。零
+文件 IO。<code>RuleSource::baked(text: &amp;'static str)</code>（<code>source.rs:57</code>）。</li>
+<li><strong>磁盘 = 开发环境。</strong> <code>RuleSource::from_path(path: impl Into&lt;PathBuf&gt;)</code>
+（<code>source.rs:65</code>）。在 <code>notify</code> 支撑的 watcher 下（cargo feature 正是
+<strong><code>hot-reload</code></strong>，<code>source.rs:136-210</code>），编辑会被实时观察到。</li>
+<li>两种模式都通过 <code>pub fn load(&amp;self) -&gt; Result&lt;Ruleset, LoadError&gt;</code> 加载
+（<code>source.rs:81</code>）。</li>
+<li><code>RuleSource::poll_changed(&amp;mut self) -&gt; bool</code>（<code>source.rs:98</code>）——<strong>内置</strong>来源永远返回
+<code>false</code>；带 feature 的磁盘来源在文件变化时返回 <code>true</code>。还有
+<code>is_hot_reloadable(&amp;self) -&gt; bool</code>（<code>source.rs:112</code>）。</li>
+</ul>
+<p><strong>回合之间重载是安全的。</strong> 当 <code>poll_changed</code> 返回 <code>true</code> 时，游戏在<strong>回合之间</strong>重新
+<code>load</code> 并重建注册表。这在战斗中途是安全的，因为效果以 <code>EffectId</code> 寻址，且<strong>存活状态放在
+引擎的 <code>EffectState</code> arena 中，而不在数据中</strong>——重载只替换效果<em>定义</em>，不触碰存活的逐实例
+状态（<code>source.rs:6-14</code>、<code>lib.rs:42-51</code>）。</p>
+<blockquote>
+<p><strong>这就是不用 Rust 编写招式/特性/属性/消耗的路径。</strong> 设计背景：§11</p>
+</blockquote>
+<hr>
+<h2 id="4-资源mpsp与招式消耗"><a class="header" href="#4-资源mpsp与招式消耗">4. 资源（MP/SP）与招式消耗</a></h2>
+<p>一套通用的、<strong>与 P 无关的</strong>可消耗资源系统让招式可以消耗 MP / SP / mana / charge。它是
+完全增量式的：默认为空、默认惰性，而且<strong>不</strong>消耗任何随机性。</p>
+<h3 id="41-battlerstate-上的-resourcepool"><a class="header" href="#41-battlerstate-上的-resourcepool">4.1 <code>BattlerState</code> 上的 <code>ResourcePool</code></a></h3>
+<p><code>ResourcePool</code> 是一个以 <code>u16</code> 为键的 <code>(resource_id, current, max)</code> 三元组袋子，id <strong>不
+透明、由游戏指定</strong>（引擎从不知道某个资源是“MP“）。它默认<strong>为空</strong>（<code>battle/mod.rs:137-222</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Default)]
+pub struct ResourcePool {
+    entries: Vec&lt;(u16, u16, u16)&gt;,   // (resource_id, current, max)
+}
+<span class="boring">}</span></code></pre>
+<p>关键方法：<code>new()</code>、<code>set(id, current, max)</code>、<code>current(id) -&gt; Option&lt;u16&gt;</code>、<code>max(id)</code>、
+<code>can_pay(id, amount) -&gt; bool</code>（<code>0</code> 消耗永远可支付；未声明 id 上的正消耗<strong>不可</strong>支付）、
+<code>pay(id, amount) -&gt; bool</code>（饱和运算、纯算术）、<code>restore</code>、<code>len</code>、<code>is_empty</code>。</p>
+<p>它是 <code>BattlerState</code> 上的一个字段（<code>battle/mod.rs:716-737</code>），在 <code>BattlerState::new</code> 里
+初始化为 <code>ResourcePool::new()</code>——因此构造函数签名<strong>不变</strong>：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub resources: ResourcePool,
+<span class="boring">}</span></code></pre>
+<p>配套的 builder/辅助方法（<code>battle/mod.rs:773-788</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn with_resource(mut self, id: u16, max: u16) -&gt; Self;   // sets current = max
+pub fn can_pay_resource(&amp;self, id: u16, amount: u16) -&gt; bool;
+pub fn pay_resource(&amp;mut self, id: u16, amount: u16) -&gt; bool;
+<span class="boring">}</span></code></pre>
+<blockquote>
+<p><strong>为什么用 <code>u16</code> 键的资源池，而不是 <code>EnumMap&lt;P::Resource&gt;</code>？</strong> <em>带默认实现的</em>关联类型在
+stable Rust 上还不稳定（<code>E0658</code>），所以增量式的选择是与 P 无关的整数键资源池
+（<code>battle/mod.rs:580-602</code> 文档；引擎不给这些 id 赋予任何含义）。</p>
+</blockquote>
+<h3 id="42-带默认实现的-provider-钩子"><a class="header" href="#42-带默认实现的-provider-钩子">4.2 带默认实现的 provider 钩子</a></h3>
+<p>消耗通过一个带默认实现的 <code>BattleProvider</code> 方法进入引擎（<code>battle/mod.rs:600-602</code>）。默认
+的 <code>&amp;[]</code> 让门槛保持惰性，于是既有的全部 16 个 <code>impl BattleProvider</code> 块原样编译通过：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn move_cost(&amp;self, _move_: &amp;Self::Move) -&gt; &amp;[(u16, u16)] {
+    &amp;[]
+}
+<span class="boring">}</span></code></pre>
+<h3 id="43-beforemove-消耗门槛"><a class="header" href="#43-beforemove-消耗门槛">4.3 <code>BeforeMove</code> 消耗门槛</a></h3>
+<p>在 <code>resolve_action</code> 中，这个门槛在 <code>BeforeMove</code> 状态门槛<strong>之后</strong>（<code>driver.rs:147-150</code>）、
+在任何暴击/命中率/伤害抽取<strong>之前</strong>（<code>driver.rs:152-171</code>）触发：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let costs = provider.move_cost(&amp;move_);
+if !costs.is_empty() {
+    let actor_b = ctx.battler(actor);
+    if !costs.iter().all(|(id, amt)| actor_b.can_pay_resource(*id, *amt)) {
+        return; // cannot pay → move prevented (no rng consumed)
+    }
+    for (id, amt) in costs {
+        ctx.battler_mut(actor).pay_resource(*id, *amt);
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>策略是：<strong>付不起 ⇒ 提前 <code>return</code></strong>（招式被阻止，形态上与完全麻痹的 <code>BeforeMove</code> 中止
+一致，暴击/命中率/伤害字节从不抽取）；<strong>付得起 ⇒ 扣减</strong>。整个代码块是<strong>纯算术</strong>——不消耗
+rng——在消耗为空/资源池为空时它是一个惰性的空循环，于是每场既有战斗和效果栈一致性抽取
+序列保持字节级一致。</p>
+<h3 id="44-在-ron-里编写消耗"><a class="header" href="#44-在-ron-里编写消耗">4.4 在 RON 里编写消耗</a></h3>
+<p>招式通过 <code>cost:</code> 字段声明消耗——<code>Vec&lt;ResourceCost&gt;</code>，其中
+<code>ResourceCost { resource: String, amount: u16 }</code>（RON 写法 <code>Cost(...)</code>，
+<code>model.rs:131-153</code>）。编译器把每个 <code>resource:</code> 名称驻留（intern）成一个 id；未知名字在
+加载时是 <code>LoadError::UnknownResource</code>（<code>registry.rs:204</code>、<code>registry.rs:368</code>）。编译好的
+<code>move_costs</code> 映射（<code>CompiledRuleset.move_cost(source_id) -&gt; &amp;[(usize, u16)]</code>，
+<code>registry.rs:108</code>、<code>276-278</code>）就是游戏接进 <code>BattleProvider::move_cost</code> 的东西。还有一个
+<code>PayResource { resource, amount, target }</code> op（<code>model.rs:347-354</code>，在
+<code>interp.rs:219-233</code> 解释：若 <code>!bindings.can_pay_resource(...)</code> 则 <code>Fail</code>，否则
+<code>bindings.pay_resource(...)</code>），用于把 <code>BeforeMove</code> 消耗表达为数据：</p>
+<pre><code class="language-ron">&lt;!-- not verified: excerpt, not loadable standalone --&gt;
+Effect(id: "move.blade", kind: Move, category: "Physical", power: 80, type: "Metal", accuracy: 100,
+    cost: [ Cost(resource: "MP", amount: 3) ],
+</code></pre>
+<p>资源在顶层声明一次（<code>rules.ron:28</code>）：</p>
+<pre><code class="language-ron">resources: ["MP"],
+</code></pre>
+<h3 id="45-minimon-的-mp-示例"><a class="header" href="#45-minimon-的-mp-示例">4.5 minimon 的 MP 示例</a></h3>
+<p>minimon 声明了单一资源 <code>Mp</code>，映射到不透明 id <code>0</code>（<code>lib.rs:279-305</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum Resource { Mp }
+impl Resource { pub const fn id(self) -&gt; u16 { match self { Resource::Mp =&gt; 0 } } }
+pub const MP: u16 = Resource::Mp.id();
+
+const BLADE_COST:   &amp;[(u16, u16)] = &amp;[(MP, 3)];
+const TORRENT_COST: &amp;[(u16, u16)] = &amp;[(MP, 5)];
+const NO_COST:      &amp;[(u16, u16)] = &amp;[];
+<span class="boring">}</span></code></pre>
+<p><code>MinimonProvider::move_cost</code>（<code>lib.rs:403-412</code>）按招式 id 返回这些值；Tackle 和 Ember 返回
+<code>NO_COST</code>。断言的测试结果（<code>tests.rs</code>）：</p>
+<ul>
+<li><code>special_move_costs_mp_and_deducts_it</code>（第 377 行）：10 MP − BLADE 3 ⇒
+<code>current(MP) == Some(7)</code>。</li>
+<li>MP 不足：2 MP &lt; BLADE 3 ⇒ 招式被阻止、防守方毫发无损，且 <code>current(MP) == Some(2)</code>
+保持不变。</li>
+<li><code>physical_move_with_no_cost_is_unaffected_by_mp</code>（第 410 行）：0 MP 的 Tackle 仍然打出
+80 点伤害，且 <code>current(MP) == Some(0)</code>。</li>
+<li><code>torrent_costs_5_mp_exact_balance_is_payable</code>（第 427 行）：恰好 5 MP 付得起 Torrent ⇒
+<code>current(MP) == Some(0)</code>。</li>
+</ul>
+<blockquote>
+<p><strong>两种不同的策略——不要混为一谈。</strong> <strong>引擎</strong>门槛（<code>driver.rs:163-171</code>）把<strong>未声明</strong>资源
+上的任何正消耗视为<strong>不可支付</strong>（招式被阻止）。minimon 的<strong>原生</strong> <code>pay_move_cost</code>
+（<code>lib.rs:1007-1027</code>）刻意不同：没有声明该资源的战斗者把这个招式视为<strong>免费</strong>（跳过
+门槛）。上面断言的 minimon 测试走的是原生 <code>Battle</code> 路径；<code>data_mode</code> 标志
+（<code>lib.rs:404</code>）让原生 <code>move_cost</code> 返回 <code>NO_COST</code>，于是数据驱动器改由 <code>rules.ron</code> 提供
+消耗。设计背景：§13</p>
+</blockquote>
+<hr>
+<h2 id="5-cookbook跨世代机制--效果栈配方"><a class="header" href="#5-cookbook跨世代机制--效果栈配方">5. Cookbook：跨世代机制 → 效果栈配方</a></h2>
+<p>每条配方背后的同一个模式：机制<strong>从来不是</strong>引擎概念。它是一个<strong>托管在 X 上</strong>的 <code>Effect</code>
+（战斗者/侧边/场地，由解析器接线），它的处理器<strong>订阅事件 Y</strong>、<strong>执行动作 Z</strong>、<strong>用
+<code>order=N</code> 排序</strong>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>机制</th><th>托管在 X 上（解析器）</th><th>订阅事件 Y</th><th>在处理器里执行 Z</th><th><code>order</code> 层级 <code>N</code></th></tr>
+</thead>
+<tbody>
+<tr><td><strong>伤害招式</strong></td><td>行动本身（<code>effect_for_move</code>）</td><td><code>ModifyDamage</code></td><td>伤害来自你的 <code>calculate_damage</code>；这个钩子就是招式的接缝。掷骰/强化用 <code>Set(relay.scale(n,d))</code> 缩放。</td><td><code>u32::MAX</code></td></tr>
+<tr><td><strong>命中附带的追加状态</strong></td><td>行动本身（<code>effect_for_move</code>）</td><td><code>DamagingHit</code></td><td>掷 <code>ctx.rng.next_u8() &lt; threshold</code>；成功则记录意图 / 经你的驱动器触发 <code>TrySetStatus</code>。有副作用 ⇒ 返回 <code>Unchanged</code>。</td><td>默认</td></tr>
+<tr><td><strong>能力阶级招式</strong></td><td>行动本身（<code>effect_for_move</code>）</td><td><code>DamagingHit</code>（或命中后）</td><td>记录一次强化请求；你的驱动器触发 <code>TryBoost</code>（relay = <code>Int(delta)</code>），让否决方有投票权，再把存活的增量应用到 <code>stat_stages</code>。</td><td>默认</td></tr>
+<tr><td><strong>反伤 / 吸血</strong></td><td>行动本身（<code>effect_for_move</code>）</td><td><code>DamagingHit</code></td><td>读 <code>ctx.mv.last_damage</code>；反伤 = 对 <code>source</code> 执行 <code>take_damage(last_damage/N)</code>；吸血 = 对 <code>source</code> 执行 <code>heal(last_damage/2)</code>。</td><td>默认</td></tr>
+<tr><td><strong>特性：被动属性强化</strong>（Huge Power）</td><td>战斗者（<code>effect_for_ability</code>）</td><td><code>ModifyStat</code></td><td>若 relay 携带被强化的属性且 <code>target</code> 是持有者，则 <code>Set(relay.scale(2,1))</code>。折叠进伤害公式的属性读取。</td><td><code>ModifyStat</code> 层级</td></tr>
+<tr><td><strong>特性：免疫</strong>（Levitate / Wonder Guard）</td><td>战斗者（<code>effect_for_ability</code>）</td><td><code>Effectiveness</code>（倍率）<strong>或</strong> <code>TryHit</code>（硬否决）</td><td>在 <code>Effectiveness</code> 上，<code>Set(relay.scale(0,1))</code> 将其归零；在 <code>TryHit</code> 上，返回 <code>Fail</code>/<code>FailSilent</code> 在伤害之前取消。</td><td>低（伤害之前）</td></tr>
+<tr><td><strong>特性：登场时</strong>（Intimidate）</td><td>战斗者（<code>effect_for_ability</code>）</td><td><code>SwitchIn</code></td><td>处理器无法持有 <code>&amp;P</code>，所以在 <code>ctx.mv</code> 里<strong>记录意图</strong>；你的 <code>switch_in</code> 辅助函数（持有 <code>&amp;P</code>）重入并触发真正的 <code>TryBoost</code>，Clear Body 在那里行使否决。</td><td><code>10</code></td></tr>
+<tr><td><strong>携带道具：回合末残余治疗</strong>（Leftovers）</td><td>战斗者（<code>effect_for_item</code>）</td><td><code>Residual</code>（或 <code>SideResidual</code>/<code>FieldResidual</code>）</td><td>对 <code>host</code> 执行 <code>heal((max_hp/16).max(1))</code>，排在状态扣血<strong>之后</strong>。</td><td><code>20</code>（扣血 = <code>10</code>）</td></tr>
+<tr><td><strong>携带道具：伤害强化</strong>（Life Orb / Choice Band）</td><td>战斗者（<code>effect_for_item</code>）</td><td><code>ModifyDamage</code>（Choice Band 用 <code>ModifyStat</code>）</td><td>若 <code>source</code> 是持有者，则 <code>Set(relay.scale(13,10))</code>（×1.3）。</td><td>中</td></tr>
+<tr><td><strong>携带道具：低血量触发</strong>（Sitrus / Salac）</td><td>战斗者（<code>effect_for_item</code>）</td><td><code>DamagingHit</code> / <code>AfterMove</code></td><td>若 <code>ctx.battler(host).hp</code> 跌到最大值的 ½ 以下，则 <code>heal(...)</code> / 触发一次 <code>TryBoost</code>，然后在你的状态里标记为已消耗。</td><td>高（命中落定之后）</td></tr>
+<tr><td><strong>天气：伤害倍率</strong>（Rain→Water）</td><td>场地（<code>field_effects</code>）</td><td><code>ModifyDamage</code>（属性倍率再加 <code>WeatherModifyStat</code>）</td><td>从 <code>ctx</code> 检查招式/持有者的属性；<code>Set(relay.scale(3,2))</code>。<code>WeatherModifyStat</code> 在 <code>ModifyStat</code> <strong>之后</strong>叠加。</td><td><code>WeatherModifyStat</code> 在 <code>ModifyStat</code> 之后</td></tr>
+<tr><td><strong>天气：回合末扣血</strong>（Sandstorm）</td><td>场地（<code>field_effects</code>）</td><td><code>FieldResidual</code></td><td>对每个在场 <code>target</code>，若不免疫则 <code>take_damage((max_hp/16).max(1))</code>。用 <code>run_event_checked</code> 驱动，让 KO 不会触发过期处理器。</td><td>残余层级</td></tr>
+<tr><td><strong>入场陷阱</strong>（Spikes / Stealth Rock）</td><td>侧边（<code>side_effects</code>）</td><td><code>SwitchIn</code></td><td>当战斗者进入那一侧时，按已存储的层数缩放执行 <code>take_damage</code>（状态放在你的侧边托管结构体里）。</td><td>低（入场时）</td></tr>
+<tr><td><strong>多回合 / 锁招</strong>（Thrash / Hyper Beam）</td><td>战斗者的易变状态（<code>effect_for_volatile</code>）+ <code>forced_action</code></td><td>易变状态监听 <code>BeforeMove</code>/<code>End</code>；锁招靠 <code>forced_action</code></td><td>上一回合设置的易变状态让 <code>forced_action(effects, actor, chosen)</code> 返回 <code>Some(locked_move)</code>，劫持本回合的输入。<code>BeforeMove</code> 把关（跳过硬直）；<code>End</code> 触发 Thrash 的自身混乱。</td><td>不适用（是接缝，不是折叠）</td></tr>
+<tr><td><strong>属性克制表 / 克制倍率</strong>（相克）</td><td>行动本身（<code>effect_for_move</code>）</td><td><code>Effectiveness</code></td><td>从 <code>source_effect</code> 找回招式的元素，读出防守方属性，把克制表的<strong>乘积</strong>折叠成一个有理数，<code>Set(relay.scale(num, den))</code>。只用整数；0× = 免疫。待在 <code>Damage</code> 通道里。见 <a href="#2-属性克制相克--type-charts">§2</a>。</td><td><code>100</code>（<code>ModifyDamage</code> 之后）</td></tr>
+<tr><td><strong>资源消耗</strong>（MP / SP / mana）</td><td>行动者（<code>move_cost</code> 钩子）</td><td>在 <code>BeforeMove</code> 处把关（引擎 <code>StackDriver</code>）</td><td>从 <code>move_cost</code> 返回 <code>&amp;[(resource_id, amount)]</code>；付不起则门槛阻止招式，否则扣减。纯算术、无 rng、<code>&amp;[]</code> 时惰性。或者用数据形式：<code>cost:</code> 字段 / <code>PayResource</code> op。见 <a href="#4-资源mpsp与招式消耗">§4</a>。</td><td>不适用（是门槛，不是折叠）</td></tr>
+<tr><td><strong>无代码编写</strong>（用 RON 写招式/特性/道具/属性/消耗）</td><td><code>dotzuki-rules</code> 加载器（以 <code>EffectId</code> 为键的 <code>interpret</code>）</td><td><code>Hook(on: …)</code> 点名的任何事件</td><td>在 <code>rules.ron</code> 里写一条 <code>EffectRecord</code>，钩子的 <code>do:</code> 是一串封闭原语 <code>Op</code>；加载器把每个注册为调用 <code>interpret</code> 的 <code>Effect</code>。内置 / 热重载双模式。见 <a href="#3-用-rulesron-无代码编写dotzuki-rules-加载器">§3</a>。</td><td>每个钩子的 <code>order:</code></td></tr>
+<tr><td><strong>非易变状态残余</strong>（烧伤 / 中毒扣血）</td><td>行动者的状态（<code>effect_for_status</code>）</td><td><code>Residual</code></td><td>对 <code>host</code> 执行 <code>take_damage((max_hp/16).max(1))</code>；无 rng；对 0 HP 宿主做自我保护。驱动器按行动者的残余结算先触发 <code>effect_for_status</code>，<strong>然后</strong>按 arena-id 顺序触发每个存活易变状态的 <code>effect_for_volatile</code>。当易变状态接管这一拍（tick）时（例如剧毒递增）跳过固定扣血。</td><td><code>10</code>（吸血之前）</td></tr>
+<tr><td><strong>招式前“无法行动“门槛</strong>（睡眠 / 冰冻 / 麻痹 / 混乱）</td><td>一个 <code>BeforeMove</code> 钩子（在 pokered 中：挂在每个招式效果上；或在你的驱动器里从状态/易变状态聚合）</td><td><code>BeforeMove</code></td><td>读行动者的状态 / 易变状态；返回 <code>Fail</code> 中止（<strong>仅当存在时</strong>才抽取该状态的 rng 字节）。<code>run_event</code> 在第一个 <code>Fail</code> 处短路，所以把每个门槛的 <code>order</code> 设成原始抽取序列（例如混乱 <code>70</code> &lt; 麻痹 <code>90</code>）。驱动器随后记录 <code>Blocked</code>（§2.11），前端据此显示原因。</td><td>每个状态一个 <code>order</code></td></tr>
+<tr><td><strong>回合叙述</strong>（战斗文本 / 动画）</td><td>不适用——调用 <code>execute_turn_logged</code></td><td>——（消费 <code>TurnLog</code>）</td><td>遍历返回的 <code>TurnLog&lt;P&gt;</code>，把每个 <code>TurnEvent</code> 映射到你的前端（一行文本、HP 条的流失、倒下动画）。呈现层在游戏侧重新推导（克制的措辞、<code>Blocked</code> 的原因）。增量式的：<code>execute_turn</code> 保持不变。见<a href="../explanation/effect-stack.html#211-narrating-a-turn--the-turnlog">设计页 §2.11</a>。</td><td>不适用</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="完全不需要引擎改动的机制"><a class="header" href="#完全不需要引擎改动的机制">完全<strong>不需要引擎改动</strong>的机制</a></h3>
+<ul>
+<li><strong>物特分家。</strong> <code>calculate_damage</code> 由 provider 提供，属性是 <code>EnumMap&lt;P::Stat&gt;</code>。定义
+<code>{Hp,Atk,Def,SpA,SpD,Spe}</code>，按招式的 category 选取属性对。引擎从来看不到 category。
+（已在 minimon 中验证。）</li>
+</ul>
+<h3 id="配方接缝的注意事项"><a class="header" href="#配方接缝的注意事项">配方接缝的注意事项</a></h3>
+<ul>
+<li><code>forced_action</code> 是<strong>锁招机制，不是事件</strong>——它返回 <code>Some(BattleAction)</code> 来替换所选
+行动。引擎不命名任何游戏专属的易变状态；所有锁定语义都在你的实现里。（引擎测试
+<code>forced_action_default_is_inert</code> 与 <code>forced_action_overrides_chosen_action</code> 验证了
+默认惰性、实现后生效。）</li>
+<li>登场重入的注意事项是<strong>真实存在的</strong>：<code>HandlerFn</code> 给出 <code>&amp;mut BattleCtx</code> 但<strong>不给 <code>&amp;P</code></strong>，
+所以处理器<strong>无法重入派发</strong>（重入需要 provider 来跑解析器）。“特性触发另一个可被否决的
+事件“因此是一种<strong>驱动器编排</strong>模式——在处理器里记录意图，从持有 <code>&amp;P</code> 的驱动器辅助函数
+触发子事件。</li>
+</ul>
+<hr>
+<h2 id="6-确定性与测试"><a class="header" href="#6-确定性与测试">6. 确定性与测试</a></h2>
+<p>确定性在这里是一等性质：引擎<strong>只</strong>通过 <code>ctx.rng</code> 抽取随机性，生成器归你的游戏所有，因此
+每个结果都是 <code>(initial state, byte script)</code> 的纯函数。</p>
+<h3 id="断言结果"><a class="header" href="#断言结果">断言结果</a></h3>
+<p>用 <code>ScriptedRng</code> 钉死确切的字节，再对 <code>BattleState</code> 断言（Showdown 风格的手工推导基准
+值）。minimon 的分家测试：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut phys = Battle::new(MinimonProvider::default(), split_attacker(vec![TACKLE]), split_defender());
+phys.fire_move(BattlerRef::PLAYER, &amp;TACKLE);
+assert_eq!(100 - phys.battler_ref(BattlerRef::OPPONENT).hp, 80);
+<span class="boring">}</span></code></pre>
+<p>顺序证明依赖<em>数学上的不对称性</em>，这样仅凭结果就能证明顺序。Leftovers：满 HP 时先扣血再
+治疗得到 <strong>94</strong>（100 − 12 + 6）；先治疗在满 HP 时是空操作，然后扣血 → <strong>88</strong>。于是 <code>94</code>
+<em>证明了</em>先扣血后治疗：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// holder is Poisoned and holds Leftovers
+b.end_of_turn_residual(BattlerRef::PLAYER);
+assert_eq!(b.battler_ref(BattlerRef::PLAYER).hp, 94);   // 88 would mean wrong order
+<span class="boring">}</span></code></pre>
+<h3 id="直接断言收集与抽取顺序"><a class="header" href="#直接断言收集与抽取顺序">直接断言收集与抽取顺序</a></h3>
+<p><code>collect_handlers</code> + <code>compare</code> 让你断言收集到了<em>哪些</em>来源、以什么顺序，而不必运行折叠：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut hs = Vec::new();
+collect_handlers(&amp;ctx, provider, None, Event::TryBoost, BattlerRef::OPPONENT, BattlerRef::PLAYER, &amp;mut hs);
+hs.sort_by(dotzuki_engine::battle::stack::compare);
+let orders: Vec&lt;u32&gt; = hs.iter().map(|h| h.order).collect();
+assert_eq!(orders, vec![5]);                 // Clear Body (order 5) collected on the foe's TryBoost
+assert_eq!(hs[0].target, BattlerRef::OPPONENT);   // hosted on the TARGET (cross-battler collection)
+<span class="boring">}</span></code></pre>
+<h3 id="抽取顺序一致性"><a class="header" href="#抽取顺序一致性">抽取顺序一致性</a></h3>
+<p><code>ScriptedRng::consumed()</code> 让你断言引擎按你期望的顺序抽取了你期望的字节——这是锁定 Gen-1
+rng 特点的凭证。引擎自己的测试断言了，例如，平局处理器的运行恰好抽取<strong>一个</strong>字节、无
+平局的运行抽取<strong>零个</strong>字节（<code>speed_tiebreak_draws_only_on_tie</code>），以及暴击先于命中率抽取
+（<code>crit_is_drawn_before_accuracy</code>）。跑一遍测试套件：</p>
+<pre><code class="language-bash">cargo test -p dotzuki-engine            # engine: comparator, pair_mut, multi-source, forced_action
+cargo test -p minimon                # the 5-system authoring proof + controls
+</code></pre>
+<hr>
+<h3 id="另见"><a class="header" href="#另见">另见</a></h3>
+<ul>
+<li>代码：<a href="../../examples/minimon/src/lib.rs"><code>examples/minimon/src/lib.rs</code></a>、
+<a href="../../examples/minimon/src/tests.rs"><code>examples/minimon/src/tests.rs</code></a>、
+<a href="../../examples/minimon/rules.ron"><code>examples/minimon/rules.ron</code></a>、
+<a href="../../crates/dotzuki-rules/src/"><code>crates/dotzuki-rules/src/</code></a>。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../how-to/ui.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../how-to/themes.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../how-to/ui.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../how-to/themes.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

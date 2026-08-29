@@ -1,0 +1,1630 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Legacy Developer Guide - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./archive/developer-guide-legacy.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="dotzuki-engine-开发者指南"><a class="header" href="#dotzuki-engine-开发者指南">dotzuki-engine 开发者指南</a></h1>
+<blockquote>
+<p><strong>状态：遗留文档。</strong> 本文档描述的是 effect-stack 出现前的 <strong>legacy
+<code>Provider</code> API</strong> 路径（地图 / NPC / 物品 / 存档 / 渲染）。其中的战斗章节
+（§6）不覆盖 <code>battle::stack</code>——战斗请见
+<a href="./BATTLE_ENGINE_GUIDE.html"><code>BATTLE_ENGINE_GUIDE.md</code></a>。文中引用的 pokered
+参考实现已随仓库拆分迁出，仅作历史参照。</p>
+</blockquote>
+<blockquote>
+<p><strong>dotzuki-engine</strong> 是一个通用的 JRPG 游戏引擎框架，基于 Game Boy 瓦片渲染原理构建，用 Rust 编写。它提供了地图系统、回合制战斗、物品管理、存档、对话引擎、菜单系统等完整的 JRPG 核心功能。</p>
+</blockquote>
+<hr>
+<h2 id="目录"><a class="header" href="#目录">目录</a></h2>
+<ol>
+<li><a href="#1-架构概览">架构概览</a></li>
+<li><a href="#2-快速开始">快速开始</a></li>
+<li><a href="#3-核心概念">核心概念</a></li>
+<li><a href="#4-地图系统">地图系统</a></li>
+<li><a href="#5-npc-系统">NPC 系统</a></li>
+<li><a href="#6-战斗与怪物系统">战斗与怪物系统</a></li>
+<li><a href="#7-中文与多语言支持">中文与多语言支持</a></li>
+<li><a href="#8-对话与文本引擎">对话与文本引擎</a></li>
+<li><a href="#9-菜单系统">菜单系统</a></li>
+<li><a href="#10-物品系统">物品系统</a></li>
+<li><a href="#11-存档系统">存档系统</a></li>
+<li><a href="#12-事件与触发器系统">事件与触发器系统</a></li>
+<li><a href="#13-渲染系统">渲染系统</a></li>
+<li><a href="#14-api-参考">API 参考</a></li>
+</ol>
+<hr>
+<h2 id="1-架构概览"><a class="header" href="#1-架构概览">1. 架构概览</a></h2>
+<h3 id="11-项目结构"><a class="header" href="#11-项目结构">1.1 项目结构</a></h3>
+<pre><code>workspace/
+├── Cargo.toml                      # Workspace 根配置
+├── dotzuki-template/                  # cargo-generate 模板，用于快速创建新游戏
+│   ├── assets/                     # 地图、瓦片集、脚本
+│   └── src/main.rs                 # 游戏主循环
+│
+├── crates/
+│   ├── dotzuki-engine/                # 🎯 核心引擎 —— 所有 trait 定义与通用类型
+│   ├── dotzuki-engine-tiled/          # 🗺️ Tiled .tmx JSON 解析器
+│   ├── dotzuki-engine-script/         # 📜 JS 脚本引擎 (Boa)
+│   ├── dotzuki-renderer/              # 🎨 现代像素字体渲染、UI DSL 布局引擎
+│   ├── dotzuki-ui/                    # 🖼️ 可复用的 JRPG UI 组件库
+│   ├── dotzuki-tui/                   # 🖥️ 终端 UI 后端
+│   ├── dotzuki-audio/                 # 🔊 音频引擎
+│   ├── dotzuki-web/                   # 🌐 WebAssembly 构建
+│   └── dotzuki-app/                   # 🚀 桌面可执行程序入口
+│
+└── examples/
+    └── minimon/                    # 跨世代战斗 POC（纯 RON 规则，证明引擎非游戏锁定）
+</code></pre>
+<h3 id="12-核心理念"><a class="header" href="#12-核心理念">1.2 核心理念</a></h3>
+<p>dotzuki-engine 遵循以下设计原则：</p>
+<ul>
+<li><strong>Provider 模式</strong>：游戏数据通过 trait 提供，引擎本身不包含任何具体游戏数据</li>
+<li><strong>泛型关联类型</strong>：所有标识符类型（地图 ID、物品 ID、怪物 ID）都是泛型参数，由实现者定义</li>
+<li><strong>零平台依赖</strong>：引擎核心（<code>dotzuki-engine</code>）无 I/O、无 GPU、无平台调用</li>
+<li><strong>可组合 trait</strong>：各系统 trait 独立，不需要全部实现即可编译最小 JRPG</li>
+</ul>
+<h3 id="13-快速架构决策"><a class="header" href="#13-快速架构决策">1.3 快速架构决策</a></h3>
+<blockquote>
+<p>注：下表“参考示例“列的 <code>pokered-core</code> / <code>pokered-data</code> 参考实现已随仓库
+拆分迁至 pokered 游戏仓库。当前引擎内的参考示例为 <code>examples/minimon</code>
+（战斗 effect-stack，见 BATTLE_ENGINE_GUIDE.md）与 <code>dotzuki-runner</code>
+（零代码运行时，见 game-project-spec.md）。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>你想做什么</th><th>需要实现的 trait</th><th>参考示例</th></tr>
+</thead>
+<tbody>
+<tr><td>显示地图</td><td><code>MapTrait</code> + <code>MapProvider</code> + <code>TilesetTrait</code> + <code>TilesetProvider</code></td><td><code>pokered-data</code></td></tr>
+<tr><td>玩家移动</td><td><code>TileMetaTrait</code> + <code>TileMetadata</code></td><td><code>pokered-data</code></td></tr>
+<tr><td>对话系统</td><td><code>TextProvider</code></td><td><code>pokered-core</code> 的文本 Provider 实现</td></tr>
+<tr><td>战斗系统</td><td><code>BattleProvider</code> + <code>TypeChart</code> + <code>BattleAI</code> + <code>EffectHandler</code></td><td><code>pokered-core</code></td></tr>
+<tr><td>菜单系统</td><td><code>MenuProvider</code></td><td><code>pokered-data</code></td></tr>
+<tr><td>物品背包</td><td><code>ItemProvider</code> + <code>ShopProvider</code></td><td><code>pokered-data</code></td></tr>
+<tr><td>存档读档</td><td><code>SaveData</code> + <code>SaveStorage</code></td><td><code>pokered-core</code></td></tr>
+<tr><td>色板渲染</td><td><code>PaletteTrait</code> + <code>PaletteProvider</code></td><td><code>pokered-data</code></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="2-快速开始"><a class="header" href="#2-快速开始">2. 快速开始</a></h2>
+<h3 id="21-创建新项目"><a class="header" href="#21-创建新项目">2.1 创建新项目</a></h3>
+<p>引擎仓本身不作为游戏仓使用；游戏通过 Cargo <strong>git 依赖</strong>（tag 固定）消费
+<code>dotzuki-*</code> crate。两种启动方式：</p>
+<ul>
+<li><strong>零代码路径（推荐）</strong>：<code>dotzuki new my-game</code> 生成
+<code>.dotzuki-editor.json</code> + DSL / 数据 / 资源目录，<code>dotzuki run</code> 直接运行
+（见 <a href="./game-project-spec.html"><code>game-project-spec.md</code></a>）。</li>
+<li><strong>Rust 路径</strong>：用本仓的 <code>dotzuki-template</code> 生成手写 <code>main.rs</code> 的游戏：</li>
+</ul>
+<pre><code class="language-bash">cd workspace
+cargo generate --path ./dotzuki-template --name my-game
+cd my-game
+cargo run --release
+</code></pre>
+<h3 id="22-模板项目结构"><a class="header" href="#22-模板项目结构">2.2 模板项目结构</a></h3>
+<pre><code>my-game/
+├── Cargo.toml             # 依赖 dotzuki-engine, dotzuki-engine-tiled, dotzuki-engine-script
+├── src/
+│   └── main.rs            # 游戏主循环：加载地图、渲染图层、处理输入、摄像机跟随
+├── assets/
+│   ├── demo.tmx           # 20×15 瓦片地图（Tiled JSON 格式）
+│   ├── tileset.png        # RGBA 瓦片集（8×8 像素瓦片，水平排列）
+│   └── script.js          # 地图事件脚本
+└── README.md
+</code></pre>
+<h3 id="23-制作自己的游戏"><a class="header" href="#23-制作自己的游戏">2.3 制作自己的游戏</a></h3>
+<ol>
+<li><strong>设计地图</strong>：使用 <a href="https://www.mapeditor.org/">Tiled</a> 编辑器，导出为 JSON 格式（.tmx）</li>
+<li><strong>创建瓦片集</strong>：制作 RGBA PNG 图片，8×8 像素瓦片水平排列</li>
+<li><strong>编写地图脚本</strong>：使用 JavaScript，实现 <code>onEnter()</code>、<code>onStep(x, y)</code>、<code>onInteract(facingX, facingY)</code></li>
+<li><strong>替换资源</strong>：放入 <code>assets/</code> 目录</li>
+<li><strong>自定义 main.rs</strong>：调整 <code>tiled_gid_to_tileset_idx</code> 映射关系</li>
+</ol>
+<h3 id="24-操作键位dotzuki-run-标准键位"><a class="header" href="#24-操作键位dotzuki-run-标准键位">2.4 操作键位（<code>dotzuki run</code> 标准键位）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>按键</th><th>功能</th></tr>
+</thead>
+<tbody>
+<tr><td>方向键 / WASD</td><td>移动玩家（每次一格）</td></tr>
+<tr><td>Z</td><td>确认 / 交互（A 键）</td></tr>
+<tr><td>X</td><td>取消 / 跑步（B 键）</td></tr>
+<tr><td>Enter / Space</td><td>打开菜单（Start）</td></tr>
+<tr><td>Backspace / 右 Shift</td><td>Select</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>键位映射见 <code>dotzuki-renderer/src/input.rs</code>。<code>dotzuki-template</code> 自带的最小
+<code>main.rs</code> 键位不同（仅方向键 + Space 触发对话 + Escape 退出）。</p>
+</blockquote>
+<hr>
+<h2 id="3-核心概念"><a class="header" href="#3-核心概念">3. 核心概念</a></h2>
+<h3 id="31-gamedata--中央依赖注入点"><a class="header" href="#31-gamedata--中央依赖注入点">3.1 GameData —— 中央依赖注入点</a></h3>
+<p><code>GameData</code> 是引擎的核心 trait，所有游戏数据子系统通过它提供：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::GameData;
+
+struct MyGameData;
+
+impl GameData for MyGameData {
+    type Tileset = MyTilesetId;     // 瓦片集 ID 枚举
+    type Map = MyMapId;             // 地图 ID 枚举
+    type Palette = MyPaletteId;     // 色板 ID 枚举
+    type TileMeta = MyTileMetaId;   // 瓦片元数据 ID
+    type Move = MyMoveId;           // 招式 ID
+    type Item = MyItemId;           // 物品 ID
+    type Species = MySpeciesId;     // 物种/怪物 ID
+
+    fn tileset_provider(&amp;self) -&gt; &amp;dyn TilesetProvider&lt;Self::Tileset&gt; { &amp;MY_PROVIDER }
+    fn map_provider(&amp;self) -&gt; &amp;dyn MapProvider&lt;Self::Map&gt; { &amp;MY_PROVIDER }
+    fn palette_provider(&amp;self) -&gt; &amp;dyn PaletteProvider&lt;Self::Palette&gt; { &amp;MY_PROVIDER }
+    fn tile_metadata(&amp;self) -&gt; &amp;dyn TileMetadata&lt;Self::TileMeta&gt; { &amp;MY_PROVIDER }
+    fn render_data(&amp;self) -&gt; &amp;dyn RenderData&lt;Move=Self::Move, Item=Self::Item, Species=Self::Species&gt; { &amp;MY_PROVIDER }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="32-provider-模式"><a class="header" href="#32-provider-模式">3.2 Provider 模式</a></h3>
+<p>引擎通过 trait 查询数据，而不是直接访问具体类型。这实现了：</p>
+<ul>
+<li><strong>依赖注入</strong>：测试时可以注入 mock 实现</li>
+<li><strong>松耦合</strong>：游戏数据变更不影响引擎代码</li>
+<li><strong>可复用</strong>：同一个引擎可以驱动不同的 JRPG 游戏</li>
+</ul>
+<hr>
+<h2 id="4-地图系统"><a class="header" href="#4-地图系统">4. 地图系统</a></h2>
+<h3 id="41-地图数据模型"><a class="header" href="#41-地图数据模型">4.1 地图数据模型</a></h3>
+<p>地图系统使用以下核心类型（定义在 <code>dotzuki_engine::overworld::types</code>）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 地图数据
+pub struct MapData&lt;M: MapTrait, T: TilesetTrait, Mus&gt; {
+    pub id: M,                          // 地图 ID
+    pub width: u8,                      // 宽度（瓦片数）
+    pub height: u8,                     // 高度（瓦片数）
+    pub tileset: T,                     // 使用的瓦片集
+    pub music: Mus,                     // 背景音乐
+    pub blocks: Vec&lt;u8&gt;,               // 方块数据（width * height 字节）
+    pub warps: Vec&lt;WarpPoint&lt;M&gt;&gt;,      // 传送点
+    pub npcs: Vec&lt;NpcDefinition&gt;,       // NPC 定义
+    pub signs: Vec&lt;Sign&gt;,               // 告示牌
+    pub connections: MapConnections&lt;M&gt;, // 地图连接
+}
+<span class="boring">}</span></code></pre>
+<h3 id="42-使用-tiled-创建地图"><a class="header" href="#42-使用-tiled-创建地图">4.2 使用 Tiled 创建地图</a></h3>
+<p>推荐使用 <a href="https://www.mapeditor.org/">Tiled</a> 编辑器创建地图，通过 <code>dotzuki-engine-tiled</code> crate 自动解析：</p>
+<pre><code class="language-toml">[dependencies]
+dotzuki-engine-tiled = { path = "../crates/dotzuki-engine-tiled" }
+</code></pre>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine_tiled::parse_tiled_json;
+
+let tmx_json = std::fs::read_to_string("assets/my_map.tmx")?;
+let map_data: MapData&lt;MyMapId, MyTilesetId, MyMusicId&gt; = parse_tiled_json(&amp;tmx_json)?;
+<span class="boring">}</span></code></pre>
+<p><strong>Tiled 使用要点：</strong></p>
+<ul>
+<li>地图格式：JSON（.tmx → 导出为 JSON）</li>
+<li>瓦片大小：8×8 像素（Game Boy 标准）</li>
+<li>图层命名：按 <code>z_index</code> 排序（数值越小越靠后）</li>
+<li>自定义属性：可用于设置碰撞、触发器、NPC 位置</li>
+</ul>
+<h3 id="43-地图连接无缝滚动"><a class="header" href="#43-地图连接无缝滚动">4.3 地图连接（无缝滚动）</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 定义地图像素之间的连接
+let connections = MapConnections {
+    north: Some(MapConnection::new(Direction::Up, Route1, 0)),   // 北边连到 Route1
+    south: Some(MapConnection::new(Direction::Down, StartTown, 0)), // 南边连到起始镇
+    west: None,
+    east: None,
+};
+<span class="boring">}</span></code></pre>
+<h3 id="44-传送点"><a class="header" href="#44-传送点">4.4 传送点</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let warp = WarpPoint::new(
+    10, 5,           // 地图坐标 (x, y)
+    MonsterCenterMap,   // 目标地图
+    1,               // 目标地图中第几个传送点
+);
+<span class="boring">}</span></code></pre>
+<h3 id="45-碰撞系统"><a class="header" href="#45-碰撞系统">4.5 碰撞系统</a></h3>
+<p>碰撞类型定义在 <code>dotzuki_engine::tile_meta::CollisionType</code>：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum CollisionType {
+    Passable,                          // 可通行
+    Impassable,                        // 不可通行
+    Ledge { direction: u8 },          // 悬崖（可跳下）
+    Counter,                           // 柜台（可从背后交互）
+    Grass(Option&lt;u8&gt;),                // 草丛（触发遇敌）
+    Water,                             // 水面（需要冲浪）
+    Warp,                              // 传送门
+    Door,                              // 门
+}
+<span class="boring">}</span></code></pre>
+<p>实现 <code>TileMetadata</code> trait 为你的瓦片集提供碰撞数据：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl TileMetadata&lt;MyTileMeta&gt; for MyTileMetaProvider {
+    fn is_passable(&amp;self, tileset: MyTileMeta, tile_id: u8) -&gt; bool { /* ... */ }
+    fn collision_type(&amp;self, tileset: MyTileMeta, tile_id: u8) -&gt; CollisionType { /* ... */ }
+    fn is_ledge(&amp;self, tileset: MyTileMeta, tile_id: u8) -&gt; bool { /* ... */ }
+    fn is_counter(&amp;self, tileset: MyTileMeta, tile_id: u8) -&gt; bool { /* ... */ }
+    fn is_grass(&amp;self, tileset: MyTileMeta, tile_id: u8) -&gt; bool { /* ... */ }
+    fn get_grass_tile(&amp;self, tileset: MyTileMeta) -&gt; Option&lt;u8&gt; { /* ... */ }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="46-metatile-系统"><a class="header" href="#46-metatile-系统">4.6 Metatile 系统</a></h3>
+<p>Metatile（元瓦片）是引擎对 Game Boy “方块“概念的泛化。一个 metatile 由 N×N 个瓦片组成（支持 2×2、3×3、4×4 等任意尺寸）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::metatile::{MetatileDef, MetatileRegistry, MetatileCell, TriggerDef, TriggerType};
+
+// 创建一个 4×4 的 metatile（Game Boy 标准）
+let mut mt = MetatileDef::new((4, 4));
+
+// 设置瓦片内容
+mt.tiles[0] = MetatileCell { tile_id: 1, flip_x: false, flip_y: false, palette_bank: 0 };
+
+// 设置碰撞
+mt.collision[0] = CollisionCell::impassable();
+
+// 设置触发器
+mt.trigger = Some(TriggerDef {
+    script_name: "heal_party".into(),
+    trigger_type: TriggerType::OnStep,
+});
+
+// 注册到 tileset 的 metatile 注册表
+let mut registry = MetatileRegistry::new();
+let block_index = registry.add_def(mt); // 地图方块数据引用此索引
+<span class="boring">}</span></code></pre>
+<h3 id="47-摄像机系统"><a class="header" href="#47-摄像机系统">4.7 摄像机系统</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::camera::{Camera, Vec2, Rect};
+
+let mut cam = Camera::new(160.0, 144.0); // Game Boy 屏幕尺寸
+cam.clamp_to_bounds(Rect::new(0.0, 0.0, 2048.0, 2048.0)); // 世界边界
+cam.follow_target(Vec2::new(player_x, player_y));           // 跟随玩家
+cam.smooth_factor = 0.2; // 平滑跟随（0.0 = 瞬移）
+
+// 每帧调用
+cam.update(dt);
+
+// 世界坐标 → 屏幕坐标
+let screen_pos = cam.world_to_screen(Vec2::new(npc_x, npc_y));
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="5-npc-系统"><a class="header" href="#5-npc-系统">5. NPC 系统</a></h2>
+<h3 id="51-npc-定义"><a class="header" href="#51-npc-定义">5.1 NPC 定义</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::overworld::types::{NpcDefinition, NpcMovementType, Direction};
+
+let npc = NpcDefinition::new(
+    1,                          // sprite_id: 精灵 ID
+    10, 5,                      // 起始位置 (x, y)
+    NpcMovementType::Wander,    // 移动类型
+    Direction::Down,            // 朝向
+    3,                          // 移动范围（0 = 不移动）
+    42,                         // text_id: 交互时显示的文本
+);
+<span class="boring">}</span></code></pre>
+<h3 id="52-npc-移动类型"><a class="header" href="#52-npc-移动类型">5.2 NPC 移动类型</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>行为</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Stationary</code></td><td>原地不动，面朝固定方向</td></tr>
+<tr><td><code>Wander</code></td><td>在范围内随机移动</td></tr>
+<tr><td><code>FixedPath</code></td><td>按固定路径移动</td></tr>
+<tr><td><code>FacePlayer</code></td><td>对话时面向玩家</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="53-npc-运行时状态"><a class="header" href="#53-npc-运行时状态">5.3 NPC 运行时状态</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::overworld::npc_movement::NpcRuntimeState;
+
+// 每帧更新 NPC 移动
+update_npc_movement(npc_state, map_data, tile_metadata, &amp;mut event_flags);
+
+// 检查 NPC 是否在玩家前方
+if let Some(npc) = npc_in_front_of_player(&amp;player, &amp;npc_states) { /* ... */ }
+
+// 启动脚本化移动
+start_scripted_move(npc_state, Direction::Up, 3); // 向上移动 3 格
+<span class="boring">}</span></code></pre>
+<h3 id="54-npc-交互"><a class="header" href="#54-npc-交互">5.4 NPC 交互</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::overworld::npc_interaction::{try_interact, InteractionResult, check_line_of_sight};
+
+// 尝试与 NPC 交互
+let result = try_interact(npc_state, &amp;player, &amp;event_flags, &amp;map_data);
+match result {
+    InteractionResult::Talk =&gt; { /* 显示对话 */ }
+    InteractionResult::TrainerBattle =&gt; { /* 开始战斗 */ }
+    InteractionResult::ItemPickup =&gt; { /* 获得物品 */ }
+    InteractionResult::AlreadyDefeated =&gt; { /* 已击败的对话 */ }
+}
+
+// 检查训练师视线
+let sight = check_line_of_sight(npc_state, &amp;player);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="6-战斗与怪物系统"><a class="header" href="#6-战斗与怪物系统">6. 战斗与怪物系统</a></h2>
+<h3 id="61-battleprovider-trait"><a class="header" href="#61-battleprovider-trait">6.1 BattleProvider trait</a></h3>
+<p>战斗系统的核心是 <code>BattleProvider</code> trait。你需要为你的游戏实现这个 trait：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::battle::{BattleProvider, BattlerState, BattleState, DamageResult,
+    MoveEffect, EffectResult, Weather, Terrain, EnumMap};
+
+impl BattleProvider for MyBattleProvider {
+    type Monster = MyMonster;
+    type Move = MyMove;
+    type Ability = MyAbility;
+    type Status = MyStatus;
+    type Stat = MyStat;
+    type Species = MySpecies;
+    type Type = MyType;
+    type Item = MyItem;
+
+    fn calculate_damage(&amp;self, move_: &amp;Self::Move, attacker: &amp;BattlerState&lt;Self&gt;,
+        defender: &amp;BattlerState&lt;Self&gt;, random: u8, is_critical: bool) -&gt; DamageResult {
+        // 实现你的伤害公式
+    }
+
+    fn select_move(&amp;self, battler: &amp;BattlerState&lt;Self&gt;,
+        state: &amp;BattleState&lt;Self&gt;) -&gt; Self::Move {
+        // AI 招式选择
+    }
+
+    fn apply_move_effect(&amp;self, effect: MoveEffect,
+        user: &amp;mut BattlerState&lt;Self&gt;, target: &amp;mut BattlerState&lt;Self&gt;) -&gt; EffectResult {
+        // 应用招式效果
+    }
+
+    fn create_monster(&amp;self, species: Self::Species, level: u8) -&gt; BattlerState&lt;Self&gt; {
+        // 根据物种和等级创建战斗单位
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="62-战斗状态"><a class="header" href="#62-战斗状态">6.2 战斗状态</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 创建战斗
+let player_team = vec![player_battler];
+let enemy_team = vec![enemy_battler];
+let mut battle = BattleState::&lt;MyBattleProvider&gt;::new(player_team, enemy_team);
+
+// 查询
+let active = battle.active_player().unwrap();
+let opponent = battle.active_opponent().unwrap();
+<span class="boring">}</span></code></pre>
+<h3 id="63-战斗单位状态"><a class="header" href="#63-战斗单位状态">6.3 战斗单位状态</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut battler = BattlerState::&lt;MyBattleProvider&gt;::new(
+    species, hp, max_hp, stats, moves
+);
+
+battler.take_damage(30);     // 受到 30 点伤害
+battler.heal(20);            // 回复 20 点 HP（不超过 max_hp）
+<span class="boring">}</span></code></pre>
+<h3 id="64-属性克制"><a class="header" href="#64-属性克制">6.4 属性克制</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait TypeChart {
+    type Type: PartialEq + Debug;
+    fn effectiveness(attacking: &amp;Self::Type, defending: &amp;[Self::Type]) -&gt; f32;
+}
+
+// 实现一个简单的剪刀石头布克制系统
+impl TypeChart for MyTypeChart {
+    type Type = Element;
+    fn effectiveness(a: &amp;Element, d: &amp;[Element]) -&gt; f32 {
+        match (a, d.first().unwrap_or(&amp;Element::Neutral)) {
+            (Element::Fire, Element::Grass) =&gt; 2.0,  // 火克草
+            (Element::Water, Element::Fire) =&gt; 2.0,   // 水克火
+            (Element::Grass, Element::Water) =&gt; 2.0,  // 草克水
+            (a, d) if a == d =&gt; 0.5,                   // 同属性减半
+            _ =&gt; 1.0,                                   // 其他普通
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="65-招式效果"><a class="header" href="#65-招式效果">6.5 招式效果</a></h3>
+<p>引擎提供 13 种招式效果分类：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>效果</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Damage</code></td><td>纯伤害</td></tr>
+<tr><td><code>Heal</code></td><td>回复 HP</td></tr>
+<tr><td><code>StatusCondition</code></td><td>施加状态异常</td></tr>
+<tr><td><code>StatChange</code></td><td>能力值变化</td></tr>
+<tr><td><code>MultiHit</code></td><td>多段攻击</td></tr>
+<tr><td><code>Recharge</code></td><td>需要蓄力</td></tr>
+<tr><td><code>DrainHp</code></td><td>吸血</td></tr>
+<tr><td><code>Recoil</code></td><td>反伤</td></tr>
+<tr><td><code>Flinch</code></td><td>畏缩</td></tr>
+<tr><td><code>FieldEffect</code></td><td>场地效果</td></tr>
+<tr><td><code>SpecialDamage</code></td><td>固定伤害</td></tr>
+<tr><td><code>Ohko</code></td><td>一击必杀</td></tr>
+<tr><td><code>MultiTurn</code></td><td>多回合招式</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="66-战场环境"><a class="header" href="#66-战场环境">6.6 战场环境</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 天气
+battle.weather = Weather::Rain;    // 下雨
+battle.weather = Weather::Sun;     // 晴天
+battle.weather = Weather::Sandstorm; // 沙暴
+battle.weather = Weather::Snow;    // 冰雹
+
+// 地形
+battle.terrain = Terrain::Electric; // 电气场地
+battle.terrain = Terrain::Grassy;   // 青草场地
+battle.terrain = Terrain::Misty;    // 薄雾场地
+battle.terrain = Terrain::Psychic;  // 精神场地
+<span class="boring">}</span></code></pre>
+<h3 id="67-ai-系统"><a class="header" href="#67-ai-系统">6.7 AI 系统</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait BattleAI&lt;P: BattleProvider + ?Sized&gt; {
+    fn select_move(&amp;self, battler: &amp;BattlerState&lt;P&gt;, state: &amp;BattleState&lt;P&gt;) -&gt; P::Move;
+    fn should_switch(&amp;self, battler: &amp;BattlerState&lt;P&gt;) -&gt; bool;
+    fn should_use_item(&amp;self, battler: &amp;BattlerState&lt;P&gt;) -&gt; Option&lt;P::Item&gt;;
+}
+<span class="boring">}</span></code></pre>
+<h3 id="68-完整战斗示例"><a class="header" href="#68-完整战斗示例">6.8 完整战斗示例</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 1. 创建战斗单位
+let hero = provider.create_monster(MySpecies::Knight, 50);
+let slime = provider.create_monster(MySpecies::Slime, 10);
+
+// 2. 初始化战斗
+let mut battle = BattleState::new(vec![hero], vec![slime]);
+
+// 3. 单回合
+let move_ = provider.select_move(battle.active_player().unwrap(), &amp;battle);
+let result = provider.calculate_damage(&amp;move_, battle.active_player().unwrap(),
+    battle.active_opponent().unwrap(), rand_val, false);
+battle.active_opponent_mut().unwrap().take_damage(result.damage);
+
+// 4. 检查结果
+if provider.check_faint(battle.active_opponent().unwrap()) {
+    // 敌人倒下了！
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="7-中文与多语言支持"><a class="header" href="#7-中文与多语言支持">7. 中文与多语言支持</a></h2>
+<h3 id="71-三条文本渲染路径"><a class="header" href="#71-三条文本渲染路径">7.1 三条文本渲染路径</a></h3>
+<p>引擎支持<strong>三种文本渲染方式</strong>，以适应不同场景：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>渲染路径</th><th>用途</th><th>中文支持</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Modern Pixel Font</strong> (<code>embedded_font.rs</code>)</td><td>UI 文本、对话、菜单</td><td>✅ 完整支持</td></tr>
+<tr><td><strong>Legacy GB Tilemap</strong> (<code>charmap.rs</code>)</td><td>复古 GB 风格文本</td><td>❌ 仅 ASCII</td></tr>
+<tr><td><strong>Generic Text Engine</strong> (<code>TextProvider</code>)</td><td>框架级文本抽象</td><td>取决于实现</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="72-现代像素字体推荐"><a class="header" href="#72-现代像素字体推荐">7.2 现代像素字体（推荐）</a></h3>
+<p>引擎使用 <strong>Fusion Pixel 10px Monospaced</strong> 字体（OFL-1.1 许可，由 TakWolf 制作）：</p>
+<ul>
+<li><strong>拉丁字符</strong>：5px 半角宽度</li>
+<li><strong>CJK 字符</strong>：10px 全角宽度</li>
+<li><strong>自动分发</strong>：根据 Unicode 码位自动选择拉丁/CJK 渲染路径</li>
+</ul>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_renderer::embedded_font;
+
+// 绘制中文字符
+embedded_font::draw_char(framebuffer, '你', x, y, color);
+embedded_font::draw_text(framebuffer, "你好，世界！", x, y, color);
+
+// 判断是否为 CJK 字符
+if embedded_font::is_cjk('中') {
+    // 全角宽度处理
+}
+
+// 计算文本像素宽度
+let width = embedded_font::text_width("你好");
+<span class="boring">}</span></code></pre>
+<h3 id="73-添加中文字形"><a class="header" href="#73-添加中文字形">7.3 添加中文字形</a></h3>
+<p>要添加新的中文字符：</p>
+<ol>
+<li>
+<p><strong>确保 BDF 字体文件包含该字符</strong></p>
+<ul>
+<li>字体位置：<code>crates/dotzuki-renderer/fonts/fusion-pixel-10px-monospaced-zh_hans.bdf</code>（24,794 个字形）</li>
+</ul>
+</li>
+<li>
+<p><strong>在 build.rs 的 CJK 字形列表中添加字符</strong></p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// crates/dotzuki-renderer/build.rs
+const CJK_CHARS: &amp;str = "\
+   你好世界欢迎来到怪物游戏\
+   训练师战斗背包存档\
+   火水草电冰龙一般格斗飞行毒地面岩石虫幽灵超能力\
+   叶芽兽电鼠兽焰蜥兽水龟兽\
+   ";
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p><strong>重新构建</strong></p>
+<pre><code class="language-bash">cargo build -p dotzuki-renderer
+</code></pre>
+</li>
+</ol>
+<h3 id="74-多语言数据管理"><a class="header" href="#74-多语言数据管理">7.4 多语言数据管理</a></h3>
+<p>按语言返回对应文本（原 pokered 参考实现中该模式位于 <code>lang_data.rs</code>，已随
+拆分迁出；以下为等价示例）：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 根据语言返回对应文本
+fn species_name(species: SpeciesId, is_zh: bool) -&gt; &amp;'static str {
+    if is_zh {
+        match species {
+            SpeciesId::Leafkit =&gt; "叶芽兽",
+            SpeciesId::Sparkit =&gt; "电鼠兽",
+            // ...
+        }
+    } else {
+        match species {
+            SpeciesId::Leafkit =&gt; "LEAFKIT",
+            SpeciesId::Sparkit =&gt; "SPARKIT",
+            // ...
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="75-拼音输入法"><a class="header" href="#75-拼音输入法">7.5 拼音输入法</a></h3>
+<p>引擎内置拼音输入法支持，用于命名界面：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use /* 你的游戏 crate */ pinyin_dict::lookup_pinyin;
+
+// 查找拼音对应的候选汉字
+let candidates: Vec&lt;char&gt; = lookup_pinyin("ni");   // → ['你', '尼', '泥', ...]
+let candidates: Vec&lt;char&gt; = lookup_pinyin("hao");  // → ['好', '号', '毫', ...]
+<span class="boring">}</span></code></pre>
+<p>拼音字典示例包含 400+ 条记录；原实现（<code>pokered-data/src/pinyin_dict.rs</code>）已随
+拆分迁至 pokered 仓库。</p>
+<h3 id="76-语言感知渲染"><a class="header" href="#76-语言感知渲染">7.6 语言感知渲染</a></h3>
+<p><code>FrameBufferPainter</code> 存储 <code>lang: Lang</code> 字段。当语言为中文时，会自动应用 <strong>-1 像素 Y 偏移</strong> 以对齐 CJK 字形：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let painter = FrameBufferPainter::new(framebuffer)
+    .with_lang(Lang::Zh);  // 启用中文渲染
+<span class="boring">}</span></code></pre>
+<h3 id="77-js-脚本中的多语言支持"><a class="header" href="#77-js-脚本中的多语言支持">7.7 JS 脚本中的多语言支持</a></h3>
+<p>在使用 <code>dotzuki-engine-script</code> 时，可通过 <code>game.t()</code> 实现双语文本：</p>
+<pre><code class="language-javascript">// game.t(en, zh) 根据当前语言返回对应文本
+await game.showText(game.t(
+    "Hello! Welcome to the world of monsters!",
+    "你好！欢迎来到怪物的世界！"
+));
+
+// 条件判断
+if (game.lang() === "zh") {
+    await game.showText("前方森林\n请小心！");
+} else {
+    await game.showText("THE FOREST AHEAD\nBe careful!");
+}
+
+// 选择框
+const choice = await game.showTextChoice(
+    game.t("Did you check out the MUSEUM?", "你去博物馆看过了吗？"),
+    [game.t("YES", "是"), game.t("NO", "否")]
+);
+</code></pre>
+<hr>
+<h2 id="8-对话与文本引擎"><a class="header" href="#8-对话与文本引擎">8. 对话与文本引擎</a></h2>
+<h3 id="81-textprovider-trait"><a class="header" href="#81-textprovider-trait">8.1 TextProvider trait</a></h3>
+<p>实现 <code>TextProvider</code> 来定义你的游戏字符编码：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::text::{TextProvider, ControlAction, DialogState, TileBuffer, TextStream};
+
+impl TextProvider for MyTextProvider {
+    type Char = MyChar;  // 你的字符类型（可以是枚举）
+
+    fn decode_byte(&amp;self, byte: u8) -&gt; Option&lt;Self::Char&gt; {
+        // 将字节解码为字符
+        match byte {
+            0x41..=0x5A =&gt; Some(MyChar::Ascii(byte as char)),
+            0xFE =&gt; Some(MyChar::Newline),
+            0xFF =&gt; Some(MyChar::Done),
+            _ =&gt; None,
+        }
+    }
+
+    fn render_char(&amp;self, c: &amp;Self::Char, buffer: &amp;mut TileBuffer) {
+        // 将字符绘制到 TileBuffer
+    }
+
+    fn is_control_code(&amp;self, c: &amp;Self::Char) -&gt; bool {
+        matches!(c, MyChar::Newline | MyChar::Done)
+    }
+
+    fn process_control(&amp;self, c: &amp;Self::Char, state: &amp;mut DialogState) -&gt; ControlAction {
+        match c {
+            MyChar::Newline =&gt; ControlAction::Newline,
+            MyChar::Done =&gt; ControlAction::Done,
+            _ =&gt; ControlAction::None,
+        }
+    }
+
+    fn string_width(&amp;self, text: &amp;[Self::Char]) -&gt; u16 {
+        // 计算文本像素宽度
+        text.len() as u16 * 8 // 等宽字体
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="82-dialogengine--逐字打字效果"><a class="header" href="#82-dialogengine--逐字打字效果">8.2 DialogEngine —— 逐字打字效果</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::text::DialogEngine;
+
+let provider = MyTextProvider;
+let mut engine = DialogEngine::new(provider);
+let mut buffer = TileBuffer::new();
+
+// 开始对话
+engine.open_dialog(&amp;[0x48, 0x45, 0x4C, 0x4C, 0x4F, 0xFF]); // "HELLO" + DONE
+
+// 每帧调用一次
+while engine.is_active() {
+    engine.update(&amp;mut buffer);  // 逐字显示
+}
+
+// 玩家按 A 键推进对话
+engine.advance();
+<span class="boring">}</span></code></pre>
+<h3 id="83-控制码"><a class="header" href="#83-控制码">8.3 控制码</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>控制动作</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Newline</code></td><td>光标移到下一行</td></tr>
+<tr><td><code>PageBreak</code></td><td>暂停，等待玩家按键后清屏</td></tr>
+<tr><td><code>Done</code></td><td>结束当前对话</td></tr>
+<tr><td><code>SetSpeed(n)</code></td><td>设置打字速度（0 = 即时）</td></tr>
+<tr><td><code>Clear</code></td><td>清空文本缓冲区</td></tr>
+<tr><td><code>WaitInput</code></td><td>暂停，等待玩家按键</td></tr>
+<tr><td><code>MoveCursor {x, y}</code></td><td>移动光标到指定位置</td></tr>
+<tr><td><code>Scroll</code></td><td>向上滚动一行</td></tr>
+<tr><td><code>Pause(n)</code></td><td>暂停 n 帧</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="84-对话状态"><a class="header" href="#84-对话状态">8.4 对话状态</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum DialogMode {
+    Typing,           // 正在逐字显示
+    Paused,           // 暂停中
+    WaitingForInput,  // 等待玩家按键
+    Scrolling,        // 滚动中
+    Done,             // 对话结束
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="9-菜单系统"><a class="header" href="#9-菜单系统">9. 菜单系统</a></h2>
+<h3 id="91-menuprovider-trait"><a class="header" href="#91-menuprovider-trait">9.1 MenuProvider trait</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::menu::{MenuProvider, MenuOption, MenuLayout};
+
+impl MenuProvider for MyMenuProvider {
+    type MenuId = MyMenuId;
+
+    fn title(&amp;self, menu: Self::MenuId) -&gt; &amp;str { "菜单标题" }
+    fn options(&amp;self, menu: Self::MenuId) -&gt; &amp;[MenuOption] { &amp;self.items }
+    fn option_count(&amp;self, menu: Self::MenuId) -&gt; u8 { 3 }
+    fn scrollable(&amp;self, menu: Self::MenuId) -&gt; bool { false }
+    fn layout(&amp;self, menu: Self::MenuId) -&gt; MenuLayout {
+        MenuLayout::new(5, 3, 10, 9)  // (tile_x, tile_y, width, height)
+            .with_spacing(2)
+            .with_cursor(true)
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="92-menusystem--菜单控制器"><a class="header" href="#92-menusystem--菜单控制器">9.2 MenuSystem —— 菜单控制器</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::menu::{MenuSystem, MenuInput, MenuAction};
+
+let provider = MyMenuProvider { /* ... */ };
+let mut menu = MenuSystem::new(&amp;provider);
+
+// 打开菜单
+menu.open(MyMenuId::MainMenu);
+
+// 处理输入（每帧一次）
+let input = MenuInput { down: true, ..Default::default() };
+let action = menu.handle_input(&amp;input);
+match action {
+    MenuAction::Selected(0) =&gt; { /* 选项 1 被选中 */ }
+    MenuAction::Selected(1) =&gt; { /* 选项 2 被选中 */ }
+    MenuAction::Cancelled =&gt; { /* 取消 */ }
+    MenuAction::Up | MenuAction::Down =&gt; { /* 光标移动 */ }
+    _ =&gt; {}
+}
+
+// 渲染菜单（使用 Painter trait）
+menu.render(&amp;mut painter);
+<span class="boring">}</span></code></pre>
+<h3 id="93-菜单选项"><a class="header" href="#93-菜单选项">9.3 菜单选项</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::menu::MenuOption;
+
+let options = vec![
+    MenuOption::new("新游戏"),              // 可选的正常选项
+    MenuOption::new("继续"),               // 可选的正常选项
+    MenuOption::disabled("需要存档"),       // 禁用（灰色）
+];
+<span class="boring">}</span></code></pre>
+<h3 id="94-菜单布局与样式"><a class="header" href="#94-菜单布局与样式">9.4 菜单布局与样式</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::menu::{BorderStyle, CursorStyle, CursorAnchor, MenuConfig, EdgeInsets};
+
+// 边框样式（9格边框）
+let border = BorderStyle {
+    corner_tl: 192, corner_tr: 193,
+    corner_bl: 198, corner_br: 199,
+    edge_top: 194, edge_bottom: 197,
+    edge_left: 195, edge_right: 196,
+    fill_bg: 200,
+};
+
+// 光标样式
+let cursor = CursorStyle::new(Some(223), CursorAnchor::CenterLeft);
+
+// 菜单渲染配置
+let config = MenuConfig::new(area, Some(border), content, cursor);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="10-物品系统"><a class="header" href="#10-物品系统">10. 物品系统</a></h2>
+<h3 id="101-itemprovider-trait"><a class="header" href="#101-itemprovider-trait">10.1 ItemProvider trait</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::items::{ItemProvider, ItemResult, Inventory};
+
+impl ItemProvider for MyItemProvider {
+    type Item = MyItem;
+    type Effect = MyEffect;
+    type Monster = MyMonster;
+
+    fn item_name(&amp;self, item: &amp;Self::Item) -&gt; &amp;str { "伤药" }
+    fn item_description(&amp;self, item: &amp;Self::Item) -&gt; &amp;str { "回复 20 点 HP" }
+    fn item_price(&amp;self, item: &amp;Self::Item) -&gt; u32 { 300 }
+    fn can_use_outside_battle(&amp;self, item: &amp;Self::Item) -&gt; bool { true }
+    fn can_use_in_battle(&amp;self, item: &amp;Self::Item) -&gt; bool { true }
+    fn consume(&amp;self, item: &amp;Self::Item) -&gt; bool { true } // 使用后消失
+    fn item_effect(&amp;self, item: &amp;Self::Item) -&gt; MyEffect { MyEffect::Heal(20) }
+
+    fn use_on_monster(&amp;self, item: &amp;Self::Item, monster: &amp;mut Self::Monster) -&gt; ItemResult {
+        // 应用物品效果
+        monster.current_hp = (monster.current_hp + 20).min(monster.max_hp);
+        ItemResult::Used
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="102-背包管理"><a class="header" href="#102-背包管理">10.2 背包管理</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::items::Inventory;
+
+let mut bag = Inventory::new();
+
+// 添加物品
+bag.add(Potion, 3);   // 获得 3 个伤药
+bag.add(Potion, 5);   // 再获得 5 个（自动堆叠为 8 个）
+
+// 检查数量
+assert!(bag.contains(&amp;Potion, 5));
+
+// 使用物品
+bag.remove(&amp;Potion, 1); // 使用 1 个
+<span class="boring">}</span></code></pre>
+<h3 id="103-商店系统"><a class="header" href="#103-商店系统">10.3 商店系统</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::items::ShopProvider;
+
+impl ShopProvider for MyShopProvider {
+    type Item = MyItem;
+    type ShopId = MyShopId;
+
+    fn shop_inventory(&amp;self, shop_id: &amp;Self::ShopId) -&gt; Vec&lt;(Self::Item, u32)&gt; {
+        vec![
+            (Potion, 300),   // 伤药 300 金币
+            (Elixir, 500),   // 万灵药 500 金币
+        ]
+    }
+
+    fn shop_name(&amp;self, shop_id: &amp;Self::ShopId) -&gt; &amp;str {
+        "友好商店"
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="104-物品分类"><a class="header" href="#104-物品分类">10.4 物品分类</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum BagCategory {
+    Items,      // 一般道具
+    Medicine,   // 药品
+    Balls,      // 捕获道具
+    Battle,     // 战斗道具
+    Key,        // 重要道具（不可丢弃）
+    Other,      // 其他
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="11-存档系统"><a class="header" href="#11-存档系统">11. 存档系统</a></h2>
+<h3 id="111-savedata-trait"><a class="header" href="#111-savedata-trait">11.1 SaveData trait</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::save::{SaveData, SaveManager, SaveStorage, SaveSlot, SaveError};
+
+impl SaveData for MySave {
+    fn serialize(&amp;self) -&gt; Vec&lt;u8&gt; {
+        // 序列化为字节数组（不包含校验和）
+        let mut data = Vec::new();
+        data.extend_from_slice(self.player_name.as_bytes());
+        data.push(self.level);
+        data.extend_from_slice(&amp;self.gold.to_le_bytes());
+        data
+    }
+
+    fn deserialize(data: &amp;[u8]) -&gt; Result&lt;Self, SaveError&gt; {
+        // 从字节数组反序列化（不包含校验和）
+        // ...
+        Ok(MySave { /* ... */ })
+    }
+
+    fn save_size() -&gt; usize {
+        // 总存档大小（包含 2 字节校验和）
+        1024
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="112-使用-savemanager"><a class="header" href="#112-使用-savemanager">11.2 使用 SaveManager</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::save::{SaveManager, SaveSlot, InMemoryStorage};
+
+// 创建存档管理器（使用内存存储——生产环境应实现文件存储）
+let storage = Box::new(InMemoryStorage::new());
+let manager = SaveManager::&lt;MySave&gt;::new(storage);
+
+// 存档
+manager.save(SaveSlot::Slot1, &amp;my_save_data)?;
+
+// 读档
+let loaded = manager.load(SaveSlot::Slot1)?;
+
+// 列出所有存档位
+let slots = manager.list_slots();
+for (slot, has_data) in slots {
+    println!("{:?}: {}", slot, if has_data { "有数据" } else { "空" });
+}
+
+// 删除存档
+manager.delete(SaveSlot::Slot1)?;
+<span class="boring">}</span></code></pre>
+<h3 id="113-实现文件存储"><a class="header" href="#113-实现文件存储">11.3 实现文件存储</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::fs;
+
+struct FileStorage { dir: String }
+
+impl SaveStorage for FileStorage {
+    fn write(&amp;self, slot: usize, data: &amp;[u8]) -&gt; Result&lt;(), SaveError&gt; {
+        let path = format!("{}/save_{}.sav", self.dir, slot);
+        fs::write(&amp;path, data).map_err(|e| SaveError::IoError(e.to_string()))
+    }
+
+    fn read(&amp;self, slot: usize) -&gt; Result&lt;Vec&lt;u8&gt;, SaveError&gt; {
+        let path = format!("{}/save_{}.sav", self.dir, slot);
+        fs::read(&amp;path).map_err(|e| SaveError::IoError(e.to_string()))
+    }
+
+    fn slot_exists(&amp;self, slot: usize) -&gt; bool {
+        std::path::Path::new(&amp;format!("{}/save_{}.sav", self.dir, slot)).exists()
+    }
+
+    fn delete_slot(&amp;self, slot: usize) -&gt; Result&lt;(), SaveError&gt; {
+        let path = format!("{}/save_{}.sav", self.dir, slot);
+        fs::remove_file(&amp;path).map_err(|e| SaveError::IoError(e.to_string()))
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="114-crc16-校验"><a class="header" href="#114-crc16-校验">11.4 CRC16 校验</a></h3>
+<p>引擎自动使用 CRC-16/XMODEM（多项式 <code>0x1021</code>）校验存档完整性：</p>
+<pre><code>存档数据结构： [游戏数据字节...] [2 字节 CRC16 校验和 (LE)]
+</code></pre>
+<hr>
+<h2 id="12-事件与触发器系统"><a class="header" href="#12-事件与触发器系统">12. 事件与触发器系统</a></h2>
+<h3 id="121-triggermanager"><a class="header" href="#121-triggermanager">12.1 TriggerManager</a></h3>
+<p>触发器系统允许你在特定瓦片上绑定脚本函数：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::trigger_manager::{TriggerManager, Trigger};
+use dotzuki_engine::metatile::TriggerType;
+
+let mut trigger_mgr = TriggerManager::new();
+
+// 注册触发器
+trigger_mgr.add_trigger(Trigger::single_tile(
+    "heal_npc",           // 触发器 ID
+    "StartTown",         // 所在地图
+    TriggerType::OnStep,  // 踩上时触发
+    3, 5,                 // 坐标 (x, y)
+    "healParty",          // 脚本函数名
+    true,                 // 一次性触发
+));
+<span class="boring">}</span></code></pre>
+<h3 id="122-触发器类型"><a class="header" href="#122-触发器类型">12.2 触发器类型</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>触发条件</th><th>典型用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>OnStep</code></td><td>每帧站在区域内</td><td>回复点、毒沼泽</td></tr>
+<tr><td><code>OnEnter</code></td><td>首次进入区域</td><td>剧情触发、过场动画</td></tr>
+<tr><td><code>OnInteract</code></td><td>玩家按下 A 键</td><td>NPC 对话、门、宝箱</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="123-游戏主循环中的触发器检查"><a class="header" href="#123-游戏主循环中的触发器检查">12.3 游戏主循环中的触发器检查</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 每帧检查
+let triggered: Vec&lt;String&gt; = trigger_mgr.check_triggers("StartTown", player_x, player_y);
+for script_name in &amp;triggered {
+    script_engine.call_function(script_name);
+}
+
+// A 键交互
+if input.a {
+    if let Some(script_name) = trigger_mgr.check_interact_mut("StartTown", facing_x, facing_y) {
+        script_engine.call_function(&amp;script_name);
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="124-脚本配置中的触发器命名"><a class="header" href="#124-脚本配置中的触发器命名">12.4 脚本配置中的触发器命名</a></h3>
+<p>在使用 <code>MapScriptConfig</code>（JSON 配置）定义坐标触发器时，每个 <code>coordEvent</code> 通过 <code>name</code> 字段标识，而非自动生成的 <code>"coord_{x}_{y}"</code> 格式。<code>name</code> 为 camelCase 字符串，在同一地图内必须唯一。</p>
+<pre><code class="language-json">{
+  "coordEvents": [
+    { "name": "northExit1", "position": [4, 1], "trigger": "coordNorthExit" }
+  ]
+}
+</code></pre>
+<p>脚本引擎通过 <code>coord_event_fn(x, y)</code> 或 <code>coord_event_by_name(name)</code> 查找对应的 JS 函数名。<code>.scene</code> 文件中的 <code>@trigger(name = "northExit1")</code> 参数直接映射到此 <code>name</code> 字段。建议为每个 coord event 赋予有意义的名称（如 <code>northExit1</code>、<code>profLabTrigger</code>），提高可读性。</p>
+<h3 id="125-js-脚本引擎"><a class="header" href="#125-js-脚本引擎">12.5 JS 脚本引擎</a></h3>
+<p>使用 <code>dotzuki-engine-script</code> 来执行 JavaScript 地图脚本：</p>
+<pre><code class="language-javascript">// assets/script.js
+
+// 地图首次进入时触发
+export async function onEnter() {
+    await game.showText("欢迎来到新手村！");
+}
+
+// 每帧踩在特定瓦片上时触发
+export async function onStep(x, y) {
+    // x, y 是当前玩家坐标
+}
+
+// 玩家按下 A 键时触发
+export async function onInteract(facingX, facingY) {
+    await game.showText("这是一个告示牌。");
+}
+</code></pre>
+<h3 id="126-事件标志"><a class="header" href="#126-事件标志">12.6 事件标志</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::overworld::event_flags::EventFlags;
+
+let mut flags = EventFlags::new();
+
+// 设置事件标志
+flags.set("defeated_gym_leader");
+
+// 检查事件标志
+if flags.check("defeated_gym_leader") {
+    // 道馆首领已被击败
+}
+
+// 重置事件标志
+flags.reset("defeated_gym_leader");
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="13-渲染系统"><a class="header" href="#13-渲染系统">13. 渲染系统</a></h2>
+<h3 id="131-framebuffer"><a class="header" href="#131-framebuffer">13.1 FrameBuffer</a></h3>
+<p>帧缓冲区是渲染的核心数据结构：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::FrameBuffer;
+
+// 创建帧缓冲（160×144 像素 = Game Boy 分辨率）
+let mut fb = FrameBuffer::default();
+
+// 或自定义分辨率
+let mut fb = FrameBuffer::new(320, 240);
+
+// 常量
+const SCREEN_WIDTH: usize = 160;
+const SCREEN_HEIGHT: usize = 144;
+const TILE_SIZE: usize = 8;  // 瓦片尺寸
+<span class="boring">}</span></code></pre>
+<h3 id="132-rgba-颜色"><a class="header" href="#132-rgba-颜色">13.2 Rgba 颜色</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::Rgba;
+
+let red = Rgba { r: 255, g: 0, b: 0, a: 255 };
+let blue = Rgba { r: 0, g: 0, b: 255, a: 255 };
+let transparent = Rgba { r: 0, g: 0, b: 0, a: 0 };
+<span class="boring">}</span></code></pre>
+<h3 id="133-painter-trait"><a class="header" href="#133-painter-trait">13.3 Painter trait</a></h3>
+<p>Painter 是渲染的抽象接口，支持像素渲染和录制回放：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::{Painter, TilePos, TileRect, InkColor, Ui, Frame};
+
+// 使用 Painter
+fn draw_scene&lt;P: Painter&gt;(painter: &amp;mut P) {
+    let mut ui = Ui::new(painter);
+
+    // 绘制文本框
+    ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |f| {
+        f.label(0, 0, "你好，冒险者！", InkColor::Black);
+    });
+}
+<span class="boring">}</span></code></pre>
+<h3 id="134-瓦片坐标系统"><a class="header" href="#134-瓦片坐标系统">13.4 瓦片坐标系统</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::{TilePos, TileRect};
+
+let pos = TilePos::new(5, 3);       // 第 5 列，第 3 行
+let rect = TileRect::new(0, 12, 20, 6);  // (x, y, w, h)
+<span class="boring">}</span></code></pre>
+<h3 id="135-地图图层渲染"><a class="header" href="#135-地图图层渲染">13.5 地图图层渲染</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::{MapLayer, MapRenderState, BlendMode};
+use dotzuki_engine::tilemap::Tilemap;
+
+// 创建地图图层
+let mut state = MapRenderState::new();
+
+// 背景层
+let bg_tilemap = Tilemap::new(32, 32);
+let mut bg_layer = MapLayer::new(bg_tilemap, 0);  // z_index = 0（最底层）
+bg_layer.scroll_factor = (0.5, 0.5);  // 视差滚动
+state.add_layer(bg_layer);
+
+// 前景层
+let fg_tilemap = Tilemap::new(32, 32);
+let mut fg_layer = MapLayer::new(fg_tilemap, 1);
+fg_layer.blend_mode = BlendMode::Normal;
+state.add_layer(fg_layer);
+
+assert_eq!(state.visible_layer_count(), 2);
+<span class="boring">}</span></code></pre>
+<h3 id="136-tilemap"><a class="header" href="#136-tilemap">13.6 Tilemap</a></h3>
+<p>新的 Tilemap 支持 16 位元数据，替代传统 Game Boy 的 1 字节瓦片索引：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::tilemap::{Tilemap, TilemapEntry};
+use dotzuki_engine::tile_meta::CollisionType;
+
+let mut tm = Tilemap::new(32, 32);
+
+// 设置瓦片
+let entry = TilemapEntry {
+    tile_id: 42,
+    flip_h: false,
+    flip_v: true,
+    palette_group: 2,
+    priority: 1,
+    collision_override: Some(CollisionType::Impassable),
+    animation_group: Some(3),  // 动画组（水面、花草）
+    ..Default::default()
+};
+tm.set(10, 5, entry);
+
+// 从 Game Boy 格式转换
+let gb_data: Vec&lt;u8&gt; = load_gb_tilemap();
+let tm = Tilemap::from_gb_tilemap(&amp;gb_data, 32, 32);
+<span class="boring">}</span></code></pre>
+<h3 id="137-色板系统"><a class="header" href="#137-色板系统">13.7 色板系统</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::palette::{PaletteTrait, PaletteProvider, SgbColor};
+
+impl PaletteTrait for MyPaletteId {}
+
+impl PaletteProvider&lt;MyPaletteId&gt; for MyPaletteProvider {
+    fn bg_palette(&amp;self, palette: MyPaletteId) -&gt; [u8; 4] { /* ... */ }
+    fn obj_palette0(&amp;self, palette: MyPaletteId) -&gt; [u8; 4] { /* ... */ }
+    fn obj_palette1(&amp;self, palette: MyPaletteId) -&gt; [u8; 4] { /* ... */ }
+    fn overworld_palette_for(&amp;self, tileset_id: u8, map_id: u8, last_map: u8) -&gt; MyPaletteId { /* ... */ }
+    fn monster_palette(&amp;self, species_index: u8) -&gt; MyPaletteId { /* ... */ }
+    fn hp_bar_to_palette_id(&amp;self, hp_bar_color: u8) -&gt; MyPaletteId { /* ... */ }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="138-色板交换palette-swap"><a class="header" href="#138-色板交换palette-swap">13.8 色板交换（Palette Swap）</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::palette_swap::{PaletteSwapManager, PaletteSwap};
+
+let mut manager = PaletteSwapManager::new();
+
+// 定义夜晚色板
+let night_swap = PaletteSwap {
+    name: "night".into(),
+    mappings: vec![(0, [Rgba { r: 10, g: 10, b: 20, a: 255 }; 4])].into_iter().collect(),
+};
+manager.add_swap(night_swap);
+manager.set_active("night");
+
+// 渲染时应用色板交换
+let mut colors = original_colors;
+manager.apply(palette_group, &amp;mut colors);
+<span class="boring">}</span></code></pre>
+<h3 id="139-renderconfig"><a class="header" href="#139-renderconfig">13.9 RenderConfig</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render_config::RenderConfig;
+
+// Game Boy 标准分辨率
+let config = RenderConfig::default();  // 160×144
+
+// 自定义分辨率
+let config = RenderConfig::new(320, 240);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="14-api-参考"><a class="header" href="#14-api-参考">14. API 参考</a></h2>
+<h3 id="141-核心-trait-清单"><a class="header" href="#141-核心-trait-清单">14.1 核心 Trait 清单</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Trait</th><th>所在模块</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>GameData</code></td><td><code>lib.rs</code></td><td>中央依赖注入点，提供所有游戏数据</td></tr>
+<tr><td><code>TilesetTrait</code></td><td><code>tileset</code></td><td>瓦片集标识符</td></tr>
+<tr><td><code>TilesetProvider&lt;T&gt;</code></td><td><code>tileset</code></td><td>提供瓦片集数据</td></tr>
+<tr><td><code>TileMetaTrait</code></td><td><code>tile_meta</code></td><td>瓦片元数据标识符</td></tr>
+<tr><td><code>TileMetadata&lt;T&gt;</code></td><td><code>tile_meta</code></td><td>提供碰撞和地形元数据</td></tr>
+<tr><td><code>MapTrait</code></td><td><code>map</code></td><td>地图标识符</td></tr>
+<tr><td><code>MapProvider&lt;M&gt;</code></td><td><code>map</code></td><td>提供地图数据</td></tr>
+<tr><td><code>PaletteTrait</code></td><td><code>palette</code></td><td>色板标识符</td></tr>
+<tr><td><code>PaletteProvider&lt;P&gt;</code></td><td><code>palette</code></td><td>提供色板数据</td></tr>
+<tr><td><code>RenderData</code></td><td><code>render_data</code></td><td>提供渲染时字符串查找</td></tr>
+<tr><td><code>TextProvider</code></td><td><code>text</code></td><td>文本编码和渲染</td></tr>
+<tr><td><code>MenuProvider</code></td><td><code>menu</code></td><td>提供菜单数据和布局</td></tr>
+<tr><td><code>MenuInputSource</code></td><td><code>menu</code></td><td>平台输入 → 菜单输入</td></tr>
+<tr><td><code>BattleProvider</code></td><td><code>battle</code></td><td>战斗数据、伤害公式、招式效果</td></tr>
+<tr><td><code>TypeChart</code></td><td><code>battle</code></td><td>属性克制矩阵</td></tr>
+<tr><td><code>BattleAI&lt;P&gt;</code></td><td><code>battle</code></td><td>战斗 AI 决策</td></tr>
+<tr><td><code>EffectHandler&lt;P&gt;</code></td><td><code>battle</code></td><td>招式效果处理器</td></tr>
+<tr><td><code>ItemProvider</code></td><td><code>items</code></td><td>物品元数据和使用效果</td></tr>
+<tr><td><code>ShopProvider</code></td><td><code>items</code></td><td>商店库存和名称</td></tr>
+<tr><td><code>SaveData</code></td><td><code>save</code></td><td>存档数据序列化/反序列化</td></tr>
+<tr><td><code>SaveStorage</code></td><td><code>save</code></td><td>平台存储后端</td></tr>
+<tr><td><code>Painter</code></td><td><code>render::painter</code></td><td>渲染抽象接口</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="142-核心类型清单"><a class="header" href="#142-核心类型清单">14.2 核心类型清单</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>所在模块</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Rgba</code></td><td><code>render::color</code></td><td>RGBA 颜色</td></tr>
+<tr><td><code>InkColor</code></td><td><code>render::ink_color</code></td><td>预定义颜色枚举</td></tr>
+<tr><td><code>FrameBuffer</code></td><td><code>render::framebuffer</code></td><td>像素帧缓冲</td></tr>
+<tr><td><code>TilePos</code></td><td><code>render::geometry</code></td><td>瓦片坐标</td></tr>
+<tr><td><code>TileRect</code></td><td><code>render::geometry</code></td><td>瓦片矩形</td></tr>
+<tr><td><code>Tilemap</code></td><td><code>tilemap</code></td><td>瓦片地图（16位元数据）</td></tr>
+<tr><td><code>TilemapEntry</code></td><td><code>tilemap</code></td><td>瓦片条目</td></tr>
+<tr><td><code>MapLayer</code></td><td><code>render</code></td><td>地图渲染图层</td></tr>
+<tr><td><code>MapRenderState</code></td><td><code>render</code></td><td>地图渲染状态</td></tr>
+<tr><td><code>BlendMode</code></td><td><code>render</code></td><td>图层混合模式</td></tr>
+<tr><td><code>RenderConfig</code></td><td><code>render_config</code></td><td>渲染配置</td></tr>
+<tr><td><code>MetatileDef</code></td><td><code>metatile</code></td><td>元瓦片定义</td></tr>
+<tr><td><code>MetatileRegistry</code></td><td><code>metatile</code></td><td>元瓦片注册表</td></tr>
+<tr><td><code>CollisionType</code></td><td><code>tile_meta</code></td><td>碰撞类型</td></tr>
+<tr><td><code>Direction</code></td><td><code>overworld::types</code></td><td>方向枚举</td></tr>
+<tr><td><code>MapData&lt;M,T,Mus&gt;</code></td><td><code>overworld::types</code></td><td>地图运行时数据</td></tr>
+<tr><td><code>MapConnection&lt;M&gt;</code></td><td><code>overworld::types</code></td><td>地图连接</td></tr>
+<tr><td><code>MapConnections&lt;M&gt;</code></td><td><code>overworld::types</code></td><td>地图连接集合</td></tr>
+<tr><td><code>WarpPoint&lt;M&gt;</code></td><td><code>overworld::types</code></td><td>传送点</td></tr>
+<tr><td><code>NpcDefinition</code></td><td><code>overworld::types</code></td><td>NPC 定义</td></tr>
+<tr><td><code>NpcMovementType</code></td><td><code>overworld::types</code></td><td>NPC 移动模式</td></tr>
+<tr><td><code>PlayerState</code></td><td><code>overworld::types</code></td><td>玩家状态</td></tr>
+<tr><td><code>OverworldState&lt;M&gt;</code></td><td><code>overworld::types</code></td><td>大地图状态</td></tr>
+<tr><td><code>OverworldInput</code></td><td><code>overworld::types</code></td><td>大地图输入</td></tr>
+<tr><td><code>Camera</code></td><td><code>camera</code></td><td>摄像机</td></tr>
+<tr><td><code>Vec2</code></td><td><code>camera</code></td><td>2D 浮点向量</td></tr>
+<tr><td><code>Rect</code></td><td><code>camera</code></td><td>轴对齐矩形</td></tr>
+<tr><td><code>EnumMap&lt;K,V&gt;</code></td><td><code>battle</code></td><td>枚举键值映射</td></tr>
+<tr><td><code>BattlerState&lt;P&gt;</code></td><td><code>battle</code></td><td>战斗单位状态</td></tr>
+<tr><td><code>BattleState&lt;P&gt;</code></td><td><code>battle</code></td><td>战斗状态</td></tr>
+<tr><td><code>DamageResult</code></td><td><code>battle</code></td><td>伤害计算结果</td></tr>
+<tr><td><code>MoveEffect</code></td><td><code>battle</code></td><td>招式效果类别</td></tr>
+<tr><td><code>EffectResult</code></td><td><code>battle</code></td><td>效果应用结果</td></tr>
+<tr><td><code>Weather</code></td><td><code>battle</code></td><td>天气</td></tr>
+<tr><td><code>Terrain</code></td><td><code>battle</code></td><td>地形</td></tr>
+<tr><td><code>Inventory&lt;I&gt;</code></td><td><code>items</code></td><td>物品背包</td></tr>
+<tr><td><code>ItemResult</code></td><td><code>items</code></td><td>物品使用结果</td></tr>
+<tr><td><code>BagCategory</code></td><td><code>items</code></td><td>背包分类</td></tr>
+<tr><td><code>DialogEngine&lt;P&gt;</code></td><td><code>text</code></td><td>对话引擎</td></tr>
+<tr><td><code>TileBuffer</code></td><td><code>text</code></td><td>文本瓦片缓冲区</td></tr>
+<tr><td><code>TextStream&lt;C&gt;</code></td><td><code>text</code></td><td>文本字符流</td></tr>
+<tr><td><code>DialogState</code></td><td><code>text</code></td><td>对话状态</td></tr>
+<tr><td><code>DialogMode</code></td><td><code>text</code></td><td>对话模式</td></tr>
+<tr><td><code>ControlAction</code></td><td><code>text</code></td><td>控制动作</td></tr>
+<tr><td><code>MenuSystem&lt;M&gt;</code></td><td><code>menu</code></td><td>菜单控制器</td></tr>
+<tr><td><code>MenuInput</code></td><td><code>menu</code></td><td>菜单输入</td></tr>
+<tr><td><code>MenuAction</code></td><td><code>menu</code></td><td>菜单操作</td></tr>
+<tr><td><code>MenuLayout</code></td><td><code>menu</code></td><td>菜单布局</td></tr>
+<tr><td><code>MenuConfig</code></td><td><code>menu</code></td><td>菜单渲染配置</td></tr>
+<tr><td><code>BorderStyle</code></td><td><code>menu</code></td><td>边框样式</td></tr>
+<tr><td><code>CursorStyle</code></td><td><code>menu</code></td><td>光标样式</td></tr>
+<tr><td><code>SaveManager&lt;S&gt;</code></td><td><code>save</code></td><td>存档管理器</td></tr>
+<tr><td><code>SaveSlot</code></td><td><code>save</code></td><td>存档位</td></tr>
+<tr><td><code>SaveError</code></td><td><code>save</code></td><td>存档错误</td></tr>
+<tr><td><code>TriggerManager</code></td><td><code>trigger_manager</code></td><td>触发器管理器</td></tr>
+<tr><td><code>Trigger</code></td><td><code>trigger_manager</code></td><td>触发器</td></tr>
+<tr><td><code>TriggerType</code></td><td><code>metatile</code></td><td>触发器类型</td></tr>
+<tr><td><code>PaletteSwapManager</code></td><td><code>palette_swap</code></td><td>色板交换管理器</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="143-常用常量"><a class="header" href="#143-常用常量">14.3 常用常量</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>常量</th><th>值</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>render::SCREEN_WIDTH</code></td><td>160</td><td>Game Boy 屏幕宽度（像素）</td></tr>
+<tr><td><code>render::SCREEN_HEIGHT</code></td><td>144</td><td>Game Boy 屏幕高度（像素）</td></tr>
+<tr><td><code>render::TILE_SIZE</code></td><td>8</td><td>瓦片尺寸（像素）</td></tr>
+<tr><td><code>render::SCREEN_WIDTH_TILES</code></td><td>20</td><td>屏幕宽度（瓦片）</td></tr>
+<tr><td><code>render::SCREEN_HEIGHT_TILES</code></td><td>18</td><td>屏幕高度（瓦片）</td></tr>
+<tr><td><code>render::DEFAULT_SCALE</code></td><td>3</td><td>默认缩放倍数</td></tr>
+<tr><td><code>camera::TILE_SIZE</code></td><td>8.0</td><td>摄像机瓦片尺寸（浮点）</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="144-颜色常量"><a class="header" href="#144-颜色常量">14.4 颜色常量</a></h3>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::render::InkColor;
+
+InkColor::White      // 白色
+InkColor::LightGray  // 浅灰
+InkColor::DarkGray   // 深灰
+InkColor::Black      // 黑色
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="附录"><a class="header" href="#附录">附录</a></h2>
+<h3 id="a-项目依赖关系图"><a class="header" href="#a-项目依赖关系图">A. 项目依赖关系图</a></h3>
+<pre><code>dotzuki-app / dotzuki-tui / dotzuki-web
+├── dotzuki-engine        (核心 trait 和类型)
+│   ├── render/        (Rgba, FrameBuffer, Painter, geometry)
+│   ├── overworld/     (地图、NPC、碰撞、移动)
+│   ├── battle/        (战斗抽象)
+│   ├── text/          (文本引擎)
+│   ├── menu/          (菜单框架)
+│   ├── items/         (物品系统)
+│   ├── save/          (存档框架)
+│   ├── tileset/       (瓦片集)
+│   ├── palette/       (色板)
+│   ├── tile_meta/     (瓦片碰撞)
+│   ├── metatile/      (元瓦片)
+│   ├── trigger_manager/ (触发器)
+│   ├── link/           (联机传输抽象：NetworkTransport、ChannelTransport、LinkRole)
+│   ├── camera/        (摄像机)
+│   ├── tilemap/       (瓦片地图)
+│   └── map/           (地图)
+├── dotzuki-engine-tiled  (Tiled .tmx 解析)
+├── dotzuki-engine-script (JS 脚本执行)
+├── dotzuki-renderer      (现代字体渲染)
+├── dotzuki-ui            (UI 组件库)
+└── dotzuki-audio         (音频引擎)
+</code></pre>
+<h3 id="b-学习路径建议"><a class="header" href="#b-学习路径建议">B. 学习路径建议</a></h3>
+<ol>
+<li><strong>第一天</strong>：阅读本文档，理解整体架构</li>
+<li><strong>第二天</strong>：使用 <code>dotzuki-template</code> 创建第一个项目，运行示例</li>
+<li><strong>第三天</strong>：用 Tiled 设计自己的地图</li>
+<li><strong>第四天</strong>：实现 <code>TextProvider</code>，添加对话</li>
+<li><strong>第五天</strong>：实现 <code>BattleProvider</code>，创建简单战斗</li>
+<li><strong>第六天</strong>：添加 NPC 和触发器</li>
+<li><strong>第七天</strong>：添加菜单和物品系统</li>
+</ol>
+<h3 id="c-相关文档"><a class="header" href="#c-相关文档">C. 相关文档</a></h3>
+<ul>
+<li><a href="./README.html"><code>README.md</code></a>（<code>workspace/docs/</code>）— 文档索引与读者指南</li>
+<li><a href="./game-project-spec.html"><code>game-project-spec.md</code></a> — 零代码游戏项目规范</li>
+<li><a href="./BATTLE_ENGINE_GUIDE.html"><code>BATTLE_ENGINE_GUIDE.md</code></a> — 战斗 effect-stack 指南</li>
+<li><a href="./GAME_UI_DSL.html">GAME_UI_DSL.md</a> — UI DSL 语法规范（已实现）</li>
+<li><a href="./FULL_DSL.html">FULL_DSL.md</a> — DSL 完整语法参考</li>
+<li><a href="./DSL_MAPPING.html">DSL_MAPPING.md</a> — DSL 编译契约</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../release-notes/migration/v0.1.0.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../archive/full-dsl.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../release-notes/migration/v0.1.0.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../archive/full-dsl.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

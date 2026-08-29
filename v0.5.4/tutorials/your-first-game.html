@@ -1,0 +1,963 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Your First Game - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-466b9ebb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./tutorials/your-first-game.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="your-first-game--town-battle-story-and-save"><a class="header" href="#your-first-game--town-battle-story-and-save">Your First Game — Town, Battle, Story and Save</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: tutorial</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.1</li>
+</ul>
+</blockquote>
+<p>Build the project committed at
+<a href="../../examples/your-first-game/"><code>examples/your-first-game/</code></a> step by step: a town with an
+NPC guide, a scripted battle, a clearing whose tall grass rolls random encounters, and a
+save — authored entirely as data, with no Rust.</p>
+<p>Before you start, finish <a href="quickstart.html">the quickstart</a> and put a <code>dotzuki</code> binary on
+your PATH. Build it once from <code>workspace/</code>:</p>
+<pre><code class="language-bash">cd workspace
+cargo build --release --bin dotzuki
+</code></pre>
+<p>The binary lands at <code>target/release/dotzuki</code>.</p>
+<p>Shortcut: <code>dotzuki new &lt;name&gt; --template your-first-game</code> writes the finished
+project (the same files you will build below) — the tutorial stays the
+step-by-step route.</p>
+<p>The goal is the committed project itself: a playable town, a scripted battle, a
+random-encounter clearing, and a save. Every listing below is a copy of that project,
+so every step ends in a state the next one continues from. The two <code>map.tmx.json</code>
+listings abbreviate their tile arrays with a marked <code>&lt;!-- excerpt --&gt;</code> comment; copy
+those arrays from the committed project.</p>
+<h2 id="1-scaffold-the-project"><a class="header" href="#1-scaffold-the-project">1. Scaffold the project</a></h2>
+<pre><code class="language-bash">dotzuki new your-first-game
+cd your-first-game
+</code></pre>
+<p><code>dotzuki new</code> <a href="../reference/glossary.html">scaffolds</a> a
+<a href="../reference/glossary.html">zero-Rust project</a> — a plain directory the engine and the
+editor consume as-is. The layout it writes:</p>
+<ul>
+<li><code>.dotzuki-editor.json</code> — the <a href="../reference/glossary.html">manifest</a>: seven editor
+activities, an empty data-<code>tables</code> list, and a <code>game</code> section.</li>
+<li><code>data/maps/</code> — one directory per map; empty for now.</li>
+<li><code>data/tiles/</code> — the shared tile library; this game does not use it, leave it empty.</li>
+<li><code>data/stories/</code> — the story-bible skeleton; this game does not use it, leave it
+empty.</li>
+<li><code>gfx/</code> — graphics assets.</li>
+<li><code>assets/scenes/main.scene</code> — a starter <a href="../reference/glossary.html">scene</a> written in
+the <a href="../reference/glossary.html">Game DSL</a>; step 6 replaces it.</li>
+<li><code>README.md</code> — free-form notes.</li>
+</ul>
+<h2 id="2-the-manifest"><a class="header" href="#2-the-manifest">2. The manifest</a></h2>
+<p>Replace the scaffolded <code>.dotzuki-editor.json</code> with this file:</p>
+<pre><code class="language-json">{
+  "name": "Your First Game",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": {
+        "mapsDir": "maps"
+      }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "code",
+      "enabled": true,
+      "config": {
+        "extension": ".scene",
+        "scriptsDir": "maps"
+      }
+    },
+    {
+      "id": "play",
+      "type": "play",
+      "label": "Play",
+      "icon": "play",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "heroes",
+            "label": "Heroes",
+            "dir": "heroes",
+            "icon": "user",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "monsters",
+            "label": "Monsters",
+            "dir": "monsters",
+            "icon": "bug",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "encounters",
+            "label": "Encounters",
+            "dir": "encounters",
+            "icon": "crosshair",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "enemies", "label": "Enemies", "type": "list" },
+              { "id": "trainer", "label": "Trainer", "type": "boolean" },
+              { "id": "money", "label": "Money", "type": "number" }
+            ]
+          },
+          {
+            "id": "spells",
+            "label": "Spells",
+            "dir": "spells",
+            "icon": "sparkles",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "type", "label": "Category", "type": "string" },
+              { "id": "power", "label": "Power", "type": "number" },
+              { "id": "accuracy", "label": "Accuracy", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "stat", "label": "Stat", "type": "string" },
+              { "id": "mpCost", "label": "MP Cost", "type": "number" }
+            ]
+          },
+          {
+            "id": "items",
+            "label": "Items",
+            "dir": "items",
+            "icon": "package",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "healHp", "label": "Heal HP", "type": "number" },
+              { "id": "price", "label": "Price", "type": "number" },
+              { "id": "effect", "label": "Effect", "type": "string" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "story",
+      "type": "story",
+      "label": "Story",
+      "icon": "book",
+      "enabled": true,
+      "config": {
+        "locales": [
+          "en",
+          "zh"
+        ],
+        "scenesDir": "maps",
+        "storiesDir": "stories"
+      }
+    },
+    {
+      "id": "assets",
+      "type": "assets",
+      "label": "Assets",
+      "icon": "image",
+      "enabled": true,
+      "config": {
+        "roots": [
+          "gfx"
+        ]
+      }
+    },
+    {
+      "id": "tiles",
+      "type": "tiles",
+      "label": "Tiles",
+      "icon": "tiles",
+      "enabled": true,
+      "config": {
+        "backdropMapsDir": "maps",
+        "tileSize": 16,
+        "tilesDir": "tiles"
+      }
+    }
+  ],
+  "game": {
+    "entryScene": "main",
+    "entryMap": "Hometown",
+    "scenesDir": "assets/scenes"
+  },
+  "battle": {
+    "party": { "table": "heroes" },
+    "enemies": { "table": "monsters" },
+    "encounters": { "table": "encounters" },
+    "skills": { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+    "stats": { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+    "resource": "mp",
+    "rules": "data/rules.ron",
+    "items": { "table": "items", "healField": "healHp", "starting": { "potion": 3 } }
+  },
+  "shop": { "currency": "G", "startMoney": 100 }
+}
+</code></pre>
+<p>Five top-level sections matter here:</p>
+<ul>
+<li><code>activities</code> — the seven editor <a href="../reference/glossary.html">activities</a> (Maps,
+Scripts, Play, Data, Story, Assets, Tiles). <code>maps</code> points the map activity at <code>maps</code>
+under <code>dataRoot</code>; <code>scripts</code> points the script activity at the same <code>maps</code> directory
+with extension <code>.scene</code>, so per-map scene files sit next to their maps. The <code>data</code>
+activity declares the five <a href="../reference/glossary.html">data tables</a>: each <code>tables[]</code>
+entry names a <code>dir</code>, an <code>idField</code>, and the field schema the editor renders as a form.
+<code>story</code> declares the bilingual locales and points <code>scenesDir</code> at <code>maps</code>; <code>assets</code>
+roots the asset picker at <code>gfx</code>; <code>tiles</code> configures the tile-library pane.</li>
+<li><code>game</code> — the engine-facing section. <code>entryScene: "main"</code> names the scene under
+<code>scenesDir</code> used when the project has no maps; <code>entryMap: "Hometown"</code> is the
+<a href="../reference/glossary.html">entry map</a> <code>dotzuki run</code> spawns on;
+<code>scenesDir: "assets/scenes"</code> is the scene directory.</li>
+<li><code>battle</code> — arms the data-driven battle system. <code>party</code> and <code>enemies</code> name the
+combatant tables (<code>heroes</code> vs <code>monsters</code>); <code>encounters</code> names the encounter table;
+<code>skills</code> names the <code>spells</code> table and the field names — <code>field: "skills"</code> is the
+skill list on a combatant record, <code>categoryField: "type"</code> and <code>costField: "mpCost"</code>
+name the category and MP-cost columns; <code>stats</code> maps the four roles (<code>hp</code>, <code>attack</code>,
+<code>defense</code>, <code>speed</code>) to record fields; <code>resource: "mp"</code> names the MP pool field;
+<code>rules: "data/rules.ron"</code> points at the rules file (step 4); <code>items</code> names the items
+table, its <code>healField: "healHp"</code>, and a starting inventory of 3 potions.</li>
+<li><code>shop</code> — <code>currency: "G"</code> and <code>startMoney: 100</code>: the money the runner owns, shows in
+the Bag and the shop UI, and carries in the save.</li>
+</ul>
+<h2 id="3-data-tables"><a class="header" href="#3-data-tables">3. Data tables</a></h2>
+<p>Each table directory holds one JSON record per row, named <code>&lt;id&gt;.json</code> under
+<code>data/&lt;dir&gt;/</code>. Create these nine files.</p>
+<h3 id="heroes"><a class="header" href="#heroes">Heroes</a></h3>
+<p><code>data/heroes/aria.json</code> — the <a href="../reference/glossary.html">party</a> is every record of the
+<code>heroes</code> table, so Aria leads alone:</p>
+<pre><code class="language-json">{
+  "id": "aria",
+  "name": "Aria",
+  "hp": 60,
+  "atk": 12,
+  "def": 10,
+  "spd": 15,
+  "mp": 20,
+  "element": "grass",
+  "skills": ["slash", "fire-bolt", "bubble", "heal"]
+}
+</code></pre>
+<p>The four <a href="../reference/glossary.html">stats</a> (<code>hp</code>, <code>atk</code>, <code>def</code>, <code>spd</code>) map through
+<code>battle.stats</code>. <code>mp</code> is the pool <code>battle.resource</code> names — Fire Bolt and Heal draw from
+it. <code>element: "grass"</code> is Aria’s <a href="../reference/glossary.html">element</a>, the defending
+side of <a href="../reference/glossary.html">type chart</a> lookups. <code>skills</code> lists the
+<a href="../reference/glossary.html">skill</a> ids from the <code>spells</code> table that Aria can use in
+battle.</p>
+<h3 id="monsters"><a class="header" href="#monsters">Monsters</a></h3>
+<p><code>data/monsters/slime.json</code> and <code>data/monsters/goblin.json</code> — the enemy records, same
+fields as heroes:</p>
+<pre><code class="language-json">{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 40,
+  "atk": 8,
+  "def": 8,
+  "spd": 5,
+  "mp": 0,
+  "element": "grass",
+  "skills": ["slash"]
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "goblin",
+  "name": "Goblin",
+  "hp": 55,
+  "atk": 10,
+  "def": 9,
+  "spd": 9,
+  "mp": 0,
+  "element": "fire",
+  "skills": ["slash"]
+}
+</code></pre>
+<p>The Slime is grass, the Goblin fire — the chart rows from step 4 make Fire Bolt hit the
+Slime ×2 and Bubble hit the Goblin ×2. Both know only Slash, and <code>mp: 0</code> means no MP
+pool, which their only skill does not need.</p>
+<h3 id="encounters"><a class="header" href="#encounters">Encounters</a></h3>
+<p><code>data/encounters/rival.json</code> — an <a href="../reference/glossary.html">encounter</a> record:</p>
+<pre><code class="language-json">{
+  "id": "rival",
+  "name": "Rival Kai",
+  "enemies": ["goblin"],
+  "trainer": true,
+  "money": 50
+}
+</code></pre>
+<p><code>enemies</code> is the ordered queue the enemy side sends out; <code>trainer: true</code> makes it a
+<a href="../reference/glossary.html">trainer battle</a> — Run is blocked and a win pays
+<code>money: 50</code> G. No scene in this game calls <code>rival</code>; the record demonstrates the schema
+and stays ready for a later storyline. The Guide’s battle starts the wild <code>slime</code>
+record instead (step 6).</p>
+<h3 id="spells"><a class="header" href="#spells">Spells</a></h3>
+<p><code>data/spells/fire-bolt.json</code>, <code>data/spells/slash.json</code>, <code>data/spells/bubble.json</code>,
+<code>data/spells/heal.json</code>:</p>
+<pre><code class="language-json">{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "attack",
+  "power": 50,
+  "accuracy": 100,
+  "element": "fire",
+  "mpCost": 5
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "slash",
+  "name": "Slash",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "mpCost": 0
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "bubble",
+  "name": "Bubble",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "element": "water",
+  "mpCost": 4
+}
+</code></pre>
+<pre><code class="language-json">{
+  "id": "heal",
+  "name": "Heal",
+  "type": "heal",
+  "power": 25,
+  "accuracy": 100,
+  "mpCost": 4
+}
+</code></pre>
+<p><code>type</code> is the category column (<code>battle.skills.categoryField</code>): <code>attack</code> deals damage
+through the standard formula, <code>heal</code> restores the user’s own HP by <code>power</code>, capped at
+max. <code>element</code> feeds the chart — Fire Bolt is fire, Bubble water; Slash and Heal carry
+none, so no row applies to them. <code>mpCost</code> is the cost column
+(<code>battle.skills.costField</code>): Fire Bolt costs 5 MP, Heal 4, Slash 0. <code>accuracy: 100</code>
+always lands. The formula and the turn loop live in
+<a href="../reference/battle-rules.html">the battle rules reference</a>.</p>
+<h3 id="items"><a class="header" href="#items">Items</a></h3>
+<p><code>data/items/potion.json</code>:</p>
+<pre><code class="language-json">{
+  "id": "potion",
+  "name": "Potion",
+  "healHp": 20,
+  "price": 20,
+  "effect": "Restores 20 HP."
+}
+</code></pre>
+<p><code>healHp: 20</code> is the <code>battle.items.healField</code> — a positive number makes the item usable
+in battle and from the pause-menu Bag, restoring 20 HP per use, capped at max.
+<code>price: 20</code> is the shop’s Buy price. <code>effect</code> is display-only flavor text.</p>
+<h2 id="4-the-rules-file"><a class="header" href="#4-the-rules-file">4. The rules file</a></h2>
+<p><code>data/rules.ron</code> — the declarative battle rules, parsed by <code>dotzuki-rules</code>:</p>
+<pre><code class="language-ron">// rules.ron — Your First Game's battle ruleset. The runner consumes the
+// type chart only; stats/types/resources are declared so the file is a
+// valid dotzuki-rules Ruleset (see reference/battle-rules.md).
+Ruleset(
+    stats: ["hp", "atk", "def", "spd"],
+    types: ["fire", "grass", "water"],
+    resources: ["mp"],
+    type_chart: [
+        (atk: "fire", def: "grass", mult: [2, 1]),
+        (atk: "grass", def: "fire", mult: [1, 2]),
+        (atk: "water", def: "fire", mult: [2, 1]),
+    ],
+)
+</code></pre>
+<p>The <a href="../reference/glossary.html">runner</a> loads this <a href="../reference/glossary.html">RON</a> file
+from the path <code>battle.rules</code> names and reads the <code>type_chart</code>: each row pairs an
+attacking skill’s <code>element</code> with a defender’s <code>element</code>, and <code>mult: [num, den]</code> is the
+rational multiplier — <code>[2, 1]</code> scales the hit ×2 (super effective), <code>[1, 2]</code> scales it
+×½ (resisted). A pairing absent from the chart stays ×1. Fire Bolt vs the grass Slime
+lands ×2, Bubble vs the fire Goblin lands ×2, and a grass skill against a fire target
+lands ×½.</p>
+<p><code>stats</code>, <code>types</code> and <code>resources</code> declare the closed vocabulary so the file parses as a
+valid dotzuki-rules <code>Ruleset</code> — <code>dotzuki check</code> fails on an unknown name. This game
+declares no <code>effects</code>, so the chart is the live part; a rules file with <code>effects</code>
+compiles into runtime <a href="../reference/glossary.html">effect stacks</a> (see
+<a href="../reference/battle-rules.html">the battle rules reference</a>).</p>
+<h2 id="5-the-town-map"><a class="header" href="#5-the-town-map">5. The town map</a></h2>
+<p>Create <code>data/maps/Hometown/</code> with three files: <code>map.tmx.json</code>, <code>tileset.png</code>, and
+<code>objects.json</code>.</p>
+<p><code>map.tmx.json</code> is Tiled JSON: 20 × 15 <a href="../reference/glossary.html">tiles</a> of 8 × 8 px.
+The <code>ground</code> and <code>decoration</code> layers render; the <code>collision</code> layer never renders and
+blocks every tile whose GID is non-zero. <a href="../reference/glossary.html">GIDs</a> are 1-based
+into the <a href="../reference/glossary.html">tileset</a> atlas, which the <code>tilesets</code> block names —
+<code>tileset.png</code>, 32 × 8 px, four tiles, <code>columns: 4</code>.</p>
+<pre><code class="language-json">{
+  "width": 20,
+  "height": 15,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). GID 1 fills the map, GID 4
+           marks the path column (x=10) and the cross row (y=7). The full array
+           lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "decoration",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). Mostly 0; GID 2 trees dot
+           the field. The full array lives in
+           examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 20,
+      "height": 15,
+      &lt;!-- excerpt: `data` is 300 GIDs (20 rows × 20). A GID-1 ring borders the
+           map; 0 inside, so the warp tile (18, 7) stays walkable. The full
+           array lives in examples/your-first-game/data/maps/Hometown/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p>The <code>data</code> arrays hold 300 entries each (20 rows × 20); each listing shows a
+representative row with an <code>&lt;!-- excerpt --&gt;</code> marker. Copy the full arrays from
+<code>examples/your-first-game/data/maps/Hometown/map.tmx.json</code>.
+<code>ground</code> paints GID 1 everywhere with a GID-4 path column (x=10) and a full GID-4 cross
+row (y=7); <code>decoration</code> drops GID-2 trees; <code>collision</code> rings the border with GID 1,
+leaving the interior — and the warp tile (18, 7) — walkable.</p>
+<p>Copy the atlas into place (both maps share it):</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Hometown/tileset.png
+</code></pre>
+<p>Replace <code>&lt;repo&gt;</code> with the path to this repository.</p>
+<p><code>objects.json</code> is the map’s <a href="../reference/glossary.html">sidecar</a> — the
+<a href="../reference/glossary.html">entities</a> placed on the map:</p>
+<pre><code class="language-json">{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 12,
+      "y": 7,
+      "facing": "down",
+      "talk": "guide_talk"
+    }
+  ],
+  "warps": [
+    { "x": 18, "y": 7, "dest_map": "Clearing", "dest_x": 2, "dest_y": 5 }
+  ],
+  "signs": [
+    { "x": 3, "y": 3, "text": "Hometown — every journey starts here." }
+  ]
+}
+</code></pre>
+<p>The Guide NPC stands at (12, 7) facing down; its <code>talk</code> field names the storyline that
+runs when the player faces it and presses A. The <a href="../reference/glossary.html">warp</a> at
+(18, 7) fades the player to the <code>Clearing</code> map, arriving at tile (2, 5). The sign at
+(3, 3) shows its text as paged dialogue when the player faces it and presses A.</p>
+<h2 id="6-scenes"><a class="header" href="#6-scenes">6. Scenes</a></h2>
+<p>Replace <code>assets/scenes/main.scene</code>, then create <code>data/maps/Hometown/script.scene</code>.</p>
+<p>A <a href="../reference/glossary.html">scene</a> is one <code>game_scene</code> document of
+<a href="../reference/glossary.html">storylines</a>. <code>main.scene</code> holds the unnamed <code>@storylines</code>
+block — the <code>main</code> storyline:</p>
+<pre><code class="language-dsl">game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to Your First Game!"
+            "Talk to the Guide in Hometown, then find the warp to the Clearing."
+        }
+    }
+}
+</code></pre>
+<p>The manifest’s <code>game.entryScene: "main"</code> names this file for map-less runs. With maps
+present, <code>game.entryMap</code> wins: <code>dotzuki run</code> spawns on Hometown and the map’s own scene
+drives it, so <code>main.scene</code> keeps the <code>scenesDir</code> contract intact.</p>
+<p><code>script.scene</code> sits next to the map, and that placement is the binding: the runner
+resolves a map’s scene as <code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code>. Hometown’s scene has two
+named storylines:</p>
+<pre><code class="language-dsl">game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @speaker("Guide") {
+            "Welcome to Hometown, Aria!"
+            "The warp on the east edge leads to the Clearing."
+            "Wild monsters roam the tall grass there — a good place to train."
+        }
+    }
+
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "You look ready for your first fight."
+            "Want to try one right here?"
+        }
+        @choice {
+            @option("Let's fight!") {
+                result = startBattle("slime")
+                @if (result == "win") {
+                    @speaker("Guide") {
+                        "Well fought! Fire beats grass, remember that."
+                    }
+                    @command("setFlag", "WON_GUIDE_BATTLE")
+                } @else {
+                    @speaker("Guide") {
+                        "It happens. Heal up and try again."
+                    }
+                }
+            }
+            @option("Not yet.") {
+                @speaker("Guide") {
+                    "Come back when you are ready."
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><code>hometown_intro</code> carries a <a href="../reference/glossary.html">trigger</a> with
+<code>on_enter = true</code> — the runner fires it when the map loads.</li>
+<li><code>guide_talk</code> carries <code>npc = "Guide"</code>, the route that names this NPC — and the NPC’s
+<code>talk</code> field names the same storyline; talking to the Guide runs it.</li>
+<li><code>@choice</code> presents the two <code>@option</code>s as a menu.</li>
+<li><code>result = startBattle("slime")</code> suspends the scene and starts a
+<a href="../reference/glossary.html">wild battle</a> against the <code>slime</code> record; the scene
+resumes with <code>result</code> set to <code>"win"</code>, <code>"lose"</code> or <code>"run"</code>.</li>
+<li><code>@if (result == "win")</code> branches on the outcome; the win branch sets the
+<a href="../reference/glossary.html">flag</a> <code>WON_GUIDE_BATTLE</code> with a
+<a href="../reference/glossary.html">command</a>. Flags persist across scenes for the session
+and ride the save.</li>
+</ul>
+<h2 id="7-the-clearing"><a class="header" href="#7-the-clearing">7. The clearing</a></h2>
+<p>Create <code>data/maps/Clearing/</code> the same way — a smaller 12 × 10 map:</p>
+<pre><code class="language-json">{
+  "width": 12,
+  "height": 10,
+  "tilewidth": 8,
+  "tileheight": 8,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). GID 1 fills the map, GID 4
+           marks the tall-grass patch (x=5–6, y=2–7). The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, ...],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 12,
+      "height": 10,
+      &lt;!-- excerpt: `data` is 120 GIDs (10 rows × 12). A GID-1 border rings the
+           map; the west wall opens at (0, 4) so the return warp tile stays
+           walkable. The full array lives in
+           examples/your-first-game/data/maps/Clearing/map.tmx.json. --&gt;
+      "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ...],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 8,
+      "tileheight": 8,
+      "tilecount": 4,
+      "image": "tileset.png",
+      "imagewidth": 32,
+      "imageheight": 8,
+      "columns": 4
+    }
+  ]
+}
+</code></pre>
+<p><code>ground</code> paints GID 1 with a GID-4 tall-grass patch at (x=5–6, y=2–7); <code>collision</code>
+borders the map and opens the west wall at (0, 4) so the return warp tile stays
+walkable. Copy the full arrays from
+<code>examples/your-first-game/data/maps/Clearing/map.tmx.json</code>.</p>
+<pre><code class="language-bash">cp &lt;repo&gt;/workspace/dotzuki-template/assets/tileset.png data/maps/Clearing/tileset.png
+</code></pre>
+<p><code>objects.json</code> adds the <code>encounters</code> block — the map’s encounter side:</p>
+<pre><code class="language-json">{
+  "warps": [
+    { "x": 0, "y": 4, "dest_map": "Hometown", "dest_x": 17, "dest_y": 7 }
+  ],
+  "encounters": {
+    "rate": 60,
+    "zones": [
+      {
+        "x": 1,
+        "y": 1,
+        "w": 10,
+        "h": 8,
+        "table": [
+          { "id": "slime", "weight": 60 },
+          { "id": "goblin", "weight": 40 }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<p><code>rate: 60</code> is the per-step chance in /256 units: a completed walk step onto a zoned
+tile draws one byte, and a value below 60 (≈ 23%) triggers a battle. Each <code>zones</code>
+rectangle (<code>x</code>, <code>y</code>, <code>w</code>, <code>h</code>) is an inclusive tile range; a hit draws a weighted id
+from the zone’s <code>table</code> — Slime 60, Goblin 40. The id resolves like <code>startBattle(id)</code>
+and arms a <a href="../reference/glossary.html">sceneless battle</a>: a win or a run returns to the
+overworld at the encounter tile; a loss runs the
+<a href="../reference/glossary.html">whiteout</a> — the party heals and the player respawns at the
+<a href="../reference/glossary.html">entry map</a>’s <a href="../reference/glossary.html">spawn</a>. The return
+warp at (0, 4) lands on Hometown (17, 7), one tile west of the east-edge warp.</p>
+<p>The scene announces the place with the <a href="../reference/glossary.html">narrator form</a> —
+<code>@speaker("")</code> renders the line without a name prefix:</p>
+<pre><code class="language-dsl">game_scene Clearing {
+    @storyline("clearing_enter") {
+        @trigger(map = "Clearing", on_enter = true)
+        @speaker("") {
+            "Tall grass rustles all around. Wild monsters prowl here."
+        }
+    }
+}
+</code></pre>
+<h2 id="8-run-it"><a class="header" href="#8-run-it">8. Run it</a></h2>
+<p>Compile-check every DSL directory and validate the battle section:</p>
+<pre><code class="language-bash">dotzuki check .
+</code></pre>
+<p>Exit code 0 means the scenes compile and the battle wiring — the table ids, the field
+names, and <code>data/rules.ron</code> — validates.</p>
+<p>Play it in a window:</p>
+<pre><code class="language-bash">dotzuki run .
+</code></pre>
+<p>Controls: <strong>Arrows/WASD</strong> move, <strong>Z</strong> confirms and talks, <strong>X</strong> cancels and runs,
+<strong>Enter/Space</strong> opens the pause menu, <strong>Backspace</strong> is Select. The tour: read the sign,
+talk to the Guide and pick <strong>Let’s fight!</strong> — Aria battles the wild Slime, Fire Bolt
+hits ×2 (fire beats grass), and the win sets <code>WON_GUIDE_BATTLE</code>. Step onto the
+east-edge warp to the Clearing; the tall-grass zone rolls encounters as you walk; take
+the west-edge warp home. The pause menu holds <strong>Party</strong>, <strong>Bag</strong> and <strong>Save</strong>.</p>
+<p>CI and screenshots run the same game <a href="../reference/glossary.html">headless</a> — no window:</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180
+</code></pre>
+<p><code>--frames 180</code> simulates 180 frames — the <a href="../reference/glossary.html">smoke test</a> this
+repo’s CI runs. Headless runs never write a save unless you pass <code>--save</code>;
+<code>--screenshot shot.png</code> dumps the final frame:</p>
+<pre><code class="language-bash">dotzuki run . --headless --frames 180 --save --screenshot shot.png
+</code></pre>
+<p><code>--lang zh</code> switches the runner’s own labels (the pause menu, the save confirmation)
+to Chinese; scene text follows when written with
+<a href="../reference/glossary.html"><code>@t("en", "中文")</code></a>.</p>
+<p>The save lands at <code>.dotzuki-save.json</code> in the project dir —
+<a href="../reference/glossary.html">save version</a> 3, holding the map, the player tile and
+facing, the flags, the party state, the inventory and the money. Saves write at stable
+points — after a warp transition and when a scene finishes into the
+<a href="../reference/glossary.html">overworld</a> — so closing the window mid-dialogue keeps the
+last stable point. Windowed runs always save; <code>--fresh</code> ignores an existing save and
+boots new.</p>
+<h2 id="where-next"><a class="header" href="#where-next">Where next</a></h2>
+<ul>
+<li><strong>Maps</strong> — <a href="../how-to/maps.html">how to author maps</a>: elevation, entities, encounters,
+tilesets.</li>
+<li><strong>Battles</strong> — <a href="../how-to/battles.html">battle rules guide</a> and
+<a href="../reference/battle-rules.html">battle rules reference</a>: effects, abilities, held
+items, weather.</li>
+<li><strong>Manifest contract</strong> — <a href="../reference/project-manifest.html">project manifest</a>: what
+<code>dotzuki run</code> and <code>dotzuki check</code> promise.</li>
+<li><strong>Editor path</strong> — <a href="./editor-first-game.html">editor-first-game.md</a>: the same game
+through the dotzuki-editor and the AI Story Designer.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../tutorials/quickstart.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../tutorials/editor-first-game.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../tutorials/quickstart.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../tutorials/editor-first-game.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
