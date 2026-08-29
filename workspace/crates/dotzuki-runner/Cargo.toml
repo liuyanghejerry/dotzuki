@@ -25,11 +25,10 @@ dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.1.1" }
 dotzuki-rules = { path = "../dotzuki-rules", version = "0.1.1" }
 dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.1.1", default-features = false, features = ["image-assets"] }
 dotzuki-ui = { path = "../dotzuki-ui", version = "0.1.1" }
-dotzuki-audio = { path = "../dotzuki-audio", version = "0.1.1", features = ["serde"] }
-# Native audio output (same version as wuxia-app). The APU renders samples on
-# cpal's callback thread; no device (CI/headless/wasm's Null host) ⇒
-# RunnerAudio stays silent.
-cpal = "0.15"
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.1.1", features = ["serde", "cpal"] }
+# Native audio output comes from dotzuki-audio's `cpal` feature (the APU
+# renders samples on cpal's callback thread; no device (CI/headless/wasm's
+# Null host) ⇒ RunnerAudio stays silent).
 image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

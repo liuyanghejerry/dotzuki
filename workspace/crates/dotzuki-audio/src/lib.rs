@@ -9,6 +9,11 @@
 //! Also provides a music/SFX sequencer, command decoder, and audio effects
 //! (vibrato, pitch slide, duty cycle rotation).
 //!
+//! On top of that: [`manager`] orchestrates the per-VBlank work (master
+//! volume, music fade-out, cross-track resume states, SFX/cry playback) and
+//! [`output`] glues the APU to real device backends (cpal native, Web Audio
+//! in the browser — both feature-gated off by default).
+//!
 //! This crate has no pokered-specific dependencies — it is a standalone
 //! Game Boy audio emulator suitable for any GB emulation project.
 
@@ -16,6 +21,8 @@ pub mod apu;
 pub mod channel;
 pub mod commands;
 pub mod effects;
+pub mod manager;
+pub mod output;
 pub mod sequencer;
 
 /// Declarative, file-based audio format + directory loader (requires `serde`).

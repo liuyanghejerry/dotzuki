@@ -23,6 +23,8 @@ pub mod mon_icon;
 pub mod palette;
 #[cfg(feature = "gpu")]
 pub mod party_hp_bar;
+#[cfg(feature = "resource")]
+pub mod resource;
 pub mod sprite;
 pub mod text_renderer;
 pub mod textbox;

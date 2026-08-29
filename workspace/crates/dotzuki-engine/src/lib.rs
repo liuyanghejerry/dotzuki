@@ -30,7 +30,7 @@
 //! | [`palette`] | `PaletteTrait`, `PaletteProvider` — colour palette lookups |
 //! | [`render_data`] | `RenderData` — display-name and metadata lookups for moves, items, species |
 //! | [`save`] | `SaveData`, `SaveManager`, `SaveStorage`, `SaveError` — save/load with CRC16 |
-//! | [`link`] | `NetworkTransport<M>`, `TransportError`, `ChannelTransport<M>`, `LinkRole` — game-agnostic link-play transport seam (zero-I/O) |
+//! | [`link`] | `NetworkTransport<M>`, `TransportError`, `ChannelTransport<M>`, `LinkRole`, JSON-line `link::codec` — game-agnostic link-play transport seam (zero-I/O) |
 
 pub mod battle;
 pub mod camera;

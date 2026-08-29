@@ -9,10 +9,20 @@ license.workspace = true
 [features]
 default = ["gpu"]
 framebuffer = []
-gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
+gpu = [
+    "dep:pixels",
+    "dep:winit",
+    "dep:winit_input_helper",
+    "dep:image",
+    "dep:error-iter",
+    "resource",
+]
 # PNG sprite-sheet loading for WalkSprite (dotzuki_renderer::walk_sprite). Decoupled
 # from `gpu` so a framebuffer-only consumer can still load character art.
 image-assets = ["dep:image"]
+# PNG → tile data pipeline (dotzuki_renderer::resource): grayscale/2bpp/1bpp/4bpp
+# conversion, AssetRoot path resolution, and the ResourceManager asset cache.
+resource = ["dep:image"]
 
 [dependencies]
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.1.1" }

@@ -1071,8 +1071,12 @@ dependencies = [
 name = "dotzuki-app"
 version = "0.1.1"
 dependencies = [
+ "dotzuki-engine",
  "dotzuki-renderer",
+ "log",
  "notify",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1080,9 +1084,13 @@ name = "dotzuki-audio"
 version = "0.1.1"
 dependencies = [
  "bitflags 2.13.0",
+ "cpal",
+ "log",
  "serde",
  "serde_json",
  "symphonia",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -1106,6 +1114,7 @@ version = "0.1.1"
 dependencies = [
  "image",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -1189,7 +1198,6 @@ name = "dotzuki-runner"
 version = "0.1.1"
 dependencies = [
  "anyhow",
- "cpal",
  "dotzuki-app",
  "dotzuki-audio",
  "dotzuki-engine",
@@ -1247,9 +1255,15 @@ dependencies = [
  "dotzuki-engine-dsl",
  "dotzuki-renderer",
  "dotzuki-ui",
+ "error-iter",
+ "js-sys",
+ "log",
+ "pixels",
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "web-sys",
+ "winit",
 ]
 
 [[package]]
