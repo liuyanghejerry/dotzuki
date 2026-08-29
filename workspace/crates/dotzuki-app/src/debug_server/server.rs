@@ -21,8 +21,14 @@ use serde::de::DeserializeOwned;
 
 use super::protocol::DebugResponse;
 
-/// Maximum time to wait for a response from the game loop before timing out.
-const RESPONSE_TIMEOUT: Duration = Duration::from_secs(5);
+/// Maximum time to wait for a response from the game loop before timing
+/// out. Long synchronous commands (e.g. step_frames / wait_until with a
+/// big frame budget) legitimately run for a minute or more in debug
+/// builds; if the timeout fires, the late response skews the FIFO reply
+/// stream (the driver then reads impossible map/coord pairs and appears
+/// frozen). A generous timeout plus the stale-response drain below make
+/// that practically impossible.
+const RESPONSE_TIMEOUT: Duration = Duration::from_secs(300);
 
 /// The debug server listens for TCP connections and forwards commands to the game loop.
 pub struct DebugServer<C> {
@@ -136,6 +142,15 @@ impl<C: DeserializeOwned> DebugServer<C> {
                     if line.is_empty() {
                         continue;
                     }
+
+                    // Stale-response drain: requests and responses are
+                    // correlated only by FIFO order on this shared channel.
+                    // If an earlier command timed out, its late response
+                    // would otherwise be delivered as the answer to THIS
+                    // command and permanently skew the stream (the driver
+                    // then reads a frozen world while the game runs on).
+                    // Discard anything already queued before forwarding.
+                    while let Ok(_) = self.response_receiver.try_recv() {}
 
                     match serde_json::from_str::<C>(&line) {
                         Ok(cmd) => {
