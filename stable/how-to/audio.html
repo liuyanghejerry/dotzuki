@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -201,7 +201,10 @@ to: a track is a <code>TrackDef</code> document describing which of the four Gam
 hardware channels play which commands, and the runtime sequencer plays it
 directly.</p>
 <p><code>dotzuki-audio</code> backs the runtime: a game-agnostic GB-APU emulation plus
-sequencer. See <code>crates/dotzuki-audio/src/format.rs</code> for the authoritative
+sequencer, a per-frame manager (music fades, master volume, cross-track
+resume states), and the device-output glue the runtime plays through (cpal
+natively, Web Audio in the browser — both behind off-by-default crate
+features). See <code>crates/dotzuki-audio/src/format.rs</code> for the authoritative
 schema.</p>
 <h2 id="layout"><a class="header" href="#layout">Layout</a></h2>
 <p>Tracks live anywhere under <code>&lt;dataRoot&gt;/audio/</code> (loaded recursively — the

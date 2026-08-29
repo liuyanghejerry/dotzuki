@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-66886069.js";
+            window.path_to_searchindex_js = "../searchindex-bf4fbc45.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-466b9ebb.js"></script>
@@ -200,7 +200,9 @@
 <p><code>dotzuki run</code> 从 <code>&lt;dataRoot&gt;/audio/</code> 下的声明式 <strong>JSON 音轨文件</strong>播放音乐与音效。没有
 需要编译成的二进制音频格式：一条音轨就是一个 <code>TrackDef</code> 文档，描述四个 Game Boy 硬件
 通道中哪些通道播放哪些命令，运行时音序器直接播放它。</p>
-<p>运行时背后是 <code>dotzuki-audio</code>：一个游戏无关的 GB-APU 仿真加上音序器。权威 schema 见
+<p>运行时背后是 <code>dotzuki-audio</code>：一个游戏无关的 GB-APU 仿真加上音序器，外加逐帧管理器
+（音乐淡出、主音量、跨曲目断点续播）与运行时实际出声的设备输出胶水（原生 cpal、浏
+览器 Web Audio，均为默认关闭的 crate feature）。权威 schema 见
 <code>crates/dotzuki-audio/src/format.rs</code>。</p>
 <h2 id="目录布局"><a class="header" href="#目录布局">目录布局</a></h2>
 <p>音轨可以放在 <code>&lt;dataRoot&gt;/audio/</code> 下的任意位置（递归加载——下面 <code>music/</code> + <code>sfx/</code> 的划

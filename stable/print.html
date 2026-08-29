@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-66886069.js";
+            window.path_to_searchindex_js = "searchindex-bf4fbc45.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-466b9ebb.js"></script>
@@ -2510,7 +2510,10 @@ to: a track is a <code>TrackDef</code> document describing which of the four Gam
 hardware channels play which commands, and the runtime sequencer plays it
 directly.</p>
 <p><code>dotzuki-audio</code> backs the runtime: a game-agnostic GB-APU emulation plus
-sequencer. See <code>crates/dotzuki-audio/src/format.rs</code> for the authoritative
+sequencer, a per-frame manager (music fades, master volume, cross-track
+resume states), and the device-output glue the runtime plays through (cpal
+natively, Web Audio in the browser — both behind off-by-default crate
+features). See <code>crates/dotzuki-audio/src/format.rs</code> for the authoritative
 schema.</p>
 <h2 id="layout"><a class="header" href="#layout">Layout</a></h2>
 <p>Tracks live anywhere under <code>&lt;dataRoot&gt;/audio/</code> (loaded recursively — the
@@ -5987,7 +5990,7 @@ current-architecture walkthrough.</p>
         │            (RON → stacks)  (.scene/.gui/.theme/.style)  (Boa JS)
         ├── dotzuki-engine-tiled (Tiled .tmx → engine types)
         ├── dotzuki-renderer (GB-style tiles/text, CJK fonts) + dotzuki-ui (Painter trait)
-        ├── dotzuki-audio (GB-APU emulation + sequencer)
+        ├── dotzuki-audio (GB-APU emulation + sequencer + fade/volume manager + device output)
         └── dotzuki-app (window/loop) / dotzuki-tui (terminal) / dotzuki-web
 </code></pre>
 <ul>
@@ -12684,7 +12687,9 @@ cargo test -p minimon                # the 5-system authoring proof + controls
 <p><code>dotzuki run</code> 从 <code>&lt;dataRoot&gt;/audio/</code> 下的声明式 <strong>JSON 音轨文件</strong>播放音乐与音效。没有
 需要编译成的二进制音频格式：一条音轨就是一个 <code>TrackDef</code> 文档，描述四个 Game Boy 硬件
 通道中哪些通道播放哪些命令，运行时音序器直接播放它。</p>
-<p>运行时背后是 <code>dotzuki-audio</code>：一个游戏无关的 GB-APU 仿真加上音序器。权威 schema 见
+<p>运行时背后是 <code>dotzuki-audio</code>：一个游戏无关的 GB-APU 仿真加上音序器，外加逐帧管理器
+（音乐淡出、主音量、跨曲目断点续播）与运行时实际出声的设备输出胶水（原生 cpal、浏
+览器 Web Audio，均为默认关闭的 crate feature）。权威 schema 见
 <code>crates/dotzuki-audio/src/format.rs</code>。</p>
 <h2 id="目录布局"><a class="header" href="#目录布局">目录布局</a></h2>
 <p>音轨可以放在 <code>&lt;dataRoot&gt;/audio/</code> 下的任意位置（递归加载——下面 <code>music/</code> + <code>sfx/</code> 的划
@@ -15340,7 +15345,7 @@ crate 内的冲突检测器在内存中的路由上工作，不读取它（confl
         │            (RON → stacks)  (.scene/.gui/.theme/.style)  (Boa JS)
         ├── dotzuki-engine-tiled (Tiled .tmx → engine types)
         ├── dotzuki-renderer (GB-style tiles/text, CJK fonts) + dotzuki-ui (Painter trait)
-        ├── dotzuki-audio (GB-APU emulation + sequencer)
+        ├── dotzuki-audio (GB-APU emulation + sequencer + fade/volume manager + device output)
         └── dotzuki-app (window/loop) / dotzuki-tui (terminal) / dotzuki-web
 </code></pre>
 <ul>
