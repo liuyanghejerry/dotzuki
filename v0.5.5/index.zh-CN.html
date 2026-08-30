@@ -1,0 +1,382 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>简介 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-73a7a8f9.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./index.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
+<blockquote>
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
+依赖的形式使用它；大多数游戏作者完全不用碰 Rust。请在下面选择你的路径。</p>
+<p>中文翻译版（<code>-zh-CN</code> 后缀的伴生文件）收录在 <code>SUMMARY.md</code> 的「中文（zh-CN）」分组中；
+内容以英文源为准（doc-standard §6）。</p>
+<h2 id="读者指南"><a class="header" href="#读者指南">读者指南</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>你是……</th><th>从这里开始</th></tr>
+</thead>
+<tbody>
+<tr><td>游戏作者，零 Rust，想<strong>不写代码</strong>做一个游戏</td><td><a href="./tutorials/quickstart.html"><code>tutorials/quickstart.md</code></a> —— 5 分钟 CLI 路径（<code>dotzuki new</code> → 编辑 <code>.scene</code> → <code>dotzuki run</code>）。随后看 <a href="./reference/project-manifest.html"><code>reference/project-manifest.md</code></a> 了解完整的项目清单与约定。</td></tr>
+<tr><td>使用 <strong>dotzuki-editor</strong>（基于 Vue 的编辑器）的游戏作者</td><td><a href="./tutorials/editor-first-game.html"><code>tutorials/editor-first-game.md</code></a> 和 <a href="../tools/dotzuki-editor/README.html"><code>../tools/dotzuki-editor/README.md</code></a></td></tr>
+<tr><td>编写<strong>战斗规则</strong>（效果栈、<code>rules.ron</code>）</td><td>编写方法见 <a href="./how-to/battles.html"><code>how-to/battles.md</code></a>；规则格式见 <a href="./reference/battle-rules.html"><code>reference/battle-rules.md</code></a>；模型讲解见 <a href="./explanation/effect-stack.html"><code>explanation/effect-stack.md</code></a></td></tr>
+<tr><td>编写 <strong>DSL</strong>（<code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code>）</td><td><a href="./reference/dsl/scene.html"><code>reference/dsl/scene.md</code></a>、<a href="./reference/dsl/gui.html"><code>reference/dsl/gui.md</code></a>、<a href="./reference/dsl/theme-style.html"><code>reference/dsl/theme-style.md</code></a>、<a href="./reference/dsl/codegen.html"><code>reference/dsl/codegen.md</code></a></td></tr>
+<tr><td>制作<strong>地图</strong>（Tiled <code>.tmx</code> + tilesets + 实体）</td><td><a href="./how-to/maps.html"><code>how-to/maps.md</code></a>；地图实体的伴生文件 <code>objects.json</code> 也在该文档中有说明</td></tr>
+<tr><td>制作<strong>音频</strong>（<code>data/audio/*.json</code> 音轨）</td><td>格式见 <a href="./how-to/audio.html"><code>how-to/audio.md</code></a>，22 个命令见 <a href="./reference/audio-commands.html"><code>reference/audio-commands.md</code></a></td></tr>
+<tr><td>编写<strong>双语文本</strong></td><td><a href="./how-to/i18n.html"><code>how-to/i18n.md</code></a> —— <code>game.lang()</code> / <code>game.t()</code> / <code>@t</code></td></tr>
+<tr><td>在终端中运行 / 自动化项目</td><td><a href="./reference/cli.html"><code>reference/cli.md</code></a> —— <code>dotzuki new</code> / <code>check</code> / <code>run</code> 及所有 flag</td></tr>
+<tr><td>发布 / 部署 / 升级</td><td><a href="./how-to/publishing.html"><code>how-to/publishing.md</code></a> —— 项目交付、无头模式 CI、WASM 网页试玩、引擎升级、存档兼容</td></tr>
+<tr><td>扩展引擎的 <strong>Rust 开发者</strong></td><td>当前架构见 <a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a>，crate map 与 docs.rs 链接见 <a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a>，<code>GameData</code> trait 见 <a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a>；引擎各系统（商店、联机、调试服务器、音频运行时、资源管理器、游戏外壳）在 <code>reference/</code> 下各有专页</td></tr>
+<tr><td>查询术语</td><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a> —— 权威术语表</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="教程"><a class="header" href="#教程">教程</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文档</th><th>涵盖内容</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./tutorials/quickstart.html"><code>tutorials/quickstart.md</code></a></td><td>5 分钟零代码之旅：<code>dotzuki new</code> → 编辑 <code>.scene</code> → <code>check</code> → <code>run</code></td></tr>
+<tr><td><a href="./tutorials/your-first-game.html"><code>tutorials/your-first-game.md</code></a></td><td>逐步构建 <code>examples/your-first-game/</code> 项目：城镇、脚本战斗、随机遇敌、存档</td></tr>
+<tr><td><a href="./tutorials/editor-first-game.html"><code>tutorials/editor-first-game.md</code></a></td><td>15 分钟带你逛一遍 dotzuki-editor，从一台空机器到一个带战斗的可玩项目</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="指南"><a class="header" href="#指南">指南</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文档</th><th>涵盖内容</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./how-to/maps.html"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
+<tr><td><a href="./how-to/scenes.html"><code>how-to/scenes.md</code></a></td><td>编写 <code>.scene</code> 剧情：NPC 对话、进图过场、选项、flag、场景内战斗</td></tr>
+<tr><td><a href="./how-to/ui.html"><code>how-to/ui.md</code></a></td><td>编写 <code>.gui</code> 布局：20×18 网格、面板/文本、模板绑定、<code>@t</code> 标签、自定义组件</td></tr>
+<tr><td><a href="./how-to/battles.html"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
+<tr><td><a href="./how-to/themes.html"><code>how-to/themes.md</code></a></td><td>声明 <code>.theme</code> / <code>.style</code> 文件并应用到 UI</td></tr>
+<tr><td><a href="./how-to/audio.html"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
+<tr><td><a href="./how-to/assets.html"><code>how-to/assets.md</code></a></td><td>素材管线：tileset、共享 tile 库、2bpp 转换、字体</td></tr>
+<tr><td><a href="./how-to/i18n.html"><code>how-to/i18n.md</code></a></td><td>双语文本：<code>game</code> i18n API 与 <code>@t</code> 语法</td></tr>
+<tr><td><a href="./how-to/publishing.html"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="参考"><a class="header" href="#参考">参考</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文档</th><th>涵盖内容</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./reference/project-manifest.html"><code>reference/project-manifest.md</code></a></td><td>零 Rust 项目的项目清单（<code>.dotzuki-editor.json</code>）、目录结构、<code>dotzuki run</code>/<code>check</code> 行为约定、编辑器试玩</td></tr>
+<tr><td><a href="./reference/battle-rules.html"><code>reference/battle-rules.md</code></a></td><td>项目清单的 <code>battle</code> 段、<code>rules.ron</code> hooks、校验约定</td></tr>
+<tr><td><a href="./reference/data-tables/combatants.html"><code>reference/data-tables/</code></a></td><td>记录 schema：<a href="./reference/data-tables/combatants.html">combatants</a>、<a href="./reference/data-tables/encounters.html">encounters</a>、<a href="./reference/data-tables/skills.html">skills</a>、<a href="./reference/data-tables/items.html">items</a>、<a href="./reference/data-tables/levels.html">levels</a></td></tr>
+<tr><td><a href="./reference/dsl/scene.html"><code>reference/dsl/scene.md</code></a></td><td><code>.scene</code> 语法 —— 已与 parser/interpreter 逐项核对，每个构造都标注了对应代码位置</td></tr>
+<tr><td><a href="./reference/dsl/gui.html"><code>reference/dsl/gui.md</code></a></td><td>已实现的 <code>.gui</code> / <code>ui {}</code> 语法、组件 schema v2、<code>@t</code></td></tr>
+<tr><td><a href="./reference/dsl/theme-style.html"><code>reference/dsl/theme-style.md</code></a></td><td><code>@theme</code> / <code>@style</code> 语法与 codegen 输出</td></tr>
+<tr><td><a href="./reference/dsl/codegen.html"><code>reference/dsl/codegen.md</code></a></td><td>DSL → JS/JSON 编译约定，已与代码对齐</td></tr>
+<tr><td><a href="./reference/dsl/runtime-loading.html"><code>reference/dsl/runtime-loading.md</code></a></td><td>带 mtime 热重载的磁盘场景 provider（AST 与 JS 两条路径）</td></tr>
+<tr><td><a href="./reference/audio-commands.html"><code>reference/audio-commands.md</code></a></td><td>22 个 <code>AudioCommand</code> 变体及其字段</td></tr>
+<tr><td><a href="./reference/audio-runtime.html"><code>reference/audio-runtime.md</code></a></td><td><code>AudioManager</code> 运行时 API（淡入淡出、音量、续播状态）+ <code>cpal</code> / <code>web-audio</code> 设备输出层</td></tr>
+<tr><td><a href="./reference/shops.html"><code>reference/shops.md</code></a></td><td><code>items::mart</code> 商店状态机：<code>MartState</code>、<code>MartBackend</code>、<code>MartDriver</code></td></tr>
+<tr><td><a href="./reference/overworld-presentation.html"><code>reference/overworld-presentation.md</code></a></td><td>按帧计数的大地图动画状态机（旋转、震动、tile、钓鱼、尘土、邮轮）</td></tr>
+<tr><td><a href="./reference/link-play.html"><code>reference/link-play.md</code></a></td><td><code>NetworkTransport</code> 接缝、JSON-line codec、TCP 与 BroadcastChannel 传输、会话路由器</td></tr>
+<tr><td><a href="./reference/debug-server.html"><code>reference/debug-server.md</code></a></td><td>TCP JSON-line 调试服务器：核心命令、线路协议、游戏命令扩展</td></tr>
+<tr><td><a href="./reference/resource-manager.html"><code>reference/resource-manager.md</code></a></td><td>PNG → 2bpp/1bpp/4bpp 管线、<code>AssetRoot</code>、<code>ResourceManager</code> 缓存、内嵌素材接缝</td></tr>
+<tr><td><a href="./reference/game-shell.html"><code>reference/game-shell.md</code></a></td><td>面向浏览器 canvas 与原生窗口的 pixels+winit <code>game-shell</code></td></tr>
+<tr><td><a href="./reference/cli.html"><code>reference/cli.md</code></a></td><td>每个 <code>dotzuki</code> 子命令与 flag、退出码</td></tr>
+<tr><td><a href="./reference/glossary.html"><code>reference/glossary.md</code></a></td><td>权威术语定义</td></tr>
+<tr><td><a href="./reference/rustdoc.html"><code>reference/rustdoc.md</code></a></td><td>面向 Rust 开发者的 crate map 与 docs.rs 链接</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="概念"><a class="header" href="#概念">概念</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文档</th><th>涵盖内容</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./explanation/architecture.html"><code>explanation/architecture.md</code></a></td><td>当前架构：引擎 crate、运行器、CLI、编辑器，以及从 DSL 到游戏的流程</td></tr>
+<tr><td><a href="./explanation/effect-stack.html"><code>explanation/effect-stack.md</code></a></td><td>战斗效果栈模型、event/handler 架构、RNG 确定性、如实说明的限制</td></tr>
+<tr><td><a href="./explanation/game-data.html"><code>explanation/game-data.md</code></a></td><td><code>GameData</code> 提供者 trait 及其泛型关联类型</td></tr>
+<tr><td><a href="./explanation/save-compatibility.html"><code>explanation/save-compatibility.md</code></a></td><td>存档版本机制与向前/向后兼容规则</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
+<ul>
+<li><a href="./release-notes/changelog.html"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="./release-notes/migration/v0.1.0.html"><code>v0.1.0</code></a>、<a href="./release-notes/migration/v0.5.4.html"><code>v0.5.4</code></a>）</li>
+</ul>
+<h2 id="归档"><a class="header" href="#归档">归档</a></h2>
+<p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文档</th><th>是什么</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./archive/developer-guide-legacy.html"><code>archive/developer-guide-legacy.md</code></a></td><td>引擎拆分前、围绕旧版 <code>Provider</code> API 路径编写的指南；已被 <code>explanation/architecture.md</code> 取代</td></tr>
+<tr><td><a href="./archive/full-dsl.html"><code>archive/full-dsl.md</code></a></td><td>完整愿景的 DSL 概览，标注已实现/拟议状态；已被 <code>reference/dsl/*</code> 取代</td></tr>
+<tr><td><a href="./archive/dsl-unified-design.html"><code>archive/dsl-unified-design.md</code></a></td><td>DSL 迁移分支留下的内部设计文档；已并入 <code>reference/dsl/codegen.md</code></td></tr>
+<tr><td><a href="./archive/game-ui-dsl.html"><code>archive/game-ui-dsl.md</code></a></td><td>旧版 GUI DSL 文档，混杂已实现语法与提案；已实现的部分现收录于 <code>reference/dsl/gui.md</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="文档体系"><a class="header" href="#文档体系">文档体系</a></h2>
+<ul>
+<li><a href="./doc-standard.html"><code>doc-standard.md</code></a> —— 本站遵循的写作与结构规范（四层模型、元信息头、新鲜度三态、
+语言政策、风格规则、示例验证、与代码同步的流程）。</li>
+<li><a href="./doc-outline.html"><code>doc-outline.md</code></a> —— 目标站点大纲，以及形成当前布局的迁移对照表。</li>
+<li>每页都带元信息头（<code>Audience</code> / <code>Type</code> / <code>Status</code> / <code>Last verified</code>）；Clausura AI 门禁
+（<code>.github/workflows/docs-review.yml</code>）会在每个 PR 中对照 <code>doc-standard.md</code> 评审文档变更。</li>
+</ul>
+<h2 id="仓库其他相关文档"><a class="header" href="#仓库其他相关文档">仓库其他相关文档</a></h2>
+<ul>
+<li><a href="../../README.html"><code>/README.md</code></a> —— 仓库首页：引擎是什么、crate 列表、git 依赖用法、构建方式</li>
+<li><a href="../../AGENTS.html"><code>/AGENTS.md</code></a> —— 面向在引擎上工作的 AI agent 的入门指引</li>
+<li><a href="../tools/dotzuki-editor/README.html"><code>tools/dotzuki-editor/README.md</code></a> —— 编辑器完整指南；
+<a href="../tools/dotzuki-editor/docs/AI_AGENT_FRAMEWORK.html"><code>AI_AGENT_FRAMEWORK.md</code></a> —— 编辑器的 AI Story Designer 框架</li>
+<li><a href="../tools/asset-converter/README.html"><code>tools/asset-converter/README.md</code></a> —— 2bpp → RGBA tileset + Tiled <code>.tsx</code> 转换器</li>
+<li><a href="../dotzuki-template/README.html"><code>dotzuki-template/README.md</code></a> —— cargo-generate Rust 模板（旧版 <code>main.rs</code> 路径；
+零 Rust 路径是 <code>dotzuki new</code> + 项目清单）</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="doc-standard.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="tutorials/quickstart.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="doc-standard.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="tutorials/quickstart.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
