@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.5.4" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.5.5" }
 sourcemap = "9.3.2"
 serde = { workspace = true }
 serde_json = { workspace = true }
