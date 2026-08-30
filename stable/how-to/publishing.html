@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-73a7a8f9.js";
+            window.path_to_searchindex_js = "../searchindex-861f4626.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-797479cc.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: game authors, CI</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.5.5</li>
 </ul>
 </blockquote>
 <p>Package, ship and upgrade a zero-Rust game project.</p>
@@ -224,11 +224,21 @@ real rendered final frame. See <a href="../reference/cli.html">the CLI reference
 <p>The same runner compiles to WASM (<code>dotzuki-runner-web</code>) and boots against an
 <strong>in-memory filesystem</strong> — the editor’s Play activity uses exactly this path,
 so a project that plays in the editor plays identically in a page.</p>
-<p>The editor bundles the project as</p>
-<pre><code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }   // whole project, incl. .dotzuki-editor.json
+<p>The one-command route is <a href="../reference/cli.html"><code>dotzuki export --web</code></a>:</p>
+<pre><code class="language-bash">dotzuki export --web . --out dist/web
 </code></pre>
-<p>(excluding <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dotfiles and <code>*.bak</code>;
-per-file cap 16 MB, total 64 MB). The page then drives:</p>
+<p>It validates the project (same diagnostics as <code>dotzuki check</code>; <code>--force</code>
+overrides), then writes a self-contained static site: an <code>index.html</code> player
+page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
+<code>localStorage</code>), <code>game.bundle.json</code> (the whole project as
+<code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }</code> plus an informational
+<code>dotzuki.version</code> stamp), and the WASM runner under <code>wasm/</code>. Upload the
+directory to any static host — itch.io, GitHub Pages, S3 — and it plays.</p>
+<p>Bundle limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
+dotfiles and <code>*.bak</code> are excluded; a single file over 16 MB or a total over
+64 MB (uncompressed) is refused.</p>
+<p>To build a <strong>custom player page</strong> instead, drive <code>WasmRunner</code> yourself — the
+generated <code>index.html</code> is the reference implementation:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -245,8 +255,7 @@ per-file cap 16 MB, total 64 MB). The page then drives:</p>
 </div>
 <p>The input bitmask is the GB button mask used by <code>dotzuki_renderer::input</code>
 (Up/Down/Left/Right/A/B/Start/Select). The editor’s
-<code>src/composables/useWasmRunner.ts</code> is a working reference for wiring input,
-audio and save persistence.</p>
+<code>src/composables/useWasmRunner.ts</code> shows the same wiring inside a larger app.</p>
 <h2 id="4-upgrading-the-engine"><a class="header" href="#4-upgrading-the-engine">4. Upgrading the engine</a></h2>
 <p><strong>Zero-Rust projects</strong> — there is no dependency manifest; “upgrade” means using
 a newer <code>dotzuki</code> binary / editor. Before upgrading:</p>
