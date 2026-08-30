@@ -18,7 +18,8 @@ crates/                          # Game-AGNOSTIC engine
 │   │                            #   + runtime compile API (compiler::compile_dirs)
 │   │                            #   + disk scene providers w/ mtime hot reload (disk_loader)
 ├── dotzuki-cli/                    # `dotzuki` bin: scaffold (dotzuki new), compile-check
-│   │                            #   (dotzuki check) & play (dotzuki run) zero-Rust projects
+│   │                            #   (dotzuki check), play (dotzuki run) & export
+│   │                            #   (dotzuki export --web) zero-Rust projects
 ├── dotzuki-runner/                 # Zero-Rust project runtime: manifest model,
 │   │                            #   project/DSL loading, maps/collision/tilesets,
 │   │                            #   RunnerGame & headless driver

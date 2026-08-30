@@ -1,5 +1,8 @@
+mod bundle;
 mod check;
+mod export;
 mod run;
+mod runner_pkg;
 mod scaffold;
 mod templates;
 
@@ -43,6 +46,28 @@ enum Commands {
     Check {
         /// Project root containing .dotzuki-editor.json
         dir: PathBuf,
+    },
+    /// Export a project to a distributable form
+    Export {
+        /// Project root containing .dotzuki-editor.json
+        dir: PathBuf,
+        /// Export a static web site (index.html + game.bundle.json + wasm runner)
+        #[arg(long, required = true)]
+        web: bool,
+        /// Output directory (default: <project>/dist/web)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Use this prebuilt dotzuki-runner-web wasm package directory
+        /// instead of the workspace one (no wasm-pack needed)
+        #[arg(long)]
+        runner_pkg: Option<PathBuf>,
+        /// Rebuild the runner wasm package with wasm-pack even when a
+        /// prebuilt one exists
+        #[arg(long)]
+        rebuild_runner: bool,
+        /// Export even when DSL validation reports diagnostics
+        #[arg(long)]
+        force: bool,
     },
     /// Boot a game project and play it (windowed; --headless for CI)
     Run {
@@ -99,6 +124,22 @@ fn main() -> anyhow::Result<()> {
             scaffold::run(&name, dir.as_deref(), title.as_deref(), template.as_deref())?;
         }
         Commands::Check { dir } => check::run(&dir)?,
+        Commands::Export {
+            dir,
+            web: _,
+            out,
+            runner_pkg,
+            rebuild_runner,
+            force,
+        } => {
+            export::run(&export::ExportArgs {
+                dir,
+                out,
+                runner_pkg,
+                rebuild_runner,
+                force,
+            })?;
+        }
         Commands::Run {
             dir,
             map,

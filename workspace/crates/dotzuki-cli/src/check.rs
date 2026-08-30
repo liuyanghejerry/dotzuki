@@ -9,13 +9,37 @@
 //! manifest's table definitions are enough.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use dotzuki_engine_dsl::compiler::compile_dirs;
+use dotzuki_engine_dsl::compiler::{compile_dirs, CompileReport};
 use dotzuki_runner::manifest::{Manifest, TableDef, DEFAULT_RULES_FILE};
 
-pub fn run(dir: &Path) -> Result<()> {
+/// A project's full diagnostic picture: the parsed manifest, the DSL dirs that
+/// were compiled, the compile report, and the battle-section diagnostics.
+/// Shared by `dotzuki check` (prints and exits) and `dotzuki export --web`
+/// (blocks the export unless `--force`).
+pub struct ProjectDiagnostics {
+    pub manifest: Manifest,
+    pub dsl_dirs: Vec<PathBuf>,
+    pub report: CompileReport,
+    pub battle_diags: Vec<String>,
+}
+
+impl ProjectDiagnostics {
+    /// Total diagnostic count (DSL compile + battle section).
+    pub fn total(&self) -> usize {
+        self.report.diagnostics.len() + self.battle_diags.len()
+    }
+
+    /// Every diagnostic message, DSL-compile first then battle-section.
+    pub fn all(&self) -> impl Iterator<Item = &String> {
+        self.report.diagnostics.iter().chain(self.battle_diags.iter())
+    }
+}
+
+/// Load the project manifest and compute all diagnostics without printing.
+pub fn diagnose(dir: &Path) -> Result<ProjectDiagnostics> {
     let manifest_path = dir.join(".dotzuki-editor.json");
     if !manifest_path.is_file() {
         bail!(
@@ -31,10 +55,21 @@ pub fn run(dir: &Path) -> Result<()> {
     let dirs = manifest.dsl_dirs(dir);
     let dir_refs: Vec<&Path> = dirs.iter().map(|d| d.as_path()).collect();
     let report = compile_dirs(&dir_refs, None);
+    let battle_diags = battle_diagnostics(&manifest, dir);
+    Ok(ProjectDiagnostics {
+        manifest,
+        dsl_dirs: dirs,
+        report,
+        battle_diags,
+    })
+}
 
-    println!("Project: {} ({})", manifest.name, dir.display());
+pub fn run(dir: &Path) -> Result<()> {
+    let diags = diagnose(dir)?;
+
+    println!("Project: {} ({})", diags.manifest.name, dir.display());
     println!("DSL dirs:");
-    for d in &dirs {
+    for d in &diags.dsl_dirs {
         if d.is_dir() {
             println!("  {}", d.display());
         } else {
@@ -43,23 +78,19 @@ pub fn run(dir: &Path) -> Result<()> {
     }
     println!(
         "Compiled: {} scene(s), {} layout(s), {} theme(s), {} style(s) from {} file(s)",
-        report.scenes.len(),
-        report.ui_layouts.len(),
-        report.themes.len(),
-        report.styles.len(),
-        report.files.len()
+        diags.report.scenes.len(),
+        diags.report.ui_layouts.len(),
+        diags.report.themes.len(),
+        diags.report.styles.len(),
+        diags.report.files.len()
     );
 
-    let battle_diags = battle_diagnostics(&manifest, dir);
-    let total = report.diagnostics.len() + battle_diags.len();
+    let total = diags.total();
     if total == 0 {
         println!("OK — no diagnostics");
         return Ok(());
     }
-    for diag in &report.diagnostics {
-        eprintln!("error: {}", diag);
-    }
-    for diag in &battle_diags {
+    for diag in diags.all() {
         eprintln!("error: {}", diag);
     }
     eprintln!("check failed: {} diagnostic(s)", total);

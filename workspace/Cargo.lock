@@ -1098,6 +1098,7 @@ name = "dotzuki-cli"
 version = "0.5.5"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "clap",
  "dotzuki-app",
  "dotzuki-engine-dsl",
