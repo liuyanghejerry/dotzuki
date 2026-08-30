@@ -3,10 +3,10 @@
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.5.5
 
-Every `dotzuki` subcommand, flag and exit code for scaffolding, validating
-and running zero-Rust game projects.
+Every `dotzuki` subcommand, flag and exit code for scaffolding, validating,
+running and exporting zero-Rust game projects.
 
 The `dotzuki` binary (`crates/dotzuki-cli`) scaffolds, validates and runs
 **zero-Rust game projects** — plain directories of DSL, data and assets plus a
@@ -29,6 +29,7 @@ manifest, not the CLI, defines the project layout.
 | `dotzuki new <name>` | Scaffold a new game project (layout identical to the editor's empty template) |
 | `dotzuki check <dir>` | Compile every DSL file in the project and report diagnostics; exit 1 on errors. Also validates the `battle` section when present |
 | `dotzuki run <dir>` | Boot the project and play it in a window (or headless for CI/screenshots) |
+| `dotzuki export --web <dir>` | Export the project as a static web site (player page + bundle + WASM runner) |
 
 ## `dotzuki new <name>`
 
@@ -102,10 +103,53 @@ dotzuki run . --headless --map TownSquare --screenshot shot.png
 dotzuki run . --watch
 ```
 
+## `dotzuki export --web <dir>`
+
+Packs the project into a **static web site** that plays in any modern browser
+— the same `WasmRunner` (dotzuki-runner-web) boot path as the editor's Play
+activity, so an exported game plays identically to the in-editor playtest.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--out <dir>` | `<project>/dist/web` | Output directory (`dist` is excluded from bundles, so re-exporting never packs a previous export) |
+| `--runner-pkg <dir>` | workspace pkg | Use this prebuilt dotzuki-runner-web wasm package directory (no wasm-pack needed) |
+| `--rebuild-runner` | off | Rebuild the runner wasm package with wasm-pack even when a prebuilt one exists |
+| `--force` | off | Export even when validation reports diagnostics |
+
+The export first runs the same diagnostics as `dotzuki check`; any diagnostic
+aborts the export unless `--force` is given. The output directory contains:
+
+```
+dist/web/
+├── index.html                      # player page: canvas, keyboard, WebAudio, localStorage saves
+├── game.bundle.json                # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+└── wasm/
+    ├── dotzuki_runner_web.js       # wasm-pack glue
+    └── dotzuki_runner_web_bg.wasm  # the runner itself
+```
+
+Bundle rules (identical to the editor's play bundle): everything except
+`node_modules`/`.git`/`target`/`dist`, dot-directories, dotfiles and `*.bak` —
+except `.dotzuki-editor.json`, which always ships. Caps: 16 MB per file, 64 MB
+total (uncompressed). The `dotzuki.version` field records the exporting CLI
+version; it is informational and nothing enforces it at runtime.
+
+The runner wasm package is resolved in this order: `--runner-pkg` → the
+prebuilt `workspace/crates/dotzuki-runner-web/pkg` → build it with
+`wasm-pack build --target web --release --features modern-audio`. The last two
+require a dotzuki source checkout; a `cargo install`ed CLI outside the repo
+must pass `--runner-pkg`.
+
+```bash
+dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web   # play at http://localhost:8000
+```
+
 ## Exit codes
 
 - `dotzuki check`: `0` = all DSL compiles (and battle section validates); `1` = diagnostics found.
 - `dotzuki run`: `0` = clean exit.
+- `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the bundle caps, or no runner wasm package available.
 
 ## Notes
 

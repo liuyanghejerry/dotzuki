@@ -3,7 +3,7 @@
 > - **Audience**: game authors, CI
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.5.5
 
 Package, ship and upgrade a zero-Rust game project.
 
@@ -54,14 +54,26 @@ The same runner compiles to WASM (`dotzuki-runner-web`) and boots against an
 **in-memory filesystem** — the editor's Play activity uses exactly this path,
 so a project that plays in the editor plays identically in a page.
 
-The editor bundles the project as
+The one-command route is [`dotzuki export --web`](../reference/cli.md):
 
-```
-{ "<posix rel path>": "<base64>" }   // whole project, incl. .dotzuki-editor.json
+```bash
+dotzuki export --web . --out dist/web
 ```
 
-(excluding `node_modules`/`.git`/`target`/`dist`, dotfiles and `*.bak`;
-per-file cap 16 MB, total 64 MB). The page then drives:
+It validates the project (same diagnostics as `dotzuki check`; `--force`
+overrides), then writes a self-contained static site: an `index.html` player
+page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
+`localStorage`), `game.bundle.json` (the whole project as
+`{ "<posix rel path>": "<base64>" }` plus an informational
+`dotzuki.version` stamp), and the WASM runner under `wasm/`. Upload the
+directory to any static host — itch.io, GitHub Pages, S3 — and it plays.
+
+Bundle limits: `node_modules`/`.git`/`target`/`dist`, dot-directories,
+dotfiles and `*.bak` are excluded; a single file over 16 MB or a total over
+64 MB (uncompressed) is refused.
+
+To build a **custom player page** instead, drive `WasmRunner` yourself — the
+generated `index.html` is the reference implementation:
 
 | `WasmRunner` method | Purpose |
 |---|---|
@@ -73,8 +85,7 @@ per-file cap 16 MB, total 64 MB). The page then drives:
 
 The input bitmask is the GB button mask used by `dotzuki_renderer::input`
 (Up/Down/Left/Right/A/B/Start/Select). The editor's
-`src/composables/useWasmRunner.ts` is a working reference for wiring input,
-audio and save persistence.
+`src/composables/useWasmRunner.ts` shows the same wiring inside a larger app.
 
 ## 4. Upgrading the engine
 
