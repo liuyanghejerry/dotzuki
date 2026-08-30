@@ -12,11 +12,11 @@ repository.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.5.4" }
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.5.4" }
-dotzuki-ui = { path = "../dotzuki-ui", version = "0.5.4" }
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.5.4" }
-dotzuki-audio = { path = "../dotzuki-audio", version = "0.5.4", features = ["serde"] }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.5.5" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.5.5" }
+dotzuki-ui = { path = "../dotzuki-ui", version = "0.5.5" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.5.5" }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.5.5", features = ["serde"] }
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -26,7 +26,7 @@ members = [
 exclude = ["dotzuki-template"]
 
 [workspace.package]
-version = "0.5.4"
+version = "0.5.5"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/liuyanghejerry/dotzuki"
