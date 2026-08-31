@@ -33,10 +33,14 @@
 //!   items, the standard damage formula, a menu/narration turn loop,
 //!   `startBattle` scene integration);
 //! - [`save`] — [`save::GameSave`]: versioned JSON save/load at
-//!   `<project>/.dotzuki-save.json`, written at stable overworld points.
+//!   `<project>/.dotzuki-save.json`, written at stable overworld points;
+//! - [`bundle`] — [`bundle::decode_bundle_files`]: decode an exported
+//!   `game.bundle.json` into the `path → content` map a [`vfs::MemoryFiles`]
+//!   boots from (the `dotzuki-player` native bin).
 
 pub mod audio;
 pub mod battle;
+pub mod bundle;
 pub mod game;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod headless;

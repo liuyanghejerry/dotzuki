@@ -19,10 +19,11 @@ crates/                          # Game-AGNOSTIC engine
 │   │                            #   + disk scene providers w/ mtime hot reload (disk_loader)
 ├── dotzuki-cli/                    # `dotzuki` bin: scaffold (dotzuki new), compile-check
 │   │                            #   (dotzuki check), play (dotzuki run) & export
-│   │                            #   (dotzuki export --web) zero-Rust projects
+│   │                            #   (dotzuki export --web/--native) zero-Rust projects
 ├── dotzuki-runner/                 # Zero-Rust project runtime: manifest model,
 │   │                            #   project/DSL loading, maps/collision/tilesets,
-│   │                            #   RunnerGame & headless driver
+│   │                            #   RunnerGame & headless driver + dotzuki-player
+│   │                            #   (game-agnostic native player bin for export --native)
 ├── dotzuki-runner-web/             # WASM build of the runner (powers dotzuki-editor Play)
 ├── dotzuki-renderer/               # Generic GB-style tile/text renderer (CJK fonts)
 ├── dotzuki-ui/                     # Generic UI widgets on a Painter trait

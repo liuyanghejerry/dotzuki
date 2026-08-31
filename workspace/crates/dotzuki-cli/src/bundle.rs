@@ -36,6 +36,25 @@ pub fn collect_project_files(root: &Path) -> Result<BTreeMap<String, String>> {
     collect_project_files_with_caps(root, MAX_FILE_BYTES, MAX_TOTAL_BYTES)
 }
 
+/// Serialize collected files into the `game.bundle.json` string every export
+/// target ships: `{ dotzuki: {…export metadata…}, files }`. The metadata is
+/// informational only — nothing enforces it at runtime.
+pub fn serialize_bundle(files: &BTreeMap<String, String>) -> Result<String> {
+    let exported_at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let bundle_json = serde_json::json!({
+        "dotzuki": {
+            "tool": "dotzuki-cli",
+            "version": env!("CARGO_PKG_VERSION"),
+            "exportedAt": exported_at,
+        },
+        "files": files,
+    });
+    serde_json::to_string(&bundle_json).context("failed to serialize bundle")
+}
+
 /// [`collect_project_files`] with explicit caps (tests, future CLI flags).
 pub fn collect_project_files_with_caps(
     root: &Path,

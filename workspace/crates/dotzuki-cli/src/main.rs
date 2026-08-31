@@ -1,6 +1,8 @@
 mod bundle;
 mod check;
 mod export;
+mod export_native;
+mod player;
 mod run;
 mod runner_pkg;
 mod scaffold;
@@ -12,7 +14,7 @@ use dotzuki_runner::manifest;
 
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -48,23 +50,32 @@ enum Commands {
         dir: PathBuf,
     },
     /// Export a project to a distributable form
+    #[command(group = ArgGroup::new("target").required(true).multiple(false))]
     Export {
         /// Project root containing .dotzuki-editor.json
         dir: PathBuf,
         /// Export a static web site (index.html + game.bundle.json + wasm runner)
-        #[arg(long, required = true)]
+        #[arg(long, group = "target")]
         web: bool,
-        /// Output directory (default: <project>/dist/web)
+        /// Export a native app directory (dotzuki-player binary + game.bundle.json)
+        #[arg(long, group = "target")]
+        native: bool,
+        /// Output directory (default: <project>/dist/web or <project>/dist/native)
         #[arg(long)]
         out: Option<PathBuf>,
         /// Use this prebuilt dotzuki-runner-web wasm package directory
         /// instead of the workspace one (no wasm-pack needed)
-        #[arg(long)]
+        #[arg(long, conflicts_with = "native")]
         runner_pkg: Option<PathBuf>,
         /// Rebuild the runner wasm package with wasm-pack even when a
         /// prebuilt one exists
-        #[arg(long)]
+        #[arg(long, conflicts_with = "native")]
         rebuild_runner: bool,
+        /// Use this prebuilt dotzuki-player binary instead of building it
+        /// with cargo (needed when this CLI was built outside the dotzuki
+        /// source tree)
+        #[arg(long, conflicts_with = "web")]
+        player_bin: Option<PathBuf>,
         /// Export even when DSL validation reports diagnostics
         #[arg(long)]
         force: bool,
@@ -127,18 +138,29 @@ fn main() -> anyhow::Result<()> {
         Commands::Export {
             dir,
             web: _,
+            native,
             out,
             runner_pkg,
             rebuild_runner,
+            player_bin,
             force,
         } => {
-            export::run(&export::ExportArgs {
-                dir,
-                out,
-                runner_pkg,
-                rebuild_runner,
-                force,
-            })?;
+            if native {
+                export_native::run(&export_native::NativeExportArgs {
+                    dir,
+                    out,
+                    player_bin,
+                    force,
+                })?;
+            } else {
+                export::run(&export::ExportArgs {
+                    dir,
+                    out,
+                    runner_pkg,
+                    rebuild_runner,
+                    force,
+                })?;
+            }
         }
         Commands::Run {
             dir,

@@ -30,6 +30,7 @@ manifest, not the CLI, defines the project layout.
 | `dotzuki check <dir>` | Compile every DSL file in the project and report diagnostics; exit 1 on errors. Also validates the `battle` section when present |
 | `dotzuki run <dir>` | Boot the project and play it in a window (or headless for CI/screenshots) |
 | `dotzuki export --web <dir>` | Export the project as a static web site (player page + bundle + WASM runner) |
+| `dotzuki export --native <dir>` | Export the project as a native app directory (dotzuki-player binary + bundle) |
 
 ## `dotzuki new <name>`
 
@@ -145,11 +146,55 @@ dotzuki export --web . --out dist/web
 python3 -m http.server --directory dist/web   # play at http://localhost:8000
 ```
 
+## `dotzuki export --native <dir>`
+
+Packs the project into a **native app directory**: the game-agnostic
+`dotzuki-player` binary (the bin target of `dotzuki-runner`) plus the same
+`game.bundle.json` the web export writes. The player boots the bundle next to
+its executable through the same `RunnerGame` + window loop as `dotzuki run`,
+and writes its save next to the bundle as `.dotzuki-save.json`.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--out <dir>` | `<project>/dist/native` | Output directory (`dist` is excluded from bundles, so re-exporting never packs a previous export) |
+| `--player-bin <path>` | cargo build | Use this prebuilt `dotzuki-player` binary instead of building it |
+| `--force` | off | Export even when validation reports diagnostics |
+
+The diagnostic gate and bundle rules are identical to `--web`. The output
+directory contains:
+
+```
+dist/native/
+├── <project-dir-name>[.exe]   # the player binary, renamed after the project directory
+└── game.bundle.json           # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+```
+
+The player binary is resolved in this order: `--player-bin` →
+`cargo build --release -p dotzuki-runner --bin dotzuki-player` in the source
+workspace (incremental, so repeat exports are cheap). The build requires a
+dotzuki source checkout; a `cargo install`ed CLI outside the repo must pass
+`--player-bin`. The build targets the **host platform only** — to ship other
+OSes, run the export on that OS (or on a per-OS CI runner).
+
+```bash
+dotzuki export --native . --out dist/native
+dist/native/my-game            # double-clickable native app
+```
+
+The shipped binary also accepts an optional bundle path argument plus
+`--lang en|zh`, `--scale <n>`, `--fresh`, and `--headless` (with `--frames` /
+`--screenshot`) for CI smoke tests of the exported artifact:
+
+```bash
+dist/native/my-game --headless --frames 120 --screenshot boot.png
+```
+
 ## Exit codes
 
 - `dotzuki check`: `0` = all DSL compiles (and battle section validates); `1` = diagnostics found.
 - `dotzuki run`: `0` = clean exit.
 - `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the bundle caps, or no runner wasm package available.
+- `dotzuki export --native`: `0` = app directory written; `1` = validation failed (without `--force`), project over the bundle caps, or no player binary available.
 
 ## Notes
 
