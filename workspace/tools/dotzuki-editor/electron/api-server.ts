@@ -38,6 +38,7 @@ import { registerSprites } from '../server/api/routes/sprites'
 import { registerAssets } from '../server/api/routes/assets'
 import { registerAudio } from '../server/api/routes/audio'
 import { registerPlay } from '../server/api/routes/play'
+import { registerExport } from '../server/api/routes/export'
 import { setProjectRootDir, getProjectRoot } from '../server/api/projectConfig'
 
 export interface StartOptions {
@@ -112,6 +113,7 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   registerAssets(server)
   registerAudio(server)
   registerPlay(server)
+  registerExport(server)
 
   // ── Anything under an API/asset prefix that fell through is a genuine 404;
   //    answer with JSON so the SPA fallback below never masks it as index.html. ──

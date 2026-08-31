@@ -18,10 +18,32 @@
         class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay"
         :title="muted ? 'Unmute' : 'Mute'"
       >{{ muted ? '🔇' : '🔊' }}</button>
+      <button
+        @click="exportGame('web')"
+        :disabled="exporting !== null"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
+      >{{ exporting === 'web' ? $t('play.exporting') : $t('play.exportWeb') }}</button>
+      <button
+        @click="exportGame('native')"
+        :disabled="exporting !== null"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
+      >{{ exporting === 'native' ? $t('play.exporting') : $t('play.exportNative') }}</button>
       <span
         class="text-xs"
         :class="status === 'error' ? 'text-danger-ink' : status === 'running' ? 'text-success-ink' : 'text-ink-muted'"
       >{{ statusText }}</span>
+    </div>
+
+    <!-- Export result (dismissible) -->
+    <div
+      v-if="exportResult"
+      class="flex items-start gap-2 px-4 py-1.5 text-xs border-b border-border bg-raised shrink-0"
+    >
+      <span
+        class="whitespace-pre-wrap break-all"
+        :class="exportResult.ok ? 'text-success-ink' : 'text-danger-ink'"
+      >{{ exportResult.message }}</span>
+      <button class="ml-auto text-ink-muted hover:text-ink" @click="exportResult = null">×</button>
     </div>
 
     <!-- Stage -->
@@ -250,6 +272,36 @@ function clearSave() {
 function toggleMute() {
   muted.value = !muted.value
   audio?.setMuted(muted.value)
+}
+
+// ── Export (dotzuki export via POST /api/export) ──
+type ExportTarget = 'web' | 'native'
+const exporting = ref<ExportTarget | null>(null)
+const exportResult = ref<{ ok: boolean; message: string } | null>(null)
+
+/**
+ * Toolbar: export — the server shells out to the dotzuki CLI, so the result
+ * is the same artifact `dotzuki export --web|--native` would write. On
+ * success the message carries the output path (dist/<target> in the project).
+ */
+async function exportGame(target: ExportTarget) {
+  if (exporting.value) return
+  exporting.value = target
+  exportResult.value = null
+  try {
+    const res = await fetch('api/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`)
+    exportResult.value = { ok: true, message: t('play.exportDone', { path: body.out }) }
+  } catch (e) {
+    exportResult.value = { ok: false, message: (e as Error).message }
+  } finally {
+    exporting.value = null
+  }
 }
 
 onMounted(() => {

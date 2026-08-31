@@ -402,6 +402,15 @@ canvas: walk, talk to NPCs, battle, shop, save.
   policy; 🔊/🔇 toggles mute).
 - **Limits**: no file watching (use Restart), and very short
   key taps shorter than one frame can be missed (same as the native shell).
+- **Export**: the toolbar's **Export Web** / **Export Native** buttons call
+  `POST /api/export`, which shells out to the dotzuki CLI
+  (`dotzuki export --web|--native`) — the artifacts are identical to the
+  command-line export and land in `<project>/dist/{web,native}`. The CLI is
+  found via `DOTZUKI_CLI`, else the workspace's `target/{release,debug}/dotzuki`;
+  web exports reuse the Play activity's runner pkg (`--runner-pkg`), so
+  wasm-pack never runs. Packaged desktop apps ship the CLI + player binaries
+  as `Resources/cli/` (staged by `electron/stage-resources.mjs`; macOS release
+  builds lipo them universal — see `.github/workflows/release-editor.yml`).
 
 New projects scaffolded by the wizard include the Play activity by default.
 For existing projects, add it to `.dotzuki-editor.json` manually:

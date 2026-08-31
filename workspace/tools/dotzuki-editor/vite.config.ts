@@ -20,6 +20,7 @@ import { registerSprites } from './server/api/routes/sprites'
 import { registerAssets } from './server/api/routes/assets'
 import { registerAudio } from './server/api/routes/audio'
 import { registerPlay } from './server/api/routes/play'
+import { registerExport } from './server/api/routes/export'
 
 // ──────────────────────────────────────────────────────────────
 // The editor is configured via a .dotzuki-editor.json file in the user's project
@@ -74,6 +75,7 @@ function apiPlugin() {
       registerAssets(server)
       registerAudio(server)
       registerPlay(server)
+      registerExport(server)
     },
   }
 }

@@ -795,6 +795,10 @@ export default {
     loading: 'Loading project bundle…',
     running: 'Running',
     error: 'Error',
+    exportWeb: 'Export Web',
+    exportNative: 'Export Native',
+    exporting: 'Exporting…',
+    exportDone: 'Exported to {path} (dist is never bundled, so re-exporting is safe)',
     keyHelp: 'Arrows / WASD: move · Z: A button · X: B button · Enter / Space: Start · Backspace / Right Shift: Select',
   },
 }

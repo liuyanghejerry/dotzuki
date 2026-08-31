@@ -68,6 +68,11 @@ page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
 `dotzuki.version` stamp), and the WASM runner under `wasm/`. Upload the
 directory to any static host — itch.io, GitHub Pages, S3 — and it plays.
 
+The dotzuki-editor does this without the terminal: the Play activity's
+**Export Web** button calls `POST /api/export`, which shells out to the same
+CLI export and writes `dist/web/` in the open project (the packaged desktop
+app ships the `dotzuki` binary for exactly this).
+
 Bundle limits: `node_modules`/`.git`/`target`/`dist`, dot-directories,
 dotfiles and `*.bak` are excluded; a single file over 16 MB or a total over
 64 MB (uncompressed) is refused.
@@ -113,6 +118,11 @@ diagnostic gate as the web export applies (`--force` overrides).
 
 Ship the directory **writable**, or players on read-only installs lose saves
 — the save file lives next to the bundle.
+
+The editor's Play activity has an **Export Native** button too — same
+`POST /api/export` route, writing `dist/native/` in the open project. In a
+dev checkout the CLI cargo-builds the player; packaged desktop apps ship a
+prebuilt one (`Resources/cli/dotzuki-player`).
 
 ## 5. Upgrading the engine
 

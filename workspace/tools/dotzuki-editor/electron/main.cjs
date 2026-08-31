@@ -45,6 +45,25 @@ if (app.isPackaged && !process.env.DOTZUKI_WASM_NODE_ROOT) {
   process.env.DOTZUKI_WASM_NODE_ROOT = path.join(process.resourcesPath, 'wasm-node-pkg')
 }
 
+// The dotzuki CLI + native player binaries ship as Resources/cli/* (staged from
+// workspace/target/release; macOS release builds lipo them universal). The
+// /api/export route shells out to the CLI (web export) and reuses the player
+// binary via --player-bin (native export), since a packaged app has no cargo.
+if (app.isPackaged && !process.env.DOTZUKI_CLI) {
+  process.env.DOTZUKI_CLI = path.join(
+    process.resourcesPath,
+    'cli',
+    process.platform === 'win32' ? 'dotzuki.exe' : 'dotzuki',
+  )
+}
+if (app.isPackaged && !process.env.DOTZUKI_PLAYER) {
+  process.env.DOTZUKI_PLAYER = path.join(
+    process.resourcesPath,
+    'cli',
+    process.platform === 'win32' ? 'dotzuki-player.exe' : 'dotzuki-player',
+  )
+}
+
 /** @type {import('http').Server extends any ? any : never} */
 let apiServer = null // { url, port, close } from the prod api-server
 /** @type {string} base origin the renderer + main talk to for /api */
