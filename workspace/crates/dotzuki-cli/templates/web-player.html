@@ -16,11 +16,17 @@
 </head>
 <body>
 <h1>__DOTZUKI_TITLE__</h1>
-<div id="status">Loading…</div>
+<div id="status">__DOTZUKI_STR_LOADING__</div>
 <canvas id="screen" width="320" height="240" hidden></canvas>
-<div id="hint">Arrows / WASD — move &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — mute</div>
+<div id="hint">__DOTZUKI_STR_HINT__</div>
 <script type="module">
 const SAVE_KEY = __DOTZUKI_SAVE_KEY__
+const STR = {
+  loadingRuntime: __DOTZUKI_STR_LOADING_RUNTIME__,
+  downloading: __DOTZUKI_STR_DOWNLOADING__,
+  starting: __DOTZUKI_STR_STARTING__,
+  failedPrefix: __DOTZUKI_STR_FAILED_PREFIX__,
+}
 const statusEl = document.getElementById('status')
 const canvas = document.getElementById('screen')
 const say = (t) => { statusEl.textContent = t }
@@ -120,14 +126,14 @@ function initAudio() {
 }
 
 try {
-  say('Loading runtime…')
+  say(STR.loadingRuntime)
   const mod = await import('./wasm/dotzuki_runner_web.js')
   await mod.default()
-  say('Downloading game…')
+  say(STR.downloading)
   const res = await fetch('./game.bundle.json')
   if (!res.ok) throw new Error('HTTP ' + res.status)
   const bundle = await res.json()
-  say('Starting…')
+  say(STR.starting)
   const runner = new mod.WasmRunner(JSON.stringify(bundle.files), localStorage.getItem(SAVE_KEY))
   const ctx = canvas.getContext('2d')
   const image = ctx.createImageData(runner.width(), runner.height())
@@ -146,7 +152,7 @@ try {
   }
   requestAnimationFrame(frame)
 } catch (e) {
-  say('Failed to load: ' + ((e && e.message) || String(e)))
+  say(STR.failedPrefix + ((e && e.message) || String(e)))
 }
 </script>
 </body>

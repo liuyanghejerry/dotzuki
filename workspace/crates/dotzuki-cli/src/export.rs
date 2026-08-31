@@ -37,6 +37,12 @@ pub struct ExportArgs {
     pub rebuild_runner: bool,
     /// Export despite DSL/battle diagnostics.
     pub force: bool,
+    /// localStorage key the player page persists saves under (default
+    /// `dotzuki-save:<title>`). Hosts embedding the export (dotzuki-cloud)
+    /// pin their own key to keep existing players' saves valid.
+    pub save_key: Option<String>,
+    /// Player page UI language (`en` / `zh`) — loading/status/hint strings.
+    pub lang: String,
 }
 
 const INDEX_TEMPLATE: &str = include_str!("../templates/web-player.html");
@@ -57,7 +63,14 @@ pub fn run(args: &ExportArgs) -> Result<PathBuf> {
         .out
         .clone()
         .unwrap_or_else(|| args.dir.join("dist").join("web"));
-    write_site(&out, &diags.manifest.name, &files, &pkg)?;
+    write_site(
+        &out,
+        &diags.manifest.name,
+        args.save_key.as_deref(),
+        &args.lang,
+        &files,
+        &pkg,
+    )?;
 
     let bundle_bytes = fs::metadata(out.join("game.bundle.json")).map(|m| m.len()).unwrap_or(0);
     println!(
@@ -98,6 +111,8 @@ pub fn gate_diagnostics(dir: &Path, force: bool) -> Result<check::ProjectDiagnos
 fn write_site(
     out: &Path,
     title: &str,
+    save_key: Option<&str>,
+    lang: &str,
     files: &BTreeMap<String, String>,
     pkg: &Path,
 ) -> Result<()> {
@@ -112,24 +127,69 @@ fn write_site(
     fs::write(out.join("game.bundle.json"), bundle::serialize_bundle(files)?)
         .context("failed to write game.bundle.json")?;
 
-    let html = render_index_html(title, &save_key(title));
+    let key = save_key
+        .map(str::to_string)
+        .unwrap_or_else(|| default_save_key(title));
+    let html = render_index_html(title, &key, lang);
     fs::write(out.join("index.html"), html).context("failed to write index.html")?;
     Ok(())
 }
 
-/// The localStorage key the player page persists saves under.
-fn save_key(title: &str) -> String {
+/// The default localStorage key the player page persists saves under.
+fn default_save_key(title: &str) -> String {
     format!("dotzuki-save:{title}")
 }
 
+/// Player-page UI strings for a `lang` (`en` default, `zh` available).
+/// Hint may contain HTML entities (it is injected as markup); the status
+/// strings are plain text. All are authored constants — never user input.
+struct PageStrings {
+    loading: &'static str,
+    loading_runtime: &'static str,
+    downloading: &'static str,
+    starting: &'static str,
+    failed_prefix: &'static str,
+    hint: &'static str,
+}
+
+fn page_strings(lang: &str) -> PageStrings {
+    match lang {
+        "zh" => PageStrings {
+            loading: "加载中…",
+            loading_runtime: "加载运行时…",
+            downloading: "下载游戏包…",
+            starting: "启动中…",
+            failed_prefix: "加载失败: ",
+            hint: "方向键 / WASD — 移动 &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — 静音",
+        },
+        _ => PageStrings {
+            loading: "Loading…",
+            loading_runtime: "Loading runtime…",
+            downloading: "Downloading game…",
+            starting: "Starting…",
+            failed_prefix: "Failed to load: ",
+            hint: "Arrows / WASD — move &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — mute",
+        },
+    }
+}
+
 /// Fill the player-page template. The title is HTML-escaped into `<title>` and
-/// `<h1>`; the save key is JSON-encoded (a valid JS string literal).
-fn render_index_html(title: &str, save_key: &str) -> String {
+/// `<h1>`; the save key and the status strings are JSON-encoded (valid JS
+/// string literals); the hint is authored markup, injected raw.
+fn render_index_html(title: &str, save_key: &str, lang: &str) -> String {
     let escaped = html_escape(title);
     let key_json = serde_json::to_string(save_key).unwrap_or_else(|_| "\"dotzuki-save\"".into());
+    let s = page_strings(lang);
+    let js = |v: &str| serde_json::to_string(v).unwrap();
     INDEX_TEMPLATE
         .replace("__DOTZUKI_TITLE__", &escaped)
         .replace("__DOTZUKI_SAVE_KEY__", &key_json)
+        .replace("__DOTZUKI_STR_LOADING__", s.loading)
+        .replace("__DOTZUKI_STR_LOADING_RUNTIME__", &js(s.loading_runtime))
+        .replace("__DOTZUKI_STR_DOWNLOADING__", &js(s.downloading))
+        .replace("__DOTZUKI_STR_STARTING__", &js(s.starting))
+        .replace("__DOTZUKI_STR_FAILED_PREFIX__", &js(s.failed_prefix))
+        .replace("__DOTZUKI_STR_HINT__", s.hint)
 }
 
 fn html_escape(s: &str) -> String {
@@ -193,6 +253,8 @@ mod tests {
             runner_pkg: Some(pkg.to_path_buf()),
             rebuild_runner: false,
             force,
+            save_key: None,
+            lang: "en".to_string(),
         }
     }
 
@@ -256,6 +318,45 @@ mod tests {
             ..HeadlessOptions::default()
         })
         .unwrap();
+    }
+
+    #[test]
+    fn save_key_and_lang_customize_the_player_page() {
+        let Some(project) = example_project() else {
+            eprintln!("skipping: examples/your-first-game not present");
+            return;
+        };
+        let pkg = fake_runner_pkg("custom-pkg");
+        let tmp = TestDir::new("custom");
+        let mut a = args(project, export_dir(&tmp), &pkg.0, false);
+        a.save_key = Some("dotzuki-cloud-save:my-game".to_string());
+        a.lang = "zh".to_string();
+        let out = run(&a).unwrap();
+
+        let html = fs::read_to_string(out.join("index.html")).unwrap();
+        // The embedding host's save key lands as a JS string literal…
+        assert!(html.contains("\"dotzuki-cloud-save:my-game\""), "{html}");
+        // …the page speaks Chinese…
+        assert!(html.contains("加载中…"), "{html}");
+        assert!(html.contains("加载失败"), "{html}");
+        assert!(html.contains("静音"), "{html}");
+        // …and every template placeholder is filled.
+        assert!(!html.contains("__DOTZUKI_"), "unreplaced placeholder: {html}");
+    }
+
+    #[test]
+    fn default_page_is_english_with_the_title_save_key() {
+        let Some(project) = example_project() else {
+            eprintln!("skipping: examples/your-first-game not present");
+            return;
+        };
+        let pkg = fake_runner_pkg("default-pkg");
+        let tmp = TestDir::new("default");
+        let out = run(&args(project, export_dir(&tmp), &pkg.0, false)).unwrap();
+        let html = fs::read_to_string(out.join("index.html")).unwrap();
+        assert!(html.contains("Loading…"), "{html}");
+        assert!(html.contains("\"dotzuki-save:Your First Game\""), "{html}");
+        assert!(!html.contains("__DOTZUKI_"), "unreplaced placeholder: {html}");
     }
 
     #[test]
