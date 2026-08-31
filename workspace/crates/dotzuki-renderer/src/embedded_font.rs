@@ -104,12 +104,21 @@ pub fn measure_text(text: &str) -> u32 {
 
 // ── Fallback Cursor Glyphs ────────────────────────────────────────
 
+// 8×8 fallback bitmaps for the cursor arrows (not in the BDF blob). The
+// Fusion Pixel baseline sinks text ink to tile rows 3..=9 (Latin) / 1..=9
+// (CJK) — center 6.0 — so the ▶ triangle occupies rows 3..=7 and is drawn
+// one extra pixel lower (see draw_char) to land its center on the same row
+// 6.0 instead of floating ~2.5px above the text line.
 const GLYPH_CURSOR_RIGHT: [u8; 8] = [
-    0b00000000, 0b01111000, 0b01111100, 0b01111110, 0b01111110, 0b01111100, 0b01111000, 0b00000000,
+    0b00000000, 0b00000000, 0b00000000, 0b01111000, 0b01111100, 0b01111110, 0b01111100, 0b01111000,
 ];
 const GLYPH_CURSOR_DOWN: [u8; 8] = [
     0b00000000, 0b00000000, 0b01111110, 0b01111110, 0b00111100, 0b00011000, 0b00000000, 0b00000000,
 ];
+
+/// Extra vertical offset for the ▶ fallback (see the comment on
+/// [`GLYPH_CURSOR_RIGHT`]). Applied per scale step in `draw_char_scaled`.
+const CURSOR_RIGHT_DY: u32 = 1;
 
 // ── Public Drawing API ────────────────────────────────────────────
 
@@ -125,6 +134,7 @@ pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface)
     let fb_h = fb.height();
     // Fallback for cursor arrows (not in BDF)
     if ch == '▶' {
+        let y = y + CURSOR_RIGHT_DY;
         for row in 0..8u32 {
             let py = y + row;
             if py >= fb_h {
@@ -225,16 +235,16 @@ pub fn draw_char_scaled(
     let s = scale as i32;
     // Cursor-arrow fallbacks (not in the BDF blob) — 8×8 bitmaps, 10px advance.
     if ch == '▶' || ch == '▼' {
-        let bmp = if ch == '▶' {
-            &GLYPH_CURSOR_RIGHT
+        let (bmp, dy) = if ch == '▶' {
+            (&GLYPH_CURSOR_RIGHT, CURSOR_RIGHT_DY as i32)
         } else {
-            &GLYPH_CURSOR_DOWN
+            (&GLYPH_CURSOR_DOWN, 0)
         };
         for row in 0..8i32 {
             let byte = bmp[row as usize];
             for col in 0..8i32 {
                 if byte & (0x80 >> col) != 0 {
-                    fill_glyph_block(x as i32 + col * s, y as i32 + row * s, scale, color, fb);
+                    fill_glyph_block(x as i32 + col * s, y as i32 + (row + dy) * s, scale, color, fb);
                 }
             }
         }
@@ -487,6 +497,27 @@ mod tests {
         let adv_ni = draw_char('你', 50, 0, Rgba::BLACK, &mut fb);
         assert_eq!(adv_a, 5); // Latin half-width
         assert_eq!(adv_ni, 10); // CJK full-width
+    }
+
+    #[test]
+    fn cursor_right_fallback_centers_on_text_ink() {
+        // The Fusion Pixel baseline sinks glyph ink below the tile top (Latin
+        // caps span tile rows 3..=9 → center 6.0); the hardcoded ▶ fallback
+        // must center on the same row or menu cursors float above the line.
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_char('▶', 0, 0, Rgba::BLACK, &mut fb);
+        draw_char('M', 16, 0, Rgba::BLACK, &mut fb);
+        let ink_center = |x0: u32| {
+            let rows: Vec<u32> = (0..12)
+                .filter(|&y| (0..8).any(|x| fb.get_pixel(x0 + x, y) == Some(Rgba::BLACK)))
+                .collect();
+            (*rows.first().unwrap() + *rows.last().unwrap()) as f64 / 2.0
+        };
+        let (cursor, text) = (ink_center(0), ink_center(16));
+        assert!(
+            (cursor - text).abs() <= 0.5,
+            "▶ ink center {cursor} should match text ink center {text}"
+        );
     }
 
     #[test]
