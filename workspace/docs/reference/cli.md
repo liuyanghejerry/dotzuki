@@ -115,6 +115,8 @@ activity, so an exported game plays identically to the in-editor playtest.
 | `--out <dir>` | `<project>/dist/web` | Output directory (`dist` is excluded from bundles, so re-exporting never packs a previous export) |
 | `--runner-pkg <dir>` | workspace pkg | Use this prebuilt dotzuki-runner-web wasm package directory (no wasm-pack needed) |
 | `--rebuild-runner` | off | Rebuild the runner wasm package with wasm-pack even when a prebuilt one exists |
+| `--save-key <key>` | `dotzuki-save:<title>` | localStorage key the player page persists saves under — hosts embedding the export (e.g. dotzuki-cloud) pin their own key so existing players keep their saves |
+| `--lang <en\|zh>` | `en` | Player page UI language (loading/status/hint strings) |
 | `--force` | off | Export even when validation reports diagnostics |
 
 The export first runs the same diagnostics as `dotzuki check`; any diagnostic

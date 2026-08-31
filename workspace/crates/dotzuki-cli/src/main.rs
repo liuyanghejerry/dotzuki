@@ -76,6 +76,14 @@ enum Commands {
         /// source tree)
         #[arg(long, conflicts_with = "web")]
         player_bin: Option<PathBuf>,
+        /// localStorage key the web player page persists saves under
+        /// (default: dotzuki-save:<title>) — hosts embedding the export pin
+        /// their own key to keep existing players' saves valid
+        #[arg(long, conflicts_with = "native")]
+        save_key: Option<String>,
+        /// Player page UI language (loading/status/hint strings)
+        #[arg(long, default_value = "en", value_parser = ["en", "zh"], conflicts_with = "native")]
+        lang: String,
         /// Export even when DSL validation reports diagnostics
         #[arg(long)]
         force: bool,
@@ -143,6 +151,8 @@ fn main() -> anyhow::Result<()> {
             runner_pkg,
             rebuild_runner,
             player_bin,
+            save_key,
+            lang,
             force,
         } => {
             if native {
@@ -159,6 +169,8 @@ fn main() -> anyhow::Result<()> {
                     runner_pkg,
                     rebuild_runner,
                     force,
+                    save_key,
+                    lang,
                 })?;
             }
         }
