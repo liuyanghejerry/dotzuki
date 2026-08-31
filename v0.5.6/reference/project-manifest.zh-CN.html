@@ -1,0 +1,572 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>项目清单 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-543cf452.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/project-manifest.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
+<blockquote>
+<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, tool developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>一个<strong>游戏项目</strong>就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
+项目清单 <code>.dotzuki-editor.json</code>。游戏项目里没有 Cargo workspace、没有
+<code>package.json</code>、也没有构建系统：引擎二进制和编辑器按原样消费这个目录。</p>
+<p>本规范是创建、编辑、运行这类项目的工具之间的契约。该布局的参考实现是编辑器的
+脚手架（<code>tools/dotzuki-editor/server/scaffold.ts</code>）；<code>dotzuki</code> CLI
+（<code>crates/dotzuki-cli</code>）生成同样的布局。</p>
+<h2 id="消费方"><a class="header" href="#消费方">消费方</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>消费方</th><th>它对游戏项目做什么</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>dotzuki-editor</strong> (<code>tools/dotzuki-editor</code>)</td><td>读写一切：项目清单、数据表、地图、场景、gfx。</td></tr>
+<tr><td><strong><code>dotzuki</code> CLI</strong> (<code>crates/dotzuki-cli</code>)</td><td><code>dotzuki new</code> 生成项目骨架；<code>dotzuki check</code> 编译检查它的 DSL 文件。</td></tr>
+<tr><td><strong><code>dotzuki run</code></strong> (<code>crates/dotzuki-cli</code> + <code>crates/dotzuki-runner</code>)</td><td>启动项目并游玩：大地图、对话场景、warp（见下文）。</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="目录布局"><a class="header" href="#目录布局">目录布局</a></h2>
+<pre><code>my-game/
+├── .dotzuki-editor.json     # project manifest — the only config file
+├── README.md             # human notes; free-form
+├── data/                 # dataRoot — game data
+│   ├── maps/             # map definitions + per-map script .scene files
+│   │   └── StartTown/    # editor-scaffolded demo map (map.tmx.json,
+│   │                     #   tileset.png, script.scene, map.json)
+│   ├── tiles/            # shared tile library (map-editor Backdrop/Trace)
+│   └── stories/          # narrative bible: characters/, quests/, arcs/,
+│                         #   graph.json (story activity)
+├── gfx/                  # gfxRoot — graphics assets (tilesets, sprites)
+└── assets/
+    └── scenes/           # story scenes, Game DSL (.scene)
+        └── main.scene    # starter scene
+</code></pre>
+<ul>
+<li><code>data/maps/</code> —— 每张地图一个条目。map 活动（<code>type: "map"</code>）通过 <code>mapsDir</code>
+（相对 <code>dataRoot</code>）指向这里；script 活动的 <code>scriptsDir</code> 按惯例也指向这里，
+这样每张地图的 <code>*.scene</code> 脚本就放在各自地图数据的旁边。</li>
+<li><code>data/tiles/</code> —— 支撑地图编辑器 tile 选择器的共享 tile 库（活动
+<code>type: "tiles"</code>）。</li>
+<li><code>gfx/</code> —— 散放的图形文件。assets 活动在 <code>roots</code> 中列出它。</li>
+<li><code>assets/scenes/</code> —— 用游戏 DSL 编写的剧情场景。这是默认的<strong>场景目录</strong>
+（<code>game.scenesDir</code>）；见下文。</li>
+</ul>
+<p>脚手架至少要创建：<code>.dotzuki-editor.json</code>、<code>README.md</code>、<code>data/maps/</code>、
+<code>data/tiles/</code>、<code>gfx/</code>、<code>assets/scenes/main.scene</code>。带数据表的模板还会为每张表
+额外创建一个 <code>data/&lt;table.dir&gt;/</code>。<strong>编辑器的脚手架</strong>还会额外种入入门内容，让
+新项目开箱即可探索：一张带程序生成 tileset（<code>tileset.png</code>）和地图级
+<code>script.scene</code> 的 <code>data/maps/StartTown/</code> 演示地图，<code>data/tiles/</code> 下种好的共享
+tile 库，<code>data/stories/</code> 的 bible 骨架，以及——对于游戏模板（<code>dotzuki</code>、
+<code>wuxia</code>）——示例表记录外加种好的剧情角色和任务。<code>dotzuki</code> 模板还<strong>可开战</strong>、
+<strong>可开店</strong>：它的项目清单带一个 <code>battle</code> 区块（heroes 对 monsters，使用 spells
+表——两个种好的 hero 组成可切换的队伍——外加一个含 3 瓶 Potion 的 <code>items</code> 块、
+一个含种好的 Bug Catcher trainer 的 <code>encounters</code> 块，以及一个启用 EXP/等级成长
+的 <code>levels</code> 块——种好的 Slime 获胜时给 8 EXP）、一个 <code>shop</code> 区块
+（<code>{ "currency": "G", "startMoney": 100 }</code>）、种好的技能记录和战斗者的 <code>skills</code>
+列表，以及一个 <code>data/rules.ron</code> type chart——新项目无需任何配置即可通过
+<code>@command("startBattle", "slime")</code>（野怪）或
+<code>@command("startBattle", "bug-catcher")</code>（trainer）开战，并通过
+<code>@command("openShop", ["potion"])</code> 打开 Buy/Sell 商店（种好的 Potion 售价 20）。
+<code>dotzuki new</code> 只生成最小骨架。</p>
+<h2 id="项目清单-schemadotzuki-editorjson"><a class="header" href="#项目清单-schemadotzuki-editorjson">项目清单 schema（<code>.dotzuki-editor.json</code>）</a></h2>
+<p>顶层对象：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>键</th><th>类型</th><th>必填</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>string</td><td>yes</td><td>显示名（自由格式，不必是 slug）。</td></tr>
+<tr><td><code>dataRoot</code></td><td>string</td><td>yes</td><td>游戏数据根目录，相对项目目录。脚手架写入 <code>"./data"</code>。</td></tr>
+<tr><td><code>gfxRoot</code></td><td>string</td><td>no</td><td>图形根目录，相对项目目录。默认 <code>"./gfx"</code>。</td></tr>
+<tr><td><code>activities</code></td><td>array</td><td>yes</td><td>活动定义（见下文）。编辑器 UI 保留其顺序。</td></tr>
+<tr><td><code>game</code></td><td>object</td><td>no</td><td>面向引擎的区块（见下文）。旧编辑器项目中没有。</td></tr>
+<tr><td><code>battle</code></td><td>object</td><td>no</td><td>战斗系统区块（见<a href="battle-rules.html">战斗规则</a>）。</td></tr>
+<tr><td><code>shop</code></td><td>object</td><td>no</td><td>货币区块：<code>{ "currency": "G", "startMoney": 100 }</code>（两个键均可选，那些是默认值）。见<a href="#商店">商店</a>。</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="活动"><a class="header" href="#活动">活动</a></h3>
+<p>每个活动形如 <code>{ id, type, label, icon, enabled, config }</code>。<code>id</code> 在项目清单内
+唯一；<code>type</code> 选择编辑器面板；<code>config</code> 是每个类型自由格式的对象（未知键会被
+容忍）。脚手架生成的活动集合，按顺序：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>id</code></th><th><code>type</code></th><th>关键 <code>config</code> 字段</th></tr>
+</thead>
+<tbody>
+<tr><td><code>maps</code></td><td><code>map</code></td><td><code>mapsDir</code>（相对 dataRoot），可选 <code>tileSize</code>、<code>blockSize</code></td></tr>
+<tr><td><code>scripts</code></td><td><code>script</code></td><td><code>scriptsDir</code>（相对 dataRoot），<code>extension</code>（默认 <code>".scene"</code>）</td></tr>
+<tr><td><code>play</code></td><td><code>play</code></td><td>无（编辑器内 WASM 试玩——见<a href="#编辑器试玩wasm-运行器">编辑器试玩</a>）</td></tr>
+<tr><td><code>data</code></td><td><code>data</code></td><td><code>tables</code>：<code>{ id, label, dir, icon, idField, fields[] }</code> 数组（表目录位于 dataRoot 之下）</td></tr>
+<tr><td><code>story</code></td><td><code>story</code></td><td><code>storiesDir</code>、<code>scenesDir</code>（均相对 dataRoot）、<code>locales</code></td></tr>
+<tr><td><code>assets</code></td><td><code>assets</code></td><td><code>roots</code>（相对项目目录），可选 <code>extensions</code></td></tr>
+<tr><td><code>tiles</code></td><td><code>tiles</code></td><td><code>tilesDir</code>、<code>tileSize</code>、<code>backdropMapsDir</code>（均相对 dataRoot）</td></tr>
+</tbody>
+</table>
+</div>
+<p>编辑器还定义了另一种活动类型，可能出现在手工搭建的项目中；脚手架不会生成它：</p>
+<ul>
+<li><code>ui</code> —— GUI 布局。<code>config.guiRoot</code>（相对项目目录）存放 <code>.gui</code> 文件；
+<code>config.extension</code> 默认为 <code>".gui"</code>。</li>
+</ul>
+<p>脚手架生成的 <code>story</code> 活动使用 <code>storiesDir: "stories"</code>、
+<code>scenesDir: "maps"</code>（它的 <code>.scene</code> 文件所在处）和 <code>locales: ["en", "zh"]</code>。</p>
+<h3 id="game-区块"><a class="header" href="#game-区块"><code>game</code> 区块</a></h3>
+<p>可选。<code>dotzuki new</code> 会写入它；编辑器读写缺少它的项目也不会报错。</p>
+<pre><code class="language-json">"game": {
+  "entryScene": "main",
+  "scenesDir": "assets/scenes"
+}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>键</th><th>类型</th><th>缺省时的默认值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>scenesDir</code></td><td>string（相对项目目录）</td><td><code>"assets/scenes"</code></td></tr>
+<tr><td><code>entryScene</code></td><td>string（<code>scenesDir</code> 下的场景文件名主干）</td><td><code>scenesDir</code> 下发现的第一个 <code>.scene</code> 文件，按路径排序，去掉扩展名</td></tr>
+<tr><td><code>entryMap</code></td><td>string</td><td>map 活动的 <code>mapsDir</code> 下的第一个地图目录，按名称排序</td></tr>
+</tbody>
+</table>
+</div>
+<p>消费方按以下顺序推导：解析 <code>scenesDir</code>（<code>game.scenesDir</code> 或默认值），扫描其中
+的 <code>.scene</code> 文件，再取 <code>entryScene</code>——来自 <code>game.entryScene</code> 或第一个发现的
+场景。<code>dotzuki new</code> 写入的 <code>"entryScene": "main"</code> 与脚手架生成的 <code>main.scene</code>
+对应，因此新项目天然自洽。<code>dotzuki run</code> 如何使用这两个键，见下文说明。</p>
+<h2 id="dotzuki-run-的行为"><a class="header" href="#dotzuki-run-的行为"><code>dotzuki run</code> 的行为</a></h2>
+<p><code>dotzuki run &lt;dir&gt;</code> 启动项目的一个可玩实例（窗口模式；CI/smoke 测试用
+<code>--headless [--frames N] [--screenshot out.png]</code>）。它由 <code>dotzuki-runner</code>
+crate 实现；本节是行为契约。</p>
+<h3 id="启动"><a class="header" href="#启动">启动</a></h3>
+<p>加载项目清单，编译所有 DSL 目录（任何诊断信息都会让启动失败，并打印与
+<code>dotzuki check</code> 相同的消息列表），编译后的场景按它们的 <code>game_scene</code> 名称注册。
+入口解析：</p>
+<ul>
+<li>有地图时：出生在 <code>game.entryMap</code>（或 <code>--map</code>），否则在 <code>mapsDir</code> 下的第一个
+地图目录。玩家出生在地图中央，向外扫描寻找第一个可行走的 tile。</li>
+<li>无地图时：纯对话模式——<code>entryScene</code>（默认推导见<a href="#game-区块">上文</a>）把它的
+<code>main</code> 剧情线运行到底，然后显示结束画面。</li>
+</ul>
+<h3 id="地图"><a class="header" href="#地图">地图</a></h3>
+<p>一张地图由 <code>&lt;mapsDir&gt;/&lt;id&gt;/map.tmx.json</code>（Tiled JSON；名为 <code>collision</code> 的图层
+标记阻挡 tiles，其余图层参与渲染）加上 <code>tileset.png</code>（全彩色 atlas，GID 从 1
+开始、按行主序排列），再加上一个可选的 objects 伴生文件——<code>objects.json</code>（由
+编辑器写入）组成，其中包含 <code>npcs: [{id,name,x,y,facing,sprite,talk}]</code>、
+<code>warps: [{x,y,dest_map,dest_x,dest_y}]</code>、<code>signs: [{x,y,text}]</code>（面向告示牌 tile
+并按 A，以分页对话的形式读出其文本），以及一个可选的 <code>encounters</code> 块（见下文）
+（旧版 <code>map.json</code> 作为后备读取）。走上 warp tile 会淡出切换到目标地图。</p>
+<p>这些文件的创作工作流见<a href="../how-to/maps.html">地图</a>。</p>
+<h3 id="海拔层级"><a class="header" href="#海拔层级">海拔层级</a></h3>
+<p>地图可以是多层的（既能在地面行走，<em>也能</em>在墙顶行走）。每层的碰撞：名为
+<code>collision</code>（第 0 层）、<code>collision1</code>、<code>collision2</code>、…… 的图层——该层中非零
+GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实心。名为 <code>stairs</code> 的
+图层标记过渡 tiles（从不渲染）：抵达时 GID 1 上升一层，GID 2 下降一层（限制在
+地图的层数范围内）。视觉图层可携带一个可选的整数自定义属性 <code>level</code>（默认 0）：
+<code>level &lt;= player elevation</code> 的图层渲染在精灵下方，<code>level</code> 高于玩家海拔的图层
+渲染在精灵上方。只有 <code>collision</code> 图层的地图与单层地图表现完全一致。</p>
+<h3 id="随机-encounters"><a class="header" href="#随机-encounters">随机 encounters</a></h3>
+<p>地图通过在 objects 伴生文件中加入 <code>encounters</code> 块来开启野怪战斗——与 pokered
+的 <code>wild_data</code> 结构相同：一个按步触发的 <code>rate</code> 字节，以 <strong>/256</strong> 为单位（<code>25</code>
+≈ 每步 9.8%），加上若干 tile 矩形区域，每个区域各有一张加权表：</p>
+<pre><code class="language-json">"encounters": {
+  "rate": 25,
+  "zones": [
+    { "x": 0, "y": 5, "w": 8, "h": 3,
+      "table": [ { "id": "slime", "weight": 70 }, { "id": "bug-catcher", "weight": 30 } ] }
+  ]
+}
+</code></pre>
+<p>区域坐标以地图 tiles 为单位，矩形<strong>包含</strong>其 <code>w</code>×<code>h</code> 的范围。在区域内 tile 上
+完成一步行走后掷骰一次：一个 rng 字节 <code>&lt; rate</code> 即命中，随后从该区域的 <code>table</code>
+做一次加权抽取选出 id（<code>weight</code> 是相对值，默认 1）。id 的解析与
+<code>startBattle(id)</code> 完全一致——先解析 encounter 记录（包括 trainer 队伍/队列），
+再解析单个敌人记录——并触发一场 <strong>sceneless</strong> 战斗（见
+<a href="battle-rules.html">战斗规则</a>）。步进结算优先级为：<strong>warp &gt; encounter 掷骰 &gt;
+普通行走</strong>——走上 warp tile 从不掷骰，原地转身不算一步。<code>encounters</code> 缺失
+（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
+<h3 id="场景分发"><a class="header" href="#场景分发">场景分发</a></h3>
+<p>进入地图时：触发它的 <code>on_enter</code> 路由（来自编译报告中的 <code>@trigger</code>），否则触发
+场景的 <code>&lt;SceneName&gt;OnLoad</code>，再否则触发它的 <code>main</code> 剧情线——只触发一次，由
+<code>__played_main_&lt;map&gt;</code> 标志守护。与 NPC 对话（面向 + A）会运行其 <code>talk</code> 字段
+指定的剧情线，否则运行以该 NPC 命名的路由，再否则运行地图场景的 <code>main</code>，再
+否则把 <code>talk</code> 作为原始文本显示。一张地图的场景就是源文件为
+<code>&lt;mapsDir&gt;/&lt;map&gt;/script.scene</code> 的已编译场景，后备为与地图同名的场景。</p>
+<h3 id="命令"><a class="header" href="#命令">命令</a></h3>
+<p>场景 VM 完整支持 <code>showText</code>（分页文本框）、<code>showChoice</code>（菜单 → 索引）、
+<code>warpTo</code>、<code>delay</code>、<code>fadeScreen</code>、flags（<code>setFlag</code>/<code>resetFlag</code>/<code>checkFlag</code>，
+会话期间跨场景保持）、<code>startBattle</code>/<code>startWildBattle</code>（见
+<a href="battle-rules.html">战斗规则</a>）和 <code>openShop</code>（见<a href="#商店">商店</a>）。任何其他命令
+都会记录一条警告并自动完成，而不是让场景死锁。</p>
+<h3 id="菜单"><a class="header" href="#菜单">菜单</a></h3>
+<p>在大地图上按 <strong>Start</strong> 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
+冻结），其中有四个条目：</p>
+<ul>
+<li><strong>Party</strong> —— party 表每条记录的只读列表：名称、HP x/y、MP x/y、状态、基准
+属性（ATK/DEF/SPD）、元素和技能名。此版本不支持调整顺序。</li>
+<li><strong>Bag</strong> —— 持久化背包（物品 → 数量）加上玩家的金钱。记录中 heal 数值为正的
+物品（与战斗物品相同的 <code>battle.items.healField</code> 约定）可以使用：选中物品，
+再选一名队伍成员——它回复（上限为最大 HP），数量减一。濒死的成员（0 HP）
+<strong>不会</strong>复活，满 HP 的成员不会被治疗（“It won’t have any effect.”），heal
+数值非正的物品无法使用。没有 <code>battle.items</code> 块的项目会把它们的物品列为不可
+用。</li>
+<li><strong>Save</strong> —— 立即写入存档文件（同一个稳定状态写入器；从菜单存档总是允许的，
+即使在无头模式下运行也一样），并显示 “Game saved.” 确认。</li>
+<li><strong>Close</strong>（或 B）。</li>
+</ul>
+<p>菜单文字跟随运行器的语言（<code>--lang en</code>/<code>zh</code>）。</p>
+<h3 id="商店"><a class="header" href="#商店">商店</a></h3>
+<p>运行器持有玩家的<strong>金钱</strong>（一个 <code>u32</code>），初始值来自项目清单可选的顶层 <code>shop</code>
+区块——<code>{ "currency": "G", "startMoney": 100 }</code>，该区块缺失时正是这些默认值
+——并随存档文件（v3）保存。货币符号显示在商店 UI 和 Bag 中的金额旁边。场景用
+<code>@command("openShop", ["potion", "elixir"])</code>（JS 中为 <code>game.openShop([...])</code>）
+打开商店：场景挂起，商店 UI 在 <strong>Buy / Sell / Exit</strong> 根菜单上打开（在列表上
+按 B 返回根菜单；在根菜单上按 B 或 Exit 恢复场景）。<strong>Buy</strong> 列出给定物品及其
+记录中的 <code>price</code>（默认 0）和玩家的金钱。按 A 购买（money −= price，inventory
++= 1）；买不起的条目会被标记并拒绝。<strong>Sell</strong> 列出玩家背包中数量为正的条目，
+每个按 <strong><code>floor(price / 2)</code></strong> 出售（没有单独的 sellPrice 字段；定价为 0 的
+物品以 0 出售——允许）。按 A 卖出一个（money += ，count −= 1）。货架上未知的
+物品 id 以 name=id、价格 0 的形式打开——配置错误的商店永远不会让场景死锁。
+物品记录通过 <code>battle.items</code> 表读取。</p>
+<h3 id="游戏结束"><a class="header" href="#游戏结束">游戏结束</a></h3>
+<p>输掉战斗不会再让玩家带着 0 HP 的队伍卡死：收到 <code>"lose"</code> 的场景结束（先播放它
+自己的战败文本）后，运行器执行一次 <strong>whiteout</strong>——短暂黑屏，一行
+<code>&lt;Name&gt; collapsed…</code>，然后整支队伍回复到满 HP/MP（状态清除），玩家回到<strong>入口
+地图的出生点</strong>（若当前地图就是入口地图则留在原地，否则加载入口地图）。flags、
+背包和金钱保留。无地图（纯对话）项目只做回复。目前还没有回复点系统：重生位置
+总是入口出生点。</p>
+<h3 id="音频"><a class="header" href="#音频">音频</a></h3>
+<p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> 播放
+<code>data/audio/**/*.json</code> 中的音轨（dotzuki-audio <code>TrackDef</code> 格式；<code>music/</code> +
+<code>sfx/</code> 子目录是惯例——目录树会递归加载）。场景传入的 id 是音轨的 <code>id</code> 字段；
+未知 id 警告一次后继续。音频完全是可选的：没有 <code>data/audio/</code> 目录意味着每条
+命令都是零设备开销的静默空操作，输出设备在第一条播放命令时才惰性打开，设备
+缺失/不可用（CI、<code>--headless</code>）时记录一次并保持静默。音频文件不会被 <code>--watch</code>
+热重载（它们在启动时加载）。</p>
+<h3 id="精灵"><a class="header" href="#精灵">精灵</a></h3>
+<p>玩家在存在 <code>gfx/overworld/player/sheet.png</code>（24×32 单元格，4 个朝向 × 5 帧）
+时使用它；否则绘制一个程序生成的占位小人。此版本中 NPC 一律渲染为以 id 着色
+的占位图形。</p>
+<h3 id="存档读档"><a class="header" href="#存档读档">存档/读档</a></h3>
+<p>游戏存档写入 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带
+版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
+<a href="battle-rules.html">战斗规则</a>；当战斗有 <code>levels</code> 块时，队伍成员可携带可选的
+<code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级 1 / 0 EXP；<code>money</code> 总是写入；<code>player.level</code>
+是地图海拔层，缺失 ⇒ 0）。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
+以及场景结束回到大地图时——绝不在场景中途或 warp 中途写入（挂起的场景引擎
+无法恢复），因此在对话中途关掉窗口会保留最后一个稳定点。Start 菜单的
+<strong>Save</strong> 条目按需写入同一个文件（总是允许，即使在无头模式运行中）。启动时若
+存在有效存档则恢复：flags 恢复，已存档的地图加载，玩家被放在已存档的 tile 上
+（若该 tile 被占用则退回出生点扫描），队伍状态、背包和金钱随之恢复，并跳过
+开场分发——恢复的 <code>__played_main_*</code> flags 让 <code>main</code> 不会在之后的进入时重播。
+加载接受任何 <code>&lt;=</code> 当前版本的存档，并按字段给默认值——<strong>v1/v2 存档仍然能恢复</strong>
+（没有 <code>party</code>/<code>inventory</code> ⇒ 两者从零开始；没有 <code>money</code> ⇒ 采用项目清单
+<code>shop.startMoney</code> 的默认值）；缺失/损坏/<strong>更新</strong>版本的存档会警告并以全新状态
+启动。<code>--fresh</code> 忽略存档；<code>--map</code> 覆盖存档中的地图。窗口模式运行总是写入
+存档；<code>--headless</code> 除非传入 <code>--save</code>，否则从不写入（CI 保持无副作用）。</p>
+<p>围绕该格式的兼容性规则见<a href="../explanation/save-compatibility.html">存档兼容性</a>。</p>
+<h3 id="热重载"><a class="header" href="#热重载">热重载</a></h3>
+<p>使用 <code>--watch</code>（仅窗口模式）时，运行中的游戏会监视 data/gfx/scene 目录：编辑
+<code>.scene</code> 会重新编译 DSL 并原地替换场景（编辑出错时旧场景继续运行；诊断信息会
+记录到日志），编辑<em>当前</em>地图的 <code>map.tmx.json</code> / <code>tileset.png</code> / objects 伴生
+文件会原地重载该地图，保留玩家位置和 flags。其他地图、数据表和 gfx 在下次
+进入 / 启动时生效。</p>
+<h3 id="尚未实现"><a class="header" href="#尚未实现">尚未实现</a></h3>
+<p>依赖以下内容的场景会警告并继续：<code>StackDriver</code> 回合循环。</p>
+<h2 id="dotzuki-check-编译什么"><a class="header" href="#dotzuki-check-编译什么"><code>dotzuki check</code> 编译什么</a></h2>
+<p><code>dotzuki check &lt;dir&gt;</code> 加载项目清单，收集所有可能存放 DSL 文件的目录，并对它们
+运行 <code>dotzuki_engine_dsl::compiler::compile_dirs</code>（在内存中运行，不写出任何
+产物）。目录集合为：</p>
+<ol>
+<li>场景目录（<code>game.scenesDir</code>，默认 <code>assets/scenes</code>，相对项目目录）；</li>
+<li>每个 <code>script</code> 活动的 <code>scriptsDir</code>（相对 dataRoot）；</li>
+<li>每个 <code>story</code> 活动的 <code>scenesDir</code>（相对 dataRoot，默认 <code>"maps"</code>）；</li>
+<li>每个 <code>ui</code> 活动的 <code>guiRoot</code>（相对项目目录）。</li>
+</ol>
+<p>重复目录会被去重；不存在的目录会被跳过（因此没有 <code>assets/scenes/</code> 的旧项目
+仍会检查它 data-root 下的场景）。<code>check</code> 打印产物计数（<code>N scene(s), M layout(s), …</code>）和所有诊断信息，出现任何诊断信息时退出码为 1，否则为 0。</p>
+<p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
+（party/enemies/encounters/skills/items）必须存在于 data 活动的
+<code>config.tables[]</code> 中，引用的属性/技能字段和物品的 <code>healField</code> 必须存在于表
+schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 字段，并且规则文件（磁盘上
+存在时）必须能按 dotzuki-rules <code>Ruleset</code> 模型解析，且能对着封闭词汇表编译
+通过——hook 中未知的事件、op，或属性/类型/资源/状态名都会产生诊断信息，就像
+它会在战斗开始时成为启动错误一样。
+战斗诊断信息与 DSL 诊断信息一样打印，并让退出码失败。
+记录 JSON 不会被加载——项目清单的表定义就够了。</p>
+<h2 id="编辑器试玩wasm-运行器"><a class="header" href="#编辑器试玩wasm-运行器">编辑器试玩（WASM 运行器）</a></h2>
+<p>编辑器的 <code>play</code> 活动通过 <code>crates/dotzuki-runner-web</code>（wasm-bindgen）在
+<strong>浏览器中</strong>运行同一个 <code>RunnerGame</code>，因此试玩不需要 Rust 工具链。与运行器的
+契约：</p>
+<ul>
+<li><strong>Bundle。</strong> <code>GET /api/play/bundle</code> 返回整个项目，形如
+<code>{ files: { "&lt;project-relative posix path&gt;": "&lt;base64&gt;" }, projectRoot }</code>，
+排除 <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>、<code>*.bak</code> 以及除
+<code>.dotzuki-editor.json</code> 之外的 dotfiles（上限为 16 MB/文件、64 MB 总量）。
+路径保持 <code>data/maps/&lt;id&gt;/script.scene</code> 的形式，这正是运行器场景 ↔ 地图匹配
+所期望的。</li>
+<li><strong>Boot。</strong> bundle 喂给 <code>vfs::MemoryFiles</code> 和 <code>LoadedProject::load_with_files</code>
+——与 <code>dotzuki run</code> 完全相同的启动路径，不经过磁盘。<code>RunnerOptions</code> 强制
+<code>watch=false</code>、无头模式（无音频设备）、<code>pcm_audio=true</code> 且不写磁盘存档。</li>
+<li><strong>Frames。</strong> 页面以约 59.7 Hz 调用 <code>tick(input_bitmask)</code>，并把返回的 320×240
+RGBA 帧 blit 上屏。输入位掩码与 <code>GbButton</code> 位序一致（bit0=A … bit7=Down）。</li>
+<li><strong>Audio。</strong> 运行器不使用 cpal 设备，而是每 tick 渲染 APU PCM
+（<code>RunnerGame::render_audio</code>，44.1 kHz 立体声 f32）；页面通过 <code>take_audio()</code>
+把它排入 WebAudio 队列（<code>usePlayAudio</code>）。与原生相同的 sequencer/fade 路径，
+用拉取模型取代回调线程。</li>
+<li><strong>Saves。</strong> <code>export_save()</code>/<code>import_save(json)</code> 取代 <code>.dotzuki-save.json</code>；
+编辑器把它们持久化到 <code>localStorage</code>。场景/战斗/商店/warp 过渡挂起期间，
+<code>export_save</code> 不返回任何内容——编辑器在自己的间隔里重试即可。</li>
+</ul>
+<p>与原生 <code>dotzuki run</code> 的差异：没有文件监视（编辑器的 <strong>Restart</strong> 按钮重新拉取
+bundle 并重启，同时恢复存档），音频输出经由浏览器的 <code>AudioContext</code> 而非 cpal
+设备，战斗 RNG 的种子不取自墙上时钟时间。其余一切——地图、对话、选项、战斗、
+商店、菜单、游戏结束流程——都是同一套代码。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../how-to/publishing.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/battle-rules.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../how-to/publishing.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/battle-rules.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

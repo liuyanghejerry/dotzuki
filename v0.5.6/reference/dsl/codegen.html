@@ -1,0 +1,750 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Codegen Mapping - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-543cf452.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/dsl/codegen.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="dsl-codegen-contract"><a class="header" href="#dsl-codegen-contract">DSL Codegen Contract</a></h1>
+<p>This page records the compiled output that the <code>dotzuki-engine-dsl</code> compiler
+emits for every Game DSL construct — JavaScript for <code>.scene</code> storylines, JSON
+for UI layouts, themes, styles, and atlases — settled against the compiler
+source in <code>crates/dotzuki-engine-dsl/src/</code>.</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: DSL authors, compiler maintainers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<h2 id="how-to-read-this-page"><a class="header" href="#how-to-read-this-page">How to read this page</a></h2>
+<ul>
+<li>Every behavioral claim carries a <code>path:line</code> citation into
+<code>crates/dotzuki-engine-dsl/src/</code>.</li>
+<li>This page replaces the legacy <code>DSL_MAPPING.md</code> and reconciles it with the
+archived design record at <a href="../../archive/dsl-unified-design.html">dsl-unified-design.md</a>.
+Where the two disagreed, the compiler source decides (doc-standard §11:
+code wins over docs).</li>
+<li>Syntax and grammar details live in the sibling pages: <code>.scene</code> statements
+in <a href="scene.html">scene.md</a>, UI components in <a href="gui.html">gui.md</a> (formerly
+<code>GAME_UI_DSL.md</code>), theme/style in <a href="theme-style.html">theme-style.md</a>
+(formerly <code>THEME_STYLE_DSL.md</code>).</li>
+<li>The <code>.scene</code> runtime binding contract (<code>script_config.json</code>) is described
+in <a href="../project-manifest.html">project-manifest.md</a> (formerly
+<code>game-project-spec.md</code>).</li>
+<li>The docs index (<a href="../../index.html">index.md</a>) lists this page’s place in
+the reference layer.</li>
+</ul>
+<p>Every example below compiles under the current compiler; the full
+<code>dotzuki-engine-dsl</code> test suite is green (lib 279, codegen 34, snapshots 8,
+integration 18, and the remaining suites), and the divergent shapes were
+confirmed by compiling the examples directly.</p>
+<h2 id="compilation-pipeline"><a class="header" href="#compilation-pipeline">Compilation pipeline</a></h2>
+<ul>
+<li>Four file extensions: <code>.scene</code>, <code>.gui</code>, <code>.theme</code>, <code>.style</code>
+(compiler.rs:74).</li>
+<li><code>.theme</code> and <code>.style</code> file contents are wrapped in
+<code>game_scene _auto { ... }</code> before parsing, so their blocks parse as scene
+directives (compiler.rs:199-205).</li>
+<li>Pipeline: lex → parse → semantic validation → codegen
+(compiler.rs:199-231).</li>
+<li>Semantic validation rejects: undefined variables in conditions,
+assignments, and speaker names; empty <code>@choice</code>; missing or circular
+<code>@style</code> parents; duplicate <code>@theme</code>/<code>@style</code> names (parser.rs:1728-1905).</li>
+</ul>
+<p>Artifacts written by the build-time compiler (compiler.rs:291-343):</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Source</th><th>Artifacts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.scene</code></td><td><code>&lt;Scene&gt;.js</code>; <code>&lt;Scene&gt;_ui.json</code> when a <code>ui</code> block exists; <code>&lt;Scene&gt;_theme_&lt;i&gt;.json</code> per <code>@theme</code>; <code>&lt;Scene&gt;_styles.json</code> when <code>@style</code> blocks exist; <code>&lt;Scene&gt;_atlas_&lt;i&gt;.json</code> per <code>@atlas</code></td></tr>
+<tr><td><code>.gui</code></td><td><code>&lt;Screen&gt;.json</code></td></tr>
+<tr><td><code>.theme</code></td><td><code>&lt;ThemeName&gt;.json</code> per <code>@theme</code> block</td></tr>
+<tr><td><code>.style</code></td><td><code>&lt;Scene&gt;_styles.json</code> — the wrapper scene name is <code>_auto</code>, so a standalone <code>.style</code> file writes <code>_auto_styles.json</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Build-time artifacts start with
+<code>// @generated by dotzuki-engine-dsl — do not edit.</code> and
+<code>// Source: &lt;path&gt;</code> (compiler.rs:240-241, 301-304).</li>
+<li>The <code>.js</code> artifact ends with an inline base64 <code>//# sourceMappingURL</code>
+(compiler.rs:288-289).</li>
+<li>Artifacts are rewritten only when their content changed
+(<code>write_if_changed</code>, compiler.rs:617-635).</li>
+</ul>
+<h2 id="two-execution-targets"><a class="header" href="#two-execution-targets">Two execution targets</a></h2>
+<p>The crate emits JS, and it also ships a native AST interpreter that executes
+<code>.scene</code> ASTs with no JS engine at all:</p>
+<ul>
+<li>The interpreter is the canonical scene semantics; the compiled-JS path
+(the <code>dotzuki-engine-script</code> Boa engine) is the fallback
+(interpreter.rs:1-24).</li>
+<li>Statements the interpreter rejects are marked in each section below.</li>
+</ul>
+<h2 id="scene-module-shape"><a class="header" href="#scene-module-shape">Scene module shape</a></h2>
+<p><code>game_scene &lt;Name&gt; { ... }</code> compiles to one JS module in this order
+(compiler.rs:234-289):</p>
+<ol>
+<li><code>@variables</code> declarations first — one <code>let &lt;name&gt; = &lt;value&gt;;</code> per
+declaration (js_variables.rs:21-46).</li>
+<li>One <code>export async function storyline_&lt;name&gt;() { ... }</code> per
+<code>@storyline("name")</code> block, in declaration order (compiler.rs:257-280).
+The legacy unnamed <code>@storylines { ... }</code> block becomes
+<code>storyline_main()</code> and carries no trigger bindings
+(parser.rs:684-692, js_storyline.rs:494-502).</li>
+<li><code>export async function &lt;SceneName&gt;OnLoad() { ... }</code> when a <code>@load</code> block
+exists (js_storyline.rs:504-511).</li>
+</ol>
+<h2 id="storyline-statements"><a class="header" href="#storyline-statements">Storyline statements</a></h2>
+<p>Statement forms valid in <code>@storyline</code>/<code>@storylines</code>/<code>@load</code> bodies and inside
+<code>@if</code>, <code>@choice</code>, and <code>@each</code> branches (parser.rs:1011-1034).</p>
+<h3 id="speaker--say"><a class="header" href="#speaker--say"><code>@speaker</code> / <code>@say</code></a></h3>
+<pre><code class="language-dsl">@speaker("Prof") {
+    "Hello! Welcome to the world of monsters!"
+}
+</code></pre>
+<p>compiles to (js_storyline.rs:197-259):</p>
+<pre><code class="language-js">await game.showText("Prof: Hello! Welcome to the world of monsters!");
+</code></pre>
+<ul>
+<li>A non-empty string-literal name is prepended as <code>"Name: "</code> inside the
+emitted string.</li>
+<li><code>@speaker("")</code> is the narrator form: the body is emitted verbatim with no
+prefix (js_storyline.rs:217-223). Regression test
+<code>test_speaker_empty_name_no_prefix</code> (js_storyline.rs:633-652).</li>
+<li>A variable name compiles to a template literal: <code>`${name}: text`</code>
+(js_storyline.rs:225-228).</li>
+<li>Multiple text lines inside one block are joined with <code>\n</code>
+(js_storyline.rs:212).</li>
+<li><code>@speaker</code> and <code>@say</code> emit identical JS; they differ in meaning —
+<code>@speaker</code> is player-initiated talk, <code>@say</code> is cutscene speech
+(ast.rs:221-230, js_storyline.rs:184-196).</li>
+<li>Localized <code>@t(...)</code> lines compile through <code>game.t("en", "zh")</code>
+(js_storyline.rs:229-254).</li>
+</ul>
+<h3 id="choice--option"><a class="header" href="#choice--option"><code>@choice</code> / <code>@option</code></a></h3>
+<pre><code class="language-dsl">@choice {
+    @option("Yes") {
+        @speaker("Prof") { "Great!" }
+    }
+    @option("No") {
+        @speaker("Prof") { "Too bad." }
+    }
+}
+</code></pre>
+<p>compiles to (js_storyline.rs:266-319):</p>
+<pre><code class="language-js">const choice = await game.showChoice(["Yes", "No"]);
+if (choice === 0) {
+    await game.showText("Prof: Great!");
+} else {
+    await game.showText("Prof: Too bad.");
+}
+</code></pre>
+<ul>
+<li>The last option is the <code>else</code> branch; every earlier option gets
+<code>if (choice === N)</code> or <code>else if (choice === N)</code>
+(js_storyline.rs:297-305).</li>
+</ul>
+<h3 id="if--else--condition-compilation-settled"><a class="header" href="#if--else--condition-compilation-settled"><code>@if</code> / <code>@else</code> — condition compilation (settled)</a></h3>
+<p>DSL conditions are expression ASTs compiled by <code>compile_expression</code>
+(js_storyline.rs:76-140) and wrapped by <code>compile_if</code>
+(js_storyline.rs:322-363). These facts contradict legacy <code>DSL_MAPPING.md</code>
+§3 and entry 4:</p>
+<ul>
+<li><code>@if (gold &gt; 100) { ... } @else { ... }</code> compiles to:</li>
+</ul>
+<pre><code class="language-js">if ((gold &gt; 100)) {
+    ...
+} else {
+    ...
+}
+</code></pre>
+<ul>
+<li>The condition is parenthesized twice: <code>compile_expression</code> wraps every
+binary operation in <code>(...)</code> and <code>compile_if</code> emits <code>if ({cond})</code>
+(js_storyline.rs:120, 338).</li>
+<li><code>==</code> in DSL compiles to <code>===</code> in JS (js_storyline.rs:37). The interpreter
+also uses strict equality (interpreter.rs:111-119).</li>
+<li>Bare call callees in conditions are namespaced to <code>game.</code>:
+<code>@if (getFlag("EVENT_X"))</code> compiles to
+<code>if (game.getFlag("EVENT_X"))</code> (js_storyline.rs:99-108; regression test
+<code>test_condition_calls_are_game_namespaced</code>, tests/codegen_tests.rs:954-978).</li>
+<li>Undefined variable names are NOT resolved through <code>game.getFlag()</code>. They
+fail semantic validation at compile time with <code>UndefinedVariable</code>
+(parser.rs:1791-1798). The legacy claim that “undefined names that match
+known flags compile to <code>game.getFlag()</code>” does not exist in the code.</li>
+<li>Else-if chains are written <code>@else @if (...) { ... }</code>. The parser
+desugars them to a nested <code>If</code> inside the else branch
+(parser.rs:1134-1173), so the JS is nested, not a flat <code>else if</code> chain:</li>
+</ul>
+<pre><code class="language-dsl">@if (gold &gt; 100) {
+    @speaker("") { "rich" }
+} @else @if (gold &gt; 10) {
+    @speaker("") { "mid" }
+} @else {
+    @speaker("") { "poor" }
+}
+</code></pre>
+<pre><code class="language-js">if ((gold &gt; 100)) {
+    await game.showText("rich");
+} else {
+    if ((gold &gt; 10)) {
+        await game.showText("mid");
+    } else {
+        await game.showText("poor");
+    }
+}
+</code></pre>
+<ul>
+<li>Spelling <code>@else if</code> (no <code>@</code> on <code>if</code>) is a parse error:
+<code>expected one of [LBrace], found Identifier("if")</code>.</li>
+<li>In the native interpreter an <code>@if</code> condition must evaluate through sync
+queries only; an async command in a condition is an error
+(interpreter.rs:459-473).</li>
+</ul>
+<h3 id="each"><a class="header" href="#each"><code>@each</code></a></h3>
+<pre><code class="language-dsl">@each item in inventory {
+    @speaker("") { "..." }
+}
+</code></pre>
+<p>compiles to <code>for (const item of inventory) { ... }</code>
+(js_storyline.rs:366-396). The <code>in</code> keyword is optional
+(parser.rs:1189-1197).</p>
+<h3 id="assignment-statements"><a class="header" href="#assignment-statements">Assignment statements</a></h3>
+<ul>
+<li><code>gold = 500</code> compiles to a bare <code>gold = 500;</code>. The <code>let gold = 500;</code>
+declaration is hoisted to the top of the storyline function
+(js_storyline.rs:398-428, 531-576).</li>
+<li>Assignments whose value is a call stay in place and are awaited:
+<code>result = startBattle("OPP")</code> compiles to
+<code>result = await game.startBattle("OPP");</code> with a hoisted <code>let result;</code>
+(js_storyline.rs:409-418, 557-571).</li>
+<li>Assigning to a <code>@variables</code> name mutates the module-scoped variable; no
+local <code>let</code> is emitted (js_storyline.rs:543-554).</li>
+</ul>
+<h3 id="bare-commands-and-command"><a class="header" href="#bare-commands-and-command">Bare commands and <code>@command</code></a></h3>
+<pre><code class="language-dsl">heal()
+giveItem("Potion", 1)
+fadeScreen("out")
+</code></pre>
+<p>compiles to (js_storyline.rs:461-481):</p>
+<pre><code class="language-js">await game["heal"]();
+await game["giveItem"]("Potion", 1);
+await game["fadeScreen"]("out");
+</code></pre>
+<ul>
+<li><code>@command("heal")</code> and <code>@command("giveItem", "Potion", 1)</code> compile
+identically; the first argument must be a string literal
+(parser.rs:1252-1304).</li>
+<li>A bare identifier without parentheses is also a command: <code>heal</code> →
+<code>await game["heal"]();</code> (parser.rs:1218-1245).</li>
+<li>A bare identifier followed by <code>=</code> is an assignment; otherwise it is a
+command (parser.rs:1020-1023).</li>
+</ul>
+<h3 id="run-----raw-javascript-settled"><a class="header" href="#run-----raw-javascript-settled"><code>@run { ... }</code> — raw JavaScript (settled)</a></h3>
+<p>The two legacy docs disagree: <code>DSL_MAPPING.md</code> entry 14 calls <code>@run</code> a
+current, first-class escape hatch; the archived design reports all <code>@run</code>
+blocks were removed from the pokered corpus as an anti-pattern. The
+compiler code says:</p>
+<ul>
+<li><code>@run { ... }</code> lexes the block as raw text with brace-nesting awareness
+(lexer.rs:491-543) into <code>StoryStmt::Run</code> (parser.rs:988-1009).</li>
+<li>Codegen emits each non-empty line verbatim, prefixed with the compiler’s
+indentation pad; the author’s inner indentation is preserved; blank lines
+are kept; no sourcemap entries are produced (js_storyline.rs:55-74).</li>
+<li><code>@run</code> is valid anywhere <code>parse_story_stmt</code> runs: storyline bodies,
+<code>@load</code>, <code>@if</code>/<code>@else</code> branches, and <code>@choice</code> option bodies
+(parser.rs:1011-1034). It is NOT valid at <code>game_scene</code> top level
+(parser.rs:679-720).</li>
+<li>The semantic validator skips <code>@run</code> content entirely: no
+undefined-variable errors for JS identifiers inside it
+(parser.rs:1774, 1826, 1845).</li>
+<li>The native AST interpreter REJECTS <code>@run</code> with an error
+(“unsupported statement: @run raw-JS blocks cannot run in the native
+interpreter”, interpreter.rs:524-528).</li>
+</ul>
+<p>Net effect: <code>@run</code> compiles for the JS/Boa runtime path and is rejected by
+the canonical interpreter. Both legacy descriptions are partial; the two
+behaviors coexist in the current code.</p>
+<h2 id="variables"><a class="header" href="#variables"><code>@variables</code></a></h2>
+<pre><code class="language-dsl">@variables {
+    gold = 500
+    player = { name: "RED", level: 5 }
+    inventory = ["sword", "shield"]
+}
+</code></pre>
+<p>compiles to (js_variables.rs:21-46):</p>
+<pre><code class="language-js">let gold = 500;
+let player = { name: "RED", level: 5 };
+let inventory = ["sword", "shield"];
+</code></pre>
+<ul>
+<li>Object literals use <code>key: value</code> (colon). <code>{ name = "RED" }</code> is a parse
+error: <code>expected one of [Colon], found Equals</code> (parser.rs:424-451).</li>
+<li>There is no <code>const</code> form; every declaration is <code>let</code>.</li>
+<li>Call initializers are NOT namespaced to <code>game.</code>:
+<code>flag = getFlag("EVENT_X")</code> compiles to
+<code>let flag = getFlag("EVENT_X");</code> (js_variables.rs:93-96) — unlike story
+expressions, which namespace to <code>game.getFlag(...)</code>.</li>
+</ul>
+<h2 id="expressions"><a class="header" href="#expressions">Expressions</a></h2>
+<p><code>compile_expression</code> (js_storyline.rs:76-140) maps expression ASTs to JS:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>DSL expression</th><th>JS output</th></tr>
+</thead>
+<tbody>
+<tr><td><code>"text"</code></td><td>JSON-escaped string literal</td></tr>
+<tr><td><code>42</code> / <code>3.14</code></td><td><code>42</code> / <code>3.14</code> (integers print without <code>.0</code>)</td></tr>
+<tr><td><code>true</code> / <code>false</code></td><td><code>true</code> / <code>false</code></td></tr>
+<tr><td><code>gold</code></td><td><code>gold</code></td></tr>
+<tr><td><code>[1, 2]</code></td><td><code>[1, 2]</code></td></tr>
+<tr><td><code>{ a: 1, b: 2 }</code></td><td><code>{ a: 1, b: 2 }</code></td></tr>
+<tr><td><code>getFlag("X")</code></td><td><code>game.getFlag("X")</code></td></tr>
+<tr><td><code>!x</code> / <code>-x</code></td><td><code>(!x)</code> / <code>(-x)</code></td></tr>
+<tr><td><code>a + b</code> (any binop)</td><td><code>(a + b)</code></td></tr>
+<tr><td><code>c ? t : e</code></td><td><code>(c ? t : e)</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Operator mapping: <code>==</code>→<code>===</code>, <code>!=</code>→<code>!==</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>|</code>, <code>&amp;</code>,
+<code>+ - * / &gt; &lt; &gt;= &lt;=</code> (js_storyline.rs:31-48).</li>
+<li>Identifiers may contain <code>.</code> and <code>-</code> (lexer.rs:438-447). A dotted name is
+one identifier, not member access. Writing <code>game.getFlag("X")</code> in DSL
+therefore compiles to <code>game.game.getFlag("X")</code> — write bare
+<code>getFlag("X")</code> instead.</li>
+<li>String interpolation (<code>{expression}</code> inside a string) is NOT implemented:
+the lexer reads strings verbatim (lexer.rs:376-400), and no codegen pass
+extracts <code>{...}</code> into JS template literals. Legacy <code>DSL_MAPPING.md</code>
+entry 6 describes a feature that does not exist in this compiler. What
+exists is the GUI binding convention: a variable used as a UI property
+compiles to the string <code>"{name}"</code> for the renderer
+(json_ui.rs:366-385). GUI template bindings use loose <code>==</code>/<code>!=</code> inside
+the template string (json_ui.rs:493-510), while JS code and the
+interpreter use strict equality.</li>
+</ul>
+<h2 id="ui-json-gui-and-ui---blocks"><a class="header" href="#ui-json-gui-and-ui---blocks">UI JSON (<code>.gui</code> and <code>ui { }</code> blocks)</a></h2>
+<ul>
+<li><code>.gui</code> <code>screen &lt;Name&gt; { ... }</code> compiles to
+<code>{"schema_version": 2, "screen": "&lt;Name&gt;", "elements": [...]}</code>
+(json_ui.rs:40-49).</li>
+<li><code>screen &lt;Name&gt; : &lt;theme&gt;</code> parses the theme name (parser.rs:735-738) but
+the emitted JSON does not include it (json_ui.rs:40-49).</li>
+<li>A <code>.scene</code> <code>ui { ... }</code> block compiles to
+<code>{"type": "group", "children": [...]}</code> (json_ui.rs:28-35).</li>
+<li>Component mapping (json_ui.rs:52-240):</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>DSL component</th><th>JSON output</th></tr>
+</thead>
+<tbody>
+<tr><td><code>panel { ... }</code></td><td><code>{ "type": "border", "children": [...] }</code></td></tr>
+<tr><td><code>container { ... }</code></td><td><code>{ "type": "group", "children": [...] }</code></td></tr>
+<tr><td><code>text("Shop") {}</code></td><td><code>{ "type": "text", "value": "Shop" }</code></td></tr>
+<tr><td><code>button("Buy") { on_click = "buy" }</code></td><td><code>{ "type": "text", "value": "Buy", "interactive": true, "onClick": "buy" }</code></td></tr>
+<tr><td><code>list { source = items }</code></td><td><code>{ "type": "list", "items": "{items}" }</code></td></tr>
+<tr><td><code>flex_list(items)</code></td><td><code>{ "type": "flex_list", "items": "{items}" }</code></td></tr>
+<tr><td><code>image("ui.png") { slice = "[8,8,8,8]" }</code></td><td><code>{ "type": "image", "src": "ui.png", "nineSlice": "[8,8,8,8]" }</code></td></tr>
+<tr><td><code>tile(31) { rect = {...} }</code></td><td><code>{ "type": "tile", "tile_id": 31, "rect": {...} }</code></td></tr>
+<tr><td><code>divider { tiles = [122] }</code></td><td><code>{ "type": "divider", "tiles": [122] }</code></td></tr>
+<tr><td><code>input</code> / <code>dropdown</code></td><td><code>{ "type": "custom:input" }</code> / <code>{ "type": "custom:dropdown" }</code></td></tr>
+<tr><td><code>cursor</code> / <code>bracket</code> / <code>pixel_rect</code></td><td><code>{ "type": "cursor" / "bracket" / "pixel_rect" }</code></td></tr>
+<tr><td>declared <code>component</code> use</td><td><code>{ "type": "custom:&lt;name&gt;" }</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Every component requires a <code>{ ... }</code> block, even when empty
+(<code>text("Hi") {}</code>). <code>text("Hi")</code> without the block is a parse error.</li>
+<li>A named child <code>title = text("Shop") {}</code> carries <code>"id": "title"</code>
+(parser.rs:1324-1353, json_ui.rs:246-249).</li>
+<li>Prop name mapping: <code>on_click</code> → <code>onClick</code>, <code>flex_grow</code> → <code>flexGrow</code>
+(json_ui.rs:246-267).</li>
+<li>A single numeric <code>padding = 24</code> expands to <code>[24, 24, 24, 24]</code>; a single
+non-numeric value is kept as a scalar (parser.rs:1464-1470,
+json_ui.rs:351-359).</li>
+<li>Non-string positional arguments to <code>text()</code>/<code>button()</code> produce an empty
+string (parser.rs:1928-1934).</li>
+<li>Legacy <code>DSL_MAPPING.md</code> entries 7/8 show <code>{"type": "panel"}</code> and
+<code>{"type": "button", "label": ...}</code> — the emitted types are <code>border</code> and
+<code>text</code> (with <code>interactive</code>), as above.</li>
+</ul>
+<h2 id="theme"><a class="header" href="#theme"><code>@theme</code></a></h2>
+<p>Full reference in <a href="theme-style.html">theme-style.md</a>. Code facts
+(json_theme.rs:9-15, compiler.rs:378-393):</p>
+<pre><code class="language-dsl">@theme dark {
+    primary = "#c9a03d"
+    background = "#1a1a2e"
+}
+</code></pre>
+<p>compiles to
+<code>{"name": "dark", "tokens": {"primary": "#c9a03d", "background": "#1a1a2e"}}</code>.</p>
+<ul>
+<li>Tokens are strings only (parser.rs:1579-1582).</li>
+<li>Each <code>@theme</code> writes its own <code>&lt;ThemeName&gt;.json</code> file; a <code>.theme</code> file
+with several blocks produces several files, not one map (contradicts
+legacy <code>DSL_MAPPING.md</code> entry 9).</li>
+</ul>
+<h2 id="style"><a class="header" href="#style"><code>@style</code></a></h2>
+<p>Full reference in <a href="theme-style.html">theme-style.md</a>. Code facts
+(json_theme.rs:45-141):</p>
+<ul>
+<li>Inheritance resolves at compile time. The output is a JSON array of style
+objects, each with <code>name</code>, merged <code>properties</code> (child overrides parent),
+<code>extends</code> when declared, and <code>inheritance_chain</code> when the chain has more
+than one member.</li>
+<li>Property values: literals become JSON primitives; a variable becomes
+<code>{"$var": "&lt;name&gt;"}</code> (json_theme.rs:132-141).</li>
+<li>Circular inheritance is a compile-time error
+(<code>CircularStyleInheritance</code>, parser.rs:1862-1868); a missing parent is
+<code>MissingStyleParent</code> (parser.rs:1853-1861).</li>
+<li>The legacy <code>__extends</code> field does not exist; the field is <code>extends</code>
+(contradicts legacy <code>DSL_MAPPING.md</code> entry 10).</li>
+</ul>
+<h2 id="atlas"><a class="header" href="#atlas"><code>@atlas</code></a></h2>
+<pre><code class="language-dsl">@atlas "ui" {
+    source = "assets/ui/atlas.png"
+    regions = {
+        btn = [0, 0, 64, 64, slice=8]
+    }
+}
+</code></pre>
+<p>compiles to (json_atlas.rs:35-65):</p>
+<pre><code class="language-json">{
+  "name": "ui",
+  "source": "assets/ui/atlas.png",
+  "regions": [
+    {
+      "name": "btn",
+      "x": 0, "y": 0, "w": 64, "h": 64,
+      "nineSlice": { "top": 8, "right": 8, "bottom": 8, "left": 8 }
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li>Region keys are <code>w</code>/<code>h</code>, not <code>width</code>/<code>height</code> (contradicts legacy
+<code>DSL_MAPPING.md</code> entry 11).</li>
+<li><code>slice=8</code> expands to four equal edges; <code>slice=[top, right, bottom, left]</code>
+maps each edge (parser.rs:1702-1718). Regions without <code>slice</code> omit
+<code>nineSlice</code> (json_atlas.rs:56-63).</li>
+</ul>
+<h2 id="trigger-bindings--script_configjson"><a class="header" href="#trigger-bindings--script_configjson">Trigger bindings → <code>script_config.json</code></a></h2>
+<p><code>@trigger</code> fields in a <code>@storyline</code> regenerate the map’s
+<code>script_config.json</code> (config_gen.rs:18-99). The runtime contract is
+documented in <a href="../project-manifest.html">project-manifest.md</a>.</p>
+<ul>
+<li><code>npc = N</code> (number or numeric string) → an <code>npcs[]</code> entry
+<code>{ "id": N, "talk": "&lt;storyline&gt;" }</code>, plus <code>toggleId</code>/<code>scriptId</code>/
+<code>defaultHidden</code> when <code>toggle</code>/<code>script</code>/<code>hidden</code> are given;
+<code>no_talk = true</code> omits <code>talk</code> (config_gen.rs:28-43). A non-numeric string
+fills the legacy advisory <code>npc</code> name field, used for route and conflict
+grouping only (parser.rs:893-900).</li>
+<li><code>sign = N</code> → a <code>signs[]</code> entry <code>{ "id": N, "talk": "&lt;storyline&gt;" }</code>
+(config_gen.rs:45-47).</li>
+<li><code>coord = [x, y]</code> / <code>coords = [[x, y], ...]</code> → <code>coordEvents[]</code> entries
+<code>{ "name": ..., "position": [x, y], "trigger": "&lt;storyline&gt;" }</code>
+(config_gen.rs:49-72).</li>
+<li>Coord name derivation: the <code>name</code> field when there is one coord; with
+several coords the trailing digit is stripped and renumbered
+(<code>northExit1</code> → <code>northExit1</code>, <code>northExit2</code>, …); unnamed coords get
+<code>&lt;storyline&gt;_&lt;x&gt;_&lt;y&gt;</code> (config_gen.rs:50-70).</li>
+<li>Any <code>@load</code> block sets <code>onLoad</code> to <code>&lt;SceneName&gt;OnLoad</code>
+(config_gen.rs:81-83).</li>
+<li>One <code>@trigger</code> line per binding; a storyline may carry several
+<code>@trigger</code> lines (parser.rs:807-840).</li>
+<li><code>after</code> links storylines for conflict detection: two storylines on the
+same <code>(map, npc)</code> without an <code>after</code> chain produce a <code>CONFLICT</code> warning
+in the compile diagnostics (conflict.rs:16-96). <code>onEnter</code>-only routes do
+not participate (conflict.rs:38-44).</li>
+<li>The compiler can also emit an advisory <code>storyline_routes.json</code>
+(<code>{"routes": [...]}</code>) via <code>compiler::generate_routing_table</code>
+(compiler.rs:639-645); runtime routing is driven by <code>script_config.json</code>.</li>
+</ul>
+<h2 id="ten-中文-i18n"><a class="header" href="#ten-中文-i18n"><code>@t("en", "中文")</code> i18n</a></h2>
+<ul>
+<li>Locale codes are positional: the first argument is <code>en</code>, the second is
+<code>zh</code>; extra arguments get <code>und</code> (parser.rs:492-526).</li>
+<li>Scene JS: <code>@t(...)</code> compiles to <code>game.t("en", "zh")</code> (i18n.rs:10-30,
+js_storyline.rs:79).</li>
+<li>GUI JSON: <code>@t(...)</code> compiles to <code>{"en": "...", "zh": "..."}</code>, resolved
+by the renderer at draw time (json_ui.rs:12-23).</li>
+</ul>
+<h2 id="native-ast-interpreter-canonical-semantics"><a class="header" href="#native-ast-interpreter-canonical-semantics">Native AST interpreter (canonical semantics)</a></h2>
+<p><code>interpreter.rs</code> executes <code>.scene</code> ASTs directly, mirroring the Boa runtime
+protocol 1:1 (interpreter.rs:1-24):</p>
+<ul>
+<li>Supported: <code>@speaker</code>/<code>@say</code>, <code>@choice</code>/<code>@option</code>, <code>@if</code>/<code>@else</code>,
+<code>@each</code>, bare commands, assignments.</li>
+<li>Rejected: <code>@run</code> (interpreter.rs:524-528), object literals
+(interpreter.rs:670-674), and async commands inside conditions or
+expressions (interpreter.rs:465-472, 543-556).</li>
+<li>A <code>showChoice</code> result out of range falls through to the last option
+(interpreter.rs:361-371), matching the JS <code>else</code> shape.</li>
+</ul>
+<h2 id="open-questions"><a class="header" href="#open-questions">Open questions</a></h2>
+<ul>
+<li><code>@run</code> direction: the compiler and the JS runtime path accept <code>@run</code>
+(js_storyline.rs:60-74) while the canonical interpreter rejects it
+(interpreter.rs:524-528). <code>DSL_MAPPING.md</code> entry 14 calls it a current,
+first-class escape hatch; the archived design calls it a removed
+anti-pattern. Which behavior is the intended long-term contract is a
+design decision the code does not state.</li>
+<li><code>@variables</code> initializer calls are emitted without the <code>game.</code> namespace
+(<code>let flag = getFlag("EVENT_X");</code>, js_variables.rs:93-96), unlike story
+expressions (<code>game.getFlag(...)</code>, js_storyline.rs:99-108). The semantic
+validator permits call initializers (parser.rs:1741-1751). Whether
+<code>@variables</code> initializers may contain calls at all is unsettled.</li>
+<li>Corpus-state claims: the archived design’s verification numbers (248
+maps, zero <code>@run</code> blocks, 10 maps with un-inlined constants in
+conditions) and <code>DSL_MAPPING.md</code>’s config round-trip claims describe the
+pokered game corpus, which lives outside this repository. They cannot be
+checked from this repo.</li>
+<li><code>storyline_routes.json</code> consumers: the compiler can write the file
+(compiler.rs:639-645), and the in-crate conflict detector operates on
+in-memory routes without reading it (conflict.rs:16-96).
+<code>DSL_MAPPING.md</code> entry 13 says the JSON powers a build-time conflict
+detector; no caller of <code>generate_routing_table</code> exists in this crate, so
+the consumer is unsettled.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../reference/dsl/theme-style.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../reference/dsl/runtime-loading.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../reference/dsl/theme-style.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../reference/dsl/runtime-loading.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

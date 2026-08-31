@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>大地图表现动画 - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-543cf452.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/overworld-presentation.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="大地图表现动画"><a class="header" href="#大地图表现动画">大地图表现动画</a></h1>
+<blockquote>
+<p>本文是 <code>reference/overworld-presentation.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
+</ul>
+</blockquote>
+<p><code>dotzuki_engine::overworld::presentation</code> 的逐帧计数的动画
+状态机——传送旋转、电梯震动、水面/花朵 tile、钓鱼、推石
+扬尘、调色板闪白与离港演出——附各自动画时长、相位与访问
+器契约。</p>
+<p>该模块（<code>crates/dotzuki-engine/src/overworld/presentation.rs</code>）
+把经典 JRPG 在<a href="./glossary.html">大地图</a>（overworld）上以阻塞方式播放的视觉
+效果复刻为纯逻辑、游戏无关的状态机。它不在
+<code>dotzuki_engine::overworld</code> 处重导出；消费方使用完整模块
+路径。除模块自身的单元测试外，仓库内没有消费方；它是面向
+游戏的 API。</p>
+<h2 id="逐帧驱动模型"><a class="header" href="#逐帧驱动模型">逐帧驱动模型</a></h2>
+<p>这里的每个状态机都遵循同一份契约：</p>
+<ul>
+<li>游戏在效果开始时构造状态，每帧调用一次 <code>tick()</code>（期间
+冻结 gameplay），渲染器每帧通过访问器读取状态。
+（<code>TileAnimState</code> 是例外：它在正常游玩期间于后台循环。）</li>
+<li>所有时长都是帧数，绝不是秒。以固定速率 tick。</li>
+<li>音效提示是类型化枚举（<code>TeleportSpinSfx</code>、
+<code>EnterMapSpinSfx</code>、<code>ElevatorShakeSfx</code>、<code>ShipDepartureSfx</code>），
+由 <code>tick()</code> 返回；游戏把它们映射到自己的音频 id。</li>
+<li>状态仅依赖 <code>Direction</code>
+（<code>crates/dotzuki-engine/src/overworld/types.rs</code>）、注入的
+调校数据与帧计数器。所有状态都派生 <code>Debug</code>/<code>Clone</code>/<code>Copy</code>。</li>
+</ul>
+<h2 id="传送旋转离场teleportspinstate"><a class="header" href="#传送旋转离场teleportspinstate">传送旋转离场：<code>TeleportSpinState</code></a></h2>
+<p>离开地图的动画（传送 / 逃脱道具）。相位：
+<code>TeleportSpinPhase::{SpinInPlace, SpinUp, Delay, Done}</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>常量</th><th>值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>SPIN_IN_PLACE_FRAMES</code></td><td>136</td><td>16 次原地旋转，间隔 16,15,…,1</td></tr>
+<tr><td><code>SPIN_UP_STEP_DELAY</code></td><td>3</td><td>上升步之间的帧数</td></tr>
+<tr><td><code>SPIN_UP_STEPS</code></td><td>5</td><td>16px 的上升步数</td></tr>
+<tr><td><code>SPIN_UP_STEP_PIXELS</code></td><td>16</td><td>每步上升的像素数</td></tr>
+<tr><td><code>SPIN_POST_DELAY_FRAMES</code></td><td>10</td><td>上升后的收尾延迟</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>TeleportSpinState::new(current_facing, spin_order)</code> 接收旋转
+经过的朝向循环（经典顺序为 <code>[Down, Left, Up, Right]</code>）；
+若 <code>current_facing</code> 不在循环中，则回退到下标 0。旋转先展示
+<code>current_facing</code>，再沿循环推进。</p>
+<p><code>tick() -&gt; Option&lt;TeleportSpinSfx&gt;</code> 在每次间隔为 4 的倍数的
+旋转开始时返回 <code>SpinLoop</code>（第 0、4、8、12 次——共播放 4
+次），并在上升阶段开始处（第 136 帧）返回一次 <code>Rise</code>。
+访问器：<code>phase()</code>、<code>is_done()</code>、<code>facing()</code>、
+<code>player_y_offset()</code>（≤ 0；<code>SpinUp</code> 期间精灵升出屏幕，结束时
+为 −80）、<code>player_visible()</code>（精灵完全升到可视区域之上后为
+false）。</p>
+<p>总时长：136 + 17 + 10 = 163 帧。当 <code>is_done()</code> 变为 true
+时，调用方开始该<a href="./glossary.html">传送点</a>（warp）的淡出。</p>
+<h2 id="到达旋进入场entermapspinstate"><a class="header" href="#到达旋进入场entermapspinstate">到达旋进入场：<code>EnterMapSpinState</code></a></h2>
+<p><code>TeleportSpinState</code> 的对应物：在传送类 warp 到达后，玩家从
+屏幕上方之外下降，然后原地旋转。相位：
+<code>EnterMapSpinPhase::{SpinDown, SpinInPlace, Done}</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>常量</th><th>值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ENTER_MAP_SPIN_DOWN_STEPS</code></td><td>5</td><td>16px 的下降步数</td></tr>
+<tr><td><code>ENTER_MAP_SPIN_DOWN_STEP_DELAY</code></td><td>3</td><td>下降步之间的帧数</td></tr>
+<tr><td><code>ENTER_MAP_SPIN_DOWN_FRAMES</code></td><td>17</td><td>下降阶段总帧数</td></tr>
+<tr><td><code>ENTER_MAP_SPIN_DOWN_STEP_PIXELS</code></td><td>16</td><td>每步下降的像素数</td></tr>
+<tr><td><code>ENTER_MAP_SPIN_IN_PLACE_FRAMES</code></td><td>36</td><td>8 次原地旋转，间隔 0,1,…,7（静音）</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>EnterMapSpinState::new(current_facing, spin_order, spin_in_place)</code>
+——到达点为传送踏板或洞口时传 <code>spin_in_place: false</code>，跳过
+最后的原地旋转，恰好 17 帧结束。</p>
+<p>该状态初始隐藏，<code>player_y_offset() == -80</code>：游戏在 warp 生效
+时构造它，并在淡入完成后开始 tick（引擎不负责驱动淡入）。
+<code>tick() -&gt; Option&lt;EnterMapSpinSfx&gt;</code> 在第一帧返回 <code>Descend</code>，
+在下降完成时返回 <code>Land</code>。访问器：<code>phase()</code>、<code>is_done()</code>、
+<code>facing()</code>、<code>player_y_offset()</code>、<code>player_visible()</code>。
+<code>is_done()</code> 后，调用方恢复保存的朝向与 Y 坐标。</p>
+<h2 id="电梯震动elevatorshakestate"><a class="header" href="#电梯震动elevatorshakestate">电梯震动：<code>ElevatorShakeState</code></a></h2>
+<p><code>ElevatorShakeParams { iterations: u8, pixel_offset: u8 }</code> 调校
+震动；<code>total_frames()</code> 为 <code>iterations * 2</code>。
+<code>ElevatorShakeState::new(params)</code> 让背景按 <code>offset_y()</code> 滚动，
+每个 2 帧的迭代在 −<code>pixel_offset</code> / +<code>pixel_offset</code> 间交替
+（首个迭代为负方向），结束后返回 0。</p>
+<p><code>tick() -&gt; Option&lt;ElevatorShakeSfx&gt;</code> 在每次迭代开始处返回
+<code>Rattle</code>，在最后一帧返回 <code>Arrive</code>。</p>
+<h2 id="水面花朵-tiletileanimstate"><a class="header" href="#水面花朵-tiletileanimstate">水面/花朵 tile：<code>TileAnimState</code></a></h2>
+<p>循环播放的背景 tile 动画（水面旋转 / 花朵帧）。
+<code>set_tileset(TileAnimKind)</code> 采用 tileset 的动画种类——
+<code>TileAnimKind::{None, Water, WaterFlower}</code>——并重置逐帧计数器，
+仅此而已：水面更新计数器与累积的水面位移会跨地图加载保留，
+与经典 WRAM 行为一致。种类为 <code>None</code> 时 <code>tick()</code> 是空操作。</p>
+<p>时序：逐帧计数器每帧自增；到 20 时水面 tile 旋转 1 像素；到
+21 时（仅 <code>WaterFlower</code>）花朵 tile 推进且计数器归零。纯水面
+tileset 在水面更新后立即归零，因此水面周期为 20 帧，带花朵
+时为 21 帧。</p>
+<p>水面更新计数器每次水面更新自增，并掩码到 0..=7；其 bit 2
+决定旋转方向——该位为 0（计数值 1,2,3,0）时向右，为 1
+（4,5,6,7）时向左——8 次更新的净位移依次为
+1,2,3,2,1,0,−1,0。花朵帧取自计数器低两位：0/1 → 帧 1，
+2 → 帧 2，3 → 帧 3。</p>
+<p>访问器：<code>water_shift() -&gt; i8</code>（正值 = 向右；渲染器按
+<code>(x - shift) mod 8</code> 采样源列）、<code>flower_frame() -&gt; Option&lt;u8&gt;</code>
+（首次花朵更新前为 <code>None</code>，此时显示 tileset 的原始花朵
+tile）、<code>kind()</code>。</p>
+<h2 id="钓鱼竿fishinganimstate"><a class="header" href="#钓鱼竿fishinganimstate">钓鱼竿：<code>FishingAnimState</code></a></h2>
+<p>相位：<code>FishingAnimPhase::{CastDelay, RodOut, Shake, Bubble, Done}</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>常量</th><th>值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>FISHING_CAST_DELAY_FRAMES</code></td><td>10</td><td>钓竿出现前的停顿</td></tr>
+<tr><td><code>FISHING_ROD_OUT_FRAMES</code></td><td>100</td><td>钓竿在外等待咬钩</td></tr>
+<tr><td><code>FISHING_SHAKE_ITERATIONS</code></td><td>10</td><td>咬钩时的抖动次数</td></tr>
+<tr><td><code>FISHING_SHAKE_STEP_FRAMES</code></td><td>3</td><td>每次抖动的帧数</td></tr>
+<tr><td><code>FISHING_BUBBLE_FRAMES</code></td><td>60</td><td>“!” 气泡时长</td></tr>
+<tr><td><code>FISHING_ANIM_FRAMES</code></td><td>200</td><td>总时长：10 + 100 + 30 + 60</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>FishingAnimState::new(facing, bite)</code> 把咬钩判定作为构造参数
+——由游戏预先决定结果。无咬钩时动画在 <code>RodOut</code> 之后立即
+结束，即第 110 帧；有咬钩时追加 <code>Shake</code> 与 <code>Bubble</code>。</p>
+<p>访问器：<code>phase()</code>、<code>is_done()</code>、<code>facing()</code>、<code>pose_active()</code>
+（在 <code>RodOut</code>/<code>Shake</code>/<code>Bubble</code> 期间为 true）、<code>rod_visible()</code>
+（<code>CastDelay</code> 期间为 false；朝向为 <code>Up</code> 时在 <code>Bubble</code> 期间
+也为 false，避免钓竿与气泡重叠）、<code>bubble_active()</code>、
+<code>player_shake_offset()</code>（<code>Shake</code> 期间每 3 帧的迭代在 1/0 间
+切换）。<code>is_done()</code> 后，调用方把结果文本入队。</p>
+<p><code>FishingAnimState::rod_piece(facing) -&gt; (dx, dy, tile, x_flip)</code>
+给出钓竿的 OAM 部件，坐标是相对玩家精灵左上角的偏移；
+图集 tile 0 对应 Down/Up，tile 1 对应 Left/Right（Right 时
+X 翻转）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>朝向</th><th><code>(dx, dy, tile, x_flip)</code></th></tr>
+</thead>
+<tbody>
+<tr><td><code>Down</code></td><td><code>(20, 35, 0, false)</code></td></tr>
+<tr><td><code>Up</code></td><td><code>(20, -12, 0, false)</code></td></tr>
+<tr><td><code>Left</code></td><td><code>(0, 16, 1, false)</code></td></tr>
+<tr><td><code>Right</code></td><td><code>(48, 16, 1, true)</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="推石扬尘boulderduststate"><a class="header" href="#推石扬尘boulderduststate">推石扬尘：<code>BoulderDustState</code></a></h2>
+<p>推动的巨石滑动一格时扬起的 2×2 烟尘块：8 步
+（<code>BOULDER_DUST_STEPS</code>）× 3 帧（<code>BOULDER_DUST_STEP_FRAMES</code>），
+共 24 帧。<code>BoulderDustState::new(facing, anchor_x, anchor_y)</code>
+把烟尘锚定在推动瞬间玩家所在的地图 tile；此后锚点不再跟随
+玩家。<code>BoulderDustState::inactive()</code> 是永久结束的状态，表示
+“没有烟尘”；动画结束后 <code>tick()</code> 是空操作。该状态派生了
+<code>PartialEq</code>/<code>Eq</code>。</p>
+<p>访问器：<code>is_active()</code>、<code>facing()</code>、<code>anchor()</code>、<code>step()</code>
+（0..=7）、<code>base_offset()</code>（烟块左上角相对玩家精灵左上角的
+偏移）、<code>drift_px()</code>（每步逆推动方向漂移 1px——巨石滑走后
+烟尘留在原地）、<code>tile_drifts() -&gt; [(i32, i32); 4]</code>（上左、
+上右、下左、下右四块 8×8 tile 的每步像素位移；水平推动时
+上左 tile 保持不动）、<code>palette_flipped()</code>（奇数步为 true，
+让烟雾精灵的两个灰阶交替闪烁）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>朝向</th><th><code>base_offset()</code></th><th><code>drift_px()</code></th></tr>
+</thead>
+<tbody>
+<tr><td><code>Down</code></td><td><code>(8, 52)</code></td><td><code>(0, -1)</code></td></tr>
+<tr><td><code>Up</code></td><td><code>(8, -12)</code></td><td><code>(0, 1)</code></td></tr>
+<tr><td><code>Left</code></td><td><code>(-24, 20)</code></td><td><code>(1, 0)</code></td></tr>
+<tr><td><code>Right</code></td><td><code>(40, 20)</code></td><td><code>(-1, 0)</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="调色板闪白flash_white_frames"><a class="header" href="#调色板闪白flash_white_frames">调色板闪白：<code>FLASH_WHITE_FRAMES</code></a></h2>
+<p><code>pub const FLASH_WHITE_FRAMES: u8 = 3</code>——黑暗区域被点亮时
+全部调色板闪白的帧数。这里没有调色板状态机；游戏自行数
+这几帧。</p>
+<h2 id="离港演出shipdeparturestate"><a class="header" href="#离港演出shipdeparturestate">离港演出：<code>ShipDepartureState</code></a></h2>
+<p>离港过场。相位：<code>ShipDeparturePhase::{InitialPause, WaterFill, Scroll, Erase, Done}</code>；用
+<code>ShipDepartureState::new()</code> / <code>Default</code> 构造。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>常量</th><th>值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>SHIP_DEPARTURE_INITIAL_PAUSE_FRAMES</code></td><td>120</td><td>音乐响起时船停在码头</td></tr>
+<tr><td><code>SHIP_DEPARTURE_WATER_FILL_FRAMES</code></td><td>3</td><td>水面填充提交</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SCROLL_ITERATIONS</code></td><td>8</td><td>卷屏迭代次数</td></tr>
+<tr><td><code>SHIP_DEPARTURE_ITERATION_FRAMES</code></td><td>128</td><td>每次迭代的帧数（16 子步 × 8 帧）</td></tr>
+<tr><td><code>SHIP_DEPARTURE_ERASE_FRAMES</code></td><td>120</td><td>抹除后的收尾停顿</td></tr>
+<tr><td><code>SHIP_DEPARTURE_TOTAL_FRAMES</code></td><td>1267</td><td>整场过场</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SCROLL_PX_PER_ITERATION</code></td><td>16</td><td>每次迭代的卷屏像素</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SUBSTEPS_PER_ITERATION</code></td><td>16</td><td>每次迭代的烟雾漂移子步数</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SUBSTEP_FRAMES</code></td><td>8</td><td>每子步的帧数</td></tr>
+<tr><td><code>SHIP_DEPARTURE_PUFF_SPACING_PX</code></td><td>16</td><td>烟雾团生成间距</td></tr>
+<tr><td><code>SHIP_DEPARTURE_PUFF_DRIFT_PX_PER_SUBSTEP</code></td><td>2</td><td>每子步的烟雾漂移</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SMOKESTACK_TILE_X</code></td><td>16</td><td>烟囱的地图位置（tile）</td></tr>
+<tr><td><code>SHIP_DEPARTURE_SMOKESTACK_TILE_Y</code></td><td>10.5</td><td>烟囱的地图位置（tile）</td></tr>
+<tr><td><code>SHIP_DEPARTURE_PUFF_START_SCREEN_X</code></td><td>88</td><td>首个烟雾团的屏幕 X</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>tick() -&gt; Option&lt;ShipDepartureSfx&gt;</code> 两次触发
+<code>ShipDepartureSfx::Horn</code>：<code>Scroll</code> 的第一帧（第 123 帧）与
+<code>Erase</code> 的第一帧（第 1147 帧）。</p>
+<p>该状态机不改动地图。游戏在 <code>Erase</code> 转换点自行应用船体地图
+块的抹除与码头→船上 warp 的移除；<code>ship_erased()</code> 在
+<code>Erase</code> 与 <code>Done</code> 期间返回 true，为那些在改动生效前绘制的
+渲染器覆盖同一帧。</p>
+<p>卷屏访问器：<code>frame()</code>、<code>scroll_iteration()</code>（0..=7）、
+<code>scroll_substep()</code>（跨全部迭代的 0..=127）、<code>scroll_px()</code>
+（0..=128；视图每次迭代推进 16px，再按每个 8 帧子步多走
+1px；抹除阶段保持完全卷动的位置）。</p>
+<p>烟雾团：<code>puff_count()</code>（≤ 8，每次迭代新增一团）、
+<code>puff_x_offset(i)</code>（第 <code>i</code> 团在屏幕 X = 88 − 16i 处生成，
+并从其生成子步起每子步漂移 +2px；渲染器通过加上
+<code>smokestack_screen_x - SHIP_DEPARTURE_PUFF_START_SCREEN_X</code>
+换算到自己的视图）、<code>puff_screen_y()</code>（= 84，烟囱所在行）。</p>
+<h2 id="示例"><a class="header" href="#示例">示例</a></h2>
+<p>驱动一次传送旋转直到结束，并收集其音效提示：</p>
+<pre class="playground"><code class="language-rust edition2021">use dotzuki_engine::overworld::presentation::{
+    TeleportSpinSfx, TeleportSpinState, SPIN_IN_PLACE_FRAMES,
+};
+use dotzuki_engine::overworld::Direction;
+
+fn main() {
+    let spin_order = [
+        Direction::Down,
+        Direction::Left,
+        Direction::Up,
+        Direction::Right,
+    ];
+    let mut spin = TeleportSpinState::new(Direction::Down, spin_order);
+
+    let (mut loops, mut rises, mut frames) = (0, 0, 0u16);
+    while !spin.is_done() {
+        match spin.tick() {
+            Some(TeleportSpinSfx::SpinLoop) =&gt; loops += 1,
+            Some(TeleportSpinSfx::Rise) =&gt; {
+                rises += 1;
+                // 上升音效在上升阶段开始处触发。
+                assert_eq!(frames, SPIN_IN_PLACE_FRAMES);
+            }
+            None =&gt; {}
+        }
+        frames += 1;
+    }
+    assert_eq!((loops, rises), (4, 1));
+    assert_eq!(frames, 136 + 17 + 10); // 原地 + 上升 + 收尾延迟
+}</code></pre>
+<p><em>由 <code>crates/dotzuki-engine/src/overworld/presentation.rs</code> 中的
+<code>spin_sfx_schedule</code> 验证。</em></p>
+<h2 id="跨动画的注意事项"><a class="header" href="#跨动画的注意事项">跨动画的注意事项</a></h2>
+<ul>
+<li>以固定帧率 tick 每个状态，并在一次性动画播放期间冻结
+gameplay；所有计数都是帧，不是秒。</li>
+<li><code>EnterMapSpinState</code> 初始隐藏；游戏在到达淡入完成后才开始
+tick 它。</li>
+<li><code>ShipDepartureState</code> 从不改动地图；游戏在 <code>ship_erased()</code>
+翻转为 true 时自行应用抹除与 warp 移除。</li>
+<li>水面 tile 的符号约定：源列按 <code>(x - shift) mod 8</code> 采样。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/shops.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/link-play.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/shops.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/link-play.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
