@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4ff01dbf.js";
+            window.path_to_searchindex_js = "searchindex-543cf452.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-797479cc.js"></script>
@@ -2909,6 +2909,10 @@ page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
 <code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }</code> plus an informational
 <code>dotzuki.version</code> stamp), and the WASM runner under <code>wasm/</code>. Upload the
 directory to any static host — itch.io, GitHub Pages, S3 — and it plays.</p>
+<p>The dotzuki-editor does this without the terminal: the Play activity’s
+<strong>Export Web</strong> button calls <code>POST /api/export</code>, which shells out to the same
+CLI export and writes <code>dist/web/</code> in the open project (the packaged desktop
+app ships the <code>dotzuki</code> binary for exactly this).</p>
 <p>Bundle limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
 dotfiles and <code>*.bak</code> are excluded; a single file over 16 MB or a total over
 64 MB (uncompressed) is refused.</p>
@@ -2950,6 +2954,10 @@ export on those OSes (or on per-OS CI runners). The same <code>dotzuki check</co
 diagnostic gate as the web export applies (<code>--force</code> overrides).</p>
 <p>Ship the directory <strong>writable</strong>, or players on read-only installs lose saves
 — the save file lives next to the bundle.</p>
+<p>The editor’s Play activity has an <strong>Export Native</strong> button too — same
+<code>POST /api/export</code> route, writing <code>dist/native/</code> in the open project. In a
+dev checkout the CLI cargo-builds the player; packaged desktop apps ship a
+prebuilt one (<code>Resources/cli/dotzuki-player</code>).</p>
 <h2 id="5-upgrading-the-engine"><a class="header" href="#5-upgrading-the-engine">5. Upgrading the engine</a></h2>
 <p><strong>Zero-Rust projects</strong> — there is no dependency manifest; “upgrade” means using
 a newer <code>dotzuki</code> binary / editor. Before upgrading:</p>
