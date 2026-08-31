@@ -44,22 +44,7 @@ const INDEX_TEMPLATE: &str = include_str!("../templates/web-player.html");
 /// Export the project and return the output directory.
 pub fn run(args: &ExportArgs) -> Result<PathBuf> {
     // 1. Validate — the same diagnostics `dotzuki check` reports.
-    let diags = check::diagnose(&args.dir)?;
-    if diags.total() > 0 {
-        for d in diags.all() {
-            eprintln!("error: {d}");
-        }
-        if !args.force {
-            bail!(
-                "export aborted: {} diagnostic(s) — fix them (see `dotzuki check`) or pass --force",
-                diags.total()
-            );
-        }
-        eprintln!(
-            "warning: exporting despite {} diagnostic(s) (--force)",
-            diags.total()
-        );
-    }
+    let diags = gate_diagnostics(&args.dir, args.force)?;
 
     // 2. Bundle the project files.
     let files = bundle::collect_project_files(&args.dir).context("failed to collect project files")?;
@@ -86,6 +71,29 @@ pub fn run(args: &ExportArgs) -> Result<PathBuf> {
     Ok(out)
 }
 
+/// Validate a project for export: the same diagnostics `dotzuki check`
+/// reports, blocking the export unless `force` — shared by every export
+/// target (`--web`, `--native`).
+pub fn gate_diagnostics(dir: &Path, force: bool) -> Result<check::ProjectDiagnostics> {
+    let diags = check::diagnose(dir)?;
+    if diags.total() > 0 {
+        for d in diags.all() {
+            eprintln!("error: {d}");
+        }
+        if !force {
+            bail!(
+                "export aborted: {} diagnostic(s) — fix them (see `dotzuki check`) or pass --force",
+                diags.total()
+            );
+        }
+        eprintln!(
+            "warning: exporting despite {} diagnostic(s) (--force)",
+            diags.total()
+        );
+    }
+    Ok(diags)
+}
+
 /// Write `index.html` + `game.bundle.json` + `wasm/*` into `out`.
 fn write_site(
     out: &Path,
@@ -101,21 +109,8 @@ fn write_site(
             .with_context(|| format!("failed to copy {file} from {}", pkg.display()))?;
     }
 
-    // Version metadata is informational only — nothing enforces it at runtime.
-    let exported_at = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let bundle_json = serde_json::json!({
-        "dotzuki": {
-            "tool": "dotzuki-cli",
-            "version": env!("CARGO_PKG_VERSION"),
-            "exportedAt": exported_at,
-        },
-        "files": files,
-    });
-    let json = serde_json::to_string(&bundle_json).context("failed to serialize bundle")?;
-    fs::write(out.join("game.bundle.json"), json).context("failed to write game.bundle.json")?;
+    fs::write(out.join("game.bundle.json"), bundle::serialize_bundle(files)?)
+        .context("failed to write game.bundle.json")?;
 
     let html = render_index_html(title, &save_key(title));
     fs::write(out.join("index.html"), html).context("failed to write index.html")?;

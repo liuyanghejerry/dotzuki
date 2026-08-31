@@ -87,7 +87,34 @@ The input bitmask is the GB button mask used by `dotzuki_renderer::input`
 (Up/Down/Left/Right/A/B/Start/Select). The editor's
 `src/composables/useWasmRunner.ts` shows the same wiring inside a larger app.
 
-## 4. Upgrading the engine
+## 4. Native app directory
+
+[`dotzuki export --native`](../reference/cli.md) packs the project into a
+distributable native app directory:
+
+```bash
+dotzuki export --native . --out dist/native
+dist/native/my-game            # double-clickable native app
+```
+
+The output is the game-agnostic `dotzuki-player` binary (renamed after the
+project directory) plus the same `game.bundle.json` the web export writes.
+The player boots the bundle sitting next to the executable through the same
+runtime as `dotzuki run` — window, audio, and saves (`<exe
+dir>/.dotzuki-save.json`) all behave like a local playtest. Zip the directory
+to distribute it; the bundle carries an informational `dotzuki.version`
+stamp recording which CLI produced it.
+
+The export builds the player with `cargo build --release` from a dotzuki
+source checkout (pass `--player-bin` to reuse a prebuilt binary instead).
+Builds are **host-platform only** — ship Windows/Linux builds by running the
+export on those OSes (or on per-OS CI runners). The same `dotzuki check`
+diagnostic gate as the web export applies (`--force` overrides).
+
+Ship the directory **writable**, or players on read-only installs lose saves
+— the save file lives next to the bundle.
+
+## 5. Upgrading the engine
 
 **Zero-Rust projects** — there is no dependency manifest; "upgrade" means using
 a newer `dotzuki` binary / editor. Before upgrading:
