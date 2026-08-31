@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-543cf452.js";
+            window.path_to_searchindex_js = "searchindex-0b28e51c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-797479cc.js"></script>
@@ -7557,6 +7557,8 @@ activity, so an exported game plays identically to the in-editor playtest.</p>
 <tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/web</code></td><td>Output directory (<code>dist</code> is excluded from bundles, so re-exporting never packs a previous export)</td></tr>
 <tr><td><code>--runner-pkg &lt;dir&gt;</code></td><td>workspace pkg</td><td>Use this prebuilt dotzuki-runner-web wasm package directory (no wasm-pack needed)</td></tr>
 <tr><td><code>--rebuild-runner</code></td><td>off</td><td>Rebuild the runner wasm package with wasm-pack even when a prebuilt one exists</td></tr>
+<tr><td><code>--save-key &lt;key&gt;</code></td><td><code>dotzuki-save:&lt;title&gt;</code></td><td>localStorage key the player page persists saves under — hosts embedding the export (e.g. dotzuki-cloud) pin their own key so existing players keep their saves</td></tr>
+<tr><td><code>--lang &lt;en|zh&gt;</code></td><td><code>en</code></td><td>Player page UI language (loading/status/hint strings)</td></tr>
 <tr><td><code>--force</code></td><td>off</td><td>Export even when validation reports diagnostics</td></tr>
 </tbody>
 </table>
