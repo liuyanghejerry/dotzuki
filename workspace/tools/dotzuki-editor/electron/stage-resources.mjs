@@ -57,3 +57,43 @@ stagePkg(
   'wasm-node-pkg', 'pnpm build:wasm', 'WASM scene-compile pkg (Node)',
   'pkg-node',
 )
+
+// Stage the dotzuki CLI + native player binaries into dist-electron/cli so
+// electron-builder ships them as an extraResource (→ Resources/cli), powering
+// /api/export in the packaged app (web export via the CLI, native export via
+// the CLI + --player-bin). The binaries are built by cargo --release into
+// workspace/target/release; release builds for macOS lipo both architectures
+// into that path first (see .github/workflows/release-editor.yml).
+function stageCliBins() {
+  const destDir = path.join(root, 'dist-electron', 'cli')
+  fs.rmSync(destDir, { recursive: true, force: true })
+  fs.mkdirSync(destDir, { recursive: true })
+
+  const exeSuffix = process.platform === 'win32' ? '.exe' : ''
+  const buildCmd = 'cd workspace && cargo build --release -p dotzuki-cli --bin dotzuki -p dotzuki-runner --bin dotzuki-player'
+  const missing = []
+  for (const base of ['dotzuki', 'dotzuki-player']) {
+    const exe = base + exeSuffix
+    const src = path.resolve(root, '..', '..', 'target', 'release', exe)
+    if (fs.existsSync(src)) {
+      const dest = path.join(destDir, exe)
+      fs.copyFileSync(src, dest)
+      fs.chmodSync(dest, 0o755)
+      const mb = (fs.statSync(dest).size / 1e6).toFixed(1)
+      console.log(`✓ staged ${exe} → dist-electron/cli (${mb} MB)`)
+    } else {
+      missing.push(exe)
+    }
+  }
+  if (missing.length > 0) {
+    fs.writeFileSync(
+      path.join(destDir, 'README.txt'),
+      `dotzuki CLI binaries not built (${missing.join(', ')}).\nRun \`${buildCmd}\` before packaging to enable /api/export.\n`,
+    )
+    console.warn(
+      `⚠ ${missing.join(', ')} not found in workspace/target/release — the packaged app will lack game export.\n` +
+        `  Build them with \`${buildCmd}\`, then re-run \`pnpm electron:build\`.`,
+    )
+  }
+}
+stageCliBins()

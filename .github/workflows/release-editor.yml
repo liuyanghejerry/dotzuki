@@ -36,7 +36,9 @@ concurrency:
 
 jobs:
   # Build the WASM packages once (Linux) and hand them to both platform
-  # packaging jobs as an artifact — no Rust toolchain needed on mac/win.
+  # packaging jobs as an artifact. The dotzuki CLI + player binaries below are
+  # built per-platform on the packaging runners themselves (they are native
+  # executables, so the Linux job cannot prebuild them).
   build-wasm:
     runs-on: ubuntu-latest
     permissions:
@@ -102,7 +104,8 @@ jobs:
 
   # Package the editor on each native platform (electron-builder cannot
   # cross-build dmg/nsis from Linux). Downloads the prebuilt WASM packages so
-  # the packaged app ships the layout preview + playtest runner.
+  # the packaged app ships the layout preview + playtest runner, and builds the
+  # dotzuki CLI + player binaries natively so /api/export works in the app.
   build-app:
     needs: build-wasm
     runs-on: ${{ matrix.os }}
@@ -173,6 +176,36 @@ jobs:
             [ -f "$f" ] || { echo "ERROR: missing $f — WASM artifact layout mismatch"; status=1; }
           done
           exit $status
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+
+      - name: Build dotzuki CLI + player binaries
+        # The packaged editor shells out to these for /api/export (staged into
+        # Resources/cli). macOS packages x64+arm64 in ONE electron-builder run,
+        # so build both arches and lipo universal binaries into target/release,
+        # where stage-resources.mjs reads them. Windows (--x64) needs only the
+        # host build.
+        working-directory: workspace
+        shell: bash
+        run: |
+          PKGS="-p dotzuki-cli --bin dotzuki -p dotzuki-runner --bin dotzuki-player"
+          cargo build --release $PKGS
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            OTHER=x86_64-apple-darwin
+            [ "$(uname -m)" = "x86_64" ] && OTHER=aarch64-apple-darwin
+            rustup target add "$OTHER"
+            cargo build --release --target "$OTHER" $PKGS
+            for bin in dotzuki dotzuki-player; do
+              lipo -create "target/release/$bin" "target/$OTHER/release/$bin" -output "target/release/$bin"
+            done
+            file target/release/dotzuki target/release/dotzuki-player
+          fi
 
       - name: Sync editor version with the workspace version
         shell: bash

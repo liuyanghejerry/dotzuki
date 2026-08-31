@@ -67,6 +67,7 @@ module.exports = {
     '!dist-electron/wasm-pkg/**',
     '!dist-electron/wasm-runner-pkg/**',
     '!dist-electron/wasm-node-pkg/**',
+    '!dist-electron/cli/**',
     'electron/**/*',
     'package.json',
     // Ships the bundled-deps license texts (e.g. Lucide ISC) inside the
@@ -77,11 +78,14 @@ module.exports = {
   // not inside the asar — the /wasm route reads it via DOTZUKI_WASM_ROOT. Same for
   // the playtest runner pkg (Resources/wasm-runner-pkg ← DOTZUKI_RUNNER_WASM_ROOT)
   // and the nodejs-target scene-compile pkg (Resources/wasm-node-pkg ←
-  // DOTZUKI_WASM_NODE_ROOT, read by sceneCheck's compile layer).
+  // DOTZUKI_WASM_NODE_ROOT, read by sceneCheck's compile layer). The dotzuki
+  // CLI + native player binaries ship the same way (Resources/cli ← DOTZUKI_CLI
+  // / DOTZUKI_PLAYER, read by /api/export).
   extraResources: [
     { from: 'dist-electron/wasm-pkg', to: 'wasm-pkg' },
     { from: 'dist-electron/wasm-runner-pkg', to: 'wasm-runner-pkg' },
     { from: 'dist-electron/wasm-node-pkg', to: 'wasm-node-pkg' },
+    { from: 'dist-electron/cli', to: 'cli' },
   ],
   asar: true,
   mac: {
