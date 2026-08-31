@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-861f4626.js";
+            window.path_to_searchindex_js = "../searchindex-4ff01dbf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-797479cc.js"></script>
@@ -256,7 +256,26 @@ generated <code>index.html</code> is the reference implementation:</p>
 <p>The input bitmask is the GB button mask used by <code>dotzuki_renderer::input</code>
 (Up/Down/Left/Right/A/B/Start/Select). The editor’s
 <code>src/composables/useWasmRunner.ts</code> shows the same wiring inside a larger app.</p>
-<h2 id="4-upgrading-the-engine"><a class="header" href="#4-upgrading-the-engine">4. Upgrading the engine</a></h2>
+<h2 id="4-native-app-directory"><a class="header" href="#4-native-app-directory">4. Native app directory</a></h2>
+<p><a href="../reference/cli.html"><code>dotzuki export --native</code></a> packs the project into a
+distributable native app directory:</p>
+<pre><code class="language-bash">dotzuki export --native . --out dist/native
+dist/native/my-game            # double-clickable native app
+</code></pre>
+<p>The output is the game-agnostic <code>dotzuki-player</code> binary (renamed after the
+project directory) plus the same <code>game.bundle.json</code> the web export writes.
+The player boots the bundle sitting next to the executable through the same
+runtime as <code>dotzuki run</code> — window, audio, and saves (<code>&lt;exe dir&gt;/.dotzuki-save.json</code>) all behave like a local playtest. Zip the directory
+to distribute it; the bundle carries an informational <code>dotzuki.version</code>
+stamp recording which CLI produced it.</p>
+<p>The export builds the player with <code>cargo build --release</code> from a dotzuki
+source checkout (pass <code>--player-bin</code> to reuse a prebuilt binary instead).
+Builds are <strong>host-platform only</strong> — ship Windows/Linux builds by running the
+export on those OSes (or on per-OS CI runners). The same <code>dotzuki check</code>
+diagnostic gate as the web export applies (<code>--force</code> overrides).</p>
+<p>Ship the directory <strong>writable</strong>, or players on read-only installs lose saves
+— the save file lives next to the bundle.</p>
+<h2 id="5-upgrading-the-engine"><a class="header" href="#5-upgrading-the-engine">5. Upgrading the engine</a></h2>
 <p><strong>Zero-Rust projects</strong> — there is no dependency manifest; “upgrade” means using
 a newer <code>dotzuki</code> binary / editor. Before upgrading:</p>
 <ol>

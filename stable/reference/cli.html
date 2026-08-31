@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-861f4626.js";
+            window.path_to_searchindex_js = "../searchindex-4ff01dbf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-797479cc.js"></script>
@@ -211,6 +211,7 @@ manifest, not the CLI, defines the project layout.</p>
 <tr><td><code>dotzuki check &lt;dir&gt;</code></td><td>Compile every DSL file in the project and report diagnostics; exit 1 on errors. Also validates the <code>battle</code> section when present</td></tr>
 <tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>Boot the project and play it in a window (or headless for CI/screenshots)</td></tr>
 <tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>Export the project as a static web site (player page + bundle + WASM runner)</td></tr>
+<tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>Export the project as a native app directory (dotzuki-player binary + bundle)</td></tr>
 </tbody>
 </table>
 </div>
@@ -324,11 +325,50 @@ must pass <code>--runner-pkg</code>.</p>
 <pre><code class="language-bash">dotzuki export --web . --out dist/web
 python3 -m http.server --directory dist/web   # play at http://localhost:8000
 </code></pre>
+<h2 id="dotzuki-export---native-dir"><a class="header" href="#dotzuki-export---native-dir"><code>dotzuki export --native &lt;dir&gt;</code></a></h2>
+<p>Packs the project into a <strong>native app directory</strong>: the game-agnostic
+<code>dotzuki-player</code> binary (the bin target of <code>dotzuki-runner</code>) plus the same
+<code>game.bundle.json</code> the web export writes. The player boots the bundle next to
+its executable through the same <code>RunnerGame</code> + window loop as <code>dotzuki run</code>,
+and writes its save next to the bundle as <code>.dotzuki-save.json</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/native</code></td><td>Output directory (<code>dist</code> is excluded from bundles, so re-exporting never packs a previous export)</td></tr>
+<tr><td><code>--player-bin &lt;path&gt;</code></td><td>cargo build</td><td>Use this prebuilt <code>dotzuki-player</code> binary instead of building it</td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>Export even when validation reports diagnostics</td></tr>
+</tbody>
+</table>
+</div>
+<p>The diagnostic gate and bundle rules are identical to <code>--web</code>. The output
+directory contains:</p>
+<pre><code>dist/native/
+├── &lt;project-dir-name&gt;[.exe]   # the player binary, renamed after the project directory
+└── game.bundle.json           # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+</code></pre>
+<p>The player binary is resolved in this order: <code>--player-bin</code> →
+<code>cargo build --release -p dotzuki-runner --bin dotzuki-player</code> in the source
+workspace (incremental, so repeat exports are cheap). The build requires a
+dotzuki source checkout; a <code>cargo install</code>ed CLI outside the repo must pass
+<code>--player-bin</code>. The build targets the <strong>host platform only</strong> — to ship other
+OSes, run the export on that OS (or on a per-OS CI runner).</p>
+<pre><code class="language-bash">dotzuki export --native . --out dist/native
+dist/native/my-game            # double-clickable native app
+</code></pre>
+<p>The shipped binary also accepts an optional bundle path argument plus
+<code>--lang en|zh</code>, <code>--scale &lt;n&gt;</code>, <code>--fresh</code>, and <code>--headless</code> (with <code>--frames</code> /
+<code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
+<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+</code></pre>
 <h2 id="exit-codes"><a class="header" href="#exit-codes">Exit codes</a></h2>
 <ul>
 <li><code>dotzuki check</code>: <code>0</code> = all DSL compiles (and battle section validates); <code>1</code> = diagnostics found.</li>
 <li><code>dotzuki run</code>: <code>0</code> = clean exit.</li>
 <li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed (without <code>--force</code>), project over the bundle caps, or no runner wasm package available.</li>
+<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation failed (without <code>--force</code>), project over the bundle caps, or no player binary available.</li>
 </ul>
 <h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
 <ul>
