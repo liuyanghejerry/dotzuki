@@ -29,8 +29,8 @@ manifest, not the CLI, defines the project layout.
 | `dotzuki new <name>` | Scaffold a new game project (layout identical to the editor's empty template) |
 | `dotzuki check <dir>` | Compile every DSL file in the project and report diagnostics; exit 1 on errors. Also validates the `battle` section when present |
 | `dotzuki run <dir>` | Boot the project and play it in a window (or headless for CI/screenshots) |
-| `dotzuki export --web <dir>` | Export the project as a static web site (player page + bundle + WASM runner) |
-| `dotzuki export --native <dir>` | Export the project as a native app directory (dotzuki-player binary + bundle) |
+| `dotzuki export --web <dir>` | Export the project as a static web site (player page + game pack + WASM runner) |
+| `dotzuki export --native <dir>` | Export the project as a native app directory (dotzuki-player binary + game pack) |
 
 ## `dotzuki new <name>`
 
@@ -112,7 +112,7 @@ activity, so an exported game plays identically to the in-editor playtest.
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--out <dir>` | `<project>/dist/web` | Output directory (`dist` is excluded from bundles, so re-exporting never packs a previous export) |
+| `--out <dir>` | `<project>/dist/web` | Output directory (`dist` is excluded from packs, so re-exporting never packs a previous export) |
 | `--runner-pkg <dir>` | workspace pkg | Use this prebuilt dotzuki-runner-web wasm package directory (no wasm-pack needed) |
 | `--rebuild-runner` | off | Rebuild the runner wasm package with wasm-pack even when a prebuilt one exists |
 | `--save-key <key>` | `dotzuki-save:<title>` | localStorage key the player page persists saves under — hosts embedding the export (e.g. dotzuki-cloud) pin their own key so existing players keep their saves |
@@ -125,13 +125,22 @@ aborts the export unless `--force` is given. The output directory contains:
 ```
 dist/web/
 ├── index.html                      # player page: canvas, keyboard, WebAudio, localStorage saves
-├── game.bundle.json                # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+├── game.dzpk                       # binary game pack: header + JSON index + raw file bytes
 └── wasm/
     ├── dotzuki_runner_web.js       # wasm-pack glue
     └── dotzuki_runner_web_bg.wasm  # the runner itself
 ```
 
-Bundle rules (identical to the editor's play bundle): everything except
+`game.dzpk` is the binary pack every export target ships (`dotzuki-runner`'s
+`pack` module defines it): a 12-byte header (magic `DZPK`, `u32` format
+version, `u32` index length), a JSON index
+`{ dotzuki: {tool, version, exportedAt}, files: { <path>: {offset, size} } }`,
+then every file's raw bytes concatenated. Raw bytes avoid base64's ~33% size
+inflation and its boot-time decode — worthwhile once a project ships real
+tilesets and audio. (Exports from older CLIs shipped a base64
+`game.bundle.json` instead; current players still boot it.)
+
+Pack rules (identical to the editor's play bundle): everything except
 `node_modules`/`.git`/`target`/`dist`, dot-directories, dotfiles and `*.bak` —
 except `.dotzuki-editor.json`, which always ships. Caps: 16 MB per file, 64 MB
 total (uncompressed). The `dotzuki.version` field records the exporting CLI
@@ -152,23 +161,23 @@ python3 -m http.server --directory dist/web   # play at http://localhost:8000
 
 Packs the project into a **native app directory**: the game-agnostic
 `dotzuki-player` binary (the bin target of `dotzuki-runner`) plus the same
-`game.bundle.json` the web export writes. The player boots the bundle next to
+`game.dzpk` pack the web export writes. The player boots the pack next to
 its executable through the same `RunnerGame` + window loop as `dotzuki run`,
-and writes its save next to the bundle as `.dotzuki-save.json`.
+and writes its save next to the pack as `.dotzuki-save.json`.
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--out <dir>` | `<project>/dist/native` | Output directory (`dist` is excluded from bundles, so re-exporting never packs a previous export) |
+| `--out <dir>` | `<project>/dist/native` | Output directory (`dist` is excluded from packs, so re-exporting never packs a previous export) |
 | `--player-bin <path>` | cargo build | Use this prebuilt `dotzuki-player` binary instead of building it |
 | `--force` | off | Export even when validation reports diagnostics |
 
-The diagnostic gate and bundle rules are identical to `--web`. The output
+The diagnostic gate and pack rules are identical to `--web`. The output
 directory contains:
 
 ```
 dist/native/
 ├── <project-dir-name>[.exe]   # the player binary, renamed after the project directory
-└── game.bundle.json           # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+└── game.dzpk                  # binary game pack (same file the web export writes)
 ```
 
 The player binary is resolved in this order: `--player-bin` →
@@ -183,7 +192,8 @@ dotzuki export --native . --out dist/native
 dist/native/my-game            # double-clickable native app
 ```
 
-The shipped binary also accepts an optional bundle path argument plus
+The shipped binary also accepts an optional pack path argument (a `.dzpk`
+pack, or a legacy `game.bundle.json` from an older export) plus
 `--lang en|zh`, `--scale <n>`, `--fresh`, and `--headless` (with `--frames` /
 `--screenshot`) for CI smoke tests of the exported artifact:
 
@@ -195,8 +205,8 @@ dist/native/my-game --headless --frames 120 --screenshot boot.png
 
 - `dotzuki check`: `0` = all DSL compiles (and battle section validates); `1` = diagnostics found.
 - `dotzuki run`: `0` = clean exit.
-- `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the bundle caps, or no runner wasm package available.
-- `dotzuki export --native`: `0` = app directory written; `1` = validation failed (without `--force`), project over the bundle caps, or no player binary available.
+- `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the pack caps, or no runner wasm package available.
+- `dotzuki export --native`: `0` = app directory written; `1` = validation failed (without `--force`), project over the pack caps, or no player binary available.
 
 ## Notes
 

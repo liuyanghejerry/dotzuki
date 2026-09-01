@@ -1,12 +1,13 @@
-//! Game bundle decoding: the `path → content` map a shipped game boots from.
+//! Game bundle decoding: the legacy JSON sibling of the `.dzpk` pack.
 //!
-//! `dotzuki export` writes `game.bundle.json` as
+//! Older `dotzuki export` builds wrote `game.bundle.json` as
 //! `{ "dotzuki": {…export metadata…}, "files": { "<path>": "<base64>" } }`.
-//! The web player page strips the wrapper and hands the bare files map to the
-//! WASM runner; native consumers (the `dotzuki-player` bin) read the file
-//! themselves, so [`decode_bundle_files`] accepts BOTH shapes — a top-level
-//! object with a `files` object member is unwrapped, anything else must
-//! itself be the files map. The `dotzuki` metadata is informational only.
+//! Current exports ship a binary `.dzpk` pack instead (see [`crate::pack`]) —
+//! base64 inflates assets ~1.33× and costs a full decode on boot. This module
+//! stays so players can still boot an old export: [`decode_bundle_files`]
+//! accepts BOTH shapes — a top-level object with a `files` object member is
+//! unwrapped, anything else must itself be the files map. The `dotzuki`
+//! metadata is informational only.
 
 use std::collections::HashMap;
 

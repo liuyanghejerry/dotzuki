@@ -4,17 +4,17 @@
 //! ```text
 //! <out>/
 //! ├── index.html                      (player page: canvas + input + audio + saves)
-//! ├── game.bundle.json                ({ dotzuki: {…meta}, files: {path: base64} })
+//! ├── game.dzpk                       (binary pack: index + raw file bytes)
 //! └── wasm/
 //!     ├── dotzuki_runner_web.js       (wasm-pack glue)
 //!     └── dotzuki_runner_web_bg.wasm  (the runner itself)
 //! ```
 //!
 //! The page boots the same `WasmRunner` (dotzuki-runner-web) the editor's Play
-//! activity uses, so an exported game plays identically to the in-editor
-//! playtest. Pipeline: validate (`dotzuki check` diagnostics; `--force`
-//! overrides) → collect the bundle → locate/build the runner wasm package →
-//! write the three artifacts.
+//! activity uses — via `WasmRunner.fromPack`, so no base64 is involved — so an
+//! exported game plays identically to the in-editor playtest. Pipeline:
+//! validate (`dotzuki check` diagnostics; `--force` overrides) → collect the
+//! pack → locate/build the runner wasm package → write the three artifacts.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -72,9 +72,9 @@ pub fn run(args: &ExportArgs) -> Result<PathBuf> {
         &pkg,
     )?;
 
-    let bundle_bytes = fs::metadata(out.join("game.bundle.json")).map(|m| m.len()).unwrap_or(0);
+    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE)).map(|m| m.len()).unwrap_or(0);
     println!(
-        "exported {} file(s) ({:.1} MiB bundle) to {}",
+        "exported {} file(s) ({:.1} MiB pack) to {}",
         files.len(),
         bundle_bytes as f64 / (1024.0 * 1024.0),
         out.display()
@@ -107,13 +107,13 @@ pub fn gate_diagnostics(dir: &Path, force: bool) -> Result<check::ProjectDiagnos
     Ok(diags)
 }
 
-/// Write `index.html` + `game.bundle.json` + `wasm/*` into `out`.
+/// Write `index.html` + `game.dzpk` + `wasm/*` into `out`.
 fn write_site(
     out: &Path,
     title: &str,
     save_key: Option<&str>,
     lang: &str,
-    files: &BTreeMap<String, String>,
+    files: &BTreeMap<String, Vec<u8>>,
     pkg: &Path,
 ) -> Result<()> {
     let wasm_dir = out.join("wasm");
@@ -124,8 +124,8 @@ fn write_site(
             .with_context(|| format!("failed to copy {file} from {}", pkg.display()))?;
     }
 
-    fs::write(out.join("game.bundle.json"), bundle::serialize_bundle(files)?)
-        .context("failed to write game.bundle.json")?;
+    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(files))
+        .context("failed to write game.dzpk")?;
 
     let key = save_key
         .map(str::to_string)
@@ -202,7 +202,7 @@ fn html_escape(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotzuki_runner::vfs::MemoryFiles;
+    use dotzuki_runner::vfs::ProjectFiles as _;
     use dotzuki_runner::{run_headless, HeadlessOptions, LoadedProject, RunnerGame, RunnerOptions};
     use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::Arc;
@@ -272,37 +272,19 @@ mod tests {
 
         // The three artifacts exist.
         let html = fs::read_to_string(out.join("index.html")).unwrap();
-        let bundle: serde_json::Value = serde_json::from_str(
-            &fs::read_to_string(out.join("game.bundle.json")).unwrap(),
-        )
-        .unwrap();
+        let pack_bytes = fs::read(out.join(bundle::PACK_FILE)).unwrap();
         assert!(out.join("wasm").join(runner_pkg::JS_FILE).is_file());
         assert!(out.join("wasm").join(runner_pkg::WASM_FILE).is_file());
-
-        // Version metadata rides along (informational only).
-        assert_eq!(
-            bundle["dotzuki"]["version"].as_str().unwrap(),
-            env!("CARGO_PKG_VERSION")
-        );
 
         // The page wired the manifest name into title and save key.
         assert!(html.contains("Your First Game"), "{html}");
         assert!(html.contains("dotzuki-save:Your First Game"), "{html}");
 
-        // The bundle boots through the exact WasmRunner path: decode the
-        // base64 map into MemoryFiles and drive a few frames headless.
-        let encoded: std::collections::HashMap<String, String> =
-            serde_json::from_value(bundle["files"].clone()).unwrap();
-        assert!(encoded.contains_key(".dotzuki-editor.json"));
-        let decoded: std::collections::HashMap<String, Vec<u8>> = encoded
-            .into_iter()
-            .map(|(k, v)| {
-                use base64::Engine as _;
-                let bytes = base64::engine::general_purpose::STANDARD.decode(v).unwrap();
-                (k, bytes)
-            })
-            .collect();
-        let project = LoadedProject::load_with_files(Arc::new(MemoryFiles::new(decoded))).unwrap();
+        // The pack boots through the exact WasmRunner.fromPack path: parse it
+        // into PackFiles and drive a few frames headless.
+        let pack = dotzuki_runner::pack::PackFiles::from_bytes(pack_bytes).unwrap();
+        assert!(pack.exists(".dotzuki-editor.json"));
+        let project = LoadedProject::load_with_files(Arc::new(pack)).unwrap();
         let mut game = RunnerGame::new(
             project,
             RunnerOptions {
@@ -377,7 +359,7 @@ mod tests {
 
         // --force exports anyway.
         let out = run(&args(root, export_dir(&tmp), &pkg.0, true)).unwrap();
-        assert!(out.join("game.bundle.json").is_file());
+        assert!(out.join(bundle::PACK_FILE).is_file());
     }
 
     #[test]

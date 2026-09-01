@@ -34,9 +34,12 @@
 //!   `startBattle` scene integration);
 //! - [`save`] — [`save::GameSave`]: versioned JSON save/load at
 //!   `<project>/.dotzuki-save.json`, written at stable overworld points;
-//! - [`bundle`] — [`bundle::decode_bundle_files`]: decode an exported
+//! - [`bundle`] — [`bundle::decode_bundle_files`]: decode a legacy exported
 //!   `game.bundle.json` into the `path → content` map a [`vfs::MemoryFiles`]
-//!   boots from (the `dotzuki-player` native bin).
+//!   boots from (superseded by `.dzpk` packs; kept so old exports still boot);
+//! - [`pack`] — [`pack::PackFiles`]: read a `.dzpk` binary game pack (the
+//!   format `dotzuki export` ships) through [`vfs::ProjectFiles`], plus
+//!   [`pack::encode_pack`] for writing one.
 
 pub mod audio;
 pub mod battle;
@@ -46,6 +49,7 @@ pub mod game;
 pub mod headless;
 pub mod manifest;
 pub mod map;
+pub mod pack;
 pub mod project;
 pub mod save;
 pub mod tileset;
@@ -66,6 +70,7 @@ pub use map::{
 pub use project::LoadedProject;
 pub use save::{GameSave, PlayerSave, DEFAULT_SAVE_FILE, SAVE_VERSION};
 pub use tileset::PngTileset;
+pub use pack::PackFiles;
 pub use vfs::{DiskFiles, MemoryFiles, ProjectFiles};
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
 pub use watch::ProjectWatcher;
