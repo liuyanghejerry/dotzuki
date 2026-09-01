@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0b28e51c.js";
+            window.path_to_searchindex_js = "searchindex-7f4bff94.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-797479cc.js"></script>
@@ -2905,15 +2905,15 @@ so a project that plays in the editor plays identically in a page.</p>
 <p>It validates the project (same diagnostics as <code>dotzuki check</code>; <code>--force</code>
 overrides), then writes a self-contained static site: an <code>index.html</code> player
 page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
-<code>localStorage</code>), <code>game.bundle.json</code> (the whole project as
-<code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }</code> plus an informational
-<code>dotzuki.version</code> stamp), and the WASM runner under <code>wasm/</code>. Upload the
+<code>localStorage</code>), <code>game.dzpk</code> (the whole project as one binary pack — a JSON
+index plus every file’s raw bytes, with an informational <code>dotzuki.version</code>
+stamp), and the WASM runner under <code>wasm/</code>. Upload the
 directory to any static host — itch.io, GitHub Pages, S3 — and it plays.</p>
 <p>The dotzuki-editor does this without the terminal: the Play activity’s
 <strong>Export Web</strong> button calls <code>POST /api/export</code>, which shells out to the same
 CLI export and writes <code>dist/web/</code> in the open project (the packaged desktop
 app ships the <code>dotzuki</code> binary for exactly this).</p>
-<p>Bundle limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
+<p>Pack limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
 dotfiles and <code>*.bak</code> are excluded; a single file over 16 MB or a total over
 64 MB (uncompressed) is refused.</p>
 <p>To build a <strong>custom player page</strong> instead, drive <code>WasmRunner</code> yourself — the
@@ -2924,7 +2924,8 @@ generated <code>index.html</code> is the reference implementation:</p>
 <tr><th><code>WasmRunner</code> method</th><th>Purpose</th></tr>
 </thead>
 <tbody>
-<tr><td><code>new(filesJson, saveJson?)</code></td><td>Boot with the bundled files; optionally import a save</td></tr>
+<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>Boot from a <code>game.dzpk</code> pack (<code>Uint8Array</code>); optionally import a save</td></tr>
+<tr><td><code>new(filesJson, saveJson?)</code></td><td>Boot with a <code>{ path: base64 }</code> JSON files map (the editor’s Play path); optionally import a save</td></tr>
 <tr><td><code>tick(inputBitmask)</code></td><td>Advance one frame; returns the RGBA frame buffer</td></tr>
 <tr><td><code>take_audio()</code></td><td>Pull generated stereo samples (<code>f32</code>, interleaved)</td></tr>
 <tr><td><code>width()</code> / <code>height()</code></td><td>Frame size (320×240)</td></tr>
@@ -2942,18 +2943,20 @@ distributable native app directory:</p>
 dist/native/my-game            # double-clickable native app
 </code></pre>
 <p>The output is the game-agnostic <code>dotzuki-player</code> binary (renamed after the
-project directory) plus the same <code>game.bundle.json</code> the web export writes.
-The player boots the bundle sitting next to the executable through the same
+project directory) plus the same <code>game.dzpk</code> pack the web export writes.
+The player boots the pack sitting next to the executable through the same
 runtime as <code>dotzuki run</code> — window, audio, and saves (<code>&lt;exe dir&gt;/.dotzuki-save.json</code>) all behave like a local playtest. Zip the directory
-to distribute it; the bundle carries an informational <code>dotzuki.version</code>
-stamp recording which CLI produced it.</p>
+to distribute it; the pack carries an informational <code>dotzuki.version</code>
+stamp recording which CLI produced it. (Packs from older CLIs —
+<code>game.bundle.json</code>, base64 JSON — still boot; the player sniffs the format
+from the magic bytes.)</p>
 <p>The export builds the player with <code>cargo build --release</code> from a dotzuki
 source checkout (pass <code>--player-bin</code> to reuse a prebuilt binary instead).
 Builds are <strong>host-platform only</strong> — ship Windows/Linux builds by running the
 export on those OSes (or on per-OS CI runners). The same <code>dotzuki check</code>
 diagnostic gate as the web export applies (<code>--force</code> overrides).</p>
 <p>Ship the directory <strong>writable</strong>, or players on read-only installs lose saves
-— the save file lives next to the bundle.</p>
+— the save file lives next to the pack.</p>
 <p>The editor’s Play activity has an <strong>Export Native</strong> button too — same
 <code>POST /api/export</code> route, writing <code>dist/native/</code> in the open project. In a
 dev checkout the CLI cargo-builds the player; packaged desktop apps ship a
@@ -7468,8 +7471,8 @@ manifest, not the CLI, defines the project layout.</p>
 <tr><td><code>dotzuki new &lt;name&gt;</code></td><td>Scaffold a new game project (layout identical to the editor’s empty template)</td></tr>
 <tr><td><code>dotzuki check &lt;dir&gt;</code></td><td>Compile every DSL file in the project and report diagnostics; exit 1 on errors. Also validates the <code>battle</code> section when present</td></tr>
 <tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>Boot the project and play it in a window (or headless for CI/screenshots)</td></tr>
-<tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>Export the project as a static web site (player page + bundle + WASM runner)</td></tr>
-<tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>Export the project as a native app directory (dotzuki-player binary + bundle)</td></tr>
+<tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>Export the project as a static web site (player page + game pack + WASM runner)</td></tr>
+<tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>Export the project as a native app directory (dotzuki-player binary + game pack)</td></tr>
 </tbody>
 </table>
 </div>
@@ -7554,7 +7557,7 @@ activity, so an exported game plays identically to the in-editor playtest.</p>
 <tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/web</code></td><td>Output directory (<code>dist</code> is excluded from bundles, so re-exporting never packs a previous export)</td></tr>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/web</code></td><td>Output directory (<code>dist</code> is excluded from packs, so re-exporting never packs a previous export)</td></tr>
 <tr><td><code>--runner-pkg &lt;dir&gt;</code></td><td>workspace pkg</td><td>Use this prebuilt dotzuki-runner-web wasm package directory (no wasm-pack needed)</td></tr>
 <tr><td><code>--rebuild-runner</code></td><td>off</td><td>Rebuild the runner wasm package with wasm-pack even when a prebuilt one exists</td></tr>
 <tr><td><code>--save-key &lt;key&gt;</code></td><td><code>dotzuki-save:&lt;title&gt;</code></td><td>localStorage key the player page persists saves under — hosts embedding the export (e.g. dotzuki-cloud) pin their own key so existing players keep their saves</td></tr>
@@ -7567,12 +7570,20 @@ activity, so an exported game plays identically to the in-editor playtest.</p>
 aborts the export unless <code>--force</code> is given. The output directory contains:</p>
 <pre><code>dist/web/
 ├── index.html                      # player page: canvas, keyboard, WebAudio, localStorage saves
-├── game.bundle.json                # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+├── game.dzpk                       # binary game pack: header + JSON index + raw file bytes
 └── wasm/
     ├── dotzuki_runner_web.js       # wasm-pack glue
     └── dotzuki_runner_web_bg.wasm  # the runner itself
 </code></pre>
-<p>Bundle rules (identical to the editor’s play bundle): everything except
+<p><code>game.dzpk</code> is the binary pack every export target ships (<code>dotzuki-runner</code>’s
+<code>pack</code> module defines it): a 12-byte header (magic <code>DZPK</code>, <code>u32</code> format
+version, <code>u32</code> index length), a JSON index
+<code>{ dotzuki: {tool, version, exportedAt}, files: { &lt;path&gt;: {offset, size} } }</code>,
+then every file’s raw bytes concatenated. Raw bytes avoid base64’s ~33% size
+inflation and its boot-time decode — worthwhile once a project ships real
+tilesets and audio. (Exports from older CLIs shipped a base64
+<code>game.bundle.json</code> instead; current players still boot it.)</p>
+<p>Pack rules (identical to the editor’s play bundle): everything except
 <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories, dotfiles and <code>*.bak</code> —
 except <code>.dotzuki-editor.json</code>, which always ships. Caps: 16 MB per file, 64 MB
 total (uncompressed). The <code>dotzuki.version</code> field records the exporting CLI
@@ -7588,26 +7599,26 @@ python3 -m http.server --directory dist/web   # play at http://localhost:8000
 <h2 id="dotzuki-export---native-dir"><a class="header" href="#dotzuki-export---native-dir"><code>dotzuki export --native &lt;dir&gt;</code></a></h2>
 <p>Packs the project into a <strong>native app directory</strong>: the game-agnostic
 <code>dotzuki-player</code> binary (the bin target of <code>dotzuki-runner</code>) plus the same
-<code>game.bundle.json</code> the web export writes. The player boots the bundle next to
+<code>game.dzpk</code> pack the web export writes. The player boots the pack next to
 its executable through the same <code>RunnerGame</code> + window loop as <code>dotzuki run</code>,
-and writes its save next to the bundle as <code>.dotzuki-save.json</code>.</p>
+and writes its save next to the pack as <code>.dotzuki-save.json</code>.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/native</code></td><td>Output directory (<code>dist</code> is excluded from bundles, so re-exporting never packs a previous export)</td></tr>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/native</code></td><td>Output directory (<code>dist</code> is excluded from packs, so re-exporting never packs a previous export)</td></tr>
 <tr><td><code>--player-bin &lt;path&gt;</code></td><td>cargo build</td><td>Use this prebuilt <code>dotzuki-player</code> binary instead of building it</td></tr>
 <tr><td><code>--force</code></td><td>off</td><td>Export even when validation reports diagnostics</td></tr>
 </tbody>
 </table>
 </div>
-<p>The diagnostic gate and bundle rules are identical to <code>--web</code>. The output
+<p>The diagnostic gate and pack rules are identical to <code>--web</code>. The output
 directory contains:</p>
 <pre><code>dist/native/
 ├── &lt;project-dir-name&gt;[.exe]   # the player binary, renamed after the project directory
-└── game.bundle.json           # { dotzuki: {tool, version, exportedAt}, files: {path: base64} }
+└── game.dzpk                  # binary game pack (same file the web export writes)
 </code></pre>
 <p>The player binary is resolved in this order: <code>--player-bin</code> →
 <code>cargo build --release -p dotzuki-runner --bin dotzuki-player</code> in the source
@@ -7618,7 +7629,8 @@ OSes, run the export on that OS (or on a per-OS CI runner).</p>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
 dist/native/my-game            # double-clickable native app
 </code></pre>
-<p>The shipped binary also accepts an optional bundle path argument plus
+<p>The shipped binary also accepts an optional pack path argument (a <code>.dzpk</code>
+pack, or a legacy <code>game.bundle.json</code> from an older export) plus
 <code>--lang en|zh</code>, <code>--scale &lt;n&gt;</code>, <code>--fresh</code>, and <code>--headless</code> (with <code>--frames</code> /
 <code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
 <pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
@@ -7627,8 +7639,8 @@ dist/native/my-game            # double-clickable native app
 <ul>
 <li><code>dotzuki check</code>: <code>0</code> = all DSL compiles (and battle section validates); <code>1</code> = diagnostics found.</li>
 <li><code>dotzuki run</code>: <code>0</code> = clean exit.</li>
-<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed (without <code>--force</code>), project over the bundle caps, or no runner wasm package available.</li>
-<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation failed (without <code>--force</code>), project over the bundle caps, or no player binary available.</li>
+<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no runner wasm package available.</li>
+<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no player binary available.</li>
 </ul>
 <h2 id="notes-1"><a class="header" href="#notes-1">Notes</a></h2>
 <ul>
