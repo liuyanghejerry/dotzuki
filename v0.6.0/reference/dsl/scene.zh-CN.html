@@ -1,0 +1,638 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Scene DSL - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-7f4bff94.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/dsl/scene.zh-CN.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="scene-dsl-参考scene"><a class="header" href="#scene-dsl-参考scene">Scene DSL 参考（<code>.scene</code>）</a></h1>
+<blockquote>
+<p>本文是 <code>reference/dsl/scene.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p><code>.scene</code> 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
+绑定——以 <code>dotzuki-engine-dsl</code> 解析与编译的实现为准。</p>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: DSL authors</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.1.0</li>
+</ul>
+</blockquote>
+<p>本页按代码实现来描述<a href="../glossary.html">游戏 DSL</a> 的 <code>.scene</code> 文件；当代码与旧文档不一致时，
+以代码为准。<code>文件:行号</code> 引用均相对于仓库中的 <code>crates/dotzuki-engine-dsl/src/</code>。各构造
+编译成什么，见 <a href="./codegen.html">codegen 约定</a>；场景内的 <code>ui { }</code> 块见
+<a href="./gui.html">GUI DSL 参考</a>；<code>@theme</code> / <code>@style</code> / <code>@atlas</code> 见
+<a href="./theme-style.html">主题与样式参考</a>。分步上手见<a href="../../tutorials/quickstart.html">快速入门</a>。</p>
+<h2 id="文件结构"><a class="header" href="#文件结构">文件结构</a></h2>
+<p>一个 <code>.scene</code> 文件包含一个 <code>game_scene &lt;Name&gt; { ... }</code> 文档（parser.rs:665-729）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @storylines {
+        @speaker("Guide") { "Welcome to StartTown!" }
+    }
+}
+</code></pre>
+<p>花括号内，以下块可以任意顺序出现：</p>
+<ul>
+<li><code>@variables { ... }</code>——场景变量</li>
+<li><code>@storylines { ... }</code>——未命名剧情线（一个 <code>main</code> 函数）</li>
+<li><code>@storyline("name") { ... }</code>——带 <code>@trigger</code> 绑定的具名剧情线</li>
+<li><code>@load { ... }</code>——场景入口处理器（至多一个）</li>
+<li><code>ui { ... }</code>——内联 UI 布局</li>
+<li><code>@theme</code> / <code>@style</code> / <code>@atlas</code> 块</li>
+</ul>
+<p>没有 import 或 include 语句；每个 <code>.scene</code> 文件独立编译。编译器按扩展名发现文件
+（compiler.rs:74）。顶层的 <code>screen</code> 与 <code>component</code> 形式属于 <code>.gui</code> 文件而非场景
+（parser.rs:568-596）；见 <a href="./gui.html">GUI DSL 参考</a>。</p>
+<h2 id="词法规则"><a class="header" href="#词法规则">词法规则</a></h2>
+<ul>
+<li><strong>注释</strong>——<code>//</code> 到行尾，<code>/* ... */</code> 跨行（lexer.rs:348-374）。</li>
+<li><strong>块与缩进</strong>——花括号界定每个块。词法器仍会强制缩进规范：每层 2 或 4 个空格，单位
+必须贯穿整个文件保持一致，tab 会被拒绝（lexer.rs:168-178、328-346）。缩进 token
+从不改变花括号块的含义；解析器会跳过它们（parser.rs:172-179）。</li>
+<li><strong>字符串</strong>——<code>"..."</code> 或 <code>'...'</code>，支持转义 <code>\n</code>、<code>\t</code>、<code>\r</code>、<code>\\</code>、<code>\"</code>、<code>\'</code>
+（lexer.rs:376-400）。</li>
+<li><strong>数字</strong>——十进制（可选小数部分）与 <code>0x</code> 十六进制；前导 <code>-</code> 会并入字面量
+（lexer.rs:402-436）。</li>
+<li><strong>标识符</strong>——字母、数字、<code>_</code>、<code>.</code>、<code>-</code>（lexer.rs:438-447）。<code>true</code> / <code>false</code> 是布尔
+字面量，<code>game_scene</code> / <code>screen</code> / <code>ui</code> 是保留字（lexer.rs:449-458）。</li>
+<li><strong>指令</strong>——<code>@name</code> token（lexer.rs:460-489）。可识别的名字：<code>variables</code>、<code>theme</code>、
+<code>style</code>、<code>atlas</code>、<code>storylines</code>、<code>storyline</code>、<code>load</code>、<code>speaker</code>、<code>say</code>、<code>choice</code>、
+<code>option</code>、<code>run</code>、<code>if</code>、<code>else</code>、<code>each</code>、<code>command</code>、<code>trigger</code>、<code>t</code>。任何其他 <code>@name</code>
+会词法化为文本为 <code>@name</code> 的标识符 token，从而解析为以该字面量为名字的裸命令
+（lexer.rs:487；parser.rs:1218-1245）——见<a href="#裸命令">裸命令</a>。</li>
+</ul>
+<h2 id="表达式"><a class="header" href="#表达式">表达式</a></h2>
+<p>表达式出现在 <code>@variables</code> 初始化器、<code>@if</code> 条件、赋值、命令实参、<code>@speaker</code> / <code>@say</code>
+名字、<code>@each</code> 来源与 <code>@trigger</code> 值中。</p>
+<ul>
+<li><strong>字面量</strong>——字符串、数字、<code>true</code>、<code>false</code>（parser.rs:377-384）。</li>
+<li><strong>数组</strong>——<code>[a, b, c]</code>（parser.rs:399-423）。</li>
+<li><strong>对象</strong>——<code>{ key: value, ... }</code> 解析为对象字面量（parser.rs:424-451）。JS codegen
+原样输出它们（js_storyline.rs:132-138）；原生解释器会报错拒绝它们，所以在解释器
+路径上不要使用（interpreter.rs:670-674）。</li>
+<li><strong>变量与调用</strong>——<code>name</code> 与 <code>name(arg, ...)</code>（parser.rs:385-393、464-488）。调用编译
+时带 <code>game.</code> 前缀。DSL 没有成员访问，所以要写 <code>getFlag("X")</code> 而不是
+<code>game.getFlag("X")</code>（js_storyline.rs:99-109）。</li>
+<li><strong>圆括号</strong>用于分组子表达式（parser.rs:394-398）。</li>
+</ul>
+<p>运算符优先级，从最高到最低：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>优先级</th><th>运算符</th><th>Parser</th></tr>
+</thead>
+<tbody>
+<tr><td>一元</td><td><code>!</code> <code>-</code></td><td>parser.rs:357-375</td></tr>
+<tr><td>乘法</td><td><code>*</code> <code>/</code></td><td>parser.rs:329-347</td></tr>
+<tr><td>加法</td><td><code>+</code> <code>-</code></td><td>parser.rs:309-327</td></tr>
+<tr><td>比较</td><td><code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code></td><td>parser.rs:279-307</td></tr>
+<tr><td>相等</td><td><code>==</code> <code>!=</code></td><td>parser.rs:259-277</td></tr>
+<tr><td>按位与</td><td><code>&amp;</code></td><td>parser.rs:249-257</td></tr>
+<tr><td>逻辑与</td><td><code>&amp;&amp;</code></td><td>parser.rs:239-247</td></tr>
+<tr><td>按位或</td><td><code>|</code></td><td>parser.rs:229-237</td></tr>
+<tr><td>逻辑或</td><td><code>||</code></td><td>parser.rs:219-227</td></tr>
+<tr><td>三元</td><td><code>cond ? a : b</code></td><td>parser.rs:203-217</td></tr>
+</tbody>
+</table>
+</div>
+<p>运行时语义与 JavaScript 对齐：</p>
+<ul>
+<li><code>==</code> / <code>!=</code> 严格比较，绝不跨类型（interpreter.rs:111-119）。</li>
+<li><code>&amp;&amp;</code> / <code>||</code> 短路求值并返回其中一个操作数（interpreter.rs:718-733）。</li>
+<li><code>&amp;</code> / <code>|</code> 把两侧经 JS <code>ToInt32</code> 转换（interpreter.rs:121-129、817-818）。</li>
+<li><code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> 转换为数字（interpreter.rs:811-814）。</li>
+<li>任一侧为文本时 <code>+</code> 拼接，否则做数字加法（interpreter.rs:799-805）。</li>
+<li>条件使用 JS 真值规则：<code>false</code>、<code>0</code>、<code>NaN</code>、<code>""</code> 与 <code>undefined</code> 为假值
+（interpreter.rs:96-106）。</li>
+</ul>
+<h2 id="顶层块"><a class="header" href="#顶层块">顶层块</a></h2>
+<h3 id="variables"><a class="header" href="#variables"><code>@variables</code></a></h3>
+<p><code>@variables { name = expr }</code> 声明场景变量。初始化器可以是任意表达式——数字、字符串、
+布尔值、数组、基于其他已声明变量的算术（parser.rs:757-778）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @variables {
+        gold = 500
+        name = "RED"
+        has_potion = true
+        discount = 10 + 5
+    }
+    @storylines {
+        @speaker("Guide") { "Welcome!" }
+    }
+}
+</code></pre>
+<p>声明编译为模块作用域的 <code>let</code> 语句，在剧情线函数之前输出（js_variables.rs:21-46）。
+调用形式的初始化器会编译为不带 <code>game.</code> 前缀的裸调用（js_variables.rs:93-96），所以
+初始化器请限于字面量、数组与基于已声明变量的表达式。剧情线中对 <code>@variables</code> 名字的
+赋值会修改模块作用域的绑定，而不是遮蔽它（js_storyline.rs:543-548）。引用未定义变量
+的初始化器是语义错误（parser.rs:1741-1751）。</p>
+<h3 id="storylines--未命名剧情线"><a class="header" href="#storylines--未命名剧情线"><code>@storylines</code> —— 未命名剧情线</a></h3>
+<p><code>@storylines { ... }</code> 容纳语句；编译器把这条剧情线命名为 <code>main</code>（parser.rs:684-692），
+并输出 <code>export async function storyline_main()</code>（compiler.rs:257-268；
+js_storyline.rs:483-513）。</p>
+<h3 id="storylinename--具名剧情线"><a class="header" href="#storylinename--具名剧情线"><code>@storyline("name")</code> —— 具名剧情线</a></h3>
+<p>具名剧情线先声明 <code>@trigger</code> 绑定，再写语句。名字必须是带引号的字符串
+（parser.rs:807-840）：</p>
+<pre><code class="language-dsl">game_scene ProfLab {
+    @storyline("talkProf") {
+        @trigger(map = "ProfLab", npc = 1)
+        @speaker("Prof") { "Hello!" }
+    }
+}
+</code></pre>
+<p><code>@trigger</code> 声明必须出现在语句之前（parser.rs:815-833）。一条剧情线可以携带多个
+<code>@trigger</code>，让多个地图对象路由到同一个处理器（ast.rs:203-207）。每条具名剧情线编译
+为 <code>export async function storyline_&lt;name&gt;()</code>（js_storyline.rs:494-513）。</p>
+<h3 id="load--场景入口"><a class="header" href="#load--场景入口"><code>@load</code> —— 场景入口</a></h3>
+<p><code>@load { ... }</code> 在场景加载时运行。一个场景只允许一个 <code>@load</code> 块；出现第二个是解析错误
+（parser.rs:697-707）：</p>
+<pre><code class="language-dsl">game_scene ProfLab {
+    @load {
+        setFlag("LAB_ENTERED")
+    }
+}
+</code></pre>
+<p>它编译为 <code>export async function &lt;SceneName&gt;OnLoad()</code>（js_storyline.rs:504-511），并接入
+生成的地图配置的 <code>onLoad</code> 字段（config_gen.rs:81-83）。</p>
+<h3 id="ui--themestyleatlas"><a class="header" href="#ui--themestyleatlas"><code>ui { }</code>、<code>@theme</code>、<code>@style</code>、<code>@atlas</code></a></h3>
+<ul>
+<li><code>ui { ... }</code>——内联 UI 布局（parser.rs:711、1306-1320），编译为 <code>&lt;SceneName&gt;_ui.json</code>
+（compiler.rs:296-307）。组件语法见 <a href="./gui.html">GUI DSL 参考</a>。</li>
+<li><code>@theme</code> / <code>@style</code> / <code>@atlas</code>——颜色主题、可复用样式与纹理 atlas（parser.rs:708-710）。
+语法与输出见<a href="./theme-style.html">主题与样式参考</a>。</li>
+</ul>
+<h2 id="剧情语句"><a class="header" href="#剧情语句">剧情语句</a></h2>
+<p>剧情线是一串按顺序执行的语句，每条异步效果都会 await。语句可嵌套在 <code>@choice</code> 选项体、
+<code>@if</code> 分支与 <code>@each</code> 体内（parser.rs:1011-1034）。</p>
+<h3 id="t--双语文本"><a class="header" href="#t--双语文本"><code>@t</code> —— 双语文本</a></h3>
+<p><a href="../glossary.html"><code>@t("en", "中文")</code></a>（双语文本语法）是本地化字符串字面量。实参按位置
+排列：第一个是 <code>en</code>，第二个是 <code>zh</code>（parser.rs:492-495、501-526）。在所有编写文本的
+位置使用它——<code>@speaker</code> / <code>@say</code> 行（parser.rs:1066-1069）与 <code>@option</code> 标签
+（parser.rs:1096-1101）——也可用于任意表达式位置，此时它解析为本地化字面量并编译为
+<code>game.t("en", "zh")</code>（parser.rs:381-383；js_storyline.rs:79）。多余的实参可以解析，但
+codegen 会忽略（parser.rs:492-495；i18n.rs:10-18）。宿主的当前语言在运行时选择变体，
+回退顺序为 <code>en</code>，然后是第一对（i18n.rs:10-18；interpreter.rs:613-625）。见
+<a href="../../how-to/i18n.html">i18n 指南</a>。</p>
+<h3 id="speaker--玩家发起的对话"><a class="header" href="#speaker--玩家发起的对话"><code>@speaker</code> —— 玩家发起的对话</a></h3>
+<p><code>@speaker(name) { "line" ... }</code> 标记玩家与 NPC 交谈时发起的对话（ast.rs:221-225）。
+名字可以是任意表达式；行内容是一个或多个普通字符串或 <code>@t</code> 字面量
+（parser.rs:1036-1077）：</p>
+<pre><code class="language-dsl">game_scene ProfLab {
+    @storylines {
+        @speaker("Prof") {
+            "Hello!"
+            "Welcome to the lab."
+        }
+        @speaker("") { "The machine hums." }
+    }
+}
+</code></pre>
+<p>名字的行为（js_storyline.rs:197-259）：</p>
+<ul>
+<li><code>""</code>——旁白形式：行内容原样渲染，不带前缀。</li>
+<li>非空字符串——渲染时带 <code>"Name: "</code> 前缀。</li>
+<li>其他任意表达式——模板字符串，<code>${name}: text</code>。</li>
+</ul>
+<p>各行用 <code>\n</code> 拼接成一次 <code>await game.showText(...)</code> 调用（js_storyline.rs:211-256）。</p>
+<h3 id="say--过场对白"><a class="header" href="#say--过场对白"><code>@say</code> —— 过场对白</a></h3>
+<p><code>@say(name) { "line" ... }</code> 语法与 <code>@speaker</code> 相同，编译出的 <code>game.showText</code> 输出也
+相同（js_storyline.rs:149-158）。它标记自动触发剧情线内的脚本化对话，NPC 依次发言；
+两者区别在语义而非输出（lexer.rs:16-21；ast.rs:226-230）：</p>
+<pre><code class="language-dsl">game_scene ProfLab {
+    @storyline("labIntro") {
+        @trigger(map = "ProfLab", on_enter = true)
+        @say("Prof") { "Hey! Wait!" }
+        @say("") { "The professor hands you a device." }
+    }
+}
+</code></pre>
+<p>玩家发起的交谈用 <code>@speaker</code>，过场对白用 <code>@say</code>。</p>
+<h3 id="choice--option"><a class="header" href="#choice--option"><code>@choice</code> / <code>@option</code></a></h3>
+<p><code>@choice { @option(label) { ... } ... }</code> 弹出一个菜单。标签是普通字符串或 <code>@t</code> 字面量；
+每个选项体容纳语句（parser.rs:1079-1113）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @storylines {
+        @choice {
+            @option(@t("Ember", "炎")) {
+                @speaker("Guide") { @t("A fire type!", "火系！") }
+            }
+            @option(@t("Dew", "水")) {
+                @speaker("Guide") { @t("A water type!", "水系！") }
+            }
+        }
+    }
+}
+</code></pre>
+<p>一个 choice 编译为 <code>const choice = await game.showChoice([...]);</code> 加一条 if/else 链；
+最后一个选项是 <code>else</code> 分支（js_storyline.rs:266-319）。结果索引越界时执行最后一个
+选项（interpreter.rs:364-370）。没有任何 <code>@option</code> 的 <code>@choice</code> 是语义错误
+（parser.rs:1831-1849）。</p>
+<h3 id="if--else"><a class="header" href="#if--else"><code>@if</code> / <code>@else</code></a></h3>
+<p><code>@if (cond) { ... } @else { ... }</code> 基于表达式分支。<code>@else @if (cond) { ... }</code> 链式
+写法可用（parser.rs:1115-1187）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @variables { gold = 500 }
+    @storylines {
+        @if (gold &gt;= 1000) {
+            @speaker("Clerk") { "You are wealthy!" }
+        } @else @if (gold &gt;= 100) {
+            @speaker("Clerk") { "A modest purse." }
+        } @else {
+            @speaker("Clerk") { "Short on coins." }
+        }
+    }
+}
+</code></pre>
+<p>条件可以调用 <code>getFlag("X")</code> 这样的同步查询；条件中出现异步命令在原生解释器中是运行时
+错误（interpreter.rs:464-483）。</p>
+<h3 id="each"><a class="header" href="#each"><code>@each</code></a></h3>
+<p><code>@each item in expr { ... }</code> 对数组的每个元素执行一次循环体。<code>in</code> 关键字可选
+（parser.rs:1189-1208）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @variables { items = ["POTION", "ETHER"] }
+    @storylines {
+        @each item in items {
+            @speaker("") { @t("Found an item!", "发现了道具！") }
+        }
+    }
+}
+</code></pre>
+<p>在原生解释器中，来源必须求值为数组（interpreter.rs:484-523）。JS codegen 输出
+<code>for (const item of ...)</code>（js_storyline.rs:366-396）。旧式的双变量形式
+<code>@each (item, index)</code> 不存在。</p>
+<h3 id="赋值"><a class="header" href="#赋值">赋值</a></h3>
+<p><code>name = expr</code> 给局部或模块变量赋值（parser.rs:1210-1216）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @variables { gold = 500 }
+    @storylines {
+        gold = gold - 100
+        setFlag("BOUGHT_POTION")
+    }
+}
+</code></pre>
+<p>普通赋值（值不是调用）按源码顺序提升到剧情线函数顶部，因此它们相对对话的顺序无关
+紧要（js_storyline.rs:525-571；解释器在 interpreter.rs:264-300 处保持一致）。值为
+调用的赋值留在原地并 await，因此 <code>result = startBattle(...)</code> 绑定战斗结果
+（js_storyline.rs:398-428）。每个被赋值的名字都会预先声明，因此 <code>@if</code> / <code>@choice</code>
+分支内的赋值在分支结束后仍然可见（js_storyline.rs:557-571）。给 <code>@variables</code> 名字
+赋值会修改模块作用域的变量（js_storyline.rs:543-548）。</p>
+<h3 id="裸命令"><a class="header" href="#裸命令">裸命令</a></h3>
+<p><code>name(args)</code>——或带空实参的 <code>name</code>——调用 <code>game</code> API 函数。任何不是 <code>name = ...</code> 的
+标识符语句都解析为命令（parser.rs:1011-1034、1218-1245），并编译为
+<code>await game["name"](args...)</code>（js_storyline.rs:461-481）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @storylines {
+        giveItem("POTION", 3)
+        healParty()
+    }
+}
+</code></pre>
+<p>同步查询的返回值出现在裸命令位置时会被丢弃（interpreter.rs:543-566）；结果有用时请
+给调用赋值。无法识别的 <code>@name(...)</code> 形式（例如旧式的 <code>@goto(...)</code>）也会落到这里，成为
+名字包含 <code>@</code> 的命令（lexer.rs:487），而 game API 并没有注册这些名字。</p>
+<h3 id="command"><a class="header" href="#command"><code>@command</code></a></h3>
+<p><code>@command("name", args...)</code> 是指令形式的逃生通道：第一个实参必须是给出 <code>game</code> API
+函数名的字符串字面量，其余实参原样传递（parser.rs:1252-1304）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @storylines {
+        @command("giveItem", "POTION", 3)
+    }
+}
+</code></pre>
+<p>它编译为与裸命令相同的 <code>await game["name"](args...)</code>（js_storyline.rs:461-481）。</p>
+<h3 id="run--原生-javascript"><a class="header" href="#run--原生-javascript"><code>@run</code> —— 原生 JavaScript</a></h3>
+<p><code>@run { ... }</code> 内嵌原生 JavaScript。词法器原样捕获整个块并跟踪花括号嵌套
+（lexer.rs:497-543），codegen 把这些行内联进生成的 JS（js_storyline.rs:60-74）：</p>
+<pre><code class="language-dsl">game_scene StartTown {
+    @storylines {
+        @run {
+            game.healParty();
+        }
+    }
+}
+</code></pre>
+<p><code>@run</code> 在 Boa 脚本路径上可用。原生 AST 解释器会报错拒绝 <code>@run</code> 块
+（interpreter.rs:524-528）；要在解释器下运行，请把这类逻辑改写成 DSL 语句或原生函数
+模块。</p>
+<h2 id="trigger-绑定"><a class="header" href="#trigger-绑定"><code>@trigger</code> 绑定</a></h2>
+<p><code>@trigger</code> 声明具名剧情线如何绑定到地图对象。它必须出现在 <code>@storyline</code> 块的语句之前
+（parser.rs:815-833）。语法：<code>@trigger(key = value, ...)</code>；键值对之间的逗号可选
+（parser.rs:961-964）。值是表达式。类型不对的键值会被忽略，未知键也会被忽略
+（parser.rs:882-959）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>接受的值</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>map</code></td><td>字符串</td><td>路由地图 id（compiler.rs:271-279）</td></tr>
+<tr><td><code>npc</code></td><td>数字或数字字符串</td><td><code>script_config.json</code> 中的 NPC 对象/text id（config_gen.rs:28-43）</td></tr>
+<tr><td><code>npc</code></td><td>非数字字符串</td><td><code>storyline_routes.json</code> 中的旧式 NPC key（compiler.rs:272-278）；冲突检测按它分组（conflict.rs:38-44）</td></tr>
+<tr><td><code>sign</code></td><td>数字或数字字符串</td><td><code>script_config.json</code> 中的 sign 条目（config_gen.rs:45-47）</td></tr>
+<tr><td><code>coord</code></td><td><code>[x, y]</code></td><td>一个 coord 事件（config_gen.rs:49-72）</td></tr>
+<tr><td><code>coords</code></td><td><code>[[x, y], ...]</code></td><td>多个 coord 事件（config_gen.rs:49-72）</td></tr>
+<tr><td><code>name</code></td><td>字符串</td><td>命名 coord 事件（config_gen.rs:50-70）</td></tr>
+<tr><td><code>toggle</code> / <code>toggleId</code></td><td>字符串</td><td>NPC <code>toggleId</code>（config_gen.rs:34-36）</td></tr>
+<tr><td><code>script</code> / <code>scriptId</code></td><td>字符串</td><td>NPC <code>scriptId</code>（config_gen.rs:37-39）</td></tr>
+<tr><td><code>hidden</code> / <code>defaultHidden</code></td><td>布尔值</td><td>NPC <code>defaultHidden</code>（config_gen.rs:40-42）</td></tr>
+<tr><td><code>no_talk</code> / <code>noTalk</code></td><td>布尔值</td><td>省略 NPC talk 处理器（config_gen.rs:31-33）</td></tr>
+<tr><td><code>on_enter</code> / <code>onEnter</code></td><td>布尔值</td><td><code>onEnter</code> 路由标志（compiler.rs:271-279）</td></tr>
+<tr><td><code>after</code></td><td>字符串（剧情线名字）</td><td>路由上的 <code>after</code> 字段；两条位于同一（map, npc）且没有 <code>after</code> 链的剧情线会产生冲突警告（conflict.rs:26-33）。<code>after</code> 所隐含的运行时顺序由消费方游戏实现 <!-- not verified against runtime --></td></tr>
+<tr><td><code>priority</code></td><td>数字</td><td>存储在 AST 上（ast.rs:176）；没有任何编译输出读取它（compiler.rs:25-34；config_gen.rs:18-99）</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-dsl">game_scene ProfLab {
+    @storyline("talkProf") {
+        @trigger(
+            map = "ProfLab",
+            npc = 1,
+            toggle = "PROFLAB_PROF",
+            script = "PROFLAB_PROF_ID",
+            hidden = true
+        )
+        @speaker("Prof") { "Welcome!" }
+    }
+    @storyline("readSign") {
+        @trigger(map = "ProfLab", sign = 1)
+        @speaker("") { "MONSTER LAB" }
+    }
+    @storyline("northExit") {
+        @trigger(map = "ProfLab", coords = [[10, 1], [11, 1]], name = "northExit1")
+        @speaker("") { "Wait!" }
+    }
+}
+</code></pre>
+<p>编译期冲突警告（<code>CONFLICT: ...</code>）经由 <code>compile_files</code> 输出（compiler.rs:602-604）。</p>
+<h2 id="编译产物"><a class="header" href="#编译产物">编译产物</a></h2>
+<p>编译一个场景会产出：</p>
+<ul>
+<li><code>&lt;SceneName&gt;.js</code>——模块作用域变量声明、每条剧情线各一个导出的 async 函数加 on-load
+函数，以及 sourcemap 页脚（compiler.rs:233-288）。</li>
+<li><code>storyline_routes.json</code>——由构建管线序列化的路由表（compiler.rs:640-645）。</li>
+<li><code>&lt;SceneName&gt;_ui.json</code>——场景含 <code>ui { }</code> 块时产出（compiler.rs:296-307）。</li>
+<li><code>script_config.json</code>——由 <code>gen_map_config</code> bin 依据 <code>@trigger</code> / <code>@load</code> 重新生成的
+地图绑定契约（gen_map_config.rs:14-67；config_gen.rs:102-137）。</li>
+</ul>
+<p>精确的 JS 与 JSON 形态见 <a href="./codegen.html">codegen 约定</a>。</p>
+<h2 id="与旧文档的差异"><a class="header" href="#与旧文档的差异">与旧文档的差异</a></h2>
+<p>愿景文档 <a href="../../archive/full-dsl.html"><code>archive/full-dsl.md</code></a> 描述了解析器并不具备的
+构造。本页只记录代码解析的内容。不属于 <code>.scene</code> 的：</p>
+<ul>
+<li><code>@characters</code>、<code>@keyframes</code>、<code>@audio</code>、<code>@resources</code>、<code>map_layout</code> 与 <code>i18n { }</code> 块。</li>
+<li>Speaker 附加项 <code>@mood</code>、<code>@avatar</code>、<code>@pause</code>、<code>@play_sound</code>。</li>
+<li><code>@each (item, index) in ...</code>——只存在 <code>@each item in ...</code>。</li>
+<li>旧式双参数形式 <code>@speaker(name, mode)</code>——被拒绝（parser.rs:2181-2197 的 parser 测试）。</li>
+<li>指令风格的游戏命令，如 <code>@add_item</code>、<code>@give_item</code>、<code>@change_scene</code>、<code>@show_menu</code>、
+<code>@goto</code>、<code>@play_bgm</code>。未知的 <code>@name</code> token 会解析为名字里带 <code>@</code> 的裸命令
+（lexer.rs:487），而 game API 并没有注册这些名字；请写 <code>giveItem(...)</code> 或
+<code>@command("giveItem", ...)</code>。</li>
+<li>对话文本中的 <code>"{binding}"</code> 模板插值——带引号的文本就是普通字符串。模板字符串只作为
+GUI 属性值存在，由渲染器解析；见 <a href="./gui.html">GUI DSL 参考</a>。</li>
+<li>按钮状态块 <code>@hover</code> / <code>@pressed</code> / <code>@disabled</code> 与响应式 <code>@media</code> / <code>@rtl</code> / <code>@ltr</code>
+块——任何地方都不会解析。</li>
+</ul>
+<h2 id="参见"><a class="header" href="#参见">参见</a></h2>
+<ul>
+<li><a href="./gui.html">GUI DSL 参考</a></li>
+<li><a href="./theme-style.html">主题与样式参考</a></li>
+<li><a href="./codegen.html">DSL codegen 约定</a></li>
+<li><a href="../../how-to/i18n.html">i18n 指南</a></li>
+<li><a href="../../tutorials/quickstart.html">快速入门</a></li>
+<li><a href="../../index.html">文档索引</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../reference/rustdoc.zh-CN.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../reference/dsl/gui.zh-CN.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../reference/rustdoc.zh-CN.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../reference/dsl/gui.zh-CN.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

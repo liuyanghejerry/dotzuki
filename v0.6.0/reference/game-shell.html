@@ -1,0 +1,476 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Game Shell - dotzuki Engine Book</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-7f4bff94.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-797479cc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">dotzuki Engine Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/./reference/game-shell.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="game-shell-reference"><a class="header" href="#game-shell-reference">Game Shell Reference</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: reference</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.5.4</li>
+</ul>
+</blockquote>
+<p>The <a href="./glossary.html">game shell</a> (<code>dotzuki_web::game_shell</code>, source
+<code>crates/dotzuki-web/src/game_shell.rs</code>) runs a <code>GameLoop</code> game in a browser
+canvas (wasm32) or a native fallback window at Game Boy frame pacing. This
+page is the API reference for its feature gate, <code>GameLoop</code> trait,
+<code>GameShellConfig</code>, and <code>run_game</code>.</p>
+<h2 id="what-it-is"><a class="header" href="#what-it-is">What it is</a></h2>
+<p>The game shell is the web counterpart to the native-only
+<code>dotzuki_renderer::window::run</code>: the same pixels + winit stack and the same
+GB-frame pacing (4194304 Hz / 70224 cycles ≈ 59.7275 Hz), plus the browser
+plumbing a wasm game needs — replacing a placeholder <code>&lt;canvas&gt;</code> in the host
+page, tracking the parent’s width on window resize, an optional FPS-counter
+element, and <code>requestAnimationFrame</code>-driven polling.</p>
+<p>Game-specific wiring stays in the game crate: it builds a
+<code>GameShellConfig</code>, implements <code>GameLoop</code>, and — when the host page needs
+runtime control over the live game — keeps its own clone of the
+<code>Rc&lt;RefCell&lt;G&gt;&gt;</code> it passes to <code>run_game</code>.</p>
+<p>The shell’s <code>GameLoop</code> is a separate trait from the native one, kept
+separate so <code>dotzuki-web</code> stays wasm-compatible:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th><code>dotzuki_renderer::window::GameLoop</code></th><th><code>dotzuki_web::game_shell::GameLoop</code></th></tr>
+</thead>
+<tbody>
+<tr><td>Targets</td><td>native only</td><td>wasm32 + native fallback</td></tr>
+<tr><td>Entry point</td><td><code>run(config, game)</code> — sync, game by value</td><td><code>run_game(config, Rc&lt;RefCell&lt;G&gt;&gt;)</code> — async</td></tr>
+<tr><td>Config type</td><td><code>GameWindowConfig</code></td><td><code>GameShellConfig</code> (adds <code>canvas_id</code>, <code>fps_element_id</code>)</td></tr>
+<tr><td>Gesture hook</td><td>—</td><td><code>on_user_gesture</code></td></tr>
+<tr><td>Also exported as</td><td><code>dotzuki_app::GameLoop</code> / <code>dotzuki_app::run</code></td><td><code>dotzuki_web</code> crate root</td></tr>
+</tbody>
+</table>
+</div>
+<p>The in-repo consumer pattern to copy is the <em>native</em> path: <code>dotzuki-runner</code>
+implements <code>dotzuki_app::GameLoop</code> for <code>RunnerGame</code>
+(<code>crates/dotzuki-runner/src/game.rs</code>) and <code>dotzuki-cli</code> boots it with
+<code>dotzuki_app::run(...)</code> — that is the <code>dotzuki_renderer::window</code> path
+re-exported through <code>dotzuki-app</code>, not this game shell. The editor’s
+<a href="./glossary.html">WASM runner</a> builds enable only the <code>modern-audio</code> feature,
+so <code>game-shell</code> has no in-repo consumer yet; it is game-facing API.</p>
+<h2 id="feature-gate"><a class="header" href="#feature-gate">Feature gate</a></h2>
+<p>The module is gated behind the <code>game-shell</code> Cargo feature of <code>dotzuki-web</code>
+(<code>crates/dotzuki-web/Cargo.toml:45-63</code>), <strong>off by default</strong> so the editor
+layout-preview bridge does not drag pixels / winit into consumers that never
+open a window. Enable it in <code>Cargo.toml</code> with
+<code>dotzuki-web = { version = "0.5.4", features = ["game-shell"] }</code>.</p>
+<p>The feature pulls in <code>pixels =0.15.0</code>, <code>winit 0.30</code>, <code>error-iter</code>,
+<code>dotzuki-renderer/gpu</code> (for <code>InputState::set_from_keycode</code>), and the
+<code>web-sys</code> DOM types (<code>Window</code>, <code>Document</code>, <code>Element</code>, <code>Node</code>, <code>Event</code>,
+<code>EventTarget</code>, <code>Performance</code>, <code>HtmlCanvasElement</code>, <code>GpuTextureFormat</code>).
+With the feature on, the crate root re-exports the flat API: <code>GameLoop</code>,
+<code>GameShellConfig</code>, <code>GameShellError</code>, <code>run_game</code>
+(<code>crates/dotzuki-web/src/lib.rs:25</code>).</p>
+<h2 id="gameloop-trait"><a class="header" href="#gameloop-trait"><code>GameLoop</code> trait</a></h2>
+<p>Quoted from <code>game_shell.rs:47-67</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait GameLoop {
+    type Fb: FbSurface;
+
+    fn update(&amp;mut self, input: &amp;InputState);
+    fn draw(&amp;mut self, fb: &amp;mut Self::Fb);
+    fn should_exit(&amp;self) -&gt; bool { false }
+    fn on_user_gesture(&amp;self) {}
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li><code>type Fb: FbSurface</code> — the framebuffer the game draws into: either
+<code>dotzuki_renderer::FrameBuffer</code> (true-color games) or
+<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code> (fixed-palette games).</li>
+<li><code>update(&amp;mut self, input: &amp;InputState)</code> — called once per GB frame;
+process input before returning.</li>
+<li><code>draw(&amp;mut self, fb: &amp;mut Self::Fb)</code> — called once per redraw; draw the
+current screen into the framebuffer.</li>
+<li><code>should_exit(&amp;self) -&gt; bool</code> — default <code>false</code>; the loop exits when it
+returns <code>true</code>.</li>
+<li><code>on_user_gesture(&amp;self)</code> — default no-op; called on every key press.
+Browsers count key presses as user gestures, so this is the hook to resume
+a suspended <code>AudioContext</code>.</li>
+</ul>
+<h2 id="gameshellconfig"><a class="header" href="#gameshellconfig"><code>GameShellConfig</code></a></h2>
+<p>Quoted from <code>game_shell.rs:70-89</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct GameShellConfig {
+    pub title: String,
+    pub scale: u32,
+    pub resizable: bool,
+    pub width: u32,
+    pub height: u32,
+    pub canvas_id: String,              // wasm only
+    pub fps_element_id: Option&lt;String&gt;, // wasm only
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li><code>width</code> / <code>height</code> — logical framebuffer pixels (e.g. 160×144 for
+GB-resolution games, 240×160 for GBA-resolution games).</li>
+<li><code>scale</code> — integer factor for the initial window size; the window’s minimum
+inner size is the unscaled framebuffer size.</li>
+<li><code>canvas_id</code> (wasm only) — DOM id of the placeholder <code>&lt;canvas&gt;</code> the shell
+replaces.</li>
+<li><code>fps_element_id</code> (wasm only) — DOM id of an element updated with
+<code>"NN FPS"</code> roughly every 30 frames; <code>None</code> disables the counter.</li>
+</ul>
+<p><code>GameShellConfig::new(title, width, height, scale)</code> fills the conventional
+defaults: <code>resizable: true</code>, <code>canvas_id: "game-canvas"</code>,
+<code>fps_element_id: Some("fps-counter")</code> — both DOM ids are no-ops when the
+host page lacks the elements.</p>
+<h2 id="run_game"><a class="header" href="#run_game"><code>run_game</code></a></h2>
+<p>Quoted from <code>game_shell.rs:154-157</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn run_game&lt;G: GameLoop + 'static&gt;(
+    config: GameShellConfig,
+    game: Rc&lt;RefCell&lt;G&gt;&gt;,
+) -&gt; Result&lt;(), GameShellError&gt;
+<span class="boring">}</span></code></pre>
+<ul>
+<li><strong>Native</strong>: runs the winit event loop to completion and returns when the
+game exits.</li>
+<li><strong>wasm32</strong>: hands the game to the browser event loop
+(<code>EventLoop::spawn</code>) and returns immediately.</li>
+<li>The function is async because pixels’ surface creation is async on wasm;
+native callers wrap it in <code>pollster::block_on</code>.</li>
+<li>The game lives behind an <code>Rc&lt;RefCell&lt;G&gt;&gt;</code> so the host page can keep a
+clone and drive the live game between frames through its own exported
+functions — sound because JS is single-threaded and those calls never
+land inside <code>update</code> / <code>draw</code>.</li>
+</ul>
+<h3 id="gameshellerror"><a class="header" href="#gameshellerror"><code>GameShellError</code></a></h3>
+<p>Quoted from <code>game_shell.rs:110-117</code>:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum GameShellError {
+    EventLoop(String),
+    WindowCreation(String),
+    PixelBuffer(pixels::Error),
+}
+<span class="boring">}</span></code></pre>
+<p>Implements <code>Debug</code> / <code>Display</code> / <code>Error</code>; only <code>PixelBuffer</code> carries a
+<code>source()</code>, and <code>From&lt;pixels::Error&gt;</code> converts into it.</p>
+<h2 id="runtime-behavior"><a class="header" href="#runtime-behavior">Runtime behavior</a></h2>
+<h3 id="pacing"><a class="header" href="#pacing">Pacing</a></h3>
+<p>Both targets pace at one <code>update</code> per GB frame (≈16.7427 ms). Per frame the
+loop runs: <code>update</code> → <code>input.begin_frame()</code> → <code>should_exit</code> check →
+<code>request_redraw</code>.</p>
+<ul>
+<li><strong>Native</strong>: <code>FRAME_DURATION = 16_742_706 ns</code>, driven in <code>AboutToWait</code> with
+<code>Instant</code> deadlines plus <code>thread::sleep</code> (game_shell.rs:39, 316-336).</li>
+<li><strong>wasm32</strong>: <code>FRAME_MS = 1000.0 * 70224.0 / 4194304.0</code> measured against
+<code>performance.now()</code> with a <code>next_frame_ms</code> accumulator and a
+spiral-of-death clamp — when the loop falls behind, the next deadline
+resets to <code>now + FRAME_MS</code> instead of bursting catch-up frames
+(game_shell.rs:42, 267-315).</li>
+</ul>
+<h3 id="rendering"><a class="header" href="#rendering">Rendering</a></h3>
+<p>Each <code>RedrawRequested</code> runs <code>draw</code> into the game’s framebuffer, then
+<code>frame_buffer.present_into(pixels.frame_mut())</code>, then <code>pixels.render()</code>.
+Render and surface-resize errors are logged and exit the loop
+(game_shell.rs:233-248). On wasm the pixels builder forces <code>Rgba8Unorm</code> and
+the WebGL backend (<code>Backends::GL</code>): some browsers expose partial WebGPU
+limits that panic wasm-bindgen (game_shell.rs:196-209).</p>
+<h3 id="input"><a class="header" href="#input">Input</a></h3>
+<p><code>KeyCode</code> events feed <code>InputState::set_from_keycode</code>. <code>Escape</code> exits on both
+targets, with no opt-out. Any key press calls <code>on_user_gesture</code> before input
+handling (game_shell.rs:249-263).</p>
+<h3 id="canvas-plumbing-wasm32"><a class="header" href="#canvas-plumbing-wasm32">Canvas plumbing (wasm32)</a></h3>
+<p><code>install_canvas</code> sets the winit canvas id and <strong>replaces</strong> the host page’s
+placeholder element that has <code>config.canvas_id</code>; it panics with
+<code>couldn't find placeholder canvas element</code> when the element is missing
+(game_shell.rs:382-397). A window-resize listener re-fits the surface to the
+parent’s width, clamped to the viewport and to the scale-multiple
+framebuffer width, preserving the framebuffer aspect ratio
+(game_shell.rs:362-377, 399-418).</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>A minimal game: a white 8×8 block moving right across a 160×144 screen while
+<code>Right</code> is held. Native entry point shown; on wasm32 call <code>run_game</code> without
+<code>pollster::block_on</code>, and keep a clone of the <code>Rc&lt;RefCell&lt;TinyGame&gt;&gt;</code> when
+the host page needs to drive the game.</p>
+<!-- not verified -->
+<pre class="playground"><code class="language-rust edition2021">use std::cell::RefCell;
+use std::rc::Rc;
+
+use dotzuki_renderer::input::{GbButton, InputState};
+use dotzuki_renderer::{FbSurface, FrameBuffer, Rgba};
+use dotzuki_web::game_shell::{run_game, GameLoop, GameShellConfig, GameShellError};
+
+struct TinyGame {
+    block_x: u32,
+}
+
+impl GameLoop for TinyGame {
+    type Fb = FrameBuffer;
+
+    fn update(&amp;mut self, input: &amp;InputState) {
+        if input.is_held(GbButton::Right) {
+            self.block_x = (self.block_x + 1) % 160;
+        }
+    }
+
+    fn draw(&amp;mut self, fb: &amp;mut Self::Fb) {
+        fb.fill_rect(0, 0, 160, 144, Rgba::BLACK);
+        fb.fill_rect(self.block_x, 64, 8, 8, Rgba::WHITE);
+    }
+}
+
+fn main() -&gt; Result&lt;(), GameShellError&gt; {
+    let config = GameShellConfig::new("Tiny Game", 160, 144, 4);
+    let game = Rc::new(RefCell::new(TinyGame { block_x: 0 }));
+    pollster::block_on(run_game(config, game))
+}</code></pre>
+<h2 id="gotchas"><a class="header" href="#gotchas">Gotchas</a></h2>
+<ul>
+<li><strong><code>Escape</code> always exits.</strong> Both targets terminate the loop on Escape; a
+game cannot remap or disable it.</li>
+<li><strong>Missing placeholder canvas panics (wasm32).</strong> <code>install_canvas</code> expects
+an element with <code>canvas_id</code> in the host page and panics otherwise — ship
+<code>&lt;canvas id="game-canvas"&gt;</code> (or your configured id) in the page.</li>
+<li><strong><code>ControlFlow::Poll</code> is load-bearing.</strong> The loop sets
+<code>ControlFlow::Poll</code> + <code>EventLoop::spawn</code>; without <code>Poll</code>, winit 0.30’s
+web backend only ticks when an event arrives (~5 FPS)
+(game_shell.rs:159-160).</li>
+<li><strong>WebGL is forced on wasm.</strong> The shell pins <code>Backends::GL</code> and
+<code>Rgba8Unorm</code>; partial WebGPU limit objects in some browsers panic
+wasm-bindgen, so WebGPU is not an option here.</li>
+<li><strong>Windowing code has no unit tests.</strong> The module is verified through its
+consumers; the example above is a skeleton, not a tested program.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/resource-manager.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/cli.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/resource-manager.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/cli.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
