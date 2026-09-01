@@ -4,15 +4,15 @@
 //! ```text
 //! <out>/
 //! ├── <project-dir-name>[.exe]  (the dotzuki-player binary, renamed)
-//! └── game.bundle.json          ({ dotzuki: {…meta}, files: {path: base64} })
+//! └── game.dzpk                 (binary pack: index + raw file bytes)
 //! ```
 //!
-//! The player binary is game-agnostic: it boots the `game.bundle.json`
-//! sitting next to the executable through the same `RunnerGame` +
-//! `dotzuki-app` window `dotzuki run` uses, and writes its save next to the
-//! bundle as `.dotzuki-save.json`. Pipeline mirrors the web export: validate
-//! (`dotzuki check` diagnostics; `--force` overrides) → collect the bundle →
-//! locate/build the player binary → write the two artifacts.
+//! The player binary is game-agnostic: it boots the `game.dzpk` sitting next
+//! to the executable through the same `RunnerGame` + `dotzuki-app` window
+//! `dotzuki run` uses, and writes its save next to the pack as
+//! `.dotzuki-save.json`. Pipeline mirrors the web export: validate (`dotzuki
+//! check` diagnostics; `--force` overrides) → collect the pack → locate/build
+//! the player binary → write the two artifacts.
 //!
 //! The build targets the host platform only — cross-compiling a Windows or
 //! Linux app from another OS is out of scope (build on the target OS, or in
@@ -38,9 +38,6 @@ pub struct NativeExportArgs {
     pub force: bool,
 }
 
-/// The bundle file name the player looks for next to its executable.
-pub const BUNDLE_FILE: &str = "game.bundle.json";
-
 /// Export the project and return the output directory.
 pub fn run(args: &NativeExportArgs) -> Result<PathBuf> {
     // 1. Validate — the same diagnostics `dotzuki check` reports.
@@ -62,12 +59,12 @@ pub fn run(args: &NativeExportArgs) -> Result<PathBuf> {
     fs::copy(&player_bin, out.join(&exe)).with_context(|| {
         format!("failed to copy the player binary from {}", player_bin.display())
     })?;
-    fs::write(out.join(BUNDLE_FILE), bundle::serialize_bundle(&files)?)
-        .context("failed to write game.bundle.json")?;
+    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(&files))
+        .context("failed to write game.dzpk")?;
 
-    let bundle_bytes = fs::metadata(out.join(BUNDLE_FILE)).map(|m| m.len()).unwrap_or(0);
+    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE)).map(|m| m.len()).unwrap_or(0);
     println!(
-        "exported {} file(s) ({:.1} MiB bundle) to {}",
+        "exported {} file(s) ({:.1} MiB pack) to {}",
         files.len(),
         bundle_bytes as f64 / (1024.0 * 1024.0),
         out.display()
@@ -102,8 +99,7 @@ fn exe_file_name(dir: &std::path::Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotzuki_runner::bundle::decode_bundle_files;
-    use dotzuki_runner::vfs::MemoryFiles;
+    use dotzuki_runner::vfs::ProjectFiles as _;
     use dotzuki_runner::{run_headless, HeadlessOptions, LoadedProject, RunnerGame, RunnerOptions};
     use std::path::Path;
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -170,20 +166,13 @@ mod tests {
 
         // The two artifacts exist, the binary renamed after the project dir.
         assert!(out.join("your-first-game").is_file());
-        let bundle = fs::read_to_string(out.join(BUNDLE_FILE)).unwrap();
+        let pack_bytes = fs::read(out.join(bundle::PACK_FILE)).unwrap();
 
-        // Version metadata rides along (informational only).
-        let parsed: serde_json::Value = serde_json::from_str(&bundle).unwrap();
-        assert_eq!(
-            parsed["dotzuki"]["version"].as_str().unwrap(),
-            env!("CARGO_PKG_VERSION")
-        );
-
-        // The bundle boots through the exact player path: decode into
-        // MemoryFiles and drive a few frames headless.
-        let decoded = decode_bundle_files(&bundle).unwrap();
-        assert!(decoded.contains_key(".dotzuki-editor.json"));
-        let project = LoadedProject::load_with_files(Arc::new(MemoryFiles::new(decoded))).unwrap();
+        // The pack boots through the exact player path: parse into PackFiles
+        // and drive a few frames headless.
+        let pack = dotzuki_runner::pack::PackFiles::from_bytes(pack_bytes).unwrap();
+        assert!(pack.exists(".dotzuki-editor.json"));
+        let project = LoadedProject::load_with_files(Arc::new(pack)).unwrap();
         let mut game = RunnerGame::new(
             project,
             RunnerOptions {
@@ -219,7 +208,7 @@ mod tests {
 
         // --force exports anyway.
         let out = run(&args(root, export_dir(&tmp), &bin, true)).unwrap();
-        assert!(out.join(BUNDLE_FILE).is_file());
+        assert!(out.join(bundle::PACK_FILE).is_file());
     }
 
     #[test]

@@ -1,14 +1,16 @@
 //! `dotzuki-player` — the game-agnostic native player that
-//! `dotzuki export --native` ships next to a `game.bundle.json`.
+//! `dotzuki export --native` ships next to a `game.dzpk` pack.
 //!
-//! The binary knows nothing about any specific game: it decodes the bundle
-//! (default `<exe dir>/game.bundle.json`, overridable with the first
-//! positional argument) into an in-memory project and boots it through the
-//! same `RunnerGame` + `dotzuki-app` window `dotzuki run` uses. The save
-//! file lives next to the bundle as `.dotzuki-save.json`.
+//! The binary knows nothing about any specific game: it opens the pack
+//! (default `<exe dir>/game.dzpk`, overridable with the first positional
+//! argument) as an in-memory project and boots it through the same
+//! `RunnerGame` + `dotzuki-app` window `dotzuki run` uses. Packs written by
+//! older exports (`game.bundle.json`, base64 JSON) still boot — the format is
+//! sniffed from the magic bytes. The save file lives next to the pack as
+//! `.dotzuki-save.json`.
 //!
 //! `--headless` (with `--frames` / `--screenshot`) smoke-drives an exported
-//! bundle without a window — CI proof that a shipped game boots.
+//! pack without a window — CI proof that a shipped game boots.
 
 #[cfg(not(target_arch = "wasm32"))]
 mod player {
@@ -17,19 +19,23 @@ mod player {
 
     use anyhow::{bail, Context, Result};
     use dotzuki_runner::bundle::decode_bundle_files;
+    use dotzuki_runner::pack::{PackFiles, MAGIC};
+    use dotzuki_runner::vfs::ProjectFiles;
     use dotzuki_runner::{
         run_headless, HeadlessOptions, LoadedProject, MemoryFiles, RunnerGame, RunnerOptions,
         DEFAULT_SAVE_FILE, SCREEN_H, SCREEN_W,
     };
 
     const USAGE: &str = "\
-dotzuki-player — boot an exported dotzuki game bundle
+dotzuki-player — boot an exported dotzuki game pack
 
 USAGE:
-    dotzuki-player [BUNDLE] [OPTIONS]
+    dotzuki-player [PACK] [OPTIONS]
 
 ARGS:
-    [BUNDLE]    Path to game.bundle.json (default: next to this executable)
+    [PACK]    Path to game.dzpk (or a legacy game.bundle.json);
+              default: game.dzpk next to this executable, falling back to
+              game.bundle.json for exports from older dotzuki versions
 
 OPTIONS:
     --lang <en|zh>        UI/script language [default: en]
@@ -91,7 +97,7 @@ OPTIONS:
                 _ if arg.starts_with('-') => bail!("unknown flag '{arg}'\n\n{USAGE}"),
                 _ => {
                     if args.bundle.is_some() {
-                        bail!("multiple bundle paths given\n\n{USAGE}");
+                        bail!("multiple pack paths given\n\n{USAGE}");
                     }
                     args.bundle = Some(PathBuf::from(arg));
                 }
@@ -100,14 +106,36 @@ OPTIONS:
         Ok(args)
     }
 
-    /// `<exe dir>/game.bundle.json` — the layout `dotzuki export --native`
-    /// writes.
+    /// `<exe dir>/game.dzpk` — the layout `dotzuki export --native` writes —
+    /// falling back to a legacy `<exe dir>/game.bundle.json` when no pack
+    /// exists (exports from older dotzuki versions).
     fn default_bundle_path() -> Result<PathBuf> {
         let exe = std::env::current_exe().context("cannot locate the player executable")?;
-        Ok(exe
+        let dir = exe
             .parent()
-            .context("player executable has no parent directory")?
-            .join("game.bundle.json"))
+            .context("player executable has no parent directory")?;
+        let pack = dir.join("game.dzpk");
+        if pack.is_file() {
+            return Ok(pack);
+        }
+        Ok(dir.join("game.bundle.json"))
+    }
+
+    /// Open a pack file as a [`ProjectFiles`] view: `.dzpk` when the magic
+    /// matches, legacy base64 JSON otherwise.
+    fn open_bundle(path: &std::path::Path) -> Result<Arc<dyn ProjectFiles>> {
+        let bytes = std::fs::read(path)
+            .with_context(|| format!("failed to read game pack {}", path.display()))?;
+        if bytes.starts_with(&MAGIC) {
+            let pack = PackFiles::from_bytes(bytes)
+                .with_context(|| format!("failed to parse game pack {}", path.display()))?;
+            return Ok(Arc::new(pack));
+        }
+        let json = String::from_utf8(bytes)
+            .with_context(|| format!("{} is neither a .dzpk pack nor bundle JSON", path.display()))?;
+        let files = decode_bundle_files(&json)
+            .with_context(|| format!("failed to decode game bundle {}", path.display()))?;
+        Ok(Arc::new(MemoryFiles::new(files)))
     }
 
     pub fn main() -> Result<()> {
@@ -116,11 +144,8 @@ OPTIONS:
             Some(path) => path.clone(),
             None => default_bundle_path()?,
         };
-        let json = std::fs::read_to_string(&bundle_path)
-            .with_context(|| format!("failed to read game bundle {}", bundle_path.display()))?;
-        let files = decode_bundle_files(&json)
-            .with_context(|| format!("failed to decode game bundle {}", bundle_path.display()))?;
-        let project = LoadedProject::load_with_files(Arc::new(MemoryFiles::new(files)))
+        let files = open_bundle(&bundle_path)?;
+        let project = LoadedProject::load_with_files(files)
             .context("failed to boot the bundled project")?;
         let title = project.manifest().name.clone();
 

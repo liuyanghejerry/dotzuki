@@ -1,12 +1,15 @@
 //! Browser playtest shell for `dotzuki-runner`: [`WasmRunner`].
 //!
-//! The editor (or any web page) ships a whole zero-Rust game project as a
-//! JSON object of `path → base64` file contents; this crate boots a
-//! [`RunnerGame`] over an in-memory file system ([`MemoryFiles`]) and exposes
-//! a frame-driven `tick(input_bitmask) → RGBA bytes` loop suitable for a
-//! `<canvas>` `ImageData` blit. Save persistence is the caller's job:
+//! The editor (or any web page) ships a whole zero-Rust game project either
+//! as a `.dzpk` binary pack ([`WasmRunner::from_pack`] — what
+//! `dotzuki export --web` produces) or as a JSON object of `path → base64`
+//! file contents (the constructor — what the editor's Play activity posts);
+//! this crate boots a [`RunnerGame`] over an in-memory file system
+//! ([`MemoryFiles`] / [`PackFiles`](dotzuki_runner::pack::PackFiles)) and
+//! exposes a frame-driven `tick(input_bitmask) → RGBA bytes` loop suitable
+//! for a `<canvas>` `ImageData` blit. Save persistence is the caller's job:
 //! [`WasmRunner::export_save`] hands out save JSON (e.g. for `localStorage`)
-//! and [`WasmRunner::import_save`] / the constructor's `save_json` restore it.
+//! and [`WasmRunner::import_save`] / the boot `save_json` restore it.
 //!
 //! ## Input bitmask
 //!
@@ -52,7 +55,8 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use dotzuki_engine::render::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 use dotzuki_renderer::input::InputState;
-use dotzuki_runner::vfs::MemoryFiles;
+use dotzuki_runner::pack::PackFiles;
+use dotzuki_runner::vfs::{MemoryFiles, ProjectFiles};
 use dotzuki_runner::{LoadedProject, RunnerGame, RunnerOptions, SCREEN_H, SCREEN_W};
 use wasm_bindgen::prelude::*;
 
@@ -99,7 +103,26 @@ impl WasmRunner {
     pub fn new(files_json: &str, save_json: Option<String>) -> Result<WasmRunner, JsValue> {
         #[cfg(feature = "debug-panic-hook")]
         console_error_panic_hook::set_once();
-        Self::boot(files_json, save_json.as_deref()).map_err(|e| JsValue::from_str(&e))
+        let files = decode_files(files_json).map_err(|e| JsValue::from_str(&e))?;
+        Self::boot_with_files(Arc::new(MemoryFiles::new(files)), save_json.as_deref())
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    /// Boot a project shipped as a `.dzpk` binary pack (the format
+    /// `dotzuki export --web` writes as `game.dzpk`): no base64, no JSON —
+    /// the pack's raw bytes are read in place via
+    /// [`PackFiles`](dotzuki_runner::pack::PackFiles). `save_json` behaves as
+    /// in the constructor.
+    ///
+    /// Fails with a human-readable message naming the offending file/step.
+    #[wasm_bindgen(js_name = fromPack)]
+    pub fn from_pack(pack: Vec<u8>, save_json: Option<String>) -> Result<WasmRunner, JsValue> {
+        #[cfg(feature = "debug-panic-hook")]
+        console_error_panic_hook::set_once();
+        let files = PackFiles::from_bytes(pack)
+            .map_err(|e| JsValue::from_str(&format!("invalid game pack: {e:#}")))?;
+        Self::boot_with_files(Arc::new(files), save_json.as_deref())
+            .map_err(|e| JsValue::from_str(&e))
     }
 
     /// Advance one frame: feed `input_bitmask` (see crate docs) to the game,
@@ -166,9 +189,8 @@ impl WasmRunner {
 impl WasmRunner {
     /// Native/testable boot path (no `JsValue`): every failure is a plain
     /// `String` naming the file or step that failed.
-    fn boot(files_json: &str, save_json: Option<&str>) -> Result<Self, String> {
-        let files = decode_files(files_json)?;
-        let project = LoadedProject::load_with_files(Arc::new(MemoryFiles::new(files)))
+    fn boot_with_files(files: Arc<dyn ProjectFiles>, save_json: Option<&str>) -> Result<Self, String> {
+        let project = LoadedProject::load_with_files(files)
             .map_err(|e| format!("project load failed: {e:#}"))?;
         let opts = RunnerOptions {
             // WASM shell: no hot-reload watching (no disk), never open an
@@ -245,7 +267,7 @@ mod tests {
     #[test]
     fn boot_fails_with_named_step() {
         // An empty project: the manifest read fails inside project load.
-        let err = WasmRunner::boot(r#"{}"#, None)
+        let err = WasmRunner::boot_with_files(Arc::new(MemoryFiles::new(HashMap::new())), None)
             .err()
             .expect("boot should fail");
         assert!(err.contains("project load failed"), "{err}");

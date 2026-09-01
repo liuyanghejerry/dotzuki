@@ -54,10 +54,10 @@ enum Commands {
     Export {
         /// Project root containing .dotzuki-editor.json
         dir: PathBuf,
-        /// Export a static web site (index.html + game.bundle.json + wasm runner)
+        /// Export a static web site (index.html + game.dzpk + wasm runner)
         #[arg(long, group = "target")]
         web: bool,
-        /// Export a native app directory (dotzuki-player binary + game.bundle.json)
+        /// Export a native app directory (dotzuki-player binary + game.dzpk)
         #[arg(long, group = "target")]
         native: bool,
         /// Output directory (default: <project>/dist/web or <project>/dist/native)
