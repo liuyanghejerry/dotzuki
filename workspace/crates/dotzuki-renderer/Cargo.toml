@@ -25,7 +25,7 @@ image-assets = ["dep:image"]
 resource = ["dep:image"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.5.6" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
 log = "0.4"
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -42,4 +42,4 @@ getrandom = { version = "0.2", features = ["js"] }
 [dev-dependencies]
 # Round-trip tests compile the pokered `.gui` DSL layouts and verify they
 # deserialize into the matching element params (guards against codegen drift).
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.5.6" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.6.0" }
