@@ -3,14 +3,38 @@ import path from 'path'
 import fs from 'fs'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { sendJson, sendError, readBody, parseUrl } from '../http'
+import { prepareComponents } from '../../componentAtlas'
+import { validateConnectionSets } from '../../../src/lib/wallConnections'
+import { loadConfig } from '../projectConfig'
 import {
   groupsRoot,
   groupsIndexFile,
   groupsLayersFile,
   readGroupsIndex,
+  tilesRoot,
 } from '../tilesPaths'
 
 export function registerGroups(server: any) {
+  server.middlewares.use('/api/connection-sets', (req, res) => {
+    if (req.method !== 'GET') return sendError(res, 'Method Not Allowed', 405)
+    try {
+      if (!loadConfig().activities.some(a => a.type === 'tiles')) return sendJson(res, { sets: [] })
+      const file = path.join(tilesRoot(), 'connections.json')
+      const sets = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).sets : []
+      sendJson(res, { sets: validateConnectionSets(sets) })
+    } catch (error) { sendError(res, (error as Error).message, 400) }
+  })
+
+  server.middlewares.use('/api/groups-prepare', async (req, res) => {
+    if (req.method !== 'POST') return sendError(res, 'Method Not Allowed', 405)
+    try {
+      const { map, groupIds } = JSON.parse(await readBody(req))
+      sendJson(res, { ok: true, ...prepareComponents(map, groupIds) })
+    } catch (error) {
+      sendError(res, (error as Error).message, 400)
+    }
+  })
+
   function nextMiddleware(_req: IncomingMessage, res: ServerResponse) {
     res.writeHead(405); res.end('Method Not Allowed')
   }
