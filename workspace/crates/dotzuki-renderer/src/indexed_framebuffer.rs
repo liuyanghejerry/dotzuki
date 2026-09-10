@@ -23,6 +23,10 @@
 //! - The cost — bit twiddling in `set_pixel`/`get_pixel` — is negligible
 //!   for a fixed 5.7 KiB buffer.
 //!
+//! On GBA builds the same API deliberately uses one byte per pixel instead.
+//! That costs 23 KiB for the 160×144 framebuffer, but makes software drawing
+//! constant-time and leaves a 32-bit-aligned linear source for Mode 4 DMA.
+//!
 //! The bit width is derived from `C::MAX` (2 bits for [`GbColor`], 4 bits
 //! for [`GbaColor`]), so the same type serves both the 4-color DMG and
 //! 16-color GBA palettes. RGBA conversion is deferred to display time via
@@ -33,12 +37,12 @@
 //!
 //! Dimensions are fixed at construction (runtime values, like the engine's
 //! [`dotzuki_engine::render::FrameBuffer`]); [`Default`] is the 160×144 Game
-//! Boy screen. Storage is a `Vec` allocated exactly once at construction
-//! (`packed_len` bytes) and never resized. A compile-time-sized fixed-array
-//! variant is not possible on stable Rust today — array lengths cannot be
-//! computed from generic parameters (`generic_const_exprs` is unstable) —
-//! so the eventual no_std/GB step can swap the `Vec` for a static buffer
-//! without touching any other code.
+//! Boy screen. Storage is a `Vec` allocated exactly once at construction and
+//! never resized: `packed_len` bytes on hosted targets, or one aligned byte
+//! per pixel on GBA. A compile-time-sized fixed-array variant is not possible
+//! on stable Rust today — array lengths cannot be computed from generic
+//! parameters (`generic_const_exprs` is unstable) — so the eventual no_std/GB
+//! step can swap the `Vec` for a static buffer without touching other code.
 
 use std::marker::PhantomData;
 
@@ -92,13 +96,21 @@ pub const fn packed_len<C: ColorIndex>(width: usize, height: usize) -> usize {
 ///
 /// `C` is the palette index type ([`GbColor`] for 4-color DMG, [`GbaColor`]
 /// for 16-color GBA). Dimensions are chosen at construction (see
-/// [`Default`] for the 160×144 Game Boy screen). Storage is a packed planar
-/// bitplane array (see the [module docs](self)); index values are implicitly
-/// masked to the storage width on write.
+/// [`Default`] for the 160×144 Game Boy screen). Hosted storage is a packed
+/// planar bitplane array; GBA storage is chunky and DMA-aligned (see the
+/// [module docs](self)). Index values are implicitly masked to the storage
+/// width on write.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
-    /// Packed planar bitplane storage, `packed_len::<C>(width, height)` bytes.
+    /// Pixel storage. Hosted targets use packed planar bitplanes; the GBA
+    /// uses one byte per index to trade 17 KiB for much faster software
+    /// rasterization and direct Mode 4 presentation.
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     data: Vec<u8>,
+    // u32 backing guarantees the alignment required by 32-bit GBA DMA. The
+    // bytes are still addressed individually by the drawing API.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    data: Vec<u32>,
     /// Screen width in pixels.
     width: usize,
     /// Screen height in pixels.
@@ -110,8 +122,12 @@ pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
 impl<C: ColorIndex> IndexedFrameBuffer<C> {
     /// Create a new `width × height` buffer, cleared to `clear`.
     pub fn new(width: usize, height: usize, clear: C) -> Self {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let data = vec![0; (width * height + 3) / 4];
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        let data = vec![0; packed_len::<C>(width, height)];
         let mut fb = Self {
-            data: vec![0; packed_len::<C>(width, height)],
+            data,
             width,
             height,
             _phantom: PhantomData,
@@ -145,6 +161,13 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Clear the entire buffer to a single index.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    pub fn clear(&mut self, color: C) {
+        self.data
+            .fill(u32::from_ne_bytes([color.to_index() as u8; 4]));
+    }
+
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn clear(&mut self, color: C) {
         let value = color.to_index();
         let bits = index_bits::<C>();
@@ -166,6 +189,22 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Set a single pixel. Returns false if out of bounds.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn set_pixel(&mut self, x: u32, y: u32, color: C) -> bool {
+        if x >= self.width as u32 || y >= self.height as u32 {
+            return false;
+        }
+        let index = y as usize * self.width + x as usize;
+        unsafe {
+            (self.data.as_mut_ptr() as *mut u8)
+                .add(index)
+                .write(color.to_index() as u8);
+        }
+        true
+    }
+
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn set_pixel(&mut self, x: u32, y: u32, color: C) -> bool {
         if x >= self.width as u32 || y >= self.height as u32 {
             return false;
@@ -184,6 +223,18 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Get the index of a single pixel. Returns None if out of bounds.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn get_pixel(&self, x: u32, y: u32) -> Option<C> {
+        if x >= self.width as u32 || y >= self.height as u32 {
+            return None;
+        }
+        let index = y as usize * self.width + x as usize;
+        let value = unsafe { (self.data.as_ptr() as *const u8).add(index).read() };
+        Some(C::from_u8(value))
+    }
+
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn get_pixel(&self, x: u32, y: u32) -> Option<C> {
         if x >= self.width as u32 || y >= self.height as u32 {
             return None;
@@ -203,6 +254,22 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
 
     /// Fill a rectangular region with an index. Coordinates are clamped to
     /// buffer bounds.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
+        let x_start = (x as usize).min(self.width);
+        let y_start = (y as usize).min(self.height);
+        let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
+        let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        let value = color.to_index() as u8;
+        let pixels = unsafe {
+            core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, self.len())
+        };
+        for row in y_start..y_end {
+            pixels[row * self.width + x_start..row * self.width + x_end].fill(value);
+        }
+    }
+
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
         let y_start = (y as usize).min(self.height);
@@ -268,6 +335,7 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     /// [module docs](self). For [`GbColor`] this is GB 2bpp tile data, so
     /// any 8×8-aligned region can be fed directly to
     /// [`crate::tile::Tile::from_2bpp`].
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     #[inline]
     pub fn packed(&self) -> &[u8] {
         &self.data
@@ -276,9 +344,17 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     /// Mutable raw packed storage (e.g. for tile blits into 8×8-aligned
     /// regions, or for serialization). The caller must preserve the
     /// planar bitplane layout.
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     #[inline]
     pub fn packed_mut(&mut self) -> &mut [u8] {
         &mut self.data
+    }
+
+    /// GBA-only chunky one-byte-per-pixel storage, ready for Mode 4.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn indices(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.data.as_ptr() as *const u8, self.len()) }
     }
 }
 
@@ -693,8 +769,9 @@ impl FbSurface for dotzuki_engine::render::FrameBuffer {
 /// Fades and flashes become palette operations, the way real GB hardware
 /// does them: swap the display palette ([`Self::set_palette`],
 /// [`Self::remap_shades`], [`Self::scale_shades`], [`Self::apply_bgp`])
-/// instead of touching every pixel. The buffer itself stays packed 2bpp —
-/// 5,760 bytes for a 160×144 screen instead of 92,160.
+/// instead of touching every pixel. Hosted buffers stay packed 2bpp — 5,760
+/// bytes for a 160×144 screen instead of 92,160 — while GBA builds use the
+/// module's DMA-friendly one-byte-per-pixel representation.
 ///
 /// `base` doubles as the initial display palette; [`Self::reset_palette`]
 /// restores it. The indexed API remains reachable via [`Self::indexed`] /
@@ -792,15 +869,24 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     }
 
     /// Raw packed 2bpp storage (see [`IndexedFrameBuffer::packed`]).
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     #[inline]
     pub fn packed(&self) -> &[u8] {
         self.buffer.packed()
     }
 
     /// Mutable raw packed storage.
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     #[inline]
     pub fn packed_mut(&mut self) -> &mut [u8] {
         self.buffer.packed_mut()
+    }
+
+    /// GBA-only chunky one-byte-per-pixel storage, ready for Mode 4.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn indices(&self) -> &[u8] {
+        self.buffer.indices()
     }
 
     /// Expand the buffer into RGBA using the *display* palette.
@@ -813,9 +899,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Copy the pixels and display palette of `other` into this buffer.
     /// Both buffers must have the same dimensions.
     pub fn copy_from(&mut self, other: &Self) {
-        self.buffer
-            .packed_mut()
-            .copy_from_slice(other.buffer.packed());
+        self.buffer.data.copy_from_slice(&other.buffer.data);
         self.palette = other.palette;
         self.base = other.base;
         self.fast_grayscale = other.fast_grayscale;

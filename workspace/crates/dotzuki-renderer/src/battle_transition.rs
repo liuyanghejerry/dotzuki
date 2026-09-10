@@ -287,6 +287,27 @@ impl<C: crate::palette::ColorIndex> TransitionFb for crate::IndexedFrameBuffer<C
             C::from_u8(3),
         );
     }
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        let (w, h) = self.size();
+        let px = tx * TILE_SIZE as usize;
+        let py = ty * TILE_SIZE as usize;
+        let spx = stx * TILE_SIZE as usize;
+        let spy = sty * TILE_SIZE as usize;
+        for dy in 0..TILE_SIZE as usize {
+            for dx in 0..TILE_SIZE as usize {
+                let (x, y) = (px + dx, py + dy);
+                let (sx, sy) = (spx + dx, spy + dy);
+                if x < w && y < h && sx < w && sy < h {
+                    if let Some(index) = src.get_pixel(sx as u32, sy as u32) {
+                        self.set_pixel(x as u32, y as u32, index);
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
         let bits = crate::index_bits::<C>();
         let gpr = (self.width() + 7) / 8;
