@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7f4bff94.js";
+            window.path_to_searchindex_js = "searchindex-4d36ace7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-797479cc.js"></script>
+        <script src="toc-14e5a394.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -227,6 +227,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code> (JSON) maps, tilesets, elevation, entities and the <code>objects.json</code> sidecar</td></tr>
+<tr><td><a href="#edit-linked-buildings-and-connected-walls"><code>how-to/map-components.md</code></a></td><td>Linked buildings, source updates, imported atlas preservation, and connected wall painting</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>Authoring <code>.scene</code> stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles</td></tr>
 <tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>Authoring <code>.gui</code> layouts: the 20×18 grid, panels/text, template bindings, <code>@t</code> labels, custom components</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
@@ -1311,6 +1312,72 @@ never rolls, and turning in place is not a step. Absent (or <code>null</code>)
 <p>The encounter record schema lives in
 <a href="#encounter-records">Encounter records</a>; sceneless
 battle outcomes live in <a href="#battles">battle rules</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="edit-linked-buildings-and-connected-walls"><a class="header" href="#edit-linked-buildings-and-connected-walls">Edit linked buildings and connected walls</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+</blockquote>
+<p>Reuse pixel artwork across a map and select wall corners from neighboring cells.</p>
+<p>Before you start, read <a href="#maps">Maps</a> and configure the map and tiles activities
+in your <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a>.</p>
+<h2 id="place-and-update-buildings"><a class="header" href="#place-and-update-buildings">Place and update buildings</a></h2>
+<ol>
+<li>Open <strong>Maps</strong> and select a map. Double-click a building thumbnail to edit its pixels.</li>
+<li>Save the building. Its PNG and editable layer sidecar remain in the shared tiles directory.</li>
+<li>Select a visual layer, enable <strong>Link buildings</strong>, and stamp the building on the map.</li>
+<li>Edit and save that building again, then click <strong>Update components</strong> on the map toolbar.</li>
+<li>Save the map. Repeat the update on other maps that use the same building.</li>
+</ol>
+<p>A <a href="#map-components">linked component</a> stores its source ID,
+revision, position, previous cells, and covered cells on the map layer. Updates preserve
+positions and restore previous cells when source pixels become transparent. The toolbar
+reports updated and skipped instances. Resized sources, missing sources, or externally
+changed footprints require review; updates do not overwrite those footprints.</p>
+<p>Normal tile painting detaches any component that covers the edited cell. Disable
+<strong>Link buildings</strong> before stamping an independent copy. Undo and redo restore pixels and
+links together. An update creates one undo entry per changed layer. Resizing the map moves
+links with their cells and drops links whose footprints extend outside the new dimensions.</p>
+<p>Existing stamps created before this feature remain independent until replaced with linked stamps.</p>
+<h2 id="draw-connected-walls"><a class="header" href="#draw-connected-walls">Draw connected walls</a></h2>
+<p>Create sixteen nonempty 1×1 building groups for one wall material. Use the same thickness,
+outline, and light direction for every group. Store the following file as <code>connections.json</code>
+inside the configured shared tiles directory. Replace each group ID with your artwork’s ID.</p>
+<pre><code class="language-json">{
+  "version": 1,
+  "sets": [{
+    "id": "plaster",
+    "name": "Plaster walls",
+    "variants": {
+      "0": "wall-island", "1": "wall-n", "2": "wall-e", "3": "wall-ne",
+      "4": "wall-s", "5": "wall-ns", "6": "wall-es", "7": "wall-nes",
+      "8": "wall-w", "9": "wall-nw", "10": "wall-ew", "11": "wall-new",
+      "12": "wall-sw", "13": "wall-nsw", "14": "wall-esw", "15": "wall-cross"
+    }
+  }]
+}
+</code></pre>
+<p>The <a href="#map-components">connection mask</a> adds north=1, east=2,
+south=4, and west=8. For example, an east-west wall uses variant 10; an isolated cell uses 0.
+Different sets and layers do not connect to one another.</p>
+<p>Reload the editor, select <strong>Walls</strong>, choose a set, and drag on a visual layer. Left-drag adds
+walls; right-drag removes walls and restores covered cells. Adjacent walls select their
+corners, junctions, and end caps after each stroke. Undo restores the entire stroke.
+Use right-drag in <strong>Walls</strong> when erasing so neighboring end caps update too.</p>
+<p>The wall brush edits visual cells. Paint the corresponding collision layer for blocked walls,
+and leave doorway cells passable. Place wall faces and doors as separate linked buildings.</p>
+<h2 id="keep-imported-atlas-artwork"><a class="header" href="#keep-imported-atlas-artwork">Keep imported atlas artwork</a></h2>
+<p>Building stamps and component updates retain existing GIDs and copy old pixels directly from
+the map’s <code>tileset.png</code>. Old artwork does not need matching shared-library PNGs. Missing
+column metadata is inferred from the image width. New component cells append to the atlas.</p>
+<p>If neither the atlas nor its referenced shared tiles is available, preparation reports an error
+before writing files. Restore the missing image and retry. Map save and undo affect map cells;
+appended atlas slots remain available after undo. The editor does not compact unused slots.</p>
+<p>For asset backup and source formats, see <a href="#assets">Assets</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="scenes"><a class="header" href="#scenes">Scenes</a></h1>
 <p>How to author <code>.scene</code> story files: NPC dialogue, map-entry cutscenes,
@@ -7658,7 +7725,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -7688,6 +7755,14 @@ per-locale values, and the runtime language selects the value. See
 <a href="#i18n-guide">the i18n guide</a>.</li>
 <li><strong>RON</strong> — the Rusty Object Notation config format used for battle rules
 (<code>rules.ron</code>).</li>
+</ul>
+<h2 id="map-components"><a class="header" href="#map-components">Map components</a></h2>
+<ul>
+<li><strong>linked component</strong>（关联组件）— a building instance with its source ID, revision,
+footprint, and previous cells stored on a map layer; source updates preserve its position.</li>
+<li><strong>connection mask</strong>（连接掩码）— the sum of occupied cardinal neighbors: north=1,
+east=2, south=4, and west=8. Selects one of sixteen wall component variants.
+See <a href="#edit-linked-buildings-and-connected-walls">map components</a>.</li>
 </ul>
 <h2 id="engine"><a class="header" href="#engine">Engine</a></h2>
 <ul>
@@ -13781,6 +13856,67 @@ encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录
 <code>encounters</code> 缺失（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
 <p>encounter 记录的 schema 见 <a href="#encounter-records">Encounter 记录</a>；
 sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="编辑关联建筑与连接墙体"><a class="header" href="#编辑关联建筑与连接墙体">编辑关联建筑与连接墙体</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+<p>本文是 <a href="#edit-linked-buildings-and-connected-walls">map-components.md</a> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit <code>494271d</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>在地图中复用像素素材，并根据相邻格选择墙角。</p>
+<p>开始前，请阅读<a href="#地图">地图指南</a>，并在<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>
+中配置 map 和 tiles 活动。</p>
+<h2 id="放置和更新建筑"><a class="header" href="#放置和更新建筑">放置和更新建筑</a></h2>
+<ol>
+<li>打开 <strong>地图</strong> 并选择地图，双击建筑缩略图编辑像素。</li>
+<li>保存建筑。PNG 和可编辑图层附属文件保存在共享图块目录中。</li>
+<li>选择可见图层，启用 <strong>关联建筑</strong>，在地图上盖章放置建筑。</li>
+<li>再次编辑并保存该建筑，点击地图工具栏的 <strong>更新组件</strong>。</li>
+<li>保存地图；其他使用同一建筑的地图需要分别执行更新。</li>
+</ol>
+<p><a href="#map-components">linked component</a>（关联组件）在地图图层中记录
+源 ID、版本、位置、原有格子和覆盖格子。更新保留位置；源像素变透明时恢复原有格子。
+工具栏报告更新和跳过的数量。源尺寸改变、源缺失或覆盖范围被外部修改时，需要检查对应实例，
+更新操作不会覆盖这些实例。</p>
+<p>普通图块绘制会解除覆盖该格的组件关联。盖章前关闭 <strong>关联建筑</strong> 可放置独立副本。
+撤销和重做同时恢复像素与关联；更新操作为每个发生变化的图层生成一个撤销记录。
+调整地图尺寸会让关联随格子移动，超出新边界的组件会解除关联。</p>
+<p>此功能加入前放置的建筑保持独立，需要重新以关联方式放置。</p>
+<h2 id="绘制连接墙体"><a class="header" href="#绘制连接墙体">绘制连接墙体</a></h2>
+<p>为一种墙体材质制作十六个非空的 1×1 建筑组件，统一厚度、轮廓和光照方向。
+在共享图块目录创建 <code>connections.json</code>，内容如下，并将各组 ID 换成素材的 ID。</p>
+<pre><code class="language-json">{
+  "version": 1,
+  "sets": [{
+    "id": "plaster",
+    "name": "Plaster walls",
+    "variants": {
+      "0": "wall-island", "1": "wall-n", "2": "wall-e", "3": "wall-ne",
+      "4": "wall-s", "5": "wall-ns", "6": "wall-es", "7": "wall-nes",
+      "8": "wall-w", "9": "wall-nw", "10": "wall-ew", "11": "wall-new",
+      "12": "wall-sw", "13": "wall-nsw", "14": "wall-esw", "15": "wall-cross"
+    }
+  }]
+}
+</code></pre>
+<p><a href="#map-components">connection mask</a>（连接掩码）取北=1、东=2、南=4、
+西=8 的和。例如东西连接使用 10，孤立格使用 0。不同规则组、不同图层之间不相连。</p>
+<p>重新加载编辑器，选择 <strong>墙体</strong> 和规则组，在可见图层上拖动。左键添加墙体，右键删除墙体并
+恢复下方格子。每笔结束后，相邻墙体自动选择转角、交叉口和端头。撤销恢复整笔操作。
+删除墙体时请在 <strong>墙体</strong> 工具中右键拖动，让相邻端头一起更新。</p>
+<p>墙体笔刷编辑可见格子。请在对应碰撞图层标记墙体阻挡，并让门洞格子保持可通行。
+墙立面和门板作为独立关联建筑放置。</p>
+<h2 id="保留导入的图集素材"><a class="header" href="#保留导入的图集素材">保留导入的图集素材</a></h2>
+<p>建筑盖章和组件更新保留原有 GID，直接从地图的 <code>tileset.png</code> 复制旧像素，
+不要求共享素材库包含旧图块的 PNG。缺失列数时从图片宽度推算，新组件格子追加到图集。</p>
+<p>如果图集和引用的共享图块都不存在，准备操作会在写文件前报告错误；恢复图片后重试。
+地图保存和撤销影响地图格子，追加的图集位置在撤销后仍保留，编辑器不会压缩未使用位置。</p>
+<p>素材备份和源格式请参阅<a href="#素材">素材指南</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="场景"><a class="header" href="#场景">场景</a></h1>
 <p>如何编写 <code>.scene</code> 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。</p>

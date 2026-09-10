@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7f4bff94.js";
+            window.path_to_searchindex_js = "../searchindex-4d36ace7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-797479cc.js"></script>
+        <script src="../toc-14e5a394.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -216,6 +216,14 @@ per-locale values, and the runtime language selects the value. See
 <a href="../how-to/i18n.html">the i18n guide</a>.</li>
 <li><strong>RON</strong> — the Rusty Object Notation config format used for battle rules
 (<code>rules.ron</code>).</li>
+</ul>
+<h2 id="map-components"><a class="header" href="#map-components">Map components</a></h2>
+<ul>
+<li><strong>linked component</strong>（关联组件）— a building instance with its source ID, revision,
+footprint, and previous cells stored on a map layer; source updates preserve its position.</li>
+<li><strong>connection mask</strong>（连接掩码）— the sum of occupied cardinal neighbors: north=1,
+east=2, south=4, and west=8. Selects one of sixteen wall component variants.
+See <a href="../how-to/map-components.html">map components</a>.</li>
 </ul>
 <h2 id="engine"><a class="header" href="#engine">Engine</a></h2>
 <ul>
