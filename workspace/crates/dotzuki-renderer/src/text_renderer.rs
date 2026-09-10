@@ -54,26 +54,19 @@ impl ScreenTileBuffer {
     }
 
     pub fn render(&self, fb: &mut impl FbSurface, tileset: &TileSet, palette: &Palette) {
-        let fb_w = fb.width();
-        let fb_h = fb.height();
         for ty in 0..self.height_tiles {
             for tx in 0..self.width_tiles {
                 let tile_id = self.get(tx, ty) as usize;
                 let tile = tileset.get(tile_id);
-                let screen_x = tx * TILE_SIZE;
-                let screen_y = ty * TILE_SIZE;
-
-                for row in 0..TILE_SIZE {
-                    for col in 0..TILE_SIZE {
-                        let px = screen_x + col;
-                        let py = screen_y + row;
-                        if px < fb_w && py < fb_h {
-                            let color_idx = tile.get(row as usize, col as usize);
-                            let rgba = palette.color(crate::palette::GbColor::from_u8(color_idx));
-                            fb.set_pixel(px, py, rgba);
-                        }
-                    }
-                }
+                fb.blit_gb_tile(
+                    (tx * TILE_SIZE) as i32,
+                    (ty * TILE_SIZE) as i32,
+                    tile,
+                    palette,
+                    false,
+                    false,
+                    false,
+                );
             }
         }
     }
@@ -88,8 +81,6 @@ impl ScreenTileBuffer {
         tw: u32,
         th: u32,
     ) {
-        let fb_w = fb.width();
-        let fb_h = fb.height();
         let tx_end = (tx_start + tw).min(self.width_tiles);
         let ty_end = (ty_start + th).min(self.height_tiles);
 
@@ -97,20 +88,15 @@ impl ScreenTileBuffer {
             for tx in tx_start..tx_end {
                 let tile_id = self.get(tx, ty) as usize;
                 let tile = tileset.get(tile_id);
-                let screen_x = tx * TILE_SIZE;
-                let screen_y = ty * TILE_SIZE;
-
-                for row in 0..TILE_SIZE {
-                    for col in 0..TILE_SIZE {
-                        let px = screen_x + col;
-                        let py = screen_y + row;
-                        if px < fb_w && py < fb_h {
-                            let color_idx = tile.get(row as usize, col as usize);
-                            let rgba = palette.color(crate::palette::GbColor::from_u8(color_idx));
-                            fb.set_pixel(px, py, rgba);
-                        }
-                    }
-                }
+                fb.blit_gb_tile(
+                    (tx * TILE_SIZE) as i32,
+                    (ty * TILE_SIZE) as i32,
+                    tile,
+                    palette,
+                    false,
+                    false,
+                    false,
+                );
             }
         }
     }

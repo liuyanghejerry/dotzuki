@@ -47,6 +47,7 @@
 use core::marker::PhantomData;
 
 use crate::palette::{ColorIndex, GbColor, GbaColor, Palette, GRAYSCALE_PALETTE};
+use crate::tile::{Tile, TILE_PIXELS};
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render_config::RenderConfig;
 
@@ -720,6 +721,51 @@ pub trait FbSurface: Sized {
     fn clear(&mut self, color: Rgba);
     /// Fill a rectangular region with a color (clamped to bounds).
     fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba);
+    /// Blit one decoded Game Boy tile, clipped to the surface.
+    ///
+    /// The default implementation preserves the ordinary RGBA drawing
+    /// semantics. Indexed surfaces override it so the four palette entries
+    /// are quantized once per tile rather than once per pixel.
+    fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+        for dst_row in 0..TILE_PIXELS {
+            let dst_y = y + dst_row as i32;
+            if dst_y < 0 || dst_y >= height {
+                continue;
+            }
+            let src_row = if flip_y {
+                TILE_PIXELS - 1 - dst_row
+            } else {
+                dst_row
+            };
+            for dst_col in 0..TILE_PIXELS {
+                let dst_x = x + dst_col as i32;
+                if dst_x < 0 || dst_x >= width {
+                    continue;
+                }
+                let src_col = if flip_x {
+                    TILE_PIXELS - 1 - dst_col
+                } else {
+                    dst_col
+                };
+                let color = palette.color(GbColor::from_u8(tile.pixels[src_row][src_col]));
+                if transparent && color == Rgba::TRANSPARENT {
+                    continue;
+                }
+                self.set_pixel(dst_x as u32, dst_y as u32, color);
+            }
+        }
+    }
     /// Read a single pixel as RGBA; out-of-bounds reads return transparent.
     fn pixel_rgba(&self, x: u32, y: u32) -> Rgba {
         self.get_pixel(x, y).unwrap_or(Rgba::TRANSPARENT)
@@ -979,6 +1025,85 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         self.buffer.fill_rect(x, y, rect_width, rect_height, index);
     }
 
+    /// Blit one decoded Game Boy tile through `palette`, clipped to the
+    /// framebuffer. The four RGBA palette entries are converted to the base
+    /// indices once, then reused for every source pixel.
+    #[inline]
+    pub fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let rgba = [
+            palette.color(GbColor::White),
+            palette.color(GbColor::LightGray),
+            palette.color(GbColor::DarkGray),
+            palette.color(GbColor::Black),
+        ];
+        let mapped = [
+            self.quantize_color(rgba[0]),
+            self.quantize_color(rgba[1]),
+            self.quantize_color(rgba[2]),
+            self.quantize_color(rgba[3]),
+        ];
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+        let tile_size = TILE_PIXELS as i32;
+        let x_start = x.saturating_neg().clamp(0, tile_size) as usize;
+        let y_start = y.saturating_neg().clamp(0, tile_size) as usize;
+        let x_end = width.saturating_sub(x).clamp(0, tile_size) as usize;
+        let y_end = height.saturating_sub(y).clamp(0, tile_size) as usize;
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let mapped = [
+            mapped[0].to_index() as u8,
+            mapped[1].to_index() as u8,
+            mapped[2].to_index() as u8,
+            mapped[3].to_index() as u8,
+        ];
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+
+        for dst_row in y_start..y_end {
+            let src_row = if flip_y {
+                TILE_PIXELS - 1 - dst_row
+            } else {
+                dst_row
+            };
+            for dst_col in x_start..x_end {
+                let src_col = if flip_x {
+                    TILE_PIXELS - 1 - dst_col
+                } else {
+                    dst_col
+                };
+                let source = (tile.pixels[src_row][src_col] & 0x03) as usize;
+                if transparent && rgba[source] == Rgba::TRANSPARENT {
+                    continue;
+                }
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                unsafe {
+                    let offset = (y + dst_row as i32) as usize * width as usize
+                        + (x + dst_col as i32) as usize;
+                    destination.add(offset).write(mapped[source]);
+                }
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                self.buffer.set_pixel(
+                    (x + dst_col as i32) as u32,
+                    (y + dst_row as i32) as u32,
+                    mapped[source],
+                );
+            }
+        }
+    }
+
     /// Copy a horizontal line of RGBA data into the buffer (each pixel
     /// quantized through the base palette). `src` must be exactly
     /// `count * 4` bytes. Returns false if the line goes out of bounds.
@@ -1032,6 +1157,95 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     }
 }
 
+impl RgbaIndexedFrameBuffer<GbColor> {
+    /// Blit a tile whose 2-bit pixel values already use the framebuffer's
+    /// index order. This bypasses RGBA palette conversion entirely.
+    ///
+    /// Use this for GB backgrounds (and other identity-palette tiles). When
+    /// `transparent_zero` is set, source index zero leaves the destination
+    /// unchanged, matching Game Boy OBJ transparency.
+    #[inline]
+    pub fn blit_gb_tile_indices(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        transparent_zero: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+
+        // The GBA framebuffer is one byte per pixel. The overwhelmingly
+        // common aligned/background case is eight short row copies with no
+        // per-pixel bounds checks or palette work.
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if !transparent_zero
+            && !flip_x
+            && !flip_y
+            && x >= 0
+            && y >= 0
+            && x + TILE_PIXELS as i32 <= width
+            && y + TILE_PIXELS as i32 <= height
+        {
+            let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+            for row in 0..TILE_PIXELS {
+                unsafe {
+                    core::ptr::copy_nonoverlapping(
+                        tile.pixels[row].as_ptr(),
+                        destination.add((y as usize + row) * width as usize + x as usize),
+                        TILE_PIXELS,
+                    );
+                }
+            }
+            return;
+        }
+
+        let tile_size = TILE_PIXELS as i32;
+        let x_start = x.saturating_neg().clamp(0, tile_size) as usize;
+        let y_start = y.saturating_neg().clamp(0, tile_size) as usize;
+        let x_end = width.saturating_sub(x).clamp(0, tile_size) as usize;
+        let y_end = height.saturating_sub(y).clamp(0, tile_size) as usize;
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+        for dst_row in y_start..y_end {
+            let src_row = if flip_y {
+                TILE_PIXELS - 1 - dst_row
+            } else {
+                dst_row
+            };
+            for dst_col in x_start..x_end {
+                let src_col = if flip_x {
+                    TILE_PIXELS - 1 - dst_col
+                } else {
+                    dst_col
+                };
+                let source = tile.pixels[src_row][src_col] & 0x03;
+                if transparent_zero && source == 0 {
+                    continue;
+                }
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                unsafe {
+                    let offset = (y + dst_row as i32) as usize * width as usize
+                        + (x + dst_col as i32) as usize;
+                    destination.add(offset).write(source);
+                }
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                self.buffer.set_pixel(
+                    (x + dst_col as i32) as u32,
+                    (y + dst_row as i32) as u32,
+                    GbColor::from_u8(source),
+                );
+            }
+        }
+    }
+}
+
 impl<C: ColorIndex + DefaultPalette> RgbaIndexedFrameBuffer<C> {
     /// Create a `config`-sized buffer using the type's default base palette,
     /// cleared to `clear`.
@@ -1074,6 +1288,18 @@ impl<C: ColorIndex + DefaultPalette> FbSurface for RgbaIndexedFrameBuffer<C> {
     }
     fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba) {
         self.fill_rect(x, y, rect_width, rect_height, color)
+    }
+    fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        self.blit_gb_tile(x, y, tile, palette, transparent, flip_x, flip_y)
     }
     fn present_into(&self, out: &mut [u8]) {
         assert!(out.len() >= self.len() * 4, "present buffer too small");
@@ -1162,6 +1388,59 @@ mod facade_tests {
         assert!(!fb.set_pixel(0, 144, Rgba::BLACK));
         assert_eq!(fb.get_pixel(160, 0), None);
         assert_eq!(fb.pixel_rgba(160, 0), Rgba::TRANSPARENT);
+    }
+
+    #[test]
+    fn gb_tile_blit_maps_palette_and_preserves_transparency() {
+        let mut tile = Tile::blank();
+        tile.pixels[0] = [0, 1, 2, 3, 0, 1, 2, 3];
+        let palette = Palette::new(&[
+            Rgba::TRANSPARENT,
+            Rgba::BLACK,
+            Rgba::rgb(0x55, 0x55, 0x55),
+            Rgba::rgb(0xAA, 0xAA, 0xAA),
+        ]);
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 2), Rgba::WHITE);
+
+        fb.blit_gb_tile(0, 0, &tile, &palette, true, false, false);
+
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::Black));
+        assert_eq!(fb.get_index(2, 0), Some(GbColor::DarkGray));
+        assert_eq!(fb.get_index(3, 0), Some(GbColor::LightGray));
+    }
+
+    #[test]
+    fn gb_tile_blit_clips_and_flips() {
+        let mut tile = Tile::blank();
+        tile.pixels[7][7] = 3;
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(4, 4), Rgba::WHITE);
+
+        fb.blit_gb_tile(-7, -7, &tile, &GRAYSCALE_PALETTE, false, true, true);
+
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(3, 3), Some(GbColor::White));
+
+        fb.blit_gb_tile(-7, -7, &tile, &GRAYSCALE_PALETTE, false, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
+    }
+
+    #[test]
+    fn gb_tile_index_blit_copies_indices_and_skips_zero() {
+        let mut tile = Tile::blank();
+        tile.pixels[0] = [0, 1, 2, 3, 0, 1, 2, 3];
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 2), Rgba::BLACK);
+
+        fb.blit_gb_tile_indices(0, 0, &tile, false, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
+        assert_eq!(fb.get_index(2, 0), Some(GbColor::DarkGray));
+        assert_eq!(fb.get_index(3, 0), Some(GbColor::Black));
+
+        fb.clear_index(GbColor::Black);
+        fb.blit_gb_tile_indices(0, 0, &tile, true, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
     }
 
     #[test]
