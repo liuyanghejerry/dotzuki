@@ -306,6 +306,23 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
 
   // ── Map tileset I/O (consumed by the Map editor's own build flow) ──
 
+  async function prepareComponents(map: string, groupIds: string[]): Promise<import('../lib/mapComponents').PreparedComponent[] | null> {
+    error.value = null
+    try {
+      const r = await fetch('api/groups-prepare', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map, groupIds }),
+      })
+      const j = await r.json()
+      if (!r.ok || !j.ok) throw new Error(j.error ?? 'Component preparation failed')
+      version.value++
+      return j.components
+    } catch (e) {
+      error.value = (e as Error).message
+      return null
+    }
+  }
+
   /** The saved tile sequence + column count for a map (empty if none yet). */
   async function loadTilesetSeq(map: string): Promise<{ tileIds: string[]; cols: number }> {
     try {
@@ -342,6 +359,7 @@ export const useTilesActivity = defineStore('tilesActivity', () => {
   }
 
   return {
+    prepareComponents,
     tiles, libraryTiles, backdrops, groups, loading, error, version,
     loadLibrary, loadBackdrops, loadTilesetSeq,
     saveTile, saveTiles, deleteTile, deleteTiles, buildTileset, tileUrl,

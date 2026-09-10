@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.6.0
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -34,6 +34,14 @@ original form in Chinese text.
   [the i18n guide](../how-to/i18n.md).
 - **RON** — the Rusty Object Notation config format used for battle rules
   (`rules.ron`).
+
+## Map components
+
+- **linked component**（关联组件）— a building instance with its source ID, revision,
+  footprint, and previous cells stored on a map layer; source updates preserve its position.
+- **connection mask**（连接掩码）— the sum of occupied cardinal neighbors: north=1,
+  east=2, south=4, and west=8. Selects one of sixteen wall component variants.
+  See [map components](../how-to/map-components.md).
 
 ## Engine
 
