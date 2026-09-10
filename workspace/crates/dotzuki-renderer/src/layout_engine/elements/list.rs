@@ -200,7 +200,7 @@ fn data_value_to_string(value: &DataValue) -> String {
 mod tests {
     use super::*;
     use dotzuki_engine::render::TileRect;
-    use std::cell::RefCell;
+    use core::cell::RefCell;
 
     // ── Test double: MockPainter ─────────────────────────────────────
 
@@ -225,7 +225,7 @@ mod tests {
             }
         }
 
-        fn ops(&self) -> std::cell::Ref<'_, Vec<DrawOp>> {
+        fn ops(&self) -> core::cell::Ref<'_, Vec<DrawOp>> {
             self.ops.borrow()
         }
 

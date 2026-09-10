@@ -14,8 +14,8 @@
 //! | TeachMove | false | true | false | true |
 //! | Custom(Id) | true | true | true | true |
 
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 /// Broad classification of an item's purpose, influencing default shop, bag,
 /// and usage behaviour.

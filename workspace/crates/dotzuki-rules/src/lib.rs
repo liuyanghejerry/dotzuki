@@ -49,7 +49,39 @@
 //! the engine's `EffectState` arena, not the data — the reload swaps the
 //! *vocabulary*, never the *in-flight state*.
 
-#![forbid(unsafe_code)]
+// `forbid(unsafe_code)` holds on hosted builds; the bare-metal build uses one
+// audited `static mut` for the trace sink (std::thread_local! is unavailable
+// there), so it downgrades to `warn`.
+#![cfg_attr(not(target_os = "none"), forbid(unsafe_code))]
+#![cfg_attr(target_os = "none", warn(unsafe_code))]
+
+// no_std port (GBA / thumbv4t): the default build (baked rules, no
+// hot-reload) runs bare-metal — the disk source and `notify` watcher are
+// hosted-only, and RON parsing uses the vendored no_std ron.
+#![cfg_attr(target_os = "none", no_std)]
+#![cfg_attr(target_os = "none", feature(prelude_import))]
+#![cfg_attr(target_os = "none", allow(internal_features))]
+
+extern crate alloc;
+
+#[allow(unused_imports)]
+mod alloc_prelude {
+    pub use core::prelude::v1::*;
+    pub use core::convert::{TryFrom, TryInto};
+    pub use alloc::borrow::ToOwned;
+    pub use core::iter::FromIterator;
+    pub use alloc::boxed::Box;
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
+    pub use alloc::vec::Vec;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::debug_assert;
+}
+
+#[cfg_attr(target_os = "none", prelude_import)]
+#[allow(unused_imports)]
+use alloc_prelude::*;
 
 mod bindings;
 mod interp;

@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::layout_engine::types::{Coord, ElementParams, ElementRect, Visibility};
     use dotzuki_engine::render::{Rgba, TileRect};
-    use std::cell::RefCell;
+    use core::cell::RefCell;
 
     #[derive(Default)]
     struct Rec {

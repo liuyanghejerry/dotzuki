@@ -27,7 +27,7 @@
 //! let loaded = manager.load(SaveSlot::Slot1)?;
 //! ```
 
-use std::cell::RefCell;
+use core::cell::RefCell;
 
 /// Errors that can occur during save/load operations.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -149,7 +149,7 @@ pub trait SaveData: Sized {
 /// `S` is the game-specific type implementing [`SaveData`].
 pub struct SaveManager<S: SaveData> {
     storage: Box<dyn SaveStorage>,
-    _phantom: std::marker::PhantomData<S>,
+    _phantom: core::marker::PhantomData<S>,
 }
 
 impl<S: SaveData> SaveManager<S> {
@@ -157,7 +157,7 @@ impl<S: SaveData> SaveManager<S> {
     pub fn new(storage: Box<dyn SaveStorage>) -> Self {
         Self {
             storage,
-            _phantom: std::marker::PhantomData,
+            _phantom: core::marker::PhantomData,
         }
     }
 

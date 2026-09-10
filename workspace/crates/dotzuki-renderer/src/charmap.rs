@@ -3,6 +3,7 @@
 
 /// Encode an ASCII/UTF-8 character to the Game Boy charmap byte.
 /// Returns None if the character has no mapping.
+
 pub fn encode_char(c: char) -> Option<u8> {
     match c {
         'A' => Some(0x80),

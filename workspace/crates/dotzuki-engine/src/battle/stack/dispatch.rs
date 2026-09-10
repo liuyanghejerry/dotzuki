@@ -1,7 +1,7 @@
 //! Handler collection, the Showdown `comparePriority` comparator, the speed-tie
 //! draw, and the `run_event` dispatch fold (design §1.3, §3.4).
 
-use std::cmp::Ordering;
+use core::cmp::Ordering;
 
 use crate::battle::rng::BattleRng;
 use crate::battle::BattlerRef;
@@ -196,7 +196,7 @@ pub fn collect_handlers<P: EffectProvider>(
     //    be a game authoring choice, not an engine one — but we still avoid the
     //    obvious double when target == source.
     let battlers: &[BattlerRef] = if target == source {
-        std::slice::from_ref(&source)
+        core::slice::from_ref(&source)
     } else {
         &[target, source]
     };

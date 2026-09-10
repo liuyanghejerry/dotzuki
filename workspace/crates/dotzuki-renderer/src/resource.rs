@@ -12,7 +12,7 @@
 //! layout) and named load helpers — live in the game crate, which implements
 //! [`AssetKind`] for its own category type.
 
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 use std::path::{Path, PathBuf};
 
 use image::GenericImageView;
@@ -28,10 +28,12 @@ use dotzuki_engine::render::Rgba;
 /// Errors that can occur during resource loading.
 #[derive(Debug, Error)]
 pub enum ResourceError {
-    #[error("asset root directory not found: {0}")]
+    // `{0:?}` (not `{0}`): thiserror's no_std mode has no Display wrapper for
+    // std::path::PathBuf, so the path renders Debug-quoted.
+    #[error("asset root directory not found: {0:?}")]
     AssetRootNotFound(PathBuf),
 
-    #[error("PNG file not found: {0}")]
+    #[error("PNG file not found: {0:?}")]
     PngNotFound(PathBuf),
 
     #[error("failed to load PNG: {0}")]
@@ -47,7 +49,7 @@ pub enum ResourceError {
     Io(#[from] std::io::Error),
 }
 
-pub type Result<T> = std::result::Result<T, ResourceError>;
+pub type Result<T> = core::result::Result<T, ResourceError>;
 
 // ---------------------------------------------------------------------------
 // Grayscale → GB color index mapping
@@ -307,7 +309,7 @@ pub fn png_to_tileset_rgba(img: &image::DynamicImage) -> Result<TileSet> {
 ///
 /// Games implement this for their own category enum that reflects their
 /// asset directory layout.
-pub trait AssetKind: Copy + Eq + std::hash::Hash {
+pub trait AssetKind: Copy + Eq + core::hash::Hash {
     /// Subdirectory name under the asset root.
     fn subdir(self) -> &'static str;
 
@@ -561,7 +563,7 @@ impl<K: AssetKind> ResourceManager<K> {
     pub fn new(root: AssetRoot) -> Self {
         Self {
             root,
-            cache: HashMap::new(),
+            cache: HashMap::default(),
             embedded_loader: None,
         }
     }
@@ -675,7 +677,7 @@ impl<K: AssetKind> ResourceManager<K> {
         &mut self,
         category: K,
         name: &str,
-    ) -> std::result::Result<&TileSet, String> {
+    ) -> core::result::Result<&TileSet, String> {
         let filename = ensure_png_ext(name);
         let cache_key = (category, format!("{}:4bpp", filename));
         if !self.cache.contains_key(&cache_key) {
@@ -695,7 +697,7 @@ impl<K: AssetKind> ResourceManager<K> {
         &mut self,
         category: K,
         name: &str,
-    ) -> std::result::Result<&TileSet, String> {
+    ) -> core::result::Result<&TileSet, String> {
         let filename = ensure_png_ext(name);
         let cache_key = (category, format!("{}:rgba", filename));
         if !self.cache.contains_key(&cache_key) {
@@ -778,7 +780,7 @@ impl<K: AssetKind> ResourceManager<K> {
         &self,
         category: K,
         name: &str,
-    ) -> std::result::Result<RgbaTileSet, String> {
+    ) -> core::result::Result<RgbaTileSet, String> {
         let filename = ensure_png_ext(name);
         let path = self.root.gfx_dir().join(category.subdir()).join(&filename);
         let data = std::fs::read(&path)

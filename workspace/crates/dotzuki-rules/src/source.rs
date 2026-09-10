@@ -22,9 +22,15 @@
 //! [`poll_changed`]: RuleSource::poll_changed
 //! [`EffectId`]: dotzuki_engine::battle::stack::EffectId
 
+#[cfg(not(target_os = "none"))]
 use std::path::{Path, PathBuf};
 
 use crate::model::{LoadError, Ruleset};
+
+// Hosted-only pieces below (std::path / std::fs / notify): bare-metal builds
+// use the baked source exclusively (RuleSource::baked), which is the RELEASE
+// mode by design — zero file IO. The `Disk` variant, `from_path`, and the
+// watcher are compiled out on `target_os = "none"`.
 
 /// A source of rule text yielding a runtime [`Ruleset`], in one of two modes
 /// (doc 11 §4.2). Both modes call the **same** [`Ruleset::from_ron`], so a baked
@@ -41,6 +47,7 @@ pub enum RuleSource {
     /// feature a [`Watcher`](self::watch::Watcher) observes the file and
     /// [`poll_changed`](RuleSource::poll_changed) signals edits so the registry
     /// is rebuilt between turns.
+    #[cfg(not(target_os = "none"))]
     Disk {
         /// The on-disk `rules.ron` path.
         path: PathBuf,
@@ -62,6 +69,7 @@ impl RuleSource {
     /// feature this still reads the file at [`load`](RuleSource::load) time (it
     /// just never watches it); with the feature it also starts a watcher so
     /// [`poll_changed`](RuleSource::poll_changed) can signal edits.
+    #[cfg(not(target_os = "none"))]
     pub fn from_path(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         #[cfg(feature = "hot-reload")]
@@ -81,6 +89,7 @@ impl RuleSource {
     pub fn load(&self) -> Result<Ruleset, LoadError> {
         match self {
             RuleSource::Baked { text } => Ruleset::from_ron(text),
+            #[cfg(not(target_os = "none"))]
             RuleSource::Disk { path, .. } => {
                 let text = read_to_string(path)?;
                 Ruleset::from_ron(&text)
@@ -98,11 +107,11 @@ impl RuleSource {
     pub fn poll_changed(&mut self) -> bool {
         match self {
             RuleSource::Baked { .. } => false,
-            #[cfg(feature = "hot-reload")]
+            #[cfg(all(feature = "hot-reload", not(target_os = "none")))]
             RuleSource::Disk { watcher, .. } => {
                 watcher.as_mut().map(|w| w.poll_changed()).unwrap_or(false)
             }
-            #[cfg(not(feature = "hot-reload"))]
+            #[cfg(all(not(feature = "hot-reload"), not(target_os = "none")))]
             RuleSource::Disk { .. } => false,
         }
     }
@@ -112,9 +121,9 @@ impl RuleSource {
     pub fn is_hot_reloadable(&self) -> bool {
         match self {
             RuleSource::Baked { .. } => false,
-            #[cfg(feature = "hot-reload")]
+            #[cfg(all(feature = "hot-reload", not(target_os = "none")))]
             RuleSource::Disk { watcher, .. } => watcher.is_some(),
-            #[cfg(not(feature = "hot-reload"))]
+            #[cfg(all(not(feature = "hot-reload"), not(target_os = "none")))]
             RuleSource::Disk { .. } => false,
         }
     }
@@ -123,6 +132,7 @@ impl RuleSource {
 /// Read a file to a string, mapping IO errors into the loader's [`LoadError::Ron`]
 /// channel (a missing/unreadable `rules.ron` is a load error, never a battle-time
 /// surprise — doc 11 §4.2).
+#[cfg(not(target_os = "none"))]
 fn read_to_string(path: &Path) -> Result<String, LoadError> {
     std::fs::read_to_string(path)
         .map_err(|e| LoadError::Ron(format!("reading {}: {e}", path.display())))
@@ -133,7 +143,7 @@ fn read_to_string(path: &Path) -> Result<String, LoadError> {
 /// `mpsc` drain) but scoped to a single `rules.ron`. It draws NO randomness,
 /// reads NO clock that affects draw order, and never touches the interpreter —
 /// it is a pure file-change signal feeding a between-turns rebuild.
-#[cfg(feature = "hot-reload")]
+#[cfg(all(feature = "hot-reload", not(target_os = "none")))]
 pub mod watch {
     use std::path::{Path, PathBuf};
     use std::sync::mpsc;

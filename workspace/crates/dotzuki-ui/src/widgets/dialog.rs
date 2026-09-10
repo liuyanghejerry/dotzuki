@@ -285,7 +285,7 @@ fn cjk_units(paragraph: &str) -> Vec<WrapUnit> {
     while let Some(ch) = chars.next() {
         if ch == '\n' || ch == ' ' {
             if !word.is_empty() {
-                units.push(WrapUnit::Word(std::mem::take(&mut word)));
+                units.push(WrapUnit::Word(core::mem::take(&mut word)));
             }
             if ch == '\n' {
                 let prev_cjk = matches!(units.last(),
@@ -301,7 +301,7 @@ fn cjk_units(paragraph: &str) -> Vec<WrapUnit> {
             word.push(ch);
         } else {
             if !word.is_empty() {
-                units.push(WrapUnit::Word(std::mem::take(&mut word)));
+                units.push(WrapUnit::Word(core::mem::take(&mut word)));
             }
             if is_closing_punct(ch) {
                 match units.last_mut() {
@@ -468,7 +468,7 @@ fn wrap_latin_paragraph(paragraph: &str, max_width_px: usize) -> Vec<String> {
             char_advance(' ') as usize
         };
         if !current.is_empty() && current_px + space_px + token_px > max_width_px {
-            lines.push(std::mem::take(&mut current));
+            lines.push(core::mem::take(&mut current));
             current_px = 0;
         }
         if current.is_empty() {
@@ -476,7 +476,7 @@ fn wrap_latin_paragraph(paragraph: &str, max_width_px: usize) -> Vec<String> {
                 // A single word wider than the line is hard-split by pixels.
                 for piece in split_by_pixels(token, max_width_px) {
                     if !current.is_empty() {
-                        lines.push(std::mem::take(&mut current));
+                        lines.push(core::mem::take(&mut current));
                     }
                     current = piece;
                     current_px = measure_text(&current) as usize;
@@ -505,7 +505,7 @@ fn split_by_pixels(s: &str, max_width_px: usize) -> Vec<String> {
     for ch in s.chars() {
         let w = char_advance(ch) as usize;
         if chunk_px + w > max_width_px && !chunk.is_empty() {
-            out.push(std::mem::take(&mut chunk));
+            out.push(core::mem::take(&mut chunk));
             chunk_px = 0;
         }
         chunk.push(ch);

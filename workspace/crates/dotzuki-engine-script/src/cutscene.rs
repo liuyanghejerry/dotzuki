@@ -34,7 +34,7 @@
 //! input. Dialog/choice interaction remains functional so that `await game.showText()`
 //! and `await game.showChoice()` can proceed.
 
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 /// Manages cutscene execution state.
 ///

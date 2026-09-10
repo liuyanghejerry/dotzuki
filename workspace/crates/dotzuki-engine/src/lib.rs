@@ -32,6 +32,41 @@
 //! | [`save`] | `SaveData`, `SaveManager`, `SaveStorage`, `SaveError` — save/load with CRC16 |
 //! | [`link`] | `NetworkTransport<M>`, `TransportError`, `ChannelTransport<M>`, `LinkRole`, JSON-line `link::codec` — game-agnostic link-play transport seam (zero-I/O) |
 
+// no_std port (GBA / thumbv4t):
+// - On bare-metal targets (`target_os = "none"`) the crate builds without
+//   std; a nightly-only `prelude_import` re-injects the alloc items
+//   (`Vec`, `String`, `Box`, `vec!`, `format!`, …) plus the core prelude so
+//   the existing code needs no per-module import churn.
+// - On hosted targets the crate keeps std (stable-toolchain compatible —
+//   required for the engine-dsl build-dependency path), which is why
+//   `no_std` itself is cfg-gated rather than unconditional.
+#![cfg_attr(target_os = "none", no_std)]
+#![cfg_attr(target_os = "none", feature(prelude_import))]
+// `prelude_import` is internal to the compiler; the lint is expected noise.
+#![cfg_attr(target_os = "none", allow(internal_features))]
+
+extern crate alloc;
+
+#[allow(unused_imports)]
+mod alloc_prelude {
+    pub use core::prelude::v1::*;
+    pub use core::convert::{TryFrom, TryInto};
+    pub use alloc::borrow::ToOwned;
+    pub use core::iter::FromIterator;
+    pub use alloc::boxed::Box;
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
+    pub use alloc::vec::Vec;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::debug_assert;
+}
+
+#[cfg_attr(target_os = "none", prelude_import)]
+#[allow(unused_imports)]
+use alloc_prelude::*;
+
+pub mod hash;
 pub mod battle;
 pub mod camera;
 pub mod items;
@@ -52,8 +87,8 @@ pub mod tilemap;
 pub mod tileset;
 pub mod trigger_manager;
 
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 /// Master trait that provides access to all game data subsystems.
 ///

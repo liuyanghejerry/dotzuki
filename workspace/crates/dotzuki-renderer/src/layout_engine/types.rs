@@ -1,7 +1,7 @@
 use dotzuki_engine::render::Rgba;
 use serde::de::{self, Deserializer};
 use serde::Deserialize;
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 use thiserror::Error;
 
 // ============================================================================
@@ -75,8 +75,11 @@ pub type ImageRegistry = HashMap<String, ImageData>;
 /// A shared empty image registry — the default [`RenderContext::images`] for
 /// callers that render no images (so [`RenderContext::new`] stays 4-arg).
 pub fn empty_image_registry() -> &'static ImageRegistry {
-    static EMPTY: std::sync::OnceLock<ImageRegistry> = std::sync::OnceLock::new();
-    EMPTY.get_or_init(ImageRegistry::new)
+    // Const-constructed empty map: no std::sync::OnceLock (unavailable on
+    // no_std) and no atomics (unavailable on thumbv4t) required.
+    static EMPTY: ImageRegistry =
+        dotzuki_engine::hash::HashMap::with_hasher(dotzuki_engine::hash::FxBuildHasher);
+    &EMPTY
 }
 
 // ============================================================================
@@ -257,7 +260,7 @@ impl<'de> Deserialize<'de> for Visibility {
         impl<'de> serde::de::Visitor<'de> for VisibilityVisitor {
             type Value = Visibility;
 
-            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 f.write_str("a bool or a {template} condition string")
             }
 
@@ -339,7 +342,7 @@ impl<'de> Deserialize<'de> for Coord {
         impl<'de> serde::de::Visitor<'de> for CoordVisitor {
             type Value = Coord;
 
-            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 f.write_str("a u32 number or a {template} string")
             }
 
@@ -571,7 +574,7 @@ where
 #[serde(untagged)]
 pub enum LocalizedValue {
     Plain(String),
-    Localized(std::collections::BTreeMap<String, String>),
+    Localized(alloc::collections::BTreeMap<String, String>),
 }
 
 impl LocalizedValue {
@@ -768,7 +771,7 @@ impl<'de> Deserialize<'de> for ListCursor {
         impl<'de> serde::de::Visitor<'de> for CursorVisitor {
             type Value = ListCursor;
 
-            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 f.write_str("a tile id number or a {tile, position} object")
             }
 

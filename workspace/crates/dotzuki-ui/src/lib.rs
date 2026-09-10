@@ -1,6 +1,34 @@
+// no_std port (GBA / thumbv4t): see dotzuki-engine's header for the pattern.
+#![cfg_attr(target_os = "none", no_std)]
+#![cfg_attr(target_os = "none", feature(prelude_import))]
+#![cfg_attr(target_os = "none", allow(internal_features))]
+
+extern crate alloc;
+
+#[allow(unused_imports)]
+mod alloc_prelude {
+    pub use core::prelude::v1::*;
+    pub use core::convert::{TryFrom, TryInto};
+    pub use alloc::borrow::ToOwned;
+    pub use core::iter::FromIterator;
+    pub use alloc::boxed::Box;
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
+    pub use alloc::vec::Vec;
+    // Macros that std injects via `#[macro_use] extern crate std` but core
+    // does not export through its prelude.
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::debug_assert;
+}
+
+#[cfg_attr(target_os = "none", prelude_import)]
+#[allow(unused_imports)]
+use alloc_prelude::*;
+
 pub mod widgets;
 
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 
 use dotzuki_renderer::embedded_font::{self, box_tiles, draw_box_tile};
 use dotzuki_renderer::FrameBuffer;
@@ -17,7 +45,7 @@ impl<'fb> FrameBufferPainter<'fb> {
     pub fn new(fb: &'fb mut FrameBuffer) -> Self {
         Self {
             fb,
-            custom_tiles: HashMap::new(),
+            custom_tiles: HashMap::default(),
         }
     }
 

@@ -5,7 +5,27 @@
 //! [`ScreenTileBuffer`].  Tile graphics are fetched from `font_battle_extra.png`
 //! and indexed at `tile_id - 0x62` (matching the `game_font` module).
 
+#[cfg(not(target_os = "none"))]
 use std::sync::Mutex;
+#[cfg(target_os = "none")]
+// thumbv4t has no atomics; single-threaded game loop.
+#[cfg(target_os = "none")]
+mod gba_mutex {
+    use core::cell::UnsafeCell;
+    pub struct Mutex<T>(UnsafeCell<T>);
+    // Sound under the single-threaded bare-metal contract.
+    unsafe impl<T> Sync for Mutex<T> {}
+    impl<T> Mutex<T> {
+        pub const fn new(v: T) -> Self {
+            Self(UnsafeCell::new(v))
+        }
+        pub fn lock(&self) -> Result<&mut T, &'static str> {
+            Ok(unsafe { &mut *self.0.get() })
+        }
+    }
+}
+#[cfg(target_os = "none")]
+use gba_mutex::Mutex;
 
 use crate::asset_provider::ResourceProvider;
 use crate::battle_scene::{
@@ -43,7 +63,7 @@ const PARTY_HP_PALETTE: Palette = Palette {
         Rgba::BLACK,
     ],
     count: 4,
-    _phantom: std::marker::PhantomData,
+    _phantom: core::marker::PhantomData,
 };
 
 /// Convert a Game Boy tile ID to its 0-based index in `font_battle_extra.png`.

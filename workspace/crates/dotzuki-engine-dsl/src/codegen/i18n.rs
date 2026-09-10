@@ -7,6 +7,7 @@
 
 /// Look up a locale's text within ordered `@t(...)` `(locale, text)` pairs,
 /// falling back to `en`, then the first pair, then `""`.
+
 pub(crate) fn locale_text<'a>(pairs: &'a [(String, String)], locale: &str) -> &'a str {
     pairs
         .iter()

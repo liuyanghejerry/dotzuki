@@ -15,9 +15,9 @@
 //! | [`ItemResult`] | Outcome of attempting to use an item |
 //! | [`BagCategory`] | Broad classification of item types for UI organisation |
 
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::cmp::Ordering;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 pub mod equip;
 pub mod kind;

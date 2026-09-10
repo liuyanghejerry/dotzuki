@@ -149,7 +149,7 @@ pub fn run<G: GameLoop + 'static>(
     res.map_err(|e| WindowError::EventLoop(e.to_string()))
 }
 
-fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
+fn log_error<E: core::error::Error + 'static>(method_name: &str, err: E) {
     error!("{method_name}() failed: {err}");
     for source in err.sources().skip(1) {
         error!("  Caused by: {source}");

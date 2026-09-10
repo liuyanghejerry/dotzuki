@@ -21,6 +21,7 @@
 // ── TilePos ────────────────────────────────────────────────────────
 
 /// A position on the tile grid, measured in tiles.
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TilePos {
     /// Horizontal position (0 = left edge).
@@ -293,7 +294,7 @@ impl Default for DialogState {
 /// ```
 pub trait TextProvider {
     /// The decoded character type produced by this provider.
-    type Char: Clone + std::fmt::Debug;
+    type Char: Clone + core::fmt::Debug;
 
     /// Decodes a single byte into an optional character.
     ///

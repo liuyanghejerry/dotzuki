@@ -5,7 +5,7 @@
 //!
 //! All functions are generic over tileset and collision provider types.
 
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 use crate::map::MapTrait;
 use crate::tileset::TilesetTrait;

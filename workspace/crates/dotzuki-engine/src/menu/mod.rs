@@ -342,7 +342,7 @@ impl MenuConfig {
 ///   identifies which menu screen to display.
 pub trait MenuProvider {
     /// The type that identifies a specific menu screen.
-    type MenuId: Copy + std::fmt::Debug + PartialEq;
+    type MenuId: Copy + core::fmt::Debug + PartialEq;
 
     /// Title string displayed at the top of the menu box.
     fn title(&self, menu: Self::MenuId) -> &str;
@@ -394,7 +394,7 @@ impl<'prov, M: MenuProvider> MenuSystem<'prov, M> {
         Self {
             provider,
             // We need a default for current_menu.  Use open() to set it.
-            current_menu: unsafe { std::mem::zeroed() },
+            current_menu: unsafe { core::mem::zeroed() },
             cursor: 0,
             scroll_offset: 0,
             is_open: false,

@@ -5,6 +5,35 @@
 // rendering API that draws into a 160×144 pixel framebuffer and displays
 // it via a scaled window using the `pixels` crate.
 
+// no_std port (GBA / thumbv4t): the `framebuffer` feature build (no gpu,
+// no resource) is bare-metal clean — the window/pixels path, PNG asset
+// loading, and disk layout loading stay hosted-only behind their features
+// or `target_os` gates.
+#![cfg_attr(target_os = "none", no_std)]
+#![cfg_attr(target_os = "none", feature(prelude_import))]
+#![cfg_attr(target_os = "none", allow(internal_features))]
+
+extern crate alloc;
+
+#[allow(unused_imports)]
+mod alloc_prelude {
+    pub use core::prelude::v1::*;
+    pub use core::convert::{TryFrom, TryInto};
+    pub use alloc::borrow::ToOwned;
+    pub use core::iter::FromIterator;
+    pub use alloc::boxed::Box;
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
+    pub use alloc::vec::Vec;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::debug_assert;
+}
+
+#[cfg_attr(target_os = "none", prelude_import)]
+#[allow(unused_imports)]
+use alloc_prelude::*;
+
 pub mod asset_provider;
 pub mod battle_anim;
 pub mod battle_scene;
@@ -21,7 +50,7 @@ pub mod menu;
 #[cfg(feature = "gpu")]
 pub mod mon_icon;
 pub mod palette;
-#[cfg(feature = "gpu")]
+#[cfg(any(feature = "gpu", target_os = "none"))]
 pub mod party_hp_bar;
 #[cfg(feature = "resource")]
 pub mod resource;

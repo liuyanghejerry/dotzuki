@@ -1,6 +1,7 @@
 // ─── Constants ───────────────────────────────────────────────────────
 
 /// Base tile ID added to frame block tile indices (original: $31).
+
 pub const ANIM_BASE_TILE_ID: u8 = 0x31;
 
 /// Number of subanimations (NUM_SUBANIMS = 86).

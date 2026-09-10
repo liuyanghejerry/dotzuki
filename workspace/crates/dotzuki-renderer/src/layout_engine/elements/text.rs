@@ -206,7 +206,7 @@ pub fn word_wrap(text: &str, max_chars: usize) -> Vec<String> {
             current.push(' ');
             current.push_str(word);
         } else {
-            lines.push(std::mem::take(&mut current));
+            lines.push(core::mem::take(&mut current));
             if word.chars().count() > max_chars {
                 for chunk in chunk_str(word, max_chars) {
                     lines.push(chunk.to_string());
@@ -255,20 +255,20 @@ pub fn word_wrap_px(text: &str, max_px: u32, painter: &dyn Painter) -> Vec<Strin
                     current.push_str(word);
                     cur_px += word_px;
                 } else {
-                    lines.push(std::mem::take(&mut current));
+                    lines.push(core::mem::take(&mut current));
                     current.push_str(word);
                     cur_px = word_px;
                 }
             } else {
                 // Word wider than a whole line — break it character by character.
                 if !current.is_empty() {
-                    lines.push(std::mem::take(&mut current));
+                    lines.push(core::mem::take(&mut current));
                     cur_px = 0;
                 }
                 for ch in word.chars() {
                     let ch_px = painter.measure_text_px(ch.encode_utf8(&mut [0u8; 4]));
                     if !current.is_empty() && cur_px + ch_px > max_px {
-                        lines.push(std::mem::take(&mut current));
+                        lines.push(core::mem::take(&mut current));
                         cur_px = 0;
                     }
                     current.push(ch);
@@ -408,8 +408,8 @@ mod tests {
 
     fn render_ctx<'a>(
         theme: &'a crate::layout_engine::types::Theme,
-        fonts: &'a std::collections::HashMap<String, ()>,
-        tilesets: &'a std::collections::HashMap<String, ()>,
+        fonts: &'a dotzuki_engine::hash::HashMap<String, ()>,
+        tilesets: &'a dotzuki_engine::hash::HashMap<String, ()>,
     ) -> RenderContext<'a> {
         RenderContext {
             screen: "test",
@@ -530,8 +530,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = Default::default();
-        let fonts = std::collections::HashMap::new();
-        let tilesets = std::collections::HashMap::new();
+        let fonts = dotzuki_engine::hash::HashMap::default();
+        let tilesets = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -554,8 +554,8 @@ mod tests {
         ctx.set("name", "SPARKIT");
         ctx.set("level", 25i64);
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -569,7 +569,7 @@ mod tests {
     #[test]
     fn localized_value_get_selects_and_falls_back() {
         use crate::layout_engine::types::LocalizedValue;
-        let mut m = std::collections::BTreeMap::new();
+        let mut m = alloc::collections::BTreeMap::new();
         m.insert("en".to_string(), "YES".to_string());
         m.insert("zh".to_string(), "是".to_string());
         let lv = LocalizedValue::Localized(m);
@@ -586,7 +586,7 @@ mod tests {
         use crate::layout_engine::types::LocalizedValue;
         let mut elem = make_element("placeholder", 0, 0, 20, 18);
         if let ElementParams::Text(ref mut tp) = elem.params {
-            let mut m = std::collections::BTreeMap::new();
+            let mut m = alloc::collections::BTreeMap::new();
             m.insert("en".to_string(), "YES".to_string());
             m.insert("zh".to_string(), "是".to_string());
             tp.value = LocalizedValue::Localized(m);
@@ -596,8 +596,8 @@ mod tests {
             _ => unreachable!(),
         };
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
 
         // Chinese: `__lang = "zh"` selects the zh variant.
@@ -628,8 +628,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -652,8 +652,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -675,8 +675,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -703,8 +703,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -723,8 +723,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -749,8 +749,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -772,8 +772,8 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 

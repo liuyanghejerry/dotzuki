@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use crate::hash::HashMap;
 
 /// A generic, string-keyed event flag system.
 ///
@@ -38,7 +38,7 @@ impl EventFlags {
     #[inline]
     pub fn new() -> Self {
         Self {
-            flags: HashMap::new(),
+            flags: HashMap::default(),
         }
     }
 
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn merge_from() {
         let mut flags = EventFlags::new();
-        let mut other = HashMap::new();
+        let mut other = HashMap::default();
         other.insert("x".to_owned(), true);
         other.insert("y".to_owned(), false);
         flags.merge_from(&other);
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn from_hashmap_roundtrip() {
-        let mut map = HashMap::new();
+        let mut map = HashMap::default();
         map.insert("a".to_owned(), true);
         map.insert("b".to_owned(), false);
         let flags = EventFlags::from_hashmap(&map);

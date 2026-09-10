@@ -23,7 +23,7 @@
 //! (VermilionGym's trash-can puzzle) is ported as a native function module in
 //! `pokered-core::overworld::native_script`.
 
-use std::collections::HashMap;
+use crate::hash::HashMap;
 
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
 
@@ -298,7 +298,7 @@ impl<H: ScriptHost> Interpreter<H> {
         self.stack.push(Frame {
             stmts: body,
             index: 0,
-            locals: HashMap::new(),
+            locals: HashMap::default(),
             each: None,
         });
         self.state = InterpState::Running;
@@ -329,7 +329,7 @@ impl<H: ScriptHost> Interpreter<H> {
             CommandResult::Number(n) => Value::Number(n),
             CommandResult::Text(s) => Value::Text(s),
         };
-        let suspended = std::mem::replace(&mut self.suspended, Suspended::None);
+        let suspended = core::mem::replace(&mut self.suspended, Suspended::None);
         if let Err(e) = self.resume(suspended, &value) {
             self.state = InterpState::Finished;
             return Err(e);
@@ -376,7 +376,7 @@ impl<H: ScriptHost> Interpreter<H> {
                 self.stack.push(Frame {
                     stmts: options[chosen].body.clone(),
                     index: 0,
-                    locals: HashMap::new(),
+                    locals: HashMap::default(),
                     each: None,
                 });
                 Ok(())
@@ -467,7 +467,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command in @if condition ({:?}); only sync queries (getFlag, hasItem, …) are allowed in conditions",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -498,7 +498,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command in @each source ({:?}); only sync queries are allowed",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -507,7 +507,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     return Ok(StepOutcome::Continue);
                 }
                 let first = arr[0].clone();
-                let mut locals = HashMap::new();
+                let mut locals = HashMap::default();
                 locals.insert(item_var.clone(), first);
                 self.stack.push(Frame {
                     stmts: body.clone(),
@@ -548,7 +548,7 @@ impl<H: ScriptHost> Interpreter<H> {
                         Eval::Command(cmd) => {
                             return Err(format!(
                                 "async command in call arguments ({:?}); only sync queries are allowed in expressions",
-                                std::mem::discriminant(&cmd)
+                                core::mem::discriminant(&cmd)
                             ))
                         }
                     }
@@ -605,7 +605,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command in speaker name ({:?})",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -664,7 +664,7 @@ impl<H: ScriptHost> Interpreter<H> {
                         Eval::Command(cmd) => {
                             return Err(format!(
                                 "async command in array literal ({:?}); only sync queries are allowed in expressions",
-                                std::mem::discriminant(&cmd)
+                                core::mem::discriminant(&cmd)
                             ))
                         }
                     }
@@ -684,7 +684,7 @@ impl<H: ScriptHost> Interpreter<H> {
                         Eval::Command(cmd) => {
                             return Err(format!(
                                 "async command inside call arguments ({:?}); only sync queries are allowed in expressions",
-                                std::mem::discriminant(&cmd)
+                                core::mem::discriminant(&cmd)
                             ))
                         }
                     }
@@ -700,7 +700,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command inside unary expression ({:?}); only sync queries are allowed",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -715,7 +715,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command inside binary expression ({:?}); only sync queries are allowed",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -740,7 +740,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command inside binary expression ({:?}); only sync queries are allowed",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -756,7 +756,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Eval::Command(cmd) => {
                         return Err(format!(
                             "async command inside ternary condition ({:?}); only sync queries are allowed",
-                            std::mem::discriminant(&cmd)
+                            core::mem::discriminant(&cmd)
                         ))
                     }
                 };
@@ -792,7 +792,7 @@ impl<H: ScriptHost> Interpreter<H> {
         self.stack.push(Frame {
             stmts,
             index: 0,
-            locals: HashMap::new(),
+            locals: HashMap::default(),
             each: None,
         });
     }
@@ -839,8 +839,8 @@ mod tests {
             Self {
                 lang: "en".into(),
                 calls: Vec::new(),
-                commands: HashMap::new(),
-                sync: HashMap::new(),
+                commands: HashMap::default(),
+                sync: HashMap::default(),
             }
         }
         fn with_sync(name: &str, v: Value) -> Self {

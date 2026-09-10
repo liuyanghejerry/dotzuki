@@ -261,7 +261,7 @@ mod tests {
     use super::*;
     use crate::layout_engine::types::EdgeInsets;
     use dotzuki_engine::render::TileRect;
-    use std::cell::RefCell;
+    use core::cell::RefCell;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum DrawOp {
@@ -282,7 +282,7 @@ mod tests {
             }
         }
 
-        fn ops(&self) -> std::cell::Ref<'_, Vec<DrawOp>> {
+        fn ops(&self) -> core::cell::Ref<'_, Vec<DrawOp>> {
             self.ops.borrow()
         }
 

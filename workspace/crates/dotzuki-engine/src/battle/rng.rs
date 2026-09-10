@@ -23,6 +23,7 @@
 /// default implementations layered on top of it so most games only implement
 /// one method. Implementations are free to override any of them to match an
 /// exact original-game draw sequence.
+
 pub trait BattleRng {
     /// Return the next raw byte in the stream (`0..=255`).
     ///

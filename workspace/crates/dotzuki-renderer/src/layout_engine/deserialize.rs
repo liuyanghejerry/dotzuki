@@ -5,6 +5,7 @@
 //! validation.
 
 use crate::layout_engine::types::{RenderError, ScreenLayout};
+#[cfg(not(target_os = "none"))]
 use std::path::Path;
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -19,6 +20,9 @@ use std::path::Path;
 ///
 /// Returns [`RenderError::InvalidLayout`] if the file cannot be read or
 /// the JSON is malformed.
+// Hosted only (filesystem access); bare-metal targets embed layouts or
+// call [`parse_layout`] directly.
+#[cfg(not(target_os = "none"))]
 pub fn load_layout(name: &str) -> Result<ScreenLayout, RenderError> {
     let candidate_paths = [format!("data/ui_layouts/{}.json", name)];
 

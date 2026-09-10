@@ -374,7 +374,7 @@ mod tests {
         let map = Walls(&[]);
         let mut a = OverworldActor::new(0, 0, 16);
         assert_eq!(a.walk_frame(), 0, "starts idle/neutral");
-        let mut seen = std::collections::HashSet::new();
+        let mut seen = crate::hash::HashSet::default();
         for _ in 0..16 {
             a.update(Some(Direction::Down), &map);
             if a.is_moving() {

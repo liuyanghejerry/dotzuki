@@ -10,7 +10,7 @@ use crate::{DirtyRegion, FbSurface, FrameBuffer, TILE_SIZE};
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render::{BlendMode, MapLayer};
 use dotzuki_engine::tilemap::TilemapEntry;
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 
 const TILE_PIXELS: u32 = TILE_SIZE;
 
@@ -25,7 +25,7 @@ pub struct LayerTileCache {
 impl LayerTileCache {
     pub fn new() -> Self {
         Self {
-            entries: HashMap::new(),
+            entries: HashMap::default(),
         }
     }
 

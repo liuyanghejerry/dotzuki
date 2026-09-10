@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 /// Trait representing a tileset identifier in a JRPG engine.
 ///

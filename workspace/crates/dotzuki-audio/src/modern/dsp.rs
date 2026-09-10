@@ -12,6 +12,7 @@
 
 /// One-pole lowpass filter. `y[n] = y[n-1] + a·(x[n] − y[n-1])` with
 /// `a = 2π·fc/fs / (1 + 2π·fc/fs)` (RC approximation of the −3 dB point).
+
 #[derive(Debug, Clone)]
 pub struct Lowpass {
     cutoff_hz: f32,

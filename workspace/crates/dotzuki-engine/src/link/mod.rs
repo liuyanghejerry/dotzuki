@@ -47,6 +47,12 @@
 //! assert_eq!(t_b.recv().unwrap(), MyMessage::Hello);
 //! ```
 
+// `ChannelTransport` is the only mpsc-backed piece: an in-memory mock for
+// hosted local play / tests. bare-metal targets have no std::sync::mpsc, so
+// the mock is host-only; the `NetworkTransport` trait, errors, and codec
+// remain available everywhere.
+
+#[cfg(not(target_os = "none"))]
 use std::sync::mpsc;
 
 pub mod codec;
@@ -64,8 +70,8 @@ pub enum TransportError {
     IoError(String),
 }
 
-impl std::fmt::Display for TransportError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for TransportError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             TransportError::Disconnected => write!(f, "peer disconnected"),
             TransportError::Timeout => write!(f, "operation timed out"),
@@ -103,11 +109,16 @@ pub trait NetworkTransport<M> {
 /// zero I/O, used for local play and tests. Dropping one end makes the
 /// other report [`TransportError::Disconnected`] exactly like a closed
 /// socket.
+///
+/// Host-only: bare-metal targets (no std::sync::mpsc) implement
+/// [`NetworkTransport`] directly against their link hardware instead.
+#[cfg(not(target_os = "none"))]
 pub struct ChannelTransport<M> {
     tx: mpsc::Sender<M>,
     rx: mpsc::Receiver<M>,
 }
 
+#[cfg(not(target_os = "none"))]
 impl<M> ChannelTransport<M> {
     /// Create a connected pair — the two ends of one link connection.
     pub fn new_pair() -> (Self, Self) {
@@ -120,6 +131,7 @@ impl<M> ChannelTransport<M> {
     }
 }
 
+#[cfg(not(target_os = "none"))]
 impl<M> NetworkTransport<M> for ChannelTransport<M> {
     fn send(&mut self, msg: M) -> Result<(), TransportError> {
         self.tx.send(msg).map_err(|_| TransportError::Disconnected)

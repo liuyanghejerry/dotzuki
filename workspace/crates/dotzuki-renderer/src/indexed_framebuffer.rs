@@ -44,7 +44,7 @@
 //! parameters (`generic_const_exprs` is unstable) — so the eventual no_std/GB
 //! step can swap the `Vec` for a static buffer without touching other code.
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::palette::{ColorIndex, GbColor, GbaColor, Palette, GRAYSCALE_PALETTE};
 use dotzuki_engine::render::Rgba;

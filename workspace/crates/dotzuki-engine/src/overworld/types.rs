@@ -9,8 +9,8 @@ use crate::map::MapTrait;
 use crate::tileset::TilesetTrait;
 
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 // ── Direction ──────────────────────────────────────────────────────
 

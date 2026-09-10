@@ -9,8 +9,8 @@
 //! | [`EquipmentSlots<I, S>`] | Slot → item mapping with mutation methods |
 //! | [`EquipError`] | Error conditions for equipment operations |
 
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 // ── EquipSlot ──────────────────────────────────────────────────────────────
 
