@@ -148,6 +148,10 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     pub fn clear(&mut self, color: C) {
         let value = color.to_index();
         let bits = index_bits::<C>();
+        if value == 0 || value + 1 == C::MAX {
+            self.data.fill(if value == 0 { 0x00 } else { 0xFF });
+            return;
+        }
         // In planar layout, byte `i` holds bitplane `i % bits` of a row
         // group, so filling every byte of a plane with 0xFF/0x00 paints
         // that plane across all 8 pixels of each group.
@@ -204,9 +208,36 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         let y_start = (y as usize).min(self.height);
         let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
         let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        let value = color.to_index();
+        let bits = index_bits::<C>();
+        let groups = groups_per_row(self.width);
+        let first_group = x_start / 8;
+        let last_group = (x_end - 1) / 8;
         for row in y_start..y_end {
-            for col in x_start..x_end {
-                self.set_pixel(col as u32, row as u32, color);
+            for group in first_group..=last_group {
+                let group_x = group * 8;
+                let from = x_start.saturating_sub(group_x).min(8);
+                let until = x_end.saturating_sub(group_x).min(8);
+                let mask = (0xFFu8 >> from) & (0xFFu8 << (8 - until));
+                let base = (row * groups + group) * bits;
+                for plane in 0..bits {
+                    let fill = if (value >> plane) & 1 == 1 {
+                        0xFF
+                    } else {
+                        0x00
+                    };
+                    if mask == 0xFF {
+                        self.data[base + plane] = fill;
+                    } else if fill == 0xFF {
+                        self.data[base + plane] |= mask;
+                    } else {
+                        self.data[base + plane] &= !mask;
+                    }
+                }
             }
         }
     }
@@ -461,6 +492,22 @@ mod tests {
     }
 
     #[test]
+    fn fill_rect_preserves_pixels_outside_partial_groups() {
+        let mut fb = IndexedFrameBuffer::<GbColor>::new(19, 3, GbColor::White);
+        fb.fill_rect(3, 1, 13, 1, GbColor::DarkGray);
+        for y in 0..3 {
+            for x in 0..19 {
+                let expected = if y == 1 && (3..16).contains(&x) {
+                    GbColor::DarkGray
+                } else {
+                    GbColor::White
+                };
+                assert_eq!(fb.get_pixel(x, y), Some(expected), "({x}, {y})");
+            }
+        }
+    }
+
+    #[test]
     fn to_rgba_applies_palette() {
         let mut fb = IndexedFrameBuffer::<GbColor>::new(4, 2, GbColor::White);
         fb.set_pixel(0, 0, GbColor::Black);
@@ -658,6 +705,9 @@ pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor> {
     buffer: IndexedFrameBuffer<C>,
     /// Quantization palette: RGBA writes map to the nearest entry's index.
     base: Palette<C>,
+    /// True when `base` is the standard opaque 0/85/170/255 gray ramp.
+    /// This enables an O(1) quantizer for the overwhelmingly common path.
+    fast_grayscale: bool,
     /// Display palette applied at present time; fades/flashes remap this.
     pub palette: Palette<C>,
 }
@@ -666,6 +716,11 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Create a `config`-sized buffer with an explicit base palette, cleared
     /// to `clear` (quantized through `base`).
     pub fn with_palette(config: RenderConfig, clear: Rgba, base: Palette<C>) -> Self {
+        let fast_grayscale = base.count == 4
+            && base.colors[0] == Rgba::rgb(0xFF, 0xFF, 0xFF)
+            && base.colors[1] == Rgba::rgb(0xAA, 0xAA, 0xAA)
+            && base.colors[2] == Rgba::rgb(0x55, 0x55, 0x55)
+            && base.colors[3] == Rgba::rgb(0x00, 0x00, 0x00);
         let mut fb = Self {
             buffer: IndexedFrameBuffer::new(
                 config.screen_width as usize,
@@ -674,6 +729,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
             ),
             palette: base,
             base,
+            fast_grayscale,
         };
         fb.clear(clear);
         fb
@@ -762,6 +818,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
             .copy_from_slice(other.buffer.packed());
         self.palette = other.palette;
         self.base = other.base;
+        self.fast_grayscale = other.fast_grayscale;
     }
 
     /// Set a single pixel by palette index. Returns false if out of bounds.
@@ -806,7 +863,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Set a single pixel, quantized through the base palette.
     /// Returns false if out of bounds.
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Rgba) -> bool {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.set_pixel(x, y, index)
     }
 
@@ -826,7 +883,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// display mapping always begins from the base and effects re-apply
     /// their palette at the end of the frame.
     pub fn clear(&mut self, color: Rgba) {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.clear(index);
         self.palette = self.base;
     }
@@ -834,7 +891,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Fill a rectangular region with a color (quantized through the base
     /// palette). Coordinates are clamped to buffer bounds.
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba) {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.fill_rect(x, y, rect_width, rect_height, index);
     }
 
@@ -853,10 +910,27 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         for i in 0..actual_count {
             let off = i * 4;
             let c = Rgba::new(src[off], src[off + 1], src[off + 2], src[off + 3]);
-            self.buffer
-                .set_pixel(x + i as u32, y, quantize(&self.base, c));
+            let index = self.quantize_color(c);
+            self.buffer.set_pixel(x + i as u32, y, index);
         }
         true
+    }
+
+    #[inline]
+    fn quantize_color(&self, color: Rgba) -> C {
+        if self.fast_grayscale && color.a == 0xFF && color.r == color.g && color.g == color.b {
+            // Exact nearest-color boundaries for [255, 170, 85, 0]. At a
+            // midpoint the generic quantizer prefers the lower index.
+            let index = match color.r {
+                213..=255 => 0,
+                128..=212 => 1,
+                43..=127 => 2,
+                _ => 3,
+            };
+            C::from_u8(index)
+        } else {
+            quantize(&self.base, color)
+        }
     }
 
     /// Save the framebuffer as a PNG file (display palette applied).
@@ -955,6 +1029,21 @@ mod facade_tests {
         for (i, &c) in colors.iter().enumerate() {
             assert_eq!(fb.get_pixel(i as u32, 0), Some(c));
             assert_eq!(fb.get_index(i as u32, 0), Some(GbColor::from_u8(i as u8)));
+        }
+    }
+
+    #[test]
+    fn fast_grayscale_quantizer_matches_generic_for_every_gray() {
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(256, 1), Rgba::WHITE);
+        assert!(fb.fast_grayscale);
+        for gray in 0..=u8::MAX {
+            let color = Rgba::rgb(gray, gray, gray);
+            assert!(fb.set_pixel(gray as u32, 0, color));
+            assert_eq!(
+                fb.get_index(gray as u32, 0),
+                Some(quantize(&GRAYSCALE_PALETTE, color)),
+                "gray {gray}"
+            );
         }
     }
 

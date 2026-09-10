@@ -23,6 +23,7 @@ const CJK_BASELINE: i32 = 2;
 ///   per glyph @ data_offset:
 ///     u8 width, u8 nrows, i16 x_off, i16 y_off, u8 advance, (u16 × nrows) rows
 static GLYPH_BLOB: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/glyphs.bin"));
+include!(concat!(env!("OUT_DIR"), "/ascii_glyph_offsets.rs"));
 
 #[inline]
 fn blob_u32(off: usize) -> u32 {
@@ -49,36 +50,46 @@ struct GlyphInfo {
 
 fn lookup_glyph(ch: char) -> Option<GlyphInfo> {
     let cp = ch as u32;
-    let count = blob_u32(0) as usize;
-    // Binary search the codepoint-sorted index (8 bytes/entry, starting at offset 4).
-    let (mut lo, mut hi) = (0usize, count);
-    while lo < hi {
-        let mid = lo + (hi - lo) / 2;
-        let entry = 4 + mid * 8;
-        let mcp = blob_u32(entry);
-        if mcp < cp {
-            lo = mid + 1;
-        } else if mcp > cp {
-            hi = mid;
-        } else {
-            let off = blob_u32(entry + 4) as usize;
-            let width = GLYPH_BLOB[off] as u32;
-            let nrows = GLYPH_BLOB[off + 1] as usize;
-            let x_off = i16::from_le_bytes([GLYPH_BLOB[off + 2], GLYPH_BLOB[off + 3]]) as i32;
-            let y_off = i16::from_le_bytes([GLYPH_BLOB[off + 4], GLYPH_BLOB[off + 5]]) as i32;
-            let advance = GLYPH_BLOB[off + 6] as u32;
-            let rows = &GLYPH_BLOB[off + 7..off + 7 + nrows * 2];
-            return Some(GlyphInfo {
-                width,
-                height: nrows as u32,
-                x_off,
-                y_off,
-                advance,
-                rows,
-            });
+    let off = if cp < ASCII_GLYPH_OFFSETS.len() as u32 {
+        let off = ASCII_GLYPH_OFFSETS[cp as usize];
+        if off == u32::MAX {
+            return None;
         }
-    }
-    None
+        off as usize
+    } else {
+        let count = blob_u32(0) as usize;
+        // Binary search the codepoint-sorted index (8 bytes/entry, starting at offset 4).
+        let (mut lo, mut hi) = (0usize, count);
+        loop {
+            if lo >= hi {
+                return None;
+            }
+            let mid = lo + (hi - lo) / 2;
+            let entry = 4 + mid * 8;
+            let mcp = blob_u32(entry);
+            if mcp < cp {
+                lo = mid + 1;
+            } else if mcp > cp {
+                hi = mid;
+            } else {
+                break blob_u32(entry + 4) as usize;
+            }
+        }
+    };
+    let width = GLYPH_BLOB[off] as u32;
+    let nrows = GLYPH_BLOB[off + 1] as usize;
+    let x_off = i16::from_le_bytes([GLYPH_BLOB[off + 2], GLYPH_BLOB[off + 3]]) as i32;
+    let y_off = i16::from_le_bytes([GLYPH_BLOB[off + 4], GLYPH_BLOB[off + 5]]) as i32;
+    let advance = GLYPH_BLOB[off + 6] as u32;
+    let rows = &GLYPH_BLOB[off + 7..off + 7 + nrows * 2];
+    Some(GlyphInfo {
+        width,
+        height: nrows as u32,
+        x_off,
+        y_off,
+        advance,
+        rows,
+    })
 }
 
 /// Returns true if the character has a CJK-width glyph (advance >= 10).
