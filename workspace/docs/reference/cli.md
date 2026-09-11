@@ -231,9 +231,15 @@ static library, and `game.dzpk`. See the
 
 - `dotzuki check`: `0` = all DSL compiles (and battle section validates); `1` = diagnostics found.
 - `dotzuki run`: `0` = clean exit.
-- `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the pack caps, or no runner wasm package available.
-- `dotzuki export --native`: `0` = app directory written; `1` = validation failed (without `--force`), project over the pack caps, or no player binary available.
-- `dotzuki export --harmony`: `0` = DevEco Studio project written; `1` = validation failed, project over the pack caps, or no mobile runtime library available.
+- `dotzuki export --web`: `0` = site written; `1` = validation failed
+  (without `--force`), project over the pack caps, or no runner wasm package
+  available.
+- `dotzuki export --native`: `0` = app directory written; `1` = validation
+  failed (without `--force`), project over the pack caps, or no player binary
+  available.
+- `dotzuki export --harmony`: `0` = DevEco Studio project written; `1` =
+  validation failed, project over the pack caps, or no mobile runtime library
+  available.
 
 ## Notes
 
