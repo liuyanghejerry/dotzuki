@@ -226,6 +226,39 @@ fn scroll_chunky_row(row: &mut [u8], dx: i32, clear: u8) {
     }
 }
 
+#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
+fn copy_chunky_rect_within(
+    pixels: &mut [u8],
+    framebuffer_width: usize,
+    source_x: usize,
+    source_y: usize,
+    copy_width: usize,
+    copy_height: usize,
+    destination_x: usize,
+    destination_y: usize,
+) {
+    debug_assert!(framebuffer_width != 0);
+    debug_assert!(pixels.len() % framebuffer_width == 0);
+    debug_assert!(source_x + copy_width <= framebuffer_width);
+    debug_assert!(destination_x + copy_width <= framebuffer_width);
+    debug_assert!((source_y + copy_height) * framebuffer_width <= pixels.len());
+    debug_assert!((destination_y + copy_height) * framebuffer_width <= pixels.len());
+
+    if destination_y > source_y {
+        for row in (0..copy_height).rev() {
+            let source = (source_y + row) * framebuffer_width + source_x;
+            let destination = (destination_y + row) * framebuffer_width + destination_x;
+            pixels.copy_within(source..source + copy_width, destination);
+        }
+    } else {
+        for row in 0..copy_height {
+            let source = (source_y + row) * framebuffer_width + source_x;
+            let destination = (destination_y + row) * framebuffer_width + destination_x;
+            pixels.copy_within(source..source + copy_width, destination);
+        }
+    }
+}
+
 impl<C: ColorIndex> IndexedFrameBuffer<C> {
     /// Create a new `width × height` buffer, cleared to `clear`.
     pub fn new(width: usize, height: usize, clear: C) -> Self {
@@ -534,6 +567,75 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
                     .get_pixel(column as u32, row as u32)
                     .expect("copy source is in bounds");
                 self.set_pixel(column as u32, row as u32, color);
+            }
+        }
+    }
+
+    /// Copy a clipped pixel rectangle within this framebuffer.
+    ///
+    /// Source and destination may overlap. The rectangle is clipped against
+    /// both origins, so pixels outside the common in-bounds extent are left
+    /// unchanged.
+    pub fn copy_rect_within(
+        &mut self,
+        source_x: u32,
+        source_y: u32,
+        rect_width: u32,
+        rect_height: u32,
+        destination_x: u32,
+        destination_y: u32,
+    ) {
+        let source_x = (source_x as usize).min(self.width);
+        let source_y = (source_y as usize).min(self.height);
+        let destination_x = (destination_x as usize).min(self.width);
+        let destination_y = (destination_y as usize).min(self.height);
+        let copy_width = (rect_width as usize)
+            .min(self.width - source_x)
+            .min(self.width - destination_x);
+        let copy_height = (rect_height as usize)
+            .min(self.height - source_y)
+            .min(self.height - destination_y);
+        if copy_width == 0 || copy_height == 0 {
+            return;
+        }
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        {
+            let pixels = unsafe {
+                core::slice::from_raw_parts_mut(
+                    self.data.as_mut_ptr().cast::<u8>(),
+                    self.width * self.height,
+                )
+            };
+            copy_chunky_rect_within(
+                pixels,
+                self.width,
+                source_x,
+                source_y,
+                copy_width,
+                copy_height,
+                destination_x,
+                destination_y,
+            );
+        }
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        {
+            let source = self.clone();
+            for row in 0..copy_height {
+                for column in 0..copy_width {
+                    let color = source
+                        .get_pixel(
+                            (source_x + column) as u32,
+                            (source_y + row) as u32,
+                        )
+                        .expect("copy source is in bounds");
+                    self.set_pixel(
+                        (destination_x + column) as u32,
+                        (destination_y + row) as u32,
+                        color,
+                    );
+                }
             }
         }
     }
@@ -959,6 +1061,87 @@ mod tests {
     }
 
     #[test]
+    fn copy_rect_within_is_overlap_safe_and_clipped() {
+        let mut original = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::White);
+        for y in 0..7 {
+            for x in 0..10 {
+                original.set_pixel(x, y, GbColor::from_u8(((x + y * 3) % 4) as u8));
+            }
+        }
+
+        for &(source_x, source_y, width, height, destination_x, destination_y) in &[
+            (1, 1, 7, 5, 2, 0),
+            (2, 0, 7, 5, 1, 1),
+            (0, 0, 10, 6, 0, 1),
+            (0, 1, 10, 6, 0, 0),
+            (8, 5, 10, 10, 9, 6),
+            (20, 20, 4, 4, 0, 0),
+        ] {
+            let mut actual = original.clone();
+            actual.copy_rect_within(
+                source_x,
+                source_y,
+                width,
+                height,
+                destination_x,
+                destination_y,
+            );
+
+            let mut expected = original.clone();
+            let copy_width = width
+                .min(10u32.saturating_sub(source_x))
+                .min(10u32.saturating_sub(destination_x));
+            let copy_height = height
+                .min(7u32.saturating_sub(source_y))
+                .min(7u32.saturating_sub(destination_y));
+            for row in 0..copy_height {
+                for column in 0..copy_width {
+                    let color = original
+                        .get_pixel(source_x + column, source_y + row)
+                        .unwrap();
+                    expected.set_pixel(destination_x + column, destination_y + row, color);
+                }
+            }
+            assert_eq!(
+                actual, expected,
+                "source ({source_x}, {source_y}), destination ({destination_x}, {destination_y})"
+            );
+        }
+    }
+
+    #[test]
+    fn chunky_rect_copy_is_overlap_safe_in_every_direction() {
+        let original: Vec<u8> = (0..70).map(|index| (index % 251) as u8).collect();
+        for &(source_x, source_y, width, height, destination_x, destination_y) in &[
+            (1, 1, 7, 5, 2, 0),
+            (2, 0, 7, 5, 1, 1),
+            (0, 0, 10, 6, 0, 1),
+            (0, 1, 10, 6, 0, 0),
+        ] {
+            let mut actual = original.clone();
+            copy_chunky_rect_within(
+                &mut actual,
+                10,
+                source_x,
+                source_y,
+                width,
+                height,
+                destination_x,
+                destination_y,
+            );
+
+            let mut expected = original.clone();
+            for row in 0..height {
+                for column in 0..width {
+                    expected[(destination_y + row) * 10 + destination_x + column] =
+                        original[(source_y + row) * 10 + source_x + column];
+                }
+            }
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
     fn to_rgba_applies_palette() {
         let mut fb = IndexedFrameBuffer::<GbColor>::new(4, 2, GbColor::White);
         fb.set_pixel(0, 0, GbColor::Black);
@@ -1380,6 +1563,27 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     ) {
         self.buffer
             .copy_rect_from(&other.buffer, x, y, rect_width, rect_height);
+    }
+
+    /// Copy a clipped, overlap-safe pixel rectangle within this framebuffer.
+    /// Palette state is unchanged.
+    pub fn copy_rect_within(
+        &mut self,
+        source_x: u32,
+        source_y: u32,
+        rect_width: u32,
+        rect_height: u32,
+        destination_x: u32,
+        destination_y: u32,
+    ) {
+        self.buffer.copy_rect_within(
+            source_x,
+            source_y,
+            rect_width,
+            rect_height,
+            destination_x,
+            destination_y,
+        );
     }
 
     /// Move the indexed pixels by `(dx, dy)`, filling exposed edges with
@@ -2181,6 +2385,19 @@ mod facade_tests {
         assert_eq!(dst.get_pixel(4, 4), Some(Rgba::BLACK));
         assert_eq!(dst.get_index(1, 4), Some(GbColor::DarkGray));
         assert_eq!(dst.get_pixel(1, 4), Some(Rgba::rgb(0x55, 0x55, 0x55)));
+    }
+
+    #[test]
+    fn copy_rect_within_preserves_palette_state() {
+        let mut fb = fb();
+        fb.fill_rect(2, 3, 6, 5, Rgba::BLACK);
+        fb.apply_bgp(0b00000000);
+        let palette = fb.palette;
+
+        fb.copy_rect_within(2, 3, 6, 5, 4, 5);
+
+        assert_eq!(fb.get_index(5, 6), Some(GbColor::Black));
+        assert_eq!(fb.palette, palette);
     }
 
     #[test]
