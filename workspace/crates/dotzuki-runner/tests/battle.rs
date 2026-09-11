@@ -808,6 +808,7 @@ fn party_state_and_inventory_round_trip_through_the_save() {
         rng_script: Some(vec![50, 100, 1]),
         save_file: Some(save_file.clone()),
         write_saves: true,
+        external_saves: false,
         ..RunnerOptions::default()
     };
     let mut game = RunnerGame::new(project, opts).expect("boot game");
@@ -1148,6 +1149,7 @@ fn level_and_exp_round_trip_through_the_save() {
         rng_script: Some(vec![50, 100, 1]),
         save_file: Some(save_file.clone()),
         write_saves: true,
+        external_saves: false,
         ..RunnerOptions::default()
     };
     let mut game = RunnerGame::new(project, opts).expect("boot game");

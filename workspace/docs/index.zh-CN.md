@@ -46,6 +46,7 @@
 | [`how-to/assets.md`](./how-to/assets.md) | 素材管线：tileset、共享 tile 库、2bpp 转换、字体 |
 | [`how-to/i18n.md`](./how-to/i18n.md) | 双语文本：`game` i18n API 与 `@t` 语法 |
 | [`how-to/publishing.md`](./how-to/publishing.md) | 发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级 |
+| [`how-to/export-harmonyos.zh-CN.md`](./how-to/export-harmonyos.zh-CN.md) | 构建移动运行时并导出 DevEco Studio 工程 |
 
 ## 参考
 
@@ -76,6 +77,7 @@
 | 文档 | 涵盖内容 |
 |---|---|
 | [`explanation/architecture.md`](./explanation/architecture.md) | 当前架构：引擎 crate、运行器、CLI、编辑器，以及从 DSL 到游戏的流程 |
+| [`explanation/mobile-architecture.zh-CN.md`](./explanation/mobile-architecture.zh-CN.md) | 一套 C ABI 与 iOS、Android、鸿蒙原生外壳 |
 | [`explanation/effect-stack.md`](./explanation/effect-stack.md) | 战斗效果栈模型、event/handler 架构、RNG 确定性、如实说明的限制 |
 | [`explanation/game-data.md`](./explanation/game-data.md) | `GameData` 提供者 trait 及其泛型关联类型 |
 | [`explanation/save-compatibility.md`](./explanation/save-compatibility.md) | 存档版本机制与向前/向后兼容规则 |

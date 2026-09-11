@@ -201,6 +201,7 @@ impl WasmRunner {
             headless: true,
             pcm_audio: true,
             fresh: true,
+            external_saves: true,
             ..RunnerOptions::default()
         };
         let mut game =

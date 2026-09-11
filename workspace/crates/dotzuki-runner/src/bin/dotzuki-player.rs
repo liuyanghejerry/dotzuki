@@ -169,6 +169,7 @@ OPTIONS:
                 save_file: Some(save_file),
                 rng_script: None,
                 write_saves: !args.headless,
+                external_saves: false,
             },
         )?;
 

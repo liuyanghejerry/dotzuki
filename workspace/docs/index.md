@@ -46,6 +46,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | [`how-to/assets.md`](./how-to/assets.md) | Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts |
 | [`how-to/i18n.md`](./how-to/i18n.md) | Bilingual text: the `game` i18n API and `@t` syntax |
 | [`how-to/publishing.md`](./how-to/publishing.md) | Shipping a project, headless smoke tests, WASM web play, engine upgrades |
+| [`how-to/export-harmonyos.md`](./how-to/export-harmonyos.md) | Building the mobile runtime and exporting a DevEco Studio project |
 
 ## Reference
 
@@ -76,6 +77,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | Document | Covers |
 |---|---|
 | [`explanation/architecture.md`](./explanation/architecture.md) | Current architecture: engine crates, runner, CLI, editor, and the DSL-to-game flow |
+| [`explanation/mobile-architecture.md`](./explanation/mobile-architecture.md) | One C ABI with native iOS, Android, and HarmonyOS shells |
 | [`explanation/effect-stack.md`](./explanation/effect-stack.md) | The battle effect-stack model, event/handler architecture, RNG determinism, honest limits |
 | [`explanation/game-data.md`](./explanation/game-data.md) | The `GameData` provider trait and its generic associated types |
 | [`explanation/save-compatibility.md`](./explanation/save-compatibility.md) | Save versioning and forward/backward compatibility rules |

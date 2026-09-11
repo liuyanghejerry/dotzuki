@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "app_name", "value": "__APP_NAME__" },
+    { "name": "module_desc", "value": "Dotzuki game" },
+    { "name": "ability_desc", "value": "Dotzuki game player" }
+  ]
+}

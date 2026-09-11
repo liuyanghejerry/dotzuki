@@ -44,14 +44,18 @@
 //! sequencer/fade once per video frame, so music, dedup, and fades behave
 //! exactly as on native.
 
-use std::collections::{BTreeMap, HashSet};
+#[cfg(feature = "modern-audio")]
+use std::collections::BTreeMap;
+use std::collections::HashSet;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use dotzuki_audio::apu::Apu;
 use dotzuki_audio::format::TrackDef;
 use dotzuki_audio::library::AudioLibrary;
-use dotzuki_audio::output::{render_apu_stereo, CpalOutput};
+use dotzuki_audio::output::render_apu_stereo;
+#[cfg(feature = "device-audio")]
+use dotzuki_audio::output::CpalOutput;
 use dotzuki_audio::sequencer::Sequencer;
 
 #[cfg(feature = "modern-audio")]
@@ -223,6 +227,7 @@ fn new_engine() -> Arc<Mutex<Engine>> {
 /// the live output (kept alive for the lifetime of playback; dropping it
 /// stops the stream), or `None` when no device is available or the stream
 /// cannot be built.
+#[cfg(feature = "device-audio")]
 fn open_stream(engine: Arc<Mutex<Engine>>) -> Option<CpalOutput> {
     CpalOutput::new(move |data: &mut [f32], _sample_rate: u32| {
         let mut e = engine.lock().unwrap();
@@ -258,6 +263,7 @@ pub struct RunnerAudio {
     engine: Option<Arc<Mutex<Engine>>>,
     /// The live cpal output, kept alive for the lifetime of playback;
     /// dropping it stops the stream. Always `None` in PCM/headless mode.
+    #[cfg(feature = "device-audio")]
     stream: Option<CpalOutput>,
     /// Set once an init attempt failed: don't retry, stay silent.
     init_failed: bool,
@@ -305,6 +311,7 @@ impl RunnerAudio {
             allow_device,
             pcm_render: false,
             engine: None,
+            #[cfg(feature = "device-audio")]
             stream: None,
             init_failed: false,
             warned_ids: HashSet::new(),
@@ -333,7 +340,14 @@ impl RunnerAudio {
 
     /// Whether the cpal output stream is live (test/debug introspection).
     pub fn has_output(&self) -> bool {
-        self.stream.is_some()
+        #[cfg(feature = "device-audio")]
+        {
+            self.stream.is_some()
+        }
+        #[cfg(not(feature = "device-audio"))]
+        {
+            false
+        }
     }
 
     /// Switch PCM pull-render mode on/off (see the module docs). In PCM mode
@@ -392,19 +406,28 @@ impl RunnerAudio {
         if !self.allow_device || self.init_failed {
             return None;
         }
-        let engine = new_engine();
-        match open_stream(Arc::clone(&engine)) {
-            Some(stream) => {
-                log::info!("audio: output stream started");
-                self.stream = Some(stream);
-                self.engine = Some(Arc::clone(&engine));
-                Some(engine)
+        #[cfg(feature = "device-audio")]
+        {
+            let engine = new_engine();
+            match open_stream(Arc::clone(&engine)) {
+                Some(stream) => {
+                    log::info!("audio: output stream started");
+                    self.stream = Some(stream);
+                    self.engine = Some(Arc::clone(&engine));
+                    Some(engine)
+                }
+                None => {
+                    log::warn!("audio: no output device — sound disabled, continuing silent");
+                    self.init_failed = true;
+                    None
+                }
             }
-            None => {
-                log::warn!("audio: no output device — sound disabled, continuing silent");
-                self.init_failed = true;
-                None
-            }
+        }
+        #[cfg(not(feature = "device-audio"))]
+        {
+            log::warn!("audio: device output backend is disabled — use PCM render mode");
+            self.init_failed = true;
+            None
         }
     }
 
@@ -627,6 +650,7 @@ fn load_file_tracks(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "modern-audio")]
     use crate::vfs::MemoryFiles;
 
     /// A minimal valid music track (dotzuki-audio `TrackDef` JSON).
@@ -661,6 +685,7 @@ mod tests {
             allow_device: false,
             pcm_render: true,
             engine: None,
+            #[cfg(feature = "device-audio")]
             stream: None,
             init_failed: false,
             warned_ids: HashSet::new(),

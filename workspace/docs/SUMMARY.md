@@ -20,6 +20,7 @@
 - [Assets](how-to/assets.md)
 - [Bilingual Text (i18n)](how-to/i18n.md)
 - [Publishing & Upgrading](how-to/publishing.md)
+- [Exporting to HarmonyOS](how-to/export-harmonyos.md)
 
 # Reference
 
@@ -52,6 +53,7 @@
 # Explanation
 
 - [Architecture Overview](explanation/architecture.md)
+- [Mobile Architecture](explanation/mobile-architecture.md)
 - [The Effect-Stack Battle Engine](explanation/effect-stack.md)
 - [The GameData Trait](explanation/game-data.md)
 - [Save Compatibility](explanation/save-compatibility.md)
@@ -94,6 +96,7 @@ archive pages stay English-only (doc-standard §5).
 - [素材](how-to/assets.zh-CN.md)
 - [i18n 指南](how-to/i18n.zh-CN.md)
 - [发布与升级指南](how-to/publishing.zh-CN.md)
+- [导出鸿蒙游戏](how-to/export-harmonyos.zh-CN.md)
 - [项目清单](reference/project-manifest.zh-CN.md)
 - [战斗规则](reference/battle-rules.zh-CN.md)
 - [音频命令](reference/audio-commands.zh-CN.md)
@@ -112,6 +115,7 @@ archive pages stay English-only (doc-standard §5).
 - [Codegen 约定](reference/dsl/codegen.zh-CN.md)
 - [DSL 运行时加载参考](reference/dsl/runtime-loading.zh-CN.md)
 - [架构总览](explanation/architecture.zh-CN.md)
+- [移动端架构](explanation/mobile-architecture.zh-CN.md)
 - [效果栈战斗引擎](explanation/effect-stack.zh-CN.md)
 - [GameData Trait](explanation/game-data.zh-CN.md)
 - [存档兼容](explanation/save-compatibility.zh-CN.md)

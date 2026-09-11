@@ -57,6 +57,12 @@ original form in Chinese text.
 - **runner**（运行器）— `dotzuki-runner`: loads a zero-Rust project
   (manifest, DSL, maps, collision, tilesets) and drives `RunnerGame`; also
   runs headless.
+- **mobile runtime**（移动运行时）— `dotzuki-runner-mobile`, the C ABI over
+  `RunnerGame` shared by native iOS, Android, and HarmonyOS shells. It owns
+  game state, RGBA frames, PCM production, and save serialization.
+- **mobile shell**（移动外壳）— platform code that owns a mobile app's
+  surface, frame clock, touch controls, audio device, lifecycle, and save
+  storage while calling the mobile runtime for game work.
 - **headless**（无头模式）— running without a window or audio device, used
   for CI smoke tests and screenshots (`dotzuki run --headless`).
 - **Boa** — the JavaScript engine behind `dotzuki-engine-script`; the DSL's
