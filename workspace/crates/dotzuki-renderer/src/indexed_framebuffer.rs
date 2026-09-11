@@ -120,6 +120,112 @@ pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
     _phantom: PhantomData<C>,
 }
 
+#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
+#[inline(always)]
+fn scroll_chunky_row(row: &mut [u8], dx: i32, clear: u8) {
+    debug_assert!(dx != 0 && (dx.unsigned_abs() as usize) < row.len());
+    let offset = dx.unsigned_abs() as usize;
+    let copy_width = row.len() - offset;
+    let source_x = if dx < 0 { offset } else { 0 };
+    let target_x = if dx > 0 { offset } else { 0 };
+    let row_ptr = row.as_mut_ptr();
+
+    // A 2-byte-misaligned source/destination would otherwise require twice
+    // as many halfword copies. On the little-endian GBA, combine adjacent
+    // aligned words so each iteration still moves four pixels.
+    if cfg!(target_endian = "little")
+        && row.len() & 3 == 0
+        && row_ptr as usize & 3 == 0
+        && offset & 3 == 2
+    {
+        let words = row.len() / 4;
+        let word_offset = offset / 4;
+        let full_words = copy_width / 4;
+        let row_words = row_ptr as *mut u32;
+        if dx < 0 {
+            for target_word in 0..full_words {
+                let source_word = word_offset + target_word;
+                let lower = unsafe { row_words.add(source_word).read() };
+                let upper = unsafe { row_words.add(source_word + 1).read() };
+                unsafe {
+                    row_words
+                        .add(target_word)
+                        .write((lower >> 16) | (upper << 16));
+                }
+            }
+            let tail = unsafe { row_words.add(words - 1).read() } >> 16;
+            unsafe { (row_ptr.add(full_words * 4) as *mut u16).write(tail as u16) };
+            row[copy_width..].fill(clear);
+        } else {
+            for source_word in (0..full_words).rev() {
+                let lower = unsafe { row_words.add(source_word).read() };
+                let upper = unsafe { row_words.add(source_word + 1).read() };
+                unsafe {
+                    row_words
+                        .add(word_offset + 1 + source_word)
+                        .write((lower >> 16) | (upper << 16));
+                }
+            }
+            let prefix = unsafe { row_words.read() } as u16;
+            unsafe { (row_ptr.add(offset) as *mut u16).write(prefix) };
+            row[..offset].fill(clear);
+        }
+        return;
+    }
+
+    let source_address = unsafe { row_ptr.add(source_x) } as usize;
+    let target_address = unsafe { row_ptr.add(target_x) } as usize;
+    if (source_address | target_address | copy_width) & 3 == 0 {
+        let words = copy_width / 4;
+        let source = unsafe { row_ptr.add(source_x) as *const u32 };
+        let target = unsafe { row_ptr.add(target_x) as *mut u32 };
+        if dx > 0 {
+            for word in (0..words).rev() {
+                unsafe { target.add(word).write(source.add(word).read()) };
+            }
+        } else {
+            for word in 0..words {
+                unsafe { target.add(word).write(source.add(word).read()) };
+            }
+        }
+    } else if (source_address | target_address | copy_width) & 1 == 0 {
+        let halfwords = copy_width / 2;
+        let source = unsafe { row_ptr.add(source_x) as *const u16 };
+        let target = unsafe { row_ptr.add(target_x) as *mut u16 };
+        if dx > 0 {
+            for halfword in (0..halfwords).rev() {
+                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+            }
+        } else {
+            for halfword in 0..halfwords {
+                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+            }
+        }
+    } else if dx > 0 {
+        for byte in (0..copy_width).rev() {
+            unsafe {
+                row_ptr
+                    .add(target_x + byte)
+                    .write(row_ptr.add(source_x + byte).read())
+            };
+        }
+    } else {
+        for byte in 0..copy_width {
+            unsafe {
+                row_ptr
+                    .add(target_x + byte)
+                    .write(row_ptr.add(source_x + byte).read())
+            };
+        }
+    }
+
+    if dx > 0 {
+        row[..target_x].fill(clear);
+    } else {
+        row[copy_width..].fill(clear);
+    }
+}
+
 impl<C: ColorIndex> IndexedFrameBuffer<C> {
     /// Create a new `width × height` buffer, cleared to `clear`.
     pub fn new(width: usize, height: usize, clear: C) -> Self {
@@ -323,56 +429,8 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
 
             if dy == 0 {
                 for y in 0..height {
-                    let row = unsafe { pixels.as_mut_ptr().add(y * width) };
-                    let source_address = unsafe { row.add(source_x) } as usize;
-                    let target_address = unsafe { row.add(target_x) } as usize;
-                    if (source_address | target_address | copy_width) & 3 == 0 {
-                        let words = copy_width / 4;
-                        let source = unsafe { row.add(source_x) as *const u32 };
-                        let target = unsafe { row.add(target_x) as *mut u32 };
-                        if dx > 0 {
-                            for word in (0..words).rev() {
-                                unsafe { target.add(word).write(source.add(word).read()) };
-                            }
-                        } else {
-                            for word in 0..words {
-                                unsafe { target.add(word).write(source.add(word).read()) };
-                            }
-                        }
-                    } else if (source_address | target_address | copy_width) & 1 == 0 {
-                        let halfwords = copy_width / 2;
-                        let source = unsafe { row.add(source_x) as *const u16 };
-                        let target = unsafe { row.add(target_x) as *mut u16 };
-                        if dx > 0 {
-                            for halfword in (0..halfwords).rev() {
-                                unsafe { target.add(halfword).write(source.add(halfword).read()) };
-                            }
-                        } else {
-                            for halfword in 0..halfwords {
-                                unsafe { target.add(halfword).write(source.add(halfword).read()) };
-                            }
-                        }
-                    } else if dx > 0 {
-                        for byte in (0..copy_width).rev() {
-                            unsafe {
-                                row.add(target_x + byte)
-                                    .write(row.add(source_x + byte).read())
-                            };
-                        }
-                    } else {
-                        for byte in 0..copy_width {
-                            unsafe {
-                                row.add(target_x + byte)
-                                    .write(row.add(source_x + byte).read())
-                            };
-                        }
-                    }
-
-                    if dx > 0 {
-                        pixels[y * width..y * width + target_x].fill(clear_value);
-                    } else {
-                        pixels[y * width + copy_width..(y + 1) * width].fill(clear_value);
-                    }
+                    let start = y * width;
+                    scroll_chunky_row(&mut pixels[start..start + width], dx, clear_value);
                 }
                 return;
             }
@@ -741,6 +799,34 @@ mod tests {
                     GbColor::White
                 };
                 assert_eq!(fb.get_pixel(x, y), Some(expected), "({x}, {y})");
+            }
+        }
+    }
+
+    #[test]
+    fn chunky_row_scroll_matches_reference_for_every_offset() {
+        let mut storage = [0u32; 10];
+        let storage_bytes = unsafe {
+            core::slice::from_raw_parts_mut(storage.as_mut_ptr() as *mut u8, storage.len() * 4)
+        };
+        for width in [37, storage_bytes.len()] {
+            let row = &mut storage_bytes[..width];
+            let original: Vec<u8> = (0..row.len() as u8).collect();
+            for dx in -(row.len() as i32 - 1)..row.len() as i32 {
+                if dx == 0 {
+                    continue;
+                }
+                row.copy_from_slice(&original);
+                scroll_chunky_row(row, dx, 0xff);
+                for (x, &actual) in row.iter().enumerate() {
+                    let source_x = x as i32 - dx;
+                    let expected = if (0..original.len() as i32).contains(&source_x) {
+                        original[source_x as usize]
+                    } else {
+                        0xff
+                    };
+                    assert_eq!(actual, expected, "width {width}, offset {dx}, pixel {x}");
+                }
             }
         }
     }
