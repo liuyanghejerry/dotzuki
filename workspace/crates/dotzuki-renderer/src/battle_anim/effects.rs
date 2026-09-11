@@ -205,17 +205,32 @@ fn shift_rows_h(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dx: i32) {
     if dx == 0 {
         return;
     }
-    let w = fb.width() as i32;
-    let src = fb.indexed().clone();
-    for y in 0..y_end.min(fb.height()) {
-        for x in 0..w {
-            let sx = x - dx;
-            let color = if sx >= 0 && sx < w {
-                src.get_pixel(sx as u32, y).unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    {
+        let width = fb.width() as usize;
+        let height = fb.height() as usize;
+        shift_chunky_rows_h(
+            fb.indexed_mut().indices_mut(),
+            width,
+            height,
+            y_end as usize,
+            dx,
+        );
+    }
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    {
+        let w = fb.width() as i32;
+        let src = fb.indexed().clone();
+        for y in 0..y_end.min(fb.height()) {
+            for x in 0..w {
+                let sx = x - dx;
+                let color = if sx >= 0 && sx < w {
+                    src.get_pixel(sx as u32, y).unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
@@ -225,17 +240,97 @@ fn shift_rows_v(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dy: i32) {
     if dy == 0 {
         return;
     }
-    let src = fb.indexed().clone();
-    for y in 0..y_end.min(fb.height()) as i32 {
-        let sy = y - dy;
-        for x in 0..fb.width() as i32 {
-            let color = if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
-                src.get_pixel(x as u32, sy as u32).unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y as u32, color);
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    {
+        let width = fb.width() as usize;
+        let height = fb.height() as usize;
+        shift_chunky_rows_v(
+            fb.indexed_mut().indices_mut(),
+            width,
+            height,
+            y_end as usize,
+            dy,
+        );
+    }
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    {
+        let src = fb.indexed().clone();
+        for y in 0..y_end.min(fb.height()) as i32 {
+            let sy = y - dy;
+            for x in 0..fb.width() as i32 {
+                let color = if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
+                    src.get_pixel(x as u32, sy as u32).unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y as u32, color);
+            }
         }
+    }
+}
+
+/// Allocation-free equivalents of the clone-based framebuffer passes used by
+/// the GBA's chunky one-byte-per-pixel backing. Kept available to unit tests so
+/// their exact edge and overlap behaviour can be checked on hosted targets.
+#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
+fn shift_chunky_rows_h(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dx: i32) {
+    let rows = y_end.min(height);
+    let offset = dx.unsigned_abs() as usize;
+    if dx == 0 || rows == 0 {
+        return;
+    }
+    if offset >= width {
+        pixels[..rows * width].fill(GbColor::White as u8);
+        return;
+    }
+    for row in pixels[..rows * width].chunks_exact_mut(width) {
+        if dx > 0 {
+            row.copy_within(..width - offset, offset);
+            row[..offset].fill(GbColor::White as u8);
+        } else {
+            row.copy_within(offset.., 0);
+            row[width - offset..].fill(GbColor::White as u8);
+        }
+    }
+}
+
+#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
+fn shift_chunky_rows_v(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dy: i32) {
+    let rows = y_end.min(height);
+    let offset = dy.unsigned_abs() as usize;
+    if dy == 0 || rows == 0 {
+        return;
+    }
+    let region = &mut pixels[..rows * width];
+    if offset >= rows {
+        region.fill(GbColor::White as u8);
+    } else if dy > 0 {
+        region.copy_within(..(rows - offset) * width, offset * width);
+        region[..offset * width].fill(GbColor::White as u8);
+    } else {
+        region.copy_within(offset * width.., 0);
+        region[(rows - offset) * width..].fill(GbColor::White as u8);
+    }
+}
+
+#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
+fn shift_chunky_row_clamped(row: &mut [u8], shift: i32) {
+    let len = row.len();
+    let offset = shift.unsigned_abs() as usize;
+    if shift == 0 || len == 0 {
+        return;
+    }
+    if offset >= len {
+        let edge = if shift > 0 { row[len - 1] } else { row[0] };
+        row.fill(edge);
+    } else if shift > 0 {
+        let edge = row[len - 1];
+        row.copy_within(offset.., 0);
+        row[len - offset..].fill(edge);
+    } else {
+        let edge = row[0];
+        row.copy_within(..len - offset, offset);
+        row[..offset].fill(edge);
     }
 }
 
@@ -1124,17 +1219,34 @@ impl BattleEffects {
             // Wavy screen: per-scanline SCX from WAVY_LINE_OFFSETS;
             // the table start advances one entry per frame.
             let w = fb.width() as usize;
-            let src = fb.indexed().clone();
             let start = (self.wave_frame - 1) as usize;
-            for y in 0..fb.height() as usize {
-                let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
-                if shift == 0 {
-                    continue;
+            #[cfg(all(target_os = "none", target_arch = "arm"))]
+            {
+                let h = fb.height() as usize;
+                for (y, row) in fb
+                    .indexed_mut()
+                    .indices_mut()
+                    .chunks_exact_mut(w)
+                    .take(h)
+                    .enumerate()
+                {
+                    let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
+                    shift_chunky_row_clamped(row, shift);
                 }
-                for x in 0..w as i32 {
-                    let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
-                    let color = src.get_pixel(sx as u32, y as u32).unwrap_or(GbColor::White);
-                    fb.set_pixel_index(x as u32, y as u32, color);
+            }
+            #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+            {
+                let src = fb.indexed().clone();
+                for y in 0..fb.height() as usize {
+                    let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
+                    if shift == 0 {
+                        continue;
+                    }
+                    for x in 0..w as i32 {
+                        let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
+                        let color = src.get_pixel(sx as u32, y as u32).unwrap_or(GbColor::White);
+                        fb.set_pixel_index(x as u32, y as u32, color);
+                    }
                 }
             }
         }
@@ -1779,6 +1891,64 @@ mod tests {
     }
 
     // ── Screen shake ─────────────────────────────────────────────────
+
+    #[test]
+    fn chunky_screen_shifts_match_clone_based_reference() {
+        let width = 7usize;
+        let height = 5usize;
+        let rows = 4usize;
+        let source: Vec<u8> = (0..width * height).map(|i| (i % 4) as u8).collect();
+
+        for dx in [-8, -3, -1, 1, 3, 8] {
+            let mut actual = source.clone();
+            shift_chunky_rows_h(&mut actual, width, height, rows, dx);
+            let mut expected = source.clone();
+            for y in 0..rows {
+                for x in 0..width {
+                    let sx = x as i32 - dx;
+                    expected[y * width + x] = if (0..width as i32).contains(&sx) {
+                        source[y * width + sx as usize]
+                    } else {
+                        GbColor::White as u8
+                    };
+                }
+            }
+            assert_eq!(actual, expected, "horizontal dx={dx}");
+        }
+
+        for dy in [-5, -2, -1, 1, 2, 5] {
+            let mut actual = source.clone();
+            shift_chunky_rows_v(&mut actual, width, height, rows, dy);
+            let mut expected = source.clone();
+            for y in 0..rows {
+                let sy = y as i32 - dy;
+                for x in 0..width {
+                    expected[y * width + x] = if (0..rows as i32).contains(&sy) {
+                        source[sy as usize * width + x]
+                    } else {
+                        GbColor::White as u8
+                    };
+                }
+            }
+            assert_eq!(actual, expected, "vertical dy={dy}");
+        }
+    }
+
+    #[test]
+    fn chunky_wavy_row_matches_clamped_reference() {
+        let source = vec![0, 1, 2, 3, 0, 1, 2];
+        for shift in [-9, -3, -1, 0, 1, 3, 9] {
+            let mut actual = source.clone();
+            shift_chunky_row_clamped(&mut actual, shift);
+            let expected: Vec<u8> = (0..source.len())
+                .map(|x| {
+                    let sx = (x as i32 + shift).clamp(0, source.len() as i32 - 1);
+                    source[sx as usize]
+                })
+                .collect();
+            assert_eq!(actual, expected, "wave shift={shift}");
+        }
+    }
 
     #[test]
     fn shake_screen_decays_amplitude() {
