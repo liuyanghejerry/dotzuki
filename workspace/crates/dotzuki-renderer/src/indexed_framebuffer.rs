@@ -1236,7 +1236,40 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Copy the pixels and display palette of `other` into this buffer.
     /// Both buffers must have the same dimensions.
     pub fn copy_from(&mut self, other: &Self) {
-        self.buffer.data.copy_from_slice(&other.buffer.data);
+        self.copy_from_with(other, |destination, source| {
+            destination.copy_from_slice(source);
+        });
+    }
+
+    /// Copy from `other`, delegating the backing-storage transfer to
+    /// `copy_pixels`.
+    ///
+    /// Hosted targets pass their packed planar bytes to the callback. Bare
+    /// metal ARM targets pass their chunky one-byte-per-pixel storage, so a
+    /// platform frontend can use a hardware copy engine without exposing
+    /// renderer internals. The callback must copy every source byte into the
+    /// equally sized destination slice before returning.
+    ///
+    /// Both buffers must have the same dimensions.
+    pub fn copy_from_with<F>(&mut self, other: &Self, copy_pixels: F)
+    where
+        F: FnOnce(&mut [u8], &[u8]),
+    {
+        assert_eq!(self.width(), other.width(), "framebuffer width mismatch");
+        assert_eq!(self.height(), other.height(), "framebuffer height mismatch");
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        copy_pixels(&mut self.buffer.data, &other.buffer.data);
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        {
+            let len = self.buffer.len();
+            let destination = unsafe {
+                core::slice::from_raw_parts_mut(self.buffer.data.as_mut_ptr().cast::<u8>(), len)
+            };
+            copy_pixels(destination, other.buffer.indices());
+        }
+
         self.palette = other.palette;
         self.base = other.base;
         self.fast_grayscale = other.fast_grayscale;
@@ -1894,6 +1927,24 @@ mod facade_tests {
         dst.copy_from(&src);
         assert_eq!(dst.get_index(8, 8), Some(GbColor::Black));
         assert_eq!(dst.get_pixel(8, 8), Some(Rgba::WHITE));
+        assert_eq!(dst.packed(), src.packed());
+    }
+
+    #[test]
+    fn copy_from_with_delegates_storage_transfer() {
+        let mut src = fb();
+        src.fill_rect(3, 5, 9, 7, Rgba::BLACK);
+        src.apply_bgp(0b00000000); // all white
+        let mut dst = fb();
+        let mut calls = 0;
+        dst.copy_from_with(&src, |destination, source| {
+            calls += 1;
+            assert_eq!(destination.len(), source.len());
+            destination.copy_from_slice(source);
+        });
+        assert_eq!(calls, 1);
+        assert_eq!(dst.get_index(4, 6), Some(GbColor::Black));
+        assert_eq!(dst.get_pixel(4, 6), Some(Rgba::WHITE));
         assert_eq!(dst.packed(), src.packed());
     }
 
