@@ -19,7 +19,7 @@ modern-audio = ["dotzuki-audio/modern-audio"]
 
 [dependencies]
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.6.0" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.6.0", features = ["script-boa"] }
 dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.6.0" }
 dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.6.0" }
 dotzuki-rules = { path = "../dotzuki-rules", version = "0.6.0" }

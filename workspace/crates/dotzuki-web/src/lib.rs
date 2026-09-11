@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-
 use wasm_bindgen::prelude::*;
 
 use dotzuki_renderer::layout_engine::deserialize::parse_layout;
 use dotzuki_renderer::layout_engine::registry::ElementRegistry;
 use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
-use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, Theme};
+use dotzuki_renderer::layout_engine::types::{
+    DataContext, DataValue, FontRegistry, RenderContext, Theme, TilesetRegistry,
+};
 use dotzuki_renderer::{FrameBuffer, RenderConfig};
 
 /// Real-engine audio playback (`render_audio_pcm`, `audio_sample_rate`).
@@ -127,8 +127,8 @@ pub fn render_gui(
     }
 
     // 4. Render at the requested size (render_layout clears to the theme bg).
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts = FontRegistry::default();
+    let tilesets = TilesetRegistry::default();
     let render_ctx = RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets);
     let mut fb = FrameBuffer::new(RenderConfig::new(width, height), Rgba::WHITE);
     {

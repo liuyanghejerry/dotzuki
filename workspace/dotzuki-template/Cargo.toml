@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 dotzuki-engine = { path = "../crates/dotzuki-engine" }
 dotzuki-engine-tiled = { path = "../crates/dotzuki-engine-tiled" }
-dotzuki-engine-script = { path = "../crates/dotzuki-engine-script" }
+dotzuki-engine-script = { path = "../crates/dotzuki-engine-script", features = ["script-boa"] }
 dotzuki-engine-dsl = { path = "../crates/dotzuki-engine-dsl" }
 
 pixels = "0.15"

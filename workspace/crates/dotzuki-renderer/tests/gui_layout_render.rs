@@ -4,7 +4,7 @@
 //! the LayoutEditor preview" regression — the round-trip test proves elements
 //! deserialize correctly, this proves they then paint.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use dotzuki_engine::render::painter::Painter;
 use dotzuki_engine::render::{Rgba, TilePos, TileRect};
@@ -12,7 +12,9 @@ use dotzuki_engine::render::{Rgba, TilePos, TileRect};
 use dotzuki_renderer::layout_engine::deserialize::parse_layout;
 use dotzuki_renderer::layout_engine::registry::ElementRegistry;
 use dotzuki_renderer::layout_engine::renderer::render_layout;
-use dotzuki_renderer::layout_engine::types::{DataContext, DataValue, RenderContext, ScreenLayout};
+use dotzuki_renderer::layout_engine::types::{
+    DataContext, DataValue, FontRegistry, RenderContext, ScreenLayout, TilesetRegistry,
+};
 
 /// Records every glyph drawn so tests can reconstruct on-screen text.
 #[derive(Default)]
@@ -74,8 +76,8 @@ fn compile_gui(src: &str, path: &str) -> ScreenLayout {
 }
 
 fn render(layout: &ScreenLayout, ctx: &DataContext) -> RecordingPainter {
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts = FontRegistry::default();
+    let tilesets = TilesetRegistry::default();
     let render_ctx = RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets);
     let registry = ElementRegistry::new();
     let mut painter = RecordingPainter::default();
@@ -130,12 +132,12 @@ fn image_element_compiles_and_blits_registered_image() {
     let layout = compile_gui(src, "pic.gui"); // panics if the image element fails to parse_layout
 
     let red = Rgba::new(255, 0, 0, 255);
-    let mut images = ImageRegistry::new();
+    let mut images = ImageRegistry::default();
     images.insert("hero".to_string(), ImageData::new(1, 1, vec![red]));
 
     let ctx = DataContext::new();
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts = FontRegistry::default();
+    let tilesets = TilesetRegistry::default();
     let render_ctx =
         RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets).with_images(&images);
     let registry = ElementRegistry::new();
