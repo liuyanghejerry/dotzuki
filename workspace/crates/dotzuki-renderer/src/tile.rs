@@ -28,6 +28,7 @@ pub enum TileFormat {
 
 /// A decoded 8×8 tile. Each element is a color index (0–3).
 #[derive(Debug, Clone)]
+#[repr(align(4))]
 pub struct Tile {
     /// 8 rows × 8 columns of palette indices (0–3).
     /// Indexed as `pixels[row][col]`.

@@ -1236,12 +1236,29 @@ impl RgbaIndexedFrameBuffer<GbColor> {
         {
             let destination = self.buffer.data.as_mut_ptr() as *mut u8;
             for row in 0..TILE_PIXELS {
+                let source = tile.pixels[row].as_ptr();
+                let destination_offset = (y as usize + row) * width as usize + x as usize;
+                let destination = unsafe { destination.add(destination_offset) };
                 unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        tile.pixels[row].as_ptr(),
-                        destination.add((y as usize + row) * width as usize + x as usize),
-                        TILE_PIXELS,
-                    );
+                    // The bounds checks above cover all eight source and
+                    // destination rows. Tile rows are word-aligned because
+                    // Tile has 4-byte alignment and every row is eight bytes.
+                    if destination_offset & 3 == 0 {
+                        let source = source as *const u32;
+                        let destination = destination as *mut u32;
+                        destination.write(source.read());
+                        destination.add(1).write(source.add(1).read());
+                    } else if destination_offset & 1 == 0 {
+                        // Smooth 2 px scrolling keeps halfword alignment even
+                        // when the destination is between word boundaries.
+                        let source = source as *const u16;
+                        let destination = destination as *mut u16;
+                        for halfword in 0..4 {
+                            destination.add(halfword).write(source.add(halfword).read());
+                        }
+                    } else {
+                        core::ptr::copy_nonoverlapping(source, destination, TILE_PIXELS);
+                    }
                 }
             }
             return;
@@ -1359,6 +1376,12 @@ mod facade_tests {
 
     fn fb() -> RgbaIndexedFrameBuffer<GbColor> {
         RgbaIndexedFrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
+    }
+
+    #[test]
+    fn decoded_tiles_are_word_aligned_without_padding() {
+        assert_eq!(core::mem::align_of::<Tile>(), 4);
+        assert_eq!(core::mem::size_of::<Tile>(), 64);
     }
 
     #[test]
