@@ -1053,6 +1053,51 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         ];
         let width = self.width() as i32;
         let height = self.height() as i32;
+
+        // Title screens, dialogue portraits and most GB sprites already use
+        // the framebuffer's native shade order. On the GBA those tiles can
+        // bypass the generic clipped/remapped loop entirely. Palette entry
+        // zero is allowed to quantize differently when it is transparent,
+        // because that source index is skipped rather than written.
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if !flip_x
+            && !flip_y
+            && x >= 0
+            && y >= 0
+            && x + TILE_PIXELS as i32 <= width
+            && y + TILE_PIXELS as i32 <= height
+        {
+            let transparent_zero = transparent && rgba[0] == Rgba::TRANSPARENT;
+            let transparent_nonzero = transparent
+                && rgba[1..]
+                    .iter()
+                    .any(|color| *color == Rgba::TRANSPARENT);
+            let identity_mapping = mapped.iter().enumerate().all(|(index, color)| {
+                (index == 0 && transparent_zero) || color.to_index() == index
+            });
+
+            if identity_mapping && !transparent_nonzero {
+                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                for row in 0..TILE_PIXELS {
+                    let source = tile.pixels[row].as_ptr();
+                    let target = unsafe {
+                        destination.add((y as usize + row) * width as usize + x as usize)
+                    };
+                    if transparent_zero {
+                        for column in 0..TILE_PIXELS {
+                            let value = unsafe { source.add(column).read() };
+                            if value != 0 {
+                                unsafe { target.add(column).write(value) };
+                            }
+                        }
+                    } else {
+                        unsafe { core::ptr::copy_nonoverlapping(source, target, TILE_PIXELS) };
+                    }
+                }
+                return;
+            }
+        }
+
         let tile_size = TILE_PIXELS as i32;
         let x_start = x.saturating_neg().clamp(0, tile_size) as usize;
         let y_start = y.saturating_neg().clamp(0, tile_size) as usize;
