@@ -1235,29 +1235,43 @@ impl RgbaIndexedFrameBuffer<GbColor> {
             && y + TILE_PIXELS as i32 <= height
         {
             let destination = self.buffer.data.as_mut_ptr() as *mut u8;
-            for row in 0..TILE_PIXELS {
-                let source = tile.pixels[row].as_ptr();
-                let destination_offset = (y as usize + row) * width as usize + x as usize;
-                let destination = unsafe { destination.add(destination_offset) };
-                unsafe {
-                    // The bounds checks above cover all eight source and
-                    // destination rows. Tile rows are word-aligned because
-                    // Tile has 4-byte alignment and every row is eight bytes.
-                    if destination_offset & 3 == 0 {
-                        let source = source as *const u32;
-                        let destination = destination as *mut u32;
+            let width = width as usize;
+            let x = x as usize;
+            let y = y as usize;
+
+            // Pick one copy shape per tile rather than branching for every
+            // row. The bounds checks above cover all eight source and
+            // destination rows. Tile rows are word-aligned because Tile has
+            // 4-byte alignment and every row is eight bytes.
+            if width & 3 == 0 && x & 3 == 0 {
+                for row in 0..TILE_PIXELS {
+                    unsafe {
+                        let source = tile.pixels[row].as_ptr() as *const u32;
+                        let destination = destination.add((y + row) * width + x) as *mut u32;
                         destination.write(source.read());
                         destination.add(1).write(source.add(1).read());
-                    } else if destination_offset & 1 == 0 {
-                        // Smooth 2 px scrolling keeps halfword alignment even
-                        // when the destination is between word boundaries.
-                        let source = source as *const u16;
-                        let destination = destination as *mut u16;
+                    }
+                }
+            } else if width & 1 == 0 && x & 1 == 0 {
+                // Smooth 2 px scrolling keeps halfword alignment even when
+                // the destination is between word boundaries.
+                for row in 0..TILE_PIXELS {
+                    unsafe {
+                        let source = tile.pixels[row].as_ptr() as *const u16;
+                        let destination = destination.add((y + row) * width + x) as *mut u16;
                         for halfword in 0..4 {
                             destination.add(halfword).write(source.add(halfword).read());
                         }
-                    } else {
-                        core::ptr::copy_nonoverlapping(source, destination, TILE_PIXELS);
+                    }
+                }
+            } else {
+                for row in 0..TILE_PIXELS {
+                    unsafe {
+                        core::ptr::copy_nonoverlapping(
+                            tile.pixels[row].as_ptr(),
+                            destination.add((y + row) * width + x),
+                            TILE_PIXELS,
+                        );
                     }
                 }
             }
