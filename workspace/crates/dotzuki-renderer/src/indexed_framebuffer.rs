@@ -489,6 +489,55 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         }
     }
 
+    /// Copy a clipped pixel rectangle from `other` at the same coordinates.
+    /// Pixels outside the rectangle are preserved. Both buffers must have the
+    /// same dimensions.
+    pub fn copy_rect_from(
+        &mut self,
+        other: &Self,
+        x: u32,
+        y: u32,
+        rect_width: u32,
+        rect_height: u32,
+    ) {
+        assert_eq!(self.width, other.width, "framebuffer width mismatch");
+        assert_eq!(self.height, other.height, "framebuffer height mismatch");
+        let x_start = (x as usize).min(self.width);
+        let y_start = (y as usize).min(self.height);
+        let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
+        let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        {
+            let copy_width = x_end - x_start;
+            let destination = self.data.as_mut_ptr().cast::<u8>();
+            let source = other.data.as_ptr().cast::<u8>();
+            for row in y_start..y_end {
+                let offset = row * self.width + x_start;
+                unsafe {
+                    core::ptr::copy_nonoverlapping(
+                        source.add(offset),
+                        destination.add(offset),
+                        copy_width,
+                    );
+                }
+            }
+        }
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        for row in y_start..y_end {
+            for column in x_start..x_end {
+                let color = other
+                    .get_pixel(column as u32, row as u32)
+                    .expect("copy source is in bounds");
+                self.set_pixel(column as u32, row as u32, color);
+            }
+        }
+    }
+
     #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
@@ -871,6 +920,28 @@ mod tests {
         for y in 0..4 {
             for x in 0..5 {
                 assert_eq!(fb.get_pixel(x, y), Some(GbColor::DarkGray));
+            }
+        }
+    }
+
+    #[test]
+    fn copy_rect_from_preserves_pixels_outside_the_rectangle() {
+        let mut source = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::White);
+        for y in 0..7 {
+            for x in 0..10 {
+                source.set_pixel(x, y, GbColor::from_u8(((x + y * 3) % 4) as u8));
+            }
+        }
+        let mut destination = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::Black);
+        destination.copy_rect_from(&source, 2, 1, 5, 4);
+        for y in 0..7 {
+            for x in 0..10 {
+                let expected = if (2..7).contains(&x) && (1..5).contains(&y) {
+                    source.get_pixel(x, y).unwrap()
+                } else {
+                    GbColor::Black
+                };
+                assert_eq!(destination.get_pixel(x, y), Some(expected), "({x}, {y})");
             }
         }
     }
@@ -1273,6 +1344,20 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         self.palette = other.palette;
         self.base = other.base;
         self.fast_grayscale = other.fast_grayscale;
+    }
+
+    /// Copy a clipped pixel rectangle from `other` at the same coordinates,
+    /// preserving all palette state and pixels outside the rectangle.
+    pub fn copy_rect_from(
+        &mut self,
+        other: &Self,
+        x: u32,
+        y: u32,
+        rect_width: u32,
+        rect_height: u32,
+    ) {
+        self.buffer
+            .copy_rect_from(&other.buffer, x, y, rect_width, rect_height);
     }
 
     /// Move the indexed pixels by `(dx, dy)`, filling exposed edges with
@@ -1946,6 +2031,23 @@ mod facade_tests {
         assert_eq!(dst.get_index(4, 6), Some(GbColor::Black));
         assert_eq!(dst.get_pixel(4, 6), Some(Rgba::WHITE));
         assert_eq!(dst.packed(), src.packed());
+    }
+
+    #[test]
+    fn copy_rect_from_preserves_destination_palette_and_other_pixels() {
+        let mut src = fb();
+        src.fill_rect(2, 3, 6, 5, Rgba::BLACK);
+        src.apply_bgp(0b00000000); // all white
+        let mut dst = fb();
+        dst.fill_rect(0, 0, 16, 16, Rgba::rgb(0x55, 0x55, 0x55));
+        dst.apply_bgp(0b11100100); // identity display palette
+
+        dst.copy_rect_from(&src, 2, 3, 6, 5);
+
+        assert_eq!(dst.get_index(4, 4), Some(GbColor::Black));
+        assert_eq!(dst.get_pixel(4, 4), Some(Rgba::BLACK));
+        assert_eq!(dst.get_index(1, 4), Some(GbColor::DarkGray));
+        assert_eq!(dst.get_pixel(1, 4), Some(Rgba::rgb(0x55, 0x55, 0x55)));
     }
 
     #[test]
