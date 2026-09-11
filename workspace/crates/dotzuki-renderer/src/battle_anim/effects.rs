@@ -489,6 +489,25 @@ impl BattleEffects {
         }
     }
 
+    /// Whether [`Self::tick`] can still change the rendered frame.
+    ///
+    /// Persistent state such as palette tint, hidden/minimized monsters, and
+    /// substitutes is intentionally excluded: it still affects rendering, but
+    /// remains pixel-stable until another command changes the latch.
+    pub fn is_animating(&self) -> bool {
+        self.flash.is_some()
+            || self.shake.is_some()
+            || self.wave_frame > 0
+            || self.hud_shake.is_some()
+            || self.blink.is_some()
+            || self.squish.is_some()
+            || self.shake_bnf.is_some()
+            || self.bounce.is_some()
+            || self.slide_down_hide.is_some()
+            || self.transform.is_some()
+            || !matches!(&self.objects, Objects::None)
+    }
+
     /// Clear per-mon latches when a mon leaves the field (switch/faint).
     pub fn clear_side(&mut self, side: MonSide) {
         let i = side.index();
@@ -1400,6 +1419,30 @@ mod tests {
 
     fn apply(fx: &mut BattleEffects, effect: AnimEffect) -> u8 {
         fx.apply(&effect, MonSide::Player)
+    }
+
+    #[test]
+    fn is_animating_tracks_transient_but_not_persistent_state() {
+        let mut fx = BattleEffects::new();
+        assert!(!fx.is_animating());
+
+        apply(
+            &mut fx,
+            AnimEffect::ShakeScreenH {
+                pixels: 1,
+                frames: 4,
+            },
+        );
+        assert!(fx.is_animating());
+        for _ in 0..4 {
+            fx.tick();
+        }
+        assert!(!fx.is_animating());
+
+        apply(&mut fx, AnimEffect::DarkScreenPalette);
+        assert!(!fx.is_animating(), "a stable tint is reusable");
+        apply(&mut fx, AnimEffect::SubstituteMon);
+        assert!(!fx.is_animating(), "a stable substitute latch is reusable");
     }
 
     // ── SquishMonPic ─────────────────────────────────────────────────
