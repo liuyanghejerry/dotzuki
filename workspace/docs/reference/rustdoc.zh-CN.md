@@ -1,17 +1,18 @@
 # Rust API 门户
 
-> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.6.0
+>（源文档 commit ca430506b34b）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.6.0
 
 crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。
 
-所有 `dotzuki-*` crate 共享同一个版本（目前是 `0.5.4`）并发布在 crates.io
+所有 `dotzuki-*` crate 共享同一个版本（目前是 `0.6.0`）并发布在 crates.io
 上，因此它们的 API 文档位于 docs.rs。本地副本：
 
 ```bash
@@ -36,7 +37,8 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-tui` | 终端外壳（ratatui） | [docs.rs](https://docs.rs/dotzuki-tui) | — |
 | `dotzuki-runner` | 零 Rust 项目运行时 + 无头模式驱动 | [docs.rs](https://docs.rs/dotzuki-runner) | [项目清单](project-manifest.md) |
 | `dotzuki-runner-web` | 运行器的 WASM 构建（编辑器 Play） | [docs.rs](https://docs.rs/dotzuki-runner-web) | [发布指南](../how-to/publishing.md) |
-| `dotzuki-cli` | `dotzuki` 二进制：`new` / `check` / `run` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI 参考](cli.md) |
+| `dotzuki-runner-mobile` | 原生平台外壳共用的 C ABI 移动运行时 | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md)、[鸿蒙导出](../how-to/export-harmonyos.zh-CN.md) |
+| `dotzuki-cli` | `dotzuki` 二进制：`new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI 参考](cli.md) |
 | `dotzuki-web` | WASM 桥：编辑器布局预览、游戏外壳（`game-shell` feature）、BroadcastChannel 联机传输（`link` feature） | [docs.rs](https://docs.rs/dotzuki-web) | [游戏外壳](game-shell.md)、[联机](link-play.md) |
 
 crates.io 发布集之外的工具：

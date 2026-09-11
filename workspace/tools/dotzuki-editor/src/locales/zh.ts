@@ -804,6 +804,7 @@ export default {
     error: '出错了',
     exportWeb: '导出 Web',
     exportNative: '导出原生',
+    exportHarmony: '导出鸿蒙',
     exporting: '正在导出…',
     exportDone: '已导出到 {path}（dist 目录不会被打进项目包，可重复导出）',
     keyHelp: '方向键 / WASD：移动 · Z：A 键 · X：B 键 · Enter / 空格：Start · Backspace / 右 Shift：Select',

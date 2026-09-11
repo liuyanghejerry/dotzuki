@@ -56,6 +56,7 @@ pub fn run(args: RunArgs) -> Result<()> {
             // Windowed runs save at stable points; headless runs only on an
             // explicit `--save`, keeping CI side-effect-free.
             write_saves: !args.headless || args.save,
+            external_saves: false,
             rng_script: None,
             pcm_audio: false,
         },

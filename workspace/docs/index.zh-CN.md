@@ -1,6 +1,7 @@
 # dotzuki 引擎 — 文档索引
 
-> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.6.0
+>（源文档 commit ca430506b34b）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本目录是 **dotzuki 开发者文档的入口**。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -46,6 +47,7 @@
 | [`how-to/assets.md`](./how-to/assets.md) | 素材管线：tileset、共享 tile 库、2bpp 转换、字体 |
 | [`how-to/i18n.md`](./how-to/i18n.md) | 双语文本：`game` i18n API 与 `@t` 语法 |
 | [`how-to/publishing.md`](./how-to/publishing.md) | 发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级 |
+| [`how-to/export-harmonyos.zh-CN.md`](./how-to/export-harmonyos.zh-CN.md) | 构建移动运行时并导出 DevEco Studio 工程 |
 
 ## 参考
 
@@ -76,6 +78,7 @@
 | 文档 | 涵盖内容 |
 |---|---|
 | [`explanation/architecture.md`](./explanation/architecture.md) | 当前架构：引擎 crate、运行器、CLI、编辑器，以及从 DSL 到游戏的流程 |
+| [`explanation/mobile-architecture.zh-CN.md`](./explanation/mobile-architecture.zh-CN.md) | 一套 C ABI 与 iOS、Android、鸿蒙原生外壳 |
 | [`explanation/effect-stack.md`](./explanation/effect-stack.md) | 战斗效果栈模型、event/handler 架构、RNG 确定性、如实说明的限制 |
 | [`explanation/game-data.md`](./explanation/game-data.md) | `GameData` 提供者 trait 及其泛型关联类型 |
 | [`explanation/save-compatibility.md`](./explanation/save-compatibility.md) | 存档版本机制与向前/向后兼容规则 |

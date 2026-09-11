@@ -804,6 +804,7 @@ export default {
     error: 'Error',
     exportWeb: 'Export Web',
     exportNative: 'Export Native',
+    exportHarmony: 'Export HarmonyOS',
     exporting: 'Exporting…',
     exportDone: 'Exported to {path} (dist is never bundled, so re-exporting is safe)',
     keyHelp: 'Arrows / WASD: move · Z: A button · X: B button · Enter / Space: Start · Backspace / Right Shift: Select',

@@ -25,6 +25,7 @@ crates/                          # Game-AGNOSTIC engine
 │   │                            #   RunnerGame & headless driver + dotzuki-player
 │   │                            #   (game-agnostic native player bin for export --native)
 ├── dotzuki-runner-web/             # WASM build of the runner (powers dotzuki-editor Play)
+├── dotzuki-runner-mobile/          # Shared C ABI runtime for iOS/Android/HarmonyOS shells
 ├── dotzuki-renderer/               # Generic GB-style tile/text renderer (CJK fonts)
 ├── dotzuki-ui/                     # Generic UI widgets on a Painter trait
 ├── dotzuki-audio/                  # Audio abstraction layer

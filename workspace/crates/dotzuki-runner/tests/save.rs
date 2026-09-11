@@ -99,6 +99,7 @@ fn boot_saving(root: &Path) -> RunnerGame {
         root,
         RunnerOptions {
             write_saves: true,
+            external_saves: false,
             ..RunnerOptions::default()
         },
     )
@@ -221,6 +222,7 @@ fn fresh_option_ignores_save() {
         RunnerOptions {
             fresh: true,
             write_saves: true,
+            external_saves: false,
             ..RunnerOptions::default()
         },
     );
@@ -354,6 +356,7 @@ fn map_option_overrides_save() {
         RunnerOptions {
             map: Some("Town".to_string()),
             write_saves: true,
+            external_saves: false,
             ..RunnerOptions::default()
         },
     );

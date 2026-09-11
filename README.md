@@ -123,7 +123,8 @@ entirely on the effect stack, plus the `your-first-game` example project.
 - `dotzuki-audio` — audio abstraction layer
 - `dotzuki-app` / `dotzuki-tui` — native app shell (hot-reload) / terminal shell
 - `dotzuki-runner` + `dotzuki-runner-web` — zero-Rust project runtime and its WASM build
-- `dotzuki-cli` — the `dotzuki` binary: `new` / `check` / `run`
+- `dotzuki-runner-mobile` — shared C ABI runtime for iOS, Android, and HarmonyOS shells
+- `dotzuki-cli` — the `dotzuki` binary: `new` / `check` / `run` / `export`
 - `dotzuki-web` — WASM bridge for editor layout preview
 
 </details>

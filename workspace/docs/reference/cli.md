@@ -3,7 +3,7 @@
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.5
+> - **Last verified**: v0.6.0
 
 Every `dotzuki` subcommand, flag and exit code for scaffolding, validating,
 running and exporting zero-Rust game projects.
@@ -31,6 +31,7 @@ manifest, not the CLI, defines the project layout.
 | `dotzuki run <dir>` | Boot the project and play it in a window (or headless for CI/screenshots) |
 | `dotzuki export --web <dir>` | Export the project as a static web site (player page + game pack + WASM runner) |
 | `dotzuki export --native <dir>` | Export the project as a native app directory (dotzuki-player binary + game pack) |
+| `dotzuki export --harmony <dir>` | Export a HarmonyOS DevEco Studio project (mobile runtime + game pack) |
 
 ## `dotzuki new <name>`
 
@@ -201,12 +202,44 @@ pack, or a legacy `game.bundle.json` from an older export) plus
 dist/native/my-game --headless --frames 120 --screenshot boot.png
 ```
 
+## `dotzuki export --harmony <dir>`
+
+Packs the project into a HarmonyOS DevEco Studio application. The application
+uses `dotzuki-runner-mobile` through ABI version 1 and ships the same
+`game.dzpk` as the other export targets.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--out <dir>` | `<project>/dist/harmony` | DevEco Studio project output directory |
+| `--mobile-lib <path>` | workspace target or `DOTZUKI_MOBILE_LIB` | Prebuilt arm64 HarmonyOS `libdotzuki_runner_mobile.a` |
+| `--force` | off | Export even when validation reports diagnostics |
+
+The exporter does not invoke the HarmonyOS Rust toolchain. Build the static
+library first, then pass its path:
+
+```bash
+dotzuki export --harmony . \
+  --mobile-lib target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a
+```
+
+The output includes ArkTS lifecycle and controls, an XComponent GLES3
+renderer, OHAudio output, Preferences save storage, the C ABI header, the
+static library, and `game.dzpk`. See the
+[HarmonyOS export guide](../how-to/export-harmonyos.md).
+
 ## Exit codes
 
 - `dotzuki check`: `0` = all DSL compiles (and battle section validates); `1` = diagnostics found.
 - `dotzuki run`: `0` = clean exit.
-- `dotzuki export --web`: `0` = site written; `1` = validation failed (without `--force`), project over the pack caps, or no runner wasm package available.
-- `dotzuki export --native`: `0` = app directory written; `1` = validation failed (without `--force`), project over the pack caps, or no player binary available.
+- `dotzuki export --web`: `0` = site written; `1` = validation failed
+  (without `--force`), project over the pack caps, or no runner wasm package
+  available.
+- `dotzuki export --native`: `0` = app directory written; `1` = validation
+  failed (without `--force`), project over the pack caps, or no player binary
+  available.
+- `dotzuki export --harmony`: `0` = DevEco Studio project written; `1` =
+  validation failed, project over the pack caps, or no mobile runtime library
+  available.
 
 ## Notes
 

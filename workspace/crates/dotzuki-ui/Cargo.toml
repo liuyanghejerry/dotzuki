@@ -6,6 +6,10 @@ license.workspace = true
 repository.workspace = true
 description = "Generic JRPG UI widget library — dialog, yes/no, flex menu widgets using the Painter trait"
 
+[features]
+default = ["gpu"]
+gpu = ["dotzuki-renderer/gpu"]
+
 [dependencies]
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false }
