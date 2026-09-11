@@ -1723,7 +1723,90 @@ impl RgbaIndexedFrameBuffer<GbColor> {
         }
 
         #[cfg(all(target_os = "none", target_arch = "arm"))]
-        let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+        {
+            let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+            if !transparent_zero && !flip_x && !flip_y {
+                let copy_width = x_end - x_start;
+                let destination_x = (x + x_start as i32) as usize;
+                let destination_y = (y + y_start as i32) as usize;
+                let source = unsafe { tile.pixels[y_start].as_ptr().add(x_start) };
+                let target =
+                    unsafe { destination.add(destination_y * width as usize + destination_x) };
+
+                // Clipped scrolling exposes 2/4/6-pixel strips. Choose the
+                // copy width once per tile so those strips retain the same
+                // aligned halfword/word writes as a fully visible tile.
+                if width as usize & 3 == 0
+                    && (source as usize | target as usize | copy_width) & 3 == 0
+                {
+                    let words = copy_width / 4;
+                    for dst_row in y_start..y_end {
+                        unsafe {
+                            let source = tile.pixels[dst_row].as_ptr().add(x_start) as *const u32;
+                            let target = destination
+                                .add((y + dst_row as i32) as usize * width as usize + destination_x)
+                                as *mut u32;
+                            for word in 0..words {
+                                target.add(word).write(source.add(word).read());
+                            }
+                        }
+                    }
+                } else if width as usize & 1 == 0
+                    && (source as usize | target as usize | copy_width) & 1 == 0
+                {
+                    let halfwords = copy_width / 2;
+                    for dst_row in y_start..y_end {
+                        unsafe {
+                            let source = tile.pixels[dst_row].as_ptr().add(x_start) as *const u16;
+                            let target = destination
+                                .add((y + dst_row as i32) as usize * width as usize + destination_x)
+                                as *mut u16;
+                            for halfword in 0..halfwords {
+                                target.add(halfword).write(source.add(halfword).read());
+                            }
+                        }
+                    }
+                } else {
+                    for dst_row in y_start..y_end {
+                        unsafe {
+                            core::ptr::copy_nonoverlapping(
+                                tile.pixels[dst_row].as_ptr().add(x_start),
+                                destination.add(
+                                    (y + dst_row as i32) as usize * width as usize + destination_x,
+                                ),
+                                copy_width,
+                            );
+                        }
+                    }
+                }
+                return;
+            }
+
+            for dst_row in y_start..y_end {
+                let src_row = if flip_y {
+                    TILE_PIXELS - 1 - dst_row
+                } else {
+                    dst_row
+                };
+                for dst_col in x_start..x_end {
+                    let src_col = if flip_x {
+                        TILE_PIXELS - 1 - dst_col
+                    } else {
+                        dst_col
+                    };
+                    let source = tile.pixels[src_row][src_col] & 0x03;
+                    if transparent_zero && source == 0 {
+                        continue;
+                    }
+                    unsafe {
+                        let offset = (y + dst_row as i32) as usize * width as usize
+                            + (x + dst_col as i32) as usize;
+                        destination.add(offset).write(source);
+                    }
+                }
+            }
+        }
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
         for dst_row in y_start..y_end {
             let src_row = if flip_y {
                 TILE_PIXELS - 1 - dst_row
@@ -1740,13 +1823,6 @@ impl RgbaIndexedFrameBuffer<GbColor> {
                 if transparent_zero && source == 0 {
                     continue;
                 }
-                #[cfg(all(target_os = "none", target_arch = "arm"))]
-                unsafe {
-                    let offset = (y + dst_row as i32) as usize * width as usize
-                        + (x + dst_col as i32) as usize;
-                    destination.add(offset).write(source);
-                }
-                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
                 self.buffer.set_pixel(
                     (x + dst_col as i32) as u32,
                     (y + dst_row as i32) as u32,
@@ -1958,6 +2034,41 @@ mod facade_tests {
         fb.blit_gb_tile_indices(0, 0, &tile, true, false, false);
         assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
         assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
+    }
+
+    #[test]
+    fn gb_tile_index_blit_clips_opaque_edges() {
+        let mut tile = Tile::blank();
+        for (row, pixels) in tile.pixels.iter_mut().enumerate() {
+            for (column, pixel) in pixels.iter_mut().enumerate() {
+                *pixel = ((row * TILE_PIXELS + column) & 3) as u8;
+            }
+        }
+
+        for (tile_x, tile_y) in [(-6, 0), (6, 0), (0, -6), (0, 6)] {
+            let mut fb =
+                RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 8), Rgba::BLACK);
+            fb.blit_gb_tile_indices(tile_x, tile_y, &tile, false, false, false);
+
+            for y in 0..8i32 {
+                for x in 0..8i32 {
+                    let source_x = x - tile_x;
+                    let source_y = y - tile_y;
+                    let expected = if (0..TILE_PIXELS as i32).contains(&source_x)
+                        && (0..TILE_PIXELS as i32).contains(&source_y)
+                    {
+                        GbColor::from_u8(tile.pixels[source_y as usize][source_x as usize])
+                    } else {
+                        GbColor::Black
+                    };
+                    assert_eq!(
+                        fb.get_index(x as u32, y as u32),
+                        Some(expected),
+                        "tile ({tile_x}, {tile_y}), pixel ({x}, {y})"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
