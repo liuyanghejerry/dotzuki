@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d36ace7.js";
+            window.path_to_searchindex_js = "../searchindex-9235c325.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-14e5a394.js"></script>
+        <script src="../toc-9877aac9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: game authors, CI</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.5</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>Every <code>dotzuki</code> subcommand, flag and exit code for scaffolding, validating,
@@ -212,6 +212,7 @@ manifest, not the CLI, defines the project layout.</p>
 <tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>Boot the project and play it in a window (or headless for CI/screenshots)</td></tr>
 <tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>Export the project as a static web site (player page + game pack + WASM runner)</td></tr>
 <tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>Export the project as a native app directory (dotzuki-player binary + game pack)</td></tr>
+<tr><td><code>dotzuki export --harmony &lt;dir&gt;</code></td><td>Export a HarmonyOS DevEco Studio project (mobile runtime + game pack)</td></tr>
 </tbody>
 </table>
 </div>
@@ -374,12 +375,44 @@ pack, or a legacy <code>game.bundle.json</code> from an older export) plus
 <code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
 <pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
 </code></pre>
+<h2 id="dotzuki-export---harmony-dir"><a class="header" href="#dotzuki-export---harmony-dir"><code>dotzuki export --harmony &lt;dir&gt;</code></a></h2>
+<p>Packs the project into a HarmonyOS DevEco Studio application. The application
+uses <code>dotzuki-runner-mobile</code> through ABI version 1 and ships the same
+<code>game.dzpk</code> as the other export targets.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/harmony</code></td><td>DevEco Studio project output directory</td></tr>
+<tr><td><code>--mobile-lib &lt;path&gt;</code></td><td>workspace target or <code>DOTZUKI_MOBILE_LIB</code></td><td>Prebuilt arm64 HarmonyOS <code>libdotzuki_runner_mobile.a</code></td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>Export even when validation reports diagnostics</td></tr>
+</tbody>
+</table>
+</div>
+<p>The exporter does not invoke the HarmonyOS Rust toolchain. Build the static
+library first, then pass its path:</p>
+<pre><code class="language-bash">dotzuki export --harmony . \
+  --mobile-lib target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a
+</code></pre>
+<p>The output includes ArkTS lifecycle and controls, an XComponent GLES3
+renderer, OHAudio output, Preferences save storage, the C ABI header, the
+static library, and <code>game.dzpk</code>. See the
+<a href="../how-to/export-harmonyos.html">HarmonyOS export guide</a>.</p>
 <h2 id="exit-codes"><a class="header" href="#exit-codes">Exit codes</a></h2>
 <ul>
 <li><code>dotzuki check</code>: <code>0</code> = all DSL compiles (and battle section validates); <code>1</code> = diagnostics found.</li>
 <li><code>dotzuki run</code>: <code>0</code> = clean exit.</li>
-<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no runner wasm package available.</li>
-<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no player binary available.</li>
+<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed
+(without <code>--force</code>), project over the pack caps, or no runner wasm package
+available.</li>
+<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation
+failed (without <code>--force</code>), project over the pack caps, or no player binary
+available.</li>
+<li><code>dotzuki export --harmony</code>: <code>0</code> = DevEco Studio project written; <code>1</code> =
+validation failed, project over the pack caps, or no mobile runtime library
+available.</li>
 </ul>
 <h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
 <ul>

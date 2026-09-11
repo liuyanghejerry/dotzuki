@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4d36ace7.js";
+            window.path_to_searchindex_js = "searchindex-9235c325.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-14e5a394.js"></script>
+        <script src="toc-9877aac9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -236,6 +236,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>Bilingual text: the <code>game</code> i18n API and <code>@t</code> syntax</td></tr>
 <tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>Shipping a project, headless smoke tests, WASM web play, engine upgrades</td></tr>
+<tr><td><a href="#export-a-game-for-harmonyos"><code>how-to/export-harmonyos.md</code></a></td><td>Building the mobile runtime and exporting a DevEco Studio project</td></tr>
 </tbody>
 </table>
 </div>
@@ -276,6 +277,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </thead>
 <tbody>
 <tr><td><a href="#architecture-overview"><code>explanation/architecture.md</code></a></td><td>Current architecture: engine crates, runner, CLI, editor, and the DSL-to-game flow</td></tr>
+<tr><td><a href="#mobile-architecture"><code>explanation/mobile-architecture.md</code></a></td><td>One C ABI with native iOS, Android, and HarmonyOS shells</td></tr>
 <tr><td><a href="#the-effect-stack-battle-engine"><code>explanation/effect-stack.md</code></a></td><td>The battle effect-stack model, event/handler architecture, RNG determinism, honest limits</td></tr>
 <tr><td><a href="#gamedata-the-provider-pattern"><code>explanation/game-data.md</code></a></td><td>The <code>GameData</code> provider trait and its generic associated types</td></tr>
 <tr><td><a href="#save-compatibility"><code>explanation/save-compatibility.md</code></a></td><td>Save versioning and forward/backward compatibility rules</td></tr>
@@ -3050,6 +3052,77 @@ cargo build
 <p>Upgrade = bump tag + <code>cargo update</code>. See the engine README “Using the engine
 from a game repo”. The same save-version rules apply: a newer engine reads
 older saves (v1/v2/v3 load fine); an older engine refuses newer ones.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="export-a-game-for-harmonyos"><a class="header" href="#export-a-game-for-harmonyos">Export a Game for HarmonyOS</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, engine contributors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+</blockquote>
+<p>Build the common mobile runtime and export a zero-Rust game as a DevEco
+Studio HarmonyOS project.</p>
+<p>Before you start, read <a href="#publishing--upgrading-guide">Publishing &amp; Upgrading</a> and install
+DevEco Studio with HarmonyOS SDK 5.0.5 (API 17) or a compatible newer SDK.</p>
+<h2 id="1-build-the-rust-mobile-runtime"><a class="header" href="#1-build-the-rust-mobile-runtime">1. Build the Rust mobile runtime</a></h2>
+<p>Install Rust’s HarmonyOS target:</p>
+<pre><code class="language-bash">rustup target add aarch64-unknown-linux-ohos
+</code></pre>
+<p>Point Cargo’s target linker at the OpenHarmony SDK’s Clang wrapper. The
+wrapper path depends on the SDK installation. Then build the static library
+from <code>workspace/</code>:</p>
+<pre><code class="language-bash">export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_OHOS_LINKER=/path/to/ohos-clang-wrapper
+cargo build --release \
+  --target aarch64-unknown-linux-ohos \
+  -p dotzuki-runner-mobile
+</code></pre>
+<p>The output is
+<code>target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a</code>.
+See the <a href="https://doc.rust-lang.org/rustc/platform-support/openharmony.html">Rust target documentation</a>
+for the SDK linker requirements.</p>
+<h2 id="2-export-the-game"><a class="header" href="#2-export-the-game">2. Export the game</a></h2>
+<p>Run the export from the game project directory or pass its path:</p>
+<pre><code class="language-bash">dotzuki export --harmony . \
+  --mobile-lib /path/to/libdotzuki_runner_mobile.a \
+  --out dist/harmony
+</code></pre>
+<p>You may set <code>DOTZUKI_MOBILE_LIB</code> instead of passing <code>--mobile-lib</code>. A source
+checkout also detects the library in the workspace target directory shown
+above.</p>
+<p>The exporter runs the same validation and pack rules as web and native
+exports. It writes:</p>
+<pre><code class="language-text">dist/harmony/
+├── AppScope/ and build-profile.json5
+├── entry/src/main/ets/          # UIAbility, controls, saves
+├── entry/src/main/cpp/          # Node-API, XComponent, GLES3, OHAudio
+├── entry/src/main/resources/rawfile/game.dzpk
+└── entry/libs/arm64-v8a/libdotzuki_runner_mobile.a
+</code></pre>
+<p>The editor’s Play toolbar exposes the same operation as <strong>Export HarmonyOS</strong>.
+Set <code>DOTZUKI_MOBILE_LIB</code> before starting the editor server when the library is
+outside the workspace target directory.</p>
+<h2 id="3-build-and-run-in-deveco-studio"><a class="header" href="#3-build-and-run-in-deveco-studio">3. Build and run in DevEco Studio</a></h2>
+<p>Open <code>dist/harmony</code> as a project. Configure an application signing profile,
+select the <code>entry</code> module, and run it on an arm64 phone or tablet.</p>
+<p>The generated shell performs these operations:</p>
+<ul>
+<li>loads <code>game.dzpk</code> with <code>ResourceManager</code>;</li>
+<li>restores UTF-8 save JSON from Preferences;</li>
+<li>advances the game from the native XComponent frame callback;</li>
+<li>uploads each 320×240 RGBA frame to a GLES3 texture with nearest filtering;</li>
+<li>combines ArkUI multi-touch buttons into the common eight-button bitmask;</li>
+<li>pulls 44.1 kHz stereo PCM from Rust in the OHAudio callback; and</li>
+<li>pauses audio and persists a stable save when the page moves to background.</li>
+</ul>
+<h2 id="4-replace-platform-presentation-without-changing-the-game"><a class="header" href="#4-replace-platform-presentation-without-changing-the-game">4. Replace platform presentation without changing the game</a></h2>
+<p>Edit files under <code>entry/src/main/ets/</code> for control layout and lifecycle UI.
+Edit <code>entry/src/main/cpp/dotzuki_host.cpp</code> for the renderer or audio adapter.
+Keep <code>dotzuki_runner_mobile.h</code>, <code>game.dzpk</code>, and ABI version 1 unchanged so a
+shell update does not fork game logic.</p>
+<p>See <a href="#mobile-architecture">Mobile Architecture</a> for the
+threading and ownership contract.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="game-project-spec--zero-rust-dotzuki-engine-projects"><a class="header" href="#game-project-spec--zero-rust-dotzuki-engine-projects">Game Project Spec — zero-Rust dotzuki-engine projects</a></h1>
 <p>The zero-Rust project contract: directory layout, manifest schema, and run/check/playtest behavior.</p>
@@ -7514,7 +7587,7 @@ consumers; the example above is a skeleton, not a tested program.</li>
 <li><strong>Audience</strong>: game authors, CI</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.5</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>Every <code>dotzuki</code> subcommand, flag and exit code for scaffolding, validating,
@@ -7540,6 +7613,7 @@ manifest, not the CLI, defines the project layout.</p>
 <tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>Boot the project and play it in a window (or headless for CI/screenshots)</td></tr>
 <tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>Export the project as a static web site (player page + game pack + WASM runner)</td></tr>
 <tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>Export the project as a native app directory (dotzuki-player binary + game pack)</td></tr>
+<tr><td><code>dotzuki export --harmony &lt;dir&gt;</code></td><td>Export a HarmonyOS DevEco Studio project (mobile runtime + game pack)</td></tr>
 </tbody>
 </table>
 </div>
@@ -7702,12 +7776,44 @@ pack, or a legacy <code>game.bundle.json</code> from an older export) plus
 <code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
 <pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
 </code></pre>
+<h2 id="dotzuki-export---harmony-dir"><a class="header" href="#dotzuki-export---harmony-dir"><code>dotzuki export --harmony &lt;dir&gt;</code></a></h2>
+<p>Packs the project into a HarmonyOS DevEco Studio application. The application
+uses <code>dotzuki-runner-mobile</code> through ABI version 1 and ships the same
+<code>game.dzpk</code> as the other export targets.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/harmony</code></td><td>DevEco Studio project output directory</td></tr>
+<tr><td><code>--mobile-lib &lt;path&gt;</code></td><td>workspace target or <code>DOTZUKI_MOBILE_LIB</code></td><td>Prebuilt arm64 HarmonyOS <code>libdotzuki_runner_mobile.a</code></td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>Export even when validation reports diagnostics</td></tr>
+</tbody>
+</table>
+</div>
+<p>The exporter does not invoke the HarmonyOS Rust toolchain. Build the static
+library first, then pass its path:</p>
+<pre><code class="language-bash">dotzuki export --harmony . \
+  --mobile-lib target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a
+</code></pre>
+<p>The output includes ArkTS lifecycle and controls, an XComponent GLES3
+renderer, OHAudio output, Preferences save storage, the C ABI header, the
+static library, and <code>game.dzpk</code>. See the
+<a href="#export-a-game-for-harmonyos">HarmonyOS export guide</a>.</p>
 <h2 id="exit-codes"><a class="header" href="#exit-codes">Exit codes</a></h2>
 <ul>
 <li><code>dotzuki check</code>: <code>0</code> = all DSL compiles (and battle section validates); <code>1</code> = diagnostics found.</li>
 <li><code>dotzuki run</code>: <code>0</code> = clean exit.</li>
-<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no runner wasm package available.</li>
-<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation failed (without <code>--force</code>), project over the pack caps, or no player binary available.</li>
+<li><code>dotzuki export --web</code>: <code>0</code> = site written; <code>1</code> = validation failed
+(without <code>--force</code>), project over the pack caps, or no runner wasm package
+available.</li>
+<li><code>dotzuki export --native</code>: <code>0</code> = app directory written; <code>1</code> = validation
+failed (without <code>--force</code>), project over the pack caps, or no player binary
+available.</li>
+<li><code>dotzuki export --harmony</code>: <code>0</code> = DevEco Studio project written; <code>1</code> =
+validation failed, project over the pack caps, or no mobile runtime library
+available.</li>
 </ul>
 <h2 id="notes-1"><a class="header" href="#notes-1">Notes</a></h2>
 <ul>
@@ -7778,6 +7884,12 @@ See <a href="#the-effect-stack-battle-engine">the effect stack explanation</a>.<
 <li><strong>runner</strong>（运行器）— <code>dotzuki-runner</code>: loads a zero-Rust project
 (manifest, DSL, maps, collision, tilesets) and drives <code>RunnerGame</code>; also
 runs headless.</li>
+<li><strong>mobile runtime</strong>（移动运行时）— <code>dotzuki-runner-mobile</code>, the C ABI over
+<code>RunnerGame</code> shared by native iOS, Android, and HarmonyOS shells. It owns
+game state, RGBA frames, PCM production, and save serialization.</li>
+<li><strong>mobile shell</strong>（移动外壳）— platform code that owns a mobile app’s
+surface, frame clock, touch controls, audio device, lifecycle, and save
+storage while calling the mobile runtime for game work.</li>
 <li><strong>headless</strong>（无头模式）— running without a window or audio device, used
 for CI smoke tests and screenshots (<code>dotzuki run --headless</code>).</li>
 <li><strong>Boa</strong> — the JavaScript engine behind <code>dotzuki-engine-script</code>; the DSL’s
@@ -8001,13 +8113,13 @@ text.</li>
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>The crate map and where each crate’s API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.</p>
-<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.5.4</code>) and are published
+<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.6.0</code>) and are published
 on crates.io, so their API docs live on docs.rs. Local copy:</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
@@ -8032,7 +8144,8 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-tui</code></td><td>Terminal shell (ratatui)</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>Zero-Rust project runtime + headless driver</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing--upgrading-guide">publishing guide</a></td></tr>
-<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI reference</a></td></tr>
+<tr><td><code>dotzuki-runner-mobile</code></td><td>C ABI mobile runtime for native platform shells</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="#mobile-architecture">mobile architecture</a>, <a href="#export-a-game-for-harmonyos">HarmonyOS export</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI reference</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM bridges: editor layout preview, game shell (<code>game-shell</code> feature), BroadcastChannel link transport (<code>link</code> feature)</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="#game-shell-reference">game shell</a>, <a href="#link-play">link play</a></td></tr>
 </tbody>
 </table>
@@ -8138,6 +8251,103 @@ the engine crates contain no concrete game data and no platform calls
 <li><a href="#gamedata-the-provider-pattern">GameData provider design</a></li>
 <li><a href="#save-compatibility">Save compatibility</a></li>
 <li><a href="#glossary">Glossary</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="mobile-architecture"><a class="header" href="#mobile-architecture">Mobile Architecture</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, engine contributors</li>
+<li><strong>Type</strong>: explanation</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+</blockquote>
+<p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
+platform, and how the HarmonyOS shell follows the iOS ownership model.</p>
+<h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
+<p>The <a href="#engine"><code>mobile runtime</code></a> is the shared game
+boundary. Each <a href="#engine"><code>mobile shell</code></a> owns the APIs
+that its operating system expects:</p>
+<pre><code class="language-text">zero-Rust project -&gt; game.dzpk -&gt; dotzuki-runner-mobile
+                                      |
+               C ABI: tick / RGBA / PCM / save / input
+                  /                   |                  \
+       iOS shell                Android shell       HarmonyOS shell
+ Metal + Swift audio       Surface + platform audio  XComponent + GLES3
+ SwiftUI/UIKit lifecycle   Kotlin lifecycle           ArkTS + OHAudio
+</code></pre>
+<p>The Rust side loads project data, advances <code>RunnerGame</code>, renders a 320×240
+RGBA frame, produces interleaved stereo PCM, and serializes saves. A shell
+controls display timing, texture presentation, touch input, audio callbacks,
+application lifecycle, and private storage.</p>
+<p>This split matches the existing iOS implementation’s strongest property:
+Swift owns every Apple framework while Rust exports data and state through a
+narrow C interface. HarmonyOS applies the same split through ArkTS, Node-API,
+XComponent, EGL/GLES3, and OHAudio.</p>
+<h2 id="why-the-android-window-loop-is-not-the-shared-boundary"><a class="header" href="#why-the-android-window-loop-is-not-the-shared-boundary">Why the Android window loop is not the shared boundary</a></h2>
+<p>The existing Android port puts <code>winit</code>, <code>pixels</code>, and the native activity loop
+inside Rust. That route provides a working window path, but platform features
+enter through separate Kotlin overlays and callbacks. Audio, saves, and
+lifecycle then cross different boundaries.</p>
+<p>Reusing that loop on HarmonyOS would bind the engine to another window
+adapter and would still require ArkTS bridges for mobile services. The common
+C ABI keeps window frameworks out of <code>dotzuki-runner</code> and gives all three
+shells the same frame, input, audio, and persistence contract.</p>
+<h2 id="contract"><a class="header" href="#contract">Contract</a></h2>
+<p><code>dotzuki-runner-mobile/include/dotzuki_runner_mobile.h</code> defines ABI version 1.
+The contract contains these groups:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Group</th><th>Calls</th><th>Ownership</th></tr>
+</thead>
+<tbody>
+<tr><td>lifetime</td><td><code>create</code>, <code>destroy</code>, <code>abi_version</code>, <code>last_error</code></td><td>shell passes a copied <code>.dzpk</code> buffer</td></tr>
+<tr><td>frame loop</td><td><code>tick</code>, <code>width</code>, <code>height</code>, <code>frame_len</code>, <code>copy_frame</code></td><td>game thread advances and copies RGBA</td></tr>
+<tr><td>input</td><td>the <code>tick</code> bitmask</td><td>A, B, Select, Start, Right, Left, Up, Down use bits 0–7</td></tr>
+<tr><td>audio</td><td><code>audio_fill</code></td><td>one real-time consumer pulls stereo PCM at 44.1 kHz</td></tr>
+<tr><td>persistence</td><td><code>export_save</code>, <code>import_save</code></td><td>shell stores UTF-8 JSON in platform-private storage</td></tr>
+</tbody>
+</table>
+</div>
+<p>The game thread is the sole caller for frame and save operations. One audio
+callback may call <code>audio_fill</code> concurrently. A lock-free single-producer,
+single-consumer ring separates the game loop from the audio callback.</p>
+<p>Mobile hosts set <code>RunnerOptions::external_saves</code>. This prevents disk loading
+and writes, including the Start menu’s Save command. The shell imports a save
+at boot and exports one at a stable state.</p>
+<h2 id="platform-mapping"><a class="header" href="#platform-mapping">Platform mapping</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Concern</th><th>iOS</th><th>Android target</th><th>HarmonyOS</th></tr>
+</thead>
+<tbody>
+<tr><td>frame clock</td><td><code>CADisplayLink</code></td><td><code>Choreographer</code></td><td>XComponent frame callback</td></tr>
+<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> or <code>TextureView</code></td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
+<tr><td>pixels</td><td>Metal texture upload</td><td>GLES/Vulkan texture upload</td><td>EGL/GLES3 texture upload</td></tr>
+<tr><td>audio</td><td><code>AVAudioEngine</code> callback</td><td>AAudio/Oboe callback</td><td>OHAudio renderer callback</td></tr>
+<tr><td>lifecycle</td><td>UIKit/SwiftUI</td><td>Activity</td><td><code>UIAbility</code> and page lifecycle</td></tr>
+<tr><td>save store</td><td>app container</td><td>app-private files</td><td>Preferences</td></tr>
+</tbody>
+</table>
+</div>
+<p>The HarmonyOS exporter implements the right column. The existing iOS shell
+already follows the ownership pattern through its game-specific ABI. Android
+and iOS can migrate to ABI version 1 without changing <code>RunnerGame</code> or project
+packs.</p>
+<h2 id="compatibility-boundary"><a class="header" href="#compatibility-boundary">Compatibility boundary</a></h2>
+<p>The shell checks <code>dotzuki_mobile_abi_version()</code> before it relies on a contract
+revision. A project pack remains platform-neutral. Save compatibility stays
+governed by <code>SAVE_VERSION</code>, not by the shell or the C ABI version.</p>
+<p>The Rust compiler lists HarmonyOS targets as Tier 2 with host tools. The
+target still needs an OpenHarmony SDK linker configuration. Huawei’s NDK
+samples define the platform-side XComponent and OHAudio integration used by
+the generated shell:</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/rustc/platform-support/openharmony.html">Rust HarmonyOS target support</a></li>
+<li><a href="https://gitee.com/harmonyos_samples/ndk-xcomponent">Huawei NDK XComponent sample</a></li>
+<li><a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5">Huawei Node-API guide</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="the-effect-stack-battle-engine"><a class="header" href="#the-effect-stack-battle-engine">The effect-stack battle engine</a></h1>
@@ -12766,7 +12976,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit ca430506b34b）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -12823,6 +13034,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>素材管线：tileset、共享 tile 库、2bpp 转换、字体</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>双语文本：<code>game</code> i18n API 与 <code>@t</code> 语法</td></tr>
 <tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
+<tr><td><a href="#导出鸿蒙游戏"><code>how-to/export-harmonyos.zh-CN.md</code></a></td><td>构建移动运行时并导出 DevEco Studio 工程</td></tr>
 </tbody>
 </table>
 </div>
@@ -12863,6 +13075,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </thead>
 <tbody>
 <tr><td><a href="#architecture-overview"><code>explanation/architecture.md</code></a></td><td>当前架构：引擎 crate、运行器、CLI、编辑器，以及从 DSL 到游戏的流程</td></tr>
+<tr><td><a href="#移动端架构"><code>explanation/mobile-architecture.zh-CN.md</code></a></td><td>一套 C ABI 与 iOS、Android、鸿蒙原生外壳</td></tr>
 <tr><td><a href="#the-effect-stack-battle-engine"><code>explanation/effect-stack.md</code></a></td><td>战斗效果栈模型、event/handler 架构、RNG 确定性、如实说明的限制</td></tr>
 <tr><td><a href="#gamedata-the-provider-pattern"><code>explanation/game-data.md</code></a></td><td><code>GameData</code> 提供者 trait 及其泛型关联类型</td></tr>
 <tr><td><a href="#save-compatibility"><code>explanation/save-compatibility.md</code></a></td><td>存档版本机制与向前/向后兼容规则</td></tr>
@@ -15362,6 +15575,76 @@ cargo build
 repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v3 都能正常加载）；旧引擎拒
 绝新存档。</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="导出鸿蒙游戏"><a class="header" href="#导出鸿蒙游戏">导出鸿蒙游戏</a></h1>
+<blockquote>
+<p>本文是 <code>export-harmonyos.md</code> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit ca430506b34b）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, engine contributors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+</blockquote>
+<p>构建公共移动运行时，并把零 Rust 游戏导出为 DevEco Studio 鸿蒙工程。</p>
+<p>开始前，请阅读<a href="#发布与升级指南">发布与升级</a>，并安装带 HarmonyOS SDK 5.0.5
+（API 17）或兼容新版本 SDK 的 DevEco Studio。</p>
+<h2 id="1-构建-rust-移动运行时"><a class="header" href="#1-构建-rust-移动运行时">1. 构建 Rust 移动运行时</a></h2>
+<p>安装 Rust 的鸿蒙 target：</p>
+<pre><code class="language-bash">rustup target add aarch64-unknown-linux-ohos
+</code></pre>
+<p>把 Cargo 的 target linker 指向 OpenHarmony SDK 的 Clang wrapper。wrapper 路径取决于
+SDK 安装位置。然后从 <code>workspace/</code> 构建静态库：</p>
+<pre><code class="language-bash">export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_OHOS_LINKER=/path/to/ohos-clang-wrapper
+cargo build --release \
+  --target aarch64-unknown-linux-ohos \
+  -p dotzuki-runner-mobile
+</code></pre>
+<p>输出文件是
+<code>target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a</code>。
+SDK linker 要求见
+<a href="https://doc.rust-lang.org/rustc/platform-support/openharmony.html">Rust target 文档</a>。</p>
+<h2 id="2-导出游戏"><a class="header" href="#2-导出游戏">2. 导出游戏</a></h2>
+<p>从游戏项目目录执行导出，也可以传入项目路径：</p>
+<pre><code class="language-bash">dotzuki export --harmony . \
+  --mobile-lib /path/to/libdotzuki_runner_mobile.a \
+  --out dist/harmony
+</code></pre>
+<p>也可以设置 <code>DOTZUKI_MOBILE_LIB</code>，不传 <code>--mobile-lib</code>。源码 checkout 还会检测上文
+workspace target 目录中的 library。</p>
+<p>导出器运行与 Web、原生导出相同的验证和 pack 规则，并写出：</p>
+<pre><code class="language-text">dist/harmony/
+├── AppScope/ and build-profile.json5
+├── entry/src/main/ets/          # UIAbility、控制器、存档
+├── entry/src/main/cpp/          # Node-API、XComponent、GLES3、OHAudio
+├── entry/src/main/resources/rawfile/game.dzpk
+└── entry/libs/arm64-v8a/libdotzuki_runner_mobile.a
+</code></pre>
+<p>编辑器的 Play 工具栏通过 <strong>Export HarmonyOS</strong> 执行同一操作。如果 library 不在
+workspace target 目录中，请在启动编辑器 server 前设置 <code>DOTZUKI_MOBILE_LIB</code>。</p>
+<h2 id="3-在-deveco-studio-构建和运行"><a class="header" href="#3-在-deveco-studio-构建和运行">3. 在 DevEco Studio 构建和运行</a></h2>
+<p>把 <code>dist/harmony</code> 作为工程打开。配置应用签名，选择 <code>entry</code> module，然后在 arm64
+手机或平板上运行。</p>
+<p>生成的外壳执行以下操作：</p>
+<ul>
+<li>用 <code>ResourceManager</code> 加载 <code>game.dzpk</code>；</li>
+<li>从 Preferences 恢复 UTF-8 存档 JSON；</li>
+<li>由 XComponent 原生帧回调推进游戏；</li>
+<li>用 nearest filtering 把每个 320×240 RGBA 帧上传到 GLES3 纹理；</li>
+<li>把 ArkUI 多点触摸按键组合成公共八键 bitmask；</li>
+<li>在 OHAudio 回调中从 Rust 拉取 44.1 kHz 双声道 PCM；</li>
+<li>页面进入后台时暂停音频并持久化稳定存档。</li>
+</ul>
+<h2 id="4-替换平台表现而不改游戏"><a class="header" href="#4-替换平台表现而不改游戏">4. 替换平台表现而不改游戏</a></h2>
+<p>在 <code>entry/src/main/ets/</code> 下修改控制器布局和生命周期 UI。在
+<code>entry/src/main/cpp/dotzuki_host.cpp</code> 中修改 renderer 或 audio adapter。保持
+<code>dotzuki_runner_mobile.h</code>、<code>game.dzpk</code> 和 ABI 版本 1 不变，
+外壳升级就不会分叉游戏逻辑。</p>
+<p>线程与所有权契约见<a href="#移动端架构">移动端架构</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
 <blockquote>
 <p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
@@ -17647,7 +17930,8 @@ fn main() -&gt; Result&lt;(), GameShellError&gt; {
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit ca430506b34b）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -17655,7 +17939,7 @@ fn main() -&gt; Result&lt;(), GameShellError&gt; {
 <li><strong>Audience</strong>: game authors, CI</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>用于生成骨架、校验和运行零 Rust 游戏项目的每个 <code>dotzuki</code> 子命令、flag 和退出
@@ -17679,6 +17963,9 @@ cargo build --release --bin dotzuki
 <tr><td><code>dotzuki new &lt;name&gt;</code></td><td>生成一个新的游戏项目骨架（布局与编辑器的空模板一致）</td></tr>
 <tr><td><code>dotzuki check &lt;dir&gt;</code></td><td>编译项目中的每个 DSL 文件并报告诊断信息；出错时退出码为 1。有 <code>battle</code> 区块时还会校验它</td></tr>
 <tr><td><code>dotzuki run &lt;dir&gt;</code></td><td>启动项目并在窗口中游玩（或为 CI/截图以无头模式运行）</td></tr>
+<tr><td><code>dotzuki export --web &lt;dir&gt;</code></td><td>把项目导出为静态网站</td></tr>
+<tr><td><code>dotzuki export --native &lt;dir&gt;</code></td><td>把项目导出为原生应用目录</td></tr>
+<tr><td><code>dotzuki export --harmony &lt;dir&gt;</code></td><td>导出鸿蒙 DevEco Studio 工程（移动运行时 + 游戏 pack）</td></tr>
 </tbody>
 </table>
 </div>
@@ -17750,11 +18037,122 @@ dotzuki run . --headless --map TownSquare --screenshot shot.png
 # Iterate with hot reload
 dotzuki run . --watch
 </code></pre>
+<h2 id="dotzuki-export---web-dir-1"><a class="header" href="#dotzuki-export---web-dir-1"><code>dotzuki export --web &lt;dir&gt;</code></a></h2>
+<p>把项目打包为可在现代浏览器中运行的<strong>静态网站</strong>。它与编辑器 Play 活动使用
+相同的 <code>WasmRunner</code>（dotzuki-runner-web）启动路径，因此导出的游戏与编辑器内
+试玩表现一致。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/web</code></td><td>输出目录（pack 会排除 <code>dist</code>，所以重复导出不会把上次产物打包进去）</td></tr>
+<tr><td><code>--runner-pkg &lt;dir&gt;</code></td><td>workspace pkg</td><td>使用预构建的 dotzuki-runner-web wasm package 目录（不需要 wasm-pack）</td></tr>
+<tr><td><code>--rebuild-runner</code></td><td>off</td><td>即使已有预构建产物，也用 wasm-pack 重新构建 runner wasm package</td></tr>
+<tr><td><code>--save-key &lt;key&gt;</code></td><td><code>dotzuki-save:&lt;title&gt;</code></td><td>player 页面保存存档所用的 localStorage key；嵌入导出物的宿主可固定自己的 key，以保留已有玩家存档</td></tr>
+<tr><td><code>--lang &lt;en|zh&gt;</code></td><td><code>en</code></td><td>player 页面的 UI 语言（加载、状态和提示文本）</td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>即使校验报告诊断信息也导出</td></tr>
+</tbody>
+</table>
+</div>
+<p>导出前会运行与 <code>dotzuki check</code> 相同的诊断；除非传入 <code>--force</code>，否则任何诊断
+都会中止导出。输出目录包含：</p>
+<pre><code>dist/web/
+├── index.html                      # player 页面：canvas、键盘、WebAudio、localStorage 存档
+├── game.dzpk                       # 二进制游戏 pack：header + JSON index + 原始文件字节
+└── wasm/
+    ├── dotzuki_runner_web.js       # wasm-pack glue
+    └── dotzuki_runner_web_bg.wasm  # runner 本体
+</code></pre>
+<p><code>game.dzpk</code> 是所有导出目标共用的二进制 pack，由 <code>dotzuki-runner</code> 的 <code>pack</code> 模块
+定义。它包含 12 字节 header（magic <code>DZPK</code>、<code>u32</code> 格式版本、<code>u32</code> index 长度）、
+JSON index
+<code>{ dotzuki: {tool, version, exportedAt}, files: { &lt;path&gt;: {offset, size} } }</code>，
+然后依次拼接每个文件的原始字节。原始字节避免了 base64 约 33% 的体积膨胀和
+启动时解码，尤其适合包含实际 tileset 与音频的项目。旧版 CLI 导出的是 base64
+<code>game.bundle.json</code>，当前 player 仍可启动该格式。</p>
+<p>Pack 规则与编辑器的 play bundle 相同：排除 <code>node_modules</code>、<code>.git</code>、<code>target</code>、
+<code>dist</code>、点目录、点文件和 <code>*.bak</code>，但始终包含 <code>.dotzuki-editor.json</code>。单文件上限
+16 MB，未压缩总大小上限 64 MB。<code>dotzuki.version</code> 记录执行导出的 CLI 版本，仅供
+参考，运行时不会强制校验。</p>
+<p>Runner wasm package 按以下顺序解析：<code>--runner-pkg</code> → 预构建的
+<code>workspace/crates/dotzuki-runner-web/pkg</code> → 使用
+<code>wasm-pack build --target web --release --features modern-audio</code> 构建。后两种方式
+要求 dotzuki 源码 checkout；在仓库外通过 <code>cargo install</code> 安装的 CLI 必须传入
+<code>--runner-pkg</code>。</p>
+<pre><code class="language-bash">dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web   # 在 http://localhost:8000 游玩
+</code></pre>
+<h2 id="dotzuki-export---native-dir-1"><a class="header" href="#dotzuki-export---native-dir-1"><code>dotzuki export --native &lt;dir&gt;</code></a></h2>
+<p>把项目打包为<strong>原生应用目录</strong>：通用的 <code>dotzuki-player</code> 二进制文件
+（<code>dotzuki-runner</code> 的 bin target），以及 web 导出使用的同一个 <code>game.dzpk</code> pack。
+Player 通过与 <code>dotzuki run</code> 相同的 <code>RunnerGame</code> 和窗口循环启动可执行文件旁的
+pack，并把存档写到 pack 旁的 <code>.dotzuki-save.json</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/native</code></td><td>输出目录（pack 会排除 <code>dist</code>，所以重复导出不会把上次产物打包进去）</td></tr>
+<tr><td><code>--player-bin &lt;path&gt;</code></td><td>cargo build</td><td>使用预构建的 <code>dotzuki-player</code>，不再执行构建</td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>即使校验报告诊断信息也导出</td></tr>
+</tbody>
+</table>
+</div>
+<p>诊断门禁和 pack 规则与 <code>--web</code> 相同。输出目录包含：</p>
+<pre><code>dist/native/
+├── &lt;project-dir-name&gt;[.exe]   # player 二进制文件，以项目目录名重命名
+└── game.dzpk                  # 二进制游戏 pack，与 web 导出的文件相同
+</code></pre>
+<p>Player 二进制文件按以下顺序解析：<code>--player-bin</code> → 在源码 workspace 中执行
+<code>cargo build --release -p dotzuki-runner --bin dotzuki-player</code>。后者使用增量构建，
+所以重复导出成本较低。构建要求 dotzuki 源码 checkout；在仓库外通过
+<code>cargo install</code> 安装的 CLI 必须传入 <code>--player-bin</code>。构建只面向<strong>宿主平台</strong>；要
+发布到其他操作系统，请在该操作系统或对应的 CI runner 上导出。</p>
+<pre><code class="language-bash">dotzuki export --native . --out dist/native
+dist/native/my-game            # 可双击启动的原生应用
+</code></pre>
+<p>随附的二进制文件也接受可选的 pack 路径（<code>.dzpk</code> 或旧版导出的
+<code>game.bundle.json</code>），以及 <code>--lang en|zh</code>、<code>--scale &lt;n&gt;</code>、<code>--fresh</code> 和
+<code>--headless</code>。无头模式还可使用 <code>--frames</code> 与 <code>--screenshot</code>，对导出产物执行 CI
+冒烟测试：</p>
+<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+</code></pre>
+<h2 id="dotzuki-export---harmony-dir-1"><a class="header" href="#dotzuki-export---harmony-dir-1"><code>dotzuki export --harmony &lt;dir&gt;</code></a></h2>
+<p>把项目打包为鸿蒙 DevEco Studio 应用。应用通过 ABI 版本 1 使用
+<code>dotzuki-runner-mobile</code>，并携带与其他导出 target 相同的 <code>game.dzpk</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--out &lt;dir&gt;</code></td><td><code>&lt;project&gt;/dist/harmony</code></td><td>DevEco Studio 工程输出目录</td></tr>
+<tr><td><code>--mobile-lib &lt;path&gt;</code></td><td>workspace target 或 <code>DOTZUKI_MOBILE_LIB</code></td><td>预构建的 arm64 鸿蒙 <code>libdotzuki_runner_mobile.a</code></td></tr>
+<tr><td><code>--force</code></td><td>off</td><td>即使校验报告诊断信息也导出</td></tr>
+</tbody>
+</table>
+</div>
+<p>导出器不会调用鸿蒙 Rust 工具链。请先构建静态库，再传入路径：</p>
+<pre><code class="language-bash">dotzuki export --harmony . \
+  --mobile-lib target/aarch64-unknown-linux-ohos/release/libdotzuki_runner_mobile.a
+</code></pre>
+<p>输出包括 ArkTS 生命周期和控制器、XComponent GLES3 renderer、OHAudio 输出、
+Preferences 存档、C ABI header、静态库和 <code>game.dzpk</code>。参见
+<a href="#导出鸿蒙游戏">鸿蒙导出指南</a>。</p>
 <h2 id="退出码"><a class="header" href="#退出码">退出码</a></h2>
 <ul>
 <li><code>dotzuki check</code>：<code>0</code> = 所有 DSL 编译通过（且 <code>battle</code> 区块校验通过）；<code>1</code> =
 发现诊断信息。</li>
 <li><code>dotzuki run</code>：<code>0</code> = 正常退出。</li>
+<li><code>dotzuki export --web</code>：<code>0</code> = 已写出站点；<code>1</code> = 校验失败（未传
+<code>--force</code>）、项目超过 pack 限制，或没有可用的 runner wasm package。</li>
+<li><code>dotzuki export --native</code>：<code>0</code> = 已写出应用目录；<code>1</code> = 校验失败（未传
+<code>--force</code>）、项目超过 pack 限制，或没有可用的 player 二进制文件。</li>
+<li><code>dotzuki export --harmony</code>：<code>0</code> = 已写出 DevEco Studio 工程；<code>1</code> = 校验失败、
+项目超过 pack 限制，或移动运行时 library 不可用。</li>
 </ul>
 <h2 id="说明"><a class="header" href="#说明">说明</a></h2>
 <ul>
@@ -17767,7 +18165,8 @@ dotzuki run . --watch
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="rust-api-门户"><a class="header" href="#rust-api-门户">Rust API 门户</a></h1>
 <blockquote>
-<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit ca430506b34b）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -17775,12 +18174,12 @@ dotzuki run . --watch
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
 </ul>
 </blockquote>
 <p>crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。</p>
-<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.5.4</code>）并发布在 crates.io
+<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.6.0</code>）并发布在 crates.io
 上，因此它们的 API 文档位于 docs.rs。本地副本：</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
@@ -17805,7 +18204,8 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-tui</code></td><td>终端外壳（ratatui）</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>零 Rust 项目运行时 + 无头模式驱动</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing--upgrading-guide">发布指南</a></td></tr>
-<tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI 参考</a></td></tr>
+<tr><td><code>dotzuki-runner-mobile</code></td><td>原生平台外壳共用的 C ABI 移动运行时</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="#移动端架构">移动端架构</a>、<a href="#导出鸿蒙游戏">鸿蒙导出</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI 参考</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM 桥：编辑器布局预览、游戏外壳（<code>game-shell</code> feature）、BroadcastChannel 联机传输（<code>link</code> feature）</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="#game-shell-reference">游戏外壳</a>、<a href="#link-play">联机</a></td></tr>
 </tbody>
 </table>
@@ -19504,6 +19904,100 @@ provider；JS provider 只编译地图场景。</li>
 <li><a href="#gamedata-the-provider-pattern">GameData provider 设计</a></li>
 <li><a href="#save-compatibility">存档兼容性</a></li>
 <li><a href="#glossary">术语表</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="移动端架构"><a class="header" href="#移动端架构">移动端架构</a></h1>
+<blockquote>
+<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.6.0
+（源文档 commit ca430506b34b）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, engine contributors</li>
+<li><strong>Type</strong>: explanation</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.6.0</li>
+</ul>
+</blockquote>
+<p>本文解释 dotzuki 为何采用一套 Rust 运行时契约和三个原生移动外壳，
+以及鸿蒙外壳
+如何沿用 iOS 的职责划分。</p>
+<h2 id="决策"><a class="header" href="#决策">决策</a></h2>
+<p><a href="#engine"><code>mobile runtime</code></a>（移动运行时）是共用的游戏边界。
+每个 <a href="#engine"><code>mobile shell</code></a>（移动外壳）负责操作系统
+要求的 API：</p>
+<pre><code class="language-text">零 Rust 项目 -&gt; game.dzpk -&gt; dotzuki-runner-mobile
+                                  |
+                  C ABI：帧 / RGBA / PCM / 存档 / 输入
+                  /               |                 \
+           iOS 外壳          Android 外壳          鸿蒙外壳
+       Metal + Swift 音频    Surface + 平台音频   XComponent + GLES3
+       SwiftUI/UIKit 生命周期 Kotlin 生命周期       ArkTS + OHAudio
+</code></pre>
+<p>Rust 侧加载项目数据、推进 <code>RunnerGame</code>、渲染 320×240 RGBA 帧、生成交错
+双声道 PCM，并序列化存档。外壳控制显示时钟、纹理呈现、触摸输入、
+音频回调、应用生命周期和私有存储。</p>
+<p>这个划分保留了现有 iOS 实现最有价值的性质：Swift 负责全部
+Apple framework，Rust 通过窄 C 接口导出数据和状态。鸿蒙用 ArkTS、
+Node-API、XComponent、EGL/GLES3 和 OHAudio 实现同样的划分。</p>
+<h2 id="为什么不把-android-窗口循环作为公共边界"><a class="header" href="#为什么不把-android-窗口循环作为公共边界">为什么不把 Android 窗口循环作为公共边界</a></h2>
+<p>现有 Android 移植把 <code>winit</code>、<code>pixels</code> 和 native activity 循环放在 Rust 内部。这个
+方案提供了可运行的窗口路径，但平台功能通过各自的 Kotlin overlay
+和回调进入，音频、存档和生命周期因而跨越不同边界。</p>
+<p>如果鸿蒙复用该循环，引擎还会绑定一个窗口适配器，同时仍需用 ArkTS bridge
+接入移动服务。公共 C ABI 把窗口框架留在 <code>dotzuki-runner</code> 之外，
+并向三端提供相同的帧、输入、音频和持久化契约。</p>
+<h2 id="契约"><a class="header" href="#契约">契约</a></h2>
+<p><code>dotzuki-runner-mobile/include/dotzuki_runner_mobile.h</code> 定义 ABI 版本 1。
+契约包含以下几组能力：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>分组</th><th>调用</th><th>所有权</th></tr>
+</thead>
+<tbody>
+<tr><td>生命周期</td><td><code>create</code>、<code>destroy</code>、<code>abi_version</code>、<code>last_error</code></td><td>外壳传入会被复制的 <code>.dzpk</code> buffer</td></tr>
+<tr><td>帧循环</td><td><code>tick</code>、<code>width</code>、<code>height</code>、<code>frame_len</code>、<code>copy_frame</code></td><td>游戏线程推进并复制 RGBA</td></tr>
+<tr><td>输入</td><td><code>tick</code> 的 bitmask</td><td>A、B、Select、Start、Right、Left、Up、Down 使用 bit 0–7</td></tr>
+<tr><td>音频</td><td><code>audio_fill</code></td><td>一个实时消费者按 44.1 kHz 拉取双声道 PCM</td></tr>
+<tr><td>持久化</td><td><code>export_save</code>、<code>import_save</code></td><td>外壳把 UTF-8 JSON 存入平台私有存储</td></tr>
+</tbody>
+</table>
+</div>
+<p>游戏线程独占帧和存档操作。一个音频回调可同时调用 <code>audio_fill</code>。
+无锁的单生产者、单消费者 ring buffer 隔离游戏循环和音频回调。</p>
+<p>移动宿主设置 <code>RunnerOptions::external_saves</code>。这会禁止磁盘加载与写入，
+包括 Start 菜单里的 Save 命令。外壳在启动时导入存档，
+并在稳定状态导出存档。</p>
+<h2 id="平台映射"><a class="header" href="#平台映射">平台映射</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>关注点</th><th>iOS</th><th>Android 目标</th><th>鸿蒙</th></tr>
+</thead>
+<tbody>
+<tr><td>帧时钟</td><td><code>CADisplayLink</code></td><td><code>Choreographer</code></td><td>XComponent 原生帧回调</td></tr>
+<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> 或 <code>TextureView</code></td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
+<tr><td>像素</td><td>Metal 纹理上传</td><td>GLES/Vulkan 纹理上传</td><td>EGL/GLES3 纹理上传</td></tr>
+<tr><td>音频</td><td><code>AVAudioEngine</code> 回调</td><td>AAudio/Oboe 回调</td><td>OHAudio renderer 回调</td></tr>
+<tr><td>生命周期</td><td>UIKit/SwiftUI</td><td>Activity</td><td><code>UIAbility</code> 与页面生命周期</td></tr>
+<tr><td>存档</td><td>app container</td><td>app 私有文件</td><td>Preferences</td></tr>
+</tbody>
+</table>
+</div>
+<p>鸿蒙导出器实现了最右列。现有 iOS 外壳已通过游戏专用 ABI 采用同样的
+所有权模式。
+Android 和 iOS 可以迁移到 ABI 版本 1，而不需要改变 <code>RunnerGame</code> 或项目 pack。</p>
+<h2 id="兼容边界"><a class="header" href="#兼容边界">兼容边界</a></h2>
+<p>外壳依靠 <code>dotzuki_mobile_abi_version()</code> 判断契约版本。项目 pack 与平台无关。
+存档兼容仍由 <code>SAVE_VERSION</code> 管理，不由外壳或 C ABI 版本管理。</p>
+<p>Rust 编译器把鸿蒙 target 列为带 host tools 的 Tier 2 target，但仍需配置 OpenHarmony
+SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 OHAudio 接法：</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/rustc/platform-support/openharmony.html">Rust 鸿蒙 target 支持</a></li>
+<li><a href="https://gitee.com/harmonyos_samples/ndk-xcomponent">华为 NDK XComponent 样例</a></li>
+<li><a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5">华为 Node-API 指南</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="效果栈战斗引擎"><a class="header" href="#效果栈战斗引擎">效果栈战斗引擎</a></h1>
