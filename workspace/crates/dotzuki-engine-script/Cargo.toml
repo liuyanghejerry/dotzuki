@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [features]
+default = ["script-boa"]
 ## Embed JS/JSON scripts into the binary via `include_str!`.
 ## When disabled, scripts MUST be loaded from disk at runtime.
 embedded-scripts = []
