@@ -270,6 +270,167 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         }
     }
 
+    /// Move the existing pixels by `(dx, dy)` and fill the newly exposed
+    /// edges with `clear`.
+    ///
+    /// Positive offsets move pixels right/down. Pixels shifted outside the
+    /// framebuffer are discarded. The GBA's chunky backing performs the
+    /// move in place, avoiding a second full-screen allocation.
+    pub fn scroll(&mut self, dx: i32, dy: i32, clear: C) {
+        if dx == 0 && dy == 0 {
+            return;
+        }
+        if self.is_empty()
+            || dx.unsigned_abs() as usize >= self.width
+            || dy.unsigned_abs() as usize >= self.height
+        {
+            self.clear(clear);
+            return;
+        }
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        {
+            let width = self.width;
+            let height = self.height;
+            let copy_width = width - dx.unsigned_abs() as usize;
+            let source_x = if dx < 0 {
+                dx.unsigned_abs() as usize
+            } else {
+                0
+            };
+            let target_x = if dx > 0 { dx as usize } else { 0 };
+            let clear_value = clear.to_index() as u8;
+            let pixels = unsafe {
+                core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, width * height)
+            };
+
+            // Vertical-only moves are one contiguous memmove. Horizontal
+            // moves need row boundaries, so copy aligned words/halfwords in
+            // the overlap-safe direction instead of invoking memmove once
+            // per scanline.
+            if dx == 0 {
+                if dy > 0 {
+                    let offset = dy as usize;
+                    pixels.copy_within(0..(height - offset) * width, offset * width);
+                    pixels[..offset * width].fill(clear_value);
+                } else {
+                    let offset = dy.unsigned_abs() as usize;
+                    pixels.copy_within(offset * width..height * width, 0);
+                    pixels[(height - offset) * width..].fill(clear_value);
+                }
+                return;
+            }
+
+            if dy == 0 {
+                for y in 0..height {
+                    let row = unsafe { pixels.as_mut_ptr().add(y * width) };
+                    let source_address = unsafe { row.add(source_x) } as usize;
+                    let target_address = unsafe { row.add(target_x) } as usize;
+                    if (source_address | target_address | copy_width) & 3 == 0 {
+                        let words = copy_width / 4;
+                        let source = unsafe { row.add(source_x) as *const u32 };
+                        let target = unsafe { row.add(target_x) as *mut u32 };
+                        if dx > 0 {
+                            for word in (0..words).rev() {
+                                unsafe { target.add(word).write(source.add(word).read()) };
+                            }
+                        } else {
+                            for word in 0..words {
+                                unsafe { target.add(word).write(source.add(word).read()) };
+                            }
+                        }
+                    } else if (source_address | target_address | copy_width) & 1 == 0 {
+                        let halfwords = copy_width / 2;
+                        let source = unsafe { row.add(source_x) as *const u16 };
+                        let target = unsafe { row.add(target_x) as *mut u16 };
+                        if dx > 0 {
+                            for halfword in (0..halfwords).rev() {
+                                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+                            }
+                        } else {
+                            for halfword in 0..halfwords {
+                                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+                            }
+                        }
+                    } else if dx > 0 {
+                        for byte in (0..copy_width).rev() {
+                            unsafe {
+                                row.add(target_x + byte)
+                                    .write(row.add(source_x + byte).read())
+                            };
+                        }
+                    } else {
+                        for byte in 0..copy_width {
+                            unsafe {
+                                row.add(target_x + byte)
+                                    .write(row.add(source_x + byte).read())
+                            };
+                        }
+                    }
+
+                    if dx > 0 {
+                        pixels[y * width..y * width + target_x].fill(clear_value);
+                    } else {
+                        pixels[y * width + copy_width..(y + 1) * width].fill(clear_value);
+                    }
+                }
+                return;
+            }
+
+            if dy > 0 {
+                let offset = dy as usize;
+                for source_y in (0..height - offset).rev() {
+                    let target_y = source_y + offset;
+                    let source = source_y * width + source_x;
+                    let target = target_y * width + target_x;
+                    pixels.copy_within(source..source + copy_width, target);
+                    if dx > 0 {
+                        pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                    } else if dx < 0 {
+                        pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                    }
+                }
+                pixels[..offset * width].fill(clear_value);
+            } else {
+                let offset = dy.unsigned_abs() as usize;
+                for source_y in offset..height {
+                    let target_y = source_y - offset;
+                    let source = source_y * width + source_x;
+                    let target = target_y * width + target_x;
+                    pixels.copy_within(source..source + copy_width, target);
+                    if dx > 0 {
+                        pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                    } else if dx < 0 {
+                        pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                    }
+                }
+                pixels[(height - offset) * width..].fill(clear_value);
+            }
+        }
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        {
+            let source = self.clone();
+            self.clear(clear);
+            for y in 0..self.height as i32 {
+                let source_y = y - dy;
+                if source_y < 0 || source_y >= self.height as i32 {
+                    continue;
+                }
+                for x in 0..self.width as i32 {
+                    let source_x = x - dx;
+                    if source_x < 0 || source_x >= self.width as i32 {
+                        continue;
+                    }
+                    let color = source
+                        .get_pixel(source_x as u32, source_y as u32)
+                        .expect("scroll source is in bounds");
+                    self.set_pixel(x as u32, y as u32, color);
+                }
+            }
+        }
+    }
+
     #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
@@ -580,6 +741,50 @@ mod tests {
                     GbColor::White
                 };
                 assert_eq!(fb.get_pixel(x, y), Some(expected), "({x}, {y})");
+            }
+        }
+    }
+
+    #[test]
+    fn scroll_moves_pixels_and_clears_exposed_edges() {
+        let mut original = IndexedFrameBuffer::<GbColor>::new(5, 4, GbColor::White);
+        for y in 0..4 {
+            for x in 0..5 {
+                original.set_pixel(x, y, GbColor::from_u8(((y * 5 + x) % 4) as u8));
+            }
+        }
+
+        for (dx, dy) in [(2, 1), (-2, -1), (1, -2), (-1, 2)] {
+            let mut shifted = original.clone();
+            shifted.scroll(dx, dy, GbColor::Black);
+            for y in 0..4i32 {
+                for x in 0..5i32 {
+                    let source_x = x - dx;
+                    let source_y = y - dy;
+                    let expected = if (0..5).contains(&source_x) && (0..4).contains(&source_y) {
+                        original
+                            .get_pixel(source_x as u32, source_y as u32)
+                            .unwrap()
+                    } else {
+                        GbColor::Black
+                    };
+                    assert_eq!(
+                        shifted.get_pixel(x as u32, y as u32),
+                        Some(expected),
+                        "offset ({dx}, {dy}), pixel ({x}, {y})"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn scroll_clears_when_offset_exceeds_dimensions() {
+        let mut fb = IndexedFrameBuffer::<GbColor>::new(5, 4, GbColor::LightGray);
+        fb.scroll(5, 0, GbColor::DarkGray);
+        for y in 0..4 {
+            for x in 0..5 {
+                assert_eq!(fb.get_pixel(x, y), Some(GbColor::DarkGray));
             }
         }
     }
@@ -951,6 +1156,12 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         self.fast_grayscale = other.fast_grayscale;
     }
 
+    /// Move the indexed pixels by `(dx, dy)`, filling exposed edges with
+    /// `clear`. The display and quantization palettes are unchanged.
+    pub fn scroll_indices(&mut self, dx: i32, dy: i32, clear: C) {
+        self.buffer.scroll(dx, dy, clear);
+    }
+
     /// Set a single pixel by palette index. Returns false if out of bounds.
     pub fn set_pixel_index(&mut self, x: u32, y: u32, color: C) -> bool {
         self.buffer.set_pixel(x, y, color)
@@ -1068,10 +1279,8 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
             && y + TILE_PIXELS as i32 <= height
         {
             let transparent_zero = transparent && rgba[0] == Rgba::TRANSPARENT;
-            let transparent_nonzero = transparent
-                && rgba[1..]
-                    .iter()
-                    .any(|color| *color == Rgba::TRANSPARENT);
+            let transparent_nonzero =
+                transparent && rgba[1..].iter().any(|color| *color == Rgba::TRANSPARENT);
             let identity_mapping = mapped.iter().enumerate().all(|(index, color)| {
                 (index == 0 && transparent_zero) || color.to_index() == index
             });
