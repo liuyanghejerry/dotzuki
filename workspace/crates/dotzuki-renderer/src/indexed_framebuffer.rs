@@ -625,6 +625,18 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     pub fn indices(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.data.as_ptr() as *const u8, self.len()) }
     }
+
+    /// Mutable GBA-only chunky one-byte-per-pixel storage.
+    ///
+    /// Platform frontends may use this view for hardware-accelerated moves.
+    /// Every byte must remain a valid palette index for `C`.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        unsafe {
+            core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, self.len())
+        }
+    }
 }
 
 /// The default [`IndexedFrameBuffer`] is a 160×144 Game Boy screen,
@@ -1295,6 +1307,16 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     #[inline]
     pub fn indices(&self) -> &[u8] {
         self.buffer.indices()
+    }
+
+    /// Mutable GBA-only chunky one-byte-per-pixel storage.
+    ///
+    /// Platform frontends may use this view for hardware-accelerated moves.
+    /// Every byte must remain a valid palette index for `C`.
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        self.buffer.indices_mut()
     }
 
     /// Expand the buffer into RGBA using the *display* palette.
