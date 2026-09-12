@@ -70,7 +70,7 @@ pub use dotzuki_engine::render::{DirtyRegion, FrameBuffer, Rgba, BYTES_PER_PIXEL
 pub use dotzuki_engine::render_config::RenderConfig;
 pub use indexed_framebuffer::{
     index_bits, packed_len, quantize, DefaultPalette, FbSurface, IndexedFrameBuffer,
-    RgbaIndexedFrameBuffer, SCREEN_HEIGHT, SCREEN_WIDTH,
+    RgbaIndexedFrameBuffer, LinearIndexedFrameBuffer, LinearRgbaIndexedFrameBuffer, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 
 #[cfg(test)]

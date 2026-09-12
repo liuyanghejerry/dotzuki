@@ -68,3 +68,5 @@ pub mod error;
 pub mod loader;
 #[cfg(not(target_os = "none"))]
 pub mod sourcemap;
+#[cfg(not(target_os = "none"))]
+pub mod static_ui;

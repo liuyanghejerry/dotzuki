@@ -193,7 +193,10 @@ const SCREEN_SHAKE_HEIGHT: u32 = 12 * TILE_SIZE;
 /// Apply a DMG palette map (shade → shade) to the whole framebuffer,
 /// e.g. rBGP = $6f for the dark-screen palette. On the indexed
 /// framebuffer this is a display-palette remap — the GB-hardware way.
-fn remap_shades(fb: &mut RgbaIndexedFrameBuffer, map: &[u8; 4]) {
+fn remap_shades<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    map: &[u8; 4],
+) {
     fb.remap_shades(map);
 }
 
@@ -201,24 +204,26 @@ fn remap_shades(fb: &mut RgbaIndexedFrameBuffer, map: &[u8; 4]) {
 /// edge with white. Used for the SCX-based shakes. Operates on the packed
 /// 2bpp indices (cloned cheaply — 5.7 KiB), so the result is identical to
 /// the old per-pixel RGBA shift.
-fn shift_rows_h(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dx: i32) {
+fn shift_rows_h<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    y_end: u32,
+    dx: i32,
+) {
     if dx == 0 {
         return;
     }
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    {
+    if LINEAR {
         let width = fb.width() as usize;
         let height = fb.height() as usize;
         shift_chunky_rows_h(
-            fb.indexed_mut().indices_mut(),
+            fb.indexed_mut().bytes_mut(),
             width,
             height,
             y_end as usize,
             dx,
         );
     }
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    {
+    if !LINEAR {
         let w = fb.width() as i32;
         let src = fb.indexed().clone();
         for y in 0..y_end.min(fb.height()) {
@@ -236,24 +241,26 @@ fn shift_rows_h(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dx: i32) {
 }
 
 /// Shift the top strip of the framebuffer vertically, filling with white.
-fn shift_rows_v(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dy: i32) {
+fn shift_rows_v<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    y_end: u32,
+    dy: i32,
+) {
     if dy == 0 {
         return;
     }
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    {
+    if LINEAR {
         let width = fb.width() as usize;
         let height = fb.height() as usize;
         shift_chunky_rows_v(
-            fb.indexed_mut().indices_mut(),
+            fb.indexed_mut().bytes_mut(),
             width,
             height,
             y_end as usize,
             dy,
         );
     }
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    {
+    if !LINEAR {
         let src = fb.indexed().clone();
         for y in 0..y_end.min(fb.height()) as i32 {
             let sy = y - dy;
@@ -272,7 +279,6 @@ fn shift_rows_v(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dy: i32) {
 /// Allocation-free equivalents of the clone-based framebuffer passes used by
 /// the GBA's chunky one-byte-per-pixel backing. Kept available to unit tests so
 /// their exact edge and overlap behaviour can be checked on hosted targets.
-#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
 fn shift_chunky_rows_h(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dx: i32) {
     let rows = y_end.min(height);
     let offset = dx.unsigned_abs() as usize;
@@ -294,7 +300,6 @@ fn shift_chunky_rows_h(pixels: &mut [u8], width: usize, height: usize, y_end: us
     }
 }
 
-#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
 fn shift_chunky_rows_v(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dy: i32) {
     let rows = y_end.min(height);
     let offset = dy.unsigned_abs() as usize;
@@ -313,7 +318,6 @@ fn shift_chunky_rows_v(pixels: &mut [u8], width: usize, height: usize, y_end: us
     }
 }
 
-#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
 fn shift_chunky_row_clamped(row: &mut [u8], shift: i32) {
     let len = row.len();
     let offset = shift.unsigned_abs() as usize;
@@ -1199,7 +1203,10 @@ impl BattleEffects {
     /// drawn but BEFORE the mon sprites, so only the HUD (and background
     /// rows 0..7) shakes — the original protects the player back pic by
     /// copying it to OAM first.
-    pub fn apply_enemy_hud_shake(&self, fb: &mut RgbaIndexedFrameBuffer) {
+    pub fn apply_enemy_hud_shake<const LINEAR: bool>(
+        &self,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    ) {
         let dx = self.enemy_hud_shake_offset();
         if dx != 0 {
             shift_rows_h(fb, HUD_SHAKE_HEIGHT, dx);
@@ -1208,7 +1215,10 @@ impl BattleEffects {
 
     /// Full-screen post effects: screen shake, wavy screen, palette tint,
     /// screen flash. Call once the scene is fully drawn.
-    pub fn apply_screen_effects(&self, fb: &mut RgbaIndexedFrameBuffer) {
+    pub fn apply_screen_effects<const LINEAR: bool>(
+        &self,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    ) {
         if let Some(shake) = self.shake {
             let (dx, dy) = shake.offset();
             shift_rows_h(fb, SCREEN_SHAKE_HEIGHT, dx);
@@ -1220,12 +1230,11 @@ impl BattleEffects {
             // the table start advances one entry per frame.
             let w = fb.width() as usize;
             let start = (self.wave_frame - 1) as usize;
-            #[cfg(all(target_os = "none", target_arch = "arm"))]
-            {
+            if LINEAR {
                 let h = fb.height() as usize;
                 for (y, row) in fb
                     .indexed_mut()
-                    .indices_mut()
+                    .bytes_mut()
                     .chunks_exact_mut(w)
                     .take(h)
                     .enumerate()
@@ -1234,8 +1243,7 @@ impl BattleEffects {
                     shift_chunky_row_clamped(row, shift);
                 }
             }
-            #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-            {
+            if !LINEAR {
                 let src = fb.indexed().clone();
                 for y in 0..fb.height() as usize {
                     let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
@@ -1284,9 +1292,9 @@ impl BattleEffects {
     /// move_anim_0.png / move_anim_1.png (tiles indexed from 0; the absolute
     /// VRAM tile ids used by the effects are converted with
     /// [`ANIM_BASE_TILE_ID`]).
-    pub fn render_objects(
+    pub fn render_objects<const LINEAR: bool>(
         &self,
-        fb: &mut RgbaIndexedFrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts0: &TileSet,
         ts1: &TileSet,
         pal: &Palette,
@@ -1374,8 +1382,8 @@ impl BattleEffects {
     /// tile = col*7 + row):
     ///   - enemy turn (facing down): tiles [0,1;2,3] at (col 2, row 4)
     ///   - player turn (facing up):  tiles [4,5;6,7] at (col 3, row 4)
-    pub fn draw_substitute(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_substitute<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         rect: MonRect,
         doll: &TileSet,
         pal: &Palette,
@@ -1398,7 +1406,11 @@ impl BattleEffects {
     /// Draw the minimize blob over a mon pic rect. Placement: pic base +
     /// (7*3+4) tiles + TILE_SIZE/4 → (col 3, row 4) + 2 px, i.e.
     /// pic-relative (24, 34); color index 3.
-    pub fn draw_minimized(fb: &mut RgbaIndexedFrameBuffer, rect: MonRect, pal: &Palette) {
+    pub fn draw_minimized<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+        rect: MonRect,
+        pal: &Palette,
+    ) {
         let color = pal.color(GbColor::from_u8(3));
         let ox = rect.x + 3 * TILE_SIZE as i32;
         let oy = rect.y + 4 * TILE_SIZE as i32 + 2;
@@ -1419,8 +1431,8 @@ impl BattleEffects {
     /// (the squish narrows the 7-tile pic one tile per pass, alternating the
     /// anchored side). Nearest-neighbor scale; color 0 is transparent like
     /// the normal mon blit.
-    pub fn draw_squished(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_squished<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1464,8 +1476,8 @@ impl BattleEffects {
     /// slide-down-and-hide redraws the pic with the 7×5 / 7×3 tile-id lists
     /// — a crop, not a scale). Color 0 is transparent like the normal mon
     /// blit.
-    pub fn draw_mon_rows(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_mon_rows<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1496,8 +1508,8 @@ impl BattleEffects {
 
     /// Draw one 8×8 tile with all four shades opaque (the substitute doll
     /// replaces the mon pic area, whose background was blanked).
-    fn draw_tile_opaque(
-        fb: &mut RgbaIndexedFrameBuffer,
+    fn draw_tile_opaque<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         tile: &crate::tile::Tile,
         x: i32,
         y: i32,

@@ -64,6 +64,24 @@ string. `@t` also mixes with template bindings:
 
 ## Syntax rules
 
+### Build-time static layouts
+
+A game can opt selected screens into the static layout backend through
+`dotzuki_engine_dsl::static_ui::compile`. It consumes the same schema v2 JSON
+as the editor and emits a Rust layout expression for build-time embedding.
+The `.gui` file remains the authored source; the game binds state at runtime.
+
+The supported subset is flat default panels, unwrapped text with alignment,
+literal tiles, grid cursors, localized text, direct `{key}` bindings, visibility,
+and stable `z_index` ordering. Themes, nested containers, custom elements, word
+wrapping, and compound template expressions produce compilation errors. A game
+must extend the compiler or retain the dynamic renderer for those screens.
+
+The renderer stores generated elements in borrowed static slices. Text and
+cursor drawing share primitives with dynamic layouts. Binding storage has a
+fixed capacity; formatting runtime values can still allocate. Editors continue
+to use the dynamic layout and hot-reload path.
+
 ### Document structure
 
 A `.gui` file holds one `screen` declaration:

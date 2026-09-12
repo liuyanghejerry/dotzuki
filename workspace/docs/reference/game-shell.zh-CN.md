@@ -78,7 +78,9 @@ pub trait GameLoop {
 
 - `type Fb: FbSurface`——游戏绘制用的帧缓冲：
   `dotzuki_renderer::FrameBuffer`（真彩色游戏）或
-  `dotzuki_renderer::RgbaIndexedFrameBuffer`（固定调色板游戏）。
+  `dotzuki_renderer::RgbaIndexedFrameBuffer`（packed 固定调色板存储）或
+  `dotzuki_renderer::LinearRgbaIndexedFrameBuffer`（字节索引、word 对齐）。
+  应用显式选择格式，两种存储在所有目标平台保持相同含义，均实现 `FbSurface`。
 - `update(&mut self, input: &InputState)`——每个 GB 帧调用一次；返回前
   处理输入。
 - `draw(&mut self, fb: &mut Self::Fb)`——每次重绘调用一次；把当前画面

@@ -23,9 +23,9 @@
 //! - The cost — bit twiddling in `set_pixel`/`get_pixel` — is negligible
 //!   for a fixed 5.7 KiB buffer.
 //!
-//! On GBA builds the same API deliberately uses one byte per pixel instead.
-//! That costs 23 KiB for the 160×144 framebuffer, but makes software drawing
-//! constant-time and leaves a 32-bit-aligned linear source for Mode 4 DMA.
+//! [`LinearIndexedFrameBuffer`] explicitly selects one byte per pixel on any
+//! target. It costs 23 KiB for a 160×144 framebuffer and provides a word-aligned
+//! source for hardware transfers. The default type always remains packed.
 //!
 //! The bit width is derived from `C::MAX` (2 bits for [`GbColor`], 4 bits
 //! for [`GbaColor`]), so the same type serves both the 4-color DMG and
@@ -38,8 +38,8 @@
 //! Dimensions are fixed at construction (runtime values, like the engine's
 //! [`dotzuki_engine::render::FrameBuffer`]); [`Default`] is the 160×144 Game
 //! Boy screen. Storage is a `Vec` allocated exactly once at construction and
-//! never resized: `packed_len` bytes on hosted targets, or one aligned byte
-//! per pixel on GBA. A compile-time-sized fixed-array variant is not possible
+//! never resized: `packed_len` bytes for packed storage, or one byte per pixel
+//! for linear storage, rounded up to a whole word. A fixed-array variant is not possible
 //! on stable Rust today — array lengths cannot be computed from generic
 //! parameters (`generic_const_exprs` is unstable) — so the eventual no_std/GB
 //! step can swap the `Vec` for a static buffer without touching other code.
@@ -97,21 +97,13 @@ pub const fn packed_len<C: ColorIndex>(width: usize, height: usize) -> usize {
 ///
 /// `C` is the palette index type ([`GbColor`] for 4-color DMG, [`GbaColor`]
 /// for 16-color GBA). Dimensions are chosen at construction (see
-/// [`Default`] for the 160×144 Game Boy screen). Hosted storage is a packed
-/// planar bitplane array; GBA storage is chunky and DMA-aligned (see the
-/// [module docs](self)). Index values are implicitly masked to the storage
+/// [`Default`] for the 160×144 Game Boy screen). `LINEAR = false` selects
+/// packed bitplanes; `LINEAR = true` selects word-aligned byte indices on
+/// every target (see the [module docs](self)). Index values are masked to the storage
 /// width on write.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
-    /// Pixel storage. Hosted targets use packed planar bitplanes; the GBA
-    /// uses one byte per index to trade 17 KiB for much faster software
-    /// rasterization and direct Mode 4 presentation.
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    data: Vec<u8>,
-    // u32 backing guarantees the alignment required by 32-bit GBA DMA. The
-    // bytes are still addressed individually by the drawing API.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    data: Vec<u32>,
+pub struct IndexedFrameBuffer<C: ColorIndex = GbColor, const LINEAR: bool = false> {
+    data: AlignedBytes,
     /// Screen width in pixels.
     width: usize,
     /// Screen height in pixels.
@@ -120,7 +112,6 @@ pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
     _phantom: PhantomData<C>,
 }
 
-#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
 #[inline(always)]
 fn scroll_chunky_row(row: &mut [u8], dx: i32, clear: u8) {
     debug_assert!(dx != 0 && (dx.unsigned_abs() as usize) < row.len());
@@ -226,7 +217,6 @@ fn scroll_chunky_row(row: &mut [u8], dx: i32, clear: u8) {
     }
 }
 
-#[cfg(any(all(target_os = "none", target_arch = "arm"), test))]
 fn copy_chunky_rect_within(
     pixels: &mut [u8],
     framebuffer_width: usize,
@@ -259,13 +249,18 @@ fn copy_chunky_rect_within(
     }
 }
 
-impl<C: ColorIndex> IndexedFrameBuffer<C> {
+impl<C: ColorIndex, const LINEAR: bool> IndexedFrameBuffer<C, LINEAR> {
     /// Create a new `width × height` buffer, cleared to `clear`.
     pub fn new(width: usize, height: usize, clear: C) -> Self {
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        let data = vec![0; (width * height + 3) / 4];
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        let data = vec![0; packed_len::<C>(width, height)];
+        let len = if LINEAR {
+            width * height
+        } else {
+            packed_len::<C>(width, height)
+        };
+        let data = AlignedBytes {
+            words: vec![0; (len + 3) / 4],
+            len,
+        };
         let mut fb = Self {
             data,
             width,
@@ -301,14 +296,24 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Clear the entire buffer to a single index.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
     pub fn clear(&mut self, color: C) {
+        if LINEAR {
+            self.clear_linear(color)
+        } else {
+            self.clear_packed(color)
+        }
+    }
+
+    #[inline]
+    fn clear_linear(&mut self, color: C) {
         self.data
+            .words
             .fill(u32::from_ne_bytes([color.to_index() as u8; 4]));
     }
 
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    pub fn clear(&mut self, color: C) {
+    #[inline]
+    fn clear_packed(&mut self, color: C) {
         let value = color.to_index();
         let bits = index_bits::<C>();
         if value == 0 || value + 1 == C::MAX {
@@ -329,9 +334,17 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Set a single pixel. Returns false if out of bounds.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
     #[inline]
     pub fn set_pixel(&mut self, x: u32, y: u32, color: C) -> bool {
+        if LINEAR {
+            self.set_pixel_linear(x, y, color)
+        } else {
+            self.set_pixel_packed(x, y, color)
+        }
+    }
+
+    #[inline]
+    fn set_pixel_linear(&mut self, x: u32, y: u32, color: C) -> bool {
         if x >= self.width as u32 || y >= self.height as u32 {
             return false;
         }
@@ -344,8 +357,8 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         true
     }
 
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    pub fn set_pixel(&mut self, x: u32, y: u32, color: C) -> bool {
+    #[inline]
+    fn set_pixel_packed(&mut self, x: u32, y: u32, color: C) -> bool {
         if x >= self.width as u32 || y >= self.height as u32 {
             return false;
         }
@@ -363,9 +376,17 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Get the index of a single pixel. Returns None if out of bounds.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
     #[inline]
     pub fn get_pixel(&self, x: u32, y: u32) -> Option<C> {
+        if LINEAR {
+            self.get_pixel_linear(x, y)
+        } else {
+            self.get_pixel_packed(x, y)
+        }
+    }
+
+    #[inline]
+    fn get_pixel_linear(&self, x: u32, y: u32) -> Option<C> {
         if x >= self.width as u32 || y >= self.height as u32 {
             return None;
         }
@@ -374,8 +395,8 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         Some(C::from_u8(value))
     }
 
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    pub fn get_pixel(&self, x: u32, y: u32) -> Option<C> {
+    #[inline]
+    fn get_pixel_packed(&self, x: u32, y: u32) -> Option<C> {
         if x >= self.width as u32 || y >= self.height as u32 {
             return None;
         }
@@ -394,8 +415,17 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
 
     /// Fill a rectangular region with an index. Coordinates are clamped to
     /// buffer bounds.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    #[inline]
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
+        if LINEAR {
+            self.fill_rect_linear(x, y, rect_width, rect_height, color)
+        } else {
+            self.fill_rect_packed(x, y, rect_width, rect_height, color)
+        }
+    }
+
+    #[inline]
+    fn fill_rect_linear(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
         let y_start = (y as usize).min(self.height);
         let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
@@ -427,96 +457,101 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
             return;
         }
 
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        {
-            let width = self.width;
-            let height = self.height;
-            let copy_width = width - dx.unsigned_abs() as usize;
-            let source_x = if dx < 0 {
-                dx.unsigned_abs() as usize
-            } else {
-                0
-            };
-            let target_x = if dx > 0 { dx as usize } else { 0 };
-            let clear_value = clear.to_index() as u8;
-            let pixels = unsafe {
-                core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, width * height)
-            };
+        if LINEAR {
+            {
+                let width = self.width;
+                let height = self.height;
+                let copy_width = width - dx.unsigned_abs() as usize;
+                let source_x = if dx < 0 {
+                    dx.unsigned_abs() as usize
+                } else {
+                    0
+                };
+                let target_x = if dx > 0 { dx as usize } else { 0 };
+                let clear_value = clear.to_index() as u8;
+                let pixels = unsafe {
+                    core::slice::from_raw_parts_mut(
+                        self.data.as_mut_ptr() as *mut u8,
+                        width * height,
+                    )
+                };
 
-            // Vertical-only moves are one contiguous memmove. Horizontal
-            // moves need row boundaries, so copy aligned words/halfwords in
-            // the overlap-safe direction instead of invoking memmove once
-            // per scanline.
-            if dx == 0 {
+                // Vertical-only moves are one contiguous memmove. Horizontal
+                // moves need row boundaries, so copy aligned words/halfwords in
+                // the overlap-safe direction instead of invoking memmove once
+                // per scanline.
+                if dx == 0 {
+                    if dy > 0 {
+                        let offset = dy as usize;
+                        pixels.copy_within(0..(height - offset) * width, offset * width);
+                        pixels[..offset * width].fill(clear_value);
+                    } else {
+                        let offset = dy.unsigned_abs() as usize;
+                        pixels.copy_within(offset * width..height * width, 0);
+                        pixels[(height - offset) * width..].fill(clear_value);
+                    }
+                    return;
+                }
+
+                if dy == 0 {
+                    for y in 0..height {
+                        let start = y * width;
+                        scroll_chunky_row(&mut pixels[start..start + width], dx, clear_value);
+                    }
+                    return;
+                }
+
                 if dy > 0 {
                     let offset = dy as usize;
-                    pixels.copy_within(0..(height - offset) * width, offset * width);
+                    for source_y in (0..height - offset).rev() {
+                        let target_y = source_y + offset;
+                        let source = source_y * width + source_x;
+                        let target = target_y * width + target_x;
+                        pixels.copy_within(source..source + copy_width, target);
+                        if dx > 0 {
+                            pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                        } else if dx < 0 {
+                            pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                        }
+                    }
                     pixels[..offset * width].fill(clear_value);
                 } else {
                     let offset = dy.unsigned_abs() as usize;
-                    pixels.copy_within(offset * width..height * width, 0);
+                    for source_y in offset..height {
+                        let target_y = source_y - offset;
+                        let source = source_y * width + source_x;
+                        let target = target_y * width + target_x;
+                        pixels.copy_within(source..source + copy_width, target);
+                        if dx > 0 {
+                            pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                        } else if dx < 0 {
+                            pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                        }
+                    }
                     pixels[(height - offset) * width..].fill(clear_value);
                 }
-                return;
-            }
-
-            if dy == 0 {
-                for y in 0..height {
-                    let start = y * width;
-                    scroll_chunky_row(&mut pixels[start..start + width], dx, clear_value);
-                }
-                return;
-            }
-
-            if dy > 0 {
-                let offset = dy as usize;
-                for source_y in (0..height - offset).rev() {
-                    let target_y = source_y + offset;
-                    let source = source_y * width + source_x;
-                    let target = target_y * width + target_x;
-                    pixels.copy_within(source..source + copy_width, target);
-                    if dx > 0 {
-                        pixels[target_y * width..target_y * width + target_x].fill(clear_value);
-                    } else if dx < 0 {
-                        pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
-                    }
-                }
-                pixels[..offset * width].fill(clear_value);
-            } else {
-                let offset = dy.unsigned_abs() as usize;
-                for source_y in offset..height {
-                    let target_y = source_y - offset;
-                    let source = source_y * width + source_x;
-                    let target = target_y * width + target_x;
-                    pixels.copy_within(source..source + copy_width, target);
-                    if dx > 0 {
-                        pixels[target_y * width..target_y * width + target_x].fill(clear_value);
-                    } else if dx < 0 {
-                        pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
-                    }
-                }
-                pixels[(height - offset) * width..].fill(clear_value);
             }
         }
 
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        {
-            let source = self.clone();
-            self.clear(clear);
-            for y in 0..self.height as i32 {
-                let source_y = y - dy;
-                if source_y < 0 || source_y >= self.height as i32 {
-                    continue;
-                }
-                for x in 0..self.width as i32 {
-                    let source_x = x - dx;
-                    if source_x < 0 || source_x >= self.width as i32 {
+        if !LINEAR {
+            {
+                let source = self.clone();
+                self.clear(clear);
+                for y in 0..self.height as i32 {
+                    let source_y = y - dy;
+                    if source_y < 0 || source_y >= self.height as i32 {
                         continue;
                     }
-                    let color = source
-                        .get_pixel(source_x as u32, source_y as u32)
-                        .expect("scroll source is in bounds");
-                    self.set_pixel(x as u32, y as u32, color);
+                    for x in 0..self.width as i32 {
+                        let source_x = x - dx;
+                        if source_x < 0 || source_x >= self.width as i32 {
+                            continue;
+                        }
+                        let color = source
+                            .get_pixel(source_x as u32, source_y as u32)
+                            .expect("scroll source is in bounds");
+                        self.set_pixel(x as u32, y as u32, color);
+                    }
                 }
             }
         }
@@ -543,30 +578,32 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
             return;
         }
 
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        {
-            let copy_width = x_end - x_start;
-            let destination = self.data.as_mut_ptr().cast::<u8>();
-            let source = other.data.as_ptr().cast::<u8>();
-            for row in y_start..y_end {
-                let offset = row * self.width + x_start;
-                unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        source.add(offset),
-                        destination.add(offset),
-                        copy_width,
-                    );
+        if LINEAR {
+            {
+                let copy_width = x_end - x_start;
+                let destination = self.data.as_mut_ptr().cast::<u8>();
+                let source = other.data.as_ptr().cast::<u8>();
+                for row in y_start..y_end {
+                    let offset = row * self.width + x_start;
+                    unsafe {
+                        core::ptr::copy_nonoverlapping(
+                            source.add(offset),
+                            destination.add(offset),
+                            copy_width,
+                        );
+                    }
                 }
             }
         }
 
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        for row in y_start..y_end {
-            for column in x_start..x_end {
-                let color = other
-                    .get_pixel(column as u32, row as u32)
-                    .expect("copy source is in bounds");
-                self.set_pixel(column as u32, row as u32, color);
+        if !LINEAR {
+            for row in y_start..y_end {
+                for column in x_start..x_end {
+                    let color = other
+                        .get_pixel(column as u32, row as u32)
+                        .expect("copy source is in bounds");
+                    self.set_pixel(column as u32, row as u32, color);
+                }
             }
         }
     }
@@ -599,49 +636,48 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
             return;
         }
 
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        {
-            let pixels = unsafe {
-                core::slice::from_raw_parts_mut(
-                    self.data.as_mut_ptr().cast::<u8>(),
-                    self.width * self.height,
-                )
-            };
-            copy_chunky_rect_within(
-                pixels,
-                self.width,
-                source_x,
-                source_y,
-                copy_width,
-                copy_height,
-                destination_x,
-                destination_y,
-            );
+        if LINEAR {
+            {
+                let pixels = unsafe {
+                    core::slice::from_raw_parts_mut(
+                        self.data.as_mut_ptr().cast::<u8>(),
+                        self.width * self.height,
+                    )
+                };
+                copy_chunky_rect_within(
+                    pixels,
+                    self.width,
+                    source_x,
+                    source_y,
+                    copy_width,
+                    copy_height,
+                    destination_x,
+                    destination_y,
+                );
+            }
         }
 
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        {
-            let source = self.clone();
-            for row in 0..copy_height {
-                for column in 0..copy_width {
-                    let color = source
-                        .get_pixel(
-                            (source_x + column) as u32,
-                            (source_y + row) as u32,
-                        )
-                        .expect("copy source is in bounds");
-                    self.set_pixel(
-                        (destination_x + column) as u32,
-                        (destination_y + row) as u32,
-                        color,
-                    );
+        if !LINEAR {
+            {
+                let source = self.clone();
+                for row in 0..copy_height {
+                    for column in 0..copy_width {
+                        let color = source
+                            .get_pixel((source_x + column) as u32, (source_y + row) as u32)
+                            .expect("copy source is in bounds");
+                        self.set_pixel(
+                            (destination_x + column) as u32,
+                            (destination_y + row) as u32,
+                            color,
+                        );
+                    }
                 }
             }
         }
     }
 
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
+    #[inline]
+    fn fill_rect_packed(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
         let y_start = (y as usize).min(self.height);
         let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
@@ -701,49 +737,11 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         }
         true
     }
-
-    /// Raw packed storage, in the planar bitplane format described in the
-    /// [module docs](self). For [`GbColor`] this is GB 2bpp tile data, so
-    /// any 8×8-aligned region can be fed directly to
-    /// [`crate::tile::Tile::from_2bpp`].
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    #[inline]
-    pub fn packed(&self) -> &[u8] {
-        &self.data
-    }
-
-    /// Mutable raw packed storage (e.g. for tile blits into 8×8-aligned
-    /// regions, or for serialization). The caller must preserve the
-    /// planar bitplane layout.
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    #[inline]
-    pub fn packed_mut(&mut self) -> &mut [u8] {
-        &mut self.data
-    }
-
-    /// GBA-only chunky one-byte-per-pixel storage, ready for Mode 4.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    #[inline]
-    pub fn indices(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts(self.data.as_ptr() as *const u8, self.len()) }
-    }
-
-    /// Mutable GBA-only chunky one-byte-per-pixel storage.
-    ///
-    /// Platform frontends may use this view for hardware-accelerated moves.
-    /// Every byte must remain a valid palette index for `C`.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    #[inline]
-    pub fn indices_mut(&mut self) -> &mut [u8] {
-        unsafe {
-            core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, self.len())
-        }
-    }
 }
 
 /// The default [`IndexedFrameBuffer`] is a 160×144 Game Boy screen,
 /// cleared to index 0.
-impl<C: ColorIndex> Default for IndexedFrameBuffer<C> {
+impl<C: ColorIndex, const LINEAR: bool> Default for IndexedFrameBuffer<C, LINEAR> {
     fn default() -> Self {
         Self::new(SCREEN_WIDTH, SCREEN_HEIGHT, C::from_u8(0))
     }
@@ -780,6 +778,42 @@ pub fn quantize<C: ColorIndex>(palette: &Palette<C>, color: Rgba) -> C {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn linear_and_packed_storage_agree_through_clipped_moves_and_blits() {
+        for (width, height) in [(0, 0), (1, 1), (5, 7), (16, 16), (19, 13)] {
+            let config = RenderConfig::new(width, height);
+            let mut packed = RgbaIndexedFrameBuffer::<GbColor>::new(config.clone(), Rgba::WHITE);
+            let mut linear = LinearRgbaIndexedFrameBuffer::<GbColor>::new(config, Rgba::WHITE);
+            assert_eq!(linear.indices().len(), width as usize * height as usize);
+            assert_eq!(linear.indices().as_ptr() as usize % 4, 0);
+            let equal = |p: &RgbaIndexedFrameBuffer, l: &LinearRgbaIndexedFrameBuffer| {
+                for y in 0..height {
+                    for x in 0..width {
+                        assert_eq!(p.get_index(x, y), l.get_index(x, y), "at {x},{y}");
+                    }
+                }
+            };
+            for i in 0..40u32 {
+                let color = GbColor::from_u8((i % 4) as u8);
+                packed.indexed_mut().fill_rect(i % 21, i % 15, 9, 4, color);
+                linear.indexed_mut().fill_rect(i % 21, i % 15, 9, 4, color);
+                let dx = i as i32 % 7 - 3;
+                let dy = i as i32 % 5 - 2;
+                packed.scroll_indices(dx, dy, color);
+                linear.scroll_indices(dx, dy, color);
+                packed.copy_rect_within(1, 1, 11, 8, i % 4, i % 3);
+                linear.copy_rect_within(1, 1, 11, 8, i % 4, i % 3);
+                equal(&packed, &linear);
+                let tile = Tile::from_2bpp(&[
+                    0x59, 0xA7, 0x18, 0xF0, 0xC3, 0x55, 0x0F, 0x88, 0xCC, 0x55, 0x87, 0xE1, 0x44,
+                    0x23, 0xF8, 0x62,
+                ]);
+                packed.blit_gb_tile_indices(dx, dy, &tile, i % 2 == 0, i % 3 == 0, i % 5 == 0);
+                linear.blit_gb_tile_indices(dx, dy, &tile, i % 2 == 0, i % 3 == 0, i % 5 == 0);
+                equal(&packed, &linear);
+            }
+        }
+    }
     use crate::palette::{GbaColor, GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
     use crate::tile::Tile;
 
@@ -1380,9 +1414,9 @@ impl FbSurface for dotzuki_engine::render::FrameBuffer {
 /// restores it. The indexed API remains reachable via [`Self::indexed`] /
 /// [`Self::indexed_mut`].
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor> {
+pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor, const LINEAR: bool = false> {
     /// The indexed pixel storage.
-    buffer: IndexedFrameBuffer<C>,
+    buffer: IndexedFrameBuffer<C, LINEAR>,
     /// Quantization palette: RGBA writes map to the nearest entry's index.
     base: Palette<C>,
     /// True when `base` is the standard opaque 0/85/170/255 gray ramp.
@@ -1392,7 +1426,7 @@ pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor> {
     pub palette: Palette<C>,
 }
 
-impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
+impl<C: ColorIndex, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
     /// Create a `config`-sized buffer with an explicit base palette, cleared
     /// to `clear` (quantized through `base`).
     pub fn with_palette(config: RenderConfig, clear: Rgba, base: Palette<C>) -> Self {
@@ -1461,45 +1495,14 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
 
     /// Read-only access to the underlying indexed buffer.
     #[inline]
-    pub fn indexed(&self) -> &IndexedFrameBuffer<C> {
+    pub fn indexed(&self) -> &IndexedFrameBuffer<C, LINEAR> {
         &self.buffer
     }
 
     /// Mutable access to the underlying indexed buffer (C-index API).
     #[inline]
-    pub fn indexed_mut(&mut self) -> &mut IndexedFrameBuffer<C> {
+    pub fn indexed_mut(&mut self) -> &mut IndexedFrameBuffer<C, LINEAR> {
         &mut self.buffer
-    }
-
-    /// Raw packed 2bpp storage (see [`IndexedFrameBuffer::packed`]).
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    #[inline]
-    pub fn packed(&self) -> &[u8] {
-        self.buffer.packed()
-    }
-
-    /// Mutable raw packed storage.
-    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    #[inline]
-    pub fn packed_mut(&mut self) -> &mut [u8] {
-        self.buffer.packed_mut()
-    }
-
-    /// GBA-only chunky one-byte-per-pixel storage, ready for Mode 4.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    #[inline]
-    pub fn indices(&self) -> &[u8] {
-        self.buffer.indices()
-    }
-
-    /// Mutable GBA-only chunky one-byte-per-pixel storage.
-    ///
-    /// Platform frontends may use this view for hardware-accelerated moves.
-    /// Every byte must remain a valid palette index for `C`.
-    #[cfg(all(target_os = "none", target_arch = "arm"))]
-    #[inline]
-    pub fn indices_mut(&mut self) -> &mut [u8] {
-        self.buffer.indices_mut()
     }
 
     /// Expand the buffer into RGBA using the *display* palette.
@@ -1520,8 +1523,8 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Copy from `other`, delegating the backing-storage transfer to
     /// `copy_pixels`.
     ///
-    /// Hosted targets pass their packed planar bytes to the callback. Bare
-    /// metal ARM targets pass their chunky one-byte-per-pixel storage, so a
+    /// Packed buffers pass planar bytes to the callback. Linear buffers pass
+    /// their one-byte-per-pixel storage, so a
     /// platform frontend can use a hardware copy engine without exposing
     /// renderer internals. The callback must copy every source byte into the
     /// equally sized destination slice before returning.
@@ -1534,17 +1537,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         assert_eq!(self.width(), other.width(), "framebuffer width mismatch");
         assert_eq!(self.height(), other.height(), "framebuffer height mismatch");
 
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        copy_pixels(&mut self.buffer.data, &other.buffer.data);
-
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        {
-            let len = self.buffer.len();
-            let destination = unsafe {
-                core::slice::from_raw_parts_mut(self.buffer.data.as_mut_ptr().cast::<u8>(), len)
-            };
-            copy_pixels(destination, other.buffer.indices());
-        }
+        copy_pixels(self.buffer.bytes_mut(), other.buffer.bytes());
 
         self.palette = other.palette;
         self.base = other.base;
@@ -1700,40 +1693,41 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         // bypass the generic clipped/remapped loop entirely. Palette entry
         // zero is allowed to quantize differently when it is transparent,
         // because that source index is skipped rather than written.
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        if !flip_x
-            && !flip_y
-            && x >= 0
-            && y >= 0
-            && x + TILE_PIXELS as i32 <= width
-            && y + TILE_PIXELS as i32 <= height
-        {
-            let transparent_zero = transparent && rgba[0] == Rgba::TRANSPARENT;
-            let transparent_nonzero =
-                transparent && rgba[1..].iter().any(|color| *color == Rgba::TRANSPARENT);
-            let identity_mapping = mapped.iter().enumerate().all(|(index, color)| {
-                (index == 0 && transparent_zero) || color.to_index() == index
-            });
+        if LINEAR {
+            if !flip_x
+                && !flip_y
+                && x >= 0
+                && y >= 0
+                && x + TILE_PIXELS as i32 <= width
+                && y + TILE_PIXELS as i32 <= height
+            {
+                let transparent_zero = transparent && rgba[0] == Rgba::TRANSPARENT;
+                let transparent_nonzero =
+                    transparent && rgba[1..].iter().any(|color| *color == Rgba::TRANSPARENT);
+                let identity_mapping = mapped.iter().enumerate().all(|(index, color)| {
+                    (index == 0 && transparent_zero) || color.to_index() == index
+                });
 
-            if identity_mapping && !transparent_nonzero {
-                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
-                for row in 0..TILE_PIXELS {
-                    let source = tile.pixels[row].as_ptr();
-                    let target = unsafe {
-                        destination.add((y as usize + row) * width as usize + x as usize)
-                    };
-                    if transparent_zero {
-                        for column in 0..TILE_PIXELS {
-                            let value = unsafe { source.add(column).read() };
-                            if value != 0 {
-                                unsafe { target.add(column).write(value) };
+                if identity_mapping && !transparent_nonzero {
+                    let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                    for row in 0..TILE_PIXELS {
+                        let source = tile.pixels[row].as_ptr();
+                        let target = unsafe {
+                            destination.add((y as usize + row) * width as usize + x as usize)
+                        };
+                        if transparent_zero {
+                            for column in 0..TILE_PIXELS {
+                                let value = unsafe { source.add(column).read() };
+                                if value != 0 {
+                                    unsafe { target.add(column).write(value) };
+                                }
                             }
+                        } else {
+                            unsafe { core::ptr::copy_nonoverlapping(source, target, TILE_PIXELS) };
                         }
-                    } else {
-                        unsafe { core::ptr::copy_nonoverlapping(source, target, TILE_PIXELS) };
                     }
+                    return;
                 }
-                return;
             }
         }
 
@@ -1746,14 +1740,6 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
             return;
         }
 
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        let mapped = [
-            mapped[0].to_index() as u8,
-            mapped[1].to_index() as u8,
-            mapped[2].to_index() as u8,
-            mapped[3].to_index() as u8,
-        ];
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
         let destination = self.buffer.data.as_mut_ptr() as *mut u8;
 
         for dst_row in y_start..y_end {
@@ -1772,18 +1758,22 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
                 if transparent && rgba[source] == Rgba::TRANSPARENT {
                     continue;
                 }
-                #[cfg(all(target_os = "none", target_arch = "arm"))]
-                unsafe {
-                    let offset = (y + dst_row as i32) as usize * width as usize
-                        + (x + dst_col as i32) as usize;
-                    destination.add(offset).write(mapped[source]);
+                if LINEAR {
+                    unsafe {
+                        let offset = (y + dst_row as i32) as usize * width as usize
+                            + (x + dst_col as i32) as usize;
+                        destination
+                            .add(offset)
+                            .write(mapped[source].to_index() as u8);
+                    }
                 }
-                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-                self.buffer.set_pixel(
-                    (x + dst_col as i32) as u32,
-                    (y + dst_row as i32) as u32,
-                    mapped[source],
-                );
+                if !LINEAR {
+                    self.buffer.set_pixel(
+                        (x + dst_col as i32) as u32,
+                        (y + dst_row as i32) as u32,
+                        mapped[source],
+                    );
+                }
             }
         }
     }
@@ -1841,7 +1831,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     }
 }
 
-impl RgbaIndexedFrameBuffer<GbColor> {
+impl<const LINEAR: bool> RgbaIndexedFrameBuffer<GbColor, LINEAR> {
     /// Blit a tile whose 2-bit pixel values already use the framebuffer's
     /// index order. This bypasses RGBA palette conversion entirely.
     ///
@@ -1864,57 +1854,58 @@ impl RgbaIndexedFrameBuffer<GbColor> {
         // The GBA framebuffer is one byte per pixel. The overwhelmingly
         // common aligned/background case is eight short row copies with no
         // per-pixel bounds checks or palette work.
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        if !transparent_zero
-            && !flip_x
-            && !flip_y
-            && x >= 0
-            && y >= 0
-            && x + TILE_PIXELS as i32 <= width
-            && y + TILE_PIXELS as i32 <= height
-        {
-            let destination = self.buffer.data.as_mut_ptr() as *mut u8;
-            let width = width as usize;
-            let x = x as usize;
-            let y = y as usize;
+        if LINEAR {
+            if !transparent_zero
+                && !flip_x
+                && !flip_y
+                && x >= 0
+                && y >= 0
+                && x + TILE_PIXELS as i32 <= width
+                && y + TILE_PIXELS as i32 <= height
+            {
+                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                let width = width as usize;
+                let x = x as usize;
+                let y = y as usize;
 
-            // Pick one copy shape per tile rather than branching for every
-            // row. The bounds checks above cover all eight source and
-            // destination rows. Tile rows are word-aligned because Tile has
-            // 4-byte alignment and every row is eight bytes.
-            if width & 3 == 0 && x & 3 == 0 {
-                for row in 0..TILE_PIXELS {
-                    unsafe {
-                        let source = tile.pixels[row].as_ptr() as *const u32;
-                        let destination = destination.add((y + row) * width + x) as *mut u32;
-                        destination.write(source.read());
-                        destination.add(1).write(source.add(1).read());
+                // Pick one copy shape per tile rather than branching for every
+                // row. The bounds checks above cover all eight source and
+                // destination rows. Tile rows are word-aligned because Tile has
+                // 4-byte alignment and every row is eight bytes.
+                if width & 3 == 0 && x & 3 == 0 {
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            let source = tile.pixels[row].as_ptr() as *const u32;
+                            let destination = destination.add((y + row) * width + x) as *mut u32;
+                            destination.write(source.read());
+                            destination.add(1).write(source.add(1).read());
+                        }
                     }
-                }
-            } else if width & 1 == 0 && x & 1 == 0 {
-                // Smooth 2 px scrolling keeps halfword alignment even when
-                // the destination is between word boundaries.
-                for row in 0..TILE_PIXELS {
-                    unsafe {
-                        let source = tile.pixels[row].as_ptr() as *const u16;
-                        let destination = destination.add((y + row) * width + x) as *mut u16;
-                        for halfword in 0..4 {
-                            destination.add(halfword).write(source.add(halfword).read());
+                } else if width & 1 == 0 && x & 1 == 0 {
+                    // Smooth 2 px scrolling keeps halfword alignment even when
+                    // the destination is between word boundaries.
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            let source = tile.pixels[row].as_ptr() as *const u16;
+                            let destination = destination.add((y + row) * width + x) as *mut u16;
+                            for halfword in 0..4 {
+                                destination.add(halfword).write(source.add(halfword).read());
+                            }
+                        }
+                    }
+                } else {
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            core::ptr::copy_nonoverlapping(
+                                tile.pixels[row].as_ptr(),
+                                destination.add((y + row) * width + x),
+                                TILE_PIXELS,
+                            );
                         }
                     }
                 }
-            } else {
-                for row in 0..TILE_PIXELS {
-                    unsafe {
-                        core::ptr::copy_nonoverlapping(
-                            tile.pixels[row].as_ptr(),
-                            destination.add((y + row) * width + x),
-                            TILE_PIXELS,
-                        );
-                    }
-                }
+                return;
             }
-            return;
         }
 
         let tile_size = TILE_PIXELS as i32;
@@ -1926,66 +1917,95 @@ impl RgbaIndexedFrameBuffer<GbColor> {
             return;
         }
 
-        #[cfg(all(target_os = "none", target_arch = "arm"))]
-        {
-            let destination = self.buffer.data.as_mut_ptr() as *mut u8;
-            if !transparent_zero && !flip_x && !flip_y {
-                let copy_width = x_end - x_start;
-                let destination_x = (x + x_start as i32) as usize;
-                let destination_y = (y + y_start as i32) as usize;
-                let source = unsafe { tile.pixels[y_start].as_ptr().add(x_start) };
-                let target =
-                    unsafe { destination.add(destination_y * width as usize + destination_x) };
+        if LINEAR {
+            {
+                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                if !transparent_zero && !flip_x && !flip_y {
+                    let copy_width = x_end - x_start;
+                    let destination_x = (x + x_start as i32) as usize;
+                    let destination_y = (y + y_start as i32) as usize;
+                    let source = unsafe { tile.pixels[y_start].as_ptr().add(x_start) };
+                    let target =
+                        unsafe { destination.add(destination_y * width as usize + destination_x) };
 
-                // Clipped scrolling exposes 2/4/6-pixel strips. Choose the
-                // copy width once per tile so those strips retain the same
-                // aligned halfword/word writes as a fully visible tile.
-                if width as usize & 3 == 0
-                    && (source as usize | target as usize | copy_width) & 3 == 0
-                {
-                    let words = copy_width / 4;
-                    for dst_row in y_start..y_end {
-                        unsafe {
-                            let source = tile.pixels[dst_row].as_ptr().add(x_start) as *const u32;
-                            let target = destination
-                                .add((y + dst_row as i32) as usize * width as usize + destination_x)
-                                as *mut u32;
-                            for word in 0..words {
-                                target.add(word).write(source.add(word).read());
-                            }
-                        }
-                    }
-                } else if width as usize & 1 == 0
-                    && (source as usize | target as usize | copy_width) & 1 == 0
-                {
-                    let halfwords = copy_width / 2;
-                    for dst_row in y_start..y_end {
-                        unsafe {
-                            let source = tile.pixels[dst_row].as_ptr().add(x_start) as *const u16;
-                            let target = destination
-                                .add((y + dst_row as i32) as usize * width as usize + destination_x)
-                                as *mut u16;
-                            for halfword in 0..halfwords {
-                                target.add(halfword).write(source.add(halfword).read());
-                            }
-                        }
-                    }
-                } else {
-                    for dst_row in y_start..y_end {
-                        unsafe {
-                            core::ptr::copy_nonoverlapping(
-                                tile.pixels[dst_row].as_ptr().add(x_start),
-                                destination.add(
+                    // Clipped scrolling exposes 2/4/6-pixel strips. Choose the
+                    // copy width once per tile so those strips retain the same
+                    // aligned halfword/word writes as a fully visible tile.
+                    if width as usize & 3 == 0
+                        && (source as usize | target as usize | copy_width) & 3 == 0
+                    {
+                        let words = copy_width / 4;
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                let source =
+                                    tile.pixels[dst_row].as_ptr().add(x_start) as *const u32;
+                                let target = destination.add(
                                     (y + dst_row as i32) as usize * width as usize + destination_x,
-                                ),
-                                copy_width,
-                            );
+                                ) as *mut u32;
+                                for word in 0..words {
+                                    target.add(word).write(source.add(word).read());
+                                }
+                            }
+                        }
+                    } else if width as usize & 1 == 0
+                        && (source as usize | target as usize | copy_width) & 1 == 0
+                    {
+                        let halfwords = copy_width / 2;
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                let source =
+                                    tile.pixels[dst_row].as_ptr().add(x_start) as *const u16;
+                                let target = destination.add(
+                                    (y + dst_row as i32) as usize * width as usize + destination_x,
+                                ) as *mut u16;
+                                for halfword in 0..halfwords {
+                                    target.add(halfword).write(source.add(halfword).read());
+                                }
+                            }
+                        }
+                    } else {
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                core::ptr::copy_nonoverlapping(
+                                    tile.pixels[dst_row].as_ptr().add(x_start),
+                                    destination.add(
+                                        (y + dst_row as i32) as usize * width as usize
+                                            + destination_x,
+                                    ),
+                                    copy_width,
+                                );
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                for dst_row in y_start..y_end {
+                    let src_row = if flip_y {
+                        TILE_PIXELS - 1 - dst_row
+                    } else {
+                        dst_row
+                    };
+                    for dst_col in x_start..x_end {
+                        let src_col = if flip_x {
+                            TILE_PIXELS - 1 - dst_col
+                        } else {
+                            dst_col
+                        };
+                        let source = tile.pixels[src_row][src_col] & 0x03;
+                        if transparent_zero && source == 0 {
+                            continue;
+                        }
+                        unsafe {
+                            let offset = (y + dst_row as i32) as usize * width as usize
+                                + (x + dst_col as i32) as usize;
+                            destination.add(offset).write(source);
                         }
                     }
                 }
-                return;
             }
-
+        }
+        if !LINEAR {
             for dst_row in y_start..y_end {
                 let src_row = if flip_y {
                     TILE_PIXELS - 1 - dst_row
@@ -2002,42 +2022,18 @@ impl RgbaIndexedFrameBuffer<GbColor> {
                     if transparent_zero && source == 0 {
                         continue;
                     }
-                    unsafe {
-                        let offset = (y + dst_row as i32) as usize * width as usize
-                            + (x + dst_col as i32) as usize;
-                        destination.add(offset).write(source);
-                    }
+                    self.buffer.set_pixel(
+                        (x + dst_col as i32) as u32,
+                        (y + dst_row as i32) as u32,
+                        GbColor::from_u8(source),
+                    );
                 }
-            }
-        }
-        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-        for dst_row in y_start..y_end {
-            let src_row = if flip_y {
-                TILE_PIXELS - 1 - dst_row
-            } else {
-                dst_row
-            };
-            for dst_col in x_start..x_end {
-                let src_col = if flip_x {
-                    TILE_PIXELS - 1 - dst_col
-                } else {
-                    dst_col
-                };
-                let source = tile.pixels[src_row][src_col] & 0x03;
-                if transparent_zero && source == 0 {
-                    continue;
-                }
-                self.buffer.set_pixel(
-                    (x + dst_col as i32) as u32,
-                    (y + dst_row as i32) as u32,
-                    GbColor::from_u8(source),
-                );
             }
         }
     }
 }
 
-impl<C: ColorIndex + DefaultPalette> RgbaIndexedFrameBuffer<C> {
+impl<C: ColorIndex + DefaultPalette, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
     /// Create a `config`-sized buffer using the type's default base palette,
     /// cleared to `clear`.
     pub fn new(config: RenderConfig, clear: Rgba) -> Self {
@@ -2045,7 +2041,7 @@ impl<C: ColorIndex + DefaultPalette> RgbaIndexedFrameBuffer<C> {
     }
 }
 
-impl RgbaIndexedFrameBuffer<GbColor> {
+impl<const LINEAR: bool> RgbaIndexedFrameBuffer<GbColor, LINEAR> {
     /// Apply a DMG BGP register byte: display color `i` becomes the base
     /// palette's shade `(bgp >> (2 * i)) & 3`. This is exactly how the
     /// original hardware performs fades (by writing the BGP register).
@@ -2058,7 +2054,9 @@ impl RgbaIndexedFrameBuffer<GbColor> {
     }
 }
 
-impl<C: ColorIndex + DefaultPalette> FbSurface for RgbaIndexedFrameBuffer<C> {
+impl<C: ColorIndex + DefaultPalette, const LINEAR: bool> FbSurface
+    for RgbaIndexedFrameBuffer<C, LINEAR>
+{
     fn new_screen(width: u32, height: u32) -> Self {
         Self::new(RenderConfig::new(width, height), Rgba::BLACK)
     }
@@ -2452,5 +2450,70 @@ mod facade_tests {
             };
             assert_eq!(fb.get_index(i as u32, 0), Some(expected));
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AlignedBytes {
+    words: Vec<u32>,
+    len: usize,
+}
+impl core::ops::Deref for AlignedBytes {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        // All u32 bit patterns are initialized; len excludes word padding.
+        unsafe { core::slice::from_raw_parts(self.words.as_ptr().cast(), self.len) }
+    }
+}
+impl core::ops::DerefMut for AlignedBytes {
+    fn deref_mut(&mut self) -> &mut [u8] {
+        unsafe { core::slice::from_raw_parts_mut(self.words.as_mut_ptr().cast(), self.len) }
+    }
+}
+/// Explicit one-byte-per-pixel, word-aligned storage on every target.
+pub type LinearIndexedFrameBuffer<C = GbColor> = IndexedFrameBuffer<C, true>;
+pub type LinearRgbaIndexedFrameBuffer<C = GbColor> = RgbaIndexedFrameBuffer<C, true>;
+impl<C: ColorIndex, const LINEAR: bool> IndexedFrameBuffer<C, LINEAR> {
+    pub(crate) fn bytes(&self) -> &[u8] {
+        &self.data
+    }
+    pub(crate) fn bytes_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> IndexedFrameBuffer<C, false> {
+    /// Planar row-major bytes; available only for explicitly packed storage.
+    pub fn packed(&self) -> &[u8] {
+        &self.data
+    }
+    /// Mutable planar bytes, excluding alignment padding.
+    pub fn packed_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> IndexedFrameBuffer<C, true> {
+    /// One palette index per pixel, row-major and word-aligned on every target.
+    pub fn indices(&self) -> &[u8] {
+        &self.data
+    }
+    /// Mutable row-major indices. Writes must stay within the palette's range.
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> RgbaIndexedFrameBuffer<C, false> {
+    pub fn packed(&self) -> &[u8] {
+        self.buffer.packed()
+    }
+    pub fn packed_mut(&mut self) -> &mut [u8] {
+        self.buffer.packed_mut()
+    }
+}
+impl<C: ColorIndex> RgbaIndexedFrameBuffer<C, true> {
+    pub fn indices(&self) -> &[u8] {
+        self.buffer.indices()
+    }
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        self.buffer.indices_mut()
     }
 }

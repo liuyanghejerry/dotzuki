@@ -77,7 +77,10 @@ pub trait GameLoop {
 
 - `type Fb: FbSurface` — the framebuffer the game draws into: either
   `dotzuki_renderer::FrameBuffer` (true-color games) or
-  `dotzuki_renderer::RgbaIndexedFrameBuffer` (fixed-palette games).
+  `dotzuki_renderer::RgbaIndexedFrameBuffer` (packed fixed-palette storage), or
+  `dotzuki_renderer::LinearRgbaIndexedFrameBuffer` (word-aligned byte indices).
+  These storage choices have the same meaning on every target; the application
+  selects the format. Both implement `FbSurface`.
 - `update(&mut self, input: &InputState)` — called once per GB frame;
   process input before returning.
 - `draw(&mut self, fb: &mut Self::Fb)` — called once per redraw; draw the

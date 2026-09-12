@@ -52,6 +52,27 @@ pub fn render_text(
     // (Theme::default() = Tile, recording mocks) always falls through to the
     // legacy tile path below, which is preserved byte-for-byte.
     let theme = render_ctx.theme;
+    if !wrap {
+        let proportional = theme.proportional(painter.supports_proportional());
+        let color = params.color.as_deref().map(parse_color).unwrap_or_else(|| {
+            if proportional {
+                theme.ink_color()
+            } else {
+                Rgba::INK_BLACK
+            }
+        });
+        render_unwrapped_text(
+            &resolved_text,
+            dotzuki_engine::render::TileRect::new(base_tx, base_ty, tile_width, tile_height),
+            align,
+            proportional,
+            color,
+            params.scale.unwrap_or(1).max(1),
+            params.line_spacing.unwrap_or(0) as u32,
+            painter,
+        );
+        return Ok(());
+    }
     if theme.proportional(painter.supports_proportional()) {
         let color = params
             .color
@@ -144,6 +165,58 @@ pub fn parse_color(s: &str) -> Rgba {
         "lightgray" | "light_gray" => Rgba::INK_LIGHT_GRAY,
         "white" => Rgba::INK_WHITE,
         _ => Rgba::INK_BLACK,
+    }
+}
+
+/// Shared allocation-free primitive for dynamic and build-generated layouts.
+#[allow(clippy::too_many_arguments)]
+pub fn render_unwrapped_text(
+    text: &str,
+    rect: dotzuki_engine::render::TileRect,
+    align: &TextAlign,
+    proportional: bool,
+    color: Rgba,
+    scale: u32,
+    spacing: u32,
+    painter: &mut dyn Painter,
+) {
+    if proportional {
+        let pitch = (crate::embedded_font::GLYPH_SIZE + 3) * scale + spacing;
+        for (i, line) in text.split('\n').enumerate() {
+            let offset_y = i as u32 * pitch;
+            if offset_y >= rect.th * 8 {
+                break;
+            }
+            let spare = (rect.tw * 8).saturating_sub(painter.measure_text_px_scaled(line, scale));
+            let offset_x = match align {
+                TextAlign::Left => 0,
+                TextAlign::Center => spare / 2,
+                TextAlign::Right => spare,
+            };
+            painter.draw_text_px_scaled(
+                rect.tx * 8 + offset_x,
+                rect.ty * 8 + offset_y,
+                line,
+                scale,
+                color,
+            );
+        }
+    } else {
+        for (i, line) in text.lines().enumerate() {
+            let offset_y = i as u32 * (1 + spacing);
+            if offset_y >= rect.th {
+                break;
+            }
+            let width = line.chars().count().min(rect.tw as usize) as u32;
+            let offset_x = align_offset(width, rect.tw, align);
+            for (col, ch) in line.chars().take(rect.tw as usize).enumerate() {
+                painter.draw_glyph(
+                    TilePos::new(rect.tx + offset_x + col as u32, rect.ty + offset_y),
+                    ch,
+                    color,
+                );
+            }
+        }
     }
 }
 
@@ -554,8 +627,10 @@ mod tests {
         ctx.set("name", "SPARKIT");
         ctx.set("level", 25i64);
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -596,8 +671,10 @@ mod tests {
             _ => unreachable!(),
         };
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
 
         // Chinese: `__lang = "zh"` selects the zh variant.
@@ -628,8 +705,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -652,8 +731,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -675,8 +756,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -703,8 +786,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -723,8 +808,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -749,8 +836,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 
@@ -772,8 +861,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = render_ctx(&theme, &fonts, &tilesets);
         let mut p = RecordingPainter::new();
 

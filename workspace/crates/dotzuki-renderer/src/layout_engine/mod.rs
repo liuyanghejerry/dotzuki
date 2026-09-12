@@ -27,3 +27,4 @@ pub mod elements;
 pub mod registry;
 pub mod renderer;
 pub mod types;
+pub mod static_layout;
