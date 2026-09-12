@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.6.1
->（源文档 commit d7ec8535d65415c69ae1be28d20c157ad1c19699）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.0
+>（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -21,10 +21,10 @@
 
 ## 未发布
 
-## v0.6.1
+## v0.7.0
 
 本版本没有破坏性的 API 变更。使用方更新方式见
-[迁移指南](migration/v0.6.1.zh-CN.md)。
+[迁移指南](migration/v0.7.0.zh-CN.md)。
 
 - Android：`dotzuki export --android` 会写出 arm64 Android Studio 工程，
   通过移动 ABI 版本 1 提供 Kotlin Activity、`Choreographer` 帧时钟、

@@ -1,18 +1,18 @@
 # Rust API 门户
 
-> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.6.1
->（源文档 commit d7ec8535d65415c69ae1be28d20c157ad1c19699）。
+> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.7.0
+>（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。
 
-所有 `dotzuki-*` crate 共享同一个版本（目前是 `0.6.1`）并发布在 crates.io
+所有 `dotzuki-*` crate 共享同一个版本（目前是 `0.7.0`）并发布在 crates.io
 上，因此它们的 API 文档位于 docs.rs。本地副本：
 
 ```bash
