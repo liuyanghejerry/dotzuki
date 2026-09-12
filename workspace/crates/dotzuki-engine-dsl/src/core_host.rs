@@ -5,6 +5,7 @@
 //! [`crate::interpreter::ScriptHost`]. They should call
 //! [`dispatch_core_async`] first, then handle only their own verbs.
 
+use crate::ast::{Expression, GameScene, SourceSpan, StoryStmt};
 use crate::interpreter::Value;
 use dotzuki_engine_script::ScriptCommand;
 
@@ -49,6 +50,158 @@ pub const CORE_ASYNC_FUNCTIONS: &[&str] = &[
     "hideScene",
     "updateUI",
 ];
+
+/// Generic verbs whose implementation needs mutable/read-only host state and
+/// therefore cannot be handled by [`dispatch_core_async`].
+pub const CORE_STATEFUL_FUNCTIONS: &[&str] = &[
+    "lang",
+    "t",
+    "showRandomText",
+    "getFlag",
+    "setFlag",
+    "resetFlag",
+    "getPlayerPosition",
+    "getPlayerX",
+    "getPlayerY",
+];
+
+pub fn is_core_function(name: &str) -> bool {
+    CORE_ASYNC_FUNCTIONS.contains(&name) || CORE_STATEFUL_FUNCTIONS.contains(&name)
+}
+
+/// A DSL call for which neither dotzuki nor the game declared a capability.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnknownHostFunction {
+    pub name: String,
+    pub span: SourceSpan,
+}
+
+/// Find undeclared `game.*` calls before a scene is serialized or code-generated.
+///
+/// `is_extension` describes the consuming game's APIs. Raw `@run` JavaScript is
+/// intentionally opaque and must be governed separately by consumers that allow
+/// it; every structured DSL command and nested expression is checked here.
+pub fn unknown_host_functions(
+    scene: &GameScene,
+    is_extension: impl Fn(&str) -> bool,
+) -> Vec<UnknownHostFunction> {
+    let mut unknown = Vec::new();
+    for storyline in &scene.storylines {
+        collect_unknown(&storyline.statements, &is_extension, &mut unknown);
+    }
+    if let Some(on_load) = &scene.on_load {
+        collect_unknown(&on_load.statements, &is_extension, &mut unknown);
+    }
+    unknown
+}
+
+fn collect_unknown(
+    statements: &[StoryStmt],
+    is_extension: &impl Fn(&str) -> bool,
+    unknown: &mut Vec<UnknownHostFunction>,
+) {
+    for statement in statements {
+        match statement {
+            StoryStmt::Speaker { name, span, .. } | StoryStmt::Say { name, span, .. } => {
+                collect_expression(name, span, is_extension, unknown);
+                continue;
+            }
+            StoryStmt::Choice { options, .. } => {
+                for option in options {
+                    collect_unknown(&option.body, is_extension, unknown);
+                }
+                continue;
+            }
+            StoryStmt::If {
+                condition,
+                then_branch,
+                else_branch,
+                span,
+            } => {
+                collect_expression(condition, span, is_extension, unknown);
+                collect_unknown(then_branch, is_extension, unknown);
+                collect_unknown(else_branch, is_extension, unknown);
+                continue;
+            }
+            StoryStmt::Each {
+                source, body, span, ..
+            } => {
+                collect_expression(source, span, is_extension, unknown);
+                collect_unknown(body, is_extension, unknown);
+                continue;
+            }
+            StoryStmt::Assign { value, span, .. } => {
+                collect_expression(value, span, is_extension, unknown);
+                continue;
+            }
+            StoryStmt::Command { name, args, span } => {
+                if !is_core_function(name) && !is_extension(name) {
+                    unknown.push(UnknownHostFunction {
+                        name: name.clone(),
+                        span: span.clone(),
+                    });
+                }
+                for argument in args {
+                    collect_expression(argument, span, is_extension, unknown);
+                }
+                continue;
+            }
+            StoryStmt::Run { .. } => continue,
+        };
+    }
+}
+
+fn collect_expression(
+    expression: &Expression,
+    span: &SourceSpan,
+    is_extension: &impl Fn(&str) -> bool,
+    unknown: &mut Vec<UnknownHostFunction>,
+) {
+    match expression {
+        Expression::Call { callee, args } => {
+            if !is_core_function(callee) && !is_extension(callee) {
+                unknown.push(UnknownHostFunction {
+                    name: callee.clone(),
+                    span: span.clone(),
+                });
+            }
+            for argument in args {
+                collect_expression(argument, span, is_extension, unknown);
+            }
+        }
+        Expression::ArrayLit(values) => {
+            for value in values {
+                collect_expression(value, span, is_extension, unknown);
+            }
+        }
+        Expression::ObjectLit(fields) => {
+            for (_, value) in fields {
+                collect_expression(value, span, is_extension, unknown);
+            }
+        }
+        Expression::UnaryOp { operand, .. } => {
+            collect_expression(operand, span, is_extension, unknown);
+        }
+        Expression::BinaryOp { left, right, .. } => {
+            collect_expression(left, span, is_extension, unknown);
+            collect_expression(right, span, is_extension, unknown);
+        }
+        Expression::TernaryOp {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            collect_expression(condition, span, is_extension, unknown);
+            collect_expression(then_expr, span, is_extension, unknown);
+            collect_expression(else_expr, span, is_extension, unknown);
+        }
+        Expression::StringLit(_)
+        | Expression::Localized(_)
+        | Expression::NumberLit(_)
+        | Expression::BoolLit(_)
+        | Expression::Variable(_) => {}
+    }
+}
 
 /// Parse a generic asynchronous `game.*` call into the engine protocol.
 ///
@@ -313,6 +466,7 @@ fn json(value: &Value) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::Storyline;
 
     fn text_value(value: &str) -> Value {
         Value::Text(value.to_string())
@@ -370,5 +524,53 @@ mod tests {
                 "missing dispatcher arm for {name}"
             );
         }
+    }
+
+    #[test]
+    fn validates_structured_calls_with_game_extensions() {
+        let span = SourceSpan::point("test.scene", 7, 3);
+        let scene = GameScene {
+            name: "test".to_string(),
+            variables: None,
+            storylines: vec![Storyline {
+                name: "main".to_string(),
+                triggers: vec![],
+                statements: vec![
+                    StoryStmt::Command {
+                        name: "showText".to_string(),
+                        args: vec![Expression::StringLit("hello".to_string())],
+                        span: span.clone(),
+                    },
+                    StoryStmt::Assign {
+                        name: "result".to_string(),
+                        value: Expression::Call {
+                            callee: "gameExtension".to_string(),
+                            args: vec![],
+                        },
+                        span: span.clone(),
+                    },
+                    StoryStmt::Command {
+                        name: "typoedFunction".to_string(),
+                        args: vec![],
+                        span: span.clone(),
+                    },
+                ],
+                span: span.clone(),
+            }],
+            on_load: None,
+            ui: None,
+            themes: vec![],
+            styles: vec![],
+            atlases: vec![],
+            span: span.clone(),
+        };
+
+        assert_eq!(
+            unknown_host_functions(&scene, |name| name == "gameExtension"),
+            vec![UnknownHostFunction {
+                name: "typoedFunction".to_string(),
+                span,
+            }]
+        );
     }
 }
