@@ -920,7 +920,7 @@ pub const SHIP_DEPARTURE_TOTAL_FRAMES: u16 = SHIP_DEPARTURE_INITIAL_PAUSE_FRAMES
     + SHIP_DEPARTURE_ERASE_FRAMES;
 
 /// Sound cues [`ShipDepartureState::tick`] can request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ShipDepartureSfx {
     /// The ship's horn — played when the scroll begins (blocking) and
     /// again when the erase phase begins (non-blocking).
@@ -932,7 +932,7 @@ pub enum ShipDepartureSfx {
 /// (freezing gameplay, matching the classic blocking structure). The
 /// renderer reads the scroll offset and puff positions; the game applies
 /// the ship erase + warp removal at the erase transition.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct ShipDepartureState {
     /// Elapsed ticks (0 before the first `tick`).
     frame: u16,
