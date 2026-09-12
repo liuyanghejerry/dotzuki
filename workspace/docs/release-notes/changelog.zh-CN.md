@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.1
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+>（源文档 commit cb606d3）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
