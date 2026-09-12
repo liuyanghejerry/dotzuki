@@ -20,6 +20,7 @@
 - [Assets](how-to/assets.md)
 - [Bilingual Text (i18n)](how-to/i18n.md)
 - [Publishing & Upgrading](how-to/publishing.md)
+- [Exporting to Android](how-to/export-android.md)
 - [Exporting to HarmonyOS](how-to/export-harmonyos.md)
 
 # Reference
@@ -63,6 +64,7 @@
 - [Changelog](release-notes/changelog.md)
 - [Migrating to v0.1.0](release-notes/migration/v0.1.0.md)
 - [Migrating to v0.5.4](release-notes/migration/v0.5.4.md)
+- [Migrating to v0.7.0](release-notes/migration/v0.7.0.md)
 
 # Archive
 
@@ -96,6 +98,7 @@ archive pages stay English-only (doc-standard §5).
 - [素材](how-to/assets.zh-CN.md)
 - [i18n 指南](how-to/i18n.zh-CN.md)
 - [发布与升级指南](how-to/publishing.zh-CN.md)
+- [导出 Android 游戏](how-to/export-android.zh-CN.md)
 - [导出鸿蒙游戏](how-to/export-harmonyos.zh-CN.md)
 - [项目清单](reference/project-manifest.zh-CN.md)
 - [战斗规则](reference/battle-rules.zh-CN.md)
@@ -127,3 +130,4 @@ archive pages stay English-only (doc-standard §5).
 - [变更日志](release-notes/changelog.zh-CN.md)
 - [迁移至 v0.1.0](release-notes/migration/v0.1.0.zh-CN.md)
 - [迁移至 v0.5.4](release-notes/migration/v0.5.4.zh-CN.md)
+- [迁移至 v0.7.0](release-notes/migration/v0.7.0.zh-CN.md)

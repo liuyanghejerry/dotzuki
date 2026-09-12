@@ -39,6 +39,7 @@ Or generate without `cargo-generate`:
 ```bash
 cp -r dotzuki-template my-game
 cd my-game
+mv Cargo.toml.liquid Cargo.toml
 # Replace {{project-name}} in Cargo.toml with my-game
 cargo run --release
 ```

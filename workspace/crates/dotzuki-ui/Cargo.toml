@@ -11,5 +11,5 @@ default = ["gpu"]
 gpu = ["dotzuki-renderer/gpu"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.7.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.7.0", default-features = false }

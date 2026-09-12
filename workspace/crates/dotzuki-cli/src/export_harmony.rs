@@ -93,6 +93,9 @@ fn locate_mobile_lib(override_path: Option<&Path>) -> Result<PathBuf> {
     if let Some(path) = override_path {
         return validate_mobile_lib(path);
     }
+    if let Some(path) = std::env::var_os("DOTZUKI_HARMONY_MOBILE_LIB") {
+        return validate_mobile_lib(Path::new(&path));
+    }
     if let Some(path) = std::env::var_os("DOTZUKI_MOBILE_LIB") {
         return validate_mobile_lib(Path::new(&path));
     }
@@ -103,7 +106,7 @@ fn locate_mobile_lib(override_path: Option<&Path>) -> Result<PathBuf> {
     }
     bail!(
         "HarmonyOS mobile runtime not found; build it for aarch64-unknown-linux-ohos, then pass \
-         --mobile-lib <path> or set DOTZUKI_MOBILE_LIB"
+         --mobile-lib <path> or set DOTZUKI_HARMONY_MOBILE_LIB"
     )
 }
 

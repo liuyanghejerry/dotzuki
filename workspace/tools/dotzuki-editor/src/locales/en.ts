@@ -804,6 +804,7 @@ export default {
     error: 'Error',
     exportWeb: 'Export Web',
     exportNative: 'Export Native',
+    exportAndroid: 'Export Android',
     exportHarmony: 'Export HarmonyOS',
     exporting: 'Exporting…',
     exportDone: 'Exported to {path} (dist is never bundled, so re-exporting is safe)',

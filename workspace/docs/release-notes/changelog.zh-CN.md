@@ -1,12 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.0
+>（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.7.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -19,6 +20,20 @@
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
 ## 未发布
+
+## v0.7.0
+
+本版本没有破坏性的 API 变更。使用方更新方式见
+[迁移指南](migration/v0.7.0.zh-CN.md)。
+
+- Android：`dotzuki export --android` 会写出 arm64 Android Studio 工程，
+  通过移动 ABI 版本 1 提供 Kotlin Activity、`Choreographer` 帧时钟、
+  `SurfaceView` renderer、`AudioTrack` 输出、触摸控制、生命周期处理和
+  `SharedPreferences` 存档。编辑器提供相同的导出入口，发布安装包包含 Android
+  运行时静态库。
+- 移动端外壳：`scripts/export-mobile-host.py --platform android|harmony` 可以把
+  自定义游戏的 `dotzuki-mobile` 静态库包装进任一由引擎维护的外壳。
+- CI 会交叉编译 Android 运行时，并组装教程项目的导出 APK。
 
 - 修复：调试服务器的响应超时从 5s 提高到 300s，且服务器在转发每条命令前会排
   空滞留的过期响应——耗时的同步命令（大帧数预算的 `step_frames`）不会再扰乱

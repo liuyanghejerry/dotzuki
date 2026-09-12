@@ -29,6 +29,11 @@
         class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
       >{{ exporting === 'native' ? $t('play.exporting') : $t('play.exportNative') }}</button>
       <button
+        @click="exportGame('android')"
+        :disabled="exporting !== null"
+        class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
+      >{{ exporting === 'android' ? $t('play.exporting') : $t('play.exportAndroid') }}</button>
+      <button
         @click="exportGame('harmony')"
         :disabled="exporting !== null"
         class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay disabled:opacity-50"
@@ -280,13 +285,13 @@ function toggleMute() {
 }
 
 // ── Export (dotzuki export via POST /api/export) ──
-type ExportTarget = 'web' | 'native' | 'harmony'
+type ExportTarget = 'web' | 'native' | 'android' | 'harmony'
 const exporting = ref<ExportTarget | null>(null)
 const exportResult = ref<{ ok: boolean; message: string } | null>(null)
 
 /**
  * Toolbar: export — the server shells out to the dotzuki CLI, so the result
- * is the same artifact `dotzuki export --web|--native|--harmony` would write. On
+ * is the same artifact `dotzuki export --web|--native|--android|--harmony` would write. On
  * success the message carries the output path (dist/<target> in the project).
  */
 async function exportGame(target: ExportTarget) {

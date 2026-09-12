@@ -1,13 +1,13 @@
 # 导出鸿蒙游戏
 
-> 本文是 `export-harmonyos.md` 的中文翻译，同步至引擎版本 v0.6.0
->（源文档 commit ca430506b34b）。
+> 本文是 `export-harmonyos.md` 的中文翻译，同步至引擎版本 v0.7.0
+>（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.6.0
+> - **Last verified**: v0.7.0
 
 构建公共移动运行时，并把零 Rust 游戏导出为 DevEco Studio 鸿蒙工程。
 
@@ -47,8 +47,9 @@ dotzuki export --harmony . \
   --out dist/harmony
 ```
 
-也可以设置 `DOTZUKI_MOBILE_LIB`，不传 `--mobile-lib`。源码 checkout 还会检测上文
-workspace target 目录中的 library。
+也可以设置 `DOTZUKI_HARMONY_MOBILE_LIB`，不传 `--mobile-lib`。
+`DOTZUKI_MOBILE_LIB` 仍是移动端导出脚本的共用后备变量。源码 checkout 还会检测
+上文 workspace target 目录中的 library。
 
 导出器运行与 Web、原生导出相同的验证和 pack 规则，并写出：
 
@@ -62,7 +63,8 @@ dist/harmony/
 ```
 
 编辑器的 Play 工具栏通过 **Export HarmonyOS** 执行同一操作。如果 library 不在
-workspace target 目录中，请在启动编辑器 server 前设置 `DOTZUKI_MOBILE_LIB`。
+workspace target 目录中，请在启动编辑器 server 前设置
+`DOTZUKI_HARMONY_MOBILE_LIB`。
 
 ## 3. 在 DevEco Studio 构建和运行
 
