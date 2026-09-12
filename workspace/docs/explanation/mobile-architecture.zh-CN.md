@@ -49,7 +49,7 @@ Node-API、XComponent、EGL/GLES3 和 OHAudio 实现同样的划分。
 
 ## 契约
 
-`dotzuki-runner-mobile/include/dotzuki_runner_mobile.h` 定义 ABI 版本 1。
+`dotzuki-mobile/include/dotzuki_runner_mobile.h` 定义 ABI 版本 1。
 契约包含以下几组能力：
 
 | 分组 | 调用 | 所有权 |
@@ -93,3 +93,20 @@ SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 O
 - [Rust 鸿蒙 target 支持](https://doc.rust-lang.org/rustc/platform-support/openharmony.html)
 - [华为 NDK XComponent 样例](https://gitee.com/harmonyos_samples/ndk-xcomponent)
 - [华为 Node-API 指南](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5)
+
+## 自定义 Rust 游戏
+
+`dotzuki-mobile` 提供 `MobileGame`、不透明运行时、PCM 队列和
+`export_mobile_abi!`，不依赖具体游戏、渲染器或设备后端。
+`dotzuki-runner-mobile` 只负责 `RunnerGame` 和 `.dzpk` 的适配。
+自定义 Rust 游戏实现同一接口并导出自己的工厂；每个应用只链接一个工厂。
+工厂定义初始化字节和存档 JSON；宿主从运行时查询画面尺寸。
+
+公共鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻显示纹理、独立触控区
+和 44.1 kHz PCM。每 500 ms 检查已提交存档，页面隐藏时也尝试刷新。
+游戏决定何时提交存档，切后台不强制生成新快照；异步持久化尚未完成时进程
+被终止，可能丢失最近一次提交。销毁运行时前必须停止音频回调。
+
+自定义静态库可通过 `scripts/export-mobile-host.py --help` 查看宿主导出参数，
+无需经过零 Rust 项目校验和打包。输出目录必须为空。游戏的构建脚本只提供库、
+初始化字节、名称和包标识，平台源代码仍在引擎仓库维护。

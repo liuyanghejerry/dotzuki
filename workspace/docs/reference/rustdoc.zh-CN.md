@@ -37,7 +37,8 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-tui` | 终端外壳（ratatui） | [docs.rs](https://docs.rs/dotzuki-tui) | — |
 | `dotzuki-runner` | 零 Rust 项目运行时 + 无头模式驱动 | [docs.rs](https://docs.rs/dotzuki-runner) | [项目清单](project-manifest.md) |
 | `dotzuki-runner-web` | 运行器的 WASM 构建（编辑器 Play） | [docs.rs](https://docs.rs/dotzuki-runner-web) | [发布指南](../how-to/publishing.md) |
-| `dotzuki-runner-mobile` | 原生平台外壳共用的 C ABI 移动运行时 | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md)、[鸿蒙导出](../how-to/export-harmonyos.zh-CN.md) |
+| `dotzuki-mobile` | 游戏无关的移动运行时：`MobileGame` trait、不透明运行时句柄、PCM 队列、`export_mobile_abi!` | [docs.rs](https://docs.rs/dotzuki-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md) |
+| `dotzuki-runner-mobile` | 零 Rust 运行器（`RunnerGame` + `.dzpk`）的 C ABI 移动宿主 | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md)、[鸿蒙导出](../how-to/export-harmonyos.zh-CN.md) |
 | `dotzuki-cli` | `dotzuki` 二进制：`new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI 参考](cli.md) |
 | `dotzuki-web` | WASM 桥：编辑器布局预览、游戏外壳（`game-shell` feature）、BroadcastChannel 联机传输（`link` feature） | [docs.rs](https://docs.rs/dotzuki-web) | [游戏外壳](game-shell.md)、[联机](link-play.md) |
 

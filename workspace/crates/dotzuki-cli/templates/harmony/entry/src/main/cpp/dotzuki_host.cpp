@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstring>
 #include <string>
 
@@ -159,6 +160,7 @@ napi_value DotzukiHost::Pause(napi_env env, napi_callback_info info) {
     (void)info;
     auto &host = Instance();
     host.paused_.store(true, std::memory_order_release);
+    host.input_.store(0, std::memory_order_relaxed);
     if (host.audioRenderer_ != nullptr) {
         OH_AudioRenderer_Pause(host.audioRenderer_);
     }
@@ -238,9 +240,10 @@ void DotzukiHost::TouchEvent(OH_NativeXComponent *component, void *window) {
 void DotzukiHost::Frame(
     OH_NativeXComponent *component, uint64_t timestamp, uint64_t targetTimestamp) {
     (void)component;
-    (void)timestamp;
     (void)targetTimestamp;
-    Instance().RenderFrame();
+    (void)timestamp;
+    const auto now = std::chrono::steady_clock::now().time_since_epoch();
+    Instance().RenderFrame(std::chrono::duration_cast<std::chrono::nanoseconds>(now).count());
 }
 
 void DotzukiHost::ReplaceRunner(
@@ -256,6 +259,8 @@ void DotzukiHost::ReplaceRunner(
         LogError("Rust mobile runtime rejected the game pack");
         return;
     }
+    lastTimestamp_ = 0;
+    accumulator_ = 0;
     frame_.resize(dotzuki_mobile_frame_len(runner_));
     InitializeAudio();
 }
@@ -338,25 +343,37 @@ bool DotzukiHost::InitializeProgram() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320, 240, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
     return true;
 }
 
-void DotzukiHost::RenderFrame() {
+void DotzukiHost::RenderFrame(uint64_t timestamp) {
     std::lock_guard<std::mutex> lock(gameMutex_);
     if (runner_ == nullptr || paused_.load(std::memory_order_acquire) ||
         display_ == EGL_NO_DISPLAY || surface_ == EGL_NO_SURFACE) {
+        lastTimestamp_ = 0;
+        accumulator_ = 0;
         return;
     }
     if (!eglMakeCurrent(display_, surface_, surface_, context_)) {
         return;
     }
-    dotzuki_mobile_tick(runner_, input_.load(std::memory_order_relaxed));
+    constexpr double step = 1.0 / 59.7275;
+    if (lastTimestamp_ == 0 || timestamp < lastTimestamp_) {
+        accumulator_ = step;
+    } else {
+        accumulator_ += std::min(static_cast<double>(timestamp - lastTimestamp_) / 1e9, step * 4);
+    }
+    lastTimestamp_ = timestamp;
+    while (accumulator_ >= step) {
+        if (!dotzuki_mobile_tick(runner_, input_.load(std::memory_order_relaxed))) return;
+        accumulator_ -= step;
+    }
     if (dotzuki_mobile_copy_frame(runner_, frame_.data(), frame_.size()) != frame_.size()) {
         return;
     }
 
-    const float gameAspect = 320.0f / 240.0f;
+    const float gameAspect = static_cast<float>(dotzuki_mobile_width(runner_)) / dotzuki_mobile_height(runner_);
     const float surfaceAspect = static_cast<float>(surfaceWidth_) /
         static_cast<float>(std::max<uint64_t>(surfaceHeight_, 1));
     GLint x = 0;
@@ -378,8 +395,7 @@ void DotzukiHost::RenderFrame() {
     glUseProgram(program_);
     glBindTexture(GL_TEXTURE_2D, texture_);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexSubImage2D(
-        GL_TEXTURE_2D, 0, 0, 0, 320, 240, GL_RGBA, GL_UNSIGNED_BYTE, frame_.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dotzuki_mobile_width(runner_), dotzuki_mobile_height(runner_), 0, GL_RGBA, GL_UNSIGNED_BYTE, frame_.data());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     eglSwapBuffers(display_, surface_);
 }

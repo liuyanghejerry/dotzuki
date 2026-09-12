@@ -18,10 +18,8 @@ pub mod layer_renderer;
 pub mod layout;
 pub mod layout_engine;
 pub mod menu;
-#[cfg(feature = "gpu")]
 pub mod mon_icon;
 pub mod palette;
-#[cfg(feature = "gpu")]
 pub mod party_hp_bar;
 #[cfg(feature = "resource")]
 pub mod resource;

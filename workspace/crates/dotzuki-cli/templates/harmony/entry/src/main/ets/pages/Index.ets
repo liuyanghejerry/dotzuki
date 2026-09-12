@@ -10,6 +10,9 @@ const SAVE_KEY = 'save-v1';
 struct Index {
   private native: DotzukiContext | undefined;
   private inputBits: number = 0;
+  private saveTimer: number = -1;
+  private saving: boolean = false;
+  private lastSave: string = '';
 
   async startGame(context: DotzukiContext): Promise<void> {
     const pack = await getContext(this).resourceManager.getRawFileContent('game.dzpk');
@@ -19,18 +22,27 @@ struct Index {
       throw new Error('dotzuki native runtime failed to start');
     }
     this.native = context;
+    this.lastSave = save;
+    if (this.saveTimer !== -1) clearInterval(this.saveTimer);
+    this.saveTimer = setInterval(() => { this.persistSave(); }, 500);
   }
 
   async persistSave(): Promise<void> {
+    if (this.saving) return;
     const bytes = this.native?.exportSave();
     if (!bytes || bytes.length === 0) {
       return;
     }
     const decoder: util.TextDecoder = util.TextDecoder.create('utf-8');
     const save: string = decoder.decodeToString(bytes);
-    const store = await preferences.getPreferences(getContext(this), SAVE_STORE);
-    await store.put(SAVE_KEY, save);
-    await store.flush();
+    if (save === this.lastSave) return;
+    this.saving = true;
+    try {
+      const store = await preferences.getPreferences(getContext(this), SAVE_STORE);
+      await store.put(SAVE_KEY, save);
+      await store.flush();
+      this.lastSave = save;
+    } finally { this.saving = false; }
   }
 
   setButton(bit: number, pressed: boolean): void {
@@ -45,9 +57,9 @@ struct Index {
   @Builder
   button(label: string, bit: number) {
     Button(label)
-      .width(54)
+      .width(label.length > 2 ? 74 : 54)
       .height(54)
-      .fontSize(20)
+      .fontSize(label.length > 2 ? 10 : 20)
       .fontWeight(FontWeight.Bold)
       .backgroundColor('#66333A4D')
       .onTouch((event: TouchEvent) => {
@@ -61,19 +73,24 @@ struct Index {
   }
 
   onPageHide(): void {
+    this.inputBits = 0;
+    this.native?.setInput(0);
     this.native?.pause();
     this.persistSave();
   }
 
   aboutToDisappear(): void {
+    if (this.saveTimer !== -1) clearInterval(this.saveTimer);
+    this.saveTimer = -1;
+    this.native?.pause();
     this.persistSave();
   }
 
   build() {
-    Stack({ alignContent: Alignment.Center }) {
+    Column() {
       XComponent({ id: 'dotzuki', type: XComponentType.SURFACE, libraryname: 'entry' })
         .width('100%')
-        .height('100%')
+        .layoutWeight(1)
         .backgroundColor(Color.Black)
         .onLoad((context) => {
           this.startGame(context as DotzukiContext);
@@ -97,7 +114,7 @@ struct Index {
       .width('100%')
       .padding({ left: 20, right: 20, bottom: 20 })
       .alignItems(VerticalAlign.Bottom)
-      .align(Alignment.Bottom)
+      .height(200)
     }
     .width('100%')
     .height('100%')

@@ -1154,6 +1154,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotzuki-mobile"
+version = "0.6.0"
+
+[[package]]
 name = "dotzuki-renderer"
 version = "0.6.0"
 dependencies = [
@@ -1221,6 +1225,7 @@ name = "dotzuki-runner-mobile"
 version = "0.6.0"
 dependencies = [
  "dotzuki-engine",
+ "dotzuki-mobile",
  "dotzuki-renderer",
  "dotzuki-runner",
  "image",

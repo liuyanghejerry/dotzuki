@@ -11,6 +11,7 @@ members = [
     "crates/dotzuki-runner",
     "crates/dotzuki-runner-web",
     "crates/dotzuki-runner-mobile",
+    "crates/dotzuki-mobile",
     "crates/dotzuki-renderer",
     "crates/dotzuki-tui",
     "crates/dotzuki-ui",
