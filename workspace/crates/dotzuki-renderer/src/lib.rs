@@ -47,6 +47,7 @@ pub mod layer_renderer;
 pub mod layout;
 pub mod layout_engine;
 pub mod menu;
+#[cfg(feature = "resource")]
 pub mod mon_icon;
 pub mod palette;
 pub mod party_hp_bar;
