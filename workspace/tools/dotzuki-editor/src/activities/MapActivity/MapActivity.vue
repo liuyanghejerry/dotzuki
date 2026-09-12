@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import type { ConnectionSet, ConnectionCell } from '../../lib/wallConnections'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useMapActivity, type AnchorX, type AnchorY } from '@/composables/useMapActivity'
@@ -61,13 +62,16 @@ const objectsEnabled = computed(() => {
 })
 
 // ── Tools ──
-type Tool = 'brush' | 'eraser' | 'bucket' | 'stamp' | 'collision' | 'stairs' | 'objects'
+type Tool = 'brush' | 'eraser' | 'bucket' | 'stamp' | 'collision' | 'stairs' | 'objects' | 'connections'
 const tool = ref<Tool>('brush')
-const toolList = computed<Tool[]>(() =>
-  objectsEnabled.value
-    ? ['brush', 'eraser', 'bucket', 'stamp', 'collision', 'stairs', 'objects']
-    : ['brush', 'eraser', 'bucket', 'stamp', 'collision', 'stairs'],
-)
+const connectionSets = ref<ConnectionSet[]>([])
+const connectionSetId = ref('')
+const toolList = computed<Tool[]>(() => {
+  const tools: Tool[] = ['brush', 'eraser', 'bucket', 'stamp', 'collision', 'stairs']
+  if (connectionSets.value.length) tools.push('connections')
+  if (objectsEnabled.value) tools.push('objects')
+  return tools
+})
 
 // ── Entity (NPC/warp/sign) overlay selection + drag ──
 const selected = ref<{ kind: 'npc' | 'warp' | 'sign'; index: number } | null>(null)
@@ -855,9 +859,11 @@ function afterObjectEdit(): void {
 // ───────────────────────────────────────────────────────────────────────────
 
 function loadTileset(name: string): Promise<void> {
+  const map = tmx.value
   return new Promise(resolve => {
     const img = new Image()
     img.onload = () => {
+      if (mapName.value !== name || tmx.value !== map) { resolve(); return }
       tilesetImg.value = img
       tilesetCols.value = Math.max(1, Math.floor(img.naturalWidth / tileW.value))
       tilesetRows.value = Math.max(1, Math.ceil(img.naturalHeight / tileH.value))
@@ -865,7 +871,7 @@ function loadTileset(name: string): Promise<void> {
       resolve()
     }
     img.onerror = () => {
-      tilesetImg.value = null
+      if (mapName.value === name && tmx.value === map) tilesetImg.value = null
       resolve()
     }
     // Cache-bust with the tiles store version (bumped on saveTile/buildTileset),
@@ -972,86 +978,62 @@ function hashRGBA(d: Uint8ClampedArray): string {
   return (h >>> 0).toString(16)
 }
 
+const linkComponents = ref(true)
+const componentMessage = ref('')
+const updatingComponents = ref(false)
+const componentCount = computed(() => tmx.value?.layers.reduce((n, l) => n + (l.components?.length ?? 0), 0) ?? 0)
+
 async function stampBuilding(atX: number, atY: number): Promise<void> {
   const g = selectedGroup.value
   const map = tmx.value
-  if (!g || !map || stamping.value) return
+  const name = mapName.value
+  const layer = activeLayer.value
+  if (!g || !map || stamping.value || updatingComponents.value) return
+  const activeLayerBefore = map.layers[layer]
+  const linked = linkComponents.value
+  // Do not append anything when the footprint cannot be placed.
+  if (atX < 0 || atY < 0 || atX + g.w > map.width || atY + g.h > map.height) return
   stamping.value = true
+  componentMessage.value = ''
   try {
-    const ts = tileW.value
-    const img = await loadImage(tilesStore.groupUrl(g.id))
-    if (!img) return
-    // Slice the building into g.h×g.w cells: skip fully-transparent ones, and
-    // content-address the rest.
-    const oc = document.createElement('canvas')
-    oc.width = ts
-    oc.height = ts
-    const octx = oc.getContext('2d')!
-    octx.imageSmoothingEnabled = false
-    const cellId: (string | null)[] = new Array(g.w * g.h).fill(null)
-    const freshPng = new Map<string, string>() // slice id → data URL (this stamp)
-    for (let cy = 0; cy < g.h; cy++) {
-      for (let cx = 0; cx < g.w; cx++) {
-        octx.clearRect(0, 0, ts, ts)
-        octx.drawImage(img, cx * ts, cy * ts, ts, ts, 0, 0, ts, ts)
-        const data = octx.getImageData(0, 0, ts, ts).data
-        let opaque = false
-        for (let p = 3; p < data.length; p += 4) {
-          if (data[p] !== 0) { opaque = true; break }
-        }
-        if (!opaque) continue
-        const id = `${g.id}_${hashRGBA(data)}`
-        cellId[cy * g.w + cx] = id
-        if (!freshPng.has(id)) freshPng.set(id, oc.toDataURL('image/png'))
-      }
-    }
-    // Persist the group's own slice tiles (tagged so they stay hidden from the
-    // harvest library) — keeps the tileset rebuildable from tileset.tiles.json.
-    await Promise.all(
-      [...freshPng].map(([id, url]) => tilesStore.saveTile(url, { id, source: `group:${g.id}` })),
-    )
-    // Ensure every slice id is in the map's tileset (append-only).
-    const seq = await tilesStore.loadTilesetSeq(mapName.value)
-    const ids = [...seq.tileIds]
-    const cols = seq.cols || 8
-    let changed = false
-    for (const id of new Set(cellId.filter(Boolean) as string[])) {
-      if (!ids.includes(id)) {
-        ids.push(id)
-        changed = true
-      }
-    }
-    if (changed) {
-      // Compose tileset.png: existing tiles from the library, fresh slices from
-      // their in-memory data URLs (no write-then-read race).
-      const rows = Math.ceil(ids.length / cols)
-      const canvas = document.createElement('canvas')
-      canvas.width = cols * ts
-      canvas.height = rows * ts
-      const ctx = canvas.getContext('2d')!
-      ctx.imageSmoothingEnabled = false
-      const imgs = await Promise.all(
-        ids.map((id) => loadImage(freshPng.get(id) ?? tilesStore.tileUrl(id))),
-      )
-      imgs.forEach((im, i) => {
-        if (im) ctx.drawImage(im, (i % cols) * ts, Math.floor(i / cols) * ts, ts, ts)
-      })
-      await tilesStore.buildTileset(mapName.value, canvas.toDataURL('image/png'), ids, cols)
-      await loadTileset(mapName.value)
-    }
-    // Paint the footprint as a single undo stroke (skip empty cells).
-    store.beginStroke(activeLayer.value)
-    for (let cy = 0; cy < g.h; cy++) {
-      for (let cx = 0; cx < g.w; cx++) {
-        const id = cellId[cy * g.w + cx]
-        if (!id) continue
-        store.setCell(activeLayer.value, atX + cx, atY + cy, ids.indexOf(id) + 1)
-      }
-    }
-    store.endStroke()
+    const sources = await tilesStore.prepareComponents(name, [g.id])
+    if (!sources) throw new Error(tilesStore.error ?? 'Component preparation failed')
+    // A tab may have changed while the request was in flight.
+    if (tmx.value !== map || mapName.value !== name) return
+    await loadTileset(name)
+    if (tmx.value !== map || mapName.value !== name || map.layers[layer] !== activeLayerBefore) return
+    store.placeComponent(layer, atX, atY, sources[0], linked)
     afterEdit()
+  } catch (error) {
+    componentMessage.value = (error as Error).message
   } finally {
     stamping.value = false
+  }
+}
+
+async function updateMapComponents(): Promise<void> {
+  const map = tmx.value
+  const name = mapName.value
+  if (!map || stamping.value || updatingComponents.value) return
+  const ids = [...new Set(map.layers.flatMap(l => (l.components ?? []).map(c => c.groupId)))]
+  if (!ids.length) return
+  updatingComponents.value = true
+  componentMessage.value = ''
+  try {
+    const sources = await tilesStore.prepareComponents(name, ids)
+    if (!sources) throw new Error(tilesStore.error ?? 'Component preparation failed')
+    if (tmx.value !== map || mapName.value !== name) return
+    await loadTileset(name)
+    if (tmx.value !== map || mapName.value !== name) return
+    const result = store.updateComponents(sources)
+    componentMessage.value = t('map.componentsUpdated', {
+      count: result.updated, skipped: result.conflicts + result.resized + result.missing,
+    })
+    afterEdit()
+  } catch (error) {
+    componentMessage.value = (error as Error).message
+  } finally {
+    updatingComponents.value = false
   }
 }
 
@@ -1335,6 +1317,50 @@ const isPainting = ref(false)
 const isPanning = ref(false)
 const panStart = ref({ x: 0, y: 0, sx: 0, sy: 0 })
 const spaceDown = ref(false)
+let connectionStroke: {
+  map: NonNullable<typeof tmx.value>; name: string; layer: number; set: ConnectionSet;
+  changes: Map<number, ConnectionCell>; last: {x:number;y:number}; solid: boolean;
+} | null = null
+
+function addConnectionPoint(cell: {x:number;y:number}) {
+  const stroke = connectionStroke
+  if (!stroke) return
+  const steps = Math.max(Math.abs(cell.x - stroke.last.x), Math.abs(cell.y - stroke.last.y), 1)
+  let previous = stroke.last
+  for (let i = 1; i <= steps; i++) {
+    const x = Math.round(stroke.last.x + (cell.x - stroke.last.x) * i / steps)
+    const y = Math.round(stroke.last.y + (cell.y - stroke.last.y) * i / steps)
+    // Bridge a diagonal pointer sample with an orthogonal step.
+    if (x !== previous.x && y !== previous.y) stroke.changes.set(previous.y * stroke.map.width + x, {x,y:previous.y,solid:stroke.solid})
+    stroke.changes.set(y * stroke.map.width + x, {x,y,solid:stroke.solid})
+    previous = {x,y}
+  }
+  stroke.last = cell
+  drawMap()
+  const ctx = canvasRef.value?.getContext('2d')
+  if (ctx) {
+    ctx.fillStyle = stroke.solid ? 'rgba(99,102,241,0.45)' : 'rgba(239,68,68,0.45)'
+    for (const c of stroke.changes.values()) ctx.fillRect(c.x * tileW.value * zoom.value,c.y * tileH.value * zoom.value,tileW.value * zoom.value,tileH.value * zoom.value)
+  }
+}
+
+async function finishConnectionStroke() {
+  const stroke = connectionStroke
+  connectionStroke = null
+  if (!stroke || tmx.value !== stroke.map || mapName.value !== stroke.name) return
+  updatingComponents.value = true
+  componentMessage.value = ''
+  try {
+    const sources = await tilesStore.prepareComponents(stroke.name, [...new Set(Object.values(stroke.set.variants))])
+    if (!sources) throw new Error(tilesStore.error ?? 'Connection preparation failed')
+    if (tmx.value !== stroke.map || mapName.value !== stroke.name) return
+    await loadTileset(stroke.name)
+    if (tmx.value !== stroke.map || mapName.value !== stroke.name) return
+    store.paintConnections(stroke.layer,stroke.set,sources,[...stroke.changes.values()])
+    afterEdit()
+  } catch (error) { componentMessage.value = (error as Error).message }
+  finally { updatingComponents.value = false }
+}
 
 function cellAt(e: MouseEvent): { x: number; y: number } | null {
   const canvas = canvasRef.value
@@ -1366,6 +1392,17 @@ function onCanvasMouseDown(e: MouseEvent): void {
     if (!sc) return
     isPanning.value = true
     panStart.value = { x: e.clientX, y: e.clientY, sx: sc.scrollLeft, sy: sc.scrollTop }
+    return
+  }
+  if (stamping.value || updatingComponents.value) return
+  if (tool.value === 'connections' && (e.button === 0 || e.button === 2)) {
+    const cell = cellAt(e)
+    const set = connectionSets.value.find(s => s.id === connectionSetId.value)
+    if (!cell || !set) return
+    e.preventDefault()
+    connectionStroke = {map:tmx.value,name:mapName.value,layer:activeLayer.value,set,
+      changes:new Map(),last:cell,solid:e.button===0}
+    addConnectionPoint(cell)
     return
   }
   if (e.button !== 0) return
@@ -1416,6 +1453,11 @@ function onCanvasMouseMove(e: MouseEvent): void {
     sc.scrollTop = panStart.value.sy - (e.clientY - panStart.value.y)
     return
   }
+  if (connectionStroke) {
+    const cell = cellAt(e)
+    if (cell) addConnectionPoint(cell)
+    return
+  }
   if (tool.value === 'objects') {
     onObjectsMouseMove(e)
     return
@@ -1441,6 +1483,7 @@ function onCanvasMouseMove(e: MouseEvent): void {
 }
 
 function onCanvasMouseUp(): void {
+  if (connectionStroke) { void finishConnectionStroke(); return }
   if (isPanning.value) {
     isPanning.value = false
     return
@@ -1734,6 +1777,13 @@ onMounted(async () => {
   // via sidebar clicks, which go through openMapTab() with save/restore.
   store.fetchList()
   tilesStore.loadGroups()
+  try {
+    const response = await fetch('api/connection-sets')
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+    connectionSets.value = data.sets
+    connectionSetId.value = data.sets[0]?.id ?? ''
+  } catch (error) { componentMessage.value = (error as Error).message }
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeyDown)
@@ -1959,6 +2009,17 @@ watch(activeSubTab, (tab, prev) => {
 
           <span class="text-ink-disabled mx-1">|</span>
           <!-- Undo / redo -->
+          <select v-if="tool === 'connections'" v-model="connectionSetId" :title="$t('map.connectionHint')"
+            class="text-xs bg-raised text-ink-body border border-border rounded-control px-1 py-0.5">
+            <option v-for="set in connectionSets" :key="set.id" :value="set.id">{{ set.name }}</option>
+          </select>
+          <label class="flex items-center gap-1 text-xs text-ink-body" :title="$t('map.linkComponentsHint')">
+            <input type="checkbox" v-model="linkComponents" />{{ $t('map.linkComponents') }}
+          </label>
+          <button @click="updateMapComponents" :disabled="!componentCount || stamping || updatingComponents"
+            class="px-2 py-0.5 text-xs rounded-control bg-raised hover:bg-overlay text-ink-body disabled:opacity-40"
+            :title="$t('map.updateComponentsHint')"
+          >{{ updatingComponents ? '…' : $t('map.updateComponents') }} ({{ componentCount }})</button>
           <button
             @click="handleUndo"
             :disabled="!canUndo"
@@ -2009,6 +2070,10 @@ watch(activeSubTab, (tab, prev) => {
             ]"
           >{{ saving ? $t('map.saving') : $t('map.save') }}</button>
         </template>
+      </div>
+
+      <div v-if="componentMessage" role="status" class="px-3 py-1.5 text-xs bg-raised text-ink-body border-b border-border">
+        {{ componentMessage }}
       </div>
 
       <!-- Canvas scroll area -->

@@ -463,6 +463,31 @@ fn save_from_menu_writes_a_resumable_file() {
     assert_eq!(game.money(), 100);
 }
 
+#[test]
+fn external_save_host_prevents_menu_disk_write() {
+    let (_tmp, root) = demo_project("externalmenusave");
+    let save_file = root.join("must-not-exist.json");
+    let project = LoadedProject::load(&root).expect("load demo project");
+    let mut game = RunnerGame::new(
+        project,
+        RunnerOptions {
+            save_file: Some(save_file.clone()),
+            external_saves: true,
+            ..RunnerOptions::default()
+        },
+    )
+    .expect("boot");
+    dismiss_dialogue(&mut game);
+
+    press(&mut game, GbButton::Start);
+    press(&mut game, GbButton::Down);
+    press(&mut game, GbButton::Down);
+    press_a(&mut game);
+
+    assert!(!save_file.exists());
+    assert!(game.export_save().is_some());
+}
+
 // ── shops ─────────────────────────────────────────────────────────────────────
 
 /// Boot with the shop scene + items, dismiss Town main, and talk to the

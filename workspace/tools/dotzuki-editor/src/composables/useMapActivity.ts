@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { applyConnectionStroke, type ConnectionSet, type ConnectionCell } from '../lib/wallConnections'
+import { cloneComponents, detachAt, placeComponent as placeLinkedComponent, refreshComponents,
+  type ComponentInstance, type PreparedComponent } from '../lib/mapComponents'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Map activity store — TMX tile-painting editor state, load/save, undo/redo.
@@ -47,6 +50,7 @@ export interface TmxLayer {
   opacity?: number
   type?: string
   properties?: TmxLayerProperty[]
+  components?: ComponentInstance[]
   [k: string]: unknown
 }
 
@@ -106,7 +110,7 @@ export interface MapObjects {
 interface MapShape {
   width: number
   height: number
-  layers: { data: number[]; width: number; height: number }[]
+  layers: { data: number[]; width: number; height: number; components?: ComponentInstance[] }[]
   collisionLevels: (number[] | null)[]
   stairs: number[] | null
 }
@@ -119,7 +123,8 @@ interface MapShape {
  *    collision grids, the stairs grid, and the map dimensions — plus the
  *    (dx,dy) it translated entities by, so undo can put them back. */
 type HistoryEntry =
-  | { kind: 'cells'; layerIndex: number; before: number[]; after: number[] }
+  | { kind: 'cells'; layerIndex: number; before: number[]; after: number[];
+      componentsBefore?: ComponentInstance[]; componentsAfter?: ComponentInstance[] }
   | { kind: 'collision'; level: number; before: number[]; after: number[] }
   | { kind: 'stairs'; before: number[]; after: number[] }
   | { kind: 'resize'; before: MapShape; after: MapShape; dx: number; dy: number }
@@ -248,6 +253,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   /** Snapshot of a layer's data taken at stroke start. */
   let strokeLayerIndex = -1
   let strokeBefore: number[] | null = null
+  let strokeComponentsBefore: ComponentInstance[] = []
 
   const canUndo = computed(() => undoStack.value.length > 0)
   const canRedo = computed(() => redoStack.value.length > 0)
@@ -520,6 +526,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
     if (!layer) return
     strokeLayerIndex = layerIndex
     strokeBefore = layer.data.slice()
+    strokeComponentsBefore = cloneComponents(layer)
   }
 
   function endStroke(): void {
@@ -533,6 +540,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
       const after = layer.data
       // Only record if something actually changed.
       let changed = after.length !== strokeBefore.length
+        || JSON.stringify(strokeComponentsBefore) !== JSON.stringify(layer.components ?? [])
       if (!changed) {
         for (let i = 0; i < after.length; i++) {
           if (after[i] !== strokeBefore[i]) {
@@ -547,6 +555,8 @@ export const useMapActivity = defineStore('mapActivity', () => {
           layerIndex: strokeLayerIndex,
           before: strokeBefore,
           after: after.slice(),
+          componentsBefore: strokeComponentsBefore,
+          componentsAfter: cloneComponents(layer),
         })
       }
     }
@@ -571,7 +581,38 @@ export const useMapActivity = defineStore('mapActivity', () => {
     if (x < 0 || y < 0 || x >= map.width || y >= map.height) return
     const idx = cellIndex(x, y)
     if (layer.data[idx] === id) return
+    detachAt(layer, x, y)
     layer.data[idx] = id
+  }
+
+  function placeComponent(layerIndex: number, x: number, y: number, source: PreparedComponent, linked = true) {
+    const map = tmx.value
+    const layer = map?.layers[layerIndex]
+    if (!map || !layer) return
+    beginStroke(layerIndex)
+    try { placeLinkedComponent(layer, map.width, map.height, x, y, source, linked) }
+    finally { endStroke() }
+  }
+
+  function updateComponents(sources: PreparedComponent[]) {
+    const result = { updated: 0, conflicts: 0, resized: 0, missing: 0 }
+    const map = tmx.value
+    if (!map) return result
+    map.layers.forEach((layer, i) => {
+      beginStroke(i)
+      const changes = refreshComponents(layer, map.width, map.height, sources)
+      for (const key of Object.keys(result) as (keyof typeof result)[]) result[key] += changes[key]
+      endStroke()
+    })
+    return result
+  }
+
+  function paintConnections(layerIndex: number, set: ConnectionSet, sources: PreparedComponent[], changes: ConnectionCell[]) {
+    const map = tmx.value, layer = map?.layers[layerIndex]
+    if (!map || !layer) return
+    beginStroke(layerIndex)
+    try { applyConnectionStroke(layer, map.width, map.height, set, sources, changes) }
+    finally { endStroke() }
   }
 
   /** 4-connected flood fill on the active layer (own stroke). */
@@ -587,7 +628,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
       const [x, y] = stack.pop()!
       if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue
       if (layer.data[cellIndex(x, y)] !== target) continue
-      layer.data[cellIndex(x, y)] = id
+      setCell(layerIndex, x, y, id)
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1])
     }
     endStroke()
@@ -608,7 +649,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
     return {
       width: map.width,
       height: map.height,
-      layers: map.layers.map(l => ({ data: l.data.slice(), width: l.width, height: l.height })),
+      layers: map.layers.map(l => ({ data: l.data.slice(), width: l.width, height: l.height, components: cloneComponents(l) })),
       collisionLevels: collisionLevels.value.map(g => (g ? g.slice() : null)),
       stairs: stairsGrid.value ? stairsGrid.value.slice() : null,
     }
@@ -626,6 +667,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
       layer.data = s.data.slice()
       layer.width = s.width
       layer.height = s.height
+      layer.components = cloneComponents({ data: [], components: s.components })
     })
     collisionLevels.value = shape.collisionLevels.map(g => (g ? g.slice() : null))
     stairsGrid.value = shape.stairs ? shape.stairs.slice() : null
@@ -688,6 +730,9 @@ export const useMapActivity = defineStore('mapActivity', () => {
       layer.data = reflow(layer.data)
       layer.width = newW
       layer.height = newH
+      if (layer.components) layer.components = layer.components
+        .map(c => ({ ...c, x: c.x + offX, y: c.y + offY }))
+        .filter(c => c.x >= 0 && c.y >= 0 && c.x + c.w <= newW && c.y + c.h <= newH)
     }
     collisionLevels.value = collisionLevels.value.map(g => (g ? reflow(g) : null))
     if (stairsGrid.value) stairsGrid.value = reflow(stairsGrid.value)
@@ -873,7 +918,10 @@ export const useMapActivity = defineStore('mapActivity', () => {
     if (!entry) return
     if (entry.kind === 'cells') {
       const layer = tmx.value?.layers[entry.layerIndex]
-      if (layer) layer.data = entry.before.slice()
+      if (layer) {
+        layer.data = entry.before.slice()
+        if (entry.componentsBefore) layer.components = cloneComponents({ data: [], components: entry.componentsBefore })
+      }
     } else if (entry.kind === 'collision') {
       collisionLevels.value[entry.level] = entry.before.slice()
     } else if (entry.kind === 'stairs') {
@@ -891,7 +939,10 @@ export const useMapActivity = defineStore('mapActivity', () => {
     if (!entry) return
     if (entry.kind === 'cells') {
       const layer = tmx.value?.layers[entry.layerIndex]
-      if (layer) layer.data = entry.after.slice()
+      if (layer) {
+        layer.data = entry.after.slice()
+        if (entry.componentsAfter) layer.components = cloneComponents({ data: [], components: entry.componentsAfter })
+      }
     } else if (entry.kind === 'collision') {
       collisionLevels.value[entry.level] = entry.after.slice()
     } else if (entry.kind === 'stairs') {
@@ -905,6 +956,7 @@ export const useMapActivity = defineStore('mapActivity', () => {
   }
 
   return {
+    placeComponent, updateComponents, paintConnections,
     // list
     mapList,
     loadingList,

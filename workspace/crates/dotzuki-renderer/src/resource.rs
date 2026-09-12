@@ -568,7 +568,7 @@ impl<K: AssetKind> ResourceManager<K> {
         }
     }
 
-    /// Register the embedded-asset loader used on wasm32/android/ios, where
+    /// Register an embedded-asset loader on any platform, where
     /// the file system is unavailable and assets are baked into the binary.
     pub fn set_embedded_loader(&mut self, loader: EmbeddedAssetLoader) {
         self.embedded_loader = Some(loader);
@@ -633,40 +633,25 @@ impl<K: AssetKind> ResourceManager<K> {
         Ok(self.cache.get(&cache_key).unwrap())
     }
 
-    fn load_raw(&self, category: K, filename: &str, is_1bpp: bool) -> Result<CachedTileSet> {
-        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-        {
-            // On wasm32/android/ios, load from embedded assets
+    fn load_png(&self, category: K, filename: &str) -> Result<LoadedPng> {
+        if let Some(loader) = self.embedded_loader {
             let relative_path = format!("{}/{}", category.subdir(), filename);
-            let embedded = self.embedded_asset(&relative_path)?;
-            let loaded = LoadedPng::load_from_bytes(embedded)?;
-            let tileset = loaded.to_tileset(is_1bpp)?;
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
-        }
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        {
-            // On native, load from file system
-            let path = self.root.resolve_checked(category, filename)?;
-            let loaded = LoadedPng::load(&path)?;
-            let tileset = loaded.to_tileset(is_1bpp)?;
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
+            let bytes = loader(&relative_path)
+                .ok_or_else(|| ResourceError::PngNotFound(PathBuf::from(relative_path)))?;
+            LoadedPng::load_from_bytes(bytes)
+        } else {
+            LoadedPng::load(&self.root.resolve_checked(category, filename)?)
         }
     }
 
-    /// Look up an embedded asset by path relative to the asset root.
-    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-    fn embedded_asset(&self, relative_path: &str) -> Result<&'static [u8]> {
-        self.embedded_loader
-            .and_then(|loader| loader(relative_path))
-            .ok_or_else(|| ResourceError::PngNotFound(PathBuf::from(relative_path)))
+    fn load_raw(&self, category: K, filename: &str, is_1bpp: bool) -> Result<CachedTileSet> {
+        let loaded = self.load_png(category, filename)?;
+        let tileset = loaded.to_tileset(is_1bpp)?;
+        Ok(CachedTileSet {
+            tile_count: tileset.len(),
+            source_size: loaded.dimensions,
+            tileset,
+        })
     }
 
     /// Load a tileset as 4bpp tile data (GBA-style 2-bitplane format).
@@ -711,62 +696,27 @@ impl<K: AssetKind> ResourceManager<K> {
 
     /// Internal: load a PNG as 4bpp tile data, no caching.
     fn load_tileset_4bpp_raw(&self, category: K, filename: &str) -> Result<CachedTileSet> {
-        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-        {
-            let relative_path = format!("{}/{}", category.subdir(), filename);
-            let embedded = self.embedded_asset(&relative_path)?;
-            let loaded = LoadedPng::load_from_bytes(embedded)?;
-            let data = png_to_4bpp(&loaded.image)?;
-            let tileset = TileSet::from_4bpp(&data);
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
-        }
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        {
-            let path = self.root.resolve_checked(category, filename)?;
-            let loaded = LoadedPng::load(&path)?;
-            let data = png_to_4bpp(&loaded.image)?;
-            let tileset = TileSet::from_4bpp(&data);
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
-        }
+        let loaded = self.load_png(category, filename)?;
+        let data = png_to_4bpp(&loaded.image)?;
+        let tileset = TileSet::from_4bpp(&data);
+        Ok(CachedTileSet {
+            tile_count: tileset.len(),
+            source_size: loaded.dimensions,
+            tileset,
+        })
     }
 
     /// Internal: load a PNG as RGBA tile data, no caching.
     fn load_tileset_rgba_raw(&self, category: K, filename: &str) -> Result<CachedTileSet> {
-        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-        {
-            let relative_path = format!("{}/{}", category.subdir(), filename);
-            let embedded = self.embedded_asset(&relative_path)?;
-            let loaded = LoadedPng::load_from_bytes(embedded)?;
-            let pixels = png_to_rgba(&loaded.image)?;
-            let tile_count = (loaded.dimensions.0 / 8 * loaded.dimensions.1 / 8) as usize;
-            let tileset = TileSet::from_rgba(&pixels, tile_count);
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
-        }
-        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-        {
-            let path = self.root.resolve_checked(category, filename)?;
-            let loaded = LoadedPng::load(&path)?;
-            let pixels = png_to_rgba(&loaded.image)?;
-            let tile_count = (loaded.dimensions.0 / 8 * loaded.dimensions.1 / 8) as usize;
-            let tileset = TileSet::from_rgba(&pixels, tile_count);
-            Ok(CachedTileSet {
-                tile_count: tileset.len(),
-                source_size: loaded.dimensions,
-                tileset,
-            })
-        }
+        let loaded = self.load_png(category, filename)?;
+        let pixels = png_to_rgba(&loaded.image)?;
+        let tile_count = (loaded.dimensions.0 / 8 * loaded.dimensions.1 / 8) as usize;
+        let tileset = TileSet::from_rgba(&pixels, tile_count);
+        Ok(CachedTileSet {
+            tile_count: tileset.len(),
+            source_size: loaded.dimensions,
+            tileset,
+        })
     }
 
     /// Load an RGBA tileset from a PNG file directly (no palette remapping).
@@ -782,6 +732,12 @@ impl<K: AssetKind> ResourceManager<K> {
         name: &str,
     ) -> core::result::Result<RgbaTileSet, String> {
         let filename = ensure_png_ext(name);
+        if let Some(loader) = self.embedded_loader {
+            let relative = format!("{}/{}", category.subdir(), filename);
+            let data =
+                loader(&relative).ok_or_else(|| format!("Missing embedded asset: {relative}"))?;
+            return RgbaTileSet::from_rgba_png(data);
+        }
         let path = self.root.gfx_dir().join(category.subdir()).join(&filename);
         let data = std::fs::read(&path)
             .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
@@ -1071,8 +1027,11 @@ mod tests {
 
     #[test]
     fn png_to_2bpp_rejects_non_multiple_of_8() {
-        let img =
-            image::DynamicImage::ImageLuma8(image::GrayImage::from_pixel(10, 8, image::Luma([255])));
+        let img = image::DynamicImage::ImageLuma8(image::GrayImage::from_pixel(
+            10,
+            8,
+            image::Luma([255]),
+        ));
         let result = png_to_2bpp(&img);
         assert!(result.is_err());
         assert!(matches!(
@@ -1133,8 +1092,11 @@ mod tests {
     #[test]
     fn png_to_tileset_2bpp_produces_correct_tile_count() {
         // 16×16 → 4 tiles
-        let img =
-            image::DynamicImage::ImageLuma8(image::GrayImage::from_pixel(16, 16, image::Luma([255])));
+        let img = image::DynamicImage::ImageLuma8(image::GrayImage::from_pixel(
+            16,
+            16,
+            image::Luma([255]),
+        ));
         let ts = png_to_tileset_2bpp(&img).unwrap();
         assert_eq!(ts.len(), 4);
     }
@@ -1274,7 +1236,9 @@ mod tests {
         let path = root.resolve(TestKind::Tiles, "a.png");
         assert!(path.to_str().unwrap().contains("tiles/a.png"));
         assert!(root.resolve_checked(TestKind::Tiles, "a.png").is_ok());
-        assert!(root.resolve_checked(TestKind::Tiles, "missing.png").is_err());
+        assert!(root
+            .resolve_checked(TestKind::Tiles, "missing.png")
+            .is_err());
         let pngs = root.list_pngs(TestKind::Tiles).unwrap();
         assert_eq!(pngs.len(), 1);
     }

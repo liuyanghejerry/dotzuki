@@ -37,6 +37,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | Document | Covers |
 |---|---|
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx` (JSON) maps, tilesets, elevation, entities and the `objects.json` sidecar |
+| [`how-to/map-components.md`](./how-to/map-components.md) | Linked buildings, source updates, imported atlas preservation, and connected wall painting |
 | [`how-to/scenes.md`](./how-to/scenes.md) | Authoring `.scene` stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles |
 | [`how-to/ui.md`](./how-to/ui.md) | Authoring `.gui` layouts: the 20×18 grid, panels/text, template bindings, `@t` labels, custom components |
 | [`how-to/battles.md`](./how-to/battles.md) | Authoring `rules.ron`: the minimon tutorial, type effectiveness, resources & move costs, cookbook, determinism |
@@ -45,6 +46,8 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | [`how-to/assets.md`](./how-to/assets.md) | Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts |
 | [`how-to/i18n.md`](./how-to/i18n.md) | Bilingual text: the `game` i18n API and `@t` syntax |
 | [`how-to/publishing.md`](./how-to/publishing.md) | Shipping a project, headless smoke tests, WASM web play, engine upgrades |
+| [`how-to/export-android.md`](./how-to/export-android.md) | Building the mobile runtime and exporting an Android Studio project |
+| [`how-to/export-harmonyos.md`](./how-to/export-harmonyos.md) | Building the mobile runtime and exporting a DevEco Studio project |
 
 ## Reference
 
@@ -75,13 +78,14 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 | Document | Covers |
 |---|---|
 | [`explanation/architecture.md`](./explanation/architecture.md) | Current architecture: engine crates, runner, CLI, editor, and the DSL-to-game flow |
+| [`explanation/mobile-architecture.md`](./explanation/mobile-architecture.md) | One C ABI with native iOS, Android, and HarmonyOS shells |
 | [`explanation/effect-stack.md`](./explanation/effect-stack.md) | The battle effect-stack model, event/handler architecture, RNG determinism, honest limits |
 | [`explanation/game-data.md`](./explanation/game-data.md) | The `GameData` provider trait and its generic associated types |
 | [`explanation/save-compatibility.md`](./explanation/save-compatibility.md) | Save versioning and forward/backward compatibility rules |
 
 ## Release notes
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release ([`v0.1.0`](./release-notes/migration/v0.1.0.md), [`v0.5.4`](./release-notes/migration/v0.5.4.md))
+- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release ([`v0.1.0`](./release-notes/migration/v0.1.0.md), [`v0.5.4`](./release-notes/migration/v0.5.4.md), [`v0.7.0`](./release-notes/migration/v0.7.0.md), [`v0.7.1`](./release-notes/migration/v0.7.1.md))
 
 ## Archive
 

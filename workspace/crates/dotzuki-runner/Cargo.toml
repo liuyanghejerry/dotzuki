@@ -6,26 +6,34 @@ description = "Generic runtime that boots a zero-Rust jrpg game project (manifes
 license.workspace = true
 repository.workspace = true
 
+[[bin]]
+name = "dotzuki-player"
+path = "src/bin/dotzuki-player.rs"
+required-features = ["gpu"]
+
 [features]
-default = ["gpu", "watch"]
+default = ["gpu", "watch", "device-audio"]
 # Windowed/GPU renderer bits (pixels/winit) — native play; off for WASM.
-gpu = ["dotzuki-renderer/gpu"]
+gpu = ["dotzuki-renderer/gpu", "dep:dotzuki-app"]
 # notify-based hot reload (`dotzuki run --watch`) — native only.
 watch = ["dep:notify"]
 # Modern file audio (WAV/OGG/FLAC/MP3) for the BGM/SFX scene commands —
 # forwarded to dotzuki-audio's `modern-audio`; off by default so projects
 # that only use TrackDef JSON chiptune stay dependency-light.
 modern-audio = ["dotzuki-audio/modern-audio"]
+# Native desktop audio output. Mobile and WASM hosts disable this feature and
+# pull PCM through `RunnerGame::render_audio` into their platform audio API.
+device-audio = ["dotzuki-audio/cpal"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.6.0" }
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.6.0" }
-dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.6.0" }
-dotzuki-rules = { path = "../dotzuki-rules", version = "0.6.0" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false, features = ["image-assets"] }
-dotzuki-ui = { path = "../dotzuki-ui", version = "0.6.0" }
-dotzuki-audio = { path = "../dotzuki-audio", version = "0.6.0", features = ["serde", "cpal"] }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.7.1" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.7.1" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.7.1" }
+dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.7.1" }
+dotzuki-rules = { path = "../dotzuki-rules", version = "0.7.1" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.7.1", default-features = false, features = ["image-assets"] }
+dotzuki-ui = { path = "../dotzuki-ui", version = "0.7.1", default-features = false }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.7.1", features = ["serde"] }
 # Native audio output comes from dotzuki-audio's `cpal` feature (the APU
 # renders samples on cpal's callback thread; no device (CI/headless/wasm's
 # Null host) ⇒ RunnerAudio stays silent).
@@ -39,5 +47,5 @@ log = "0.4"
 base64 = "0.22"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-dotzuki-app = { path = "../dotzuki-app", version = "0.6.0" }
+dotzuki-app = { path = "../dotzuki-app", version = "0.7.1", optional = true }
 notify = { workspace = true, optional = true }

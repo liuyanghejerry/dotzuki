@@ -35,10 +35,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Build the WASM packages once (Linux) and hand them to both platform
-  # packaging jobs as an artifact. The dotzuki CLI + player binaries below are
-  # built per-platform on the packaging runners themselves (they are native
-  # executables, so the Linux job cannot prebuild them).
+  # Build platform-independent release resources on Linux and hand them to both
+  # packaging jobs. The dotzuki CLI + player binaries below are built on each
+  # packaging runner because they are native executables.
   build-wasm:
     runs-on: ubuntu-latest
     permissions:
@@ -102,12 +101,52 @@ jobs:
             workspace/crates/dotzuki-web/pkg-node
             workspace/crates/dotzuki-runner-web/pkg
 
+  build-android-runtime:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust toolchain (Android target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: sdkmanager "ndk;27.0.12077973"
+
+      - name: Cache cargo registry & build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+          key: android-mobile-runtime
+
+      - name: Build Android mobile runtime
+        working-directory: workspace
+        run: |
+          NDK_BIN="$ANDROID_SDK_ROOT/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDK_BIN/aarch64-linux-android26-clang" \
+          AR_aarch64_linux_android="$NDK_BIN/llvm-ar" \
+            cargo build --release --target aarch64-linux-android -p dotzuki-runner-mobile
+
+      - name: Upload Android mobile runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-mobile-runtime
+          if-no-files-found: error
+          path: workspace/target/aarch64-linux-android/release/libdotzuki_runner_mobile.a
+
   # Package the editor on each native platform (electron-builder cannot
   # cross-build dmg/nsis from Linux). Downloads the prebuilt WASM packages so
   # the packaged app ships the layout preview + playtest runner, and builds the
   # dotzuki CLI + player binaries natively so /api/export works in the app.
   build-app:
-    needs: build-wasm
+    needs: [build-wasm, build-android-runtime]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -176,6 +215,16 @@ jobs:
             [ -f "$f" ] || { echo "ERROR: missing $f — WASM artifact layout mismatch"; status=1; }
           done
           exit $status
+
+      - name: Download Android mobile runtime
+        uses: actions/download-artifact@v4
+        with:
+          name: android-mobile-runtime
+          path: workspace/target/aarch64-linux-android/release
+
+      - name: Verify Android mobile runtime
+        shell: bash
+        run: test -f workspace/target/aarch64-linux-android/release/libdotzuki_runner_mobile.a
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -299,8 +348,8 @@ jobs:
           fi
 
       - name: Download distributables
-        # Only the two platform distributable artifacts — not wasm-pkgs (an
-        # intermediate of this same run that the installers already embed).
+        # Only the two platform distributable artifacts. WASM packages and the
+        # Android runtime are intermediate artifacts already embedded in them.
         uses: actions/download-artifact@v4
         with:
           pattern: editor-dist-*

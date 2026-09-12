@@ -63,6 +63,14 @@ if (app.isPackaged && !process.env.DOTZUKI_PLAYER) {
     process.platform === 'win32' ? 'dotzuki-player.exe' : 'dotzuki-player',
   )
 }
+if (app.isPackaged && !process.env.DOTZUKI_ANDROID_MOBILE_LIB) {
+  process.env.DOTZUKI_ANDROID_MOBILE_LIB = path.join(
+    process.resourcesPath,
+    'mobile',
+    'android',
+    'libdotzuki_runner_mobile.a',
+  )
+}
 
 /** @type {import('http').Server extends any ? any : never} */
 let apiServer = null // { url, port, close } from the prod api-server

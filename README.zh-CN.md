@@ -119,7 +119,8 @@ dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.
 - `dotzuki-audio` —— 音频抽象层
 - `dotzuki-app` / `dotzuki-tui` —— 原生应用壳（热重载）/ 终端壳
 - `dotzuki-runner` + `dotzuki-runner-web` —— 零 Rust 项目运行时及其 WASM 构建
-- `dotzuki-cli` —— `dotzuki` 二进制：`new` / `check` / `run`
+- `dotzuki-runner-mobile` —— iOS、Android 和鸿蒙外壳共用的 C ABI 运行时
+- `dotzuki-cli` —— `dotzuki` 二进制：`new` / `check` / `run` / `export`
 - `dotzuki-web` —— 编辑器布局预览的 WASM 桥接
 
 </details>
@@ -150,4 +151,3 @@ target/release/dotzuki new demo && target/release/dotzuki run demo
 除非你明确另行声明，否则任何有意提交以纳入本项目的贡献
 （按 Apache-2.0 许可证的定义）均按上述双许可证授权，
 不附加任何额外条款或条件。
-

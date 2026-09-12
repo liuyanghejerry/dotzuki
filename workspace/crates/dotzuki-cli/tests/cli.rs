@@ -211,3 +211,61 @@ fn check_reports_dsl_errors_with_exit_1() {
     assert!(combined.contains("broken.scene"), "{}", combined);
     assert!(combined.contains("diagnostic"), "{}", combined);
 }
+
+#[test]
+fn harmony_export_writes_a_deveco_project() {
+    let tmp = TestDir::new("harmony");
+    let project = scaffold(tmp.path(), "my-game");
+    let runtime = tmp.path().join("libdotzuki_runner_mobile.a");
+    fs::write(&runtime, b"test archive").unwrap();
+    let export_dir = tmp.path().join("harmony-output");
+
+    let out = dotzuki(&[
+        "export",
+        "--harmony",
+        project.to_str().unwrap(),
+        "--mobile-lib",
+        runtime.to_str().unwrap(),
+        "--out",
+        export_dir.to_str().unwrap(),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(export_dir.join("build-profile.json5").is_file());
+    assert!(export_dir
+        .join("entry/src/main/resources/rawfile/game.dzpk")
+        .is_file());
+    assert_eq!(
+        fs::read(export_dir.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a")).unwrap(),
+        b"test archive"
+    );
+}
+
+#[test]
+fn android_export_writes_an_android_studio_project() {
+    let tmp = TestDir::new("android");
+    let project = scaffold(tmp.path(), "my-game");
+    let runtime = tmp.path().join("libdotzuki_runner_mobile.a");
+    fs::write(&runtime, b"test archive").unwrap();
+    let export_dir = tmp.path().join("android-output");
+
+    let out = dotzuki(&[
+        "export",
+        "--android",
+        project.to_str().unwrap(),
+        "--mobile-lib",
+        runtime.to_str().unwrap(),
+        "--out",
+        export_dir.to_str().unwrap(),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(export_dir.join("settings.gradle.kts").is_file());
+    assert!(export_dir
+        .join("app/src/main/AndroidManifest.xml")
+        .is_file());
+    assert!(export_dir.join("app/src/main/res/raw/game.dzpk").is_file());
+    assert_eq!(
+        fs::read(export_dir.join("app/src/main/jniLibs/arm64-v8a/libdotzuki_runner_mobile.a"))
+            .unwrap(),
+        b"test archive"
+    );
+}

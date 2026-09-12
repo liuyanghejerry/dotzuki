@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.6.0
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -35,6 +35,14 @@ original form in Chinese text.
 - **RON** — the Rusty Object Notation config format used for battle rules
   (`rules.ron`).
 
+## Map components
+
+- **linked component**（关联组件）— a building instance with its source ID, revision,
+  footprint, and previous cells stored on a map layer; source updates preserve its position.
+- **connection mask**（连接掩码）— the sum of occupied cardinal neighbors: north=1,
+  east=2, south=4, and west=8. Selects one of sixteen wall component variants.
+  See [map components](../how-to/map-components.md).
+
 ## Engine
 
 - **`GameData`** — the provider trait every game implements to hand data to
@@ -49,6 +57,21 @@ original form in Chinese text.
 - **runner**（运行器）— `dotzuki-runner`: loads a zero-Rust project
   (manifest, DSL, maps, collision, tilesets) and drives `RunnerGame`; also
   runs headless.
+- **mobile runtime**（移动运行时）— `dotzuki-mobile`, the game-agnostic
+  runtime crate behind the shared mobile C ABI: it owns `MobileGame`, the
+  opaque runtime handle, the bounded PCM queue, and `export_mobile_abi!`.
+  `dotzuki-runner-mobile` implements the contract for `RunnerGame` and
+  `.dzpk` packs; native iOS, Android, and HarmonyOS shells call the same ABI.
+- **mobile shell**（移动外壳）— platform code that owns a mobile app's
+  surface, frame clock, touch controls, audio device, lifecycle, and save
+  storage while calling the mobile runtime for game work.
+- **`MobileGame`** — the trait a mobile game implements for the runtime:
+  frame dimensions, ticks, RGBA output, PCM, and save JSON.
+- **`export_mobile_abi!`** — the `dotzuki-mobile` macro that expands one
+  `MobileGame` factory into the shared C ABI; each application links exactly
+  one factory.
+- **committed save**（已提交存档）— the save snapshot the game marks stable;
+  hosts poll it on a timer and flush it on page hide.
 - **headless**（无头模式）— running without a window or audio device, used
   for CI smoke tests and screenshots (`dotzuki run --headless`).
 - **Boa** — the JavaScript engine behind `dotzuki-engine-script`; the DSL's

@@ -83,6 +83,7 @@ fn main() {
             headless: true,
             fresh: true,
             write_saves: true,
+            external_saves: false,
             save_file: Some(save_file.clone()),
             // Deterministic battles: always hit, 89% variance, never crit.
             rng_script: Some(vec![50, 100, 1]),

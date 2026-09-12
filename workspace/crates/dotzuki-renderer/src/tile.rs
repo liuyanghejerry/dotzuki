@@ -385,7 +385,7 @@ impl RgbaTileSet {
     /// no palette remapping).
     ///
     /// The PNG dimensions must be multiples of 8.
-    #[cfg(feature = "gpu")]
+    #[cfg(any(feature = "gpu", feature = "image-assets"))]
     pub fn from_rgba_png(png_data: &[u8]) -> Result<Self, String> {
         use image::GenericImageView;
 

@@ -84,12 +84,50 @@ PUBLISH_ORDER=(
     dotzuki-app
     dotzuki-tui
     dotzuki-runner
+    dotzuki-mobile
+    dotzuki-runner-mobile
     dotzuki-web
     dotzuki-runner-web
     dotzuki-cli
 )
 
 cd "$WORKSPACE_ROOT"
+
+# The CLI packages its own copy because Cargo cannot include files from a
+# sibling crate in a crate archive. Keep the exported ABI header identical and
+# make sure it is present in the dotzuki-cli package before publishing.
+if ! cmp -s \
+    crates/dotzuki-mobile/include/dotzuki_runner_mobile.h \
+    crates/dotzuki-cli/templates/mobile/dotzuki_runner_mobile.h; then
+    echo "ERROR: dotzuki-cli mobile ABI header is missing or out of sync." >&2
+    exit 1
+fi
+if ! cargo package -p dotzuki-cli --list --allow-dirty \
+    | grep -qx 'templates/mobile/dotzuki_runner_mobile.h'; then
+    echo "ERROR: dotzuki-cli package does not include the mobile ABI header." >&2
+    exit 1
+fi
+
+# Cargo scans every Cargo.toml in a git dependency source, including manifests
+# below workspace-excluded directories. Keep template placeholders in
+# Cargo.toml.liquid files so consumers never see parse diagnostics.
+python3 <<'PY'
+from pathlib import Path
+
+invalid = []
+for manifest in Path(".").glob("**/Cargo.toml"):
+    if "target" in manifest.parts or "node_modules" in manifest.parts:
+        continue
+    text = manifest.read_text(encoding="utf-8")
+    if "{{" in text or "}}" in text:
+        invalid.append(str(manifest))
+
+if invalid:
+    raise SystemExit(
+        "ERROR: Cargo manifest contains an unexpanded template placeholder; "
+        "rename it to Cargo.toml.liquid:\n  - " + "\n  - ".join(invalid)
+    )
+PY
 
 VERSION="$(cargo metadata --no-deps --format-version 1 | python3 -c '
 import json, sys

@@ -158,6 +158,10 @@ pub struct RunnerOptions {
     /// (`--save`), keeping CI side-effect-free. Loading is independent — a
     /// valid save always resumes unless `fresh`/`map` say otherwise.
     pub write_saves: bool,
+    /// Delegate all persistence to the embedding host. This disables disk
+    /// loading and both automatic and menu-triggered disk writes; the host
+    /// uses [`RunnerGame::import_save`] and [`RunnerGame::export_save`].
+    pub external_saves: bool,
 }
 
 /// Live textbox state: pages waiting on A presses. `engine` is `Some` for a
@@ -324,6 +328,8 @@ pub struct RunnerGame {
     save_path: PathBuf,
     /// Whether stable-state saves are written (see [`RunnerOptions::write_saves`]).
     write_saves: bool,
+    /// Whether the embedding host owns save persistence.
+    external_saves: bool,
     /// Deterministic battle rng byte script (see [`RunnerOptions::rng_script`]).
     rng_script: Option<Vec<u8>>,
     /// The persistent party state (v2-b): every party member's current
@@ -438,6 +444,7 @@ impl RunnerGame {
             audio,
             save_path,
             write_saves: opts.write_saves,
+            external_saves: opts.external_saves,
             rng_script: opts.rng_script.clone(),
             party_state: None,
             inventory: None,
@@ -453,7 +460,7 @@ impl RunnerGame {
         // the normal boot. Disk saves are native-only; the WASM shell
         // restores its localStorage save via `import_save` after boot.
         #[cfg(not(target_arch = "wasm32"))]
-        if !opts.fresh && opts.map.is_none() {
+        if !opts.external_saves && !opts.fresh && opts.map.is_none() {
             if let Some(save) = GameSave::load(&game.save_path) {
                 if game.resume_from(save) {
                     return Ok(game);
@@ -643,6 +650,9 @@ impl RunnerGame {
     ///
     /// [`export_save`]: Self::export_save
     pub(crate) fn write_save_now(&self) {
+        if self.external_saves {
+            return;
+        }
         #[cfg(not(target_arch = "wasm32"))]
         {
             let save = self.current_save();
@@ -1960,7 +1970,7 @@ impl RunnerGame {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "gpu", not(target_arch = "wasm32")))]
 impl dotzuki_app::GameLoop for RunnerGame {
     type Fb = FrameBuffer;
 

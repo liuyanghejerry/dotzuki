@@ -1,0 +1,7 @@
+[package]
+name = "dotzuki-mobile"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Game-independent mobile host contract and PCM queue"

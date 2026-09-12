@@ -1,7 +1,7 @@
 // @ts-nocheck -- route handlers use the loose dev-server types (see assets.ts)
 // ──────────────────────────────────────────────────────────────────────────
-// Game export — POST /api/export { target?: 'web' | 'native' } shells out to
-// the dotzuki CLI (`dotzuki export --web|--native`) so the editor's export is
+// Game export — POST /api/export { target?: 'web' | 'native' | 'android' | 'harmony' } shells out to
+// the dotzuki CLI so the editor's export is
 // byte-identical to the command-line one: same bundle rules, same diagnostic
 // gate, same player artifacts. Nothing about bundling is reimplemented here.
 //
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'url'
 import { sendJson, sendError, readBody } from '../http'
 import { getProjectRoot, configFile } from '../projectConfig'
 
-const TARGETS = new Set(['web', 'native'])
+const TARGETS = new Set(['web', 'native', 'android', 'harmony'])
 
 /** Longest a single export may take (a cold native player build is minutes). */
 const EXPORT_TIMEOUT_MS = 10 * 60 * 1000
@@ -74,10 +74,14 @@ export function registerExport(server: any) {
         const body = JSON.parse((await readBody(req)) || '{}')
         if (body.target !== undefined) target = body.target
       } catch {
-        return sendError(res, 'Request body must be JSON ({ "target": "web" | "native" })', 400)
+        return sendError(
+          res,
+          'Request body must be JSON ({ "target": "web" | "native" | "android" | "harmony" })',
+          400,
+        )
       }
       if (!TARGETS.has(target)) {
-        return sendError(res, `Unknown export target '${target}' (expected web|native)`, 400)
+        return sendError(res, `Unknown export target '${target}' (expected web|native|android|harmony)`, 400)
       }
 
       const cli = findDotzukiCli()
@@ -93,8 +97,14 @@ export function registerExport(server: any) {
       const args = ['export', `--${target}`, root]
       if (target === 'web') {
         args.push('--runner-pkg', findRunnerPkg())
-      } else if (process.env.DOTZUKI_PLAYER) {
+      } else if (target === 'native' && process.env.DOTZUKI_PLAYER) {
         args.push('--player-bin', process.env.DOTZUKI_PLAYER)
+      } else if (target === 'android') {
+        const library = process.env.DOTZUKI_ANDROID_MOBILE_LIB || process.env.DOTZUKI_MOBILE_LIB
+        if (library) args.push('--mobile-lib', library)
+      } else if (target === 'harmony') {
+        const library = process.env.DOTZUKI_HARMONY_MOBILE_LIB || process.env.DOTZUKI_MOBILE_LIB
+        if (library) args.push('--mobile-lib', library)
       }
       const out = path.join(root, 'dist', target)
 

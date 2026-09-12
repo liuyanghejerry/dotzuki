@@ -11,6 +11,7 @@
 # How-To Guides
 
 - [Authoring Maps](how-to/maps.md)
+- [Linked Buildings and Walls](how-to/map-components.md)
 - [Authoring Scenes](how-to/scenes.md)
 - [Authoring UI Layouts](how-to/ui.md)
 - [Authoring Battles](how-to/battles.md)
@@ -19,6 +20,8 @@
 - [Assets](how-to/assets.md)
 - [Bilingual Text (i18n)](how-to/i18n.md)
 - [Publishing & Upgrading](how-to/publishing.md)
+- [Exporting to Android](how-to/export-android.md)
+- [Exporting to HarmonyOS](how-to/export-harmonyos.md)
 
 # Reference
 
@@ -51,6 +54,7 @@
 # Explanation
 
 - [Architecture Overview](explanation/architecture.md)
+- [Mobile Architecture](explanation/mobile-architecture.md)
 - [The Effect-Stack Battle Engine](explanation/effect-stack.md)
 - [The GameData Trait](explanation/game-data.md)
 - [Save Compatibility](explanation/save-compatibility.md)
@@ -60,6 +64,8 @@
 - [Changelog](release-notes/changelog.md)
 - [Migrating to v0.1.0](release-notes/migration/v0.1.0.md)
 - [Migrating to v0.5.4](release-notes/migration/v0.5.4.md)
+- [Migrating to v0.7.0](release-notes/migration/v0.7.0.md)
+- [Migrating to v0.7.1](release-notes/migration/v0.7.1.md)
 
 # Archive
 
@@ -84,6 +90,7 @@ archive pages stay English-only (doc-standard §5).
 - [你的第一个游戏](tutorials/your-first-game.zh-CN.md)
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
 - [制作地图](how-to/maps.zh-CN.md)
+- [关联建筑与连接墙体](how-to/map-components-zh-CN.md)
 - [编写场景](how-to/scenes.zh-CN.md)
 - [编写 UI 布局](how-to/ui.zh-CN.md)
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)
@@ -92,6 +99,8 @@ archive pages stay English-only (doc-standard §5).
 - [素材](how-to/assets.zh-CN.md)
 - [i18n 指南](how-to/i18n.zh-CN.md)
 - [发布与升级指南](how-to/publishing.zh-CN.md)
+- [导出 Android 游戏](how-to/export-android.zh-CN.md)
+- [导出鸿蒙游戏](how-to/export-harmonyos.zh-CN.md)
 - [项目清单](reference/project-manifest.zh-CN.md)
 - [战斗规则](reference/battle-rules.zh-CN.md)
 - [音频命令](reference/audio-commands.zh-CN.md)
@@ -110,6 +119,7 @@ archive pages stay English-only (doc-standard §5).
 - [Codegen 约定](reference/dsl/codegen.zh-CN.md)
 - [DSL 运行时加载参考](reference/dsl/runtime-loading.zh-CN.md)
 - [架构总览](explanation/architecture.zh-CN.md)
+- [移动端架构](explanation/mobile-architecture.zh-CN.md)
 - [效果栈战斗引擎](explanation/effect-stack.zh-CN.md)
 - [GameData Trait](explanation/game-data.zh-CN.md)
 - [存档兼容](explanation/save-compatibility.zh-CN.md)
@@ -121,3 +131,5 @@ archive pages stay English-only (doc-standard §5).
 - [变更日志](release-notes/changelog.zh-CN.md)
 - [迁移至 v0.1.0](release-notes/migration/v0.1.0.zh-CN.md)
 - [迁移至 v0.5.4](release-notes/migration/v0.5.4.zh-CN.md)
+- [迁移至 v0.7.0](release-notes/migration/v0.7.0.zh-CN.md)
+- [迁移至 v0.7.1](release-notes/migration/v0.7.1.zh-CN.md)

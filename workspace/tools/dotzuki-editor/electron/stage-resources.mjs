@@ -97,3 +97,34 @@ function stageCliBins() {
   }
 }
 stageCliBins()
+
+// Android exports are assembled on the user's machine, but the game runtime
+// itself is cross-compiled in release CI and shipped with the editor.
+function stageAndroidMobileRuntime() {
+  const destDir = path.join(root, 'dist-electron', 'mobile', 'android')
+  const file = 'libdotzuki_runner_mobile.a'
+  const src = path.resolve(
+    root,
+    '..',
+    '..',
+    'target',
+    'aarch64-linux-android',
+    'release',
+    file,
+  )
+  fs.rmSync(destDir, { recursive: true, force: true })
+  fs.mkdirSync(destDir, { recursive: true })
+  if (fs.existsSync(src)) {
+    const dest = path.join(destDir, file)
+    fs.copyFileSync(src, dest)
+    const mb = (fs.statSync(dest).size / 1e6).toFixed(1)
+    console.log(`✓ staged Android mobile runtime → dist-electron/mobile/android (${mb} MB)`)
+  } else {
+    fs.writeFileSync(
+      path.join(destDir, 'README.txt'),
+      'Android mobile runtime not built. Android export requires a prebuilt arm64 static library.\n',
+    )
+    console.warn(`⚠ ${src} not found — the packaged app will lack Android export.`)
+  }
+}
+stageAndroidMobileRuntime()
