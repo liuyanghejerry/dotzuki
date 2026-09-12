@@ -1321,6 +1321,11 @@ impl Parser {
             Some(Token::DirectiveIf) => self.parse_if_stmt(),
             Some(Token::DirectiveEach) => self.parse_each_stmt(),
             Some(Token::DirectiveCommand) => self.parse_directive_command_stmt(),
+            Some(Token::Identifier(name)) if name == "return" => {
+                let span = self.current_span();
+                self.advance();
+                Ok(StoryStmt::Return { span })
+            }
             Some(Token::Identifier(_)) => {
                 if self.peek_n(1) == Some(&Token::Equals) {
                     self.parse_assign_stmt()
@@ -4625,6 +4630,31 @@ mod tests {
             }
             _ => panic!("expected Command from bare identifier"),
         }
+    }
+
+    #[test]
+    fn test_return_is_control_flow_not_a_host_command() {
+        let tokens = vec![
+            tok(Token::KeywordGameScene),
+            tok(id("Return")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::Identifier("return".into())),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
+        ];
+        let (doc, errors) = parse(tokens);
+        assert!(errors.is_empty(), "return should parse: {errors:?}");
+        let Document::Scene(scene) = doc.expect("scene") else {
+            panic!("expected scene")
+        };
+        assert!(matches!(
+            scene.storylines[0].statements.as_slice(),
+            [StoryStmt::Return { .. }]
+        ));
     }
 
     // ──────────────── ERROR CONDITION TESTS ────────────────

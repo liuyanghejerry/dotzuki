@@ -526,6 +526,12 @@ impl<H: ScriptHost> Interpreter<H> {
                  (this scene has `@run {{ … }}` starting {:?}); port it to DSL or a native function",
                 js.trim().chars().take(40).collect::<String>()
             )),
+            StoryStmt::Return { .. } => {
+                self.stack.clear();
+                self.suspended = Suspended::None;
+                self.pending_command = None;
+                Ok(StepOutcome::Continue)
+            }
             StoryStmt::Assign { name, value, .. } => match self.eval(&value)? {
                 Eval::Command(cmd) => {
                     self.suspended = Suspended::AwaitAssign {
@@ -916,6 +922,23 @@ mod tests {
         assert!(interp.is_idle());
         // signal_done when idle is a no-op.
         assert!(interp.signal_done(CommandResult::Void).unwrap().is_none());
+    }
+
+    #[test]
+    fn return_exits_the_storyline_without_calling_later_commands() {
+        let mut host = FakeHost::new();
+        host.enqueue(
+            "showText",
+            ScriptCommand::ShowText {
+                text: "late".into(),
+            },
+        );
+        let mut interp = Interpreter::new(host);
+        interp.load_function(&[StoryStmt::Return { span: span() }, text_stmt("late")]);
+
+        assert!(interp.tick().unwrap().is_none());
+        assert!(interp.is_idle());
+        assert!(interp.host().calls.is_empty());
     }
 
     #[test]

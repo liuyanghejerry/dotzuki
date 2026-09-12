@@ -146,7 +146,7 @@ fn collect_unknown(
                 }
                 continue;
             }
-            StoryStmt::Run { .. } => continue,
+            StoryStmt::Run { .. } | StoryStmt::Return { .. } => continue,
         };
     }
 }

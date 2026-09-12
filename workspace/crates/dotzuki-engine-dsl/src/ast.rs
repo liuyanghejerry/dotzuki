@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::hash::HashMap;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Document {
@@ -254,6 +254,11 @@ pub enum StoryStmt {
     },
     Run {
         js: String,
+        span: SourceSpan,
+    },
+    /// End the current storyline immediately. This is control flow, not a
+    /// call to a host capability.
+    Return {
         span: SourceSpan,
     },
     Assign {
