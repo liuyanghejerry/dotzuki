@@ -44,6 +44,7 @@ mod alloc_prelude {
 use alloc_prelude::*;
 
 pub mod ast;
+pub mod core_host;
 pub mod hash;
 pub mod interpreter;
 pub mod lexer;
