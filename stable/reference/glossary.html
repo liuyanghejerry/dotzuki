@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9235c325.js";
+            window.path_to_searchindex_js = "../searchindex-b5297744.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9877aac9.js"></script>
@@ -239,12 +239,21 @@ See <a href="../explanation/effect-stack.html">the effect stack explanation</a>.
 <li><strong>runner</strong>（运行器）— <code>dotzuki-runner</code>: loads a zero-Rust project
 (manifest, DSL, maps, collision, tilesets) and drives <code>RunnerGame</code>; also
 runs headless.</li>
-<li><strong>mobile runtime</strong>（移动运行时）— <code>dotzuki-runner-mobile</code>, the C ABI over
-<code>RunnerGame</code> shared by native iOS, Android, and HarmonyOS shells. It owns
-game state, RGBA frames, PCM production, and save serialization.</li>
+<li><strong>mobile runtime</strong>（移动运行时）— <code>dotzuki-mobile</code>, the game-agnostic
+runtime crate behind the shared mobile C ABI: it owns <code>MobileGame</code>, the
+opaque runtime handle, the bounded PCM queue, and <code>export_mobile_abi!</code>.
+<code>dotzuki-runner-mobile</code> implements the contract for <code>RunnerGame</code> and
+<code>.dzpk</code> packs; native iOS, Android, and HarmonyOS shells call the same ABI.</li>
 <li><strong>mobile shell</strong>（移动外壳）— platform code that owns a mobile app’s
 surface, frame clock, touch controls, audio device, lifecycle, and save
 storage while calling the mobile runtime for game work.</li>
+<li><strong><code>MobileGame</code></strong> — the trait a mobile game implements for the runtime:
+frame dimensions, ticks, RGBA output, PCM, and save JSON.</li>
+<li><strong><code>export_mobile_abi!</code></strong> — the <code>dotzuki-mobile</code> macro that expands one
+<code>MobileGame</code> factory into the shared C ABI; each application links exactly
+one factory.</li>
+<li><strong>committed save</strong>（已提交存档）— the save snapshot the game marks stable;
+hosts poll it on a timer and flush it on page hide.</li>
 <li><strong>headless</strong>（无头模式）— running without a window or audio device, used
 for CI smoke tests and screenshots (<code>dotzuki run --headless</code>).</li>
 <li><strong>Boa</strong> — the JavaScript engine behind <code>dotzuki-engine-script</code>; the DSL’s

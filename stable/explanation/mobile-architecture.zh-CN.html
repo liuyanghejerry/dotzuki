@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9235c325.js";
+            window.path_to_searchindex_js = "../searchindex-b5297744.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9877aac9.js"></script>
@@ -223,7 +223,7 @@ Node-API、XComponent、EGL/GLES3 和 OHAudio 实现同样的划分。</p>
 接入移动服务。公共 C ABI 把窗口框架留在 <code>dotzuki-runner</code> 之外，
 并向三端提供相同的帧、输入、音频和持久化契约。</p>
 <h2 id="契约"><a class="header" href="#契约">契约</a></h2>
-<p><code>dotzuki-runner-mobile/include/dotzuki_runner_mobile.h</code> 定义 ABI 版本 1。
+<p><code>dotzuki-mobile/include/dotzuki_runner_mobile.h</code> 定义 ABI 版本 1。
 契约包含以下几组能力：</p>
 <div class="table-wrapper">
 <table>
@@ -273,6 +273,19 @@ SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 O
 <li><a href="https://gitee.com/harmonyos_samples/ndk-xcomponent">华为 NDK XComponent 样例</a></li>
 <li><a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5">华为 Node-API 指南</a></li>
 </ul>
+<h2 id="自定义-rust-游戏"><a class="header" href="#自定义-rust-游戏">自定义 Rust 游戏</a></h2>
+<p><code>dotzuki-mobile</code> 提供 <code>MobileGame</code>、不透明运行时、PCM 队列和
+<code>export_mobile_abi!</code>，不依赖具体游戏、渲染器或设备后端。
+<code>dotzuki-runner-mobile</code> 只负责 <code>RunnerGame</code> 和 <code>.dzpk</code> 的适配。
+自定义 Rust 游戏实现同一接口并导出自己的工厂；每个应用只链接一个工厂。
+工厂定义初始化字节和存档 JSON；宿主从运行时查询画面尺寸。</p>
+<p>公共鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻显示纹理、独立触控区
+和 44.1 kHz PCM。每 500 ms 检查已提交存档，页面隐藏时也尝试刷新。
+游戏决定何时提交存档，切后台不强制生成新快照；异步持久化尚未完成时进程
+被终止，可能丢失最近一次提交。销毁运行时前必须停止音频回调。</p>
+<p>自定义静态库可通过 <code>scripts/export-mobile-host.py --help</code> 查看宿主导出参数，
+无需经过零 Rust 项目校验和打包。输出目录必须为空。游戏的构建脚本只提供库、
+初始化字节、名称和包标识，平台源代码仍在引擎仓库维护。</p>
 
                     </main>
 

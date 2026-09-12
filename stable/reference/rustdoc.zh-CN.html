@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9235c325.js";
+            window.path_to_searchindex_js = "../searchindex-b5297744.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9877aac9.js"></script>
@@ -221,7 +221,8 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-tui</code></td><td>终端外壳（ratatui）</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>零 Rust 项目运行时 + 无头模式驱动</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="project-manifest.html">项目清单</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="../how-to/publishing.html">发布指南</a></td></tr>
-<tr><td><code>dotzuki-runner-mobile</code></td><td>原生平台外壳共用的 C ABI 移动运行时</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.zh-CN.html">移动端架构</a>、<a href="../how-to/export-harmonyos.zh-CN.html">鸿蒙导出</a></td></tr>
+<tr><td><code>dotzuki-mobile</code></td><td>游戏无关的移动运行时：<code>MobileGame</code> trait、不透明运行时句柄、PCM 队列、<code>export_mobile_abi!</code></td><td><a href="https://docs.rs/dotzuki-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.zh-CN.html">移动端架构</a></td></tr>
+<tr><td><code>dotzuki-runner-mobile</code></td><td>零 Rust 运行器（<code>RunnerGame</code> + <code>.dzpk</code>）的 C ABI 移动宿主</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.zh-CN.html">移动端架构</a>、<a href="../how-to/export-harmonyos.zh-CN.html">鸿蒙导出</a></td></tr>
 <tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="cli.html">CLI 参考</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM 桥：编辑器布局预览、游戏外壳（<code>game-shell</code> feature）、BroadcastChannel 联机传输（<code>link</code> feature）</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="game-shell.html">游戏外壳</a>、<a href="link-play.html">联机</a></td></tr>
 </tbody>

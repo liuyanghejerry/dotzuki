@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9235c325.js";
+            window.path_to_searchindex_js = "../searchindex-b5297744.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9877aac9.js"></script>
@@ -221,7 +221,7 @@ adapter and would still require ArkTS bridges for mobile services. The common
 C ABI keeps window frameworks out of <code>dotzuki-runner</code> and gives all three
 shells the same frame, input, audio, and persistence contract.</p>
 <h2 id="contract"><a class="header" href="#contract">Contract</a></h2>
-<p><code>dotzuki-runner-mobile/include/dotzuki_runner_mobile.h</code> defines ABI version 1.
+<p><code>dotzuki-mobile/include/dotzuki_runner_mobile.h</code> defines ABI version 1.
 The contract contains these groups:</p>
 <div class="table-wrapper">
 <table>
@@ -276,6 +276,25 @@ the generated shell:</p>
 <li><a href="https://gitee.com/harmonyos_samples/ndk-xcomponent">Huawei NDK XComponent sample</a></li>
 <li><a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5">Huawei Node-API guide</a></li>
 </ul>
+<h2 id="custom-rust-games"><a class="header" href="#custom-rust-games">Custom Rust games</a></h2>
+<p><code>dotzuki-mobile</code> owns <code>MobileGame</code>, the opaque runtime, bounded PCM queue and
+<code>export_mobile_abi!</code>. It has no game, renderer, or device dependencies.
+<code>dotzuki-runner-mobile</code> implements the contract for <code>RunnerGame</code> and <code>.dzpk</code>.
+A custom Rust game links <code>dotzuki-mobile</code> and exports its own factory instead;
+link exactly one factory per application. That factory defines the
+initialization bytes and the save JSON. The host queries frame dimensions
+from the runtime.</p>
+<p>The common Harmony host uses a monotonic fixed-step clock (59.7275 Hz), nearest
+texture sampling, a separate touch-control area, and 44.1 kHz PCM. It polls
+committed saves every 500 ms and flushes on page hide. A game controls what
+constitutes a committed save; backgrounding does not require a new snapshot.
+Persistence is asynchronous, so abrupt process death before a flush completes
+can lose the latest commit. Stop audio callbacks before destroying the runtime.</p>
+<p>For a custom static library, <code>scripts/export-mobile-host.py --help</code> documents
+exporting the same host without the zero-Rust project validation/pack step.
+Its output directory must be empty. The game’s build wrapper supplies a library,
+initialization bytes, title, and bundle name; it does not copy platform sources
+into the game’s repository.</p>
 
                     </main>
 

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9235c325.js";
+            window.path_to_searchindex_js = "../searchindex-b5297744.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9877aac9.js"></script>
@@ -217,7 +217,8 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-tui</code></td><td>Terminal shell (ratatui)</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>Zero-Rust project runtime + headless driver</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="project-manifest.html">project manifest</a></td></tr>
 <tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="../how-to/publishing.html">publishing guide</a></td></tr>
-<tr><td><code>dotzuki-runner-mobile</code></td><td>C ABI mobile runtime for native platform shells</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.html">mobile architecture</a>, <a href="../how-to/export-harmonyos.html">HarmonyOS export</a></td></tr>
+<tr><td><code>dotzuki-mobile</code></td><td>Game-independent mobile runtime: <code>MobileGame</code> trait, opaque runtime handle, PCM queue, <code>export_mobile_abi!</code></td><td><a href="https://docs.rs/dotzuki-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.html">mobile architecture</a></td></tr>
+<tr><td><code>dotzuki-runner-mobile</code></td><td>C ABI mobile host for the zero-Rust runner (<code>RunnerGame</code> + <code>.dzpk</code>)</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.html">mobile architecture</a>, <a href="../how-to/export-harmonyos.html">HarmonyOS export</a></td></tr>
 <tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="cli.html">CLI reference</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM bridges: editor layout preview, game shell (<code>game-shell</code> feature), BroadcastChannel link transport (<code>link</code> feature)</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="game-shell.html">game shell</a>, <a href="link-play.html">link play</a></td></tr>
 </tbody>
