@@ -104,8 +104,9 @@ the generated shell:
 `export_mobile_abi!`. It has no game, renderer, or device dependencies.
 `dotzuki-runner-mobile` implements the contract for `RunnerGame` and `.dzpk`.
 A custom Rust game links `dotzuki-mobile` and exports its own factory instead;
-link exactly one factory per application. Initialization bytes and save JSON
-are defined by that factory. Frame dimensions are queried from the runtime.
+link exactly one factory per application. That factory defines the
+initialization bytes and the save JSON. The host queries frame dimensions
+from the runtime.
 
 The common Harmony host uses a monotonic fixed-step clock (59.7275 Hz), nearest
 texture sampling, a separate touch-control area, and 44.1 kHz PCM. It polls

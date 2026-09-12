@@ -34,7 +34,8 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-tui` | Terminal shell (ratatui) | [docs.rs](https://docs.rs/dotzuki-tui) | — |
 | `dotzuki-runner` | Zero-Rust project runtime + headless driver | [docs.rs](https://docs.rs/dotzuki-runner) | [project manifest](project-manifest.md) |
 | `dotzuki-runner-web` | WASM build of the runner (editor Play) | [docs.rs](https://docs.rs/dotzuki-runner-web) | [publishing guide](../how-to/publishing.md) |
-| `dotzuki-runner-mobile` | C ABI mobile runtime for native platform shells | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [mobile architecture](../explanation/mobile-architecture.md), [HarmonyOS export](../how-to/export-harmonyos.md) |
+| `dotzuki-mobile` | Game-independent mobile runtime: `MobileGame` trait, opaque runtime handle, PCM queue, `export_mobile_abi!` | [docs.rs](https://docs.rs/dotzuki-mobile) | [mobile architecture](../explanation/mobile-architecture.md) |
+| `dotzuki-runner-mobile` | C ABI mobile host for the zero-Rust runner (`RunnerGame` + `.dzpk`) | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [mobile architecture](../explanation/mobile-architecture.md), [HarmonyOS export](../how-to/export-harmonyos.md) |
 | `dotzuki-cli` | The `dotzuki` binary: `new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI reference](cli.md) |
 | `dotzuki-web` | WASM bridges: editor layout preview, game shell (`game-shell` feature), BroadcastChannel link transport (`link` feature) | [docs.rs](https://docs.rs/dotzuki-web) | [game shell](game-shell.md), [link play](link-play.md) |
 
