@@ -224,7 +224,7 @@ enum StepOutcome {
 /// `load_function` starts a fresh execution (fresh locals — same as calling
 /// an exported JS async function); `tick` runs it until the next `await`
 /// (or completion); `signal_done` delivers the awaited result and resumes.
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Interpreter<H: ScriptHost> {
     host: H,
     state: InterpState,
