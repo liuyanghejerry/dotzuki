@@ -26,14 +26,14 @@ modern-audio = ["dotzuki-audio/modern-audio"]
 device-audio = ["dotzuki-audio/cpal"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.1" }
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.6.1" }
-dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.6.1" }
-dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.6.1" }
-dotzuki-rules = { path = "../dotzuki-rules", version = "0.6.1" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.1", default-features = false, features = ["image-assets"] }
-dotzuki-ui = { path = "../dotzuki-ui", version = "0.6.1", default-features = false }
-dotzuki-audio = { path = "../dotzuki-audio", version = "0.6.1", features = ["serde"] }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.7.0" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.7.0" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.7.0" }
+dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.7.0" }
+dotzuki-rules = { path = "../dotzuki-rules", version = "0.7.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.7.0", default-features = false, features = ["image-assets"] }
+dotzuki-ui = { path = "../dotzuki-ui", version = "0.7.0", default-features = false }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.7.0", features = ["serde"] }
 # Native audio output comes from dotzuki-audio's `cpal` feature (the APU
 # renders samples on cpal's callback thread; no device (CI/headless/wasm's
 # Null host) ⇒ RunnerAudio stays silent).
@@ -47,5 +47,5 @@ log = "0.4"
 base64 = "0.22"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-dotzuki-app = { path = "../dotzuki-app", version = "0.6.1", optional = true }
+dotzuki-app = { path = "../dotzuki-app", version = "0.7.0", optional = true }
 notify = { workspace = true, optional = true }

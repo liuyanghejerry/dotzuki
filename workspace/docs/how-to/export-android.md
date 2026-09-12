@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 Build the shared mobile runtime and export a zero-Rust game as an Android
 Studio project for arm64 phones and tablets.

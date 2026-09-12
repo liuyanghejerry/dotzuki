@@ -3,7 +3,7 @@
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 Every `dotzuki` subcommand, flag and exit code for scaffolding, validating,
 running and exporting zero-Rust game projects.

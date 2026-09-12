@@ -64,7 +64,7 @@
 - [Changelog](release-notes/changelog.md)
 - [Migrating to v0.1.0](release-notes/migration/v0.1.0.md)
 - [Migrating to v0.5.4](release-notes/migration/v0.5.4.md)
-- [Migrating to v0.6.1](release-notes/migration/v0.6.1.md)
+- [Migrating to v0.7.0](release-notes/migration/v0.7.0.md)
 
 # Archive
 

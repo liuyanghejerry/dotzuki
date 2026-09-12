@@ -93,6 +93,27 @@ PUBLISH_ORDER=(
 
 cd "$WORKSPACE_ROOT"
 
+# Cargo scans every Cargo.toml in a git dependency source, including manifests
+# below workspace-excluded directories. Keep template placeholders in
+# Cargo.toml.liquid files so consumers never see parse diagnostics.
+python3 <<'PY'
+from pathlib import Path
+
+invalid = []
+for manifest in Path(".").glob("**/Cargo.toml"):
+    if "target" in manifest.parts or "node_modules" in manifest.parts:
+        continue
+    text = manifest.read_text(encoding="utf-8")
+    if "{{" in text or "}}" in text:
+        invalid.append(str(manifest))
+
+if invalid:
+    raise SystemExit(
+        "ERROR: Cargo manifest contains an unexpanded template placeholder; "
+        "rename it to Cargo.toml.liquid:\n  - " + "\n  - ".join(invalid)
+    )
+PY
+
 VERSION="$(cargo metadata --no-deps --format-version 1 | python3 -c '
 import json, sys
 meta = json.load(sys.stdin)

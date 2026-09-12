@@ -1,0 +1,4 @@
+[template]
+# Binary assets are copied unchanged; parsing them as Liquid can fail on
+# arbitrary byte sequences.
+exclude = ["assets/tileset.png"]

@@ -88,7 +88,7 @@ All `dotzuki-*` crates are published to crates.io under one shared version — t
 - **PR gate**: the `package-check` job in `.github/workflows/main.yml` runs `scripts/publish-crates.sh --check` — a manifest/packaging check. It stays strict except for the expected windows where an internal `dotzuki-*` dep is not yet resolvable on crates.io (pre-first-release, or right after a version bump while the sparse index catches up); those are reported as skipped, since the version-consistency gate already pins internal deps to the workspace version.
 - **Local check**: `cd workspace && bash scripts/publish-crates.sh --check`.
 - **Internal dep rule**: every internal `dotzuki-*` path dependency MUST carry `version = "<workspace version>"` (crates.io resolves path deps through the registry); the script fails the release on drift. When bumping the workspace version, bump those strings too — or just run the `--check`, which catches any mismatch.
-- **Non-publishable members**: `minimon`, `run-wasm`, and the `dotzuki-template` dir are excluded from publishing (`publish = false` / workspace `exclude`).
+- **Non-publishable members**: `minimon`, `run-wasm`, and the `dotzuki-template` dir are excluded from publishing (`publish = false` / workspace `exclude`). The template manifest is named `Cargo.toml.liquid`; cargo-generate emits `Cargo.toml`, while Cargo git consumers avoid parsing its placeholders.
 - **Publishing from a mirrored machine**: the script pins `--registry crates-io`; mirrors like rsproxy lag behind crates.io and can break mid-sequence dependency resolution, so prefer the GitHub Actions workflow for actual releases.
 
 ## Releasing (Editor installers)

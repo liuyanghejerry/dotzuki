@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.

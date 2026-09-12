@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.1
+> - **Last verified**: v0.7.0
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -18,10 +18,10 @@ with a migration guide under `migration/` (created per release).
 
 ## Unreleased
 
-## v0.6.1
+## v0.7.0
 
 This release has no breaking API changes. See the
-[migration guide](migration/v0.6.1.md) for the consumer update.
+[migration guide](migration/v0.7.0.md) for the consumer update.
 
 - Android: `dotzuki export --android` writes an arm64 Android Studio project
   with a Kotlin Activity, `Choreographer` frame clock, `SurfaceView` renderer,

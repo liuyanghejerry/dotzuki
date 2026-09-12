@@ -22,13 +22,13 @@ members = [
     "run-wasm",
 ]
 
-# cargo-generate starter template: its Cargo.toml uses {{project-name}}
-# placeholders and must not be parsed as a workspace package (which also
-# breaks consumers that fetch this repo as a git dependency).
+# cargo-generate starter template. Its manifest is Cargo.toml.liquid so Cargo
+# does not parse the project-name template token when this repository is used
+# as a git dependency; cargo-generate emits Cargo.toml in generated projects.
 exclude = ["dotzuki-template"]
 
 [workspace.package]
-version = "0.6.1"
+version = "0.7.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/liuyanghejerry/dotzuki"
