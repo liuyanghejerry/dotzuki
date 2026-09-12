@@ -8,8 +8,9 @@
 Build the shared mobile runtime and export a zero-Rust game as an Android
 Studio project for arm64 phones and tablets.
 
-Install Android Studio with Android SDK 35, CMake 3.22.1, NDK 27, and JDK 17.
-The generated app supports Android 8.0 (API 26) and later.
+Before you start, read [Publishing & Upgrading](./publishing.md) and install
+Android Studio with Android SDK 35, CMake 3.22.1, NDK 27, and JDK 17. The
+generated app supports Android 8.0 (API 26) and later.
 
 ## 1. Build the Rust mobile runtime
 
