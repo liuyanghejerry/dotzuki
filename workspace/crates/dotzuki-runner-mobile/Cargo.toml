@@ -14,10 +14,10 @@ default = []
 modern-audio = ["dotzuki-runner/modern-audio"]
 
 [dependencies]
-dotzuki-mobile = { path = "../dotzuki-mobile", version = "0.6.0" }
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false, features = ["image-assets"] }
-dotzuki-runner = { path = "../dotzuki-runner", version = "0.6.0", default-features = false }
+dotzuki-mobile = { path = "../dotzuki-mobile", version = "0.6.1" }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.1" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.1", default-features = false, features = ["image-assets"] }
+dotzuki-runner = { path = "../dotzuki-runner", version = "0.6.1", default-features = false }
 
 [dev-dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }

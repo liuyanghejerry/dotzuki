@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.6.0
+> - **Last verified**: v0.6.1
 
 Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.
@@ -45,9 +45,10 @@ dotzuki export --harmony . \
   --out dist/harmony
 ```
 
-You may set `DOTZUKI_MOBILE_LIB` instead of passing `--mobile-lib`. A source
-checkout also detects the library in the workspace target directory shown
-above.
+You may set `DOTZUKI_HARMONY_MOBILE_LIB` instead of passing `--mobile-lib`.
+`DOTZUKI_MOBILE_LIB` remains a common fallback for mobile export scripts. A
+source checkout also detects the library in the workspace target directory
+shown above.
 
 The exporter runs the same validation and pack rules as web and native
 exports. It writes:
@@ -62,8 +63,8 @@ dist/harmony/
 ```
 
 The editor's Play toolbar exposes the same operation as **Export HarmonyOS**.
-Set `DOTZUKI_MOBILE_LIB` before starting the editor server when the library is
-outside the workspace target directory.
+Set `DOTZUKI_HARMONY_MOBILE_LIB` before starting the editor server when the
+library is outside the workspace target directory.
 
 ## 3. Build and run in DevEco Studio
 

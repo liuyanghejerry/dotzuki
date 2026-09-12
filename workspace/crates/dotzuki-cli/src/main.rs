@@ -1,6 +1,7 @@
 mod bundle;
 mod check;
 mod export;
+mod export_android;
 mod export_harmony;
 mod export_native;
 mod player;
@@ -61,6 +62,9 @@ enum Commands {
         /// Export a native app directory (dotzuki-player binary + game.dzpk)
         #[arg(long, group = "target")]
         native: bool,
+        /// Export an Android Studio project
+        #[arg(long, group = "target")]
+        android: bool,
         /// Export a HarmonyOS DevEco Studio project
         #[arg(long, group = "target")]
         harmony: bool,
@@ -69,27 +73,27 @@ enum Commands {
         out: Option<PathBuf>,
         /// Use this prebuilt dotzuki-runner-web wasm package directory
         /// instead of the workspace one (no wasm-pack needed)
-        #[arg(long, conflicts_with_all = ["native", "harmony"])]
+        #[arg(long, conflicts_with_all = ["native", "android", "harmony"])]
         runner_pkg: Option<PathBuf>,
         /// Rebuild the runner wasm package with wasm-pack even when a
         /// prebuilt one exists
-        #[arg(long, conflicts_with_all = ["native", "harmony"])]
+        #[arg(long, conflicts_with_all = ["native", "android", "harmony"])]
         rebuild_runner: bool,
         /// Use this prebuilt dotzuki-player binary instead of building it
         /// with cargo (needed when this CLI was built outside the dotzuki
         /// source tree)
-        #[arg(long, conflicts_with_all = ["web", "harmony"])]
+        #[arg(long, conflicts_with_all = ["web", "android", "harmony"])]
         player_bin: Option<PathBuf>,
-        /// Prebuilt aarch64 HarmonyOS `libdotzuki_runner_mobile.a`
+        /// Prebuilt aarch64 mobile `libdotzuki_runner_mobile.a`
         #[arg(long, conflicts_with_all = ["web", "native"])]
         mobile_lib: Option<PathBuf>,
         /// localStorage key the web player page persists saves under
         /// (default: dotzuki-save:<title>) — hosts embedding the export pin
         /// their own key to keep existing players' saves valid
-        #[arg(long, conflicts_with_all = ["native", "harmony"])]
+        #[arg(long, conflicts_with_all = ["native", "android", "harmony"])]
         save_key: Option<String>,
         /// Player page UI language (loading/status/hint strings)
-        #[arg(long, default_value = "en", value_parser = ["en", "zh"], conflicts_with_all = ["native", "harmony"])]
+        #[arg(long, default_value = "en", value_parser = ["en", "zh"], conflicts_with_all = ["native", "android", "harmony"])]
         lang: String,
         /// Export even when DSL validation reports diagnostics
         #[arg(long)]
@@ -154,6 +158,7 @@ fn main() -> anyhow::Result<()> {
             dir,
             web: _,
             native,
+            android,
             harmony,
             out,
             runner_pkg,
@@ -164,7 +169,14 @@ fn main() -> anyhow::Result<()> {
             lang,
             force,
         } => {
-            if harmony {
+            if android {
+                export_android::run(&export_android::AndroidExportArgs {
+                    dir,
+                    out,
+                    mobile_lib,
+                    force,
+                })?;
+            } else if harmony {
                 export_harmony::run(&export_harmony::HarmonyExportArgs {
                     dir,
                     out,

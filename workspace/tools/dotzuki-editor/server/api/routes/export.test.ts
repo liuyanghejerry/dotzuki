@@ -28,12 +28,16 @@ describe.skipIf(process.platform === 'win32')('POST /api/export', () => {
       DOTZUKI_RUNNER_WASM_ROOT: process.env.DOTZUKI_RUNNER_WASM_ROOT,
       DOTZUKI_PLAYER: process.env.DOTZUKI_PLAYER,
       DOTZUKI_MOBILE_LIB: process.env.DOTZUKI_MOBILE_LIB,
+      DOTZUKI_ANDROID_MOBILE_LIB: process.env.DOTZUKI_ANDROID_MOBILE_LIB,
+      DOTZUKI_HARMONY_MOBILE_LIB: process.env.DOTZUKI_HARMONY_MOBILE_LIB,
       DOTZUKI_EDITOR_ROOT: process.env.DOTZUKI_EDITOR_ROOT,
     }
     process.env.DOTZUKI_CLI = stubCli
     delete process.env.DOTZUKI_PLAYER
     delete process.env.DOTZUKI_RUNNER_WASM_ROOT
     delete process.env.DOTZUKI_MOBILE_LIB
+    delete process.env.DOTZUKI_ANDROID_MOBILE_LIB
+    delete process.env.DOTZUKI_HARMONY_MOBILE_LIB
   })
 
   afterEach(() => {
@@ -137,6 +141,23 @@ describe.skipIf(process.platform === 'win32')('POST /api/export', () => {
     expect(res.status).toBe(200)
     expect(res.json().out).toBe(path.join(root(), 'dist', 'harmony'))
     expect(stubArgs()).toContain(`export --harmony ${root()}`)
+    expect(stubArgs()).toContain(`--mobile-lib ${runtime}`)
+  })
+
+  it('Android export prefers its platform runtime override', async () => {
+    writeProjectConfig(root())
+    const runtime = path.join(stubDir, 'libdotzuki_runner_mobile.a')
+    fs.writeFileSync(runtime, '')
+    process.env.DOTZUKI_ANDROID_MOBILE_LIB = runtime
+
+    const res = await call(
+      makeExportServer().routes,
+      '/api/export',
+      mockReq('POST', { target: 'android' }),
+    )
+    expect(res.status).toBe(200)
+    expect(res.json().out).toBe(path.join(root(), 'dist', 'android'))
+    expect(stubArgs()).toContain(`export --android ${root()}`)
     expect(stubArgs()).toContain(`--mobile-lib ${runtime}`)
   })
 

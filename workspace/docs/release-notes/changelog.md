@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.6.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -17,6 +17,21 @@ with a migration guide under `migration/` (created per release).
   version history (doc-standard §10).
 
 ## Unreleased
+
+## v0.6.1
+
+This release has no breaking API changes. See the
+[migration guide](migration/v0.6.1.md) for the consumer update.
+
+- Android: `dotzuki export --android` writes an arm64 Android Studio project
+  with a Kotlin Activity, `Choreographer` frame clock, `SurfaceView` renderer,
+  `AudioTrack` output, touch controls, lifecycle handling, and
+  `SharedPreferences` saves through mobile ABI version 1. The editor exposes
+  the same export and release installers include the Android runtime library.
+- Mobile hosts: `scripts/export-mobile-host.py --platform android|harmony`
+  wraps a custom game's `dotzuki-mobile` static library in either engine-owned
+  shell.
+- CI cross-compiles the Android runtime and assembles the tutorial export.
 
 - Fix: the debug server's response timeout rises from 5s to 300s, and the
   server drains stale responses before forwarding each command — a slow

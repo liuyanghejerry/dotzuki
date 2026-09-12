@@ -68,6 +68,7 @@ module.exports = {
     '!dist-electron/wasm-runner-pkg/**',
     '!dist-electron/wasm-node-pkg/**',
     '!dist-electron/cli/**',
+    '!dist-electron/mobile/**',
     'electron/**/*',
     'package.json',
     // Ships the bundled-deps license texts (e.g. Lucide ISC) inside the
@@ -86,6 +87,7 @@ module.exports = {
     { from: 'dist-electron/wasm-runner-pkg', to: 'wasm-runner-pkg' },
     { from: 'dist-electron/wasm-node-pkg', to: 'wasm-node-pkg' },
     { from: 'dist-electron/cli', to: 'cli' },
+    { from: 'dist-electron/mobile', to: 'mobile' },
   ],
   asar: true,
   mac: {

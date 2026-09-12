@@ -804,6 +804,7 @@ export default {
     error: '出错了',
     exportWeb: '导出 Web',
     exportNative: '导出原生',
+    exportAndroid: '导出 Android',
     exportHarmony: '导出鸿蒙',
     exporting: '正在导出…',
     exportDone: '已导出到 {path}（dist 目录不会被打进项目包，可重复导出）',

@@ -3,7 +3,7 @@
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.0
+> - **Last verified**: v0.6.1
 
 Every `dotzuki` subcommand, flag and exit code for scaffolding, validating,
 running and exporting zero-Rust game projects.
@@ -31,6 +31,7 @@ manifest, not the CLI, defines the project layout.
 | `dotzuki run <dir>` | Boot the project and play it in a window (or headless for CI/screenshots) |
 | `dotzuki export --web <dir>` | Export the project as a static web site (player page + game pack + WASM runner) |
 | `dotzuki export --native <dir>` | Export the project as a native app directory (dotzuki-player binary + game pack) |
+| `dotzuki export --android <dir>` | Export an Android Studio project (mobile runtime + game pack) |
 | `dotzuki export --harmony <dir>` | Export a HarmonyOS DevEco Studio project (mobile runtime + game pack) |
 
 ## `dotzuki new <name>`
@@ -202,6 +203,23 @@ pack, or a legacy `game.bundle.json` from an older export) plus
 dist/native/my-game --headless --frames 120 --screenshot boot.png
 ```
 
+## `dotzuki export --android <dir>`
+
+Packs the project into an Android Studio application. The app uses
+`dotzuki-runner-mobile` through ABI version 1 and supports arm64 Android 8.0
+(API 26) and later.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--out <dir>` | `<project>/dist/android` | Android Studio project output directory |
+| `--mobile-lib <path>` | workspace target or `DOTZUKI_ANDROID_MOBILE_LIB` | Prebuilt arm64 Android `libdotzuki_runner_mobile.a` |
+| `--force` | off | Export even when validation reports diagnostics |
+
+The output includes a Kotlin activity and controls, `Choreographer` frame
+timing, `SurfaceView` RGBA presentation, `AudioTrack` output,
+`SharedPreferences` save storage, the JNI bridge, C ABI header, static library,
+and `game.dzpk`. See the [Android export guide](../how-to/export-android.md).
+
 ## `dotzuki export --harmony <dir>`
 
 Packs the project into a HarmonyOS DevEco Studio application. The application
@@ -211,7 +229,7 @@ uses `dotzuki-runner-mobile` through ABI version 1 and ships the same
 | Flag | Default | Meaning |
 |---|---|---|
 | `--out <dir>` | `<project>/dist/harmony` | DevEco Studio project output directory |
-| `--mobile-lib <path>` | workspace target or `DOTZUKI_MOBILE_LIB` | Prebuilt arm64 HarmonyOS `libdotzuki_runner_mobile.a` |
+| `--mobile-lib <path>` | workspace target or `DOTZUKI_HARMONY_MOBILE_LIB` | Prebuilt arm64 HarmonyOS `libdotzuki_runner_mobile.a` |
 | `--force` | off | Export even when validation reports diagnostics |
 
 The exporter does not invoke the HarmonyOS Rust toolchain. Build the static
@@ -236,6 +254,9 @@ static library, and `game.dzpk`. See the
   available.
 - `dotzuki export --native`: `0` = app directory written; `1` = validation
   failed (without `--force`), project over the pack caps, or no player binary
+  available.
+- `dotzuki export --android`: `0` = Android Studio project written; `1` =
+  validation failed, project over the pack caps, or no Android runtime library
   available.
 - `dotzuki export --harmony`: `0` = DevEco Studio project written; `1` =
   validation failed, project over the pack caps, or no mobile runtime library
