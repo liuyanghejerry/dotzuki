@@ -1,7 +1,7 @@
 # dotzuki 引擎 — 文档索引
 
-> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.6.0
->（源文档 commit ca430506b34b）。
+> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.7.0
+>（源文档 commit e5978b51abd75570080230acfd5c86341103ae5e）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本目录是 **dotzuki 开发者文档的入口**。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -47,6 +47,7 @@
 | [`how-to/assets.md`](./how-to/assets.md) | 素材管线：tileset、共享 tile 库、2bpp 转换、字体 |
 | [`how-to/i18n.md`](./how-to/i18n.md) | 双语文本：`game` i18n API 与 `@t` 语法 |
 | [`how-to/publishing.md`](./how-to/publishing.md) | 发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级 |
+| [`how-to/export-android.zh-CN.md`](./how-to/export-android.zh-CN.md) | 构建移动运行时并导出 Android Studio 工程 |
 | [`how-to/export-harmonyos.zh-CN.md`](./how-to/export-harmonyos.zh-CN.md) | 构建移动运行时并导出 DevEco Studio 工程 |
 
 ## 参考
@@ -85,7 +86,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)）
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)）
 
 ## 归档
 

@@ -1,7 +1,7 @@
 # 导出 Android 游戏
 
 > 本文是 `export-android.md` 的中文翻译，同步至引擎版本 v0.7.0
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+>（源文档 commit e5978b51abd75570080230acfd5c86341103ae5e）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
@@ -12,8 +12,9 @@
 构建共用移动运行时，并把零 Rust 游戏导出为面向 arm64 手机和平板的
 Android Studio 工程。
 
-请安装 Android Studio、Android SDK 35、CMake 3.22.1、NDK 27 和 JDK 17。
-生成的应用支持 Android 8.0（API 26）及更高版本。
+开始前，请阅读[发布与升级](./publishing.zh-CN.md)，并安装 Android Studio、
+Android SDK 35、CMake 3.22.1、NDK 27 和 JDK 17。生成的应用支持 Android
+8.0（API 26）及更高版本。
 
 ## 1. 构建 Rust 移动运行时
 
