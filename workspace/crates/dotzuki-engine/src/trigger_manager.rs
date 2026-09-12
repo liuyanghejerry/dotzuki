@@ -20,7 +20,7 @@ use crate::metatile::TriggerType;
 /// condition (stepping on, entering, or interacting with the tile), the
 /// associated [`script_name`](Trigger::script_name) is returned so the game
 /// loop can call the corresponding JS function on the script engine.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Trigger {
     /// Unique identifier for this trigger (e.g. `"start_town_prof"`).
     pub id: String,
@@ -112,7 +112,7 @@ impl Trigger {
 ///     script_engine.call_function(&name);
 /// }
 /// ```
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct TriggerManager {
     triggers: Vec<Trigger>,
     /// Tracked so [`OnEnter`](TriggerType::OnEnter) triggers can detect when

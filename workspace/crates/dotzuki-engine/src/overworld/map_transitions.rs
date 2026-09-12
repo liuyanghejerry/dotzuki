@@ -2,7 +2,7 @@ use crate::map::MapTrait;
 use crate::overworld::types::{Direction, MapData};
 use crate::tileset::TilesetTrait;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ConnectionTransition<M: MapTrait> {
     pub new_map: M,
     pub new_x: u16,
