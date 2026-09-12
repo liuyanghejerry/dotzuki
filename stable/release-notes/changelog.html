@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5297744.js";
+            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9877aac9.js"></script>
+        <script src="../toc-46c713ff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.7.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -200,12 +200,32 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<h2 id="v070"><a class="header" href="#v070">v0.7.0</a></h2>
+<p>This release has no breaking API changes. See the
+<a href="migration/v0.7.0.html">migration guide</a> for the consumer update.</p>
 <ul>
-<li>Fix: the debug server’s response timeout rises from 5s to 300s, and the
+<li>
+<p>Android: <code>dotzuki export --android</code> writes an arm64 Android Studio project
+with a Kotlin Activity, <code>Choreographer</code> frame clock, <code>SurfaceView</code> renderer,
+<code>AudioTrack</code> output, touch controls, lifecycle handling, and
+<code>SharedPreferences</code> saves through mobile ABI version 1. The editor exposes
+the same export and release installers include the Android runtime library.</p>
+</li>
+<li>
+<p>Mobile hosts: <code>scripts/export-mobile-host.py --platform android|harmony</code>
+wraps a custom game’s <code>dotzuki-mobile</code> static library in either engine-owned
+shell.</p>
+</li>
+<li>
+<p>CI cross-compiles the Android runtime and assembles the tutorial export.</p>
+</li>
+<li>
+<p>Fix: the debug server’s response timeout rises from 5s to 300s, and the
 server drains stale responses before forwarding each command — a slow
 synchronous command (<code>step_frames</code> with a large frame budget) no longer
 skews the FIFO response stream. See
-<a href="../reference/debug-server.html">the debug server reference</a>.</li>
+<a href="../reference/debug-server.html">the debug server reference</a>.</p>
+</li>
 </ul>
 <h2 id="v054"><a class="header" href="#v054">v0.5.4</a></h2>
 <p>The workspace version returns to the v0.5.x tag series (0.1.1 → 0.5.4); see

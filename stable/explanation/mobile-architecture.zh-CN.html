@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5297744.js";
+            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9877aac9.js"></script>
+        <script src="../toc-46c713ff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,8 +182,8 @@
                     <main>
                         <h1 id="移动端架构"><a class="header" href="#移动端架构">移动端架构</a></h1>
 <blockquote>
-<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.6.0
-（源文档 commit ca430506b34b）。
+<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.7.0
+（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -191,12 +191,11 @@
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.7.0</li>
 </ul>
 </blockquote>
-<p>本文解释 dotzuki 为何采用一套 Rust 运行时契约和三个原生移动外壳，
-以及鸿蒙外壳
-如何沿用 iOS 的职责划分。</p>
+<p>本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
+外壳；Android 和鸿蒙使用同一套带版本号的 C ABI。</p>
 <h2 id="决策"><a class="header" href="#决策">决策</a></h2>
 <p><a href="../reference/glossary.html#engine"><code>mobile runtime</code></a>（移动运行时）是共用的游戏边界。
 每个 <a href="../reference/glossary.html#engine"><code>mobile shell</code></a>（移动外壳）负责操作系统
@@ -205,23 +204,21 @@
                                   |
                   C ABI：帧 / RGBA / PCM / 存档 / 输入
                   /               |                 \
-           iOS 外壳          Android 外壳          鸿蒙外壳
-       Metal + Swift 音频    Surface + 平台音频   XComponent + GLES3
-       SwiftUI/UIKit 生命周期 Kotlin 生命周期       ArkTS + OHAudio
+           iOS 外壳             Android 外壳          鸿蒙外壳
+       Metal + Swift 音频   SurfaceView + AudioTrack  XComponent + GLES3
+       SwiftUI/UIKit 生命周期    Kotlin Activity        ArkTS + OHAudio
 </code></pre>
 <p>Rust 侧加载项目数据、推进 <code>RunnerGame</code>、渲染 320×240 RGBA 帧、生成交错
 双声道 PCM，并序列化存档。外壳控制显示时钟、纹理呈现、触摸输入、
 音频回调、应用生命周期和私有存储。</p>
-<p>这个划分保留了现有 iOS 实现最有价值的性质：Swift 负责全部
-Apple framework，Rust 通过窄 C 接口导出数据和状态。鸿蒙用 ArkTS、
-Node-API、XComponent、EGL/GLES3 和 OHAudio 实现同样的划分。</p>
-<h2 id="为什么不把-android-窗口循环作为公共边界"><a class="header" href="#为什么不把-android-窗口循环作为公共边界">为什么不把 Android 窗口循环作为公共边界</a></h2>
-<p>现有 Android 移植把 <code>winit</code>、<code>pixels</code> 和 native activity 循环放在 Rust 内部。这个
-方案提供了可运行的窗口路径，但平台功能通过各自的 Kotlin overlay
-和回调进入，音频、存档和生命周期因而跨越不同边界。</p>
-<p>如果鸿蒙复用该循环，引擎还会绑定一个窗口适配器，同时仍需用 ArkTS bridge
-接入移动服务。公共 C ABI 把窗口框架留在 <code>dotzuki-runner</code> 之外，
-并向三端提供相同的帧、输入、音频和持久化契约。</p>
+<p>这个划分沿用现有 iOS 的所有权模型：Swift 负责 Apple framework，Rust 通过
+窄 C 接口导出数据和状态。Android 和鸿蒙分别通过自己的原生 UI、显示、音频、
+生命周期与存储 API 实现相同的划分。</p>
+<h2 id="为什么-android-窗口循环由外壳负责"><a class="header" href="#为什么-android-窗口循环由外壳负责">为什么 Android 窗口循环由外壳负责</a></h2>
+<p>早期的游戏专用 Android 移植把 <code>winit</code>、<code>pixels</code> 和 native activity 循环放在
+Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共用 Android 外壳
+现在负责 Activity、<code>Choreographer</code>、<code>SurfaceView</code>、<code>AudioTrack</code>、触摸控制和
+<code>SharedPreferences</code>。Rust 保持在与鸿蒙相同的帧、输入、音频和持久化契约之后。</p>
 <h2 id="契约"><a class="header" href="#契约">契约</a></h2>
 <p><code>dotzuki-mobile/include/dotzuki_runner_mobile.h</code> 定义 ABI 版本 1。
 契约包含以下几组能力：</p>
@@ -248,21 +245,20 @@ Node-API、XComponent、EGL/GLES3 和 OHAudio 实现同样的划分。</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>关注点</th><th>iOS</th><th>Android 目标</th><th>鸿蒙</th></tr>
+<tr><th>关注点</th><th>iOS</th><th>Android</th><th>鸿蒙</th></tr>
 </thead>
 <tbody>
 <tr><td>帧时钟</td><td><code>CADisplayLink</code></td><td><code>Choreographer</code></td><td>XComponent 原生帧回调</td></tr>
-<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> 或 <code>TextureView</code></td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
-<tr><td>像素</td><td>Metal 纹理上传</td><td>GLES/Vulkan 纹理上传</td><td>EGL/GLES3 纹理上传</td></tr>
-<tr><td>音频</td><td><code>AVAudioEngine</code> 回调</td><td>AAudio/Oboe 回调</td><td>OHAudio renderer 回调</td></tr>
+<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> / Canvas</td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
+<tr><td>像素</td><td>Metal 纹理上传</td><td>最近邻 bitmap 复制</td><td>EGL/GLES3 纹理上传</td></tr>
+<tr><td>音频</td><td><code>AVAudioEngine</code> 回调</td><td><code>AudioTrack</code> stream</td><td>OHAudio renderer 回调</td></tr>
 <tr><td>生命周期</td><td>UIKit/SwiftUI</td><td>Activity</td><td><code>UIAbility</code> 与页面生命周期</td></tr>
-<tr><td>存档</td><td>app container</td><td>app 私有文件</td><td>Preferences</td></tr>
+<tr><td>存档</td><td>app container</td><td><code>SharedPreferences</code></td><td>Preferences</td></tr>
 </tbody>
 </table>
 </div>
-<p>鸿蒙导出器实现了最右列。现有 iOS 外壳已通过游戏专用 ABI 采用同样的
-所有权模式。
-Android 和 iOS 可以迁移到 ABI 版本 1，而不需要改变 <code>RunnerGame</code> 或项目 pack。</p>
+<p>Android 和鸿蒙导出器通过 ABI 版本 1 实现各自列出的能力。现有 iOS 外壳通过
+游戏专用 ABI 沿用同一所有权模式，迁移时不需要改变 <code>RunnerGame</code> 或项目 pack。</p>
 <h2 id="兼容边界"><a class="header" href="#兼容边界">兼容边界</a></h2>
 <p>外壳依靠 <code>dotzuki_mobile_abi_version()</code> 判断契约版本。项目 pack 与平台无关。
 存档兼容仍由 <code>SAVE_VERSION</code> 管理，不由外壳或 C ABI 版本管理。</p>
@@ -279,10 +275,10 @@ SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 O
 <code>dotzuki-runner-mobile</code> 只负责 <code>RunnerGame</code> 和 <code>.dzpk</code> 的适配。
 自定义 Rust 游戏实现同一接口并导出自己的工厂；每个应用只链接一个工厂。
 工厂定义初始化字节和存档 JSON；宿主从运行时查询画面尺寸。</p>
-<p>公共鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻显示纹理、独立触控区
-和 44.1 kHz PCM。每 500 ms 检查已提交存档，页面隐藏时也尝试刷新。
-游戏决定何时提交存档，切后台不强制生成新快照；异步持久化尚未完成时进程
-被终止，可能丢失最近一次提交。销毁运行时前必须停止音频回调。</p>
+<p>公共 Android 和鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻采样、
+独立触控区和 44.1 kHz PCM。它们每 500 ms 检查已提交存档，并在生命周期切换时
+刷新。游戏决定何时提交存档。持久化是异步的；如果刷新完成前进程被终止，
+最近一次提交可能丢失。销毁运行时前必须停止音频回调。</p>
 <p>自定义静态库可通过 <code>scripts/export-mobile-host.py --help</code> 查看宿主导出参数，
 无需经过零 Rust 项目校验和打包。输出目录必须为空。游戏的构建脚本只提供库、
 初始化字节、名称和包标识，平台源代码仍在引擎仓库维护。</p>

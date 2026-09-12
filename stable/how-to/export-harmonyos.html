@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5297744.js";
+            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9877aac9.js"></script>
+        <script src="../toc-46c713ff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: game authors, engine contributors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.7.0</li>
 </ul>
 </blockquote>
 <p>Build the common mobile runtime and export a zero-Rust game as a DevEco
@@ -215,9 +215,10 @@ for the SDK linker requirements.</p>
   --mobile-lib /path/to/libdotzuki_runner_mobile.a \
   --out dist/harmony
 </code></pre>
-<p>You may set <code>DOTZUKI_MOBILE_LIB</code> instead of passing <code>--mobile-lib</code>. A source
-checkout also detects the library in the workspace target directory shown
-above.</p>
+<p>You may set <code>DOTZUKI_HARMONY_MOBILE_LIB</code> instead of passing <code>--mobile-lib</code>.
+<code>DOTZUKI_MOBILE_LIB</code> remains a common fallback for mobile export scripts. A
+source checkout also detects the library in the workspace target directory
+shown above.</p>
 <p>The exporter runs the same validation and pack rules as web and native
 exports. It writes:</p>
 <pre><code class="language-text">dist/harmony/
@@ -228,8 +229,8 @@ exports. It writes:</p>
 └── entry/libs/arm64-v8a/libdotzuki_runner_mobile.a
 </code></pre>
 <p>The editor’s Play toolbar exposes the same operation as <strong>Export HarmonyOS</strong>.
-Set <code>DOTZUKI_MOBILE_LIB</code> before starting the editor server when the library is
-outside the workspace target directory.</p>
+Set <code>DOTZUKI_HARMONY_MOBILE_LIB</code> before starting the editor server when the
+library is outside the workspace target directory.</p>
 <h2 id="3-build-and-run-in-deveco-studio"><a class="header" href="#3-build-and-run-in-deveco-studio">3. Build and run in DevEco Studio</a></h2>
 <p>Open <code>dist/harmony</code> as a project. Configure an application signing profile,
 select the <code>entry</code> module, and run it on an arm64 phone or tablet.</p>
@@ -255,7 +256,7 @@ threading and ownership contract.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../how-to/publishing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../how-to/export-android.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -269,7 +270,7 @@ threading and ownership contract.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../how-to/publishing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../how-to/export-android.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

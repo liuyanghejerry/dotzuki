@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5297744.js";
+            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9877aac9.js"></script>
+        <script src="../toc-46c713ff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,8 @@
                     <main>
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.7.0
+（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -190,7 +191,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.7.0</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -203,10 +204,29 @@
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<h2 id="v070"><a class="header" href="#v070">v0.7.0</a></h2>
+<p>本版本没有破坏性的 API 变更。使用方更新方式见
+<a href="migration/v0.7.0.zh-CN.html">迁移指南</a>。</p>
 <ul>
-<li>修复：调试服务器的响应超时从 5s 提高到 300s，且服务器在转发每条命令前会排
+<li>
+<p>Android：<code>dotzuki export --android</code> 会写出 arm64 Android Studio 工程，
+通过移动 ABI 版本 1 提供 Kotlin Activity、<code>Choreographer</code> 帧时钟、
+<code>SurfaceView</code> renderer、<code>AudioTrack</code> 输出、触摸控制、生命周期处理和
+<code>SharedPreferences</code> 存档。编辑器提供相同的导出入口，发布安装包包含 Android
+运行时静态库。</p>
+</li>
+<li>
+<p>移动端外壳：<code>scripts/export-mobile-host.py --platform android|harmony</code> 可以把
+自定义游戏的 <code>dotzuki-mobile</code> 静态库包装进任一由引擎维护的外壳。</p>
+</li>
+<li>
+<p>CI 会交叉编译 Android 运行时，并组装教程项目的导出 APK。</p>
+</li>
+<li>
+<p>修复：调试服务器的响应超时从 5s 提高到 300s，且服务器在转发每条命令前会排
 空滞留的过期响应——耗时的同步命令（大帧数预算的 <code>step_frames</code>）不会再扰乱
-FIFO 响应流。见<a href="../reference/debug-server.html">调试服务器参考</a>。</li>
+FIFO 响应流。见<a href="../reference/debug-server.html">调试服务器参考</a>。</p>
+</li>
 </ul>
 <h2 id="v054"><a class="header" href="#v054">v0.5.4</a></h2>
 <p>workspace 版本回到 v0.5.x tag 序列（0.1.1 → 0.5.4）；版本线的来龙去脉见

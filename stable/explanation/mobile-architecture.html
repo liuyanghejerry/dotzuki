@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5297744.js";
+            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9877aac9.js"></script>
+        <script src="../toc-46c713ff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,11 +186,11 @@
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.7.0</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
-platform, and how the HarmonyOS shell follows the iOS ownership model.</p>
+platform, with Android and HarmonyOS using the same versioned C ABI.</p>
 <h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
 <p>The <a href="../reference/glossary.html#engine"><code>mobile runtime</code></a> is the shared game
 boundary. Each <a href="../reference/glossary.html#engine"><code>mobile shell</code></a> owns the APIs
@@ -199,27 +199,25 @@ that its operating system expects:</p>
                                       |
                C ABI: tick / RGBA / PCM / save / input
                   /                   |                  \
-       iOS shell                Android shell       HarmonyOS shell
- Metal + Swift audio       Surface + platform audio  XComponent + GLES3
- SwiftUI/UIKit lifecycle   Kotlin lifecycle           ArkTS + OHAudio
+       iOS shell                Android shell         HarmonyOS shell
+ Metal + Swift audio       SurfaceView + AudioTrack   XComponent + GLES3
+ SwiftUI/UIKit lifecycle       Kotlin Activity         ArkTS + OHAudio
 </code></pre>
 <p>The Rust side loads project data, advances <code>RunnerGame</code>, renders a 320×240
 RGBA frame, produces interleaved stereo PCM, and serializes saves. A shell
 controls display timing, texture presentation, touch input, audio callbacks,
 application lifecycle, and private storage.</p>
-<p>This split matches the existing iOS implementation’s strongest property:
-Swift owns every Apple framework while Rust exports data and state through a
-narrow C interface. HarmonyOS applies the same split through ArkTS, Node-API,
-XComponent, EGL/GLES3, and OHAudio.</p>
-<h2 id="why-the-android-window-loop-is-not-the-shared-boundary"><a class="header" href="#why-the-android-window-loop-is-not-the-shared-boundary">Why the Android window loop is not the shared boundary</a></h2>
-<p>The existing Android port puts <code>winit</code>, <code>pixels</code>, and the native activity loop
-inside Rust. That route provides a working window path, but platform features
-enter through separate Kotlin overlays and callbacks. Audio, saves, and
-lifecycle then cross different boundaries.</p>
-<p>Reusing that loop on HarmonyOS would bind the engine to another window
-adapter and would still require ArkTS bridges for mobile services. The common
-C ABI keeps window frameworks out of <code>dotzuki-runner</code> and gives all three
-shells the same frame, input, audio, and persistence contract.</p>
+<p>This split follows the existing iOS ownership model: Swift owns the Apple
+frameworks while Rust exports data and state through a narrow C interface.
+Android and HarmonyOS apply the same split through their native UI, display,
+audio, lifecycle, and storage APIs.</p>
+<h2 id="why-the-shell-owns-the-android-window-loop"><a class="header" href="#why-the-shell-owns-the-android-window-loop">Why the shell owns the Android window loop</a></h2>
+<p>The earlier game-specific Android port put <code>winit</code>, <code>pixels</code>, and the native
+activity loop inside Rust. Platform features then entered through separate
+Kotlin overlays and callbacks. The shared Android shell now owns the Activity,
+<code>Choreographer</code>, <code>SurfaceView</code>, <code>AudioTrack</code>, touch controls, and
+<code>SharedPreferences</code>. Rust remains behind the same frame, input, audio, and
+persistence contract used by HarmonyOS.</p>
 <h2 id="contract"><a class="header" href="#contract">Contract</a></h2>
 <p><code>dotzuki-mobile/include/dotzuki_runner_mobile.h</code> defines ABI version 1.
 The contract contains these groups:</p>
@@ -247,21 +245,21 @@ at boot and exports one at a stable state.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Concern</th><th>iOS</th><th>Android target</th><th>HarmonyOS</th></tr>
+<tr><th>Concern</th><th>iOS</th><th>Android</th><th>HarmonyOS</th></tr>
 </thead>
 <tbody>
 <tr><td>frame clock</td><td><code>CADisplayLink</code></td><td><code>Choreographer</code></td><td>XComponent frame callback</td></tr>
-<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> or <code>TextureView</code></td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
-<tr><td>pixels</td><td>Metal texture upload</td><td>GLES/Vulkan texture upload</td><td>EGL/GLES3 texture upload</td></tr>
-<tr><td>audio</td><td><code>AVAudioEngine</code> callback</td><td>AAudio/Oboe callback</td><td>OHAudio renderer callback</td></tr>
+<tr><td>surface</td><td><code>MTKView</code> / Metal</td><td><code>SurfaceView</code> / Canvas</td><td><code>XComponent</code> / <code>NativeWindow</code></td></tr>
+<tr><td>pixels</td><td>Metal texture upload</td><td>nearest-neighbor bitmap copy</td><td>EGL/GLES3 texture upload</td></tr>
+<tr><td>audio</td><td><code>AVAudioEngine</code> callback</td><td><code>AudioTrack</code> stream</td><td>OHAudio renderer callback</td></tr>
 <tr><td>lifecycle</td><td>UIKit/SwiftUI</td><td>Activity</td><td><code>UIAbility</code> and page lifecycle</td></tr>
-<tr><td>save store</td><td>app container</td><td>app-private files</td><td>Preferences</td></tr>
+<tr><td>save store</td><td>app container</td><td><code>SharedPreferences</code></td><td>Preferences</td></tr>
 </tbody>
 </table>
 </div>
-<p>The HarmonyOS exporter implements the right column. The existing iOS shell
-already follows the ownership pattern through its game-specific ABI. Android
-and iOS can migrate to ABI version 1 without changing <code>RunnerGame</code> or project
+<p>The Android and HarmonyOS exporters implement their columns through ABI
+version 1. The existing iOS shell follows the ownership pattern through its
+game-specific ABI and can migrate without changing <code>RunnerGame</code> or project
 packs.</p>
 <h2 id="compatibility-boundary"><a class="header" href="#compatibility-boundary">Compatibility boundary</a></h2>
 <p>The shell checks <code>dotzuki_mobile_abi_version()</code> before it relies on a contract
@@ -284,12 +282,12 @@ A custom Rust game links <code>dotzuki-mobile</code> and exports its own factory
 link exactly one factory per application. That factory defines the
 initialization bytes and the save JSON. The host queries frame dimensions
 from the runtime.</p>
-<p>The common Harmony host uses a monotonic fixed-step clock (59.7275 Hz), nearest
-texture sampling, a separate touch-control area, and 44.1 kHz PCM. It polls
-committed saves every 500 ms and flushes on page hide. A game controls what
-constitutes a committed save; backgrounding does not require a new snapshot.
-Persistence is asynchronous, so abrupt process death before a flush completes
-can lose the latest commit. Stop audio callbacks before destroying the runtime.</p>
+<p>The common Android and HarmonyOS hosts use a monotonic fixed-step clock
+(59.7275 Hz), nearest sampling, a separate touch-control area, and 44.1 kHz
+PCM. They poll committed saves every 500 ms and flush during lifecycle
+transitions. A game controls what constitutes a committed save. Persistence is
+asynchronous, so abrupt process death before a flush completes can lose the
+latest commit. Stop audio callbacks before destroying the runtime.</p>
 <p>For a custom static library, <code>scripts/export-mobile-host.py --help</code> documents
 exporting the same host without the zero-Rust project validation/pack step.
 Its output directory must be empty. The game’s build wrapper supplies a library,
