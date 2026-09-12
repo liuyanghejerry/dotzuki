@@ -897,7 +897,7 @@ pub const SHIP_DEPARTURE_SMOKESTACK_TILE_Y: f32 = 10.5;
 pub const SHIP_DEPARTURE_PUFF_START_SCREEN_X: i32 = 88;
 
 /// Phase of the ship-departure cutscene.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ShipDeparturePhase {
     /// Initial pause — the ship sits at the dock while the music plays.
     InitialPause,
