@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5ca1e94d.js";
+            window.path_to_searchindex_js = "../searchindex-1b9a6a63.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-46c713ff.js"></script>
+        <script src="../toc-fcc230b2.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -200,6 +200,14 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<h2 id="v071"><a class="header" href="#v071">v0.7.1</a></h2>
+<p>This patch release has no API changes.
+See the <a href="migration/v0.7.1.html">migration guide</a> for the consumer update.</p>
+<ul>
+<li>Fix: the published <code>dotzuki</code> CLI now includes the mobile ABI C header used
+by Android and HarmonyOS export templates. Crates.io installations can export
+those projects without requiring a source checkout.</li>
+</ul>
 <h2 id="v070"><a class="header" href="#v070">v0.7.0</a></h2>
 <p>This release has no breaking API changes. See the
 <a href="migration/v0.7.0.html">migration guide</a> for the consumer update.</p>
