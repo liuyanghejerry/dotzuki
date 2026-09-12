@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.0
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.1
+>（源文档 commit cb606d3）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.7.1
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -20,6 +20,14 @@
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
 ## 未发布
+
+## v0.7.1
+
+此补丁版本没有 API 变更。
+使用方更新方式见[迁移指南](migration/v0.7.1.zh-CN.md)。
+
+- 修复：发布的 `dotzuki` CLI 现在包含 Android 和 HarmonyOS 导出模板所需的移动
+  ABI C 头文件。通过 crates.io 安装后可直接导出这两类工程，无需源码 checkout。
 
 ## v0.7.0
 
