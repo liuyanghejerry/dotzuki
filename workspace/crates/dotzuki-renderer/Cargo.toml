@@ -22,7 +22,7 @@ gpu = [
 image-assets = ["dep:image"]
 # PNG → tile data pipeline (dotzuki_renderer::resource): grayscale/2bpp/1bpp/4bpp
 # conversion, AssetRoot path resolution, and the ResourceManager asset cache.
-resource = ["dep:image"]
+resource = ["image-assets"]
 
 [dependencies]
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }

@@ -84,6 +84,7 @@ PUBLISH_ORDER=(
     dotzuki-app
     dotzuki-tui
     dotzuki-runner
+    dotzuki-mobile
     dotzuki-runner-mobile
     dotzuki-web
     dotzuki-runner-web

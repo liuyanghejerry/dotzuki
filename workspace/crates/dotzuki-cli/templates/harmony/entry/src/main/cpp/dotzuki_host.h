@@ -52,7 +52,7 @@ private:
     bool InitializeEgl(void *window, uint64_t width, uint64_t height);
     bool InitializeProgram();
     bool InitializeAudio();
-    void RenderFrame();
+    void RenderFrame(uint64_t timestamp);
     void Resize(uint64_t width, uint64_t height);
     void ShutdownAudio();
     void ShutdownEgl();
@@ -63,6 +63,8 @@ private:
     std::atomic<uint8_t> input_ { 0 };
     std::atomic<bool> paused_ { false };
     std::mutex gameMutex_;
+    uint64_t lastTimestamp_ = 0;
+    double accumulator_ = 0;
     uint64_t surfaceWidth_ = 0;
     uint64_t surfaceHeight_ = 0;
 

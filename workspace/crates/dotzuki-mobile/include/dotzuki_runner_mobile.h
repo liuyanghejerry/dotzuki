@@ -9,14 +9,14 @@
 extern "C" {
 #endif
 
-typedef struct MobileRunner DotzukiMobileRunner;
+typedef struct MobileRuntime DotzukiMobileRunner;
 
 /* ABI version 1 threading contract:
  * - one game thread owns tick, frame copy, and save calls;
  * - one audio callback may call audio_fill concurrently;
  * - stop the audio callback before destroy.
  * Input bits 0..7 are A, B, Select, Start, Right, Left, Up, Down.
- * Frames are 320x240 RGBA8. Audio is 44100 Hz stereo interleaved f32.
+ * Query width/height/frame_len for RGBA8 dimensions. Audio is 44100 Hz stereo interleaved f32.
  */
 
 uint32_t dotzuki_mobile_abi_version(void);

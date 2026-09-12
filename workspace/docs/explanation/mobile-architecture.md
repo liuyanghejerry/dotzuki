@@ -48,7 +48,7 @@ shells the same frame, input, audio, and persistence contract.
 
 ## Contract
 
-`dotzuki-runner-mobile/include/dotzuki_runner_mobile.h` defines ABI version 1.
+`dotzuki-mobile/include/dotzuki_runner_mobile.h` defines ABI version 1.
 The contract contains these groups:
 
 | Group | Calls | Ownership |
@@ -97,3 +97,25 @@ the generated shell:
 - [Rust HarmonyOS target support](https://doc.rust-lang.org/rustc/platform-support/openharmony.html)
 - [Huawei NDK XComponent sample](https://gitee.com/harmonyos_samples/ndk-xcomponent)
 - [Huawei Node-API guide](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/napi-introduction-V5)
+
+## Custom Rust games
+
+`dotzuki-mobile` owns `MobileGame`, the opaque runtime, bounded PCM queue and
+`export_mobile_abi!`. It has no game, renderer, or device dependencies.
+`dotzuki-runner-mobile` implements the contract for `RunnerGame` and `.dzpk`.
+A custom Rust game links `dotzuki-mobile` and exports its own factory instead;
+link exactly one factory per application. Initialization bytes and save JSON
+are defined by that factory. Frame dimensions are queried from the runtime.
+
+The common Harmony host uses a monotonic fixed-step clock (59.7275 Hz), nearest
+texture sampling, a separate touch-control area, and 44.1 kHz PCM. It polls
+committed saves every 500 ms and flushes on page hide. A game controls what
+constitutes a committed save; backgrounding does not require a new snapshot.
+Persistence is asynchronous, so abrupt process death before a flush completes
+can lose the latest commit. Stop audio callbacks before destroying the runtime.
+
+For a custom static library, `scripts/export-mobile-host.py --help` documents
+exporting the same host without the zero-Rust project validation/pack step.
+Its output directory must be empty. The game's build wrapper supplies a library,
+initialization bytes, title, and bundle name; it does not copy platform sources
+into the game's repository.
