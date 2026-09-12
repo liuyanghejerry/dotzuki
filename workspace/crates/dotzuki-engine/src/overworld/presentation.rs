@@ -25,7 +25,7 @@ use super::types::Direction;
 // ── Teleport/escape-item spin-out ─────────────────────────────────
 
 /// Phase of the leave-map spin animation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TeleportSpinPhase {
     /// Spin in place: 16 spins with frame delays 16,15,…,1 (136 frames
     /// total); a loop sound cue fires whenever the current spin's delay is
@@ -52,7 +52,7 @@ pub const SPIN_POST_DELAY_FRAMES: u16 = 10;
 pub const SPIN_UP_STEP_PIXELS: i32 = 16;
 
 /// Sound cues [`TeleportSpinState::tick`] can request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TeleportSpinSfx {
     /// The looping spin cue, fired on spins whose delay is a multiple of 4.
     SpinLoop,
@@ -210,7 +210,7 @@ impl TeleportSpinState {
 /// Phase of the arrival spin, the counterpart of [`TeleportSpinState`]:
 /// after a teleport-class warp arrival, the player descends from off the
 /// top of the screen, then spins in place.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnterMapSpinPhase {
     /// Spin while moving down: 5 spin steps of 16px each (3-frame step
     /// delay), a descent cue at the start, an arrival cue after the last
@@ -239,7 +239,7 @@ pub const ENTER_MAP_SPIN_DOWN_STEP_PIXELS: i32 = 16;
 pub const ENTER_MAP_SPIN_IN_PLACE_FRAMES: u16 = 36;
 
 /// Sound cues [`EnterMapSpinState::tick`] can request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnterMapSpinSfx {
     /// Fired once at the start of the spin-down.
     Descend,
@@ -387,7 +387,7 @@ impl EnterMapSpinState {
 
 /// Tuning for the elevator rumble: how many up/down iterations and how far
 /// the background scrolls each iteration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ElevatorShakeParams {
     /// Number of shake iterations (each lasts 2 frames).
     pub iterations: u8,
@@ -403,7 +403,7 @@ impl ElevatorShakeParams {
 }
 
 /// Sound cues [`ElevatorShakeState::tick`] can request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ElevatorShakeSfx {
     /// The rattle, fired at the start of each 2-frame iteration.
     Rattle,
@@ -477,7 +477,7 @@ impl ElevatorShakeState {
 
 /// Which background tiles a tileset animates (the classic
 /// water-rotation / flower-frame system).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TileAnimKind {
     /// No animated tiles.
     None,
@@ -602,7 +602,7 @@ pub const FISHING_ANIM_FRAMES: u16 = FISHING_CAST_DELAY_FRAMES
     + FISHING_BUBBLE_FRAMES;
 
 /// Phase of the player-side fishing rod animation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FishingAnimPhase {
     /// Initial pause — nothing drawn yet (the rod OAM and the fishing pose
     /// tiles are set up only after this delay).
