@@ -93,6 +93,21 @@ PUBLISH_ORDER=(
 
 cd "$WORKSPACE_ROOT"
 
+# The CLI packages its own copy because Cargo cannot include files from a
+# sibling crate in a crate archive. Keep the exported ABI header identical and
+# make sure it is present in the dotzuki-cli package before publishing.
+if ! cmp -s \
+    crates/dotzuki-mobile/include/dotzuki_runner_mobile.h \
+    crates/dotzuki-cli/templates/mobile/dotzuki_runner_mobile.h; then
+    echo "ERROR: dotzuki-cli mobile ABI header is missing or out of sync." >&2
+    exit 1
+fi
+if ! cargo package -p dotzuki-cli --list --allow-dirty \
+    | grep -qx 'templates/mobile/dotzuki_runner_mobile.h'; then
+    echo "ERROR: dotzuki-cli package does not include the mobile ABI header." >&2
+    exit 1
+fi
+
 # Cargo scans every Cargo.toml in a git dependency source, including manifests
 # below workspace-excluded directories. Keep template placeholders in
 # Cargo.toml.liquid files so consumers never see parse diagnostics.

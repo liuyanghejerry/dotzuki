@@ -148,7 +148,7 @@ fn write_project(
     fs::create_dir_all(include.parent().unwrap())?;
     fs::write(
         &include,
-        include_bytes!("../../dotzuki-mobile/include/dotzuki_runner_mobile.h"),
+        include_bytes!("../templates/mobile/dotzuki_runner_mobile.h"),
     )?;
     let library = out.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a");
     fs::create_dir_all(library.parent().unwrap())?;
