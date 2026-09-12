@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.7.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -17,6 +17,15 @@ with a migration guide under `migration/` (created per release).
   version history (doc-standard §10).
 
 ## Unreleased
+
+## v0.7.1
+
+This patch release has no API changes.
+See the [migration guide](migration/v0.7.1.md) for the consumer update.
+
+- Fix: the published `dotzuki` CLI now includes the mobile ABI C header used
+  by Android and HarmonyOS export templates. Crates.io installations can export
+  those projects without requiring a source checkout.
 
 ## v0.7.0
 
