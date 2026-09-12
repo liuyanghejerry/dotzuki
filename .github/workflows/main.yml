@@ -86,6 +86,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -yq pkg-config libasound2-dev
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
