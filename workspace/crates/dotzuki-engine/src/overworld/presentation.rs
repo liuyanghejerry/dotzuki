@@ -69,7 +69,7 @@ pub enum TeleportSpinSfx {
 /// `spin_order` is the facing cycle the animation rotates through, starting
 /// from the player's current facing (the classic order is
 /// `[Down, Left, Up, Right]`).
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct TeleportSpinState {
     /// Facing cycle, indexed by `(start_index + step) % 4`.
     spin_order: [Direction; 4],
@@ -254,7 +254,7 @@ pub enum EnterMapSpinSfx {
 /// player stays hidden during the fade). `spin_in_place` mirrors the
 /// standing-on-warp-pad check: arrivals on a warp pad/hole skip the final
 /// spin-in-place.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct EnterMapSpinState {
     /// Facing cycle, indexed by `(start_index + step) % 4`.
     spin_order: [Direction; 4],
@@ -414,7 +414,7 @@ pub enum ElevatorShakeSfx {
 /// Frame-driven elevator rumble: scrolls the background up/down by
 /// ±`pixel_offset`, `iterations` × 2 frames, a rattle cue each iteration,
 /// then a single arrival ding.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct ElevatorShakeState {
     /// Elapsed frames of the shake (0..params.total_frames()).
     frame: u16,
@@ -496,7 +496,7 @@ pub enum TileAnimKind {
 /// - `counter2` increments on each water update (& 7); its bit 2 selects
 ///   the water rotation direction (right for 4 updates, then left for 4),
 ///   and `counter2 & 3` selects the flower frame (0/1 → 1, 2 → 2, 3 → 3).
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct TileAnimState {
     counter1: u8,
     counter2: u8,
@@ -625,7 +625,7 @@ pub enum FishingAnimPhase {
 /// passes the game's eligibility gates; ticked once per frame by the update
 /// loop (which freezes gameplay while it runs); when [`Self::is_done`] the
 /// result text is queued.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct FishingAnimState {
     /// Elapsed ticks (0 before the first `tick`).
     frame: u16,
@@ -746,7 +746,7 @@ pub const BOULDER_DUST_STEP_FRAMES: u8 = 3;
 /// of [`BOULDER_DUST_STEP_FRAMES`] frames each. Every step the block drifts
 /// 1px against the boulder's slide direction and the sprite palette
 /// toggles, flashing two gray shades.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
 pub struct BoulderDustState {
     /// The push direction — the player's facing when the boulder moved
     /// (also the dust's base offset and drift direction).
