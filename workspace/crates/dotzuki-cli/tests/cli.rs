@@ -290,4 +290,22 @@ fn android_export_writes_an_android_studio_project() {
             .unwrap(),
         b"test archive"
     );
+    // The launcher reads the adaptive icon; the manifest must point at it.
+    let manifest = fs::read_to_string(export_dir.join("app/src/main/AndroidManifest.xml")).unwrap();
+    assert!(manifest.contains("android:icon=\"@mipmap/ic_launcher\""));
+    assert!(manifest.contains("android:roundIcon=\"@mipmap/ic_launcher_round\""));
+    assert!(export_dir
+        .join("app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml")
+        .is_file());
+    assert!(export_dir
+        .join("app/src/main/res/values/ic_launcher_background.xml")
+        .is_file());
+    for density in ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"] {
+        for name in ["ic_launcher", "ic_launcher_round", "ic_launcher_foreground"] {
+            let bytes =
+                fs::read(export_dir.join(format!("app/src/main/res/mipmap-{density}/{name}.png")))
+                    .unwrap_or_else(|_| panic!("missing mipmap-{density}/{name}.png"));
+            assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n", "{density}/{name}");
+        }
+    }
 }
