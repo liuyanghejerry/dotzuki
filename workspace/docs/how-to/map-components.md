@@ -104,4 +104,5 @@ appended atlas slots remain available after undo. The editor does not compact un
 
 For asset backup and source formats, see [Assets](./assets.md).
 
-For complete PNG components at a higher pixel density than the logical map grid, see [Arrange native-resolution map scenery](./native-map-art.md).
+For complete PNG components at a higher pixel density than the logical map grid, see [Arrange
+native-resolution map scenery](./native-map-art.md).

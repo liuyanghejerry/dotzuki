@@ -288,7 +288,9 @@ original form in Chinese text.
 
 ## Native map scenery
 
-- **native scenery**（原生布景）— optional `art.json` map artwork whose PNG resolution is independent of logical map pixels. `pixels_per_unit` sets the ratio; component positions and sorting anchors stay in logical pixels. See [arranging native scenery](../how-to/native-map-art.md).
+- **native scenery**（原生布景）— optional `art.json` map artwork whose PNG resolution is independent
+  of logical map pixels. `pixels_per_unit` sets the ratio; component positions and sorting
+  anchors stay in logical pixels. See [arranging native scenery](../how-to/native-map-art.md).
 
 ## Audio
 
