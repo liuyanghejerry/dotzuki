@@ -28,8 +28,8 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
-use dotzuki_renderer::FbSurface;
 use dotzuki_renderer::input::InputState;
+use dotzuki_renderer::FbSurface;
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant};

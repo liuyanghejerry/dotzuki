@@ -955,10 +955,10 @@ mod tests {
 
     #[test]
     fn test_numbers() {
-        let tokens = lex("gold = 500 price = 3.14").unwrap();
+        let tokens = lex("gold = 500 price = 3.125").unwrap();
         let types = token_types(&tokens);
         assert!(types.contains(&Token::NumberLit(500.0)));
-        assert!(types.contains(&Token::NumberLit(3.14)));
+        assert!(types.contains(&Token::NumberLit(3.125)));
     }
 
     #[test]

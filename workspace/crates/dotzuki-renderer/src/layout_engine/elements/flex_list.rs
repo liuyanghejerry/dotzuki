@@ -260,8 +260,8 @@ fn data_value_to_string(value: &DataValue) -> String {
 mod tests {
     use super::*;
     use crate::layout_engine::types::EdgeInsets;
-    use dotzuki_engine::render::TileRect;
     use core::cell::RefCell;
+    use dotzuki_engine::render::TileRect;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum DrawOp {

@@ -339,8 +339,8 @@ mod tests {
 
     #[test]
     fn test_expression_number_float() {
-        let result = compile_expression(&Expression::NumberLit(3.14));
-        assert_eq!(result, "3.14");
+        let result = compile_expression(&Expression::NumberLit(3.125));
+        assert_eq!(result, "3.125");
     }
 
     #[test]

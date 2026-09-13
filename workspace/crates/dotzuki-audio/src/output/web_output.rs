@@ -41,29 +41,26 @@ impl WebAudioOutput {
             )
             .ok()?;
 
-        let closure = Closure::wrap(Box::new(
-            move |event: web_sys::AudioProcessingEvent| {
-                let output = match event.output_buffer() {
-                    Ok(buf) => buf,
-                    Err(_) => return,
-                };
-                let length = output.length() as usize;
+        let closure = Closure::wrap(Box::new(move |event: web_sys::AudioProcessingEvent| {
+            let output = match event.output_buffer() {
+                Ok(buf) => buf,
+                Err(_) => return,
+            };
+            let length = output.length() as usize;
 
-                let mut interleaved = vec![0.0_f32; length * 2];
-                source.render(&mut interleaved, sample_rate);
+            let mut interleaved = vec![0.0_f32; length * 2];
+            source.render(&mut interleaved, sample_rate);
 
-                let mut left_buf = vec![0.0_f32; length];
-                let mut right_buf = vec![0.0_f32; length];
-                for (i, frame) in interleaved.chunks_exact(2).enumerate() {
-                    left_buf[i] = frame[0];
-                    right_buf[i] = frame[1];
-                }
+            let mut left_buf = vec![0.0_f32; length];
+            let mut right_buf = vec![0.0_f32; length];
+            for (i, frame) in interleaved.chunks_exact(2).enumerate() {
+                left_buf[i] = frame[0];
+                right_buf[i] = frame[1];
+            }
 
-                let _ = output.copy_to_channel(&left_buf, 0);
-                let _ = output.copy_to_channel(&right_buf, 1);
-            },
-        )
-            as Box<dyn FnMut(web_sys::AudioProcessingEvent)>);
+            let _ = output.copy_to_channel(&left_buf, 0);
+            let _ = output.copy_to_channel(&right_buf, 1);
+        }) as Box<dyn FnMut(web_sys::AudioProcessingEvent)>);
 
         processor.set_onaudioprocess(Some(closure.as_ref().unchecked_ref()));
 

@@ -2,6 +2,7 @@
 name = "dotzuki-runner"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "Generic runtime that boots a zero-Rust jrpg game project (manifest, DSL, maps)"
 license.workspace = true
 repository.workspace = true

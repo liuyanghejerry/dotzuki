@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <js_native_api.h>
 #include <mutex>
+#include <shared_mutex>
 #include <ohaudio/native_audiorenderer.h>
 #include <ohaudio/native_audiostreambuilder.h>
 #include <vector>
@@ -63,6 +64,7 @@ private:
     std::atomic<uint8_t> input_ { 0 };
     std::atomic<bool> paused_ { false };
     std::mutex gameMutex_;
+    std::shared_mutex runnerLifetimeMutex_;
     uint64_t lastTimestamp_ = 0;
     double accumulator_ = 0;
     uint64_t surfaceWidth_ = 0;

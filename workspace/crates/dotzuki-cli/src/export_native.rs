@@ -44,7 +44,8 @@ pub fn run(args: &NativeExportArgs) -> Result<PathBuf> {
     export::gate_diagnostics(&args.dir, args.force)?;
 
     // 2. Bundle the project files.
-    let files = bundle::collect_project_files(&args.dir).context("failed to collect project files")?;
+    let files =
+        bundle::collect_project_files(&args.dir).context("failed to collect project files")?;
 
     // 3. Locate (or cargo build) the player binary.
     let player_bin = player::locate(args.player_bin.as_deref())?;
@@ -57,12 +58,17 @@ pub fn run(args: &NativeExportArgs) -> Result<PathBuf> {
     let exe = exe_file_name(&args.dir);
     fs::create_dir_all(&out).with_context(|| format!("failed to create {}", out.display()))?;
     fs::copy(&player_bin, out.join(&exe)).with_context(|| {
-        format!("failed to copy the player binary from {}", player_bin.display())
+        format!(
+            "failed to copy the player binary from {}",
+            player_bin.display()
+        )
     })?;
     fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(&files))
         .context("failed to write game.dzpk")?;
 
-    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE)).map(|m| m.len()).unwrap_or(0);
+    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE))
+        .map(|m| m.len())
+        .unwrap_or(0);
     println!(
         "exported {} file(s) ({:.1} MiB pack) to {}",
         files.len(),
@@ -89,7 +95,11 @@ fn exe_file_name(dir: &std::path::Path) -> String {
             }
         })
         .collect::<String>();
-    let mut name = if slug.is_empty() { "game".to_string() } else { slug };
+    let mut name = if slug.is_empty() {
+        "game".to_string()
+    } else {
+        slug
+    };
     if cfg!(windows) {
         name.push_str(".exe");
     }
@@ -183,10 +193,13 @@ mod tests {
             },
         )
         .unwrap();
-        run_headless(&mut game, &HeadlessOptions {
-            frames: 30,
-            ..HeadlessOptions::default()
-        })
+        run_headless(
+            &mut game,
+            &HeadlessOptions {
+                frames: 30,
+                ..HeadlessOptions::default()
+            },
+        )
         .unwrap();
     }
 
@@ -200,7 +213,11 @@ mod tests {
             r#"{ "name": "broken", "dataRoot": "./data" }"#,
         )
         .unwrap();
-        fs::write(root.join("assets/scenes/bad.scene"), "this is not a scene {{{").unwrap();
+        fs::write(
+            root.join("assets/scenes/bad.scene"),
+            "this is not a scene {{{",
+        )
+        .unwrap();
 
         let (_pkg_tmp, bin) = fake_player_bin("broken-pkg");
         let err = run(&args(root.clone(), export_dir(&tmp), &bin, false)).unwrap_err();
@@ -231,6 +248,7 @@ mod tests {
     }
 
     fn export_dir(tmp: &TestDir) -> PathBuf {
-        tmp.0.join(format!("out-{}", NEXT_ID.fetch_add(1, Ordering::SeqCst)))
+        tmp.0
+            .join(format!("out-{}", NEXT_ID.fetch_add(1, Ordering::SeqCst)))
     }
 }

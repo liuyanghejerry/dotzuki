@@ -6,8 +6,8 @@ use core::cmp::Ordering;
 use crate::battle::rng::BattleRng;
 use crate::battle::BattlerRef;
 
-use super::ctx::{BattleCtx, EffectProvider};
-use super::event::{Effect, EffectId, Event, HandlerFn, HandlerResult, RelayVar};
+use super::ctx::{BattleCtx, EffectHost, EffectProvider};
+use super::event::{Effect, EffectId, Event, HandlerFn, HandlerResult, HookScope, RelayVar};
 
 /// One collected, sortable handler invocation (design §1.3). The comparator
 /// orders these by the exact Showdown lexical order.
@@ -68,13 +68,10 @@ pub fn compare<P: EffectProvider + ?Sized>(
 /// Collect, from a single known effect, the hooks that subscribe to `ev`,
 /// wrapping each with its host's speed and `effect_order` from the arena.
 ///
-/// Scoping note (design §1.3): the POC collects from the **one effect explicitly
-/// passed by the driver** (the move's effect, the host's status effect) rather
-/// than synthesizing `OnAny/OnFoe/OnSource/OnAlly` prefix variants across every
-/// live effect — no Gen-1 effect registers a prefixed hook, so that seam stays
-/// present-but-inert. This keeps the slice minimal per the doc's explicit
-/// permission while preserving the comparator's full shape.
-pub fn collect_from_effect<P: EffectProvider + ?Sized>(
+/// This compatibility path intentionally treats the explicitly supplied effect
+/// as direct. Call [`collect_handlers`] when hooks from every live source and
+/// their [`HookScope`] filters must participate in the dispatch.
+pub fn collect_from_effect<P: EffectProvider>(
     ctx: &BattleCtx<'_, P>,
     eff: &'static Effect<P>,
     ev: Event,
@@ -82,29 +79,38 @@ pub fn collect_from_effect<P: EffectProvider + ?Sized>(
     source: BattlerRef,
     out: &mut Vec<CollectedHandler<P>>,
 ) {
-    // Delegates to the shared `push_matching` so the single-source slice path
-    // and the multi-source `collect_handlers` path emit byte-identical
-    // `CollectedHandler`s for the same effect (comparator tiers incl. the inert
-    // `speed = 0` and the arena-or-id `effect_order` fallback). This identity is
-    // what keeps the 88 Gen-1 slices' `consumed()` draw order unchanged.
-    push_matching(ctx, eff, ev, target, source, out);
+    push_matching(
+        ctx,
+        eff,
+        ev,
+        EffectHost::Battler(source),
+        target,
+        source,
+        target,
+        true,
+        out,
+    );
 }
 
 /// Push every hook in `eff` that subscribes to `ev` into `out`, stamping each
 /// with the comparator tiers. Shared by [`collect_from_effect`] (single-source,
 /// the slice path) and [`collect_handlers`] (multi-source, §2.2) so both paths
 /// produce **byte-identical** `CollectedHandler`s for the same effect.
-fn push_matching<P: EffectProvider + ?Sized>(
+fn push_matching<P: EffectProvider>(
     ctx: &BattleCtx<'_, P>,
     eff: &'static Effect<P>,
     ev: Event,
-    target: BattlerRef,
-    source: BattlerRef,
+    host: EffectHost,
+    event_target: BattlerRef,
+    event_source: BattlerRef,
+    direct_target: BattlerRef,
+    force_direct: bool,
     out: &mut Vec<CollectedHandler<P>>,
 ) {
-    // `speed` tier: the engine cannot name a game-specific "speed" stat from the
-    // opaque `P::Stat`, so it stays 0 (an inert tier, as for the slices).
-    let speed = 0;
+    let speed = match host {
+        EffectHost::Battler(who) => P::handler_speed(ctx.state, who),
+        EffectHost::Side(_) | EffectHost::Field => 0,
+    };
     // effect_order: prefer the live arena entry; fall back to the effect id so
     // moves/abilities/items (no arena entry) still get a deterministic,
     // RNG-free tiebreak.
@@ -117,6 +123,15 @@ fn push_matching<P: EffectProvider + ?Sized>(
         if hook.event != ev {
             continue;
         }
+        let scope = P::hook_scope(eff, ev);
+        if !force_direct && !scope_matches(scope, host, event_target, event_source) {
+            continue;
+        }
+        let target = if scope == HookScope::Direct {
+            direct_target
+        } else {
+            event_target
+        };
         out.push(CollectedHandler {
             order: hook.order,
             priority: hook.priority,
@@ -124,10 +139,94 @@ fn push_matching<P: EffectProvider + ?Sized>(
             sub_order: hook.sub_order.unwrap_or_else(|| eff.kind.sub_order()),
             effect_order,
             target,
-            source,
+            source: event_source,
             source_effect: eff.id,
             call: hook.call,
         });
+    }
+}
+
+fn scope_matches(
+    scope: HookScope,
+    host: EffectHost,
+    target: BattlerRef,
+    source: BattlerRef,
+) -> bool {
+    match (scope, host) {
+        (HookScope::Any, _) => true,
+        (HookScope::Direct, EffectHost::Battler(who)) => who == target || who == source,
+        (HookScope::Direct, EffectHost::Side(side)) => side == target.side || side == source.side,
+        (HookScope::Direct, EffectHost::Field) => true,
+        (HookScope::Source, EffectHost::Battler(who)) => who == source,
+        (HookScope::Source, _) => false,
+        (HookScope::Foe, EffectHost::Battler(who)) => who.side != target.side,
+        (HookScope::Foe, EffectHost::Side(side)) => side != target.side,
+        (HookScope::Foe, EffectHost::Field) => false,
+        (HookScope::Ally, EffectHost::Battler(who)) => who.side == target.side,
+        (HookScope::Ally, EffectHost::Side(side)) => side == target.side,
+        (HookScope::Ally, EffectHost::Field) => false,
+    }
+}
+
+#[cfg(test)]
+mod scope_tests {
+    use super::{scope_matches, EffectHost, HookScope};
+    use crate::battle::BattlerRef;
+
+    #[test]
+    fn hook_scopes_match_battler_side_and_field_hosts() {
+        let target = BattlerRef::new(0, 0);
+        let source = BattlerRef::new(1, 0);
+        let ally = EffectHost::Battler(BattlerRef::new(0, 1));
+        let foe = EffectHost::Battler(BattlerRef::new(1, 1));
+
+        assert!(scope_matches(
+            HookScope::Any,
+            EffectHost::Field,
+            target,
+            source
+        ));
+        assert!(scope_matches(
+            HookScope::Direct,
+            target.into(),
+            target,
+            source
+        ));
+        assert!(!scope_matches(HookScope::Direct, ally, target, source));
+        assert!(scope_matches(
+            HookScope::Source,
+            source.into(),
+            target,
+            source
+        ));
+        assert!(!scope_matches(
+            HookScope::Source,
+            target.into(),
+            target,
+            source
+        ));
+        assert!(scope_matches(HookScope::Ally, ally, target, source));
+        assert!(!scope_matches(HookScope::Ally, foe, target, source));
+        assert!(scope_matches(HookScope::Foe, foe, target, source));
+        assert!(!scope_matches(HookScope::Foe, ally, target, source));
+        assert!(scope_matches(
+            HookScope::Ally,
+            EffectHost::Side(0),
+            target,
+            source
+        ));
+        assert!(scope_matches(
+            HookScope::Foe,
+            EffectHost::Side(1),
+            target,
+            source
+        ));
+        assert!(!scope_matches(
+            HookScope::Ally,
+            EffectHost::Field,
+            target,
+            source
+        ));
     }
 }
 
@@ -137,9 +236,9 @@ fn push_matching<P: EffectProvider + ?Sized>(
 /// the one effect the driver passes:
 ///
 /// 1. the **source effect** (the move/volatile that triggered the dispatch),
-/// 2. every **live volatile** on `target` and on `source` (arena scan →
+/// 2. every **live volatile** (arena scan →
 ///    `effect_for_volatile`),
-/// 3. each relevant battler's **ability** and **held item**
+/// 3. every active battler's **ability** and **held item**
 ///    (`effect_for_ability` / `effect_for_item`),
 /// 4. the **side** effects of `target`'s and `source`'s sides (`side_effects`),
 /// 5. the **field** effects (`field_effects`).
@@ -173,56 +272,107 @@ pub fn collect_handlers<P: EffectProvider>(
 ) {
     // 1. The source effect (the move/volatile the driver resolved), if any.
     if let Some(eff) = src_eff {
-        push_matching(ctx, eff, ev, target, source, out);
+        push_matching(
+            ctx,
+            eff,
+            ev,
+            EffectHost::Battler(source),
+            target,
+            source,
+            target,
+            true,
+            out,
+        );
     }
 
-    // 2. Live volatiles on target & source (arena scan → effect_for_volatile).
+    // 2. Every live volatile (arena scan → effect_for_volatile). Scope filtering
+    //    below keeps direct hooks on target/source while allowing Any/Ally/Foe
+    //    hooks hosted by other active battlers to participate.
     //    Walk the arena in its stable `id` order so the gather is deterministic
     //    and RNG-free. We only *read* the arena here (shared borrow); the owned
     //    snapshot in `out` decouples this read from any later mutation.
     for e in ctx.effects.iter() {
-        if e.host != target && e.host != source {
-            continue;
-        }
         if let Some(eff) = provider.effect_for_volatile(&e.kind) {
-            push_matching(ctx, eff, ev, target, source, out);
+            push_matching(
+                ctx,
+                eff,
+                ev,
+                e.host.into(),
+                target,
+                source,
+                target,
+                false,
+                out,
+            );
         }
     }
 
-    // 3. Ability + held item on each relevant battler. Defaulted resolvers ⇒
-    //    None ⇒ skipped. `source`/`target` may coincide (a self-targeting
-    //    event); dedup is unnecessary because the comparator + effect_order make
-    //    the fold deterministic and a battler's own ability listing twice would
-    //    be a game authoring choice, not an engine one — but we still avoid the
-    //    obvious double when target == source.
-    let battlers: &[BattlerRef] = if target == source {
-        core::slice::from_ref(&source)
-    } else {
-        &[target, source]
-    };
-    for &who in battlers {
-        let b = ctx.battler(who);
-        if let Some(eff) = provider.effect_for_ability(b) {
-            push_matching(ctx, eff, ev, who, source, out);
-        }
-        if let Some(eff) = provider.effect_for_item(b) {
-            push_matching(ctx, eff, ev, who, source, out);
+    // 3. Ability + held item on every active battler. Direct scope reduces this
+    //    to target/source; broader scopes can observe allies, foes, or everyone.
+    for side in 0..=1 {
+        let battler_count = if side == 0 {
+            ctx.state.player_battlers.len()
+        } else {
+            ctx.state.opponent_battlers.len()
+        };
+        for slot in 0..battler_count.min(u8::MAX as usize + 1) {
+            let who = BattlerRef::new(side, slot as u8);
+            let b = ctx.battler(who);
+            if b.hp == 0 {
+                continue;
+            }
+            if let Some(eff) = provider.effect_for_ability(b) {
+                push_matching(ctx, eff, ev, who.into(), target, source, who, false, out);
+            }
+            if let Some(eff) = provider.effect_for_item(b) {
+                push_matching(ctx, eff, ev, who.into(), target, source, who, false, out);
+            }
         }
     }
 
     // 4. Side effects of target's & source's sides. Defaulted ⇒ empty.
     for &eff in provider.side_effects(ctx, target.side) {
-        push_matching(ctx, eff, ev, target, source, out);
+        push_matching(
+            ctx,
+            eff,
+            ev,
+            EffectHost::Side(target.side),
+            target,
+            source,
+            target,
+            false,
+            out,
+        );
     }
     if source.side != target.side {
         for &eff in provider.side_effects(ctx, source.side) {
-            push_matching(ctx, eff, ev, target, source, out);
+            push_matching(
+                ctx,
+                eff,
+                ev,
+                EffectHost::Side(source.side),
+                target,
+                source,
+                target,
+                false,
+                out,
+            );
         }
     }
 
     // 5. Field effects. Defaulted ⇒ empty.
     for &eff in provider.field_effects(ctx) {
-        push_matching(ctx, eff, ev, target, source, out);
+        push_matching(
+            ctx,
+            eff,
+            ev,
+            EffectHost::Field,
+            target,
+            source,
+            target,
+            false,
+            out,
+        );
     }
 }
 

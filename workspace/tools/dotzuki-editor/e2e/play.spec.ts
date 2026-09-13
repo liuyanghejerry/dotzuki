@@ -46,6 +46,13 @@ test.describe('play activity (wasm runner)', () => {
     expect([first.w, first.h]).toEqual([320, 240])
     expect(first.distinct).toBeGreaterThan(2)
 
+    // Game language is independent from the editor UI language. Changing it
+    // reboots the WASM runner and is reflected in the runner-owned save.
+    const language = page.getByTestId('play-language')
+    await language.selectOption('zh')
+    await expect(language).toHaveValue('zh')
+    await page.waitForTimeout(500)
+
     // Advance the intro dialogue with A (KeyZ). Holds are deliberate: a ~0ms
     // down/up tap can fall between two game ticks and be lost, same as the
     // native shell.
@@ -76,6 +83,11 @@ test.describe('play activity (wasm runner)', () => {
       Object.keys(localStorage).filter(k => k.startsWith('dotzuki-play-save')),
     )
     expect(saveKeys.length).toBeGreaterThan(0)
+    const savedLanguage = await page.evaluate((key) => {
+      const raw = localStorage.getItem(key)
+      return raw ? JSON.parse(raw).lang : null
+    }, saveKeys[0])
+    expect(savedLanguage).toBe('zh')
 
     // Audio: the fixture's StartTown scene plays "TownTheme" on boot, the wasm
     // runner renders PCM per tick, and the WebAudio graph starts consuming it

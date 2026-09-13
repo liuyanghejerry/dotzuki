@@ -131,8 +131,9 @@ OPTIONS:
                 .with_context(|| format!("failed to parse game pack {}", path.display()))?;
             return Ok(Arc::new(pack));
         }
-        let json = String::from_utf8(bytes)
-            .with_context(|| format!("{} is neither a .dzpk pack nor bundle JSON", path.display()))?;
+        let json = String::from_utf8(bytes).with_context(|| {
+            format!("{} is neither a .dzpk pack nor bundle JSON", path.display())
+        })?;
         let files = decode_bundle_files(&json)
             .with_context(|| format!("failed to decode game bundle {}", path.display()))?;
         Ok(Arc::new(MemoryFiles::new(files)))
@@ -145,8 +146,8 @@ OPTIONS:
             None => default_bundle_path()?,
         };
         let files = open_bundle(&bundle_path)?;
-        let project = LoadedProject::load_with_files(files)
-            .context("failed to boot the bundled project")?;
+        let project =
+            LoadedProject::load_with_files(files).context("failed to boot the bundled project")?;
         let title = project.manifest().name.clone();
 
         // A bundled project has no disk root, so the runner's default save

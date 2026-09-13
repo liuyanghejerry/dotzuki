@@ -335,8 +335,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = RenderContext {
             screen: "test",
             theme: &theme,
@@ -367,8 +369,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = RenderContext {
             screen: "test",
             theme: &theme,
@@ -397,8 +401,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = RenderContext {
             screen: "test",
             theme: &theme,
@@ -423,8 +429,10 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set("id", 77i64);
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = RenderContext {
             screen: "test",
             theme: &theme,
@@ -451,8 +459,10 @@ mod tests {
         };
         let ctx = DataContext::new();
         let theme = make_theme();
-        let fonts: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
-        let tilesets: dotzuki_engine::hash::HashMap<String, ()> = dotzuki_engine::hash::HashMap::default();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let rc = RenderContext {
             screen: "test",
             theme: &theme,

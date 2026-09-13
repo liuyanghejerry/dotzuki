@@ -828,6 +828,7 @@ export default {
     title: '试玩',
     restart: '重启试玩',
     clearSave: '清除存档',
+    language: '游戏语言',
     retry: '重试',
     loading: '正在加载项目包…',
     running: '运行中',

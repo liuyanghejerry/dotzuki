@@ -69,7 +69,7 @@ async function loadWasmCompiler(): Promise<WasmSceneCompiler | null> {
   if (wasmCompiler !== undefined) return wasmCompiler
   try {
     const entry = path.join(wasmNodeRoot(), 'dotzuki_web.js')
-    const mod = await import(pathToFileURL(entry).href)
+    const mod = await import(/* @vite-ignore */ pathToFileURL(entry).href)
     wasmCompiler = (mod.default ?? mod) as WasmSceneCompiler
   } catch (e) {
     console.warn(

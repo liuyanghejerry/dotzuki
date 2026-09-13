@@ -8,123 +8,10 @@
 //! uses the [`Painter`] trait for rendering, making it backend-agnostic.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Painter, Rgba, TileRect, Ui};
+#[cfg(test)]
+use dotzuki_engine::render::TileRect;
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 use dotzuki_renderer::embedded_font::{char_advance, measure_text};
-
-/// Configuration for a text dialog widget (legacy).
-///
-/// Use [`MenuConfig`] instead for new code.
-#[derive(Debug, Clone)]
-#[deprecated(note = "Use dotzuki_engine::menu::MenuConfig instead")]
-pub struct DialogConfig {
-    /// Position and size of the dialog box (INCLUDING the 1-tile border).
-    pub rect: TileRect,
-    /// Ink colour for the box border and text.
-    pub color: Rgba,
-    /// Maximum characters per line (Latin text word-wraps; CJK char-wraps).
-    pub max_line_width: usize,
-    /// Maximum number of visible lines.
-    pub max_lines: usize,
-    /// Tile rows between consecutive text lines (typically 2).
-    pub line_height: u32,
-    /// X tile offset of the first text character, relative to the box interior.
-    pub text_start_tx: u32,
-    /// Y tile offset of the first text line, relative to the box interior.
-    pub text_start_ty: u32,
-    /// If `true`, draw an arrow glyph when there is text.
-    pub show_arrow: bool,
-    /// X tile offset of the arrow, relative to the box interior.
-    pub arrow_tx: u32,
-    /// Y tile offset of the arrow, relative to the box interior.
-    pub arrow_ty: u32,
-    /// Glyph character for the "more text" arrow (default: ▼).
-    pub arrow_glyph: char,
-    /// Ink colour for the arrow glyph.
-    pub arrow_color: Rgba,
-}
-
-#[allow(deprecated)]
-impl Default for DialogConfig {
-    fn default() -> Self {
-        Self {
-            rect: TileRect::new(0, 14, 20, 4),
-            color: Rgba::INK_BLACK,
-            max_line_width: 18,
-            max_lines: 2,
-            line_height: 2,
-            text_start_tx: 1,
-            text_start_ty: 1,
-            show_arrow: true,
-            arrow_tx: 16,
-            arrow_ty: 3,
-            arrow_glyph: '\u{25BC}',
-            arrow_color: Rgba::INK_BLACK,
-        }
-    }
-}
-
-#[allow(deprecated)]
-impl DialogConfig {
-    /// Create a dialog config with a specific position and size.
-    pub fn new(tx: u32, ty: u32, tw: u32, th: u32) -> Self {
-        Self {
-            rect: TileRect::new(tx, ty, tw, th),
-            ..Default::default()
-        }
-    }
-    pub fn with_color(mut self, color: Rgba) -> Self {
-        self.color = color;
-        self
-    }
-    pub fn with_max_line_width(mut self, w: usize) -> Self {
-        self.max_line_width = w;
-        self
-    }
-    pub fn with_max_lines(mut self, n: usize) -> Self {
-        self.max_lines = n;
-        self
-    }
-    pub fn with_line_height(mut self, h: u32) -> Self {
-        self.line_height = h;
-        self
-    }
-    pub fn with_text_start(mut self, tx: u32, ty: u32) -> Self {
-        self.text_start_tx = tx;
-        self.text_start_ty = ty;
-        self
-    }
-    pub fn with_arrow(mut self, tx: u32, ty: u32, glyph: char, color: Rgba) -> Self {
-        self.show_arrow = true;
-        self.arrow_tx = tx;
-        self.arrow_ty = ty;
-        self.arrow_glyph = glyph;
-        self.arrow_color = color;
-        self
-    }
-    pub fn without_arrow(mut self) -> Self {
-        self.show_arrow = false;
-        self
-    }
-}
-
-#[allow(deprecated)]
-impl From<&DialogConfig> for MenuConfig {
-    fn from(cfg: &DialogConfig) -> Self {
-        let content = TileRect::new(
-            cfg.rect.tx + 1,
-            cfg.rect.ty + 1,
-            cfg.rect.tw.saturating_sub(2),
-            cfg.rect.th.saturating_sub(2),
-        );
-        let cursor = if cfg.show_arrow {
-            dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default())
-        } else {
-            dotzuki_engine::menu::CursorStyle::new(None, Default::default())
-        };
-        MenuConfig::new(cfg.rect, None, content, cursor)
-    }
-}
-
 /// Draw a text dialog box.
 ///
 /// `configs[0]` is the dialog box; extra configs (if any) are ignored.
@@ -167,17 +54,6 @@ fn draw_dialog_impl<P: Painter>(text: &str, config: &MenuConfig, ui: &mut Ui<P>)
             frame.cursor_glyph_at(arrow_tx, arrow_ty, '\u{25BC}', Rgba::INK_BLACK);
         }
     });
-}
-
-/// Deprecated: legacy wrapper converting [`DialogConfig`] and calling [`draw_dialog`].
-///
-/// The wrap width is derived from the box interior, so `max_line_width` is
-/// no longer consulted.
-#[deprecated(note = "Use draw_dialog with &[MenuConfig] instead")]
-pub fn draw_dialog_legacy<P: Painter>(text: &str, config: &DialogConfig, painter: &mut P) {
-    let mc = MenuConfig::from(config);
-    let mut ui = Ui::new(painter);
-    draw_dialog_impl(text, &mc, &mut ui);
 }
 
 // ── Line wrapping ─────────────────────────────────────────────────
@@ -233,12 +109,11 @@ pub fn wrap_lines(text: &str, max_width_px: usize, max_lines: usize) -> Vec<Stri
 /// punctuation — characters that wrap with full-width (10px) metrics.
 fn is_cjk_char(c: char) -> bool {
     matches!(c as u32,
-        0x2E80..=0x9FFF   // CJK radicals, kana, unified ideographs
+        0x2E80..=0x9FFF   // CJK radicals, punctuation, kana, unified ideographs
         | 0xAC00..=0xD7AF // Hangul syllables
         | 0xF900..=0xFAFF // CJK compatibility ideographs
         | 0xFE30..=0xFE4F // CJK compatibility forms
         | 0xFF00..=0xFFEF // full-width forms
-        | 0x3000..=0x303F // CJK punctuation (incl. ideographic space)
     )
 }
 
@@ -387,7 +262,6 @@ fn wrap_cjk_paragraph(paragraph: &str, max_width_px: usize) -> Vec<String> {
             }
             if line.len() >= 2 {
                 let pulled = line.pop().unwrap();
-                line_px = line_px.saturating_sub(unit_width(&pulled));
                 lines.push(units_to_string(&line));
                 line.clear();
                 line_px = 0;

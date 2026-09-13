@@ -170,9 +170,7 @@ impl TeleportSpinState {
     /// Current player facing (the spin rotating through the facing cycle).
     pub fn facing(&self) -> Direction {
         let step = match self.phase {
-            TeleportSpinPhase::SpinInPlace => {
-                Self::spin_in_place_index(self.frame).unwrap_or(15)
-            }
+            TeleportSpinPhase::SpinInPlace => Self::spin_in_place_index(self.frame).unwrap_or(15),
             TeleportSpinPhase::SpinUp => {
                 let f = self.frame - SPIN_IN_PLACE_FRAMES;
                 ((f / (1 + SPIN_UP_STEP_DELAY)) as usize).min((SPIN_UP_STEPS - 1) as usize) + 16
@@ -307,9 +305,7 @@ impl EnterMapSpinState {
                 }
             }
             EnterMapSpinPhase::SpinInPlace => {
-                if self.frame + 1
-                    >= ENTER_MAP_SPIN_DOWN_FRAMES + ENTER_MAP_SPIN_IN_PLACE_FRAMES
-                {
+                if self.frame + 1 >= ENTER_MAP_SPIN_DOWN_FRAMES + ENTER_MAP_SPIN_IN_PLACE_FRAMES {
                     self.phase = EnterMapSpinPhase::Done;
                 }
             }
@@ -368,8 +364,7 @@ impl EnterMapSpinState {
                 } else {
                     let moves = ((self.frame - 1) / (1 + ENTER_MAP_SPIN_DOWN_STEP_DELAY) + 1)
                         .min(ENTER_MAP_SPIN_DOWN_STEPS);
-                    -((ENTER_MAP_SPIN_DOWN_STEPS - moves) as i32)
-                        * ENTER_MAP_SPIN_DOWN_STEP_PIXELS
+                    -((ENTER_MAP_SPIN_DOWN_STEPS - moves) as i32) * ENTER_MAP_SPIN_DOWN_STEP_PIXELS
                 }
             }
             EnterMapSpinPhase::SpinInPlace | EnterMapSpinPhase::Done => 0,
@@ -378,8 +373,8 @@ impl EnterMapSpinState {
 
     /// Whether the player sprite is still off the top of the screen.
     pub fn player_visible(&self) -> bool {
-        self.player_y_offset() > -(ENTER_MAP_SPIN_DOWN_STEPS as i32)
-            * ENTER_MAP_SPIN_DOWN_STEP_PIXELS
+        self.player_y_offset()
+            > -(ENTER_MAP_SPIN_DOWN_STEPS as i32) * ENTER_MAP_SPIN_DOWN_STEP_PIXELS
     }
 }
 
@@ -656,9 +651,8 @@ impl FishingAnimState {
             FishingAnimPhase::Done
         } else if frame < rod_end + FISHING_SHAKE_ITERATIONS * FISHING_SHAKE_STEP_FRAMES {
             FishingAnimPhase::Shake
-        } else if frame < rod_end
-            + FISHING_SHAKE_ITERATIONS * FISHING_SHAKE_STEP_FRAMES
-            + FISHING_BUBBLE_FRAMES
+        } else if frame
+            < rod_end + FISHING_SHAKE_ITERATIONS * FISHING_SHAKE_STEP_FRAMES + FISHING_BUBBLE_FRAMES
         {
             FishingAnimPhase::Bubble
         } else {
@@ -715,7 +709,11 @@ impl FishingAnimState {
         }
         let shake_start = FISHING_CAST_DELAY_FRAMES + FISHING_ROD_OUT_FRAMES;
         let iteration = (self.frame - shake_start) / FISHING_SHAKE_STEP_FRAMES;
-        if iteration % 2 == 0 { 1 } else { 0 }
+        if iteration % 2 == 0 {
+            1
+        } else {
+            0
+        }
     }
 
     /// The rod's OAM piece for `facing`, expressed as an OFFSET from the
@@ -1057,13 +1055,11 @@ impl ShipDepartureState {
         match self.phase {
             ShipDeparturePhase::Scroll => {
                 self.scroll_iteration() as i32 * SHIP_DEPARTURE_SCROLL_PX_PER_ITERATION
-                    + (self.scroll_substep() as i32
-                        % SHIP_DEPARTURE_SUBSTEPS_PER_ITERATION as i32)
+                    + (self.scroll_substep() as i32 % SHIP_DEPARTURE_SUBSTEPS_PER_ITERATION as i32)
                     + 1
             }
             ShipDeparturePhase::Erase | ShipDeparturePhase::Done => {
-                SHIP_DEPARTURE_SCROLL_ITERATIONS as i32
-                    * SHIP_DEPARTURE_SCROLL_PX_PER_ITERATION
+                SHIP_DEPARTURE_SCROLL_ITERATIONS as i32 * SHIP_DEPARTURE_SCROLL_PX_PER_ITERATION
             }
             _ => 0,
         }
@@ -1172,7 +1168,11 @@ mod tests {
         for _ in 0..16 {
             spin.tick();
         }
-        assert_eq!(spin.facing(), Direction::Right, "second spin of the custom cycle");
+        assert_eq!(
+            spin.facing(),
+            Direction::Right,
+            "second spin of the custom cycle"
+        );
         // A start facing absent from the cycle falls back to the cycle start.
         let spin = TeleportSpinState::new(Direction::Up, [Direction::Down; 4]);
         assert_eq!(spin.facing(), Direction::Down);
@@ -1212,7 +1212,11 @@ mod tests {
         for _ in 0..SPIN_IN_PLACE_FRAMES - 1 {
             spin.tick();
         }
-        assert_eq!(spin.player_y_offset(), 0, "still grounded on the last spin frame");
+        assert_eq!(
+            spin.player_y_offset(),
+            0,
+            "still grounded on the last spin frame"
+        );
         spin.tick(); // first spin-up step applies the -16px delta immediately
         assert_eq!(spin.player_y_offset(), -16);
         // Remaining 4 steps (each 1 spin + 3 delay frames, the last has no delay).
@@ -1231,7 +1235,10 @@ mod tests {
         // The state is created at warp commit; the player is off the top of
         // the screen while the fade-in plays — offset -80, not visible.
         assert_eq!(anim.phase(), EnterMapSpinPhase::SpinDown);
-        assert!(!anim.player_visible(), "hidden until the spin-down descends");
+        assert!(
+            !anim.player_visible(),
+            "hidden until the spin-down descends"
+        );
         assert_eq!(anim.player_y_offset(), -80);
 
         // 5 moves of 16px on ticks 1, 5, 9, 13, 17 (a spin + 3-frame delay
@@ -1244,7 +1251,11 @@ mod tests {
                 last = anim.player_y_offset();
             }
         }
-        assert_eq!(anim.player_y_offset(), 0, "standing position after the 5th move");
+        assert_eq!(
+            anim.player_y_offset(),
+            0,
+            "standing position after the 5th move"
+        );
         assert!(anim.player_visible());
     }
 
@@ -1422,7 +1433,11 @@ mod tests {
         // counter2&3: 0/1 → flower1, 2 → flower2, 3 → flower3.
         let mut anim = TileAnimState::new();
         anim.set_tileset(TileAnimKind::WaterFlower);
-        assert_eq!(anim.flower_frame(), None, "base tile until the first update");
+        assert_eq!(
+            anim.flower_frame(),
+            None,
+            "base tile until the first update"
+        );
         let expected = [1, 2, 3, 1, 1, 2];
         for want in expected {
             for _ in 0..21 {
@@ -1447,7 +1462,11 @@ mod tests {
         assert_eq!(anim.water_shift(), 0);
         anim.tick();
         assert_eq!(anim.water_shift(), 1);
-        assert_eq!(anim.flower_frame(), None, "water-only tilesets never flower");
+        assert_eq!(
+            anim.flower_frame(),
+            None,
+            "water-only tilesets never flower"
+        );
     }
 
     // ── FishingAnimState ──────────────────────────────────────────
@@ -1462,7 +1481,12 @@ mod tests {
     #[test]
     fn fishing_anim_no_bite_finishes_after_rod_out() {
         // No bite → straight to the result text: no shake, no bubble.
-        for facing in [Direction::Down, Direction::Up, Direction::Left, Direction::Right] {
+        for facing in [
+            Direction::Down,
+            Direction::Up,
+            Direction::Left,
+            Direction::Right,
+        ] {
             let mut anim = FishingAnimState::new(facing, false);
             assert_eq!(anim.phase(), FishingAnimPhase::CastDelay);
             // CastDelay covers the first 10 frames: ticks 1..9 are still
@@ -1472,13 +1496,21 @@ mod tests {
                 assert_eq!(anim.phase(), FishingAnimPhase::CastDelay);
             }
             anim.tick();
-            assert_eq!(anim.phase(), FishingAnimPhase::RodOut, "rod appears at frame 10");
+            assert_eq!(
+                anim.phase(),
+                FishingAnimPhase::RodOut,
+                "rod appears at frame 10"
+            );
             for _ in 0..FISHING_ROD_OUT_FRAMES - 1 {
                 anim.tick();
                 assert_eq!(anim.phase(), FishingAnimPhase::RodOut);
             }
             anim.tick();
-            assert_eq!(anim.phase(), FishingAnimPhase::Done, "no bite → straight to text");
+            assert_eq!(
+                anim.phase(),
+                FishingAnimPhase::Done,
+                "no bite → straight to text"
+            );
             assert!(anim.is_done());
         }
     }
@@ -1486,8 +1518,15 @@ mod tests {
     #[test]
     fn fishing_anim_bite_plays_shake_then_bubble_then_done() {
         let mut anim = FishingAnimState::new(Direction::Down, true);
-        tick_n(&mut anim, FISHING_CAST_DELAY_FRAMES + FISHING_ROD_OUT_FRAMES);
-        assert_eq!(anim.phase(), FishingAnimPhase::Shake, "bite starts the shake");
+        tick_n(
+            &mut anim,
+            FISHING_CAST_DELAY_FRAMES + FISHING_ROD_OUT_FRAMES,
+        );
+        assert_eq!(
+            anim.phase(),
+            FishingAnimPhase::Shake,
+            "bite starts the shake"
+        );
         assert!(!anim.bubble_active());
 
         // 10 iterations × 3 frames.
@@ -1501,7 +1540,11 @@ mod tests {
             assert_eq!(anim.player_shake_offset(), if i % 2 == 0 { 1 } else { 0 });
             tick_n(&mut anim, FISHING_SHAKE_STEP_FRAMES);
         }
-        assert_eq!(anim.phase(), FishingAnimPhase::Bubble, "shake ends → bubble");
+        assert_eq!(
+            anim.phase(),
+            FishingAnimPhase::Bubble,
+            "shake ends → bubble"
+        );
         assert!(anim.bubble_active());
         assert_eq!(anim.player_shake_offset(), 0, "no shake during the bubble");
 
@@ -1511,7 +1554,11 @@ mod tests {
             assert!(anim.bubble_active());
         }
         anim.tick();
-        assert_eq!(anim.phase(), FishingAnimPhase::Done, "bubble ends → result text");
+        assert_eq!(
+            anim.phase(),
+            FishingAnimPhase::Done,
+            "bubble ends → result text"
+        );
         assert!(anim.is_done());
         assert!(!anim.bubble_active());
     }
@@ -1525,13 +1572,23 @@ mod tests {
             bite.tick();
         }
         // 10 + 100 (+ 30 + 60 on a bite) — no-bite is done at 110.
-        assert!(no_bite.is_done(), "no-bite finishes at 10 + 100 = 110 frames");
-        assert!(bite.is_done(), "bite finishes at 10 + 100 + 30 + 60 = 200 frames");
+        assert!(
+            no_bite.is_done(),
+            "no-bite finishes at 10 + 100 = 110 frames"
+        );
+        assert!(
+            bite.is_done(),
+            "bite finishes at 10 + 100 + 30 + 60 = 200 frames"
+        );
         let mut late = FishingAnimState::new(Direction::Down, true);
         for _ in 0..FISHING_ANIM_FRAMES - 1 {
             late.tick();
         }
-        assert_eq!(late.phase(), FishingAnimPhase::Bubble, "frame 199 is still the bubble");
+        assert_eq!(
+            late.phase(),
+            FishingAnimPhase::Bubble,
+            "frame 199 is still the bubble"
+        );
     }
 
     #[test]
@@ -1567,10 +1624,22 @@ mod tests {
 
     #[test]
     fn fishing_anim_rod_piece_offsets() {
-        assert_eq!(FishingAnimState::rod_piece(Direction::Down), (20, 35, 0, false));
-        assert_eq!(FishingAnimState::rod_piece(Direction::Up), (20, -12, 0, false));
-        assert_eq!(FishingAnimState::rod_piece(Direction::Left), (0, 16, 1, false));
-        assert_eq!(FishingAnimState::rod_piece(Direction::Right), (48, 16, 1, true));
+        assert_eq!(
+            FishingAnimState::rod_piece(Direction::Down),
+            (20, 35, 0, false)
+        );
+        assert_eq!(
+            FishingAnimState::rod_piece(Direction::Up),
+            (20, -12, 0, false)
+        );
+        assert_eq!(
+            FishingAnimState::rod_piece(Direction::Left),
+            (0, 16, 1, false)
+        );
+        assert_eq!(
+            FishingAnimState::rod_piece(Direction::Right),
+            (48, 16, 1, true)
+        );
     }
 
     // ── BoulderDustState ──────────────────────────────────────────
@@ -1615,7 +1684,11 @@ mod tests {
         let dust = BoulderDustState::new(Direction::Left, 5, 5);
         assert_eq!(dust.tile_drifts(), [(0, 0), (1, 0), (1, 0), (1, 0)]);
         let dust = BoulderDustState::new(Direction::Down, 5, 5);
-        assert_eq!(dust.tile_drifts(), [(0, -1); 4], "vertical pushes move all tiles");
+        assert_eq!(
+            dust.tile_drifts(),
+            [(0, -1); 4],
+            "vertical pushes move all tiles"
+        );
     }
 
     #[test]
@@ -1735,7 +1808,9 @@ mod tests {
             seen.push(dep.scroll_px());
             dep.tick();
         }
-        let expected: Vec<i32> = (0..16).flat_map(|d| core::iter::repeat(d + 1).take(8)).collect();
+        let expected: Vec<i32> = (0..16)
+            .flat_map(|d| core::iter::repeat(d + 1).take(8))
+            .collect();
         assert_eq!(seen, expected, "scroll ramps 1..=16 across iteration 0");
 
         // Mid-animation: frame 123 + 40 substeps → iteration 2, substep 40 →

@@ -983,6 +983,8 @@ pub trait EffectHandler<P: BattleProvider + ?Sized> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(dead_code)]
+
     use super::*;
 
     // ── Mock Types ────────────────────────────────────────────────────
@@ -1674,6 +1676,7 @@ mod driver_tests {
         Sleep,
     }
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[allow(dead_code)]
     enum DType {
         Normal,
     }

@@ -2,6 +2,7 @@
 name = "dotzuki-engine"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "A general-purpose JRPG game engine built from Game Boy tile rendering principles"
 repository = "https://github.com/liuyanghejerry/dotzuki"
 license.workspace = true

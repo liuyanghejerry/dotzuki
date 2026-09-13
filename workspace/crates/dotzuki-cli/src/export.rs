@@ -53,7 +53,8 @@ pub fn run(args: &ExportArgs) -> Result<PathBuf> {
     let diags = gate_diagnostics(&args.dir, args.force)?;
 
     // 2. Bundle the project files.
-    let files = bundle::collect_project_files(&args.dir).context("failed to collect project files")?;
+    let files =
+        bundle::collect_project_files(&args.dir).context("failed to collect project files")?;
 
     // 3. Locate (or wasm-pack build) the runner package.
     let pkg = runner_pkg::locate(args.runner_pkg.as_deref(), args.rebuild_runner)?;
@@ -72,7 +73,9 @@ pub fn run(args: &ExportArgs) -> Result<PathBuf> {
         &pkg,
     )?;
 
-    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE)).map(|m| m.len()).unwrap_or(0);
+    let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE))
+        .map(|m| m.len())
+        .unwrap_or(0);
     println!(
         "exported {} file(s) ({:.1} MiB pack) to {}",
         files.len(),
@@ -295,10 +298,13 @@ mod tests {
             },
         )
         .unwrap();
-        run_headless(&mut game, &HeadlessOptions {
-            frames: 30,
-            ..HeadlessOptions::default()
-        })
+        run_headless(
+            &mut game,
+            &HeadlessOptions {
+                frames: 30,
+                ..HeadlessOptions::default()
+            },
+        )
         .unwrap();
     }
 
@@ -323,7 +329,10 @@ mod tests {
         assert!(html.contains("加载失败"), "{html}");
         assert!(html.contains("静音"), "{html}");
         // …and every template placeholder is filled.
-        assert!(!html.contains("__DOTZUKI_"), "unreplaced placeholder: {html}");
+        assert!(
+            !html.contains("__DOTZUKI_"),
+            "unreplaced placeholder: {html}"
+        );
     }
 
     #[test]
@@ -338,7 +347,10 @@ mod tests {
         let html = fs::read_to_string(out.join("index.html")).unwrap();
         assert!(html.contains("Loading…"), "{html}");
         assert!(html.contains("\"dotzuki-save:Your First Game\""), "{html}");
-        assert!(!html.contains("__DOTZUKI_"), "unreplaced placeholder: {html}");
+        assert!(
+            !html.contains("__DOTZUKI_"),
+            "unreplaced placeholder: {html}"
+        );
     }
 
     #[test]
@@ -351,7 +363,11 @@ mod tests {
             r#"{ "name": "broken", "dataRoot": "./data" }"#,
         )
         .unwrap();
-        fs::write(root.join("assets/scenes/bad.scene"), "this is not a scene {{{").unwrap();
+        fs::write(
+            root.join("assets/scenes/bad.scene"),
+            "this is not a scene {{{",
+        )
+        .unwrap();
 
         let pkg = fake_runner_pkg("broken-pkg");
         let err = run(&args(root.clone(), export_dir(&tmp), &pkg.0, false)).unwrap_err();
@@ -371,6 +387,7 @@ mod tests {
     }
 
     fn export_dir(tmp: &TestDir) -> PathBuf {
-        tmp.0.join(format!("out-{}", NEXT_ID.fetch_add(1, Ordering::SeqCst)))
+        tmp.0
+            .join(format!("out-{}", NEXT_ID.fetch_add(1, Ordering::SeqCst)))
     }
 }

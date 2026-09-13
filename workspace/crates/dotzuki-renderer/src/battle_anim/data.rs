@@ -2807,7 +2807,7 @@ mod tests {
     fn all_move_anim_commands_valid() {
         // Verify all move animation commands have valid encoding
         for (i, cmds) in MOVE_ANIM_DATA.iter().enumerate() {
-            for (j, &(kind, a, b, c)) in cmds.iter().enumerate() {
+            for (j, &(kind, _a, b, c)) in cmds.iter().enumerate() {
                 assert!(
                     kind <= 1,
                     "Move {} cmd {}: kind {} out of range",

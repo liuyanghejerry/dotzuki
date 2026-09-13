@@ -18,6 +18,20 @@
         class="px-2 py-1 text-xs rounded-control bg-raised hover:bg-overlay"
         :title="muted ? 'Unmute' : 'Mute'"
       >{{ muted ? '🔇' : '🔊' }}</button>
+      <label class="flex items-center gap-1 text-xs text-ink-muted">
+        {{ $t('play.language') }}
+        <select
+          data-testid="play-language"
+          v-model="selectedLanguage"
+          @change="changeLanguage"
+          :disabled="status === 'loading'"
+          class="rounded-control border border-border bg-raised px-1.5 py-1 text-ink"
+        >
+          <option v-for="language in playLanguages" :key="language" :value="language">
+            {{ language }}
+          </option>
+        </select>
+      </label>
       <button
         @click="exportGame('web')"
         :disabled="exporting !== null"
@@ -86,6 +100,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useProjectStore } from '@/stores/project'
+import type { StoryActivityConfig } from '@/types/project'
 import {
   loadBundle,
   createRunner,
@@ -94,11 +110,16 @@ import {
 } from '@/composables/useWasmRunner'
 import { createPlayAudio, type PlayAudio } from '@/composables/usePlayAudio'
 
-// TODO(language): the project manifest can declare multiple locales, but the
-// WasmRunner contract has no language parameter — once it does, offer an
-// en/zh switch here and pass it through when constructing the runner.
-
-const { t } = useI18n()
+const { t, locale: editorLocale } = useI18n()
+const project = useProjectStore()
+const playLanguages = computed(() => {
+  const story = project.config?.activities.find(activity => activity.type === 'story')
+  const configured = (story?.config as StoryActivityConfig | undefined)?.locales
+  return configured?.length ? configured : ['en', 'zh']
+})
+const selectedLanguage = ref(
+  playLanguages.value.includes(editorLocale.value) ? editorLocale.value : playLanguages.value[0],
+)
 
 /** The runner's fixed framebuffer (WasmRunner.width()/height()). */
 const WIDTH = 320
@@ -245,7 +266,7 @@ async function boot(refreshBundle: boolean, keepSave: boolean) {
       saveKey = `dotzuki-play-save:${bundle.projectRoot}`
     }
     const save = keepSave && saveKey ? localStorage.getItem(saveKey) : null
-    runner = await createRunner(bundleFiles!, save)
+    runner = await createRunner(bundleFiles!, save, selectedLanguage.value)
     // Older runner pkgs predate take_audio() — skip audio silently (warn once).
     audioSupported = typeof runner.take_audio === 'function'
     if (!audioSupported && !warnedNoAudio) {
@@ -276,6 +297,12 @@ function restart() {
 function clearSave() {
   if (saveKey) localStorage.removeItem(saveKey)
   void boot(false, false)
+}
+
+/** Reboot in the selected project locale while preserving the current save. */
+function changeLanguage() {
+  persistSave()
+  void boot(false, true)
 }
 
 /** Toolbar: mute toggle — silences output while the queue keeps draining. */

@@ -22,7 +22,7 @@ pub mod game_shell;
 pub mod link;
 
 #[cfg(feature = "game-shell")]
-pub use game_shell::{GameLoop, GameShellConfig, GameShellError, run_game};
+pub use game_shell::{run_game, GameLoop, GameShellConfig, GameShellError};
 
 use dotzuki_engine::render::Rgba;
 use dotzuki_ui::FrameBufferPainter;
@@ -38,7 +38,7 @@ fn log_error(msg: &str) {
     eprintln!("[dotzuki-web] ERROR: {}", msg);
 }
 
-#[cfg(feature = "debug-panic-hook")]
+#[cfg(all(feature = "debug-panic-hook", target_arch = "wasm32"))]
 #[wasm_bindgen]
 pub fn install_panic_hook() {
     console_error_panic_hook::set_once();
@@ -246,7 +246,9 @@ pub fn compile_screen_source(source: &str) -> String {
     match parse_gui_doc(source) {
         Ok(dotzuki_engine_dsl::ast::Document::Screen(screen)) => {
             match dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen) {
-                Ok(json) => serde_json::json!({ "ok": true, "kind": "screen", "js": json }).to_string(),
+                Ok(json) => {
+                    serde_json::json!({ "ok": true, "kind": "screen", "js": json }).to_string()
+                }
                 Err(e) => dsl_err_json(&e.to_string()),
             }
         }
@@ -345,7 +347,10 @@ component NamePlate {
 }"##;
         let raw = compile_screen_source(src);
         let parsed: serde_json::Value = serde_json::from_str(&raw).unwrap();
-        assert_eq!(parsed["ok"], true, "component prelude must not be an error: {raw}");
+        assert_eq!(
+            parsed["ok"], true,
+            "component prelude must not be an error: {raw}"
+        );
         assert_eq!(parsed["kind"], "components");
         assert_eq!(parsed["names"], serde_json::json!(["HpGauge", "NamePlate"]));
         // Nothing to render — empty buffer, and no error logged.
@@ -355,7 +360,9 @@ component NamePlate {
     /// Screen sources keep the original success shape, plus `kind: "screen"`.
     #[test]
     fn compile_screen_source_marks_screens() {
-        let raw = compile_screen_source(r##"screen Main { text("hi") { rect = {tx: 1, ty: 1, tw: 4, th: 1} } }"##);
+        let raw = compile_screen_source(
+            r##"screen Main { text("hi") { rect = {tx: 1, ty: 1, tw: 4, th: 1} } }"##,
+        );
         let parsed: serde_json::Value = serde_json::from_str(&raw).unwrap();
         assert_eq!(parsed["ok"], true, "screen must compile: {raw}");
         assert_eq!(parsed["kind"], "screen");

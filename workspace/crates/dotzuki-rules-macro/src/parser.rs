@@ -154,6 +154,14 @@ pub enum OpInput {
     InflictStatus {
         status: String,
         target: SelectorInput,
+        #[serde(default)]
+        amount: AmountSpecInput,
+    },
+    InflictVolatile {
+        kind: String,
+        target: SelectorInput,
+        #[serde(default)]
+        amount: AmountSpecInput,
     },
     Boost {
         stat: String,
@@ -228,6 +236,19 @@ pub enum DamageValueInput {
     Const(u16),
     UserLevel,
     RngScaledLevel { num: u32, den: u32 },
+}
+
+#[derive(Debug, Deserialize)]
+pub enum AmountSpecInput {
+    Const(u16),
+    RngMask { mask: u8, plus: u8 },
+    RngRange { lo: u16, hi: u16 },
+}
+
+impl Default for AmountSpecInput {
+    fn default() -> Self {
+        Self::Const(0)
+    }
 }
 
 #[derive(Debug, Deserialize)]

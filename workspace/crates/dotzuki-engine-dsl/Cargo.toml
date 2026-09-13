@@ -2,6 +2,7 @@
 name = "dotzuki-engine-dsl"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "Game DSL compiler (.scene/.gui/.theme/.style) plus a native AST interpreter for the dotzuki JRPG engine"
 license.workspace = true
 repository.workspace = true

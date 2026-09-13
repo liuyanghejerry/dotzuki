@@ -2,6 +2,7 @@
 name = "dotzuki-app"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "A generic desktop app crate wrapping dotzuki-renderer's game loop"
 license.workspace = true
 repository.workspace = true

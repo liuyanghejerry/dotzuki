@@ -50,7 +50,7 @@ use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_engine_script::command::CommandResult;
 use dotzuki_engine_script::engine::ScriptEngine;
 use dotzuki_renderer::input::{GbButton, InputState};
-use dotzuki_ui::widgets::flex_menu::{draw_flex_menu, FlexMenuState};
+use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
 use dotzuki_ui::FrameBufferPainter;
 
 use super::{draw_textbox, find_spawn, paginate, Mode, RunnerGame, SCREEN_H, SCREEN_W};

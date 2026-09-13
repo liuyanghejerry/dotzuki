@@ -59,10 +59,14 @@ pub enum MartTopChoice {
 }
 
 impl MartTopChoice {
-    const ORDER: [MartTopChoice; 3] = [MartTopChoice::Buy, MartTopChoice::Sell, MartTopChoice::Quit];
+    const ORDER: [MartTopChoice; 3] =
+        [MartTopChoice::Buy, MartTopChoice::Sell, MartTopChoice::Quit];
 
     pub fn position(self) -> usize {
-        Self::ORDER.iter().position(|&c| c == self).expect("valid choice")
+        Self::ORDER
+            .iter()
+            .position(|&c| c == self)
+            .expect("valid choice")
     }
 
     fn next(self) -> Self {
@@ -421,9 +425,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
                 quantity,
                 selected,
             } => self.update_buy_confirm(input, backend, item_index, quantity, selected),
-            BuyMenuState::Result {
-                return_to_list, ..
-            } => {
+            BuyMenuState::Result { return_to_list, .. } => {
                 // Auto-dismiss result on next frame.
                 if return_to_list {
                     self.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 });
@@ -491,9 +493,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
     ) -> MartUpdate {
         if input.cancel {
             // Back to item select, cursor preserved.
-            self.phase = MartPhase::Buy(BuyMenuState::SelectItem {
-                cursor: item_index,
-            });
+            self.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: item_index });
             return MartUpdate::Continue;
         }
         if input.up {
@@ -569,9 +569,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
                 }
                 ConfirmChoice::No => {
                     // Back to item select, cursor preserved.
-                    self.phase = MartPhase::Buy(BuyMenuState::SelectItem {
-                        cursor: item_index,
-                    });
+                    self.phase = MartPhase::Buy(BuyMenuState::SelectItem { cursor: item_index });
                 }
             }
         }
@@ -587,9 +585,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
         ss: SellMenuState,
     ) -> MartUpdate {
         match ss {
-            SellMenuState::SelectItem { cursor } => {
-                self.update_sell_select(input, backend, cursor)
-            }
+            SellMenuState::SelectItem { cursor } => self.update_sell_select(input, backend, cursor),
             SellMenuState::Quantity {
                 item_index,
                 quantity,
@@ -600,12 +596,15 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
                 quantity,
                 max_quantity,
                 selected,
-            } => {
-                self.update_sell_confirm(input, backend, item_index, quantity, max_quantity, selected)
-            }
-            SellMenuState::Result {
-                return_to_list, ..
-            } => {
+            } => self.update_sell_confirm(
+                input,
+                backend,
+                item_index,
+                quantity,
+                max_quantity,
+                selected,
+            ),
+            SellMenuState::Result { return_to_list, .. } => {
                 // Auto-dismiss result on next frame.
                 if return_to_list {
                     self.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 });
@@ -673,9 +672,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
     ) -> MartUpdate {
         if input.cancel {
             // Back to sell item select, cursor preserved.
-            self.phase = MartPhase::Sell(SellMenuState::SelectItem {
-                cursor: item_index,
-            });
+            self.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: item_index });
             return MartUpdate::Continue;
         }
         if input.up {
@@ -751,9 +748,7 @@ impl<I: Copy + Eq + Hash + Debug> MartState<I> {
                 }
                 ConfirmChoice::No => {
                     // Back to sell item select.
-                    self.phase = MartPhase::Sell(SellMenuState::SelectItem {
-                        cursor: item_index,
-                    });
+                    self.phase = MartPhase::Sell(SellMenuState::SelectItem { cursor: item_index });
                 }
             }
         }
@@ -885,7 +880,9 @@ mod tests {
             if quantity > owned {
                 return SellResult::NotInBag;
             }
-            let value = Self::price(item).map(|p| p / 2 * quantity as u32).unwrap_or(0);
+            let value = Self::price(item)
+                .map(|p| p / 2 * quantity as u32)
+                .unwrap_or(0);
             if quantity == owned {
                 self.bag.remove(bag_index);
             } else {
@@ -964,7 +961,10 @@ mod tests {
         ));
 
         // Confirm → enter Buy.
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 })
@@ -972,7 +972,10 @@ mod tests {
 
         // Down → Potion (index 1). Confirm → Quantity.
         mart.update_frame(menu_down(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::Quantity {
@@ -984,7 +987,10 @@ mod tests {
         // Up ×2 → quantity=3. Confirm → Confirm phase.
         mart.update_frame(menu_up(), &mut p);
         mart.update_frame(menu_up(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::Confirm {
@@ -1029,7 +1035,10 @@ mod tests {
         mart.update_frame(menu_confirm(), &mut p);
         mart.update_frame(menu_confirm(), &mut p);
         mart.update_frame(menu_confirm(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::Result {
@@ -1057,7 +1066,10 @@ mod tests {
         mart.update_frame(menu_confirm(), &mut p);
         mart.update_frame(menu_confirm(), &mut p);
         mart.update_frame(menu_confirm(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::Result {
@@ -1091,7 +1103,10 @@ mod tests {
         ));
 
         // Cancel → back to SelectItem.
-        assert_eq!(mart.update_frame(menu_cancel(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_cancel(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 })
@@ -1116,7 +1131,10 @@ mod tests {
         ));
 
         // Cancel → back to Quantity.
-        assert_eq!(mart.update_frame(menu_cancel(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_cancel(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::Quantity {
@@ -1173,7 +1191,10 @@ mod tests {
         let mut mart = MartState::new(stock(&[Item::KeyRelic]));
         let mut p = MockMart::new(1000);
         mart.update_frame(menu_confirm(), &mut p); // into SelectItem
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Buy(BuyMenuState::SelectItem { cursor: 0 })
@@ -1190,14 +1211,20 @@ mod tests {
 
         // MainMenu → down to Sell → Confirm.
         mart.update_frame(menu_down(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Sell(SellMenuState::SelectItem { cursor: 0 })
         ));
 
         // Confirm on Potion → Quantity.
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Sell(SellMenuState::Quantity {
@@ -1209,7 +1236,10 @@ mod tests {
 
         // Up → quantity=2. Confirm → Confirm phase.
         mart.update_frame(menu_up(), &mut p);
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Sell(SellMenuState::Confirm {
@@ -1221,7 +1251,10 @@ mod tests {
         ));
 
         // Confirm → commit sell.
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert_eq!(p.money, 300); // price 300, sell half = 150 × 2
         assert_eq!(p.owned(Item::Potion), 3);
         assert!(matches!(
@@ -1248,7 +1281,10 @@ mod tests {
         let mut mart = MartState::new(stock(&[Item::Ball]));
         let mut p = MockMart::new(0);
         mart.update_frame(menu_down(), &mut p); // cursor → Sell
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::MainMenu {
@@ -1267,7 +1303,10 @@ mod tests {
         mart.update_frame(menu_confirm(), &mut p); // into SelectItem
         mart.update_frame(menu_confirm(), &mut p); // into Quantity
         mart.update_frame(menu_confirm(), &mut p); // into Confirm
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert!(matches!(
             mart.phase,
             MartPhase::Sell(SellMenuState::Result {
@@ -1390,7 +1429,10 @@ mod tests {
 
         // Confirm on No → back to SelectItem, money unchanged.
         let old_money = p.money;
-        assert_eq!(mart.update_frame(menu_confirm(), &mut p), MartUpdate::Continue);
+        assert_eq!(
+            mart.update_frame(menu_confirm(), &mut p),
+            MartUpdate::Continue
+        );
         assert_eq!(p.money, old_money);
         assert!(matches!(
             mart.phase,

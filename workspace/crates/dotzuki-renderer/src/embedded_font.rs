@@ -255,7 +255,13 @@ pub fn draw_char_scaled(
             let byte = bmp[row as usize];
             for col in 0..8i32 {
                 if byte & (0x80 >> col) != 0 {
-                    fill_glyph_block(x as i32 + col * s, y as i32 + (row + dy) * s, scale, color, fb);
+                    fill_glyph_block(
+                        x as i32 + col * s,
+                        y as i32 + (row + dy) * s,
+                        scale,
+                        color,
+                        fb,
+                    );
                 }
             }
         }

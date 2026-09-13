@@ -7,7 +7,7 @@
 **Make a classic JRPG — without writing a single line of Rust.**
 
 [![crates.io](https://img.shields.io/crates/v/dotzuki-engine.svg)](https://crates.io/crates/dotzuki-engine)
-[![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.88%2B-orange)](https://www.rust-lang.org/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 [![Docs](https://img.shields.io/badge/docs-liuyanghejerry.github.io%2Fdotzuki-blue)](https://liuyanghejerry.github.io/dotzuki/stable/)
 

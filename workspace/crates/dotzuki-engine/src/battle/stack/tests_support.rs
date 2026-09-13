@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! Shared **game-agnostic mock game** for the engine-side stack tests
 //! (design §6, the mock-game style). No game-specific concrete type, no `rand`, no
 //! game concept leaks — `TProvider` is a tiny synthetic game whose `Stat` is the
@@ -48,6 +50,8 @@ pub enum TSpecies {
     Plain,
     /// Hosts the mock "ability" effect (see [`MOCK_ABILITY`]).
     HasAbility,
+    /// Hosts an ability whose damaging-hit hook listens only on the source.
+    HasSourceAbility,
     /// Hosts the mock "item" effect (see [`MOCK_ITEM`]).
     HasItem,
     /// Hosts both ability and item.
@@ -123,6 +127,22 @@ impl BattleProvider for TProvider {
 impl EffectProvider for TProvider {
     type EffectStateKind = TKind;
 
+    fn handler_speed(_state: &BattleState<Self>, who: BattlerRef) -> u32 {
+        if who == BattlerRef::PLAYER {
+            200
+        } else {
+            100
+        }
+    }
+
+    fn hook_scope(effect: &Effect<Self>, event: Event) -> crate::battle::stack::HookScope {
+        if effect.id == MOCK_SOURCE_ABILITY.id && event == Event::DamagingHit {
+            crate::battle::stack::HookScope::Source
+        } else {
+            crate::battle::stack::HookScope::Direct
+        }
+    }
+
     fn effect_for_move(&self, _m: &Self::Move) -> Option<&'static Effect<Self>> {
         None
     }
@@ -136,7 +156,11 @@ impl EffectProvider for TProvider {
         }
     }
     fn effect_for_ability(&self, b: &BattlerState<Self>) -> Option<&'static Effect<Self>> {
-        matches!(b.species, TSpecies::HasAbility | TSpecies::HasBoth).then_some(&MOCK_ABILITY)
+        match b.species {
+            TSpecies::HasAbility | TSpecies::HasBoth => Some(&MOCK_ABILITY),
+            TSpecies::HasSourceAbility => Some(&MOCK_SOURCE_ABILITY),
+            _ => None,
+        }
     }
     fn effect_for_item(&self, b: &BattlerState<Self>) -> Option<&'static Effect<Self>> {
         matches!(b.species, TSpecies::HasItem | TSpecies::HasBoth).then_some(&MOCK_ITEM)
@@ -235,6 +259,18 @@ fn volatile_hit<P: EffectProvider<Stat = TStat> + ?Sized>(
 /// Ability: order 10 (fires earlier).
 pub static MOCK_ABILITY: Effect<TProvider> = Effect {
     id: EffectId(0xA1),
+    kind: EffectType::Condition,
+    hooks: &[EventHook {
+        event: Event::DamagingHit,
+        call: ability_hit::<TProvider>,
+        order: 10,
+        priority: 0,
+        sub_order: None,
+    }],
+};
+
+pub static MOCK_SOURCE_ABILITY: Effect<TProvider> = Effect {
+    id: EffectId(0xA2),
     kind: EffectType::Condition,
     hooks: &[EventHook {
         event: Event::DamagingHit,

@@ -153,53 +153,42 @@ impl<C: DeserializeOwned> DebugServer<C> {
                     while let Ok(_) = self.response_receiver.try_recv() {}
 
                     match serde_json::from_str::<C>(&line) {
-                        Ok(cmd) => {
-                            match self.command_sender.send(cmd) {
-                                Ok(()) => {
-                                    match self
-                                        .response_receiver
-                                        .recv_timeout(RESPONSE_TIMEOUT)
-                                    {
-                                        Ok(resp) => {
-                                            if let Ok(json) = serde_json::to_string(&resp) {
-                                                let _ = writeln!(writer, "{}", json);
-                                                let _ = writer.flush();
-                                            }
-                                        }
-                                        Err(mpsc::RecvTimeoutError::Timeout) => {
-                                            let resp = DebugResponse::err(
-                                                "timeout waiting for game loop response"
-                                                    .to_string(),
-                                            );
-                                            if let Ok(json) = serde_json::to_string(&resp) {
-                                                let _ = writeln!(writer, "{}", json);
-                                                let _ = writer.flush();
-                                            }
-                                        }
-                                        Err(mpsc::RecvTimeoutError::Disconnected) => {
-                                            warn!(
-                                                "Debug server: response channel disconnected"
-                                            );
-                                            return;
-                                        }
+                        Ok(cmd) => match self.command_sender.send(cmd) {
+                            Ok(()) => match self.response_receiver.recv_timeout(RESPONSE_TIMEOUT) {
+                                Ok(resp) => {
+                                    if let Ok(json) = serde_json::to_string(&resp) {
+                                        let _ = writeln!(writer, "{}", json);
+                                        let _ = writer.flush();
                                     }
                                 }
-                                Err(mpsc::SendError(_)) => {
+                                Err(mpsc::RecvTimeoutError::Timeout) => {
                                     let resp = DebugResponse::err(
-                                        "game loop command channel disconnected".to_string(),
+                                        "timeout waiting for game loop response".to_string(),
                                     );
                                     if let Ok(json) = serde_json::to_string(&resp) {
                                         let _ = writeln!(writer, "{}", json);
                                         let _ = writer.flush();
                                     }
+                                }
+                                Err(mpsc::RecvTimeoutError::Disconnected) => {
+                                    warn!("Debug server: response channel disconnected");
                                     return;
                                 }
+                            },
+                            Err(mpsc::SendError(_)) => {
+                                let resp = DebugResponse::err(
+                                    "game loop command channel disconnected".to_string(),
+                                );
+                                if let Ok(json) = serde_json::to_string(&resp) {
+                                    let _ = writeln!(writer, "{}", json);
+                                    let _ = writer.flush();
+                                }
+                                return;
                             }
-                        }
+                        },
                         Err(e) => {
                             warn!("Debug server: failed to parse command: {}", e);
-                            let resp =
-                                DebugResponse::err(format!("invalid command: {}", e));
+                            let resp = DebugResponse::err(format!("invalid command: {}", e));
                             if let Ok(json) = serde_json::to_string(&resp) {
                                 let _ = writeln!(writer, "{}", json);
                                 let _ = writer.flush();
@@ -248,7 +237,10 @@ mod tests {
         }
         let cmds = received.expect("command forwarded to game loop");
         assert_eq!(cmds.len(), 1);
-        assert!(matches!(cmds[0], CoreDebugCommand::StepFrames { count: 40 }));
+        assert!(matches!(
+            cmds[0],
+            CoreDebugCommand::StepFrames { count: 40 }
+        ));
 
         // The response written by the game loop comes back as one JSON line.
         handle.send_response(DebugResponse::ok_with_data(serde_json::json!({
@@ -279,7 +271,10 @@ mod tests {
         reader.read_line(&mut line).unwrap();
         let resp: serde_json::Value = serde_json::from_str(line.trim()).unwrap();
         assert_eq!(resp["ok"], false);
-        assert!(resp["error"].as_str().unwrap().starts_with("invalid command"));
+        assert!(resp["error"]
+            .as_str()
+            .unwrap()
+            .starts_with("invalid command"));
 
         // The connection survives: a valid command still reaches the handle.
         writeln!(stream, r#"{{"cmd":"get_state"}}"#).unwrap();
@@ -291,7 +286,10 @@ mod tests {
                 assert!(matches!(cmds[0], CoreDebugCommand::GetState));
                 break;
             }
-            assert!(std::time::Instant::now() < deadline, "command never arrived");
+            assert!(
+                std::time::Instant::now() < deadline,
+                "command never arrived"
+            );
             std::thread::sleep(Duration::from_millis(1));
         }
     }

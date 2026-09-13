@@ -252,10 +252,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CreateGameWizard from './CreateGameWizard.vue'
-import AssistantPanel from './assistant/AssistantPanel.vue'
+const AssistantPanel = defineAsyncComponent(() => import('./assistant/AssistantPanel.vue'))
 import { useQuickProviderSetup } from '@/composables/useQuickProviderSetup'
 import { PROVIDER_PRESETS } from '@/components/assistant/providerPresets'
 import type { ProjectConfig } from '@/types'

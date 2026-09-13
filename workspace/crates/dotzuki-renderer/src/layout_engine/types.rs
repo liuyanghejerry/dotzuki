@@ -1,7 +1,7 @@
+use dotzuki_engine::hash::HashMap;
 use dotzuki_engine::render::Rgba;
 use serde::de::{self, Deserializer};
 use serde::Deserialize;
-use dotzuki_engine::hash::HashMap;
 use thiserror::Error;
 
 // ============================================================================

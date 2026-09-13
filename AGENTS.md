@@ -55,7 +55,7 @@ dotzuki-template/                   # cargo-generate starter template for new ga
 New game projects are **zero-Rust**: a `.dotzuki-editor.json` manifest plus a data/DSL/assets layout (see `workspace/docs/reference/project-manifest.md`), scaffolded by `dotzuki new` (dotzuki-cli) or the dotzuki-editor Create wizard.
 
 ## Build System (Rust)
-- **Toolchain**: Rust 1.70+ (stable), wasm32-unknown-unknown target for WebAssembly
+- **Toolchain**: Rust 1.88+ (stable), wasm32-unknown-unknown target for WebAssembly
 - **Build**: `cargo build` / `cargo build --release` from `workspace/`
 - **Run**: `cargo run --release --bin dotzuki` (dotzuki-cli)
 - **Tests**: `cargo test` (engine + demo examples)

@@ -49,26 +49,26 @@ extern crate alloc;
 
 #[allow(unused_imports)]
 mod alloc_prelude {
-    pub use core::prelude::v1::*;
-    pub use core::convert::{TryFrom, TryInto};
     pub use alloc::borrow::ToOwned;
-    pub use core::iter::FromIterator;
     pub use alloc::boxed::Box;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
     pub use alloc::vec;
     pub use alloc::vec::Vec;
-    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::convert::{TryFrom, TryInto};
     pub use core::debug_assert;
+    pub use core::iter::FromIterator;
+    pub use core::prelude::v1::*;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
 }
 
 #[cfg_attr(target_os = "none", prelude_import)]
 #[allow(unused_imports)]
 use alloc_prelude::*;
 
-pub mod hash;
 pub mod battle;
 pub mod camera;
+pub mod hash;
 pub mod items;
 pub mod link;
 pub mod map;

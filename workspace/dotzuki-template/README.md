@@ -4,7 +4,7 @@ A `cargo-generate` template for creating JRPG games using the `dotzuki-engine` w
 
 ## Prerequisites
 
-- **Rust** 1.70+ ([rustup](https://rustup.rs))
+- **Rust** 1.88+ ([rustup](https://rustup.rs))
 - **Platform libraries** for `pixels`/`winit` (see below)
 
 ### macOS

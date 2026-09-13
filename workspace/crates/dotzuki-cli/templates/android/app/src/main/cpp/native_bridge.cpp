@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,7 @@
 namespace {
 constexpr uint32_t MOBILE_ABI_VERSION = 1;
 std::mutex game_mutex;
+std::shared_mutex runner_lifetime_mutex;
 DotzukiMobileRunner *runner = nullptr;
 
 jbyteArray bytes_to_array(JNIEnv *env, const uint8_t *bytes, size_t length) {
@@ -43,6 +45,7 @@ Java_com_dotzuki_player_NativeBridge_create(
         save = env->GetByteArrayElements(save_array, nullptr);
     }
     std::lock_guard<std::mutex> lock(game_mutex);
+    std::unique_lock<std::shared_mutex> lifetime_lock(runner_lifetime_mutex);
     if (runner != nullptr) {
         dotzuki_mobile_destroy(runner);
     }
@@ -57,6 +60,7 @@ Java_com_dotzuki_player_NativeBridge_create(
 extern "C" JNIEXPORT void JNICALL
 Java_com_dotzuki_player_NativeBridge_destroy(JNIEnv *, jobject) {
     std::lock_guard<std::mutex> lock(game_mutex);
+    std::unique_lock<std::shared_mutex> lifetime_lock(runner_lifetime_mutex);
     if (runner != nullptr) {
         dotzuki_mobile_destroy(runner);
         runner = nullptr;
@@ -105,6 +109,9 @@ Java_com_dotzuki_player_NativeBridge_audioFill(
     const uint32_t requested = std::min<uint32_t>(
         static_cast<uint32_t>(frames), static_cast<uint32_t>(sample_count / 2));
     jfloat *output = env->GetFloatArrayElements(output_array, nullptr);
+    // The audio ring may run concurrently with tick, but the runner handle must
+    // remain alive until this callback finishes.
+    std::shared_lock<std::shared_mutex> lifetime_lock(runner_lifetime_mutex);
     const uint32_t written = runner == nullptr ? 0 :
         dotzuki_mobile_audio_fill(runner, output, requested);
     std::fill(output + static_cast<size_t>(written) * 2, output + sample_count, 0.0f);

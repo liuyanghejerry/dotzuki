@@ -26,5 +26,5 @@ pub mod deserialize;
 pub mod elements;
 pub mod registry;
 pub mod renderer;
-pub mod types;
 pub mod static_layout;
+pub mod types;

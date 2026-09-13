@@ -1,8 +1,7 @@
-// @ts-nocheck -- Vite 8 middleware types changed; this is a config file, not app code
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import path from 'node:path'
 import { registerBuiltinActions } from './server/actions'
 import { registerSession } from './server/api/sessionState'
 import { registerProject } from './server/api/routes/project'
@@ -34,10 +33,10 @@ import { registerExport } from './server/api/routes/export'
 // path helpers live alongside it (http.ts, util.ts, tilesPaths.ts, storyPaths.ts).
 // ──────────────────────────────────────────────────────────────
 
-function apiPlugin() {
+function apiPlugin(): Plugin {
   return {
     name: 'dotzuki-editor-api',
-    configureServer(server: any) {
+    configureServer(server) {
       // Register the built-in AI actions (refine-character, generate-scene, …) so
       // /api/ai/run + the legacy shims can resolve them.
       registerBuiltinActions()
@@ -87,7 +86,7 @@ export default defineConfig({
   base: './',
   plugins: [vue(), tailwindcss(), apiPlugin()],
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   server: {
     port: 5174,
@@ -103,8 +102,8 @@ export default defineConfig({
       // it: the Help panel bundles `workspace/docs/reference/*.md` via `?raw`
       // imports, so the dev server must be allowed to serve those files too.
       allow: [
-        path.resolve(__dirname, '.'),
-        path.resolve(__dirname, '../../docs'),
+        path.resolve(import.meta.dirname, '.'),
+        path.resolve(import.meta.dirname, '../../docs'),
       ],
     },
   },

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import path from 'path'
+import path from 'node:path'
 
 // Isolated test config (vitest prefers this over vite.config.ts, so the dev
 // server middleware plugin is never loaded during tests). The sprite-sheet
@@ -7,7 +7,7 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     // Mirror vite.config.ts so client modules under test resolve '@' imports.
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   test: {
     include: ['server/**/*.test.ts', 'src/**/*.test.ts'],

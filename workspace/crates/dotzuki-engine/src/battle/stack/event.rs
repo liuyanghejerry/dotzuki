@@ -267,6 +267,25 @@ pub enum EffectType {
     Condition,
 }
 
+/// Which battler-relative event stream an effect hook observes.
+///
+/// The scope is supplied by [`EffectProvider::hook_scope`](super::ctx::EffectProvider::hook_scope)
+/// so existing static [`EventHook`] tables remain source-compatible.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum HookScope {
+    /// Observe events whose target or source is the effect's host.
+    #[default]
+    Direct,
+    /// Observe every matching event, regardless of its host.
+    Any,
+    /// Observe matching events emitted by the effect's host.
+    Source,
+    /// Observe matching events targeting the opposing side.
+    Foe,
+    /// Observe matching events targeting the host's side.
+    Ally,
+}
+
 impl EffectType {
     /// The Showdown `effectType` table sub-order (design §1.3): lower fires
     /// first. Gen-1 does not exercise this seam, but it is wired for review.

@@ -1293,7 +1293,7 @@ mod tests {
 
     #[test]
     fn run_block_is_rejected() {
-        let mut host = FakeHost::new();
+        let host = FakeHost::new();
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::Run {
             js: "let x = 1;".into(),
@@ -1341,7 +1341,7 @@ mod tests {
 
     #[test]
     fn short_circuit_or_returns_operand() {
-        let mut host = FakeHost::with_sync("getMoney", Value::Number(0.0));
+        let host = FakeHost::with_sync("getMoney", Value::Number(0.0));
         let mut interp = Interpreter::new(host);
         interp.load_function(&[StoryStmt::Assign {
             name: "m".into(),

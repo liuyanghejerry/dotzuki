@@ -59,7 +59,7 @@ use dotzuki_audio::output::CpalOutput;
 use dotzuki_audio::sequencer::Sequencer;
 
 #[cfg(feature = "modern-audio")]
-use dotzuki_audio::modern::{Bus as ModernBus, ModernAudio, PlayOptions as ModernPlayOptions};
+use dotzuki_audio::modern::{ModernAudio, PlayOptions as ModernPlayOptions};
 
 use crate::vfs::{join_path, DiskFiles, ProjectFiles};
 

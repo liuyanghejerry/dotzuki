@@ -5,14 +5,10 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
-      # Workflow-only changes (this file, docs-pages.yml, …) must not run
-      # the full suite: GitHub parses every workflow's YAML on push anyway,
-      # and `workflow_dispatch` remains for manual re-runs.
-      - '.github/workflows/*'
   pull_request:
     paths-ignore:
       - '**.md'
-      - '.github/workflows/*'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -44,6 +40,8 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Cache cargo registry & build
         # rust-cache uses its own key namespace and prunes the target dir
@@ -53,6 +51,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: workspace
+
+      - name: Check formatting
+        working-directory: workspace
+        run: cargo fmt --all --check
+
+      - name: Lint all targets and features
+        working-directory: workspace
+        run: cargo clippy --workspace --all-targets --all-features -- -D clippy::correctness
 
       - name: Build workspace
         working-directory: workspace
@@ -185,6 +191,68 @@ jobs:
         working-directory: workspace
         run: gradle --project-dir target/android-export-ci assembleDebug --no-daemon
 
+  msrv:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Minimum Rust 1.88
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+          key: msrv-1.88
+      - working-directory: workspace
+        run: cargo check --workspace --locked
+
+  wasm-targets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Build WebAssembly targets
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+          key: wasm-targets
+      - working-directory: workspace
+        run: |
+          cargo check -p dotzuki-runner-web --target wasm32-unknown-unknown --features modern-audio
+          cargo check -p dotzuki-web --target wasm32-unknown-unknown --all-features
+
+  dependency-policy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Dependency advisories, licenses, and sources
+    steps:
+      - uses: actions/checkout@v5
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: workspace/Cargo.toml
+          command: check advisories licenses sources
+
+  mobile-host-contracts:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    name: Mobile host contracts (${{ matrix.os }})
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - working-directory: workspace
+        run: cargo test -p dotzuki-mobile -p dotzuki-runner-mobile -p dotzuki-cli --locked
+
   package-check:
     runs-on: ubuntu-latest
     permissions:
@@ -295,3 +363,20 @@ jobs:
       - name: Build
         working-directory: workspace/tools/dotzuki-editor
         run: pnpm run build
+
+      - name: Install Playwright Chromium
+        working-directory: workspace/tools/dotzuki-editor
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build the in-editor WASM runner
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+
+      - name: Compile the in-editor WASM runner
+        working-directory: workspace/tools/dotzuki-editor
+        run: pnpm run build:wasm-runner
+
+      - name: Browser end-to-end tests
+        working-directory: workspace/tools/dotzuki-editor
+        run: pnpm run test:e2e

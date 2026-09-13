@@ -34,7 +34,10 @@ impl ProjectDiagnostics {
 
     /// Every diagnostic message, DSL-compile first then battle-section.
     pub fn all(&self) -> impl Iterator<Item = &String> {
-        self.report.diagnostics.iter().chain(self.battle_diags.iter())
+        self.report
+            .diagnostics
+            .iter()
+            .chain(self.battle_diags.iter())
     }
 }
 

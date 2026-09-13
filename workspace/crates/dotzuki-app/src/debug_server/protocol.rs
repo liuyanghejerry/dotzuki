@@ -158,9 +158,8 @@ mod tests {
         let json = serde_json::to_string(&DebugResponse::err("boom".into())).unwrap();
         assert_eq!(json, r#"{"ok":false,"error":"boom"}"#);
 
-        let json =
-            serde_json::to_string(&DebugResponse::ok_with_data(serde_json::json!({"x": 1})))
-                .unwrap();
+        let json = serde_json::to_string(&DebugResponse::ok_with_data(serde_json::json!({"x": 1})))
+            .unwrap();
         assert_eq!(json, r#"{"ok":true,"data":{"x":1}}"#);
     }
 }
