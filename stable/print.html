@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-184aa8e1.js";
+            window.path_to_searchindex_js = "searchindex-ec137ca7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-fcc230b2.js"></script>
+        <script src="toc-d524b668.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -287,7 +287,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9255,7 +9255,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.1</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9269,6 +9269,43 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<h2 id="v080"><a class="header" href="#v080">v0.8.0</a></h2>
+<p>This release contains breaking API and feature-gate changes. See the
+<a href="#migrating-to-v080">migration guide</a> for consumer updates.</p>
+<p>Breaking changes:</p>
+<ul>
+<li><code>FrameBuffer::save_png</code> now requires the <code>dotzuki-engine/image</code> feature.</li>
+<li>Boa-backed exports in <code>dotzuki-engine-script</code> now require the <code>script-boa</code>
+feature. Default-feature consumers retain them; consumers that disable
+defaults must opt in.</li>
+<li><code>dotzuki_renderer::mon_icon</code> now requires the renderer’s <code>resource</code> feature.</li>
+<li>Engine and DSL public data structures now use their crate-local deterministic
+<code>HashMap</code> and <code>HashSet</code> aliases instead of <code>std::collections</code> types.</li>
+<li><code>StoryStmt</code> gained the <code>Return</code> variant. Exhaustive matches must handle it.</li>
+<li>Seven <code>BattleEffects</code> rendering methods gained an inferred const storage
+parameter, and <code>Tile</code> now has four-byte alignment.</li>
+</ul>
+<p>GBA and renderer additions:</p>
+<ul>
+<li>Engine, DSL, script protocol, renderer, UI, rules, app, and audio paths can
+compile with <code>no_std + alloc</code> on bare-metal ARM consumers.</li>
+<li>Indexed framebuffers expose explicit packed and word-aligned linear storage.
+The default remains packed on every target; <code>LinearIndexedFrameBuffer</code> and
+<code>LinearRgbaIndexedFrameBuffer</code> provide one byte per palette index for DMA.</li>
+<li>Indexed tile blits, clipped row-copy paths, framebuffer scrolling, rectangle
+copies, and overlap-safe internal moves reduce CPU and allocation pressure.</li>
+<li>Transient battle-animation state and in-place GBA screen effects let consumers
+reuse stable frames without cloning a 160×144 index buffer.</li>
+</ul>
+<p>DSL and layout additions:</p>
+<ul>
+<li>The schema v2 <a href="#glossary"><code>static layout</code></a> compiler lowers
+supported <code>.gui</code> screens into
+borrowed Rust layout data while keeping <code>.gui</code> as the authored source.</li>
+<li>The native AST core dispatcher and capability traversal centralize built-in
+command validation; bare <code>return</code> now has matching parser, native interpreter,
+and JavaScript semantics.</li>
+</ul>
 <h2 id="v071"><a class="header" href="#v071">v0.7.1</a></h2>
 <p>This patch release has no API changes.
 See the <a href="#migrating-to-v071">migration guide</a> for the consumer update.</p>
@@ -9572,6 +9609,94 @@ run:</p>
 <p>If you install <code>dotzuki</code> from crates.io and use <code>dotzuki export --android</code> or
 <code>dotzuki export --harmony</code>, update to v0.7.1 before exporting. The release
 package now includes the mobile ABI header that those generated projects need.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v080"><a class="header" href="#migrating-to-v080">Migrating to v0.8.0</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
+</ul>
+</blockquote>
+<p>Update every <code>dotzuki-*</code> dependency from v0.7.1 to v0.8.0 and apply the
+feature and public-type migrations below.</p>
+<p>Before you start, read the <a href="#changelog">changelog</a> for the release scope.</p>
+<h2 id="update-dependencies-2"><a class="header" href="#update-dependencies-2">Update dependencies</a></h2>
+<p>Keep all engine crates on one version. For registry dependencies:</p>
+<pre><code class="language-toml">dotzuki-engine = "0.8.0"
+dotzuki-renderer = "0.8.0"
+</code></pre>
+<p>For git dependencies, update every engine entry to <code>tag = "v0.8.0"</code>, then run:</p>
+<pre><code class="language-bash">cargo update
+</code></pre>
+<h2 id="enable-apis-that-moved-behind-features"><a class="header" href="#enable-apis-that-moved-behind-features">Enable APIs that moved behind features</a></h2>
+<p><code>FrameBuffer::save_png</code> now requires the engine’s <code>image</code> feature:</p>
+<pre><code class="language-toml">dotzuki-engine = { version = "0.8.0", features = ["image"] }
+</code></pre>
+<p>The default <code>dotzuki-engine-script</code> configuration still includes Boa. A
+consumer that disables default features and uses <code>ScriptEngine</code>,
+<code>ScriptApiRegistrar</code>, or other Boa-backed exports must enable <code>script-boa</code>:</p>
+<pre><code class="language-toml">dotzuki-engine-script = { version = "0.8.0", default-features = false, features = ["script-boa"] }
+</code></pre>
+<p><code>dotzuki_renderer::mon_icon</code> now follows the renderer’s resource-loading
+boundary. A framebuffer-only consumer that uses this module must enable
+<code>resource</code>:</p>
+<pre><code class="language-toml">dotzuki-renderer = { version = "0.8.0", default-features = false, features = ["resource"] }
+</code></pre>
+<h2 id="migrate-public-hash-map-values"><a class="header" href="#migrate-public-hash-map-values">Migrate public hash-map values</a></h2>
+<p>Public engine and DSL structures now use deterministic, <code>no_std</code>-compatible
+map and set aliases. Replace <code>std::collections</code> values passed into those APIs
+with the aliases exported by the owning crate:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::hash::HashMap;
+
+let mut flags = HashMap::default();
+flags.insert("opened_gate".to_owned(), true);
+<span class="boring">}</span></code></pre>
+<p>Use <code>dotzuki_engine_dsl::hash::{HashMap, HashSet}</code> for DSL AST values. Existing
+maps can be converted with <code>into_iter().collect()</code> when ownership is available.</p>
+<h2 id="handle-the-return-statement"><a class="header" href="#handle-the-return-statement">Handle the <code>return</code> statement</a></h2>
+<p><code>StoryStmt</code> has a new <code>Return</code> variant. Add a match arm in consumers that match
+the enum exhaustively. The native interpreter and generated JavaScript both end
+the current storyline when this variant runs. Do not persist or compare numeric
+casts of <code>StoryStmt</code>: inserting <code>Return</code> changed the implicit discriminants of
+the following <code>Assign</code> and <code>Command</code> variants.</p>
+<h2 id="update-renderer-type-sensitive-code"><a class="header" href="#update-renderer-type-sensitive-code">Update renderer type-sensitive code</a></h2>
+<p>The following <code>BattleEffects</code> methods now carry an inferred const storage
+parameter so they accept packed and linear RGBA indexed framebuffers:</p>
+<ul>
+<li><code>apply_enemy_hud_shake</code></li>
+<li><code>apply_screen_effects</code></li>
+<li><code>render_objects</code></li>
+<li><code>draw_substitute</code></li>
+<li><code>draw_minimized</code></li>
+<li><code>draw_squished</code></li>
+<li><code>draw_mon_rows</code></li>
+</ul>
+<p>Ordinary calls infer the parameter. Calls that supplied generic arguments with
+turbofish syntax must include or allow inference for the new const argument.</p>
+<p><code>dotzuki_renderer::tile::Tile</code> now has four-byte alignment so GBA tile-copy
+paths can issue aligned word loads. Remove <code>Tile</code> from downstream <code>repr(packed)</code>
+structures; store it separately or use an aligned container.</p>
+<h2 id="choose-indexed-framebuffer-storage"><a class="header" href="#choose-indexed-framebuffer-storage">Choose indexed framebuffer storage</a></h2>
+<p><code>IndexedFrameBuffer</code> and <code>RgbaIndexedFrameBuffer</code> remain packed by default on
+every target. Existing packed-storage code can keep using <code>packed()</code> and
+<code>packed_mut()</code>.</p>
+<p>Use <code>LinearIndexedFrameBuffer</code> or <code>LinearRgbaIndexedFrameBuffer</code> when a platform
+needs one byte per palette index, word alignment, <code>indices()</code>, or <code>indices_mut()</code>.
+GBA Mode 4 consumers should use a linear alias for DMA-friendly presentation:</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_renderer::{LinearRgbaIndexedFrameBuffer, RenderConfig, Rgba};
+
+let framebuffer = LinearRgbaIndexedFrameBuffer::new(
+    RenderConfig::new(160, 144),
+    Rgba::BLACK,
+);
+<span class="boring">}</span></code></pre>
+<p>The storage choice is part of the type and no longer changes with the target.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-engine-开发者指南"><a class="header" href="#dotzuki-engine-开发者指南">dotzuki-engine 开发者指南</a></h1>
 <blockquote>
@@ -13213,8 +13338,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.7.1
-（源文档 commit 489436d）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.8.0
+（源文档 commit 1d88d2f3ef7670a7bc2cf517c49fe83a7f2ab770）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13322,7 +13447,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -21340,8 +21465,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.7.1
-（源文档 commit cb606d3）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.0
+（源文档 commit 1d88d2f3ef7670a7bc2cf517c49fe83a7f2ab770）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21349,7 +21474,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.1</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -21362,6 +21487,41 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<h2 id="v080-1"><a class="header" href="#v080-1">v0.8.0</a></h2>
+<p>本版本包含破坏性 API 与 feature gate 变更。使用方更新方式见
+<a href="#迁移到-v080">迁移指南</a>。</p>
+<p>破坏性变更：</p>
+<ul>
+<li><code>FrameBuffer::save_png</code> 现在需要 <code>dotzuki-engine/image</code> feature。</li>
+<li><code>dotzuki-engine-script</code> 中依赖 Boa 的导出现在需要 <code>script-boa</code> feature。
+使用默认 feature 的消费方不受影响；关闭默认 feature 的消费方需要
+显式启用它。</li>
+<li><code>dotzuki_renderer::mon_icon</code> 现在需要 renderer 的 <code>resource</code> feature。</li>
+<li>Engine 与 DSL 的公开数据结构现在使用所属 crate 的确定性 <code>HashMap</code> 和
+<code>HashSet</code> alias，不再使用 <code>std::collections</code> 类型。</li>
+<li><code>StoryStmt</code> 新增 <code>Return</code> variant。穷尽匹配需要处理它。</li>
+<li>七个 <code>BattleEffects</code> 渲染方法新增可推导的 const 存储参数，<code>Tile</code> 现在按
+四字节对齐。</li>
+</ul>
+<p>GBA 与 renderer 新增内容：</p>
+<ul>
+<li>Engine、DSL、script protocol、renderer、UI、rules、app 与 audio 路径现在可供
+裸机 ARM 消费方以 <code>no_std + alloc</code> 编译。</li>
+<li>索引 framebuffer 提供显式 packed 与 word-aligned linear 存储。
+默认类型在所有目标上保持 packed；<code>LinearIndexedFrameBuffer</code> 与
+<code>LinearRgbaIndexedFrameBuffer</code> 为 DMA 提供每个调色板索引一个字节的存储。</li>
+<li>索引 tile blit、裁剪行复制、framebuffer scroll、矩形复制与
+重叠安全的内部搬移降低 CPU 与内存分配压力。</li>
+<li>瞬态战斗动画状态与 GBA 原地屏幕效果让消费方能够复用稳定帧，不再克隆
+160×144 索引缓冲区。</li>
+</ul>
+<p>DSL 与布局新增内容：</p>
+<ul>
+<li>Schema v2 <a href="#glossary"><code>静态布局</code></a>编译器把支持的 <code>.gui</code> 画面
+编译为借用式 Rust 布局数据，同时保留 <code>.gui</code> 作为创作源。</li>
+<li>原生 AST core dispatcher 与 capability traversal 统一内建命令校验；
+<code>return</code> 现在具有一致的 parser、原生 interpreter 与 JavaScript 语义。</li>
+</ul>
 <h2 id="v071-1"><a class="header" href="#v071-1">v0.7.1</a></h2>
 <p>此补丁版本没有 API 变更。
 使用方更新方式见<a href="#迁移到-v071">迁移指南</a>。</p>
@@ -21649,6 +21809,95 @@ dotzuki-mobile = "0.7.1"
 <p>如果通过 crates.io 安装 <code>dotzuki</code> 并使用 <code>dotzuki export --android</code> 或
 <code>dotzuki export --harmony</code>，请在导出前升级到 v0.7.1。该发布包已包含生成工程所需的
 移动 ABI 头文件。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移到-v080"><a class="header" href="#迁移到-v080">迁移到 v0.8.0</a></h1>
+<blockquote>
+<p>本文是 <code>v0.8.0.md</code> 的中文翻译，同步至引擎版本 v0.8.0
+（源文档 commit db41ffc61f12a1b3cade92ef0c9d33a4db1062ee）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
+</ul>
+</blockquote>
+<p>把所有 <code>dotzuki-*</code> 依赖从 v0.7.1 更新到 v0.8.0，并完成下面的 feature 与
+公开类型迁移。</p>
+<p>开始前，请阅读<a href="#变更日志">变更日志</a>了解本版本的范围。</p>
+<h2 id="更新依赖-2"><a class="header" href="#更新依赖-2">更新依赖</a></h2>
+<p>所有引擎 crate 应使用同一个版本。使用 registry 依赖时：</p>
+<pre><code class="language-toml">dotzuki-engine = "0.8.0"
+dotzuki-renderer = "0.8.0"
+</code></pre>
+<p>使用 git 依赖时，把每个引擎依赖更新为 <code>tag = "v0.8.0"</code>，然后运行：</p>
+<pre><code class="language-bash">cargo update
+</code></pre>
+<h2 id="启用移到-feature-后的-api"><a class="header" href="#启用移到-feature-后的-api">启用移到 feature 后的 API</a></h2>
+<p><code>FrameBuffer::save_png</code> 现在需要 engine 的 <code>image</code> feature：</p>
+<pre><code class="language-toml">dotzuki-engine = { version = "0.8.0", features = ["image"] }
+</code></pre>
+<p><code>dotzuki-engine-script</code> 的默认配置仍然包含 Boa。关闭默认 feature 后继续使用
+<code>ScriptEngine</code>、<code>ScriptApiRegistrar</code> 或其他依赖 Boa 的导出时，必须启用
+<code>script-boa</code>：</p>
+<pre><code class="language-toml">dotzuki-engine-script = { version = "0.8.0", default-features = false, features = ["script-boa"] }
+</code></pre>
+<p><code>dotzuki_renderer::mon_icon</code> 现在归入 renderer 的资源加载边界。
+仅使用 framebuffer 但需要该模块的消费方必须启用 <code>resource</code>：</p>
+<pre><code class="language-toml">dotzuki-renderer = { version = "0.8.0", default-features = false, features = ["resource"] }
+</code></pre>
+<h2 id="迁移公开-hash-map-值"><a class="header" href="#迁移公开-hash-map-值">迁移公开 hash map 值</a></h2>
+<p>公开的 engine 与 DSL 结构现在使用确定性且兼容 <code>no_std</code> 的 map 和 set alias。
+传入这些 API 的 <code>std::collections</code> 值需要替换为所属 crate 导出的 alias：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_engine::hash::HashMap;
+
+let mut flags = HashMap::default();
+flags.insert("opened_gate".to_owned(), true);
+<span class="boring">}</span></code></pre>
+<p>DSL AST 值使用 <code>dotzuki_engine_dsl::hash::{HashMap, HashSet}</code>。
+拥有旧 map 的所有权时，可以通过 <code>into_iter().collect()</code> 转换。</p>
+<h2 id="处理-return-语句"><a class="header" href="#处理-return-语句">处理 <code>return</code> 语句</a></h2>
+<p><code>StoryStmt</code> 新增 <code>Return</code> variant。对该 enum 做穷尽匹配的消费方需要添加 match arm。
+原生 interpreter 与生成的 JavaScript 都会在执行该 variant 时结束当前 storyline。
+不要持久化或比较 <code>StoryStmt</code> 的数值转换结果：插入 <code>Return</code> 改变了后续 <code>Assign</code>
+与 <code>Command</code> variant 的隐式 discriminant。</p>
+<h2 id="更新依赖-renderer-类型细节的代码"><a class="header" href="#更新依赖-renderer-类型细节的代码">更新依赖 renderer 类型细节的代码</a></h2>
+<p>以下 <code>BattleEffects</code> 方法现在带有可推导的 const 存储参数，使其同时接受 packed 与
+linear RGBA 索引 framebuffer：</p>
+<ul>
+<li><code>apply_enemy_hud_shake</code></li>
+<li><code>apply_screen_effects</code></li>
+<li><code>render_objects</code></li>
+<li><code>draw_substitute</code></li>
+<li><code>draw_minimized</code></li>
+<li><code>draw_squished</code></li>
+<li><code>draw_mon_rows</code></li>
+</ul>
+<p>常规调用会推导该参数。使用 turbofish 显式传入泛型参数的调用需要包含新的 const
+参数，或改为让编译器推导。</p>
+<p><code>dotzuki_renderer::tile::Tile</code> 现在按四字节对齐，使 GBA tile copy 路径能够执行
+对齐的 word load。不要把 <code>Tile</code> 放进下游 <code>repr(packed)</code> 结构；请单独存储它，
+或使用满足对齐要求的容器。</p>
+<h2 id="选择索引-framebuffer-存储"><a class="header" href="#选择索引-framebuffer-存储">选择索引 framebuffer 存储</a></h2>
+<p><code>IndexedFrameBuffer</code> 与 <code>RgbaIndexedFrameBuffer</code> 在所有目标上仍默认使用 packed
+存储。现有 packed 存储代码可以继续使用 <code>packed()</code> 与 <code>packed_mut()</code>。</p>
+<p>平台需要每个调色板索引一个字节、word alignment、<code>indices()</code> 或 <code>indices_mut()</code> 时，
+使用 <code>LinearIndexedFrameBuffer</code> 或 <code>LinearRgbaIndexedFrameBuffer</code>。
+GBA Mode 4 消费方应使用 linear alias，以便通过 DMA 提交：</p>
+<pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use dotzuki_renderer::{LinearRgbaIndexedFrameBuffer, RenderConfig, Rgba};
+
+let framebuffer = LinearRgbaIndexedFrameBuffer::new(
+    RenderConfig::new(160, 144),
+    Rgba::BLACK,
+);
+<span class="boring">}</span></code></pre>
+<p>存储选择现在是类型的一部分，不会再随编译目标变化。</p>
 
                     </main>
 

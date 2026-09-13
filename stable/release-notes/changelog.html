@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-184aa8e1.js";
+            window.path_to_searchindex_js = "../searchindex-ec137ca7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fcc230b2.js"></script>
+        <script src="../toc-d524b668.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.1</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -200,6 +200,43 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<h2 id="v080"><a class="header" href="#v080">v0.8.0</a></h2>
+<p>This release contains breaking API and feature-gate changes. See the
+<a href="migration/v0.8.0.html">migration guide</a> for consumer updates.</p>
+<p>Breaking changes:</p>
+<ul>
+<li><code>FrameBuffer::save_png</code> now requires the <code>dotzuki-engine/image</code> feature.</li>
+<li>Boa-backed exports in <code>dotzuki-engine-script</code> now require the <code>script-boa</code>
+feature. Default-feature consumers retain them; consumers that disable
+defaults must opt in.</li>
+<li><code>dotzuki_renderer::mon_icon</code> now requires the renderer’s <code>resource</code> feature.</li>
+<li>Engine and DSL public data structures now use their crate-local deterministic
+<code>HashMap</code> and <code>HashSet</code> aliases instead of <code>std::collections</code> types.</li>
+<li><code>StoryStmt</code> gained the <code>Return</code> variant. Exhaustive matches must handle it.</li>
+<li>Seven <code>BattleEffects</code> rendering methods gained an inferred const storage
+parameter, and <code>Tile</code> now has four-byte alignment.</li>
+</ul>
+<p>GBA and renderer additions:</p>
+<ul>
+<li>Engine, DSL, script protocol, renderer, UI, rules, app, and audio paths can
+compile with <code>no_std + alloc</code> on bare-metal ARM consumers.</li>
+<li>Indexed framebuffers expose explicit packed and word-aligned linear storage.
+The default remains packed on every target; <code>LinearIndexedFrameBuffer</code> and
+<code>LinearRgbaIndexedFrameBuffer</code> provide one byte per palette index for DMA.</li>
+<li>Indexed tile blits, clipped row-copy paths, framebuffer scrolling, rectangle
+copies, and overlap-safe internal moves reduce CPU and allocation pressure.</li>
+<li>Transient battle-animation state and in-place GBA screen effects let consumers
+reuse stable frames without cloning a 160×144 index buffer.</li>
+</ul>
+<p>DSL and layout additions:</p>
+<ul>
+<li>The schema v2 <a href="../reference/glossary.html"><code>static layout</code></a> compiler lowers
+supported <code>.gui</code> screens into
+borrowed Rust layout data while keeping <code>.gui</code> as the authored source.</li>
+<li>The native AST core dispatcher and capability traversal centralize built-in
+command validation; bare <code>return</code> now has matching parser, native interpreter,
+and JavaScript semantics.</li>
+</ul>
 <h2 id="v071"><a class="header" href="#v071">v0.7.1</a></h2>
 <p>This patch release has no API changes.
 See the <a href="migration/v0.7.1.html">migration guide</a> for the consumer update.</p>
