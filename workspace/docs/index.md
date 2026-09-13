@@ -85,7 +85,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 
 ## Release notes
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release ([`v0.1.0`](./release-notes/migration/v0.1.0.md), [`v0.5.4`](./release-notes/migration/v0.5.4.md), [`v0.7.0`](./release-notes/migration/v0.7.0.md), [`v0.7.1`](./release-notes/migration/v0.7.1.md), [`v0.8.0`](./release-notes/migration/v0.8.0.md), [`v0.8.1`](./release-notes/migration/v0.8.1.md))
+- [`release-notes/changelog.md`](./release-notes/changelog.md) — version history; migration guides live next to it per release ([`v0.1.0`](./release-notes/migration/v0.1.0.md), [`v0.5.4`](./release-notes/migration/v0.5.4.md), [`v0.7.0`](./release-notes/migration/v0.7.0.md), [`v0.7.1`](./release-notes/migration/v0.7.1.md), [`v0.8.0`](./release-notes/migration/v0.8.0.md), [`v0.8.1`](./release-notes/migration/v0.8.1.md), [`v0.8.2`](./release-notes/migration/v0.8.2.md))
 
 ## Archive
 

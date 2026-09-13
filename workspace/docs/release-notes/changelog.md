@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.1
+> - **Last verified**: v0.8.2
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,20 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## v0.8.2
+
+This patch release adds trait implementations only; there are no breaking
+changes. See the [migration guide](migration/v0.8.2.md) for the consumer
+update.
+
+- Add: engine-owned runtime state is serializable — `Serialize` and
+  `Deserialize` on the DSL interpreter (`Interpreter`, `InterpState`), the
+  trigger manager, NPC runtime state, the cutscene manager, connection
+  transitions, `CommandResult`, `Metatile`, and the overworld presentation
+  states, plus `Debug` and `Clone` on the DSL `Interpreter`. A game with
+  frame-level `save_state` / `restore_state` can snapshot and restore engine
+  state directly, instead of pinning a private engine branch.
 
 ## v0.8.1
 
