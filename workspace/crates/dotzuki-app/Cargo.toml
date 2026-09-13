@@ -11,8 +11,8 @@ default = ["desktop"]
 desktop = ["dotzuki-renderer/gpu", "dep:notify"]
 
 [dependencies]
-dotzuki-engine = { path = "../dotzuki-engine", version = "0.8.1" }
-dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.8.1", default-features = false }
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.8.2" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.8.2", default-features = false }
 notify = { version = "6", optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

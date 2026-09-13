@@ -1,7 +1,7 @@
 # dotzuki 引擎 — 文档索引
 
-> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.8.1
->（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
+> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.8.2
+>（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本目录是 **dotzuki 开发者文档的入口**。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -86,7 +86,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)）
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)、[`v0.8.2`](./release-notes/migration/v0.8.2.zh-CN.md)）
 
 ## 归档
 
