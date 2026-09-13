@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(produced, out);
 
         // The two artifacts exist, the binary renamed after the project dir.
-        assert!(out.join("your-first-game").is_file());
+        assert!(out.join(exe_file_name(&project)).is_file());
         let pack_bytes = fs::read(out.join(bundle::PACK_FILE)).unwrap();
 
         // The pack boots through the exact player path: parse into PackFiles
