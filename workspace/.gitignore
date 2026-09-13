@@ -1,5 +1,6 @@
 # Build artifacts
 /target/
+/ci/*/target/
 dotzuki-template/target/
 tools/asset-converter/target/
 
@@ -24,4 +25,3 @@ Thumbs.db
 
 # pnpm workspace (lockfile IS committed — reproducible CI installs)
 tools/node_modules/
-

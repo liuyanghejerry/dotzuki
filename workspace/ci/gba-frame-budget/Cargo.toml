@@ -1,0 +1,16 @@
+[workspace]
+
+[package]
+name = "dotzuki-gba-frame-budget"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+agb = { version = "=0.25.0", default-features = false, features = ["testing"] }
+dotzuki-renderer = { path = "../../crates/dotzuki-renderer", default-features = false, features = ["framebuffer"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = 3

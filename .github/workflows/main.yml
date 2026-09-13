@@ -71,6 +71,57 @@ jobs:
           ./target/debug/dotzuki check examples/your-first-game
           ./target/debug/dotzuki run examples/your-first-game --headless --frames 180
 
+  gba-frame-budget:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: GBA frame budget (59.7275 Hz)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install mGBA build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -yq \
+            build-essential \
+            clang \
+            cmake \
+            curl \
+            libclang-dev \
+            libelf-dev \
+            pkg-config
+
+      - name: Install pinned GBA Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly-2025-12-06
+          components: rust-src
+
+      - name: Cache GBA cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace/ci/gba-frame-budget
+          key: gba-frame-budget
+
+      # The pinned runner embeds mGBA 0.10.5. It executes ARM7TDMI code and
+      # reports emulated GBA master-clock cycles, so host load cannot make the
+      # performance threshold flaky.
+      - name: Install mGBA test runner
+        # agb v0.25.0, pinned to the peeled commit so a moved tag cannot alter
+        # the emulator or its cycle model.
+        run: >-
+          cargo install --git https://github.com/agbrs/agb.git
+          --rev 1c2842c954fe1dd40a4b0ce0fbecf4ab7157745a
+          --locked mgba-test-runner
+
+      # One 59.7275 Hz frame is exactly 280,896 GBA master-clock cycles. The
+      # ROM asserts representative redraw and screen-effect frames stay below
+      # that budget; exceeding it fails this required CI job.
+      - name: Enforce GBA frame budget
+        working-directory: workspace/ci/gba-frame-budget
+        run: cargo test --release --locked
+
   build-android-export:
     runs-on: ubuntu-latest
     permissions:
