@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d5d99721.js";
+            window.path_to_searchindex_js = "../searchindex-0aae8d67.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-be14a74b.js"></script>
+        <script src="../toc-fb75aeab.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.1</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -198,6 +198,19 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v082"><a class="header" href="#v082">v0.8.2</a></h2>
+<p>This patch release adds trait implementations only; there are no breaking
+changes. See the <a href="migration/v0.8.2.html">migration guide</a> for the consumer
+update.</p>
+<ul>
+<li>Add: engine-owned runtime state is serializable — <code>Serialize</code> and
+<code>Deserialize</code> on the DSL interpreter (<code>Interpreter</code>, <code>InterpState</code>), the
+trigger manager, NPC runtime state, the cutscene manager, connection
+transitions, <code>CommandResult</code>, <code>Metatile</code>, and the overworld presentation
+states, plus <code>Debug</code> and <code>Clone</code> on the DSL <code>Interpreter</code>. A game with
+frame-level <code>save_state</code> / <code>restore_state</code> can snapshot and restore engine
+state directly, instead of pinning a private engine branch.</li>
 </ul>
 <h2 id="v081"><a class="header" href="#v081">v0.8.1</a></h2>
 <p>This patch release has no API changes. See the

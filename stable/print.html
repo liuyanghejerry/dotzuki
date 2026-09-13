@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d5d99721.js";
+            window.path_to_searchindex_js = "searchindex-0aae8d67.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-be14a74b.js"></script>
+        <script src="toc-fb75aeab.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -287,7 +287,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9269,7 +9269,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.1</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9281,6 +9281,19 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v082"><a class="header" href="#v082">v0.8.2</a></h2>
+<p>This patch release adds trait implementations only; there are no breaking
+changes. See the <a href="#migrating-to-v082">migration guide</a> for the consumer
+update.</p>
+<ul>
+<li>Add: engine-owned runtime state is serializable — <code>Serialize</code> and
+<code>Deserialize</code> on the DSL interpreter (<code>Interpreter</code>, <code>InterpState</code>), the
+trigger manager, NPC runtime state, the cutscene manager, connection
+transitions, <code>CommandResult</code>, <code>Metatile</code>, and the overworld presentation
+states, plus <code>Debug</code> and <code>Clone</code> on the DSL <code>Interpreter</code>. A game with
+frame-level <code>save_state</code> / <code>restore_state</code> can snapshot and restore engine
+state directly, instead of pinning a private engine branch.</li>
 </ul>
 <h2 id="v081"><a class="header" href="#v081">v0.8.1</a></h2>
 <p>This patch release has no API changes. See the
@@ -9754,6 +9767,38 @@ for HarmonyOS. A host exported before v0.8.1 keeps whatever icons it was
 generated with, so re-run the export and rebuild the app to pick them up. The
 template ships a neutral mark; replace the layer bitmaps after export when a
 game needs its own art.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v082"><a class="header" href="#migrating-to-v082">Migrating to v0.8.2</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
+</ul>
+</blockquote>
+<p>Update every <code>dotzuki-*</code> dependency from v0.8.1 to v0.8.2. This release has
+no breaking Rust API changes; it adds trait implementations.</p>
+<p>Before you start, read the <a href="#changelog">changelog</a> for this patch’s
+scope.</p>
+<h2 id="update-dependencies-4"><a class="header" href="#update-dependencies-4">Update dependencies</a></h2>
+<p>Keep all engine crates on one version. For registry dependencies:</p>
+<pre><code class="language-toml">dotzuki-engine = "0.8.2"
+dotzuki-mobile = "0.8.2"
+</code></pre>
+<p>For git dependencies, update every engine entry to <code>tag = "v0.8.2"</code>, then
+run:</p>
+<pre><code class="language-bash">cargo update
+</code></pre>
+<h2 id="snapshot-engine-state"><a class="header" href="#snapshot-engine-state">Snapshot engine state</a></h2>
+<p>Runtime state owned by the engine is serializable: the DSL interpreter
+(<code>Interpreter</code>, <code>InterpState</code>), the trigger manager, NPC runtime state, the
+cutscene manager, connection transitions, <code>CommandResult</code>, <code>Metatile</code>, and
+the overworld presentation states implement <code>Serialize</code> and <code>Deserialize</code>;
+the DSL <code>Interpreter</code> also implements <code>Debug</code> and <code>Clone</code>.</p>
+<p>Derive snapshot types over those values directly when a game saves and
+restores frame-level state; no per-struct mirror type and no private engine
+branch to pin.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-engine-开发者指南"><a class="header" href="#dotzuki-engine-开发者指南">dotzuki-engine 开发者指南</a></h1>
 <blockquote>
@@ -13395,8 +13440,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.8.1
-（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.8.2
+（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13504,7 +13549,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -21532,8 +21577,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.1
-（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.2
+（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21541,7 +21586,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.1</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -21552,6 +21597,17 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="v082-1"><a class="header" href="#v082-1">v0.8.2</a></h2>
+<p>此补丁版本只新增 trait 实现，没有破坏性变更。使用方更新方式见
+<a href="#迁移到-v082">迁移指南</a>。</p>
+<ul>
+<li>新增：引擎自身的运行时状态现在可序列化——DSL 解释器（<code>Interpreter</code>、
+<code>InterpState</code>）、trigger manager、NPC 运行时状态、cutscene manager、连接过场、
+<code>CommandResult</code>、<code>Metatile</code> 以及 overworld 演出状态实现 <code>Serialize</code> 与
+<code>Deserialize</code>，DSL <code>Interpreter</code> 另有 <code>Debug</code> 与 <code>Clone</code>。需要逐帧
+<code>save_state</code> / <code>restore_state</code> 的游戏可以直接对引擎状态下快照并恢复，无需再
+固定一份私有引擎分支。</li>
 </ul>
 <h2 id="v081-1"><a class="header" href="#v081-1">v0.8.1</a></h2>
 <p>此补丁版本没有 API 变更。使用方更新方式见<a href="#迁移到-v081">迁移指南</a>。</p>
@@ -22004,6 +22060,39 @@ dotzuki-mobile = "0.8.1"
 使用自适应图标，鸿蒙使用分层图标加启动页图标。在 v0.8.1 之前导出的宿主保留导出时
 的图标，请重新执行导出并重建应用。模板自带中性图案；游戏需要自己的美术时，在导出
 后替换图层位图即可。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移到-v082"><a class="header" href="#迁移到-v082">迁移到 v0.8.2</a></h1>
+<blockquote>
+<p>本文是 <code>v0.8.2.md</code> 的中文翻译，同步至引擎版本 v0.8.2
+（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
+</ul>
+</blockquote>
+<p>将所有 <code>dotzuki-*</code> 依赖从 v0.8.1 更新到 v0.8.2。本版本没有破坏性的 Rust API
+变更，只新增 trait 实现。</p>
+<p>开始前，请阅读本补丁适用范围的<a href="#变更日志">变更日志</a>。</p>
+<h2 id="更新依赖-4"><a class="header" href="#更新依赖-4">更新依赖</a></h2>
+<p>所有引擎 crate 应使用同一个版本。使用 registry 依赖时：</p>
+<pre><code class="language-toml">dotzuki-engine = "0.8.2"
+dotzuki-mobile = "0.8.2"
+</code></pre>
+<p>使用 git 依赖时，把每个引擎依赖更新为 <code>tag = "v0.8.2"</code>，然后运行：</p>
+<pre><code class="language-bash">cargo update
+</code></pre>
+<h2 id="对引擎状态做快照"><a class="header" href="#对引擎状态做快照">对引擎状态做快照</a></h2>
+<p>引擎自身的运行时状态现在可序列化：DSL 解释器（<code>Interpreter</code>、<code>InterpState</code>）、
+trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>CommandResult</code>、
+<code>Metatile</code> 以及 overworld 演出状态实现 <code>Serialize</code> 与 <code>Deserialize</code>；DSL
+<code>Interpreter</code> 还实现 <code>Debug</code> 与 <code>Clone</code>。</p>
+<p>需要逐帧保存与恢复状态的游戏，可以直接对这些值派生快照类型；不必为每个引擎结构
+另写镜像类型，也不必再固定一份私有引擎分支。</p>
 
                     </main>
 
