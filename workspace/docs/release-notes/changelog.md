@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.1
+> - **Last verified**: v0.8.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -16,7 +16,59 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
-## Unreleased
+## v0.8.1
+
+This patch release has no API changes. See the
+[migration guide](migration/v0.8.1.md) for the consumer update.
+
+- Fix: HarmonyOS hosts export with a layered launcher icon, which API 11 and
+  later require, so the home screen shows the game's own icon instead of the
+  system placeholder. Re-export a host to pick up the icon; the
+  `dotzuki export --harmony` template and `scripts/export-mobile-host.py` both
+  carry the layered bitmaps.
+- Fix: Android hosts export with adaptive launcher icons. The manifest now
+  points at `@mipmap/ic_launcher`, and the template ships the API 26 layers,
+  the legacy icons, and one bitmap per screen density. Re-export a host to pick
+  up the icons.
+
+## v0.8.0
+
+This release contains breaking API and feature-gate changes. See the
+[migration guide](migration/v0.8.0.md) for consumer updates.
+
+Breaking changes:
+
+- `FrameBuffer::save_png` now requires the `dotzuki-engine/image` feature.
+- Boa-backed exports in `dotzuki-engine-script` now require the `script-boa`
+  feature. Default-feature consumers retain them; consumers that disable
+  defaults must opt in.
+- `dotzuki_renderer::mon_icon` now requires the renderer's `resource` feature.
+- Engine and DSL public data structures now use their crate-local deterministic
+  `HashMap` and `HashSet` aliases instead of `std::collections` types.
+- `StoryStmt` gained the `Return` variant. Exhaustive matches must handle it.
+- Seven `BattleEffects` rendering methods gained an inferred const storage
+  parameter, and `Tile` now has four-byte alignment.
+
+GBA and renderer additions:
+
+- Engine, DSL, script protocol, renderer, UI, rules, app, and audio paths can
+  compile with `no_std + alloc` on bare-metal ARM consumers.
+- Indexed framebuffers expose explicit packed and word-aligned linear storage.
+  The default remains packed on every target; `LinearIndexedFrameBuffer` and
+  `LinearRgbaIndexedFrameBuffer` provide one byte per palette index for DMA.
+- Indexed tile blits, clipped row-copy paths, framebuffer scrolling, rectangle
+  copies, and overlap-safe internal moves reduce CPU and allocation pressure.
+- Transient battle-animation state and in-place GBA screen effects let consumers
+  reuse stable frames without cloning a 160×144 index buffer.
+
+DSL and layout additions:
+
+- The schema v2 [`static layout`](../reference/glossary.md) compiler lowers
+  supported `.gui` screens into
+  borrowed Rust layout data while keeping `.gui` as the authored source.
+- The native AST core dispatcher and capability traversal centralize built-in
+  command validation; bare `return` now has matching parser, native interpreter,
+  and JavaScript semantics.
 
 ## v0.7.1
 

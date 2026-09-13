@@ -1,6 +1,7 @@
 # GUI DSL 参考
 
-> 本文是 `reference/dsl/gui.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/dsl/gui.md` 的中文翻译，同步至引擎版本 v0.7.1
+>（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `.gui` 布局文件与 `ui {}` 块的权威语法参考：每个已实现的组件、属性与绑定，以及它们
@@ -9,7 +10,7 @@
 > - **Audience**: game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.7.1
 
 旧版 GAME_UI_DSL 文档中的提案保存在 archive/game-ui-dsl.md；本页只记录已实现的表面。
 

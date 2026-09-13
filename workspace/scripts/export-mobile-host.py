@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import shutil
 
+BINARY_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".webp", ".ttf", ".otf"})
+
 
 def export_host(platform, library, payload, output, title, bundle):
     workspace = Path(__file__).resolve().parents[1]
@@ -26,6 +28,11 @@ def export_host(platform, library, payload, output, title, bundle):
                 if platform == "android"
                 else json.dumps(title, ensure_ascii=False)[1:-1]
             )
+            if source.suffix.lower() in BINARY_SUFFIXES:
+                # Bitmaps and other binary assets carry no placeholders; a text
+                # round-trip would corrupt them.
+                shutil.copyfile(source, dest)
+                continue
             text = (
                 source.read_text()
                 .replace("__APP_NAME__", app_name)
