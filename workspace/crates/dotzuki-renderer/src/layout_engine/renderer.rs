@@ -334,7 +334,7 @@ mod tests {
     use crate::layout_engine::types::Theme;
     use dotzuki_engine::render::Rgba as EngineRgba;
     use dotzuki_engine::render::TilePos;
-    use std::collections::HashMap;
+    use dotzuki_engine::hash::HashMap;
 
     // ── RecordingPainter ──────────────────────────────────────────────
 
@@ -421,11 +421,11 @@ mod tests {
     }
 
     fn make_fonts() -> HashMap<String, ()> {
-        HashMap::new()
+        HashMap::default()
     }
 
     fn make_tilesets() -> HashMap<String, ()> {
-        HashMap::new()
+        HashMap::default()
     }
 
     fn make_render_ctx<'a>(

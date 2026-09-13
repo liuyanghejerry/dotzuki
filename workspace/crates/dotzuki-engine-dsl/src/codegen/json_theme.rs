@@ -1,6 +1,6 @@
 use crate::ast::*;
+use crate::hash::HashMap;
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 /// Compile `@theme` → JSON tokens map.
 ///
@@ -78,12 +78,12 @@ fn resolve_style(
 ) -> HashMap<String, Value> {
     let style = match styles.get(name) {
         Some(s) => s,
-        None => return HashMap::new(),
+        None => return HashMap::with_hasher(Default::default()),
     };
 
     // Cycle detection
     if visited.contains(&name.to_string()) {
-        return HashMap::new();
+        return HashMap::with_hasher(Default::default());
     }
     visited.push(name.to_string());
 
@@ -91,7 +91,7 @@ fn resolve_style(
     let mut props = if let Some(ref parent) = &style.extends {
         resolve_style(parent, styles, visited)
     } else {
-        HashMap::new()
+        HashMap::with_hasher(Default::default())
     };
 
     // Merge child properties (child overrides ancestor)
@@ -146,7 +146,7 @@ fn expression_to_value(expr: &Expression) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use crate::hash::HashMap;
 
     fn span() -> SourceSpan {
         SourceSpan::point("test.scene", 0, 0)
@@ -159,7 +159,7 @@ mod tests {
         let theme = Theme {
             name: "dark".into(),
             tokens: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("primary".into(), "#c9a03d".into());
                 m.insert("background".into(), "#1a1a1e".into());
                 m
@@ -181,7 +181,7 @@ mod tests {
             name: "base".into(),
             extends: None,
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("padding".into(), Expression::NumberLit(12.0));
                 m.insert("color".into(), Expression::StringLit("red".into()));
                 m
@@ -202,7 +202,7 @@ mod tests {
             name: "derived".into(),
             extends: Some("base".into()),
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("margin".into(), Expression::NumberLit(8.0));
                 m
             },
@@ -222,7 +222,7 @@ mod tests {
             name: "base".into(),
             extends: None,
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("padding".into(), Expression::NumberLit(12.0));
                 m.insert("color".into(), Expression::StringLit("red".into()));
                 m
@@ -233,7 +233,7 @@ mod tests {
             name: "child".into(),
             extends: Some("base".into()),
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("margin".into(), Expression::NumberLit(4.0));
                 m
             },
@@ -259,7 +259,7 @@ mod tests {
             name: "grandparent".into(),
             extends: None,
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("font".into(), Expression::StringLit("Arial".into()));
                 m.insert("size".into(), Expression::NumberLit(14.0));
                 m
@@ -270,7 +270,7 @@ mod tests {
             name: "parent".into(),
             extends: Some("grandparent".into()),
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("size".into(), Expression::NumberLit(16.0)); // override
                 m.insert("weight".into(), Expression::StringLit("bold".into()));
                 m
@@ -281,7 +281,7 @@ mod tests {
             name: "child".into(),
             extends: Some("parent".into()),
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("color".into(), Expression::StringLit("blue".into()));
                 m
             },
@@ -313,7 +313,7 @@ mod tests {
             name: "expr_test".into(),
             extends: None,
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("str_val".into(), Expression::StringLit("hello".into()));
                 m.insert("num_val".into(), Expression::NumberLit(42.0));
                 m.insert("bool_val".into(), Expression::BoolLit(true));
@@ -339,13 +339,13 @@ mod tests {
         let a = Style {
             name: "a".into(),
             extends: Some("b".into()),
-            properties: HashMap::new(),
+            properties: HashMap::with_hasher(Default::default()),
             span: span(),
         };
         let b = Style {
             name: "b".into(),
             extends: Some("a".into()),
-            properties: HashMap::new(),
+            properties: HashMap::with_hasher(Default::default()),
             span: span(),
         };
 
@@ -361,7 +361,7 @@ mod tests {
             name: "base".into(),
             extends: None,
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("color".into(), Expression::StringLit("red".into()));
                 m.insert("padding".into(), Expression::NumberLit(10.0));
                 m
@@ -372,7 +372,7 @@ mod tests {
             name: "child".into(),
             extends: Some("base".into()),
             properties: {
-                let mut m = HashMap::new();
+                let mut m = HashMap::with_hasher(Default::default());
                 m.insert("color".into(), Expression::StringLit("blue".into())); // override
                 m
             },

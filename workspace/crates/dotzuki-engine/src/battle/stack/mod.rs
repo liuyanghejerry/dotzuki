@@ -1118,7 +1118,7 @@ mod tests {
 
     #[test]
     fn comparator_lexical_order() {
-        use std::cmp::Ordering;
+        use core::cmp::Ordering;
         let h = |order, priority, eo| CollectedHandler::<TProvider> {
             order,
             priority,

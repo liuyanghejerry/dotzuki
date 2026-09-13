@@ -3,7 +3,7 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.7.1
 
 The [game shell](./glossary.md) (`dotzuki_web::game_shell`, source
 `crates/dotzuki-web/src/game_shell.rs`) runs a `GameLoop` game in a browser
@@ -75,9 +75,12 @@ pub trait GameLoop {
 }
 ```
 
-- `type Fb: FbSurface` — the framebuffer the game draws into: either
-  `dotzuki_renderer::FrameBuffer` (true-color games) or
-  `dotzuki_renderer::RgbaIndexedFrameBuffer` (fixed-palette games).
+- `type Fb: FbSurface` — the framebuffer the game draws into:
+  `dotzuki_renderer::FrameBuffer` (true-color games),
+  `dotzuki_renderer::RgbaIndexedFrameBuffer` (packed fixed-palette storage), or
+  `dotzuki_renderer::LinearRgbaIndexedFrameBuffer` (word-aligned byte indices).
+  These storage choices have the same meaning on every target; the application
+  selects the format. All three implement `FbSurface`.
 - `update(&mut self, input: &InputState)` — called once per GB frame;
   process input before returning.
 - `draw(&mut self, fb: &mut Self::Fb)` — called once per redraw; draw the

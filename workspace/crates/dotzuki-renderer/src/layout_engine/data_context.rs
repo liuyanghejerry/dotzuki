@@ -5,7 +5,7 @@ impl DataContext {
     /// Create a new empty data context.
     pub fn new() -> Self {
         Self {
-            values: std::collections::HashMap::new(),
+            values: dotzuki_engine::hash::HashMap::default(),
         }
     }
 

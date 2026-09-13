@@ -193,7 +193,10 @@ const SCREEN_SHAKE_HEIGHT: u32 = 12 * TILE_SIZE;
 /// Apply a DMG palette map (shade → shade) to the whole framebuffer,
 /// e.g. rBGP = $6f for the dark-screen palette. On the indexed
 /// framebuffer this is a display-palette remap — the GB-hardware way.
-fn remap_shades(fb: &mut RgbaIndexedFrameBuffer, map: &[u8; 4]) {
+fn remap_shades<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    map: &[u8; 4],
+) {
     fb.remap_shades(map);
 }
 
@@ -201,41 +204,137 @@ fn remap_shades(fb: &mut RgbaIndexedFrameBuffer, map: &[u8; 4]) {
 /// edge with white. Used for the SCX-based shakes. Operates on the packed
 /// 2bpp indices (cloned cheaply — 5.7 KiB), so the result is identical to
 /// the old per-pixel RGBA shift.
-fn shift_rows_h(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dx: i32) {
+fn shift_rows_h<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    y_end: u32,
+    dx: i32,
+) {
     if dx == 0 {
         return;
     }
-    let w = fb.width() as i32;
-    let src = fb.indexed().clone();
-    for y in 0..y_end.min(fb.height()) {
-        for x in 0..w {
-            let sx = x - dx;
-            let color = if sx >= 0 && sx < w {
-                src.get_pixel(sx as u32, y).unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    if LINEAR {
+        let width = fb.width() as usize;
+        let height = fb.height() as usize;
+        shift_chunky_rows_h(
+            fb.indexed_mut().bytes_mut(),
+            width,
+            height,
+            y_end as usize,
+            dx,
+        );
+    }
+    if !LINEAR {
+        let w = fb.width() as i32;
+        let src = fb.indexed().clone();
+        for y in 0..y_end.min(fb.height()) {
+            for x in 0..w {
+                let sx = x - dx;
+                let color = if sx >= 0 && sx < w {
+                    src.get_pixel(sx as u32, y).unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
 
 /// Shift the top strip of the framebuffer vertically, filling with white.
-fn shift_rows_v(fb: &mut RgbaIndexedFrameBuffer, y_end: u32, dy: i32) {
+fn shift_rows_v<const LINEAR: bool>(
+    fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    y_end: u32,
+    dy: i32,
+) {
     if dy == 0 {
         return;
     }
-    let src = fb.indexed().clone();
-    for y in 0..y_end.min(fb.height()) as i32 {
-        let sy = y - dy;
-        for x in 0..fb.width() as i32 {
-            let color = if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
-                src.get_pixel(x as u32, sy as u32).unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y as u32, color);
+    if LINEAR {
+        let width = fb.width() as usize;
+        let height = fb.height() as usize;
+        shift_chunky_rows_v(
+            fb.indexed_mut().bytes_mut(),
+            width,
+            height,
+            y_end as usize,
+            dy,
+        );
+    }
+    if !LINEAR {
+        let src = fb.indexed().clone();
+        for y in 0..y_end.min(fb.height()) as i32 {
+            let sy = y - dy;
+            for x in 0..fb.width() as i32 {
+                let color = if sy >= 0 && (sy as u32) < y_end.min(fb.height()) {
+                    src.get_pixel(x as u32, sy as u32).unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y as u32, color);
+            }
         }
+    }
+}
+
+/// Allocation-free equivalents of the clone-based framebuffer passes used by
+/// the GBA's chunky one-byte-per-pixel backing. Kept available to unit tests so
+/// their exact edge and overlap behaviour can be checked on hosted targets.
+fn shift_chunky_rows_h(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dx: i32) {
+    let rows = y_end.min(height);
+    let offset = dx.unsigned_abs() as usize;
+    if dx == 0 || rows == 0 {
+        return;
+    }
+    if offset >= width {
+        pixels[..rows * width].fill(GbColor::White as u8);
+        return;
+    }
+    for row in pixels[..rows * width].chunks_exact_mut(width) {
+        if dx > 0 {
+            row.copy_within(..width - offset, offset);
+            row[..offset].fill(GbColor::White as u8);
+        } else {
+            row.copy_within(offset.., 0);
+            row[width - offset..].fill(GbColor::White as u8);
+        }
+    }
+}
+
+fn shift_chunky_rows_v(pixels: &mut [u8], width: usize, height: usize, y_end: usize, dy: i32) {
+    let rows = y_end.min(height);
+    let offset = dy.unsigned_abs() as usize;
+    if dy == 0 || rows == 0 {
+        return;
+    }
+    let region = &mut pixels[..rows * width];
+    if offset >= rows {
+        region.fill(GbColor::White as u8);
+    } else if dy > 0 {
+        region.copy_within(..(rows - offset) * width, offset * width);
+        region[..offset * width].fill(GbColor::White as u8);
+    } else {
+        region.copy_within(offset * width.., 0);
+        region[(rows - offset) * width..].fill(GbColor::White as u8);
+    }
+}
+
+fn shift_chunky_row_clamped(row: &mut [u8], shift: i32) {
+    let len = row.len();
+    let offset = shift.unsigned_abs() as usize;
+    if shift == 0 || len == 0 {
+        return;
+    }
+    if offset >= len {
+        let edge = if shift > 0 { row[len - 1] } else { row[0] };
+        row.fill(edge);
+    } else if shift > 0 {
+        let edge = row[len - 1];
+        row.copy_within(offset.., 0);
+        row[len - offset..].fill(edge);
+    } else {
+        let edge = row[0];
+        row.copy_within(..len - offset, offset);
+        row[..offset].fill(edge);
     }
 }
 
@@ -487,6 +586,25 @@ impl BattleEffects {
             substitute: [false; 2],
             objects: Objects::None,
         }
+    }
+
+    /// Whether [`Self::tick`] can still change the rendered frame.
+    ///
+    /// Persistent state such as palette tint, hidden/minimized monsters, and
+    /// substitutes is intentionally excluded: it still affects rendering, but
+    /// remains pixel-stable until another command changes the latch.
+    pub fn is_animating(&self) -> bool {
+        self.flash.is_some()
+            || self.shake.is_some()
+            || self.wave_frame > 0
+            || self.hud_shake.is_some()
+            || self.blink.is_some()
+            || self.squish.is_some()
+            || self.shake_bnf.is_some()
+            || self.bounce.is_some()
+            || self.slide_down_hide.is_some()
+            || self.transform.is_some()
+            || !matches!(&self.objects, Objects::None)
     }
 
     /// Clear per-mon latches when a mon leaves the field (switch/faint).
@@ -1085,7 +1203,10 @@ impl BattleEffects {
     /// drawn but BEFORE the mon sprites, so only the HUD (and background
     /// rows 0..7) shakes — the original protects the player back pic by
     /// copying it to OAM first.
-    pub fn apply_enemy_hud_shake(&self, fb: &mut RgbaIndexedFrameBuffer) {
+    pub fn apply_enemy_hud_shake<const LINEAR: bool>(
+        &self,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    ) {
         let dx = self.enemy_hud_shake_offset();
         if dx != 0 {
             shift_rows_h(fb, HUD_SHAKE_HEIGHT, dx);
@@ -1094,7 +1215,10 @@ impl BattleEffects {
 
     /// Full-screen post effects: screen shake, wavy screen, palette tint,
     /// screen flash. Call once the scene is fully drawn.
-    pub fn apply_screen_effects(&self, fb: &mut RgbaIndexedFrameBuffer) {
+    pub fn apply_screen_effects<const LINEAR: bool>(
+        &self,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+    ) {
         if let Some(shake) = self.shake {
             let (dx, dy) = shake.offset();
             shift_rows_h(fb, SCREEN_SHAKE_HEIGHT, dx);
@@ -1105,17 +1229,32 @@ impl BattleEffects {
             // Wavy screen: per-scanline SCX from WAVY_LINE_OFFSETS;
             // the table start advances one entry per frame.
             let w = fb.width() as usize;
-            let src = fb.indexed().clone();
             let start = (self.wave_frame - 1) as usize;
-            for y in 0..fb.height() as usize {
-                let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
-                if shift == 0 {
-                    continue;
+            if LINEAR {
+                let h = fb.height() as usize;
+                for (y, row) in fb
+                    .indexed_mut()
+                    .bytes_mut()
+                    .chunks_exact_mut(w)
+                    .take(h)
+                    .enumerate()
+                {
+                    let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
+                    shift_chunky_row_clamped(row, shift);
                 }
-                for x in 0..w as i32 {
-                    let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
-                    let color = src.get_pixel(sx as u32, y as u32).unwrap_or(GbColor::White);
-                    fb.set_pixel_index(x as u32, y as u32, color);
+            }
+            if !LINEAR {
+                let src = fb.indexed().clone();
+                for y in 0..fb.height() as usize {
+                    let shift = WAVY_LINE_OFFSETS[(start + y) % 32] as i32;
+                    if shift == 0 {
+                        continue;
+                    }
+                    for x in 0..w as i32 {
+                        let sx = (x + shift).clamp(0, w as i32 - 1) as usize;
+                        let color = src.get_pixel(sx as u32, y as u32).unwrap_or(GbColor::White);
+                        fb.set_pixel_index(x as u32, y as u32, color);
+                    }
                 }
             }
         }
@@ -1153,9 +1292,9 @@ impl BattleEffects {
     /// move_anim_0.png / move_anim_1.png (tiles indexed from 0; the absolute
     /// VRAM tile ids used by the effects are converted with
     /// [`ANIM_BASE_TILE_ID`]).
-    pub fn render_objects(
+    pub fn render_objects<const LINEAR: bool>(
         &self,
-        fb: &mut RgbaIndexedFrameBuffer,
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts0: &TileSet,
         ts1: &TileSet,
         pal: &Palette,
@@ -1243,8 +1382,8 @@ impl BattleEffects {
     /// tile = col*7 + row):
     ///   - enemy turn (facing down): tiles [0,1;2,3] at (col 2, row 4)
     ///   - player turn (facing up):  tiles [4,5;6,7] at (col 3, row 4)
-    pub fn draw_substitute(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_substitute<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         rect: MonRect,
         doll: &TileSet,
         pal: &Palette,
@@ -1267,7 +1406,11 @@ impl BattleEffects {
     /// Draw the minimize blob over a mon pic rect. Placement: pic base +
     /// (7*3+4) tiles + TILE_SIZE/4 → (col 3, row 4) + 2 px, i.e.
     /// pic-relative (24, 34); color index 3.
-    pub fn draw_minimized(fb: &mut RgbaIndexedFrameBuffer, rect: MonRect, pal: &Palette) {
+    pub fn draw_minimized<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
+        rect: MonRect,
+        pal: &Palette,
+    ) {
         let color = pal.color(GbColor::from_u8(3));
         let ox = rect.x + 3 * TILE_SIZE as i32;
         let oy = rect.y + 4 * TILE_SIZE as i32 + 2;
@@ -1288,8 +1431,8 @@ impl BattleEffects {
     /// (the squish narrows the 7-tile pic one tile per pass, alternating the
     /// anchored side). Nearest-neighbor scale; color 0 is transparent like
     /// the normal mon blit.
-    pub fn draw_squished(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_squished<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1333,8 +1476,8 @@ impl BattleEffects {
     /// slide-down-and-hide redraws the pic with the 7×5 / 7×3 tile-id lists
     /// — a crop, not a scale). Color 0 is transparent like the normal mon
     /// blit.
-    pub fn draw_mon_rows(
-        fb: &mut RgbaIndexedFrameBuffer,
+    pub fn draw_mon_rows<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         ts: &TileSet,
         x: i32,
         y: i32,
@@ -1365,8 +1508,8 @@ impl BattleEffects {
 
     /// Draw one 8×8 tile with all four shades opaque (the substitute doll
     /// replaces the mon pic area, whose background was blanked).
-    fn draw_tile_opaque(
-        fb: &mut RgbaIndexedFrameBuffer,
+    fn draw_tile_opaque<const LINEAR: bool>(
+        fb: &mut RgbaIndexedFrameBuffer<GbColor, LINEAR>,
         tile: &crate::tile::Tile,
         x: i32,
         y: i32,
@@ -1400,6 +1543,30 @@ mod tests {
 
     fn apply(fx: &mut BattleEffects, effect: AnimEffect) -> u8 {
         fx.apply(&effect, MonSide::Player)
+    }
+
+    #[test]
+    fn is_animating_tracks_transient_but_not_persistent_state() {
+        let mut fx = BattleEffects::new();
+        assert!(!fx.is_animating());
+
+        apply(
+            &mut fx,
+            AnimEffect::ShakeScreenH {
+                pixels: 1,
+                frames: 4,
+            },
+        );
+        assert!(fx.is_animating());
+        for _ in 0..4 {
+            fx.tick();
+        }
+        assert!(!fx.is_animating());
+
+        apply(&mut fx, AnimEffect::DarkScreenPalette);
+        assert!(!fx.is_animating(), "a stable tint is reusable");
+        apply(&mut fx, AnimEffect::SubstituteMon);
+        assert!(!fx.is_animating(), "a stable substitute latch is reusable");
     }
 
     // ── SquishMonPic ─────────────────────────────────────────────────
@@ -1736,6 +1903,64 @@ mod tests {
     }
 
     // ── Screen shake ─────────────────────────────────────────────────
+
+    #[test]
+    fn chunky_screen_shifts_match_clone_based_reference() {
+        let width = 7usize;
+        let height = 5usize;
+        let rows = 4usize;
+        let source: Vec<u8> = (0..width * height).map(|i| (i % 4) as u8).collect();
+
+        for dx in [-8, -3, -1, 1, 3, 8] {
+            let mut actual = source.clone();
+            shift_chunky_rows_h(&mut actual, width, height, rows, dx);
+            let mut expected = source.clone();
+            for y in 0..rows {
+                for x in 0..width {
+                    let sx = x as i32 - dx;
+                    expected[y * width + x] = if (0..width as i32).contains(&sx) {
+                        source[y * width + sx as usize]
+                    } else {
+                        GbColor::White as u8
+                    };
+                }
+            }
+            assert_eq!(actual, expected, "horizontal dx={dx}");
+        }
+
+        for dy in [-5, -2, -1, 1, 2, 5] {
+            let mut actual = source.clone();
+            shift_chunky_rows_v(&mut actual, width, height, rows, dy);
+            let mut expected = source.clone();
+            for y in 0..rows {
+                let sy = y as i32 - dy;
+                for x in 0..width {
+                    expected[y * width + x] = if (0..rows as i32).contains(&sy) {
+                        source[sy as usize * width + x]
+                    } else {
+                        GbColor::White as u8
+                    };
+                }
+            }
+            assert_eq!(actual, expected, "vertical dy={dy}");
+        }
+    }
+
+    #[test]
+    fn chunky_wavy_row_matches_clamped_reference() {
+        let source = vec![0, 1, 2, 3, 0, 1, 2];
+        for shift in [-9, -3, -1, 0, 1, 3, 9] {
+            let mut actual = source.clone();
+            shift_chunky_row_clamped(&mut actual, shift);
+            let expected: Vec<u8> = (0..source.len())
+                .map(|x| {
+                    let sx = (x as i32 + shift).clamp(0, source.len() as i32 - 1);
+                    source[sx as usize]
+                })
+                .collect();
+            assert_eq!(actual, expected, "wave shift={shift}");
+        }
+    }
 
     #[test]
     fn shake_screen_decays_amplitude() {

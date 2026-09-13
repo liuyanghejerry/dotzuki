@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use crate::hash::HashMap;
 
 use crate::render::Rgba;
 
@@ -25,7 +25,7 @@ impl PaletteSwapManager {
     /// Creates a new empty manager with no swaps and no active swap.
     pub fn new() -> Self {
         Self {
-            swaps: HashMap::new(),
+            swaps: HashMap::default(),
             active_swap: None,
         }
     }

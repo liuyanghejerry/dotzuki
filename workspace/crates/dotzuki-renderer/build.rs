@@ -53,8 +53,12 @@ fn generate_cjk_glyphs(manifest_dir: &str, out_dir: &str) {
     let data_start = 4 + all.len() * 8;
     let mut index = Vec::with_capacity(all.len() * 8);
     let mut data = Vec::new();
+    let mut ascii_offsets = [u32::MAX; 128];
     for (ch, g) in &all {
         let off = (data_start + data.len()) as u32;
+        if (*ch as u32) < ascii_offsets.len() as u32 {
+            ascii_offsets[*ch as usize] = off;
+        }
         index.extend_from_slice(&(*ch as u32).to_le_bytes());
         index.extend_from_slice(&off.to_le_bytes());
 
@@ -76,6 +80,15 @@ fn generate_cjk_glyphs(manifest_dir: &str, out_dir: &str) {
 
     let dest = Path::new(out_dir).join("glyphs.bin");
     fs::write(&dest, &blob).unwrap();
+
+    // ASCII dominates menu/dialog rendering. A tiny direct table avoids a
+    // binary search through ~25k CJK entries for every Latin character.
+    let ascii_table = format!(
+        "pub static ASCII_GLYPH_OFFSETS: [u32; 128] = {:?};\n",
+        ascii_offsets
+    );
+    let ascii_dest = Path::new(out_dir).join("ascii_glyph_offsets.rs");
+    fs::write(&ascii_dest, ascii_table).unwrap();
 
     println!(
         "cargo:warning=CJK glyphs baked: {} chars ({} KiB blob)",

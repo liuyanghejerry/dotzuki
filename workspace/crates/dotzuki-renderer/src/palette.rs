@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbColor, SgbPaletteEntry};
 use dotzuki_engine::render::Rgba;

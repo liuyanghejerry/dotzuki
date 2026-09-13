@@ -148,8 +148,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -193,8 +193,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -234,8 +234,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -278,8 +278,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -319,8 +319,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -364,8 +364,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 
@@ -404,8 +404,8 @@ mod tests {
         let rc = RenderContext {
             screen: "test",
             theme: &Default::default(),
-            fonts: &std::collections::HashMap::new(),
-            tilesets: &std::collections::HashMap::new(),
+            fonts: &dotzuki_engine::hash::HashMap::default(),
+            tilesets: &dotzuki_engine::hash::HashMap::default(),
             images: crate::layout_engine::types::empty_image_registry(),
         };
 

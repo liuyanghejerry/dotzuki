@@ -29,7 +29,7 @@ use super::{
     BattleAction, BattleProvider, BattleRng, BattleState, BattlerRef, BattlerState as Battler,
     EffectResult, MoveGate, OrderKey,
 };
-use std::fmt;
+use core::fmt;
 
 /// A single observable event produced during turn execution.
 ///

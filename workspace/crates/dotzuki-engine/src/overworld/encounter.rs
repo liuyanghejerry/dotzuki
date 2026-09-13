@@ -59,7 +59,7 @@ pub enum EncounterStep<S> {
 pub trait EncounterProvider {
     /// Opaque species identifier the game understands. The engine treats it as
     /// data only and never inspects it.
-    type Species: Copy + Eq + std::fmt::Debug;
+    type Species: Copy + Eq + core::fmt::Debug;
 
     /// Roll a wild encounter for the tile the player just stepped onto.
     ///

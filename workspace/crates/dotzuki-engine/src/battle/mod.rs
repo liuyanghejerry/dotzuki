@@ -22,7 +22,7 @@
 //!   to type charts, AI, and effect handlers internally.
 //! * **No I/O, no platform** — Pure data and trait definitions only.
 
-use std::fmt;
+use core::fmt;
 
 pub mod ai;
 pub mod driver;

@@ -1735,7 +1735,7 @@ mod tests {
             seen.push(dep.scroll_px());
             dep.tick();
         }
-        let expected: Vec<i32> = (0..16).flat_map(|d| std::iter::repeat(d + 1).take(8)).collect();
+        let expected: Vec<i32> = (0..16).flat_map(|d| core::iter::repeat(d + 1).take(8)).collect();
         assert_eq!(seen, expected, "scroll ramps 1..=16 across iteration 0");
 
         // Mid-animation: frame 123 + 40 substeps → iteration 2, substep 40 →

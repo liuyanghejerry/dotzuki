@@ -34,11 +34,12 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/liuyanghejerry/dotzuki"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+log = { version = "0.4", default-features = false }
 ron = "0.8"
 bincode = "1"
-thiserror = "2"
+thiserror = { version = "2", default-features = false }
 miette = { version = "7", features = ["fancy"] }
 anyhow = "1"
 tracing = "0.1"

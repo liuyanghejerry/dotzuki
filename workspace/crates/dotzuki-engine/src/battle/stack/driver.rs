@@ -564,9 +564,9 @@ impl StackDriver {
             None => (0, 0),
         };
         match player_rank.cmp(&enemy_rank) {
-            std::cmp::Ordering::Less => FirstMover::Player,
-            std::cmp::Ordering::Greater => FirstMover::Opponent,
-            std::cmp::Ordering::Equal => {
+            core::cmp::Ordering::Less => FirstMover::Player,
+            core::cmp::Ordering::Greater => FirstMover::Opponent,
+            core::cmp::Ordering::Equal => {
                 // Exact tie → ONE coin-flip byte (the only turn-order draw).
                 if rng.next_u8() < 128 {
                     FirstMover::Player

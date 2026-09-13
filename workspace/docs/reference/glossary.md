@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.6.0
+> - **Last verified**: v0.7.1
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -77,6 +77,9 @@ original form in Chinese text.
 - **Boa** — the JavaScript engine behind `dotzuki-engine-script`; the DSL's
   native AST interpreter mirrors its runtime protocol and is the canonical
   scene semantics.
+- **static layout**（静态布局）— a schema v2 UI layout compiled into borrowed
+  Rust data at build time. The `.gui` file remains the authored source. See
+  [DSL code generation](./dsl/codegen.md).
 - **`TrackDef` / `AudioCommand`** — the JSON audio track schema and its 22
   channel commands. See [audio commands](./audio-commands.md).
 - **save version**（存档版本）— the version stamp inside `.dotzuki-save.json`;

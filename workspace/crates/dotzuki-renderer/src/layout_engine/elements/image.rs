@@ -61,8 +61,17 @@ pub fn render_image(
             let box_w = tw * 8;
             let box_h = th * 8;
             let scale = (box_w as f32 / img.width as f32).min(box_h as f32 / img.height as f32);
-            let dst_w = ((img.width as f32 * scale).round() as u32).max(1);
-            let dst_h = ((img.height as f32 * scale).round() as u32).max(1);
+            // f32::round is std-only; libm's roundf on no_std targets.
+            #[cfg(target_os = "none")]
+            fn round_u(x: f32) -> u32 {
+                libm::roundf(x) as u32
+            }
+            #[cfg(not(target_os = "none"))]
+            fn round_u(x: f32) -> u32 {
+                x.round() as u32
+            }
+            let dst_w = round_u(img.width as f32 * scale).max(1);
+            let dst_h = round_u(img.height as f32 * scale).max(1);
             let ox = box_px + (box_w.saturating_sub(dst_w)) / 2;
             let oy = box_py + (box_h.saturating_sub(dst_h)) / 2;
             painter.draw_rgba(
@@ -141,16 +150,18 @@ mod tests {
 
     fn make_render_ctx() -> (
         RenderContext<'static>,
-        std::collections::HashMap<String, ()>,
-        std::collections::HashMap<String, ()>,
+        dotzuki_engine::hash::HashMap<String, ()>,
+        dotzuki_engine::hash::HashMap<String, ()>,
     ) {
-        let fonts: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
-        let tilesets: std::collections::HashMap<String, ()> = std::collections::HashMap::new();
+        let fonts: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
+        let tilesets: dotzuki_engine::hash::HashMap<String, ()> =
+            dotzuki_engine::hash::HashMap::default();
         let theme = crate::layout_engine::types::Theme::default();
         // SAFETY: We leak the box to get a 'static reference. In tests this is fine.
-        let fonts_ref: &'static std::collections::HashMap<String, ()> =
+        let fonts_ref: &'static dotzuki_engine::hash::HashMap<String, ()> =
             Box::leak(Box::new(fonts.clone()));
-        let tilesets_ref: &'static std::collections::HashMap<String, ()> =
+        let tilesets_ref: &'static dotzuki_engine::hash::HashMap<String, ()> =
             Box::leak(Box::new(tilesets.clone()));
         let theme_ref: &'static crate::layout_engine::types::Theme = Box::leak(Box::new(theme));
         (
@@ -451,12 +462,12 @@ mod tests {
 
         // A 1×1 opaque red image registered under the resolved key "hero".
         let red = EngineRgba::new(255, 0, 0, 255);
-        let mut images = ImageRegistry::new();
+        let mut images = ImageRegistry::default();
         images.insert("hero".to_string(), ImageData::new(1, 1, vec![red]));
 
         let theme = Theme::default();
-        let fonts = std::collections::HashMap::<String, ()>::new();
-        let tilesets = std::collections::HashMap::<String, ()>::new();
+        let fonts = dotzuki_engine::hash::HashMap::<String, ()>::default();
+        let tilesets = dotzuki_engine::hash::HashMap::<String, ()>::default();
         let rc = RenderContext {
             screen: "t",
             theme: &theme,
@@ -508,14 +519,14 @@ mod tests {
         let mut ctx = DataContext::new();
         ctx.set("sprite", "missing");
 
-        let mut images = ImageRegistry::new();
+        let mut images = ImageRegistry::default();
         images.insert(
             "other".to_string(),
             ImageData::new(1, 1, vec![EngineRgba::new(0, 255, 0, 255)]),
         );
         let theme = Theme::default();
-        let fonts = std::collections::HashMap::<String, ()>::new();
-        let tilesets = std::collections::HashMap::<String, ()>::new();
+        let fonts = dotzuki_engine::hash::HashMap::<String, ()>::default();
+        let tilesets = dotzuki_engine::hash::HashMap::<String, ()>::default();
         let rc = RenderContext {
             screen: "t",
             theme: &theme,

@@ -8,7 +8,7 @@ source in `crates/dotzuki-engine-dsl/src/`.
 > - **Audience**: DSL authors, compiler maintainers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.7.1
 
 ## How to read this page
 
@@ -62,6 +62,25 @@ Artifacts written by the build-time compiler (compiler.rs:291-343):
   (compiler.rs:288-289).
 - Artifacts are rewritten only when their content changed
   (`write_if_changed`, compiler.rs:617-635).
+
+## Build-time static UI layouts
+
+The [`static layout`](../glossary.md) backend accepts the same schema v2 JSON
+that `.gui` compilation produces. `dotzuki_engine_dsl::static_ui::compile`
+emits a Rust layout expression for build-time embedding. The `.gui` file
+remains the authored source, while the Rust consumer binds state at runtime.
+
+The supported subset is flat default panels, unwrapped text with alignment,
+literal tiles, grid cursors, localized text, direct `{key}` bindings,
+visibility, and stable `z_index` ordering. Themes, nested containers, custom
+elements, word wrapping, and compound template expressions produce compilation
+errors. Consumers that require those features must extend the compiler or use
+the dynamic renderer for those screens.
+
+Generated elements use borrowed static slices. Text and cursor drawing share
+primitives with dynamic layouts. Binding storage has a fixed capacity, while
+formatting runtime values can still allocate. The editor continues to use the
+dynamic layout and hot-reload path.
 
 ## Two execution targets
 

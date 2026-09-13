@@ -181,6 +181,11 @@ fn compile_story_stmt(
         StoryStmt::Command { name, args, span } => {
             compile_command(name, args, span, sourcemap, line, depth)
         }
+        StoryStmt::Return { span } => {
+            sourcemap.record_span(&to_sm_span(span), *line, 0);
+            *line += 1;
+            format!("{}return;\n", indent(depth))
+        }
         StoryStmt::Run { js, .. } => compile_run(js, depth),
     }
 }
@@ -1092,6 +1097,14 @@ mod tests {
         };
         let (js, sm) = compile_stmt(&stmt);
         assert!(js.contains("await game[\"giveItem\"](\"POTION\", 1);"));
+        assert_eq!(sm.mappings().len(), 1);
+    }
+
+    #[test]
+    fn test_return_statement() {
+        let stmt = StoryStmt::Return { span: span(1, 0) };
+        let (js, sm) = compile_stmt(&stmt);
+        assert_eq!(js, "return;\n");
         assert_eq!(sm.mappings().len(), 1);
     }
 

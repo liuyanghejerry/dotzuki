@@ -17,9 +17,9 @@
 //! Input uses the engine-wide [`MenuInput`]; sound cues are reported as
 //! [`MartSound`] values the game maps to its own audio ids.
 
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::str::FromStr;
+use core::fmt::Debug;
+use core::hash::Hash;
+use core::str::FromStr;
 
 use super::use_driver::{buy, sell, ShopError};
 use super::{Inventory, ShopProvider};

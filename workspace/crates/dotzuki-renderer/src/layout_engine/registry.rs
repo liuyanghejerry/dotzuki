@@ -1,5 +1,5 @@
-use std::collections::HashMap;
-use std::fmt::Debug;
+use dotzuki_engine::hash::HashMap;
+use core::fmt::Debug;
 
 use crate::layout_engine::types::{
     DataContext, ElementParams, LayoutElement, RenderContext, RenderError, ScreenLayout,
@@ -92,8 +92,8 @@ pub struct SchemaViolation {
     pub message: String,
 }
 
-impl std::fmt::Display for SchemaViolation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for SchemaViolation {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}: {}", self.element, self.message)
     }
 }
@@ -169,7 +169,7 @@ impl ElementRegistry {
     /// Create a new empty registry.
     pub fn new() -> Self {
         Self {
-            elements: HashMap::new(),
+            elements: HashMap::default(),
         }
     }
 

@@ -19,8 +19,8 @@
 //!   the sell rate come from [`ShopProvider`](super::ShopProvider) (Gen-1
 //!   quirks stay game-side).
 
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 use super::{Inventory, ItemKind, ItemProvider, ShopProvider};
 use crate::battle::rng::BattleRng;

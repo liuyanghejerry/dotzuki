@@ -13,6 +13,9 @@ use std::path::Path;
 mod ast {
     include!("src/ast.rs");
 }
+mod hash {
+    include!("src/hash.rs");
+}
 mod lexer {
     include!("src/lexer.rs");
 }

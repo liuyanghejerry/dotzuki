@@ -7,7 +7,7 @@ compile to.
 > - **Audience**: game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.7.1
 
 Proposals from the legacy GAME_UI_DSL document live in archive/game-ui-dsl.md; this page documents only the implemented surface.
 

@@ -7,10 +7,10 @@
 
 use crate::tile::RgbaTile;
 use crate::{DirtyRegion, FbSurface, FrameBuffer, TILE_SIZE};
+use dotzuki_engine::hash::HashMap;
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render::{BlendMode, MapLayer};
 use dotzuki_engine::tilemap::TilemapEntry;
-use std::collections::HashMap;
 
 const TILE_PIXELS: u32 = TILE_SIZE;
 
@@ -25,7 +25,7 @@ pub struct LayerTileCache {
 impl LayerTileCache {
     pub fn new() -> Self {
         Self {
-            entries: HashMap::new(),
+            entries: HashMap::default(),
         }
     }
 
@@ -197,7 +197,35 @@ pub fn render_layers_with_cache_sized<F>(
             tile_size,
             &tile_color,
             &mut cache,
+            false,
         );
+        return;
+    }
+
+    // Fully opaque Normal layers can be composed in place, bottom-to-top.
+    // This is the overwhelmingly common tilemap case and avoids allocating a
+    // full RGBA framebuffer plus scanning every pixel once more per layer.
+    // Partially transparent tile pixels are still alpha-composited below, so
+    // this remains pixel-equivalent to the general path.
+    if visible
+        .iter()
+        .all(|layer| layer.opacity == 1.0 && matches!(layer.blend_mode, BlendMode::Normal))
+    {
+        fb.clear(Rgba::TRANSPARENT);
+        for layer in visible {
+            render_single_layer(
+                fb,
+                layer,
+                camera_x,
+                camera_y,
+                width,
+                height,
+                tile_size,
+                &tile_color,
+                &mut cache,
+                true,
+            );
+        }
         return;
     }
 
@@ -222,6 +250,7 @@ pub fn render_layers_with_cache_sized<F>(
             tile_size,
             &tile_color,
             &mut cache,
+            false,
         );
         composite_onto(fb, &temp, layer.opacity, layer.blend_mode);
     }
@@ -241,6 +270,7 @@ fn render_single_layer<F>(
     tile_size: u32,
     tile_color: &F,
     cache: &mut Option<&mut LayerTileCache>,
+    composite_normal: bool,
 ) where
     F: Fn(u16, u8, u8, u8) -> Rgba,
 {
@@ -284,10 +314,31 @@ fn render_single_layer<F>(
                 if color.a == 0 {
                     continue;
                 }
-                fb.set_pixel(screen_x, screen_y, color);
+                if composite_normal && color.a < 255 {
+                    let dst = fb
+                        .get_pixel(screen_x, screen_y)
+                        .unwrap_or(Rgba::TRANSPARENT);
+                    fb.set_pixel(screen_x, screen_y, blend_normal_pixel(dst, color));
+                } else {
+                    fb.set_pixel(screen_x, screen_y, color);
+                }
             }
         }
     }
+}
+
+/// Alpha-compose one source pixel using the same arithmetic as
+/// [`composite_onto`]'s `BlendMode::Normal` branch.
+#[inline]
+fn blend_normal_pixel(dst: Rgba, src: Rgba) -> Rgba {
+    let alpha = src.a as f32 / 255.0;
+    let inv_alpha = 1.0 - alpha;
+    Rgba::new(
+        (src.r as f32 * alpha + dst.r as f32 * inv_alpha).clamp(0.0, 255.0) as u8,
+        (src.g as f32 * alpha + dst.g as f32 * inv_alpha).clamp(0.0, 255.0) as u8,
+        (src.b as f32 * alpha + dst.b as f32 * inv_alpha).clamp(0.0, 255.0) as u8,
+        (src.a as f32 + dst.a as f32 * inv_alpha).clamp(0.0, 255.0) as u8,
+    )
 }
 
 /// Compute the effective intra-tile pixel coordinate after applying
@@ -797,6 +848,32 @@ mod tests {
                 assert_eq!(fb.get_pixel(x, y), Some(Rgba::rgb(255, 0, 0)));
             }
         }
+    }
+
+    #[test]
+    fn opaque_normal_fast_path_blends_partial_pixel_alpha() {
+        let bottom = MapLayer::new(uniform_tilemap(1, 1, 1), 0);
+        let top = MapLayer::new(uniform_tilemap(1, 1, 2), 1);
+        let mut fb = make_fb(1, 1, Rgba::TRANSPARENT);
+
+        render_layers(
+            &mut fb,
+            &[bottom, top],
+            0,
+            0,
+            1,
+            1,
+            |tile_id, _, _, _| match tile_id {
+                1 => Rgba::rgb(0, 0, 200),
+                2 => Rgba::new(200, 0, 0, 128),
+                _ => Rgba::TRANSPARENT,
+            },
+        );
+
+        let pixel = fb.get_pixel(0, 0).unwrap();
+        assert!((pixel.r as i32 - 100).abs() <= 1, "r={}", pixel.r);
+        assert!((pixel.b as i32 - 99).abs() <= 1, "b={}", pixel.b);
+        assert_eq!(pixel.a, 255);
     }
 
     #[test]

@@ -509,7 +509,7 @@ fn binop_str(op: BinOp) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use crate::hash::HashMap;
 
     /// Helper: create a minimal `ComponentProps` with the given span.
     fn props_with(
@@ -573,7 +573,7 @@ mod tests {
             on_click: None,
             flex_grow: None,
             visible: None,
-            custom: HashMap::new(),
+            custom: HashMap::with_hasher(Default::default()),
             span: SourceSpan::point("test", 1, 1),
             rect: None,
             style: None,
@@ -706,7 +706,7 @@ mod tests {
                 Some("on_ok"),
                 None,
                 None,
-                HashMap::new(),
+                HashMap::with_hasher(Default::default()),
             ),
             span: SourceSpan::point("test", 3, 1),
         };
@@ -740,7 +740,7 @@ mod tests {
                 Some("buy_item"),
                 None,
                 None,
-                HashMap::new(),
+                HashMap::with_hasher(Default::default()),
             ),
             span: SourceSpan::point("test", 1, 1),
         };
@@ -773,7 +773,7 @@ mod tests {
 
     #[test]
     fn test_image_with_slice() {
-        let mut custom = HashMap::new();
+        let mut custom = HashMap::with_hasher(Default::default());
         custom.insert("slice".into(), Expression::StringLit("[8,8,8,8]".into()));
         let image = UiComponent::Image {
             src: "ui/panel.png".into(),
@@ -808,7 +808,7 @@ mod tests {
                 None,
                 Some(1),
                 Some(true),
-                HashMap::new(),
+                HashMap::with_hasher(Default::default()),
             ),
             span: SourceSpan::point("test", 1, 1),
         };
@@ -830,7 +830,7 @@ mod tests {
 
     #[test]
     fn test_full_ui_block() {
-        let mut custom = HashMap::new();
+        let mut custom = HashMap::with_hasher(Default::default());
         custom.insert("slice".into(), Expression::StringLit("[8,8,8,8]".into()));
 
         let ui = UiBlock {
@@ -847,7 +847,7 @@ mod tests {
                         None,
                         None,
                         None,
-                        HashMap::new(),
+                        HashMap::with_hasher(Default::default()),
                     ),
                     children: vec![
                         UiComponent::Text {
@@ -867,7 +867,7 @@ mod tests {
                                 Some("close_screen"),
                                 None,
                                 None,
-                                HashMap::new(),
+                                HashMap::with_hasher(Default::default()),
                             ),
                             span: SourceSpan::point("test", 3, 1),
                         },
@@ -931,7 +931,7 @@ mod tests {
                             Some("handle"),
                             None,
                             None,
-                            HashMap::new(),
+                            HashMap::with_hasher(Default::default()),
                         ),
                         span: SourceSpan::point("test", 3, 1),
                     }],
@@ -962,7 +962,7 @@ mod tests {
                 None,
                 None,
                 None,
-                HashMap::new(),
+                HashMap::with_hasher(Default::default()),
             ),
             span: SourceSpan::point("test", 1, 1),
         };
@@ -977,7 +977,7 @@ mod tests {
                 None,
                 None,
                 None,
-                HashMap::new(),
+                HashMap::with_hasher(Default::default()),
             ),
             span: SourceSpan::point("test", 2, 1),
         };
@@ -1011,7 +1011,7 @@ mod tests {
             on_click: None,
             flex_grow: None,
             visible: None,
-            custom: HashMap::new(),
+            custom: HashMap::with_hasher(Default::default()),
             span: SourceSpan::point("test", 1, 1),
             rect: None,
             style: None,

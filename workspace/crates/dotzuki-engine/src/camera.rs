@@ -133,7 +133,13 @@ impl Camera {
                 self.position = *target;
             } else {
                 let follow_strength = (1.0 - self.smooth_factor) * DEFAULT_FOLLOW_SPEED;
-                let t = 1.0 - (-follow_strength * dt).exp();
+                // f32::exp is not available on no_std targets; libm's expf is
+                // used there (bit-identical inputs, same decay curve).
+                #[cfg(target_os = "none")]
+                let decay = libm::expf(-follow_strength * dt);
+                #[cfg(not(target_os = "none"))]
+                let decay = (-follow_strength * dt).exp();
+                let t = 1.0 - decay;
                 self.position.x += (target.x - self.position.x) * t;
                 self.position.y += (target.y - self.position.y) * t;
             }
@@ -248,14 +254,29 @@ impl Camera {
     ///
     /// Divides the camera's world x-position by `TILE_SIZE` (8 px) and floors.
     pub fn tile_x(&self) -> i32 {
-        (self.position.x / TILE_SIZE).floor() as i32
+        // f32::floor is std-only; libm's floorf on no_std targets.
+        #[cfg(target_os = "none")]
+        {
+            libm::floorf(self.position.x / TILE_SIZE) as i32
+        }
+        #[cfg(not(target_os = "none"))]
+        {
+            (self.position.x / TILE_SIZE).floor() as i32
+        }
     }
 
     /// Which tile row is at the camera's top edge.
     ///
     /// Divides the camera's world y-position by `TILE_SIZE` (8 px) and floors.
     pub fn tile_y(&self) -> i32 {
-        (self.position.y / TILE_SIZE).floor() as i32
+        #[cfg(target_os = "none")]
+        {
+            libm::floorf(self.position.y / TILE_SIZE) as i32
+        }
+        #[cfg(not(target_os = "none"))]
+        {
+            (self.position.y / TILE_SIZE).floor() as i32
+        }
     }
 
     // ---------------------------------------------------------------------------

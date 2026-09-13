@@ -5,6 +5,7 @@
 //! validation.
 
 use crate::layout_engine::types::{RenderError, ScreenLayout};
+#[cfg(not(target_os = "none"))]
 use std::path::Path;
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -19,6 +20,9 @@ use std::path::Path;
 ///
 /// Returns [`RenderError::InvalidLayout`] if the file cannot be read or
 /// the JSON is malformed.
+// Hosted only (filesystem access); bare-metal targets embed layouts or
+// call [`parse_layout`] directly.
+#[cfg(not(target_os = "none"))]
 pub fn load_layout(name: &str) -> Result<ScreenLayout, RenderError> {
     let candidate_paths = [format!("data/ui_layouts/{}.json", name)];
 
@@ -88,18 +92,31 @@ fn validate_layout(layout: &ScreenLayout) {
 
         // Warn on unknown element types so the user knows the renderer
         // will skip them.
-        match element.element_type.as_str() {
-            "group" | "border" | "text" | "tile" | "divider" | "image" | "list" | "flex_list" => {}
-            t if t.starts_with("custom:") => {}
-            _ => {
-                log::warn!(
-                    "Unknown element type '{}' in element '{}' — will be skipped at render time",
-                    element.element_type,
-                    id,
-                );
-            }
+        if !is_known_element_type(&element.element_type) {
+            log::warn!(
+                "Unknown element type '{}' in element '{}' — will be skipped at render time",
+                element.element_type,
+                id,
+            );
         }
     }
+}
+
+fn is_known_element_type(element_type: &str) -> bool {
+    matches!(
+        element_type,
+        "group"
+            | "border"
+            | "text"
+            | "tile"
+            | "divider"
+            | "image"
+            | "list"
+            | "flex_list"
+            | "cursor"
+            | "bracket"
+            | "pixel_rect"
+    ) || element_type.starts_with("custom:")
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -234,6 +251,30 @@ mod tests {
         assert_eq!(layout.elements.len(), 1);
         assert_eq!(layout.elements[0].element_type, "foobar_unknown");
         // Validation logs a warning but does not error — the element is kept.
+    }
+
+    #[test]
+    fn renderer_builtin_element_types_are_known_to_validation() {
+        for element_type in [
+            "group",
+            "border",
+            "text",
+            "tile",
+            "divider",
+            "image",
+            "list",
+            "flex_list",
+            "cursor",
+            "bracket",
+            "pixel_rect",
+            "custom:meter",
+        ] {
+            assert!(
+                is_known_element_type(element_type),
+                "renderer builtin {element_type} must not emit an unknown-type warning",
+            );
+        }
+        assert!(!is_known_element_type("foobar_unknown"));
     }
 
     // ── test_parse_dex_layout ─────────────────────────────────────────

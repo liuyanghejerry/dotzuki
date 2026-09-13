@@ -23,6 +23,10 @@
 //! - The cost — bit twiddling in `set_pixel`/`get_pixel` — is negligible
 //!   for a fixed 5.7 KiB buffer.
 //!
+//! [`LinearIndexedFrameBuffer`] explicitly selects one byte per pixel on any
+//! target. It costs 23 KiB for a 160×144 framebuffer and provides a word-aligned
+//! source for hardware transfers. The default type always remains packed.
+//!
 //! The bit width is derived from `C::MAX` (2 bits for [`GbColor`], 4 bits
 //! for [`GbaColor`]), so the same type serves both the 4-color DMG and
 //! 16-color GBA palettes. RGBA conversion is deferred to display time via
@@ -33,16 +37,17 @@
 //!
 //! Dimensions are fixed at construction (runtime values, like the engine's
 //! [`dotzuki_engine::render::FrameBuffer`]); [`Default`] is the 160×144 Game
-//! Boy screen. Storage is a `Vec` allocated exactly once at construction
-//! (`packed_len` bytes) and never resized. A compile-time-sized fixed-array
-//! variant is not possible on stable Rust today — array lengths cannot be
-//! computed from generic parameters (`generic_const_exprs` is unstable) —
-//! so the eventual no_std/GB step can swap the `Vec` for a static buffer
-//! without touching any other code.
+//! Boy screen. Storage is a `Vec` allocated exactly once at construction and
+//! never resized: `packed_len` bytes for packed storage, or one byte per pixel
+//! for linear storage, rounded up to a whole word. A fixed-array variant is not possible
+//! on stable Rust today — array lengths cannot be computed from generic
+//! parameters (`generic_const_exprs` is unstable) — so the eventual no_std/GB
+//! step can swap the `Vec` for a static buffer without touching other code.
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::palette::{ColorIndex, GbColor, GbaColor, Palette, GRAYSCALE_PALETTE};
+use crate::tile::{Tile, TILE_PIXELS};
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render_config::RenderConfig;
 
@@ -92,13 +97,13 @@ pub const fn packed_len<C: ColorIndex>(width: usize, height: usize) -> usize {
 ///
 /// `C` is the palette index type ([`GbColor`] for 4-color DMG, [`GbaColor`]
 /// for 16-color GBA). Dimensions are chosen at construction (see
-/// [`Default`] for the 160×144 Game Boy screen). Storage is a packed planar
-/// bitplane array (see the [module docs](self)); index values are implicitly
-/// masked to the storage width on write.
+/// [`Default`] for the 160×144 Game Boy screen). `LINEAR = false` selects
+/// packed bitplanes; `LINEAR = true` selects word-aligned byte indices on
+/// every target (see the [module docs](self)). Index values are masked to the storage
+/// width on write.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
-    /// Packed planar bitplane storage, `packed_len::<C>(width, height)` bytes.
-    data: Vec<u8>,
+pub struct IndexedFrameBuffer<C: ColorIndex = GbColor, const LINEAR: bool = false> {
+    data: AlignedBytes,
     /// Screen width in pixels.
     width: usize,
     /// Screen height in pixels.
@@ -107,11 +112,157 @@ pub struct IndexedFrameBuffer<C: ColorIndex = GbColor> {
     _phantom: PhantomData<C>,
 }
 
-impl<C: ColorIndex> IndexedFrameBuffer<C> {
+#[inline(always)]
+fn scroll_chunky_row(row: &mut [u8], dx: i32, clear: u8) {
+    debug_assert!(dx != 0 && (dx.unsigned_abs() as usize) < row.len());
+    let offset = dx.unsigned_abs() as usize;
+    let copy_width = row.len() - offset;
+    let source_x = if dx < 0 { offset } else { 0 };
+    let target_x = if dx > 0 { offset } else { 0 };
+    let row_ptr = row.as_mut_ptr();
+
+    // A 2-byte-misaligned source/destination would otherwise require twice
+    // as many halfword copies. On the little-endian GBA, combine adjacent
+    // aligned words so each iteration still moves four pixels.
+    if cfg!(target_endian = "little")
+        && row.len() & 3 == 0
+        && row_ptr as usize & 3 == 0
+        && offset & 3 == 2
+    {
+        let words = row.len() / 4;
+        let word_offset = offset / 4;
+        let full_words = copy_width / 4;
+        let row_words = row_ptr as *mut u32;
+        if dx < 0 {
+            for target_word in 0..full_words {
+                let source_word = word_offset + target_word;
+                let lower = unsafe { row_words.add(source_word).read() };
+                let upper = unsafe { row_words.add(source_word + 1).read() };
+                unsafe {
+                    row_words
+                        .add(target_word)
+                        .write((lower >> 16) | (upper << 16));
+                }
+            }
+            let tail = unsafe { row_words.add(words - 1).read() } >> 16;
+            unsafe { (row_ptr.add(full_words * 4) as *mut u16).write(tail as u16) };
+            row[copy_width..].fill(clear);
+        } else {
+            for source_word in (0..full_words).rev() {
+                let lower = unsafe { row_words.add(source_word).read() };
+                let upper = unsafe { row_words.add(source_word + 1).read() };
+                unsafe {
+                    row_words
+                        .add(word_offset + 1 + source_word)
+                        .write((lower >> 16) | (upper << 16));
+                }
+            }
+            let prefix = unsafe { row_words.read() } as u16;
+            unsafe { (row_ptr.add(offset) as *mut u16).write(prefix) };
+            row[..offset].fill(clear);
+        }
+        return;
+    }
+
+    let source_address = unsafe { row_ptr.add(source_x) } as usize;
+    let target_address = unsafe { row_ptr.add(target_x) } as usize;
+    if (source_address | target_address | copy_width) & 3 == 0 {
+        let words = copy_width / 4;
+        let source = unsafe { row_ptr.add(source_x) as *const u32 };
+        let target = unsafe { row_ptr.add(target_x) as *mut u32 };
+        if dx > 0 {
+            for word in (0..words).rev() {
+                unsafe { target.add(word).write(source.add(word).read()) };
+            }
+        } else {
+            for word in 0..words {
+                unsafe { target.add(word).write(source.add(word).read()) };
+            }
+        }
+    } else if (source_address | target_address | copy_width) & 1 == 0 {
+        let halfwords = copy_width / 2;
+        let source = unsafe { row_ptr.add(source_x) as *const u16 };
+        let target = unsafe { row_ptr.add(target_x) as *mut u16 };
+        if dx > 0 {
+            for halfword in (0..halfwords).rev() {
+                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+            }
+        } else {
+            for halfword in 0..halfwords {
+                unsafe { target.add(halfword).write(source.add(halfword).read()) };
+            }
+        }
+    } else if dx > 0 {
+        for byte in (0..copy_width).rev() {
+            unsafe {
+                row_ptr
+                    .add(target_x + byte)
+                    .write(row_ptr.add(source_x + byte).read())
+            };
+        }
+    } else {
+        for byte in 0..copy_width {
+            unsafe {
+                row_ptr
+                    .add(target_x + byte)
+                    .write(row_ptr.add(source_x + byte).read())
+            };
+        }
+    }
+
+    if dx > 0 {
+        row[..target_x].fill(clear);
+    } else {
+        row[copy_width..].fill(clear);
+    }
+}
+
+fn copy_chunky_rect_within(
+    pixels: &mut [u8],
+    framebuffer_width: usize,
+    source_x: usize,
+    source_y: usize,
+    copy_width: usize,
+    copy_height: usize,
+    destination_x: usize,
+    destination_y: usize,
+) {
+    debug_assert!(framebuffer_width != 0);
+    debug_assert!(pixels.len() % framebuffer_width == 0);
+    debug_assert!(source_x + copy_width <= framebuffer_width);
+    debug_assert!(destination_x + copy_width <= framebuffer_width);
+    debug_assert!((source_y + copy_height) * framebuffer_width <= pixels.len());
+    debug_assert!((destination_y + copy_height) * framebuffer_width <= pixels.len());
+
+    if destination_y > source_y {
+        for row in (0..copy_height).rev() {
+            let source = (source_y + row) * framebuffer_width + source_x;
+            let destination = (destination_y + row) * framebuffer_width + destination_x;
+            pixels.copy_within(source..source + copy_width, destination);
+        }
+    } else {
+        for row in 0..copy_height {
+            let source = (source_y + row) * framebuffer_width + source_x;
+            let destination = (destination_y + row) * framebuffer_width + destination_x;
+            pixels.copy_within(source..source + copy_width, destination);
+        }
+    }
+}
+
+impl<C: ColorIndex, const LINEAR: bool> IndexedFrameBuffer<C, LINEAR> {
     /// Create a new `width × height` buffer, cleared to `clear`.
     pub fn new(width: usize, height: usize, clear: C) -> Self {
+        let len = if LINEAR {
+            width * height
+        } else {
+            packed_len::<C>(width, height)
+        };
+        let data = AlignedBytes {
+            words: vec![0; (len + 3) / 4],
+            len,
+        };
         let mut fb = Self {
-            data: vec![0; packed_len::<C>(width, height)],
+            data,
             width,
             height,
             _phantom: PhantomData,
@@ -145,9 +296,30 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Clear the entire buffer to a single index.
+    #[inline]
     pub fn clear(&mut self, color: C) {
+        if LINEAR {
+            self.clear_linear(color)
+        } else {
+            self.clear_packed(color)
+        }
+    }
+
+    #[inline]
+    fn clear_linear(&mut self, color: C) {
+        self.data
+            .words
+            .fill(u32::from_ne_bytes([color.to_index() as u8; 4]));
+    }
+
+    #[inline]
+    fn clear_packed(&mut self, color: C) {
         let value = color.to_index();
         let bits = index_bits::<C>();
+        if value == 0 || value + 1 == C::MAX {
+            self.data.fill(if value == 0 { 0x00 } else { 0xFF });
+            return;
+        }
         // In planar layout, byte `i` holds bitplane `i % bits` of a row
         // group, so filling every byte of a plane with 0xFF/0x00 paints
         // that plane across all 8 pixels of each group.
@@ -162,7 +334,31 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Set a single pixel. Returns false if out of bounds.
+    #[inline]
     pub fn set_pixel(&mut self, x: u32, y: u32, color: C) -> bool {
+        if LINEAR {
+            self.set_pixel_linear(x, y, color)
+        } else {
+            self.set_pixel_packed(x, y, color)
+        }
+    }
+
+    #[inline]
+    fn set_pixel_linear(&mut self, x: u32, y: u32, color: C) -> bool {
+        if x >= self.width as u32 || y >= self.height as u32 {
+            return false;
+        }
+        let index = y as usize * self.width + x as usize;
+        unsafe {
+            (self.data.as_mut_ptr() as *mut u8)
+                .add(index)
+                .write(color.to_index() as u8);
+        }
+        true
+    }
+
+    #[inline]
+    fn set_pixel_packed(&mut self, x: u32, y: u32, color: C) -> bool {
         if x >= self.width as u32 || y >= self.height as u32 {
             return false;
         }
@@ -180,7 +376,27 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
     }
 
     /// Get the index of a single pixel. Returns None if out of bounds.
+    #[inline]
     pub fn get_pixel(&self, x: u32, y: u32) -> Option<C> {
+        if LINEAR {
+            self.get_pixel_linear(x, y)
+        } else {
+            self.get_pixel_packed(x, y)
+        }
+    }
+
+    #[inline]
+    fn get_pixel_linear(&self, x: u32, y: u32) -> Option<C> {
+        if x >= self.width as u32 || y >= self.height as u32 {
+            return None;
+        }
+        let index = y as usize * self.width + x as usize;
+        let value = unsafe { (self.data.as_ptr() as *const u8).add(index).read() };
+        Some(C::from_u8(value))
+    }
+
+    #[inline]
+    fn get_pixel_packed(&self, x: u32, y: u32) -> Option<C> {
         if x >= self.width as u32 || y >= self.height as u32 {
             return None;
         }
@@ -199,14 +415,303 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
 
     /// Fill a rectangular region with an index. Coordinates are clamped to
     /// buffer bounds.
+    #[inline]
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
+        if LINEAR {
+            self.fill_rect_linear(x, y, rect_width, rect_height, color)
+        } else {
+            self.fill_rect_packed(x, y, rect_width, rect_height, color)
+        }
+    }
+
+    #[inline]
+    fn fill_rect_linear(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
         let x_start = (x as usize).min(self.width);
         let y_start = (y as usize).min(self.height);
         let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
         let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        let value = color.to_index() as u8;
+        let pixels = unsafe {
+            core::slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut u8, self.len())
+        };
         for row in y_start..y_end {
-            for col in x_start..x_end {
-                self.set_pixel(col as u32, row as u32, color);
+            pixels[row * self.width + x_start..row * self.width + x_end].fill(value);
+        }
+    }
+
+    /// Move the existing pixels by `(dx, dy)` and fill the newly exposed
+    /// edges with `clear`.
+    ///
+    /// Positive offsets move pixels right/down. Pixels shifted outside the
+    /// framebuffer are discarded. The GBA's chunky backing performs the
+    /// move in place, avoiding a second full-screen allocation.
+    pub fn scroll(&mut self, dx: i32, dy: i32, clear: C) {
+        if dx == 0 && dy == 0 {
+            return;
+        }
+        if self.is_empty()
+            || dx.unsigned_abs() as usize >= self.width
+            || dy.unsigned_abs() as usize >= self.height
+        {
+            self.clear(clear);
+            return;
+        }
+
+        if LINEAR {
+            {
+                let width = self.width;
+                let height = self.height;
+                let copy_width = width - dx.unsigned_abs() as usize;
+                let source_x = if dx < 0 {
+                    dx.unsigned_abs() as usize
+                } else {
+                    0
+                };
+                let target_x = if dx > 0 { dx as usize } else { 0 };
+                let clear_value = clear.to_index() as u8;
+                let pixels = unsafe {
+                    core::slice::from_raw_parts_mut(
+                        self.data.as_mut_ptr() as *mut u8,
+                        width * height,
+                    )
+                };
+
+                // Vertical-only moves are one contiguous memmove. Horizontal
+                // moves need row boundaries, so copy aligned words/halfwords in
+                // the overlap-safe direction instead of invoking memmove once
+                // per scanline.
+                if dx == 0 {
+                    if dy > 0 {
+                        let offset = dy as usize;
+                        pixels.copy_within(0..(height - offset) * width, offset * width);
+                        pixels[..offset * width].fill(clear_value);
+                    } else {
+                        let offset = dy.unsigned_abs() as usize;
+                        pixels.copy_within(offset * width..height * width, 0);
+                        pixels[(height - offset) * width..].fill(clear_value);
+                    }
+                    return;
+                }
+
+                if dy == 0 {
+                    for y in 0..height {
+                        let start = y * width;
+                        scroll_chunky_row(&mut pixels[start..start + width], dx, clear_value);
+                    }
+                    return;
+                }
+
+                if dy > 0 {
+                    let offset = dy as usize;
+                    for source_y in (0..height - offset).rev() {
+                        let target_y = source_y + offset;
+                        let source = source_y * width + source_x;
+                        let target = target_y * width + target_x;
+                        pixels.copy_within(source..source + copy_width, target);
+                        if dx > 0 {
+                            pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                        } else if dx < 0 {
+                            pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                        }
+                    }
+                    pixels[..offset * width].fill(clear_value);
+                } else {
+                    let offset = dy.unsigned_abs() as usize;
+                    for source_y in offset..height {
+                        let target_y = source_y - offset;
+                        let source = source_y * width + source_x;
+                        let target = target_y * width + target_x;
+                        pixels.copy_within(source..source + copy_width, target);
+                        if dx > 0 {
+                            pixels[target_y * width..target_y * width + target_x].fill(clear_value);
+                        } else if dx < 0 {
+                            pixels[target + copy_width..(target_y + 1) * width].fill(clear_value);
+                        }
+                    }
+                    pixels[(height - offset) * width..].fill(clear_value);
+                }
+            }
+        }
+
+        if !LINEAR {
+            {
+                let source = self.clone();
+                self.clear(clear);
+                for y in 0..self.height as i32 {
+                    let source_y = y - dy;
+                    if source_y < 0 || source_y >= self.height as i32 {
+                        continue;
+                    }
+                    for x in 0..self.width as i32 {
+                        let source_x = x - dx;
+                        if source_x < 0 || source_x >= self.width as i32 {
+                            continue;
+                        }
+                        let color = source
+                            .get_pixel(source_x as u32, source_y as u32)
+                            .expect("scroll source is in bounds");
+                        self.set_pixel(x as u32, y as u32, color);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Copy a clipped pixel rectangle from `other` at the same coordinates.
+    /// Pixels outside the rectangle are preserved. Both buffers must have the
+    /// same dimensions.
+    pub fn copy_rect_from(
+        &mut self,
+        other: &Self,
+        x: u32,
+        y: u32,
+        rect_width: u32,
+        rect_height: u32,
+    ) {
+        assert_eq!(self.width, other.width, "framebuffer width mismatch");
+        assert_eq!(self.height, other.height, "framebuffer height mismatch");
+        let x_start = (x as usize).min(self.width);
+        let y_start = (y as usize).min(self.height);
+        let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
+        let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        if LINEAR {
+            {
+                let copy_width = x_end - x_start;
+                let destination = self.data.as_mut_ptr().cast::<u8>();
+                let source = other.data.as_ptr().cast::<u8>();
+                for row in y_start..y_end {
+                    let offset = row * self.width + x_start;
+                    unsafe {
+                        core::ptr::copy_nonoverlapping(
+                            source.add(offset),
+                            destination.add(offset),
+                            copy_width,
+                        );
+                    }
+                }
+            }
+        }
+
+        if !LINEAR {
+            for row in y_start..y_end {
+                for column in x_start..x_end {
+                    let color = other
+                        .get_pixel(column as u32, row as u32)
+                        .expect("copy source is in bounds");
+                    self.set_pixel(column as u32, row as u32, color);
+                }
+            }
+        }
+    }
+
+    /// Copy a clipped pixel rectangle within this framebuffer.
+    ///
+    /// Source and destination may overlap. The rectangle is clipped against
+    /// both origins, so pixels outside the common in-bounds extent are left
+    /// unchanged.
+    pub fn copy_rect_within(
+        &mut self,
+        source_x: u32,
+        source_y: u32,
+        rect_width: u32,
+        rect_height: u32,
+        destination_x: u32,
+        destination_y: u32,
+    ) {
+        let source_x = (source_x as usize).min(self.width);
+        let source_y = (source_y as usize).min(self.height);
+        let destination_x = (destination_x as usize).min(self.width);
+        let destination_y = (destination_y as usize).min(self.height);
+        let copy_width = (rect_width as usize)
+            .min(self.width - source_x)
+            .min(self.width - destination_x);
+        let copy_height = (rect_height as usize)
+            .min(self.height - source_y)
+            .min(self.height - destination_y);
+        if copy_width == 0 || copy_height == 0 {
+            return;
+        }
+
+        if LINEAR {
+            {
+                let pixels = unsafe {
+                    core::slice::from_raw_parts_mut(
+                        self.data.as_mut_ptr().cast::<u8>(),
+                        self.width * self.height,
+                    )
+                };
+                copy_chunky_rect_within(
+                    pixels,
+                    self.width,
+                    source_x,
+                    source_y,
+                    copy_width,
+                    copy_height,
+                    destination_x,
+                    destination_y,
+                );
+            }
+        }
+
+        if !LINEAR {
+            {
+                let source = self.clone();
+                for row in 0..copy_height {
+                    for column in 0..copy_width {
+                        let color = source
+                            .get_pixel((source_x + column) as u32, (source_y + row) as u32)
+                            .expect("copy source is in bounds");
+                        self.set_pixel(
+                            (destination_x + column) as u32,
+                            (destination_y + row) as u32,
+                            color,
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[inline]
+    fn fill_rect_packed(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: C) {
+        let x_start = (x as usize).min(self.width);
+        let y_start = (y as usize).min(self.height);
+        let x_end = (x.saturating_add(rect_width) as usize).min(self.width);
+        let y_end = (y.saturating_add(rect_height) as usize).min(self.height);
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        let value = color.to_index();
+        let bits = index_bits::<C>();
+        let groups = groups_per_row(self.width);
+        let first_group = x_start / 8;
+        let last_group = (x_end - 1) / 8;
+        for row in y_start..y_end {
+            for group in first_group..=last_group {
+                let group_x = group * 8;
+                let from = x_start.saturating_sub(group_x).min(8);
+                let until = x_end.saturating_sub(group_x).min(8);
+                let mask = (0xFFu8 >> from) & (0xFFu8 << (8 - until));
+                let base = (row * groups + group) * bits;
+                for plane in 0..bits {
+                    let fill = if (value >> plane) & 1 == 1 {
+                        0xFF
+                    } else {
+                        0x00
+                    };
+                    if mask == 0xFF {
+                        self.data[base + plane] = fill;
+                    } else if fill == 0xFF {
+                        self.data[base + plane] |= mask;
+                    } else {
+                        self.data[base + plane] &= !mask;
+                    }
+                }
             }
         }
     }
@@ -232,28 +737,11 @@ impl<C: ColorIndex> IndexedFrameBuffer<C> {
         }
         true
     }
-
-    /// Raw packed storage, in the planar bitplane format described in the
-    /// [module docs](self). For [`GbColor`] this is GB 2bpp tile data, so
-    /// any 8×8-aligned region can be fed directly to
-    /// [`crate::tile::Tile::from_2bpp`].
-    #[inline]
-    pub fn packed(&self) -> &[u8] {
-        &self.data
-    }
-
-    /// Mutable raw packed storage (e.g. for tile blits into 8×8-aligned
-    /// regions, or for serialization). The caller must preserve the
-    /// planar bitplane layout.
-    #[inline]
-    pub fn packed_mut(&mut self) -> &mut [u8] {
-        &mut self.data
-    }
 }
 
 /// The default [`IndexedFrameBuffer`] is a 160×144 Game Boy screen,
 /// cleared to index 0.
-impl<C: ColorIndex> Default for IndexedFrameBuffer<C> {
+impl<C: ColorIndex, const LINEAR: bool> Default for IndexedFrameBuffer<C, LINEAR> {
     fn default() -> Self {
         Self::new(SCREEN_WIDTH, SCREEN_HEIGHT, C::from_u8(0))
     }
@@ -290,6 +778,42 @@ pub fn quantize<C: ColorIndex>(palette: &Palette<C>, color: Rgba) -> C {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn linear_and_packed_storage_agree_through_clipped_moves_and_blits() {
+        for (width, height) in [(0, 0), (1, 1), (5, 7), (16, 16), (19, 13)] {
+            let config = RenderConfig::new(width, height);
+            let mut packed = RgbaIndexedFrameBuffer::<GbColor>::new(config.clone(), Rgba::WHITE);
+            let mut linear = LinearRgbaIndexedFrameBuffer::<GbColor>::new(config, Rgba::WHITE);
+            assert_eq!(linear.indices().len(), width as usize * height as usize);
+            assert_eq!(linear.indices().as_ptr() as usize % 4, 0);
+            let equal = |p: &RgbaIndexedFrameBuffer, l: &LinearRgbaIndexedFrameBuffer| {
+                for y in 0..height {
+                    for x in 0..width {
+                        assert_eq!(p.get_index(x, y), l.get_index(x, y), "at {x},{y}");
+                    }
+                }
+            };
+            for i in 0..40u32 {
+                let color = GbColor::from_u8((i % 4) as u8);
+                packed.indexed_mut().fill_rect(i % 21, i % 15, 9, 4, color);
+                linear.indexed_mut().fill_rect(i % 21, i % 15, 9, 4, color);
+                let dx = i as i32 % 7 - 3;
+                let dy = i as i32 % 5 - 2;
+                packed.scroll_indices(dx, dy, color);
+                linear.scroll_indices(dx, dy, color);
+                packed.copy_rect_within(1, 1, 11, 8, i % 4, i % 3);
+                linear.copy_rect_within(1, 1, 11, 8, i % 4, i % 3);
+                equal(&packed, &linear);
+                let tile = Tile::from_2bpp(&[
+                    0x59, 0xA7, 0x18, 0xF0, 0xC3, 0x55, 0x0F, 0x88, 0xCC, 0x55, 0x87, 0xE1, 0x44,
+                    0x23, 0xF8, 0x62,
+                ]);
+                packed.blit_gb_tile_indices(dx, dy, &tile, i % 2 == 0, i % 3 == 0, i % 5 == 0);
+                linear.blit_gb_tile_indices(dx, dy, &tile, i % 2 == 0, i % 3 == 0, i % 5 == 0);
+                equal(&packed, &linear);
+            }
+        }
+    }
     use crate::palette::{GbaColor, GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
     use crate::tile::Tile;
 
@@ -461,6 +985,197 @@ mod tests {
     }
 
     #[test]
+    fn fill_rect_preserves_pixels_outside_partial_groups() {
+        let mut fb = IndexedFrameBuffer::<GbColor>::new(19, 3, GbColor::White);
+        fb.fill_rect(3, 1, 13, 1, GbColor::DarkGray);
+        for y in 0..3 {
+            for x in 0..19 {
+                let expected = if y == 1 && (3..16).contains(&x) {
+                    GbColor::DarkGray
+                } else {
+                    GbColor::White
+                };
+                assert_eq!(fb.get_pixel(x, y), Some(expected), "({x}, {y})");
+            }
+        }
+    }
+
+    #[test]
+    fn chunky_row_scroll_matches_reference_for_every_offset() {
+        let mut storage = [0u32; 10];
+        let storage_bytes = unsafe {
+            core::slice::from_raw_parts_mut(storage.as_mut_ptr() as *mut u8, storage.len() * 4)
+        };
+        for width in [37, storage_bytes.len()] {
+            let row = &mut storage_bytes[..width];
+            let original: Vec<u8> = (0..row.len() as u8).collect();
+            for dx in -(row.len() as i32 - 1)..row.len() as i32 {
+                if dx == 0 {
+                    continue;
+                }
+                row.copy_from_slice(&original);
+                scroll_chunky_row(row, dx, 0xff);
+                for (x, &actual) in row.iter().enumerate() {
+                    let source_x = x as i32 - dx;
+                    let expected = if (0..original.len() as i32).contains(&source_x) {
+                        original[source_x as usize]
+                    } else {
+                        0xff
+                    };
+                    assert_eq!(actual, expected, "width {width}, offset {dx}, pixel {x}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn scroll_moves_pixels_and_clears_exposed_edges() {
+        let mut original = IndexedFrameBuffer::<GbColor>::new(5, 4, GbColor::White);
+        for y in 0..4 {
+            for x in 0..5 {
+                original.set_pixel(x, y, GbColor::from_u8(((y * 5 + x) % 4) as u8));
+            }
+        }
+
+        for (dx, dy) in [(2, 1), (-2, -1), (1, -2), (-1, 2)] {
+            let mut shifted = original.clone();
+            shifted.scroll(dx, dy, GbColor::Black);
+            for y in 0..4i32 {
+                for x in 0..5i32 {
+                    let source_x = x - dx;
+                    let source_y = y - dy;
+                    let expected = if (0..5).contains(&source_x) && (0..4).contains(&source_y) {
+                        original
+                            .get_pixel(source_x as u32, source_y as u32)
+                            .unwrap()
+                    } else {
+                        GbColor::Black
+                    };
+                    assert_eq!(
+                        shifted.get_pixel(x as u32, y as u32),
+                        Some(expected),
+                        "offset ({dx}, {dy}), pixel ({x}, {y})"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn scroll_clears_when_offset_exceeds_dimensions() {
+        let mut fb = IndexedFrameBuffer::<GbColor>::new(5, 4, GbColor::LightGray);
+        fb.scroll(5, 0, GbColor::DarkGray);
+        for y in 0..4 {
+            for x in 0..5 {
+                assert_eq!(fb.get_pixel(x, y), Some(GbColor::DarkGray));
+            }
+        }
+    }
+
+    #[test]
+    fn copy_rect_from_preserves_pixels_outside_the_rectangle() {
+        let mut source = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::White);
+        for y in 0..7 {
+            for x in 0..10 {
+                source.set_pixel(x, y, GbColor::from_u8(((x + y * 3) % 4) as u8));
+            }
+        }
+        let mut destination = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::Black);
+        destination.copy_rect_from(&source, 2, 1, 5, 4);
+        for y in 0..7 {
+            for x in 0..10 {
+                let expected = if (2..7).contains(&x) && (1..5).contains(&y) {
+                    source.get_pixel(x, y).unwrap()
+                } else {
+                    GbColor::Black
+                };
+                assert_eq!(destination.get_pixel(x, y), Some(expected), "({x}, {y})");
+            }
+        }
+    }
+
+    #[test]
+    fn copy_rect_within_is_overlap_safe_and_clipped() {
+        let mut original = IndexedFrameBuffer::<GbColor>::new(10, 7, GbColor::White);
+        for y in 0..7 {
+            for x in 0..10 {
+                original.set_pixel(x, y, GbColor::from_u8(((x + y * 3) % 4) as u8));
+            }
+        }
+
+        for &(source_x, source_y, width, height, destination_x, destination_y) in &[
+            (1, 1, 7, 5, 2, 0),
+            (2, 0, 7, 5, 1, 1),
+            (0, 0, 10, 6, 0, 1),
+            (0, 1, 10, 6, 0, 0),
+            (8, 5, 10, 10, 9, 6),
+            (20, 20, 4, 4, 0, 0),
+        ] {
+            let mut actual = original.clone();
+            actual.copy_rect_within(
+                source_x,
+                source_y,
+                width,
+                height,
+                destination_x,
+                destination_y,
+            );
+
+            let mut expected = original.clone();
+            let copy_width = width
+                .min(10u32.saturating_sub(source_x))
+                .min(10u32.saturating_sub(destination_x));
+            let copy_height = height
+                .min(7u32.saturating_sub(source_y))
+                .min(7u32.saturating_sub(destination_y));
+            for row in 0..copy_height {
+                for column in 0..copy_width {
+                    let color = original
+                        .get_pixel(source_x + column, source_y + row)
+                        .unwrap();
+                    expected.set_pixel(destination_x + column, destination_y + row, color);
+                }
+            }
+            assert_eq!(
+                actual, expected,
+                "source ({source_x}, {source_y}), destination ({destination_x}, {destination_y})"
+            );
+        }
+    }
+
+    #[test]
+    fn chunky_rect_copy_is_overlap_safe_in_every_direction() {
+        let original: Vec<u8> = (0..70).map(|index| (index % 251) as u8).collect();
+        for &(source_x, source_y, width, height, destination_x, destination_y) in &[
+            (1, 1, 7, 5, 2, 0),
+            (2, 0, 7, 5, 1, 1),
+            (0, 0, 10, 6, 0, 1),
+            (0, 1, 10, 6, 0, 0),
+        ] {
+            let mut actual = original.clone();
+            copy_chunky_rect_within(
+                &mut actual,
+                10,
+                source_x,
+                source_y,
+                width,
+                height,
+                destination_x,
+                destination_y,
+            );
+
+            let mut expected = original.clone();
+            for row in 0..height {
+                for column in 0..width {
+                    expected[(destination_y + row) * 10 + destination_x + column] =
+                        original[(source_y + row) * 10 + source_x + column];
+                }
+            }
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
     fn to_rgba_applies_palette() {
         let mut fb = IndexedFrameBuffer::<GbColor>::new(4, 2, GbColor::White);
         fb.set_pixel(0, 0, GbColor::Black);
@@ -597,6 +1312,51 @@ pub trait FbSurface: Sized {
     fn clear(&mut self, color: Rgba);
     /// Fill a rectangular region with a color (clamped to bounds).
     fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba);
+    /// Blit one decoded Game Boy tile, clipped to the surface.
+    ///
+    /// The default implementation preserves the ordinary RGBA drawing
+    /// semantics. Indexed surfaces override it so the four palette entries
+    /// are quantized once per tile rather than once per pixel.
+    fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+        for dst_row in 0..TILE_PIXELS {
+            let dst_y = y + dst_row as i32;
+            if dst_y < 0 || dst_y >= height {
+                continue;
+            }
+            let src_row = if flip_y {
+                TILE_PIXELS - 1 - dst_row
+            } else {
+                dst_row
+            };
+            for dst_col in 0..TILE_PIXELS {
+                let dst_x = x + dst_col as i32;
+                if dst_x < 0 || dst_x >= width {
+                    continue;
+                }
+                let src_col = if flip_x {
+                    TILE_PIXELS - 1 - dst_col
+                } else {
+                    dst_col
+                };
+                let color = palette.color(GbColor::from_u8(tile.pixels[src_row][src_col]));
+                if transparent && color == Rgba::TRANSPARENT {
+                    continue;
+                }
+                self.set_pixel(dst_x as u32, dst_y as u32, color);
+            }
+        }
+    }
     /// Read a single pixel as RGBA; out-of-bounds reads return transparent.
     fn pixel_rgba(&self, x: u32, y: u32) -> Rgba {
         self.get_pixel(x, y).unwrap_or(Rgba::TRANSPARENT)
@@ -646,26 +1406,35 @@ impl FbSurface for dotzuki_engine::render::FrameBuffer {
 /// Fades and flashes become palette operations, the way real GB hardware
 /// does them: swap the display palette ([`Self::set_palette`],
 /// [`Self::remap_shades`], [`Self::scale_shades`], [`Self::apply_bgp`])
-/// instead of touching every pixel. The buffer itself stays packed 2bpp —
-/// 5,760 bytes for a 160×144 screen instead of 92,160.
+/// instead of touching every pixel. Hosted buffers stay packed 2bpp — 5,760
+/// bytes for a 160×144 screen instead of 92,160 — while GBA builds use the
+/// module's DMA-friendly one-byte-per-pixel representation.
 ///
 /// `base` doubles as the initial display palette; [`Self::reset_palette`]
 /// restores it. The indexed API remains reachable via [`Self::indexed`] /
 /// [`Self::indexed_mut`].
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor> {
+pub struct RgbaIndexedFrameBuffer<C: ColorIndex = GbColor, const LINEAR: bool = false> {
     /// The indexed pixel storage.
-    buffer: IndexedFrameBuffer<C>,
+    buffer: IndexedFrameBuffer<C, LINEAR>,
     /// Quantization palette: RGBA writes map to the nearest entry's index.
     base: Palette<C>,
+    /// True when `base` is the standard opaque 0/85/170/255 gray ramp.
+    /// This enables an O(1) quantizer for the overwhelmingly common path.
+    fast_grayscale: bool,
     /// Display palette applied at present time; fades/flashes remap this.
     pub palette: Palette<C>,
 }
 
-impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
+impl<C: ColorIndex, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
     /// Create a `config`-sized buffer with an explicit base palette, cleared
     /// to `clear` (quantized through `base`).
     pub fn with_palette(config: RenderConfig, clear: Rgba, base: Palette<C>) -> Self {
+        let fast_grayscale = base.count == 4
+            && base.colors[0] == Rgba::rgb(0xFF, 0xFF, 0xFF)
+            && base.colors[1] == Rgba::rgb(0xAA, 0xAA, 0xAA)
+            && base.colors[2] == Rgba::rgb(0x55, 0x55, 0x55)
+            && base.colors[3] == Rgba::rgb(0x00, 0x00, 0x00);
         let mut fb = Self {
             buffer: IndexedFrameBuffer::new(
                 config.screen_width as usize,
@@ -674,6 +1443,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
             ),
             palette: base,
             base,
+            fast_grayscale,
         };
         fb.clear(clear);
         fb
@@ -725,26 +1495,14 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
 
     /// Read-only access to the underlying indexed buffer.
     #[inline]
-    pub fn indexed(&self) -> &IndexedFrameBuffer<C> {
+    pub fn indexed(&self) -> &IndexedFrameBuffer<C, LINEAR> {
         &self.buffer
     }
 
     /// Mutable access to the underlying indexed buffer (C-index API).
     #[inline]
-    pub fn indexed_mut(&mut self) -> &mut IndexedFrameBuffer<C> {
+    pub fn indexed_mut(&mut self) -> &mut IndexedFrameBuffer<C, LINEAR> {
         &mut self.buffer
-    }
-
-    /// Raw packed 2bpp storage (see [`IndexedFrameBuffer::packed`]).
-    #[inline]
-    pub fn packed(&self) -> &[u8] {
-        self.buffer.packed()
-    }
-
-    /// Mutable raw packed storage.
-    #[inline]
-    pub fn packed_mut(&mut self) -> &mut [u8] {
-        self.buffer.packed_mut()
     }
 
     /// Expand the buffer into RGBA using the *display* palette.
@@ -757,11 +1515,74 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Copy the pixels and display palette of `other` into this buffer.
     /// Both buffers must have the same dimensions.
     pub fn copy_from(&mut self, other: &Self) {
-        self.buffer
-            .packed_mut()
-            .copy_from_slice(other.buffer.packed());
+        self.copy_from_with(other, |destination, source| {
+            destination.copy_from_slice(source);
+        });
+    }
+
+    /// Copy from `other`, delegating the backing-storage transfer to
+    /// `copy_pixels`.
+    ///
+    /// Packed buffers pass planar bytes to the callback. Linear buffers pass
+    /// their one-byte-per-pixel storage, so a
+    /// platform frontend can use a hardware copy engine without exposing
+    /// renderer internals. The callback must copy every source byte into the
+    /// equally sized destination slice before returning.
+    ///
+    /// Both buffers must have the same dimensions.
+    pub fn copy_from_with<F>(&mut self, other: &Self, copy_pixels: F)
+    where
+        F: FnOnce(&mut [u8], &[u8]),
+    {
+        assert_eq!(self.width(), other.width(), "framebuffer width mismatch");
+        assert_eq!(self.height(), other.height(), "framebuffer height mismatch");
+
+        copy_pixels(self.buffer.bytes_mut(), other.buffer.bytes());
+
         self.palette = other.palette;
         self.base = other.base;
+        self.fast_grayscale = other.fast_grayscale;
+    }
+
+    /// Copy a clipped pixel rectangle from `other` at the same coordinates,
+    /// preserving all palette state and pixels outside the rectangle.
+    pub fn copy_rect_from(
+        &mut self,
+        other: &Self,
+        x: u32,
+        y: u32,
+        rect_width: u32,
+        rect_height: u32,
+    ) {
+        self.buffer
+            .copy_rect_from(&other.buffer, x, y, rect_width, rect_height);
+    }
+
+    /// Copy a clipped, overlap-safe pixel rectangle within this framebuffer.
+    /// Palette state is unchanged.
+    pub fn copy_rect_within(
+        &mut self,
+        source_x: u32,
+        source_y: u32,
+        rect_width: u32,
+        rect_height: u32,
+        destination_x: u32,
+        destination_y: u32,
+    ) {
+        self.buffer.copy_rect_within(
+            source_x,
+            source_y,
+            rect_width,
+            rect_height,
+            destination_x,
+            destination_y,
+        );
+    }
+
+    /// Move the indexed pixels by `(dx, dy)`, filling exposed edges with
+    /// `clear`. The display and quantization palettes are unchanged.
+    pub fn scroll_indices(&mut self, dx: i32, dy: i32, clear: C) {
+        self.buffer.scroll(dx, dy, clear);
     }
 
     /// Set a single pixel by palette index. Returns false if out of bounds.
@@ -806,7 +1627,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Set a single pixel, quantized through the base palette.
     /// Returns false if out of bounds.
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Rgba) -> bool {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.set_pixel(x, y, index)
     }
 
@@ -826,7 +1647,7 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// display mapping always begins from the base and effects re-apply
     /// their palette at the end of the frame.
     pub fn clear(&mut self, color: Rgba) {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.clear(index);
         self.palette = self.base;
     }
@@ -834,8 +1655,127 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     /// Fill a rectangular region with a color (quantized through the base
     /// palette). Coordinates are clamped to buffer bounds.
     pub fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba) {
-        let index = quantize(&self.base, color);
+        let index = self.quantize_color(color);
         self.buffer.fill_rect(x, y, rect_width, rect_height, index);
+    }
+
+    /// Blit one decoded Game Boy tile through `palette`, clipped to the
+    /// framebuffer. The four RGBA palette entries are converted to the base
+    /// indices once, then reused for every source pixel.
+    #[inline]
+    pub fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let rgba = [
+            palette.color(GbColor::White),
+            palette.color(GbColor::LightGray),
+            palette.color(GbColor::DarkGray),
+            palette.color(GbColor::Black),
+        ];
+        let mapped = [
+            self.quantize_color(rgba[0]),
+            self.quantize_color(rgba[1]),
+            self.quantize_color(rgba[2]),
+            self.quantize_color(rgba[3]),
+        ];
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+
+        // Title screens, dialogue portraits and most GB sprites already use
+        // the framebuffer's native shade order. On the GBA those tiles can
+        // bypass the generic clipped/remapped loop entirely. Palette entry
+        // zero is allowed to quantize differently when it is transparent,
+        // because that source index is skipped rather than written.
+        if LINEAR {
+            if !flip_x
+                && !flip_y
+                && x >= 0
+                && y >= 0
+                && x + TILE_PIXELS as i32 <= width
+                && y + TILE_PIXELS as i32 <= height
+            {
+                let transparent_zero = transparent && rgba[0] == Rgba::TRANSPARENT;
+                let transparent_nonzero =
+                    transparent && rgba[1..].iter().any(|color| *color == Rgba::TRANSPARENT);
+                let identity_mapping = mapped.iter().enumerate().all(|(index, color)| {
+                    (index == 0 && transparent_zero) || color.to_index() == index
+                });
+
+                if identity_mapping && !transparent_nonzero {
+                    let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                    for row in 0..TILE_PIXELS {
+                        let source = tile.pixels[row].as_ptr();
+                        let target = unsafe {
+                            destination.add((y as usize + row) * width as usize + x as usize)
+                        };
+                        if transparent_zero {
+                            for column in 0..TILE_PIXELS {
+                                let value = unsafe { source.add(column).read() };
+                                if value != 0 {
+                                    unsafe { target.add(column).write(value) };
+                                }
+                            }
+                        } else {
+                            unsafe { core::ptr::copy_nonoverlapping(source, target, TILE_PIXELS) };
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+
+        let tile_size = TILE_PIXELS as i32;
+        let x_start = x.saturating_neg().clamp(0, tile_size) as usize;
+        let y_start = y.saturating_neg().clamp(0, tile_size) as usize;
+        let x_end = width.saturating_sub(x).clamp(0, tile_size) as usize;
+        let y_end = height.saturating_sub(y).clamp(0, tile_size) as usize;
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+
+        for dst_row in y_start..y_end {
+            let src_row = if flip_y {
+                TILE_PIXELS - 1 - dst_row
+            } else {
+                dst_row
+            };
+            for dst_col in x_start..x_end {
+                let src_col = if flip_x {
+                    TILE_PIXELS - 1 - dst_col
+                } else {
+                    dst_col
+                };
+                let source = (tile.pixels[src_row][src_col] & 0x03) as usize;
+                if transparent && rgba[source] == Rgba::TRANSPARENT {
+                    continue;
+                }
+                if LINEAR {
+                    unsafe {
+                        let offset = (y + dst_row as i32) as usize * width as usize
+                            + (x + dst_col as i32) as usize;
+                        destination
+                            .add(offset)
+                            .write(mapped[source].to_index() as u8);
+                    }
+                }
+                if !LINEAR {
+                    self.buffer.set_pixel(
+                        (x + dst_col as i32) as u32,
+                        (y + dst_row as i32) as u32,
+                        mapped[source],
+                    );
+                }
+            }
+        }
     }
 
     /// Copy a horizontal line of RGBA data into the buffer (each pixel
@@ -853,10 +1793,27 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
         for i in 0..actual_count {
             let off = i * 4;
             let c = Rgba::new(src[off], src[off + 1], src[off + 2], src[off + 3]);
-            self.buffer
-                .set_pixel(x + i as u32, y, quantize(&self.base, c));
+            let index = self.quantize_color(c);
+            self.buffer.set_pixel(x + i as u32, y, index);
         }
         true
+    }
+
+    #[inline]
+    fn quantize_color(&self, color: Rgba) -> C {
+        if self.fast_grayscale && color.a == 0xFF && color.r == color.g && color.g == color.b {
+            // Exact nearest-color boundaries for [255, 170, 85, 0]. At a
+            // midpoint the generic quantizer prefers the lower index.
+            let index = match color.r {
+                213..=255 => 0,
+                128..=212 => 1,
+                43..=127 => 2,
+                _ => 3,
+            };
+            C::from_u8(index)
+        } else {
+            quantize(&self.base, color)
+        }
     }
 
     /// Save the framebuffer as a PNG file (display palette applied).
@@ -874,7 +1831,209 @@ impl<C: ColorIndex> RgbaIndexedFrameBuffer<C> {
     }
 }
 
-impl<C: ColorIndex + DefaultPalette> RgbaIndexedFrameBuffer<C> {
+impl<const LINEAR: bool> RgbaIndexedFrameBuffer<GbColor, LINEAR> {
+    /// Blit a tile whose 2-bit pixel values already use the framebuffer's
+    /// index order. This bypasses RGBA palette conversion entirely.
+    ///
+    /// Use this for GB backgrounds (and other identity-palette tiles). When
+    /// `transparent_zero` is set, source index zero leaves the destination
+    /// unchanged, matching Game Boy OBJ transparency.
+    #[inline]
+    pub fn blit_gb_tile_indices(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        transparent_zero: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        let width = self.width() as i32;
+        let height = self.height() as i32;
+
+        // The GBA framebuffer is one byte per pixel. The overwhelmingly
+        // common aligned/background case is eight short row copies with no
+        // per-pixel bounds checks or palette work.
+        if LINEAR {
+            if !transparent_zero
+                && !flip_x
+                && !flip_y
+                && x >= 0
+                && y >= 0
+                && x + TILE_PIXELS as i32 <= width
+                && y + TILE_PIXELS as i32 <= height
+            {
+                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                let width = width as usize;
+                let x = x as usize;
+                let y = y as usize;
+
+                // Pick one copy shape per tile rather than branching for every
+                // row. The bounds checks above cover all eight source and
+                // destination rows. Tile rows are word-aligned because Tile has
+                // 4-byte alignment and every row is eight bytes.
+                if width & 3 == 0 && x & 3 == 0 {
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            let source = tile.pixels[row].as_ptr() as *const u32;
+                            let destination = destination.add((y + row) * width + x) as *mut u32;
+                            destination.write(source.read());
+                            destination.add(1).write(source.add(1).read());
+                        }
+                    }
+                } else if width & 1 == 0 && x & 1 == 0 {
+                    // Smooth 2 px scrolling keeps halfword alignment even when
+                    // the destination is between word boundaries.
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            let source = tile.pixels[row].as_ptr() as *const u16;
+                            let destination = destination.add((y + row) * width + x) as *mut u16;
+                            for halfword in 0..4 {
+                                destination.add(halfword).write(source.add(halfword).read());
+                            }
+                        }
+                    }
+                } else {
+                    for row in 0..TILE_PIXELS {
+                        unsafe {
+                            core::ptr::copy_nonoverlapping(
+                                tile.pixels[row].as_ptr(),
+                                destination.add((y + row) * width + x),
+                                TILE_PIXELS,
+                            );
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+        let tile_size = TILE_PIXELS as i32;
+        let x_start = x.saturating_neg().clamp(0, tile_size) as usize;
+        let y_start = y.saturating_neg().clamp(0, tile_size) as usize;
+        let x_end = width.saturating_sub(x).clamp(0, tile_size) as usize;
+        let y_end = height.saturating_sub(y).clamp(0, tile_size) as usize;
+        if x_start >= x_end || y_start >= y_end {
+            return;
+        }
+
+        if LINEAR {
+            {
+                let destination = self.buffer.data.as_mut_ptr() as *mut u8;
+                if !transparent_zero && !flip_x && !flip_y {
+                    let copy_width = x_end - x_start;
+                    let destination_x = (x + x_start as i32) as usize;
+                    let destination_y = (y + y_start as i32) as usize;
+                    let source = unsafe { tile.pixels[y_start].as_ptr().add(x_start) };
+                    let target =
+                        unsafe { destination.add(destination_y * width as usize + destination_x) };
+
+                    // Clipped scrolling exposes 2/4/6-pixel strips. Choose the
+                    // copy width once per tile so those strips retain the same
+                    // aligned halfword/word writes as a fully visible tile.
+                    if width as usize & 3 == 0
+                        && (source as usize | target as usize | copy_width) & 3 == 0
+                    {
+                        let words = copy_width / 4;
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                let source =
+                                    tile.pixels[dst_row].as_ptr().add(x_start) as *const u32;
+                                let target = destination.add(
+                                    (y + dst_row as i32) as usize * width as usize + destination_x,
+                                ) as *mut u32;
+                                for word in 0..words {
+                                    target.add(word).write(source.add(word).read());
+                                }
+                            }
+                        }
+                    } else if width as usize & 1 == 0
+                        && (source as usize | target as usize | copy_width) & 1 == 0
+                    {
+                        let halfwords = copy_width / 2;
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                let source =
+                                    tile.pixels[dst_row].as_ptr().add(x_start) as *const u16;
+                                let target = destination.add(
+                                    (y + dst_row as i32) as usize * width as usize + destination_x,
+                                ) as *mut u16;
+                                for halfword in 0..halfwords {
+                                    target.add(halfword).write(source.add(halfword).read());
+                                }
+                            }
+                        }
+                    } else {
+                        for dst_row in y_start..y_end {
+                            unsafe {
+                                core::ptr::copy_nonoverlapping(
+                                    tile.pixels[dst_row].as_ptr().add(x_start),
+                                    destination.add(
+                                        (y + dst_row as i32) as usize * width as usize
+                                            + destination_x,
+                                    ),
+                                    copy_width,
+                                );
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                for dst_row in y_start..y_end {
+                    let src_row = if flip_y {
+                        TILE_PIXELS - 1 - dst_row
+                    } else {
+                        dst_row
+                    };
+                    for dst_col in x_start..x_end {
+                        let src_col = if flip_x {
+                            TILE_PIXELS - 1 - dst_col
+                        } else {
+                            dst_col
+                        };
+                        let source = tile.pixels[src_row][src_col] & 0x03;
+                        if transparent_zero && source == 0 {
+                            continue;
+                        }
+                        unsafe {
+                            let offset = (y + dst_row as i32) as usize * width as usize
+                                + (x + dst_col as i32) as usize;
+                            destination.add(offset).write(source);
+                        }
+                    }
+                }
+            }
+        }
+        if !LINEAR {
+            for dst_row in y_start..y_end {
+                let src_row = if flip_y {
+                    TILE_PIXELS - 1 - dst_row
+                } else {
+                    dst_row
+                };
+                for dst_col in x_start..x_end {
+                    let src_col = if flip_x {
+                        TILE_PIXELS - 1 - dst_col
+                    } else {
+                        dst_col
+                    };
+                    let source = tile.pixels[src_row][src_col] & 0x03;
+                    if transparent_zero && source == 0 {
+                        continue;
+                    }
+                    self.buffer.set_pixel(
+                        (x + dst_col as i32) as u32,
+                        (y + dst_row as i32) as u32,
+                        GbColor::from_u8(source),
+                    );
+                }
+            }
+        }
+    }
+}
+
+impl<C: ColorIndex + DefaultPalette, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
     /// Create a `config`-sized buffer using the type's default base palette,
     /// cleared to `clear`.
     pub fn new(config: RenderConfig, clear: Rgba) -> Self {
@@ -882,7 +2041,7 @@ impl<C: ColorIndex + DefaultPalette> RgbaIndexedFrameBuffer<C> {
     }
 }
 
-impl RgbaIndexedFrameBuffer<GbColor> {
+impl<const LINEAR: bool> RgbaIndexedFrameBuffer<GbColor, LINEAR> {
     /// Apply a DMG BGP register byte: display color `i` becomes the base
     /// palette's shade `(bgp >> (2 * i)) & 3`. This is exactly how the
     /// original hardware performs fades (by writing the BGP register).
@@ -895,7 +2054,9 @@ impl RgbaIndexedFrameBuffer<GbColor> {
     }
 }
 
-impl<C: ColorIndex + DefaultPalette> FbSurface for RgbaIndexedFrameBuffer<C> {
+impl<C: ColorIndex + DefaultPalette, const LINEAR: bool> FbSurface
+    for RgbaIndexedFrameBuffer<C, LINEAR>
+{
     fn new_screen(width: u32, height: u32) -> Self {
         Self::new(RenderConfig::new(width, height), Rgba::BLACK)
     }
@@ -917,6 +2078,18 @@ impl<C: ColorIndex + DefaultPalette> FbSurface for RgbaIndexedFrameBuffer<C> {
     fn fill_rect(&mut self, x: u32, y: u32, rect_width: u32, rect_height: u32, color: Rgba) {
         self.fill_rect(x, y, rect_width, rect_height, color)
     }
+    fn blit_gb_tile(
+        &mut self,
+        x: i32,
+        y: i32,
+        tile: &Tile,
+        palette: &Palette,
+        transparent: bool,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
+        self.blit_gb_tile(x, y, tile, palette, transparent, flip_x, flip_y)
+    }
     fn present_into(&self, out: &mut [u8]) {
         assert!(out.len() >= self.len() * 4, "present buffer too small");
         self.to_rgba(out);
@@ -930,6 +2103,12 @@ mod facade_tests {
 
     fn fb() -> RgbaIndexedFrameBuffer<GbColor> {
         RgbaIndexedFrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
+    }
+
+    #[test]
+    fn decoded_tiles_are_word_aligned_without_padding() {
+        assert_eq!(core::mem::align_of::<Tile>(), 4);
+        assert_eq!(core::mem::size_of::<Tile>(), 64);
     }
 
     #[test]
@@ -955,6 +2134,21 @@ mod facade_tests {
         for (i, &c) in colors.iter().enumerate() {
             assert_eq!(fb.get_pixel(i as u32, 0), Some(c));
             assert_eq!(fb.get_index(i as u32, 0), Some(GbColor::from_u8(i as u8)));
+        }
+    }
+
+    #[test]
+    fn fast_grayscale_quantizer_matches_generic_for_every_gray() {
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(256, 1), Rgba::WHITE);
+        assert!(fb.fast_grayscale);
+        for gray in 0..=u8::MAX {
+            let color = Rgba::rgb(gray, gray, gray);
+            assert!(fb.set_pixel(gray as u32, 0, color));
+            assert_eq!(
+                fb.get_index(gray as u32, 0),
+                Some(quantize(&GRAYSCALE_PALETTE, color)),
+                "gray {gray}"
+            );
         }
     }
 
@@ -989,6 +2183,94 @@ mod facade_tests {
         assert!(!fb.set_pixel(0, 144, Rgba::BLACK));
         assert_eq!(fb.get_pixel(160, 0), None);
         assert_eq!(fb.pixel_rgba(160, 0), Rgba::TRANSPARENT);
+    }
+
+    #[test]
+    fn gb_tile_blit_maps_palette_and_preserves_transparency() {
+        let mut tile = Tile::blank();
+        tile.pixels[0] = [0, 1, 2, 3, 0, 1, 2, 3];
+        let palette = Palette::new(&[
+            Rgba::TRANSPARENT,
+            Rgba::BLACK,
+            Rgba::rgb(0x55, 0x55, 0x55),
+            Rgba::rgb(0xAA, 0xAA, 0xAA),
+        ]);
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 2), Rgba::WHITE);
+
+        fb.blit_gb_tile(0, 0, &tile, &palette, true, false, false);
+
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::Black));
+        assert_eq!(fb.get_index(2, 0), Some(GbColor::DarkGray));
+        assert_eq!(fb.get_index(3, 0), Some(GbColor::LightGray));
+    }
+
+    #[test]
+    fn gb_tile_blit_clips_and_flips() {
+        let mut tile = Tile::blank();
+        tile.pixels[7][7] = 3;
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(4, 4), Rgba::WHITE);
+
+        fb.blit_gb_tile(-7, -7, &tile, &GRAYSCALE_PALETTE, false, true, true);
+
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(3, 3), Some(GbColor::White));
+
+        fb.blit_gb_tile(-7, -7, &tile, &GRAYSCALE_PALETTE, false, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
+    }
+
+    #[test]
+    fn gb_tile_index_blit_copies_indices_and_skips_zero() {
+        let mut tile = Tile::blank();
+        tile.pixels[0] = [0, 1, 2, 3, 0, 1, 2, 3];
+        let mut fb = RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 2), Rgba::BLACK);
+
+        fb.blit_gb_tile_indices(0, 0, &tile, false, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
+        assert_eq!(fb.get_index(2, 0), Some(GbColor::DarkGray));
+        assert_eq!(fb.get_index(3, 0), Some(GbColor::Black));
+
+        fb.clear_index(GbColor::Black);
+        fb.blit_gb_tile_indices(0, 0, &tile, true, false, false);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
+    }
+
+    #[test]
+    fn gb_tile_index_blit_clips_opaque_edges() {
+        let mut tile = Tile::blank();
+        for (row, pixels) in tile.pixels.iter_mut().enumerate() {
+            for (column, pixel) in pixels.iter_mut().enumerate() {
+                *pixel = ((row * TILE_PIXELS + column) & 3) as u8;
+            }
+        }
+
+        for (tile_x, tile_y) in [(-6, 0), (6, 0), (0, -6), (0, 6)] {
+            let mut fb =
+                RgbaIndexedFrameBuffer::<GbColor>::new(RenderConfig::new(8, 8), Rgba::BLACK);
+            fb.blit_gb_tile_indices(tile_x, tile_y, &tile, false, false, false);
+
+            for y in 0..8i32 {
+                for x in 0..8i32 {
+                    let source_x = x - tile_x;
+                    let source_y = y - tile_y;
+                    let expected = if (0..TILE_PIXELS as i32).contains(&source_x)
+                        && (0..TILE_PIXELS as i32).contains(&source_y)
+                    {
+                        GbColor::from_u8(tile.pixels[source_y as usize][source_x as usize])
+                    } else {
+                        GbColor::Black
+                    };
+                    assert_eq!(
+                        fb.get_index(x as u32, y as u32),
+                        Some(expected),
+                        "tile ({tile_x}, {tile_y}), pixel ({x}, {y})"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -1069,6 +2351,54 @@ mod facade_tests {
     }
 
     #[test]
+    fn copy_from_with_delegates_storage_transfer() {
+        let mut src = fb();
+        src.fill_rect(3, 5, 9, 7, Rgba::BLACK);
+        src.apply_bgp(0b00000000); // all white
+        let mut dst = fb();
+        let mut calls = 0;
+        dst.copy_from_with(&src, |destination, source| {
+            calls += 1;
+            assert_eq!(destination.len(), source.len());
+            destination.copy_from_slice(source);
+        });
+        assert_eq!(calls, 1);
+        assert_eq!(dst.get_index(4, 6), Some(GbColor::Black));
+        assert_eq!(dst.get_pixel(4, 6), Some(Rgba::WHITE));
+        assert_eq!(dst.packed(), src.packed());
+    }
+
+    #[test]
+    fn copy_rect_from_preserves_destination_palette_and_other_pixels() {
+        let mut src = fb();
+        src.fill_rect(2, 3, 6, 5, Rgba::BLACK);
+        src.apply_bgp(0b00000000); // all white
+        let mut dst = fb();
+        dst.fill_rect(0, 0, 16, 16, Rgba::rgb(0x55, 0x55, 0x55));
+        dst.apply_bgp(0b11100100); // identity display palette
+
+        dst.copy_rect_from(&src, 2, 3, 6, 5);
+
+        assert_eq!(dst.get_index(4, 4), Some(GbColor::Black));
+        assert_eq!(dst.get_pixel(4, 4), Some(Rgba::BLACK));
+        assert_eq!(dst.get_index(1, 4), Some(GbColor::DarkGray));
+        assert_eq!(dst.get_pixel(1, 4), Some(Rgba::rgb(0x55, 0x55, 0x55)));
+    }
+
+    #[test]
+    fn copy_rect_within_preserves_palette_state() {
+        let mut fb = fb();
+        fb.fill_rect(2, 3, 6, 5, Rgba::BLACK);
+        fb.apply_bgp(0b00000000);
+        let palette = fb.palette;
+
+        fb.copy_rect_within(2, 3, 6, 5, 4, 5);
+
+        assert_eq!(fb.get_index(5, 6), Some(GbColor::Black));
+        assert_eq!(fb.palette, palette);
+    }
+
+    #[test]
     fn clear_resets_display_palette() {
         let mut fb = fb();
         fb.apply_bgp(0b00000000); // white-out display palette
@@ -1120,5 +2450,70 @@ mod facade_tests {
             };
             assert_eq!(fb.get_index(i as u32, 0), Some(expected));
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AlignedBytes {
+    words: Vec<u32>,
+    len: usize,
+}
+impl core::ops::Deref for AlignedBytes {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        // All u32 bit patterns are initialized; len excludes word padding.
+        unsafe { core::slice::from_raw_parts(self.words.as_ptr().cast(), self.len) }
+    }
+}
+impl core::ops::DerefMut for AlignedBytes {
+    fn deref_mut(&mut self) -> &mut [u8] {
+        unsafe { core::slice::from_raw_parts_mut(self.words.as_mut_ptr().cast(), self.len) }
+    }
+}
+/// Explicit one-byte-per-pixel, word-aligned storage on every target.
+pub type LinearIndexedFrameBuffer<C = GbColor> = IndexedFrameBuffer<C, true>;
+pub type LinearRgbaIndexedFrameBuffer<C = GbColor> = RgbaIndexedFrameBuffer<C, true>;
+impl<C: ColorIndex, const LINEAR: bool> IndexedFrameBuffer<C, LINEAR> {
+    pub(crate) fn bytes(&self) -> &[u8] {
+        &self.data
+    }
+    pub(crate) fn bytes_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> IndexedFrameBuffer<C, false> {
+    /// Planar row-major bytes; available only for explicitly packed storage.
+    pub fn packed(&self) -> &[u8] {
+        &self.data
+    }
+    /// Mutable planar bytes, excluding alignment padding.
+    pub fn packed_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> IndexedFrameBuffer<C, true> {
+    /// One palette index per pixel, row-major and word-aligned on every target.
+    pub fn indices(&self) -> &[u8] {
+        &self.data
+    }
+    /// Mutable row-major indices. Writes must stay within the palette's range.
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+}
+impl<C: ColorIndex> RgbaIndexedFrameBuffer<C, false> {
+    pub fn packed(&self) -> &[u8] {
+        self.buffer.packed()
+    }
+    pub fn packed_mut(&mut self) -> &mut [u8] {
+        self.buffer.packed_mut()
+    }
+}
+impl<C: ColorIndex> RgbaIndexedFrameBuffer<C, true> {
+    pub fn indices(&self) -> &[u8] {
+        self.buffer.indices()
+    }
+    pub fn indices_mut(&mut self) -> &mut [u8] {
+        self.buffer.indices_mut()
     }
 }

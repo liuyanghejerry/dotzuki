@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::hash::Hash;
+use core::fmt::Debug;
+use core::hash::Hash;
 
 // ============================================================================
 // SGB Color Types (shared between engine, data, and renderer)

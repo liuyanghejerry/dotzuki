@@ -39,18 +39,28 @@ pub fn render_cursor(
         None => theme.cursor_ink(),
     };
 
-    // Proportional screens place the glyph at pixel precision; the legacy tile
-    // path is preserved byte-for-byte for pokered.
-    if theme.proportional(painter.supports_proportional()) {
+    draw_cursor_glyph(
+        TilePos::new(tx, ty),
+        params.glyph_char(),
+        color,
+        theme.proportional(painter.supports_proportional()),
+        painter,
+    );
+}
+
+/// Shared primitive for dynamic and build-generated cursor elements.
+pub fn draw_cursor_glyph(
+    pos: TilePos,
+    glyph: char,
+    color: dotzuki_engine::render::Rgba,
+    proportional: bool,
+    painter: &mut dyn Painter,
+) {
+    if proportional {
         let mut buf = [0u8; 4];
-        painter.draw_text_px(
-            tx * 8,
-            ty * 8,
-            params.glyph_char().encode_utf8(&mut buf),
-            color,
-        );
+        painter.draw_text_px(pos.tx * 8, pos.ty * 8, glyph.encode_utf8(&mut buf), color);
     } else {
-        painter.draw_glyph(TilePos::new(tx, ty), params.glyph_char(), color);
+        painter.draw_glyph(pos, glyph, color);
     }
 }
 
@@ -58,8 +68,8 @@ pub fn render_cursor(
 mod tests {
     use super::*;
     use crate::layout_engine::types::{Coord, ElementParams, ElementRect, Visibility};
+    use core::cell::RefCell;
     use dotzuki_engine::render::{Rgba, TileRect};
-    use std::cell::RefCell;
 
     #[derive(Default)]
     struct Rec {

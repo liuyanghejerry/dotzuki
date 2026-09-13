@@ -272,7 +272,9 @@ impl TransitionFb for FrameBuffer {
     }
 }
 
-impl<C: crate::palette::ColorIndex> TransitionFb for crate::IndexedFrameBuffer<C> {
+impl<C: crate::palette::ColorIndex, const LINEAR: bool> TransitionFb
+    for crate::IndexedFrameBuffer<C, LINEAR>
+{
     fn size(&self) -> (usize, usize) {
         (self.width(), self.height())
     }
@@ -288,42 +290,28 @@ impl<C: crate::palette::ColorIndex> TransitionFb for crate::IndexedFrameBuffer<C
         );
     }
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
-        let bits = crate::index_bits::<C>();
-        let gpr = (self.width() + 7) / 8;
         let (w, h) = self.size();
         let px = tx * TILE_SIZE as usize;
         let py = ty * TILE_SIZE as usize;
         let spx = stx * TILE_SIZE as usize;
         let spy = sty * TILE_SIZE as usize;
         for dy in 0..TILE_SIZE as usize {
-            let y = py + dy;
-            let sy = spy + dy;
-            if y >= h || sy >= h {
-                break;
-            }
             for dx in 0..TILE_SIZE as usize {
-                let x = px + dx;
-                let sx = spx + dx;
-                if x >= w || sx >= w {
-                    break;
-                }
-                // Packed layout: per row, bytes run `gpr * bits` per
-                // row-group; a pixel spans one bit per plane byte.
-                let doff = (y * gpr + x / 8) * bits;
-                let soff = (sy * gpr + sx / 8) * bits;
-                let bit_shift = 7 - (x % 8);
-                let sbit_shift = 7 - (sx % 8);
-                let dst = self.packed_mut();
-                for plane in 0..bits {
-                    let sb = (src.packed()[soff + plane] >> sbit_shift) & 1;
-                    dst[doff + plane] = (dst[doff + plane] & !(1 << bit_shift)) | (sb << bit_shift);
+                let (x, y) = (px + dx, py + dy);
+                let (sx, sy) = (spx + dx, spy + dy);
+                if x < w && y < h && sx < w && sy < h {
+                    if let Some(index) = src.get_pixel(sx as u32, sy as u32) {
+                        self.set_pixel(x as u32, y as u32, index);
+                    }
                 }
             }
         }
     }
 }
 
-impl<C: crate::palette::ColorIndex> TransitionFb for crate::RgbaIndexedFrameBuffer<C> {
+impl<C: crate::palette::ColorIndex, const LINEAR: bool> TransitionFb
+    for crate::RgbaIndexedFrameBuffer<C, LINEAR>
+{
     fn size(&self) -> (usize, usize) {
         (self.width() as usize, self.height() as usize)
     }

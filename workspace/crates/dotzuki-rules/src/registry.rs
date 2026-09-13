@@ -18,7 +18,7 @@
 //! [`RulesProvider`] trait (which *extends* `EffectProvider`); the engine is
 //! untouched.
 
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 
 use dotzuki_engine::battle::stack::{
     Effect, EffectId, EffectProvider, EffectType, Event, EventHook,
@@ -161,15 +161,15 @@ impl CompiledRuleset {
         B: RuleBindings<P>,
     {
         let _ = bindings; // bindings authority is exercised via status_index_of/stat list
-        let mut hooks = HashMap::new();
-        let mut statuses: HashMap<String, usize> = HashMap::new();
-        let mut move_costs: HashMap<String, Vec<(usize, u16)>> = HashMap::new();
+        let mut hooks = HashMap::default();
+        let mut statuses: HashMap<String, usize> = HashMap::default();
+        let mut move_costs: HashMap<String, Vec<(usize, u16)>> = HashMap::default();
         let mut next_id = id_base;
 
         // Intern the type chart NOW (doc 12 §2): every edge's atk/def names must
         // be in `types:` — an unknown name is a LOAD error, never a battle-time
         // surprise. The DATA layer owns the chart; a hot-reload rebuilds this map.
-        let mut type_chart: HashMap<(usize, usize), (u32, u32)> = HashMap::new();
+        let mut type_chart: HashMap<(usize, usize), (u32, u32)> = HashMap::default();
         for edge in &ruleset.type_chart {
             let a = ruleset
                 .type_index(&edge.atk)

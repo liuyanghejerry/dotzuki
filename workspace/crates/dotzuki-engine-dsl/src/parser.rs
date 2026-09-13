@@ -1,6 +1,6 @@
 use crate::ast::*;
+use crate::hash::{HashMap, HashSet};
 use crate::lexer::{SpannedToken, Token};
-use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseError {
@@ -61,8 +61,8 @@ pub enum ParseError {
     },
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::UnexpectedToken {
                 expected, found, ..
@@ -121,7 +121,7 @@ impl std::fmt::Display for ParseError {
     }
 }
 
-impl std::error::Error for ParseError {}
+impl core::error::Error for ParseError {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SemanticError {
@@ -148,8 +148,8 @@ pub enum SemanticError {
     },
 }
 
-impl std::fmt::Display for SemanticError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for SemanticError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::UndefinedVariable { name, .. } => write!(f, "undefined variable '{}'", name),
             Self::CircularStyleInheritance { chain, .. } => {
@@ -166,7 +166,7 @@ impl std::fmt::Display for SemanticError {
     }
 }
 
-impl std::error::Error for SemanticError {}
+impl core::error::Error for SemanticError {}
 
 const VALID_COMPONENT_TYPES: &[&str] = &[
     "panel",
@@ -206,7 +206,7 @@ impl Parser {
             errors: Vec::new(),
             current_scope: Vec::new(),
             _source: source.to_string(),
-            component_decls: HashMap::new(),
+            component_decls: HashMap::default(),
         }
     }
 
@@ -1321,6 +1321,11 @@ impl Parser {
             Some(Token::DirectiveIf) => self.parse_if_stmt(),
             Some(Token::DirectiveEach) => self.parse_each_stmt(),
             Some(Token::DirectiveCommand) => self.parse_directive_command_stmt(),
+            Some(Token::Identifier(name)) if name == "return" => {
+                let span = self.current_span();
+                self.advance();
+                Ok(StoryStmt::Return { span })
+            }
             Some(Token::Identifier(_)) => {
                 if self.peek_n(1) == Some(&Token::Equals) {
                     self.parse_assign_stmt()
@@ -1857,7 +1862,7 @@ impl Parser {
             on_click: None,
             flex_grow: None,
             visible: None,
-            custom: HashMap::new(),
+            custom: HashMap::default(),
             span: self.current_span(),
             rect: None,
             style: None,
@@ -2138,7 +2143,7 @@ impl Parser {
         self.expect_keyword(Token::DirectiveTheme)?;
         let name = self.expect_ident()?;
         self.expect_peek(&Token::LBrace)?;
-        let mut tokens = HashMap::new();
+        let mut tokens = HashMap::default();
         loop {
             self.skip_noise();
             match self.peek() {
@@ -2171,7 +2176,7 @@ impl Parser {
             None
         };
         self.expect_peek(&Token::LBrace)?;
-        let mut properties = HashMap::new();
+        let mut properties = HashMap::default();
         loop {
             self.skip_noise();
             match self.peek() {
@@ -2530,7 +2535,7 @@ impl SemanticValidator {
     }
 
     fn check_uniqueness(&mut self, themes: &[Theme], styles: &[Style]) {
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::default();
         for t in themes {
             if !seen.insert(&t.name) {
                 self.errors.push(SemanticError::DuplicateName {
@@ -4625,6 +4630,31 @@ mod tests {
             }
             _ => panic!("expected Command from bare identifier"),
         }
+    }
+
+    #[test]
+    fn test_return_is_control_flow_not_a_host_command() {
+        let tokens = vec![
+            tok(Token::KeywordGameScene),
+            tok(id("Return")),
+            tok(Token::LBrace),
+            tok(Token::DirectiveStorylines),
+            tok(Token::LBrace),
+            tok(Token::Identifier("return".into())),
+            tok(Token::Newline),
+            tok(Token::RBrace),
+            tok(Token::RBrace),
+            tok(Token::Eof),
+        ];
+        let (doc, errors) = parse(tokens);
+        assert!(errors.is_empty(), "return should parse: {errors:?}");
+        let Document::Scene(scene) = doc.expect("scene") else {
+            panic!("expected scene")
+        };
+        assert!(matches!(
+            scene.storylines[0].statements.as_slice(),
+            [StoryStmt::Return { .. }]
+        ));
     }
 
     // ──────────────── ERROR CONDITION TESTS ────────────────

@@ -297,6 +297,10 @@ impl FrameBuffer {
     /// Save the framebuffer as a PNG file.
     ///
     /// Uses the `image` crate to encode the raw RGBA data.
+    ///
+    /// Host-only (behind the `image` feature): bare-metal targets have no
+    /// filesystem and no std::io; a GBA build never enables this.
+    #[cfg(feature = "image")]
     pub fn save_png(&self, path: &std::path::Path) -> std::io::Result<()> {
         use image::{ImageBuffer, Rgba as ImgRgba};
         let img: ImageBuffer<ImgRgba<u8>, _> =

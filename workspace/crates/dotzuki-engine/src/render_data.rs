@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 /// Provides render-time string and metadata lookups for game entities.
 ///

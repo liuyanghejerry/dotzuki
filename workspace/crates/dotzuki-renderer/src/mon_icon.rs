@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use dotzuki_engine::hash::HashMap;
 use std::sync::Mutex;
 
 use crate::asset_provider::ResourceProvider;
@@ -207,7 +207,7 @@ pub fn load_mon_icon_tiles(
     let mut guard = CACHE
         .lock()
         .map_err(|e| format!("cache lock poisoned: {}", e))?;
-    let map = guard.get_or_insert_with(HashMap::new);
+    let map = guard.get_or_insert_with(HashMap::default);
     map.insert(key, leaked);
     Ok(leaked)
 }
