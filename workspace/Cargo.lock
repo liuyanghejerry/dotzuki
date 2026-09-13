@@ -1069,7 +1069,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1081,7 +1081,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "bitflags 2.13.0",
  "cpal",
@@ -1095,7 +1095,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-cli"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1111,7 +1111,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "hashbrown 0.15.5",
  "image",
@@ -1123,7 +1123,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "base64 0.22.1",
  "dotzuki-engine-script",
@@ -1138,7 +1138,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "boa_engine",
  "log",
@@ -1149,7 +1149,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-tiled"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "serde",
@@ -1158,11 +1158,11 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-mobile"
-version = "0.8.0"
+version = "0.8.2"
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-engine-dsl",
@@ -1181,7 +1181,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-rules-macro",
@@ -1193,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules-macro"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1204,7 +1204,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-runner"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1226,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-runner-mobile"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-mobile",
@@ -1238,7 +1238,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-runner-web"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "base64 0.22.1",
  "console_error_panic_hook",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-tui"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1261,7 +1261,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1269,7 +1269,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-web"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "console_error_panic_hook",
  "dotzuki-audio",
@@ -2465,7 +2465,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "minimon"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-rules",

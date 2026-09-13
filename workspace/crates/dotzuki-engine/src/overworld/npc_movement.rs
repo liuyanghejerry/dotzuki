@@ -20,7 +20,7 @@ use super::types::{Direction, MapData, NpcMovementType, NpcWanderAxis};
 ///
 /// Game-specific data (e.g., trainer flags, item drops) should be stored
 /// in a separate parallel array and looked up by `npc_index`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NpcRuntimeState {
     pub npc_index: u8,
     pub sprite_id: u8,

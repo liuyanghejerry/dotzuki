@@ -67,6 +67,8 @@
 - [Migrating to v0.7.0](release-notes/migration/v0.7.0.md)
 - [Migrating to v0.7.1](release-notes/migration/v0.7.1.md)
 - [Migrating to v0.8.0](release-notes/migration/v0.8.0.md)
+- [Migrating to v0.8.1](release-notes/migration/v0.8.1.md)
+- [Migrating to v0.8.2](release-notes/migration/v0.8.2.md)
 
 # Archive
 
@@ -135,3 +137,5 @@ archive pages stay English-only (doc-standard §5).
 - [迁移至 v0.7.0](release-notes/migration/v0.7.0.zh-CN.md)
 - [迁移至 v0.7.1](release-notes/migration/v0.7.1.zh-CN.md)
 - [迁移至 v0.8.0](release-notes/migration/v0.8.0.zh-CN.md)
+- [迁移至 v0.8.1](release-notes/migration/v0.8.1.zh-CN.md)
+- [迁移至 v0.8.2](release-notes/migration/v0.8.2.zh-CN.md)

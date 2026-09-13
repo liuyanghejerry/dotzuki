@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.8.0", default-features = false }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.8.2", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -36,6 +36,6 @@ thiserror = { workspace = true }
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
 [dev-dependencies]
-dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.8.0" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.8.2" }
 base64 = "0.22"
 insta = "1.47.2"
