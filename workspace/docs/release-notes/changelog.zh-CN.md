@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.0
->（源文档 commit 1d88d2f3ef7670a7bc2cf517c49fe83a7f2ab770）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.1
+>（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.0
+> - **Last verified**: v0.8.1
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -19,7 +19,9 @@
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
-## 未发布
+## v0.8.1
+
+此补丁版本没有 API 变更。使用方更新方式见[迁移指南](migration/v0.8.1.zh-CN.md)。
 
 - 修复：鸿蒙宿主改用分层启动图标（API 11 及以上要求），桌面显示游戏自己的图标
   而不是系统占位图。重新导出宿主即可生效；`dotzuki export --harmony` 模板与

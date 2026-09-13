@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.0
+> - **Last verified**: v0.8.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -16,7 +16,10 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
-## Unreleased
+## v0.8.1
+
+This patch release has no API changes. See the
+[migration guide](migration/v0.8.1.md) for the consumer update.
 
 - Fix: HarmonyOS hosts export with a layered launcher icon, which API 11 and
   later require, so the home screen shows the game's own icon instead of the
