@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.1
->（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.2
+>（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.1
+> - **Last verified**: v0.8.2
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,18 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## v0.8.2
+
+此补丁版本只新增 trait 实现，没有破坏性变更。使用方更新方式见
+[迁移指南](migration/v0.8.2.zh-CN.md)。
+
+- 新增：引擎自身的运行时状态现在可序列化——DSL 解释器（`Interpreter`、
+  `InterpState`）、trigger manager、NPC 运行时状态、cutscene manager、连接过场、
+  `CommandResult`、`Metatile` 以及 overworld 演出状态实现 `Serialize` 与
+  `Deserialize`，DSL `Interpreter` 另有 `Debug` 与 `Clone`。需要逐帧
+  `save_state` / `restore_state` 的游戏可以直接对引擎状态下快照并恢复，无需再
+  固定一份私有引擎分支。
 
 ## v0.8.1
 
