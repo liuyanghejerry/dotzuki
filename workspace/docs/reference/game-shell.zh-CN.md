@@ -1,12 +1,13 @@
 # 游戏外壳参考
 
-> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.7.1
+>（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.7.1
 
 [游戏外壳](./glossary.md)（`dotzuki_web::game_shell`，源码见
 `crates/dotzuki-web/src/game_shell.rs`）以 Game Boy 帧节奏在浏览器
@@ -77,10 +78,11 @@ pub trait GameLoop {
 ```
 
 - `type Fb: FbSurface`——游戏绘制用的帧缓冲：
-  `dotzuki_renderer::FrameBuffer`（真彩色游戏）或
+  `dotzuki_renderer::FrameBuffer`（真彩色游戏）、
   `dotzuki_renderer::RgbaIndexedFrameBuffer`（packed 固定调色板存储）或
   `dotzuki_renderer::LinearRgbaIndexedFrameBuffer`（字节索引、word 对齐）。
-  应用显式选择格式，两种存储在所有目标平台保持相同含义，均实现 `FbSurface`。
+  应用显式选择格式，三种存储在所有目标平台保持相同含义，均实现
+  `FbSurface`。
 - `update(&mut self, input: &InputState)`——每个 GB 帧调用一次；返回前
   处理输入。
 - `draw(&mut self, fb: &mut Self::Fb)`——每次重绘调用一次；把当前画面

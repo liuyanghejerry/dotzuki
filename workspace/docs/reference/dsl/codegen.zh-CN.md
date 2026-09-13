@@ -1,6 +1,7 @@
 # DSL codegen 约定
 
-> 本文是 `reference/dsl/codegen.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/dsl/codegen.md` 的中文翻译，同步至引擎版本 v0.7.1
+>（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本页记录 `dotzuki-engine-dsl` 编译器为每种游戏 DSL 构造输出的编译产物——`.scene` 剧情
@@ -10,7 +11,7 @@
 > - **Audience**: DSL authors, compiler maintainers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.7.1
 
 ## 如何阅读本页
 
@@ -50,6 +51,23 @@ codegen 34、snapshots 8、integration 18，以及其余测试套件），差异
   `// Source: <path>` 开头（compiler.rs:240-241、301-304）。
 - `.js` 产物以内联 base64 的 `//# sourceMappingURL` 结尾（compiler.rs:288-289）。
 - 产物只在内容变化时重写（`write_if_changed`，compiler.rs:617-635）。
+
+## 构建期静态 UI 布局
+
+[`静态布局`](../glossary.md)后端读取 `.gui` 编译产出的同一份 schema v2 JSON。
+`dotzuki_engine_dsl::static_ui::compile` 生成供构建期嵌入的 Rust 布局表达式。
+`.gui` 文件仍然是创作源，Rust 消费方在运行时绑定状态。
+
+支持的子集包括平铺默认面板、不自动换行且支持对齐的文字、
+字面量 tile、网格光标、多语言文字、直接 `{key}` 绑定、可见性，
+以及稳定的 `z_index` 顺序。
+主题、嵌套容器、自定义元素、按词换行和复合模板表达式会触发
+编译错误。
+需要这些特性的消费方必须扩展编译器，或让相应画面使用动态渲染器。
+
+生成元素使用静态借用切片。文字和光标绘制与动态布局共用绘制函数。
+绑定表容量固定，运行时数值格式化仍可能分配内存。编辑器继续使用
+动态布局与热重载。
 
 ## 两个执行目标
 
