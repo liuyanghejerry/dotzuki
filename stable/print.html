@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0aae8d67.js";
+            window.path_to_searchindex_js = "searchindex-597000fd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-fb75aeab.js"></script>
+        <script src="toc-82564987.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -227,7 +227,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code> (JSON) maps, tilesets, elevation, entities and the <code>objects.json</code> sidecar</td></tr>
-<tr><td><a href="#edit-linked-buildings-and-connected-walls"><code>how-to/map-components.md</code></a></td><td>Linked buildings, source updates, imported atlas preservation, and connected wall painting</td></tr>
+<tr><td><a href="#edit-linked-buildings-and-auto-tiles"><code>how-to/map-components.md</code></a></td><td>Linked buildings, source updates, imported atlas preservation, and cardinal/blob auto-tiles</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>Authoring <code>.scene</code> stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles</td></tr>
 <tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>Authoring <code>.gui</code> layouts: the 20×18 grid, panels/text, template bindings, <code>@t</code> labels, custom components</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
@@ -1316,16 +1316,17 @@ never rolls, and turning in place is not a step. Absent (or <code>null</code>)
 <a href="#encounter-records">Encounter records</a>; sceneless
 battle outcomes live in <a href="#battles">battle rules</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="edit-linked-buildings-and-connected-walls"><a class="header" href="#edit-linked-buildings-and-connected-walls">Edit linked buildings and connected walls</a></h1>
+<h1 id="edit-linked-buildings-and-auto-tiles"><a class="header" href="#edit-linked-buildings-and-auto-tiles">Edit linked buildings and auto-tiles</a></h1>
 <blockquote>
 <ul>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
-<p>Reuse pixel artwork across a map and select wall corners from neighboring cells.</p>
+<p>Reuse pixel artwork across a map and select terrain edges, inner corners, and wall junctions
+from neighboring cells.</p>
 <p>Before you start, read <a href="#maps">Maps</a> and configure the map and tiles activities
 in your <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a>.</p>
 <h2 id="place-and-update-buildings"><a class="header" href="#place-and-update-buildings">Place and update buildings</a></h2>
@@ -1346,15 +1347,28 @@ changed footprints require review; updates do not overwrite those footprints.</p
 links together. An update creates one undo entry per changed layer. Resizing the map moves
 links with their cells and drops links whose footprints extend outside the new dimensions.</p>
 <p>Existing stamps created before this feature remain independent until replaced with linked stamps.</p>
-<h2 id="draw-connected-walls"><a class="header" href="#draw-connected-walls">Draw connected walls</a></h2>
-<p>Create sixteen nonempty 1×1 building groups for one wall material. Use the same thickness,
-outline, and light direction for every group. Store the following file as <code>connections.json</code>
-inside the configured shared tiles directory. Replace each group ID with your artwork’s ID.</p>
+<h2 id="draw-auto-tiles"><a class="header" href="#draw-auto-tiles">Draw auto-tiles</a></h2>
+<p>An <a href="#map-components">auto-tile</a> set supports one of two modes:</p>
+<ul>
+<li><code>cardinal</code> uses sixteen variants for thin walls, fences, pipes, and paths. The mask checks
+north, east, south, and west.</li>
+<li><code>blob</code> uses 47 variants for filled ground, shores, and cliff tops. The mask also checks four
+diagonal cells, so the editor can select inner-corner artwork.</li>
+</ul>
+<p>Create one nonempty 1×1 building group for every required variant. Keep the outline and light
+direction consistent across the groups. Open <strong>Maps &gt; Auto-tile &gt; Sets</strong>, create a set, and
+choose its neighbor mode. Each mask card shows the occupied cells around the center and lets
+you choose its building artwork. <strong>Assign in library order</strong> maps the first 16 or 47 one-cell
+buildings to the canonical masks in ascending order.</p>
+<p>Click <strong>Save</strong> to write <code>connections.json</code> inside the configured shared tiles directory. The
+following complete <code>cardinal</code> set documents the saved format for source control and automation.
+Older projects may omit <code>mode</code>; the editor treats a missing mode as <code>cardinal</code>.</p>
 <pre><code class="language-json">{
-  "version": 1,
+  "version": 2,
   "sets": [{
     "id": "plaster",
     "name": "Plaster walls",
+    "mode": "cardinal",
     "variants": {
       "0": "wall-island", "1": "wall-n", "2": "wall-e", "3": "wall-ne",
       "4": "wall-s", "5": "wall-ns", "6": "wall-es", "7": "wall-nes",
@@ -1365,14 +1379,22 @@ inside the configured shared tiles directory. Replace each group ID with your ar
 }
 </code></pre>
 <p>The <a href="#map-components">connection mask</a> adds north=1, east=2,
-south=4, and west=8. For example, an east-west wall uses variant 10; an isolated cell uses 0.
+south=4, and west=8. A <code>blob</code> set also adds north-east=16, south-east=32, south-west=64,
+and north-west=128. The editor counts a diagonal only when both adjoining cardinal cells exist.
+This rule produces these 47 canonical blob masks:</p>
+<p><code>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19, 23, 27, 31, 38, 39, 46, 47, 55, 63, 76, 77, 78, 79, 95, 110, 111, 127, 137, 139, 141, 143, 155, 159, 175, 191, 205, 207, 223, 239, 255</code>.</p>
+<p>Choose <code>blob</code> in the rule editor and map every number in that list to a building group ID. An
+east-west cardinal wall uses variant 10; a fully surrounded blob cell uses variant 255.
 Different sets and layers do not connect to one another.</p>
-<p>Reload the editor, select <strong>Walls</strong>, choose a set, and drag on a visual layer. Left-drag adds
-walls; right-drag removes walls and restores covered cells. Adjacent walls select their
-corners, junctions, and end caps after each stroke. Undo restores the entire stroke.
-Use right-drag in <strong>Walls</strong> when erasing so neighboring end caps update too.</p>
-<p>The wall brush edits visual cells. Paint the corresponding collision layer for blocked walls,
-and leave doorway cells passable. Place wall faces and doors as separate linked buildings.</p>
+<p>Select <strong>Auto-tile</strong>, choose a set, and wait for <strong>Preparing tiles…</strong> to disappear. Drag on a
+visual layer. Left-drag adds cells; right-drag removes cells and restores covered cells. The
+canvas previews the final edges, corners, junctions, and end caps during the stroke. Releasing
+the pointer commits one undo step. Touchpad users can select <strong>Erase</strong> and remove cells with a
+left-drag; a right-drag always erases regardless of the selected action. Choose a 1×1, 2×2, or
+3×3 brush from the size menu.</p>
+<p>The auto-tile brush edits visual cells. Paint the corresponding collision layer for blocked
+walls or cliffs, and leave doorway and ramp cells passable. Use a <code>blob</code> set for a cliff top and
+place deeper cliff faces, ramps, and doors as linked buildings on the required visual layer.</p>
 <h2 id="keep-imported-atlas-artwork"><a class="header" href="#keep-imported-atlas-artwork">Keep imported atlas artwork</a></h2>
 <p>Building stamps and component updates retain existing GIDs and copy old pixels directly from
 the map’s <code>tileset.png</code>. Old artwork does not need matching shared-library PNGs. Missing
@@ -7962,7 +7984,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.1</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -7997,9 +8019,12 @@ per-locale values, and the runtime language selects the value. See
 <ul>
 <li><strong>linked component</strong>（关联组件）— a building instance with its source ID, revision,
 footprint, and previous cells stored on a map layer; source updates preserve its position.</li>
+<li><strong>auto-tile</strong>（自动地形）— a visual map cell whose neighboring cells determine its artwork
+within the same rule set. Cardinal sets join walls; blob sets form filled terrain edges.</li>
 <li><strong>connection mask</strong>（连接掩码）— the sum of occupied cardinal neighbors: north=1,
-east=2, south=4, and west=8. Selects one of sixteen wall component variants.
-See <a href="#edit-linked-buildings-and-connected-walls">map components</a>.</li>
+east=2, south=4, and west=8. Blob masks also use gated diagonal bits to select one of
+47 terrain component variants.
+See <a href="#edit-linked-buildings-and-auto-tiles">map components</a>.</li>
 </ul>
 <h2 id="engine"><a class="header" href="#engine">Engine</a></h2>
 <ul>
@@ -14535,18 +14560,18 @@ encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录
 <p>encounter 记录的 schema 见 <a href="#encounter-records">Encounter 记录</a>；
 sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="编辑关联建筑与连接墙体"><a class="header" href="#编辑关联建筑与连接墙体">编辑关联建筑与连接墙体</a></h1>
+<h1 id="编辑关联建筑与自动地形"><a class="header" href="#编辑关联建筑与自动地形">编辑关联建筑与自动地形</a></h1>
 <blockquote>
 <ul>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
-<p>本文是 <a href="#edit-linked-buildings-and-connected-walls">map-components.md</a> 的中文翻译，同步至引擎版本 v0.6.0
-（源文档 commit <code>494271d</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+<p>本文是 <a href="#edit-linked-buildings-and-auto-tiles">map-components.md</a> 的中文翻译，同步至引擎版本 v0.8.0
+（源文档 commit <code>a7559eb</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
-<p>在地图中复用像素素材，并根据相邻格选择墙角。</p>
+<p>在地图中复用像素素材，并根据相邻格选择地形边缘、内角和墙体连接点。</p>
 <p>开始前，请阅读<a href="#地图">地图指南</a>，并在<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>
 中配置 map 和 tiles 活动。</p>
 <h2 id="放置和更新建筑"><a class="header" href="#放置和更新建筑">放置和更新建筑</a></h2>
@@ -14565,14 +14590,26 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 撤销和重做同时恢复像素与关联；更新操作为每个发生变化的图层生成一个撤销记录。
 调整地图尺寸会让关联随格子移动，超出新边界的组件会解除关联。</p>
 <p>此功能加入前放置的建筑保持独立，需要重新以关联方式放置。</p>
-<h2 id="绘制连接墙体"><a class="header" href="#绘制连接墙体">绘制连接墙体</a></h2>
-<p>为一种墙体材质制作十六个非空的 1×1 建筑组件，统一厚度、轮廓和光照方向。
-在共享图块目录创建 <code>connections.json</code>，内容如下，并将各组 ID 换成素材的 ID。</p>
+<h2 id="绘制自动地形"><a class="header" href="#绘制自动地形">绘制自动地形</a></h2>
+<p><a href="#map-components">auto-tile</a>（自动地形）规则组支持两种模式：</p>
+<ul>
+<li><code>cardinal</code> 使用十六个变体，适合细墙、栅栏、管线和道路。掩码检查北、东、南、西。</li>
+<li><code>blob</code> 使用 47 个变体，适合成片地面、岸线和悬崖顶面。掩码还检查四个对角格，
+因此编辑器能选择内角素材。</li>
+</ul>
+<p>为每个必需变体制作一个非空的 1×1 建筑组件，统一轮廓和光照方向。打开
+<strong>地图 &gt; 自动地形 &gt; 规则组</strong>，新建规则组并选择邻接模式。每张掩码卡片会显示中心格周围的
+占用形状，可在卡片中选择建筑素材。点击 <strong>按素材顺序分配</strong>，编辑器会把素材库前 16 或
+47 个单格建筑按标准掩码升序映射到各个变体。</p>
+<p>点击 <strong>保存</strong> 后，编辑器会在共享图块目录写入 <code>connections.json</code>。以下完整的 <code>cardinal</code>
+规则组说明了用于版本控制和自动化的文件格式。旧项目可以省略 <code>mode</code>；编辑器会按
+<code>cardinal</code> 处理。</p>
 <pre><code class="language-json">{
-  "version": 1,
+  "version": 2,
   "sets": [{
     "id": "plaster",
     "name": "Plaster walls",
+    "mode": "cardinal",
     "variants": {
       "0": "wall-island", "1": "wall-n", "2": "wall-e", "3": "wall-ne",
       "4": "wall-s", "5": "wall-ns", "6": "wall-es", "7": "wall-nes",
@@ -14583,12 +14620,20 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 }
 </code></pre>
 <p><a href="#map-components">connection mask</a>（连接掩码）取北=1、东=2、南=4、
-西=8 的和。例如东西连接使用 10，孤立格使用 0。不同规则组、不同图层之间不相连。</p>
-<p>重新加载编辑器，选择 <strong>墙体</strong> 和规则组，在可见图层上拖动。左键添加墙体，右键删除墙体并
-恢复下方格子。每笔结束后，相邻墙体自动选择转角、交叉口和端头。撤销恢复整笔操作。
-删除墙体时请在 <strong>墙体</strong> 工具中右键拖动，让相邻端头一起更新。</p>
-<p>墙体笔刷编辑可见格子。请在对应碰撞图层标记墙体阻挡，并让门洞格子保持可通行。
-墙立面和门板作为独立关联建筑放置。</p>
+西=8 的和。<code>blob</code> 规则组还取东北=16、东南=32、西南=64、西北=128。仅当对角两侧的
+正交格都存在时，编辑器才计入该对角。该规则生成以下 47 个标准 blob 掩码：</p>
+<p><code>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19, 23, 27, 31, 38, 39, 46, 47, 55, 63, 76, 77, 78, 79, 95, 110, 111, 127, 137, 139, 141, 143, 155, 159, 175, 191, 205, 207, 223, 239, 255</code>。</p>
+<p>在规则编辑器中选择 <code>blob</code>，并将列表中的每个数字映射到一个建筑组 ID。东西连接的
+cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255。不同规则组、不同图层
+之间不相连。</p>
+<p>选择 <strong>自动地形</strong> 和规则组，等待 <strong>正在准备图块…</strong> 消失，然后在可见图层上拖动。左键
+添加格子；右键删除格子并恢复下方内容。拖动时，画布会直接预览最终的边缘、转角、交叉口
+和端头；松开鼠标后整笔操作成为一个撤销步骤。触控板用户可以选择 <strong>擦除</strong>，然后用左键
+拖动删除格子；无论当前选择哪项操作，右键拖动始终执行擦除。尺寸菜单提供 1×1、2×2
+和 3×3 画笔。</p>
+<p>自动地形笔刷编辑可见格子。请在对应碰撞图层标记墙体或悬崖阻挡，并让门洞与坡道格保持
+可通行。悬崖顶面使用 <code>blob</code> 规则组；更深的悬崖立面、坡道和门板作为关联建筑放在所需的
+可见图层。</p>
 <h2 id="保留导入的图集素材"><a class="header" href="#保留导入的图集素材">保留导入的图集素材</a></h2>
 <p>建筑盖章和组件更新保留原有 GID，直接从地图的 <code>tileset.png</code> 复制旧像素，
 不要求共享素材库包含旧图块的 PNG。缺失列数时从图片宽度推算，新组件格子追加到图集。</p>

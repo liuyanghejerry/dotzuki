@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Linked Buildings and Walls - dotzuki Engine Book</title>
+        <title>Linked Buildings and Auto-tiles - dotzuki Engine Book</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0aae8d67.js";
+            window.path_to_searchindex_js = "../searchindex-597000fd.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fb75aeab.js"></script>
+        <script src="../toc-82564987.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,16 +180,17 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="edit-linked-buildings-and-connected-walls"><a class="header" href="#edit-linked-buildings-and-connected-walls">Edit linked buildings and connected walls</a></h1>
+                        <h1 id="edit-linked-buildings-and-auto-tiles"><a class="header" href="#edit-linked-buildings-and-auto-tiles">Edit linked buildings and auto-tiles</a></h1>
 <blockquote>
 <ul>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.8.0</li>
 </ul>
 </blockquote>
-<p>Reuse pixel artwork across a map and select wall corners from neighboring cells.</p>
+<p>Reuse pixel artwork across a map and select terrain edges, inner corners, and wall junctions
+from neighboring cells.</p>
 <p>Before you start, read <a href="./maps.html">Maps</a> and configure the map and tiles activities
 in your <a href="../reference/project-manifest.html">project manifest</a>.</p>
 <h2 id="place-and-update-buildings"><a class="header" href="#place-and-update-buildings">Place and update buildings</a></h2>
@@ -210,15 +211,28 @@ changed footprints require review; updates do not overwrite those footprints.</p
 links together. An update creates one undo entry per changed layer. Resizing the map moves
 links with their cells and drops links whose footprints extend outside the new dimensions.</p>
 <p>Existing stamps created before this feature remain independent until replaced with linked stamps.</p>
-<h2 id="draw-connected-walls"><a class="header" href="#draw-connected-walls">Draw connected walls</a></h2>
-<p>Create sixteen nonempty 1×1 building groups for one wall material. Use the same thickness,
-outline, and light direction for every group. Store the following file as <code>connections.json</code>
-inside the configured shared tiles directory. Replace each group ID with your artwork’s ID.</p>
+<h2 id="draw-auto-tiles"><a class="header" href="#draw-auto-tiles">Draw auto-tiles</a></h2>
+<p>An <a href="../reference/glossary.html#map-components">auto-tile</a> set supports one of two modes:</p>
+<ul>
+<li><code>cardinal</code> uses sixteen variants for thin walls, fences, pipes, and paths. The mask checks
+north, east, south, and west.</li>
+<li><code>blob</code> uses 47 variants for filled ground, shores, and cliff tops. The mask also checks four
+diagonal cells, so the editor can select inner-corner artwork.</li>
+</ul>
+<p>Create one nonempty 1×1 building group for every required variant. Keep the outline and light
+direction consistent across the groups. Open <strong>Maps &gt; Auto-tile &gt; Sets</strong>, create a set, and
+choose its neighbor mode. Each mask card shows the occupied cells around the center and lets
+you choose its building artwork. <strong>Assign in library order</strong> maps the first 16 or 47 one-cell
+buildings to the canonical masks in ascending order.</p>
+<p>Click <strong>Save</strong> to write <code>connections.json</code> inside the configured shared tiles directory. The
+following complete <code>cardinal</code> set documents the saved format for source control and automation.
+Older projects may omit <code>mode</code>; the editor treats a missing mode as <code>cardinal</code>.</p>
 <pre><code class="language-json">{
-  "version": 1,
+  "version": 2,
   "sets": [{
     "id": "plaster",
     "name": "Plaster walls",
+    "mode": "cardinal",
     "variants": {
       "0": "wall-island", "1": "wall-n", "2": "wall-e", "3": "wall-ne",
       "4": "wall-s", "5": "wall-ns", "6": "wall-es", "7": "wall-nes",
@@ -229,14 +243,22 @@ inside the configured shared tiles directory. Replace each group ID with your ar
 }
 </code></pre>
 <p>The <a href="../reference/glossary.html#map-components">connection mask</a> adds north=1, east=2,
-south=4, and west=8. For example, an east-west wall uses variant 10; an isolated cell uses 0.
+south=4, and west=8. A <code>blob</code> set also adds north-east=16, south-east=32, south-west=64,
+and north-west=128. The editor counts a diagonal only when both adjoining cardinal cells exist.
+This rule produces these 47 canonical blob masks:</p>
+<p><code>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19, 23, 27, 31, 38, 39, 46, 47, 55, 63, 76, 77, 78, 79, 95, 110, 111, 127, 137, 139, 141, 143, 155, 159, 175, 191, 205, 207, 223, 239, 255</code>.</p>
+<p>Choose <code>blob</code> in the rule editor and map every number in that list to a building group ID. An
+east-west cardinal wall uses variant 10; a fully surrounded blob cell uses variant 255.
 Different sets and layers do not connect to one another.</p>
-<p>Reload the editor, select <strong>Walls</strong>, choose a set, and drag on a visual layer. Left-drag adds
-walls; right-drag removes walls and restores covered cells. Adjacent walls select their
-corners, junctions, and end caps after each stroke. Undo restores the entire stroke.
-Use right-drag in <strong>Walls</strong> when erasing so neighboring end caps update too.</p>
-<p>The wall brush edits visual cells. Paint the corresponding collision layer for blocked walls,
-and leave doorway cells passable. Place wall faces and doors as separate linked buildings.</p>
+<p>Select <strong>Auto-tile</strong>, choose a set, and wait for <strong>Preparing tiles…</strong> to disappear. Drag on a
+visual layer. Left-drag adds cells; right-drag removes cells and restores covered cells. The
+canvas previews the final edges, corners, junctions, and end caps during the stroke. Releasing
+the pointer commits one undo step. Touchpad users can select <strong>Erase</strong> and remove cells with a
+left-drag; a right-drag always erases regardless of the selected action. Choose a 1×1, 2×2, or
+3×3 brush from the size menu.</p>
+<p>The auto-tile brush edits visual cells. Paint the corresponding collision layer for blocked
+walls or cliffs, and leave doorway and ramp cells passable. Use a <code>blob</code> set for a cliff top and
+place deeper cliff faces, ramps, and doors as linked buildings on the required visual layer.</p>
 <h2 id="keep-imported-atlas-artwork"><a class="header" href="#keep-imported-atlas-artwork">Keep imported atlas artwork</a></h2>
 <p>Building stamps and component updates retain existing GIDs and copy old pixels directly from
 the map’s <code>tileset.png</code>. Old artwork does not need matching shared-library PNGs. Missing
