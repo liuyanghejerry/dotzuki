@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1b9a6a63.js";
+            window.path_to_searchindex_js = "searchindex-184aa8e1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-fcc230b2.js"></script>
@@ -4655,7 +4655,7 @@ compile to.</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>Proposals from the legacy GAME_UI_DSL document live in archive/game-ui-dsl.md; this page documents only the implemented surface.</p>
@@ -5250,7 +5250,7 @@ source in <code>crates/dotzuki-engine-dsl/src/</code>.</p>
 <li><strong>Audience</strong>: DSL authors, compiler maintainers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <h2 id="how-to-read-this-page"><a class="header" href="#how-to-read-this-page">How to read this page</a></h2>
@@ -5311,6 +5311,21 @@ assignments, and speaker names; empty <code>@choice</code>; missing or circular
 <li>Artifacts are rewritten only when their content changed
 (<code>write_if_changed</code>, compiler.rs:617-635).</li>
 </ul>
+<h2 id="build-time-static-ui-layouts"><a class="header" href="#build-time-static-ui-layouts">Build-time static UI layouts</a></h2>
+<p>The <a href="#glossary"><code>static layout</code></a> backend accepts the same schema v2 JSON
+that <code>.gui</code> compilation produces. <code>dotzuki_engine_dsl::static_ui::compile</code>
+emits a Rust layout expression for build-time embedding. The <code>.gui</code> file
+remains the authored source, while the Rust consumer binds state at runtime.</p>
+<p>The supported subset is flat default panels, unwrapped text with alignment,
+literal tiles, grid cursors, localized text, direct <code>{key}</code> bindings,
+visibility, and stable <code>z_index</code> ordering. Themes, nested containers, custom
+elements, word wrapping, and compound template expressions produce compilation
+errors. Consumers that require those features must extend the compiler or use
+the dynamic renderer for those screens.</p>
+<p>Generated elements use borrowed static slices. Text and cursor drawing share
+primitives with dynamic layouts. Binding storage has a fixed capacity, while
+formatting runtime values can still allocate. The editor continues to use the
+dynamic layout and hot-reload path.</p>
 <h2 id="two-execution-targets"><a class="header" href="#two-execution-targets">Two execution targets</a></h2>
 <p>The crate emits JS, and it also ships a native AST interpreter that executes
 <code>.scene</code> ASTs with no JS engine at all:</p>
@@ -7425,7 +7440,7 @@ with <code>AssetRoot::new_wasm()</code>, or every load fails.</li>
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>The <a href="#glossary">game shell</a> (<code>dotzuki_web::game_shell</code>, source
@@ -7494,9 +7509,12 @@ With the feature on, the crate root re-exports the flat API: <code>GameLoop</cod
 }
 <span class="boring">}</span></code></pre>
 <ul>
-<li><code>type Fb: FbSurface</code> — the framebuffer the game draws into: either
-<code>dotzuki_renderer::FrameBuffer</code> (true-color games) or
-<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code> (fixed-palette games).</li>
+<li><code>type Fb: FbSurface</code> — the framebuffer the game draws into:
+<code>dotzuki_renderer::FrameBuffer</code> (true-color games),
+<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code> (packed fixed-palette storage), or
+<code>dotzuki_renderer::LinearRgbaIndexedFrameBuffer</code> (word-aligned byte indices).
+These storage choices have the same meaning on every target; the application
+selects the format. All three implement <code>FbSurface</code>.</li>
 <li><code>update(&amp;mut self, input: &amp;InputState)</code> — called once per GB frame;
 process input before returning.</li>
 <li><code>draw(&amp;mut self, fb: &amp;mut Self::Fb)</code> — called once per redraw; draw the
@@ -7930,7 +7948,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.6.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -8003,6 +8021,9 @@ for CI smoke tests and screenshots (<code>dotzuki run --headless</code>).</li>
 <li><strong>Boa</strong> — the JavaScript engine behind <code>dotzuki-engine-script</code>; the DSL’s
 native AST interpreter mirrors its runtime protocol and is the canonical
 scene semantics.</li>
+<li><strong>static layout</strong>（静态布局）— a schema v2 UI layout compiled into borrowed
+Rust data at build time. The <code>.gui</code> file remains the authored source. See
+<a href="#dsl-codegen-contract">DSL code generation</a>.</li>
 <li><strong><code>TrackDef</code> / <code>AudioCommand</code></strong> — the JSON audio track schema and its 22
 channel commands. See <a href="#audio-command-reference">audio commands</a>.</li>
 <li><strong>save version</strong>（存档版本）— the version stamp inside <code>.dotzuki-save.json</code>;
@@ -17991,7 +18012,8 @@ assert_eq!(mgr.cache_size(), 0);
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.7.1
+（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -17999,7 +18021,7 @@ assert_eq!(mgr.cache_size(), 0);
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p><a href="#glossary">游戏外壳</a>（<code>dotzuki_web::game_shell</code>，源码见
@@ -18067,8 +18089,11 @@ API 参考：feature 开关、<code>GameLoop</code> trait、<code>GameShellConfi
 <span class="boring">}</span></code></pre>
 <ul>
 <li><code>type Fb: FbSurface</code>——游戏绘制用的帧缓冲：
-<code>dotzuki_renderer::FrameBuffer</code>（真彩色游戏）或
-<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code>（固定调色板游戏）。</li>
+<code>dotzuki_renderer::FrameBuffer</code>（真彩色游戏）、
+<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code>（packed 固定调色板存储）或
+<code>dotzuki_renderer::LinearRgbaIndexedFrameBuffer</code>（字节索引、word 对齐）。
+应用显式选择格式，三种存储在所有目标平台保持相同含义，均实现
+<code>FbSurface</code>。</li>
 <li><code>update(&amp;mut self, input: &amp;InputState)</code>——每个 GB 帧调用一次；返回前
 处理输入。</li>
 <li><code>draw(&amp;mut self, fb: &amp;mut Self::Fb)</code>——每次重绘调用一次；把当前画面
@@ -18944,7 +18969,8 @@ GUI 属性值存在，由渲染器解析；见 <a href="#gui-dsl-reference">GUI 
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="gui-dsl-参考"><a class="header" href="#gui-dsl-参考">GUI DSL 参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/dsl/gui.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/dsl/gui.md</code> 的中文翻译，同步至引擎版本 v0.7.1
+（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>.gui</code> 布局文件与 <code>ui {}</code> 块的权威语法参考：每个已实现的组件、属性与绑定，以及它们
@@ -18954,7 +18980,7 @@ GUI 属性值存在，由渲染器解析；见 <a href="#gui-dsl-reference">GUI 
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>旧版 GAME_UI_DSL 文档中的提案保存在 archive/game-ui-dsl.md；本页只记录已实现的表面。</p>
@@ -19516,7 +19542,8 @@ component hp_bar {
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dsl-codegen-约定"><a class="header" href="#dsl-codegen-约定">DSL codegen 约定</a></h1>
 <blockquote>
-<p>本文是 <code>reference/dsl/codegen.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/dsl/codegen.md</code> 的中文翻译，同步至引擎版本 v0.7.1
+（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本页记录 <code>dotzuki-engine-dsl</code> 编译器为每种游戏 DSL 构造输出的编译产物——<code>.scene</code> 剧情
@@ -19527,7 +19554,7 @@ component hp_bar {
 <li><strong>Audience</strong>: DSL authors, compiler maintainers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <h2 id="如何阅读本页"><a class="header" href="#如何阅读本页">如何阅读本页</a></h2>
@@ -19574,6 +19601,19 @@ codegen 34、snapshots 8、integration 18，以及其余测试套件），差异
 <li><code>.js</code> 产物以内联 base64 的 <code>//# sourceMappingURL</code> 结尾（compiler.rs:288-289）。</li>
 <li>产物只在内容变化时重写（<code>write_if_changed</code>，compiler.rs:617-635）。</li>
 </ul>
+<h2 id="构建期静态-ui-布局"><a class="header" href="#构建期静态-ui-布局">构建期静态 UI 布局</a></h2>
+<p><a href="#glossary"><code>静态布局</code></a>后端读取 <code>.gui</code> 编译产出的同一份 schema v2 JSON。
+<code>dotzuki_engine_dsl::static_ui::compile</code> 生成供构建期嵌入的 Rust 布局表达式。
+<code>.gui</code> 文件仍然是创作源，Rust 消费方在运行时绑定状态。</p>
+<p>支持的子集包括平铺默认面板、不自动换行且支持对齐的文字、
+字面量 tile、网格光标、多语言文字、直接 <code>{key}</code> 绑定、可见性，
+以及稳定的 <code>z_index</code> 顺序。
+主题、嵌套容器、自定义元素、按词换行和复合模板表达式会触发
+编译错误。
+需要这些特性的消费方必须扩展编译器，或让相应画面使用动态渲染器。</p>
+<p>生成元素使用静态借用切片。文字和光标绘制与动态布局共用绘制函数。
+绑定表容量固定，运行时数值格式化仍可能分配内存。编辑器继续使用
+动态布局与热重载。</p>
 <h2 id="两个执行目标"><a class="header" href="#两个执行目标">两个执行目标</a></h2>
 <p>这个 crate 既产出 JS，也自带一个原生 AST 解释器，可以完全不依赖 JS 引擎执行 <code>.scene</code>
 AST：</p>

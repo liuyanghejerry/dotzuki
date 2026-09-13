@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1b9a6a63.js";
+            window.path_to_searchindex_js = "../searchindex-184aa8e1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-fcc230b2.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <p>The <a href="./glossary.html">game shell</a> (<code>dotzuki_web::game_shell</code>, source
@@ -255,9 +255,12 @@ With the feature on, the crate root re-exports the flat API: <code>GameLoop</cod
 }
 <span class="boring">}</span></code></pre>
 <ul>
-<li><code>type Fb: FbSurface</code> — the framebuffer the game draws into: either
-<code>dotzuki_renderer::FrameBuffer</code> (true-color games) or
-<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code> (fixed-palette games).</li>
+<li><code>type Fb: FbSurface</code> — the framebuffer the game draws into:
+<code>dotzuki_renderer::FrameBuffer</code> (true-color games),
+<code>dotzuki_renderer::RgbaIndexedFrameBuffer</code> (packed fixed-palette storage), or
+<code>dotzuki_renderer::LinearRgbaIndexedFrameBuffer</code> (word-aligned byte indices).
+These storage choices have the same meaning on every target; the application
+selects the format. All three implement <code>FbSurface</code>.</li>
 <li><code>update(&amp;mut self, input: &amp;InputState)</code> — called once per GB frame;
 process input before returning.</li>
 <li><code>draw(&amp;mut self, fb: &amp;mut Self::Fb)</code> — called once per redraw; draw the

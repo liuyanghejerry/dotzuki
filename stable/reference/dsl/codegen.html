@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-1b9a6a63.js";
+            window.path_to_searchindex_js = "../../searchindex-184aa8e1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-fcc230b2.js"></script>
@@ -190,7 +190,7 @@ source in <code>crates/dotzuki-engine-dsl/src/</code>.</p>
 <li><strong>Audience</strong>: DSL authors, compiler maintainers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.7.1</li>
 </ul>
 </blockquote>
 <h2 id="how-to-read-this-page"><a class="header" href="#how-to-read-this-page">How to read this page</a></h2>
@@ -251,6 +251,21 @@ assignments, and speaker names; empty <code>@choice</code>; missing or circular
 <li>Artifacts are rewritten only when their content changed
 (<code>write_if_changed</code>, compiler.rs:617-635).</li>
 </ul>
+<h2 id="build-time-static-ui-layouts"><a class="header" href="#build-time-static-ui-layouts">Build-time static UI layouts</a></h2>
+<p>The <a href="../glossary.html"><code>static layout</code></a> backend accepts the same schema v2 JSON
+that <code>.gui</code> compilation produces. <code>dotzuki_engine_dsl::static_ui::compile</code>
+emits a Rust layout expression for build-time embedding. The <code>.gui</code> file
+remains the authored source, while the Rust consumer binds state at runtime.</p>
+<p>The supported subset is flat default panels, unwrapped text with alignment,
+literal tiles, grid cursors, localized text, direct <code>{key}</code> bindings,
+visibility, and stable <code>z_index</code> ordering. Themes, nested containers, custom
+elements, word wrapping, and compound template expressions produce compilation
+errors. Consumers that require those features must extend the compiler or use
+the dynamic renderer for those screens.</p>
+<p>Generated elements use borrowed static slices. Text and cursor drawing share
+primitives with dynamic layouts. Binding storage has a fixed capacity, while
+formatting runtime values can still allocate. The editor continues to use the
+dynamic layout and hot-reload path.</p>
 <h2 id="two-execution-targets"><a class="header" href="#two-execution-targets">Two execution targets</a></h2>
 <p>The crate emits JS, and it also ships a native AST interpreter that executes
 <code>.scene</code> ASTs with no JS engine at all:</p>
