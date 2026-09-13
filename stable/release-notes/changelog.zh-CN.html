@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-adb05a92.js";
+            window.path_to_searchindex_js = "../searchindex-b0967458.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d524b668.js"></script>
+        <script src="../toc-be14a74b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,8 +182,8 @@
                     <main>
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.0
-（源文档 commit 1d88d2f3ef7670a7bc2cf517c49fe83a7f2ab770）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.1
+（源文档 commit 24109b5d0b419923b2beb14bcba4ac454f5764d9）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.0</li>
+<li><strong>Last verified</strong>: v0.8.1</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -203,7 +203,8 @@
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
-<h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<h2 id="v081"><a class="header" href="#v081">v0.8.1</a></h2>
+<p>此补丁版本没有 API 变更。使用方更新方式见<a href="migration/v0.8.1.zh-CN.html">迁移指南</a>。</p>
 <ul>
 <li>修复：鸿蒙宿主改用分层启动图标（API 11 及以上要求），桌面显示游戏自己的图标
 而不是系统占位图。重新导出宿主即可生效；<code>dotzuki export --harmony</code> 模板与
