@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import type { ConnectionSet, ConnectionCell } from '../../lib/wallConnections'
+import { applyConnectionStroke, type ConnectionSet, type ConnectionCell } from '../../lib/wallConnections'
+import type { PreparedComponent } from '../../lib/mapComponents'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useMapActivity, type AnchorX, type AnchorY } from '@/composables/useMapActivity'
@@ -11,6 +12,7 @@ import { useEditorStore } from '@/stores/editor'
 import { useEditorSettings } from '@/composables/useEditorSettings'
 import MapBackdropGen from './MapBackdropGen.vue'
 import MapTraceDialog from './MapTraceDialog.vue'
+import AutotileSetDialog from './AutotileSetDialog.vue'
 import TilePixelEditor from '../TilesActivity/TilePixelEditor.vue'
 import type { MapActivityConfig } from '@/types/project'
 
@@ -66,12 +68,110 @@ type Tool = 'brush' | 'eraser' | 'bucket' | 'stamp' | 'collision' | 'stairs' | '
 const tool = ref<Tool>('brush')
 const connectionSets = ref<ConnectionSet[]>([])
 const connectionSetId = ref('')
+const connectionBrush = ref<'paint' | 'erase'>('paint')
+const connectionBrushSize = ref<1 | 2 | 3>(1)
 const toolList = computed<Tool[]>(() => {
-  const tools: Tool[] = ['brush', 'eraser', 'bucket', 'stamp', 'collision', 'stairs']
-  if (connectionSets.value.length) tools.push('connections')
+  const tools: Tool[] = ['brush', 'eraser', 'bucket', 'stamp', 'connections', 'collision', 'stairs']
   if (objectsEnabled.value) tools.push('objects')
   return tools
 })
+const showAutotileConfig = ref(false)
+const savingAutotileConfig = ref(false)
+const autotileConfigError = ref('')
+
+type PreparedConnection = {
+  map: string
+  setId: string
+  signature: string
+  tilesVersion: number
+  sources: PreparedComponent[]
+}
+const preparedConnection = ref<PreparedConnection | null>(null)
+const connectionPreparing = ref(false)
+let connectionPrepareSeq = 0
+
+function connectionSignature(set: ConnectionSet): string {
+  return JSON.stringify([set.mode ?? 'cardinal', set.variants])
+}
+
+function currentConnectionSources(set: ConnectionSet): PreparedComponent[] | null {
+  const prepared = preparedConnection.value
+  return prepared
+    && prepared.map === mapName.value
+    && prepared.setId === set.id
+    && prepared.signature === connectionSignature(set)
+    && prepared.tilesVersion === tilesStore.version
+    ? prepared.sources
+    : null
+}
+
+async function prepareConnectionSet(force = false): Promise<PreparedComponent[] | null> {
+  const set = connectionSets.value.find(item => item.id === connectionSetId.value)
+  const name = mapName.value
+  if (!set || !name || !tmx.value) return null
+  if (!force) {
+    const cached = currentConnectionSources(set)
+    if (cached) return cached
+  }
+  const seq = ++connectionPrepareSeq
+  connectionPreparing.value = true
+  componentMessage.value = t('map.autotile.preparing')
+  const sources = await tilesStore.prepareComponents(name, [...new Set(Object.values(set.variants))])
+  if (seq !== connectionPrepareSeq || mapName.value !== name || !sources) {
+    if (seq === connectionPrepareSeq) {
+      connectionPreparing.value = false
+      componentMessage.value = tilesStore.error ?? ''
+    }
+    return null
+  }
+  await loadTileset(name)
+  if (seq !== connectionPrepareSeq || mapName.value !== name) return null
+  preparedConnection.value = {
+    map: name,
+    setId: set.id,
+    signature: connectionSignature(set),
+    tilesVersion: tilesStore.version,
+    sources,
+  }
+  connectionPreparing.value = false
+  componentMessage.value = ''
+  drawMap()
+  return sources
+}
+
+function selectTool(next: Tool): void {
+  tool.value = next
+  if (next !== 'connections') return
+  if (!connectionSets.value.length) {
+    showAutotileConfig.value = true
+    return
+  }
+  void prepareConnectionSet()
+}
+
+async function saveAutotileSets(sets: ConnectionSet[]): Promise<void> {
+  if (savingAutotileConfig.value) return
+  savingAutotileConfig.value = true
+  autotileConfigError.value = ''
+  try {
+    const response = await fetch('api/connection-sets', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sets }),
+    })
+    const data = await response.json()
+    if (!response.ok || !data.ok) throw new Error(data.error ?? t('map.autotile.saveFailed'))
+    connectionSets.value = data.sets
+    if (!sets.some(set => set.id === connectionSetId.value)) connectionSetId.value = sets[0]?.id ?? ''
+    preparedConnection.value = null
+    showAutotileConfig.value = false
+    if (tool.value === 'connections') void prepareConnectionSet(true)
+  } catch (cause) {
+    autotileConfigError.value = (cause as Error).message
+  } finally {
+    savingAutotileConfig.value = false
+  }
+}
 
 // ── Entity (NPC/warp/sign) overlay selection + drag ──
 const selected = ref<{ kind: 'npc' | 'warp' | 'sign'; index: number } | null>(null)
@@ -1146,9 +1246,12 @@ function drawMap(): void {
   map.layers.forEach((layer, li) => {
     if (layerVisible.value[li] === false) return
     if (img) {
+      const layerData = connectionStroke?.layer === li && connectionStroke.previewData
+        ? connectionStroke.previewData
+        : layer.data
       for (let y = 0; y < map.height; y++) {
         for (let x = 0; x < map.width; x++) {
-          const id = layer.data[y * map.width + x] ?? 0
+          const id = layerData[y * map.width + x] ?? 0
           if (id <= 0) continue
           const { col, row } = tileSource(id)
           ctx.drawImage(
@@ -1319,8 +1422,41 @@ const panStart = ref({ x: 0, y: 0, sx: 0, sy: 0 })
 const spaceDown = ref(false)
 let connectionStroke: {
   map: NonNullable<typeof tmx.value>; name: string; layer: number; set: ConnectionSet;
-  changes: Map<number, ConnectionCell>; last: {x:number;y:number}; solid: boolean;
+  sources: PreparedComponent[]; changes: Map<number, ConnectionCell>;
+  last: {x:number;y:number}; solid: boolean; size: number; previewData: number[] | null;
 } | null = null
+let connectionPreviewFrame = 0
+
+function addConnectionCells(stroke: NonNullable<typeof connectionStroke>, x: number, y: number): void {
+  const before = Math.floor((stroke.size - 1) / 2)
+  const after = stroke.size - before - 1
+  for (let dy = -before; dy <= after; dy++) {
+    for (let dx = -before; dx <= after; dx++) {
+      const px = x + dx, py = y + dy
+      if (px < 0 || py < 0 || px >= stroke.map.width || py >= stroke.map.height) continue
+      stroke.changes.set(py * stroke.map.width + px, { x: px, y: py, solid: stroke.solid })
+    }
+  }
+}
+
+function renderConnectionPreview(): void {
+  connectionPreviewFrame = 0
+  const stroke = connectionStroke
+  if (!stroke) return
+  const layer = stroke.map.layers[stroke.layer]
+  if (layer) {
+    const preview = { data: layer.data, components: layer.components }
+    try {
+      applyConnectionStroke(preview, stroke.map.width, stroke.map.height, stroke.set,
+        stroke.sources, [...stroke.changes.values()])
+      stroke.previewData = preview.data
+    } catch (cause) {
+      componentMessage.value = (cause as Error).message
+      stroke.previewData = null
+    }
+  }
+  drawMap()
+}
 
 function addConnectionPoint(cell: {x:number;y:number}) {
   const stroke = connectionStroke
@@ -1331,35 +1467,25 @@ function addConnectionPoint(cell: {x:number;y:number}) {
     const x = Math.round(stroke.last.x + (cell.x - stroke.last.x) * i / steps)
     const y = Math.round(stroke.last.y + (cell.y - stroke.last.y) * i / steps)
     // Bridge a diagonal pointer sample with an orthogonal step.
-    if (x !== previous.x && y !== previous.y) stroke.changes.set(previous.y * stroke.map.width + x, {x,y:previous.y,solid:stroke.solid})
-    stroke.changes.set(y * stroke.map.width + x, {x,y,solid:stroke.solid})
+    if (x !== previous.x && y !== previous.y) addConnectionCells(stroke, x, previous.y)
+    addConnectionCells(stroke, x, y)
     previous = {x,y}
   }
   stroke.last = cell
-  drawMap()
-  const ctx = canvasRef.value?.getContext('2d')
-  if (ctx) {
-    ctx.fillStyle = stroke.solid ? 'rgba(99,102,241,0.45)' : 'rgba(239,68,68,0.45)'
-    for (const c of stroke.changes.values()) ctx.fillRect(c.x * tileW.value * zoom.value,c.y * tileH.value * zoom.value,tileW.value * zoom.value,tileH.value * zoom.value)
-  }
+  if (!connectionPreviewFrame) connectionPreviewFrame = requestAnimationFrame(renderConnectionPreview)
 }
 
-async function finishConnectionStroke() {
+function finishConnectionStroke() {
   const stroke = connectionStroke
   connectionStroke = null
+  if (connectionPreviewFrame) cancelAnimationFrame(connectionPreviewFrame)
+  connectionPreviewFrame = 0
   if (!stroke || tmx.value !== stroke.map || mapName.value !== stroke.name) return
-  updatingComponents.value = true
   componentMessage.value = ''
   try {
-    const sources = await tilesStore.prepareComponents(stroke.name, [...new Set(Object.values(stroke.set.variants))])
-    if (!sources) throw new Error(tilesStore.error ?? 'Connection preparation failed')
-    if (tmx.value !== stroke.map || mapName.value !== stroke.name) return
-    await loadTileset(stroke.name)
-    if (tmx.value !== stroke.map || mapName.value !== stroke.name) return
-    store.paintConnections(stroke.layer,stroke.set,sources,[...stroke.changes.values()])
+    store.paintConnections(stroke.layer,stroke.set,stroke.sources,[...stroke.changes.values()])
     afterEdit()
   } catch (error) { componentMessage.value = (error as Error).message }
-  finally { updatingComponents.value = false }
 }
 
 function cellAt(e: MouseEvent): { x: number; y: number } | null {
@@ -1398,10 +1524,14 @@ function onCanvasMouseDown(e: MouseEvent): void {
   if (tool.value === 'connections' && (e.button === 0 || e.button === 2)) {
     const cell = cellAt(e)
     const set = connectionSets.value.find(s => s.id === connectionSetId.value)
-    if (!cell || !set) return
+    if (!set) { showAutotileConfig.value = true; return }
+    const sources = currentConnectionSources(set)
+    if (!cell || !sources) { void prepareConnectionSet(); return }
     e.preventDefault()
     connectionStroke = {map:tmx.value,name:mapName.value,layer:activeLayer.value,set,
-      changes:new Map(),last:cell,solid:e.button===0}
+      sources,changes:new Map(),last:cell,
+      solid:e.button===2 ? false : connectionBrush.value==='paint',
+      size:connectionBrushSize.value,previewData:null}
     addConnectionPoint(cell)
     return
   }
@@ -1749,6 +1879,7 @@ async function restoreView(): Promise<void> {
   await nextTick()
   drawMap()
   drawMinimap()
+  if (tool.value === 'connections' && connectionSets.value.length) void prepareConnectionSet()
 }
 
 // ── Lifecycle ──
@@ -1786,6 +1917,7 @@ onMounted(async () => {
   } catch (error) { componentMessage.value = (error as Error).message }
 })
 onUnmounted(() => {
+  if (connectionPreviewFrame) cancelAnimationFrame(connectionPreviewFrame)
   document.removeEventListener('keydown', onKeyDown)
   document.removeEventListener('keyup', onKeyUp)
   window.removeEventListener('jrpg:backdrop-updated', onBackdropUpdated)
@@ -1997,7 +2129,7 @@ watch(activeSubTab, (tab, prev) => {
             <button
               v-for="tl in toolList"
               :key="tl"
-              @click="tool = tl"
+              @click="selectTool(tl)"
               :class="[
                 'px-2 py-0.5 text-xs rounded-control transition-colors',
                 tool === tl ? 'bg-accent text-white' : 'bg-raised hover:bg-overlay text-ink-body',
@@ -2009,9 +2141,42 @@ watch(activeSubTab, (tab, prev) => {
 
           <span class="text-ink-disabled mx-1">|</span>
           <!-- Undo / redo -->
-          <select v-if="tool === 'connections'" v-model="connectionSetId" :title="$t('map.connectionHint')"
+          <select v-if="tool === 'connections' && connectionSets.length" v-model="connectionSetId"
+            :title="$t('map.connectionHint')" @change="prepareConnectionSet(true)"
             class="text-xs bg-raised text-ink-body border border-border rounded-control px-1 py-0.5">
-            <option v-for="set in connectionSets" :key="set.id" :value="set.id">{{ set.name }}</option>
+            <option v-for="set in connectionSets" :key="set.id" :value="set.id">
+              {{ set.name }} · {{ $t('map.autotileMode.' + (set.mode ?? 'cardinal')) }}
+            </option>
+          </select>
+          <span v-if="tool === 'connections' && connectionPreparing" class="text-xs text-accent-ink">
+            {{ $t('map.autotile.preparing') }}
+          </span>
+          <span v-else-if="tool === 'connections' && !connectionSets.length" class="text-xs text-warning-ink">
+            {{ $t('map.autotile.noSets') }}
+          </span>
+          <button v-if="tool === 'connections'"
+            class="px-2 py-0.5 text-xs rounded-control bg-raised hover:bg-overlay text-ink-body"
+            @click="showAutotileConfig = true"
+          >⚙ {{ $t('map.autotile.manage') }}</button>
+          <div v-if="tool === 'connections' && connectionSets.length" class="flex gap-1">
+            <button
+              v-for="action in (['paint', 'erase'] as const)"
+              :key="action"
+              @click="connectionBrush = action"
+              :class="[
+                'px-2 py-0.5 text-xs rounded-control',
+                connectionBrush === action
+                  ? 'bg-accent text-white'
+                  : 'bg-raised hover:bg-overlay text-ink-body',
+              ]"
+            >{{ action === 'paint' ? '＋' : '−' }} {{ $t(`map.autotile.${action}`) }}</button>
+          </div>
+          <select v-if="tool === 'connections' && connectionSets.length" v-model.number="connectionBrushSize"
+            class="px-1 py-0.5 text-xs bg-raised border border-border rounded-control text-ink-body"
+            :title="$t('map.autotile.brushSize')">
+            <option :value="1">1×1</option>
+            <option :value="2">2×2</option>
+            <option :value="3">3×3</option>
           </select>
           <label class="flex items-center gap-1 text-xs text-ink-body" :title="$t('map.linkComponentsHint')">
             <input type="checkbox" v-model="linkComponents" />{{ $t('map.linkComponents') }}
@@ -2597,6 +2762,16 @@ watch(activeSubTab, (tab, prev) => {
       :img-w="backdropImg.naturalWidth" :img-h="backdropImg.naturalHeight" :tile-size="mapTileSize"
       :busy="tracing" :error="traceError"
       @close="showTrace = false" @convert="traceBackdropToTiles" />
+
+    <AutotileSetDialog
+      v-if="showAutotileConfig"
+      :sets="connectionSets"
+      :groups="tilesStore.groups"
+      :busy="savingAutotileConfig"
+      :error="autotileConfigError"
+      @close="showAutotileConfig = false; autotileConfigError = ''"
+      @save="saveAutotileSets"
+    />
 
     <!-- ═══ Browse Buildings modal ═══ -->
     <div

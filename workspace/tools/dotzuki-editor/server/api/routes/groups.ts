@@ -15,13 +15,28 @@ import {
 } from '../tilesPaths'
 
 export function registerGroups(server: any) {
-  server.middlewares.use('/api/connection-sets', (req, res) => {
-    if (req.method !== 'GET') return sendError(res, 'Method Not Allowed', 405)
+  server.middlewares.use('/api/connection-sets', async (req, res) => {
     try {
-      if (!loadConfig().activities.some(a => a.type === 'tiles')) return sendJson(res, { sets: [] })
+      if (!loadConfig().activities.some(a => a.type === 'tiles')) {
+        return req.method === 'GET'
+          ? sendJson(res, { sets: [] })
+          : sendError(res, 'The project has no tiles activity', 400)
+      }
       const file = path.join(tilesRoot(), 'connections.json')
-      const sets = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).sets : []
-      sendJson(res, { sets: validateConnectionSets(sets) })
+      if (req.method === 'GET') {
+        const sets = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).sets : []
+        return sendJson(res, { sets: validateConnectionSets(sets) })
+      }
+      if (req.method === 'PUT') {
+        const body = JSON.parse(await readBody(req))
+        const sets = validateConnectionSets(body.sets)
+        fs.mkdirSync(path.dirname(file), { recursive: true })
+        const temp = `${file}.tmp-${process.pid}`
+        fs.writeFileSync(temp, `${JSON.stringify({ version: 2, sets }, null, 2)}\n`, 'utf8')
+        fs.renameSync(temp, file)
+        return sendJson(res, { ok: true, sets })
+      }
+      return sendError(res, 'Method Not Allowed', 405)
     } catch (error) { sendError(res, (error as Error).message, 400) }
   })
 
