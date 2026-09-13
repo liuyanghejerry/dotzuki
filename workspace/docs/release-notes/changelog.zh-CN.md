@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.7.1
->（源文档 commit cb606d3）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.0
+>（源文档 commit 1d88d2f3ef7670a7bc2cf517c49fe83a7f2ab770）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.1
+> - **Last verified**: v0.8.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -20,6 +20,43 @@
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
 ## 未发布
+
+## v0.8.0
+
+本版本包含破坏性 API 与 feature gate 变更。使用方更新方式见
+[迁移指南](migration/v0.8.0.zh-CN.md)。
+
+破坏性变更：
+
+- `FrameBuffer::save_png` 现在需要 `dotzuki-engine/image` feature。
+- `dotzuki-engine-script` 中依赖 Boa 的导出现在需要 `script-boa` feature。
+  使用默认 feature 的消费方不受影响；关闭默认 feature 的消费方需要
+  显式启用它。
+- `dotzuki_renderer::mon_icon` 现在需要 renderer 的 `resource` feature。
+- Engine 与 DSL 的公开数据结构现在使用所属 crate 的确定性 `HashMap` 和
+  `HashSet` alias，不再使用 `std::collections` 类型。
+- `StoryStmt` 新增 `Return` variant。穷尽匹配需要处理它。
+- 七个 `BattleEffects` 渲染方法新增可推导的 const 存储参数，`Tile` 现在按
+  四字节对齐。
+
+GBA 与 renderer 新增内容：
+
+- Engine、DSL、script protocol、renderer、UI、rules、app 与 audio 路径现在可供
+  裸机 ARM 消费方以 `no_std + alloc` 编译。
+- 索引 framebuffer 提供显式 packed 与 word-aligned linear 存储。
+  默认类型在所有目标上保持 packed；`LinearIndexedFrameBuffer` 与
+  `LinearRgbaIndexedFrameBuffer` 为 DMA 提供每个调色板索引一个字节的存储。
+- 索引 tile blit、裁剪行复制、framebuffer scroll、矩形复制与
+  重叠安全的内部搬移降低 CPU 与内存分配压力。
+- 瞬态战斗动画状态与 GBA 原地屏幕效果让消费方能够复用稳定帧，不再克隆
+  160×144 索引缓冲区。
+
+DSL 与布局新增内容：
+
+- Schema v2 [`静态布局`](../reference/glossary.md)编译器把支持的 `.gui` 画面
+  编译为借用式 Rust 布局数据，同时保留 `.gui` 作为创作源。
+- 原生 AST core dispatcher 与 capability traversal 统一内建命令校验；
+  `return` 现在具有一致的 parser、原生 interpreter 与 JavaScript 语义。
 
 ## v0.7.1
 
