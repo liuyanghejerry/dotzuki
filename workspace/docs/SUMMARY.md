@@ -67,6 +67,7 @@
 - [Migrating to v0.7.0](release-notes/migration/v0.7.0.md)
 - [Migrating to v0.7.1](release-notes/migration/v0.7.1.md)
 - [Migrating to v0.8.0](release-notes/migration/v0.8.0.md)
+- [Migrating to v0.8.1](release-notes/migration/v0.8.1.md)
 
 # Archive
 
