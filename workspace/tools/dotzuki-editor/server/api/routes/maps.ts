@@ -9,6 +9,7 @@ import { getProjectContext } from '../../context/projectContext'
 import { makeGenImage } from '../../spriteSheet/generate'
 import { resolveApiKey } from '../../ai'
 import { generateMapBackdrop } from '../../backdropTools'
+import { registerMapArt } from './mapArt'
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -109,6 +110,7 @@ function rewriteMapRefs(oldName: string, newName: string): number {
 }
 
 export function registerMaps(server: any) {
+  registerMapArt(server)
   server.middlewares.use('/api/maps', (req, res) => {
     try {
       const cfg = loadConfig()
@@ -141,6 +143,7 @@ export function registerMaps(server: any) {
                   name, isDir, size: stat.size,
                   hasTilemap: fs.existsSync(path.join(full, 'map.tmx.json')),
                   hasBackdrop: fs.existsSync(path.join(full, 'source.png')),
+                  hasArt: fs.existsSync(path.join(full, 'art.json')),
                 }
               : { name, isDir, size: stat.size }
           })

@@ -12,6 +12,7 @@
 
 - [Authoring Maps](how-to/maps.md)
 - [Linked Buildings and Auto-tiles](how-to/map-components.md)
+- [Native Map Scenery](how-to/native-map-art.md)
 - [Authoring Scenes](how-to/scenes.md)
 - [Authoring UI Layouts](how-to/ui.md)
 - [Authoring Battles](how-to/battles.md)
@@ -94,6 +95,7 @@ archive pages stay English-only (doc-standard §5).
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
 - [制作地图](how-to/maps.zh-CN.md)
 - [编辑关联建筑与自动地形](how-to/map-components.zh-CN.md)
+- [编排高密度地图布景](how-to/native-map-art.zh-CN.md)
 - [编写场景](how-to/scenes.zh-CN.md)
 - [编写 UI 布局](how-to/ui.zh-CN.md)
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)

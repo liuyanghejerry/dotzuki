@@ -38,6 +38,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 |---|---|
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx` (JSON) maps, tilesets, elevation, entities and the `objects.json` sidecar |
 | [`how-to/map-components.md`](./how-to/map-components.md) | Linked buildings, source updates, imported atlas preservation, and cardinal/blob auto-tiles |
+| [`how-to/native-map-art.md`](./how-to/native-map-art.md) | Native-resolution scenery, logical coordinates, collision overlays, and source pixel editing |
 | [`how-to/scenes.md`](./how-to/scenes.md) | Authoring `.scene` stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles |
 | [`how-to/ui.md`](./how-to/ui.md) | Authoring `.gui` layouts: the 20×18 grid, panels/text, template bindings, `@t` labels, custom components |
 | [`how-to/battles.md`](./how-to/battles.md) | Authoring `rules.ron`: the minimon tutorial, type effectiveness, resources & move costs, cookbook, determinism |
