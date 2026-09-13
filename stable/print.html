@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-597000fd.js";
+            window.path_to_searchindex_js = "searchindex-999adb80.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-82564987.js"></script>
+        <script src="toc-d8e34e91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -228,6 +228,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code> (JSON) maps, tilesets, elevation, entities and the <code>objects.json</code> sidecar</td></tr>
 <tr><td><a href="#edit-linked-buildings-and-auto-tiles"><code>how-to/map-components.md</code></a></td><td>Linked buildings, source updates, imported atlas preservation, and cardinal/blob auto-tiles</td></tr>
+<tr><td><a href="#arrange-native-resolution-map-scenery"><code>how-to/native-map-art.md</code></a></td><td>Native-resolution scenery, logical coordinates, collision overlays, and source pixel editing</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>Authoring <code>.scene</code> stories: NPC dialogue, map-entry cutscenes, choices, flags, scene battles</td></tr>
 <tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>Authoring <code>.gui</code> layouts: the 20×18 grid, panels/text, template bindings, <code>@t</code> labels, custom components</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>Authoring <code>rules.ron</code>: the minimon tutorial, type effectiveness, resources &amp; move costs, cookbook, determinism</td></tr>
@@ -1322,7 +1323,7 @@ battle outcomes live in <a href="#battles">battle rules</a>.</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.0</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
 </blockquote>
 <p>Reuse pixel artwork across a map and select terrain edges, inner corners, and wall junctions
@@ -1403,6 +1404,81 @@ column metadata is inferred from the image width. New component cells append to 
 before writing files. Restore the missing image and retry. Map save and undo affect map cells;
 appended atlas slots remain available after undo. The editor does not compact unused slots.</p>
 <p>For asset backup and source formats, see <a href="#assets">Assets</a>.</p>
+<p>For complete PNG components at a higher pixel density than the logical map grid, see <a href="#arrange-native-resolution-map-scenery">Arrange
+native-resolution map scenery</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="arrange-native-resolution-map-scenery"><a class="header" href="#arrange-native-resolution-map-scenery">Arrange native-resolution map scenery</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, tool developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
+</ul>
+</blockquote>
+<p>Move detailed pixel artwork over an existing map while keeping its logical grid and collision
+data separate.</p>
+<p>Before you start, read <a href="#maps">Maps</a> and <a href="#edit-linked-buildings-and-auto-tiles">linked building editing</a>.
+Configure map and tiles activities in your <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a>.</p>
+<h2 id="prepare-a-compatible-map"><a class="header" href="#prepare-a-compatible-map">Prepare a compatible map</a></h2>
+<p><a href="#native-map-scenery">Native scenery</a> uses an optional <code>art.json</code> beside
+<code>map.tmx.json</code>. Your game’s runtime must consume this scenery contract. This editor feature does
+not change the generic runner’s rendering or convert a tilemap automatically.</p>
+<p>For a 4×3 map with 16×16 logical tiles, create a 128×96 ground PNG and a 32×64 tree PNG. Save
+them as editable building groups in your configured tiles directory. This example assumes
+sibling <code>maps</code> and <code>tiles</code> directories:</p>
+<pre><code class="language-json">{
+  "version": 1,
+  "pixels_per_unit": 2,
+  "ground": "../../tiles/groups/ground.png",
+  "components": [
+    {
+      "image": "../../tiles/groups/tree.png",
+      "x": 16,
+      "y": 0,
+      "foot_y": 16,
+      "layer": "depth"
+    }
+  ]
+}
+</code></pre>
+<p>Image paths are relative to the map directory and must resolve inside the configured data root.
+Density is an integer from 1 to 4. Ground dimensions equal map size × logical tile size ×
+density; every component image dimension must be divisible by density. An optional <code>water_mask</code>
+PNG must have the same dimensions as the ground. The editor displays this mask for inspection;
+it does not animate it.</p>
+<h2 id="arrange-and-inspect-objects"><a class="header" href="#arrange-and-inspect-objects">Arrange and inspect objects</a></h2>
+<ol>
+<li>Open the map and click <strong>Native scenery</strong>. The new tab displays the ground and complete
+component images with sharp pixel edges. At 100%, each source pixel occupies one CSS pixel.</li>
+<li>Click an opaque part of an object or choose it from the filtered object list. Transparent
+image corners let you select objects underneath.</li>
+<li>Drag to move. <strong>Snap to tiles</strong> snaps the movement delta to the logical grid. Arrow keys move
+one logical pixel; Shift + arrow moves one tile. Set <strong>X</strong>, <strong>Y</strong>, or <strong>Sorting foot Y</strong> for
+exact placement. Moving Y also moves the sorting anchor.</li>
+<li>Choose <strong>Ground</strong> for bridges and floor details, <strong>Depth sorted</strong> for buildings and trees, or
+<strong>Foreground</strong> for fixed overlays. Depth objects sort by <code>foot_y</code>, with original component
+order breaking ties. The cyan line marks the selected object’s sorting anchor.</li>
+<li>Enable <strong>Collision</strong>, <strong>Grid</strong>, or <strong>NPCs and exits</strong> to compare scenery with saved map data.
+These overlays show base collision and authored object positions; conditional events and
+actor movement still need a playtest. Edit collision and entity positions in the tilemap tab,
+save there, and reload the scenery tab.</li>
+<li>Choose a library image and click <strong>Place library object</strong> to add it near the center of the
+visible area. You can duplicate or remove existing objects. These operations change scenery
+only; they do not create or remove collision cells.</li>
+</ol>
+<h2 id="edit-pixels-and-save"><a class="header" href="#edit-pixels-and-save">Edit pixels and save</a></h2>
+<p>Select a component and click <strong>Edit pixels</strong> to open its building group in the existing pixel
+editor. The ground has its own edit button. Save the PNG and layers there, then return to the
+scenery tab. Source images refresh while unsaved positions and undo history remain intact.</p>
+<p><strong>Save scenery</strong> writes only <code>art.json</code>. Unknown map-art and component fields are preserved.
+Undo/redo remains available after saving, so undoing a saved edit makes the tab unsaved again.
+Switching tabs preserves each open arrangement; closing a dirty scenery tab asks before
+discarding it.</p>
+<p>If another tool changed <code>art.json</code> after you opened it, saving reports a conflict and leaves
+both the file and your unsaved arrangement intact. Review the external change before choosing
+<strong>Reload from disk</strong>, which discards the local arrangement after confirmation. Missing images,
+incorrect ground sizes, invalid density, and misaligned component dimensions prevent a save.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="scenes"><a class="header" href="#scenes">Scenes</a></h1>
 <p>How to author <code>.scene</code> story files: NPC dialogue, map-entry cutscenes,
@@ -7984,7 +8060,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.0</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -8264,6 +8340,12 @@ the <code>GameData</code> trait.</li>
 data-driven battle system.</li>
 <li><strong>story bible</strong>（叙事圣经）— the seeded <code>data/stories/</code> narrative content.</li>
 <li><strong>recipe</strong>（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.</li>
+</ul>
+<h2 id="native-map-scenery"><a class="header" href="#native-map-scenery">Native map scenery</a></h2>
+<ul>
+<li><strong>native scenery</strong>（原生布景）— optional <code>art.json</code> map artwork whose PNG resolution is independent
+of logical map pixels. <code>pixels_per_unit</code> sets the ratio; component positions and sorting
+anchors stay in logical pixels. See <a href="#arrange-native-resolution-map-scenery">arranging native scenery</a>.</li>
 </ul>
 <h2 id="audio-1"><a class="header" href="#audio-1">Audio</a></h2>
 <ul>
@@ -13515,6 +13597,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
+<tr><td><a href="#编排高密度地图布景"><code>how-to/native-map-art.zh-CN.md</code></a></td><td>高密度布景、逻辑坐标、碰撞叠层与来源像素编辑</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>编写 <code>.scene</code> 剧情：NPC 对话、进图过场、选项、flag、场景内战斗</td></tr>
 <tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>编写 <code>.gui</code> 布局：20×18 网格、面板/文本、模板绑定、<code>@t</code> 标签、自定义组件</td></tr>
 <tr><td><a href="#authoring-battles-on-the-effect-stack"><code>how-to/battles.md</code></a></td><td>编写 <code>rules.ron</code>：minimon 教程、属性克制、资源与招式消耗、cookbook、确定性</td></tr>
@@ -14566,10 +14649,10 @@ sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.0</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
 </ul>
-<p>本文是 <a href="#edit-linked-buildings-and-auto-tiles">map-components.md</a> 的中文翻译，同步至引擎版本 v0.8.0
-（源文档 commit <code>a7559eb</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+<p>本文是 <a href="#edit-linked-buildings-and-auto-tiles">map-components.md</a> 的中文翻译，同步至引擎版本 v0.8.2
+（源文档 commit <code>b876d5e</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>在地图中复用像素素材，并根据相邻格选择地形边缘、内角和墙体连接点。</p>
 <p>开始前，请阅读<a href="#地图">地图指南</a>，并在<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>
@@ -14640,6 +14723,52 @@ cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255�
 <p>如果图集和引用的共享图块都不存在，准备操作会在写文件前报告错误；恢复图片后重试。
 地图保存和撤销影响地图格子，追加的图集位置在撤销后仍保留，编辑器不会压缩未使用位置。</p>
 <p>素材备份和源格式请参阅<a href="#素材">素材指南</a>。</p>
+<p>如果需要编排高于逻辑地图网格密度的完整 PNG 组件，请阅读<a href="#编排高密度地图布景">编排高密度地图布景</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="编排高密度地图布景"><a class="header" href="#编排高密度地图布景">编排高密度地图布景</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: game authors, tool developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.8.2</li>
+</ul>
+<p>本文是 <a href="#arrange-native-resolution-map-scenery">native-map-art.md</a> 的中文翻译，同步至引擎版本 v0.8.2（源文档 commit <code>b876d5e</code>）。内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<p>在已有地图上移动精细像素素材，分别维护逻辑网格和碰撞数据。</p>
+<p>开始前，请阅读<a href="#地图">地图指南</a>和<a href="#编辑关联建筑与自动地形">关联建筑编辑</a>，并在<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>中配置 map 和 tiles 活动。</p>
+<h2 id="准备兼容地图"><a class="header" href="#准备兼容地图">准备兼容地图</a></h2>
+<p><a href="#native-map-scenery">原生布景</a>使用放在 <code>map.tmx.json</code> 旁的可选 <code>art.json</code>。游戏运行端需要支持这份布景协议。本编辑器功能不会修改通用 runner 的渲染，也不会自动转换地块地图。</p>
+<p>对于 4×3 格、每格 16×16 逻辑像素的地图，准备 128×96 的地面 PNG 和 32×64 的树木 PNG，并保存为已配置素材目录中的可编辑建筑组件。下面假设 <code>maps</code> 和 <code>tiles</code> 是同级目录：</p>
+<pre><code class="language-json">{
+  "version": 1,
+  "pixels_per_unit": 2,
+  "ground": "../../tiles/groups/ground.png",
+  "components": [
+    {
+      "image": "../../tiles/groups/tree.png",
+      "x": 16,
+      "y": 0,
+      "foot_y": 16,
+      "layer": "depth"
+    }
+  ]
+}
+</code></pre>
+<p>图片路径相对于地图目录，解析后须位于配置的数据根目录内。密度是 1 至 4 的整数。地面尺寸等于地图格数 × 逻辑格尺寸 × 密度；组件图片尺寸须能被密度整除。可选的 <code>water_mask</code> PNG 须与地面同尺寸。编辑器可以显示蒙版供检查，但不播放水纹动画。</p>
+<h2 id="编排和检查物件"><a class="header" href="#编排和检查物件">编排和检查物件</a></h2>
+<ol>
+<li>打开地图，点击 <strong>原生布景</strong>。新标签页显示完整地面和组件，保留清晰像素边缘。100% 倍率下，每个来源像素占一个 CSS 像素。</li>
+<li>点击物件的不透明部分，或从筛选后的物件列表选择。图片透明角落允许选中下面的物件。</li>
+<li>拖动物件。<strong>吸附网格</strong>将移动量对齐逻辑网格。方向键移动一个逻辑像素，Shift + 方向键移动一格。也可以直接设置 <strong>X</strong>、<strong>Y</strong> 和 <strong>排序脚底 Y</strong>。修改 Y 会同步移动排序锚点。</li>
+<li>桥面和地面细节选择 <strong>地面</strong>；建筑、树木选择 <strong>按脚底排序</strong>；固定覆盖物选择 <strong>前景</strong>。深度物件按 <code>foot_y</code> 排序，同值时保持原组件顺序。青色线表示所选物件的排序锚点。</li>
+<li>启用 <strong>碰撞</strong>、<strong>网格</strong>或<strong>人物与出入口</strong>，对照已保存的地图数据。这些叠层显示底层碰撞和静态物件位置；条件事件和人物走位仍需试玩。碰撞与角色位置在地块标签页中修改，保存后重载布景页。</li>
+<li>选择素材库图片，点击 <strong>放置素材库物件</strong>，将其加入当前可见区域中心附近。也可以复制或移除已有物件。这些操作仅改变布景，不会新增或删除碰撞格。</li>
+</ol>
+<h2 id="编辑像素并保存"><a class="header" href="#编辑像素并保存">编辑像素并保存</a></h2>
+<p>选择组件后点击 <strong>编辑像素</strong>，会在现有像素编辑器中打开对应建筑组件。地面也有独立编辑按钮。在像素编辑器中保存 PNG 和图层，再返回布景页；来源图片会更新，未保存的位置和撤销历史会保留。</p>
+<p><strong>保存布景</strong>只写入 <code>art.json</code>，保留未知的顶层字段和组件字段。保存后仍可撤销/重做；撤销已保存的修改会使标签页重新变为未保存状态。切换标签页会保留各自的布局，关闭未保存的布景页前会询问是否丢弃。</p>
+<p>如果其他工具在打开后修改了 <code>art.json</code>，保存会报告冲突，并保留磁盘文件和当前未保存布局。先检查外部修改，再选择 <strong>从磁盘重载</strong>；确认后会丢弃本地布局。图片缺失、地面尺寸错误、密度无效或组件尺寸无法整除密度时，保存不会写入文件。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="场景"><a class="header" href="#场景">场景</a></h1>
 <p>如何编写 <code>.scene</code> 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。</p>
