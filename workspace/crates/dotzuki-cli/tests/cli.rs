@@ -238,6 +238,28 @@ fn harmony_export_writes_a_deveco_project() {
         fs::read(export_dir.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a")).unwrap(),
         b"test archive"
     );
+    // API 11 and later take the launcher icon from a layered image.
+    assert!(fs::read_to_string(export_dir.join("AppScope/app.json5"))
+        .unwrap()
+        .contains("\"icon\": \"$media:layered_image\""));
+    let module = fs::read_to_string(export_dir.join("entry/src/main/module.json5")).unwrap();
+    assert!(module.contains("\"icon\": \"$media:layered_image\""));
+    assert!(module.contains("\"startWindowIcon\": \"$media:startIcon\""));
+    for layer in [
+        "AppScope/resources/base/media/background.png",
+        "AppScope/resources/base/media/foreground.png",
+        "entry/src/main/resources/base/media/background.png",
+        "entry/src/main/resources/base/media/foreground.png",
+    ] {
+        let bytes = fs::read(export_dir.join(layer)).unwrap();
+        assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n", "{layer}");
+    }
+    assert!(export_dir
+        .join("entry/src/main/resources/base/media/startIcon.png")
+        .is_file());
+    assert!(!export_dir
+        .join("AppScope/resources/base/media/app_icon.svg")
+        .exists());
 }
 
 #[test]
