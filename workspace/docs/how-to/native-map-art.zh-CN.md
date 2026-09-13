@@ -5,7 +5,7 @@
 > - **Status**: active
 > - **Last verified**: v0.8.2
 >
-> 本文是 [native-map-art.md](./native-map-art.md) 的中文翻译，同步至引擎版本 v0.8.2（源文档 commit `5136687`）。内容以英文源为准；发现不一致请更新英文源再同步翻译。
+> 本文是 [native-map-art.md](./native-map-art.md) 的中文翻译，同步至引擎版本 v0.8.2（源文档 commit `b876d5e`）。内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 在已有地图上移动精细像素素材，分别维护逻辑网格和碰撞数据。
 
