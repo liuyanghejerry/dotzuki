@@ -21,6 +21,12 @@
 
 ## 未发布
 
+- 修复：鸿蒙宿主改用分层启动图标（API 11 及以上要求），桌面显示游戏自己的图标
+  而不是系统占位图。重新导出宿主即可生效；`dotzuki export --harmony` 模板与
+  `scripts/export-mobile-host.py` 都会带上分层位图资源。
+- 修复：安卓宿主改用自适应启动图标。manifest 指向 `@mipmap/ic_launcher`，模板
+  同时带上 API 26 图层、旧式图标与各屏幕密度的位图。重新导出宿主即可生效。
+
 ## v0.8.0
 
 本版本包含破坏性 API 与 feature gate 变更。使用方更新方式见

@@ -29,10 +29,25 @@ macro_rules! template {
     };
 }
 
+/// A template file copied byte for byte, with no `__NAME__` substitution.
+struct TemplateAsset {
+    path: &'static str,
+    body: &'static [u8],
+}
+
+macro_rules! asset {
+    ($path:literal) => {
+        TemplateAsset {
+            path: $path,
+            body: include_bytes!(concat!("../templates/harmony/", $path)),
+        }
+    };
+}
+
 const TEMPLATES: &[TemplateFile] = &[
     template!("AppScope/app.json5"),
     template!("AppScope/resources/base/element/string.json"),
-    template!("AppScope/resources/base/media/app_icon.svg"),
+    template!("AppScope/resources/base/media/layered_image.json"),
     template!("build-profile.json5"),
     template!("hvigor/hvigor-config.json5"),
     template!("hvigorfile.ts"),
@@ -47,13 +62,25 @@ const TEMPLATES: &[TemplateFile] = &[
     template!("entry/src/main/resources/base/element/color.json"),
     template!("entry/src/main/resources/base/element/string.json"),
     template!("entry/src/main/resources/base/profile/main_pages.json"),
-    template!("entry/src/main/resources/base/media/app_icon.svg"),
+    template!("entry/src/main/resources/base/media/layered_image.json"),
     template!("entry/src/main/cpp/CMakeLists.txt"),
     template!("entry/src/main/cpp/dotzuki_host.cpp"),
     template!("entry/src/main/cpp/dotzuki_host.h"),
     template!("entry/src/main/cpp/napi_init.cpp"),
     template!("entry/src/main/cpp/types/libentry/index.d.ts"),
     template!("entry/src/main/cpp/types/libentry/oh-package.json5"),
+];
+
+/// Launcher and start-window bitmaps. API 11 and later take the launcher icon
+/// from a layered image, so each icon directory carries a full-bleed
+/// `background.png` plus a `foreground.png` whose mark stays inside the safe
+/// area; `app.json5` reads the AppScope copy and `module.json5` the entry copy.
+const ASSETS: &[TemplateAsset] = &[
+    asset!("AppScope/resources/base/media/background.png"),
+    asset!("AppScope/resources/base/media/foreground.png"),
+    asset!("entry/src/main/resources/base/media/background.png"),
+    asset!("entry/src/main/resources/base/media/foreground.png"),
+    asset!("entry/src/main/resources/base/media/startIcon.png"),
 ];
 
 pub fn run(args: &HarmonyExportArgs) -> Result<PathBuf> {
@@ -131,14 +158,14 @@ fn write_project(
     mobile_lib: &Path,
 ) -> Result<()> {
     for template in TEMPLATES {
-        let destination = out.join(template.path);
-        fs::create_dir_all(destination.parent().unwrap())?;
         let body = template
             .body
             .replace("__APP_NAME__", &json_string_contents(title))
             .replace("__BUNDLE_NAME__", bundle_name);
-        fs::write(&destination, body)
-            .with_context(|| format!("failed to write {}", destination.display()))?;
+        write_file(out, template.path, body.as_bytes())?;
+    }
+    for asset in ASSETS {
+        write_file(out, asset.path, asset.body)?;
     }
     let rawfile = out.join("entry/src/main/resources/rawfile/game.dzpk");
     fs::create_dir_all(rawfile.parent().unwrap())?;
@@ -159,6 +186,13 @@ fn write_project(
         )
     })?;
     Ok(())
+}
+
+fn write_file(out: &Path, relative: &str, body: &[u8]) -> Result<()> {
+    let destination = out.join(relative);
+    fs::create_dir_all(destination.parent().unwrap())?;
+    fs::write(&destination, body)
+        .with_context(|| format!("failed to write {}", destination.display()))
 }
 
 fn app_slug(value: &str) -> String {
@@ -207,6 +241,63 @@ mod tests {
         }
     }
 
+    fn template_body(path: &str) -> &'static str {
+        TEMPLATES
+            .iter()
+            .find(|template| template.path == path)
+            .unwrap_or_else(|| panic!("{path} is not a registered template"))
+            .body
+    }
+
+    /// API 11 and later draw the launcher icon from a layered image, so a
+    /// single-layer `$media:app_icon` leaves the device on the system
+    /// placeholder.
+    #[test]
+    fn templates_declare_layered_launcher_icons() {
+        assert!(template_body("AppScope/app.json5").contains("\"icon\": \"$media:layered_image\""));
+
+        let module = template_body("entry/src/main/module.json5");
+        assert!(module.contains("\"icon\": \"$media:layered_image\""));
+        assert!(module.contains("\"startWindowIcon\": \"$media:startIcon\""));
+
+        for path in [
+            "AppScope/resources/base/media/layered_image.json",
+            "entry/src/main/resources/base/media/layered_image.json",
+        ] {
+            let layer = template_body(path);
+            assert!(layer.contains("$media:background"), "{path}");
+            assert!(layer.contains("$media:foreground"), "{path}");
+        }
+
+        for template in TEMPLATES {
+            assert!(
+                !template.body.contains("$media:app_icon"),
+                "{}",
+                template.path
+            );
+        }
+    }
+
+    fn png_size(body: &[u8]) -> (u32, u32) {
+        assert_eq!(&body[..8], b"\x89PNG\r\n\x1a\n", "asset is not a PNG");
+        let width = u32::from_be_bytes(body[16..20].try_into().unwrap());
+        let height = u32::from_be_bytes(body[20..24].try_into().unwrap());
+        (width, height)
+    }
+
+    #[test]
+    fn layered_icon_assets_are_square_pngs() {
+        for asset in ASSETS {
+            let (width, height) = png_size(asset.body);
+            let expected = if asset.path.ends_with("startIcon.png") {
+                144
+            } else {
+                1024
+            };
+            assert_eq!((width, height), (expected, expected), "{}", asset.path);
+        }
+    }
+
     #[test]
     fn writes_deveco_project_pack_header_and_runtime() {
         let root =
@@ -229,6 +320,17 @@ mod tests {
             fs::read(root.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a")).unwrap(),
             b"archive"
         );
+        for asset in ASSETS {
+            assert_eq!(
+                fs::read(root.join(asset.path)).unwrap(),
+                asset.body,
+                "{}",
+                asset.path
+            );
+        }
+        assert!(fs::read_to_string(root.join("AppScope/app.json5"))
+            .unwrap()
+            .contains("$media:layered_image"));
         let _ = fs::remove_dir_all(&root);
     }
 }

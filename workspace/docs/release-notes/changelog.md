@@ -18,6 +18,16 @@ with a migration guide under `migration/` (created per release).
 
 ## Unreleased
 
+- Fix: HarmonyOS hosts export with a layered launcher icon, which API 11 and
+  later require, so the home screen shows the game's own icon instead of the
+  system placeholder. Re-export a host to pick up the icon; the
+  `dotzuki export --harmony` template and `scripts/export-mobile-host.py` both
+  carry the layered bitmaps.
+- Fix: Android hosts export with adaptive launcher icons. The manifest now
+  points at `@mipmap/ic_launcher`, and the template ships the API 26 layers,
+  the legacy icons, and one bitmap per screen density. Re-export a host to pick
+  up the icons.
+
 ## v0.8.0
 
 This release contains breaking API and feature-gate changes. See the

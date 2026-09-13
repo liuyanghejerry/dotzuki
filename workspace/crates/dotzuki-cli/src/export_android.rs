@@ -28,6 +28,21 @@ macro_rules! template {
     };
 }
 
+/// A template file copied byte for byte, with no `__NAME__` substitution.
+struct TemplateAsset {
+    path: &'static str,
+    body: &'static [u8],
+}
+
+macro_rules! asset {
+    ($path:literal) => {
+        TemplateAsset {
+            path: $path,
+            body: include_bytes!(concat!("../templates/android/", $path)),
+        }
+    };
+}
+
 const TEMPLATES: &[TemplateFile] = &[
     template!("settings.gradle.kts"),
     template!("build.gradle.kts"),
@@ -36,6 +51,9 @@ const TEMPLATES: &[TemplateFile] = &[
     template!("app/src/main/AndroidManifest.xml"),
     template!("app/src/main/res/values/strings.xml"),
     template!("app/src/main/res/values/themes.xml"),
+    template!("app/src/main/res/values/ic_launcher_background.xml"),
+    template!("app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml"),
+    template!("app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"),
     template!("app/src/main/cpp/CMakeLists.txt"),
     template!("app/src/main/cpp/native_bridge.cpp"),
     template!("app/src/main/java/com/dotzuki/player/NativeBridge.kt"),
@@ -43,6 +61,29 @@ const TEMPLATES: &[TemplateFile] = &[
     template!("app/src/main/java/com/dotzuki/player/GameSurfaceView.kt"),
     template!("app/src/main/java/com/dotzuki/player/GamepadView.kt"),
     template!("app/src/main/java/com/dotzuki/player/MainActivity.kt"),
+];
+
+/// Launcher bitmaps. `ic_launcher` and `ic_launcher_round` carry the full
+/// artwork for surfaces that read the legacy icon, while
+/// `ic_launcher_foreground` is the transparent mark that API 26 and later
+/// compose over `@color/ic_launcher_background`. Each density keeps the
+/// 108dp adaptive canvas and the 48dp legacy canvas.
+const ASSETS: &[TemplateAsset] = &[
+    asset!("app/src/main/res/mipmap-mdpi/ic_launcher.png"),
+    asset!("app/src/main/res/mipmap-hdpi/ic_launcher.png"),
+    asset!("app/src/main/res/mipmap-xhdpi/ic_launcher.png"),
+    asset!("app/src/main/res/mipmap-xxhdpi/ic_launcher.png"),
+    asset!("app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"),
+    asset!("app/src/main/res/mipmap-mdpi/ic_launcher_round.png"),
+    asset!("app/src/main/res/mipmap-hdpi/ic_launcher_round.png"),
+    asset!("app/src/main/res/mipmap-xhdpi/ic_launcher_round.png"),
+    asset!("app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png"),
+    asset!("app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png"),
+    asset!("app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png"),
+    asset!("app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png"),
+    asset!("app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png"),
+    asset!("app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png"),
+    asset!("app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png"),
 ];
 
 pub fn run(args: &AndroidExportArgs) -> Result<PathBuf> {
@@ -120,14 +161,14 @@ fn write_project(
     mobile_lib: &Path,
 ) -> Result<()> {
     for template in TEMPLATES {
-        let destination = out.join(template.path);
-        fs::create_dir_all(destination.parent().unwrap())?;
         let body = template
             .body
             .replace("__APP_NAME__", &xml_text(title))
             .replace("__APPLICATION_ID__", application_id);
-        fs::write(&destination, body)
-            .with_context(|| format!("failed to write {}", destination.display()))?;
+        write_file(out, template.path, body.as_bytes())?;
+    }
+    for asset in ASSETS {
+        write_file(out, asset.path, asset.body)?;
     }
     let rawfile = out.join("app/src/main/res/raw/game.dzpk");
     fs::create_dir_all(rawfile.parent().unwrap())?;
@@ -148,6 +189,13 @@ fn write_project(
         )
     })?;
     Ok(())
+}
+
+fn write_file(out: &Path, relative: &str, body: &[u8]) -> Result<()> {
+    let destination = out.join(relative);
+    fs::create_dir_all(destination.parent().unwrap())?;
+    fs::write(&destination, body)
+        .with_context(|| format!("failed to write {}", destination.display()))
 }
 
 fn app_slug(value: &str) -> String {
@@ -204,6 +252,76 @@ mod tests {
         }
     }
 
+    fn template_body(path: &str) -> &'static str {
+        TEMPLATES
+            .iter()
+            .find(|template| template.path == path)
+            .unwrap_or_else(|| panic!("{path} is not a registered template"))
+            .body
+    }
+
+    /// `android:icon` must point at the `mipmap` artwork, and API 26 and later
+    /// compose the adaptive icon from the shared background color and the
+    /// transparent foreground layer.
+    #[test]
+    fn templates_declare_adaptive_launcher_icons() {
+        let manifest = template_body("app/src/main/AndroidManifest.xml");
+        assert!(manifest.contains("android:icon=\"@mipmap/ic_launcher\""));
+        assert!(manifest.contains("android:roundIcon=\"@mipmap/ic_launcher_round\""));
+
+        let background = template_body("app/src/main/res/values/ic_launcher_background.xml");
+        assert!(background.contains("<color name=\"ic_launcher_background\">"));
+
+        for path in [
+            "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+            "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+        ] {
+            let icon = template_body(path);
+            assert!(
+                icon.contains("<background android:drawable=\"@color/ic_launcher_background\""),
+                "{path}"
+            );
+            assert!(
+                icon.contains("<foreground android:drawable=\"@mipmap/ic_launcher_foreground\""),
+                "{path}"
+            );
+        }
+    }
+
+    fn png_size(body: &[u8]) -> (u32, u32) {
+        assert_eq!(&body[..8], b"\x89PNG\r\n\x1a\n", "asset is not a PNG");
+        let width = u32::from_be_bytes(body[16..20].try_into().unwrap());
+        let height = u32::from_be_bytes(body[20..24].try_into().unwrap());
+        (width, height)
+    }
+
+    #[test]
+    fn launcher_icon_assets_match_their_density() {
+        for asset in ASSETS {
+            let density = asset
+                .path
+                .split('/')
+                .find(|part| part.starts_with("mipmap-"))
+                .expect("asset lives in a density bucket");
+            let scale = match density {
+                "mipmap-mdpi" => (1, 1),
+                "mipmap-hdpi" => (3, 2),
+                "mipmap-xhdpi" => (2, 1),
+                "mipmap-xxhdpi" => (3, 1),
+                "mipmap-xxxhdpi" => (4, 1),
+                other => panic!("unknown density bucket {other}"),
+            };
+            // The adaptive foreground covers 108dp; the legacy pair covers 48dp.
+            let base = if asset.path.ends_with("_foreground.png") {
+                108
+            } else {
+                48
+            };
+            let expected = base * scale.0 / scale.1;
+            assert_eq!(png_size(asset.body), (expected, expected), "{}", asset.path);
+        }
+    }
+
     #[test]
     fn writes_android_project_pack_header_and_runtime() {
         let root =
@@ -227,6 +345,14 @@ mod tests {
                 .unwrap(),
             b"archive"
         );
+        for asset in ASSETS {
+            assert_eq!(
+                fs::read(root.join(asset.path)).unwrap(),
+                asset.body,
+                "{}",
+                asset.path
+            );
+        }
         let _ = fs::remove_dir_all(&root);
     }
 }
