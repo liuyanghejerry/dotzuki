@@ -1,0 +1,20 @@
+[book]
+title = "dotzuki Engine Book"
+authors = ["dotzuki contributors"]
+language = "en"
+src = "."
+# `workspace/docs/` is the single source of truth; mdBook is only the
+# presentation layer (see doc-outline.md §2.1). The build output goes into
+# `book/` here, which is gitignored and only ever produced by CI or locally.
+
+[build]
+build-dir = "book"
+
+[output.html]
+# Base URL of the GitHub Pages deployment. CI publishes to /stable/ (main
+# branch) and /vX.Y.Z/ (version tags); the site root redirects to /stable/.
+git-repository-url = "https://github.com/liuyanghejerry/dotzuki"
+edit-url-template = "https://github.com/liuyanghejerry/dotzuki/edit/master/workspace/docs/{path}"
+
+[rust]
+edition = "2021"
