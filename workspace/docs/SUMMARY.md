@@ -91,7 +91,7 @@ archive pages stay English-only (doc-standard §5).
 - [你的第一个游戏](tutorials/your-first-game.zh-CN.md)
 - [在编辑器中制作你的第一个游戏](tutorials/editor-first-game.zh-CN.md)
 - [制作地图](how-to/maps.zh-CN.md)
-- [关联建筑与连接墙体](how-to/map-components-zh-CN.md)
+- [编辑关联建筑与自动地形](how-to/map-components-zh-CN.md)
 - [编写场景](how-to/scenes.zh-CN.md)
 - [编写 UI 布局](how-to/ui.zh-CN.md)
 - [在效果栈上编写战斗](how-to/battles.zh-CN.md)

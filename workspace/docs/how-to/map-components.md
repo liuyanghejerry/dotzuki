@@ -53,7 +53,7 @@ Older projects may omit `mode`; the editor treats a missing mode as `cardinal`.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "sets": [{
     "id": "plaster",
     "name": "Plaster walls",
