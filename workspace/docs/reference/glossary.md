@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.0
+> - **Last verified**: v0.8.2
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -285,6 +285,10 @@ original form in Chinese text.
   data-driven battle system.
 - **story bible**（叙事圣经）— the seeded `data/stories/` narrative content.
 - **recipe**（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.
+
+## Native map scenery
+
+- **native scenery**（原生布景）— optional `art.json` map artwork whose PNG resolution is independent of logical map pixels. `pixels_per_unit` sets the ratio; component positions and sorting anchors stay in logical pixels. See [arranging native scenery](../how-to/native-map-art.md).
 
 ## Audio
 

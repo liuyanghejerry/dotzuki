@@ -22,6 +22,8 @@ export interface MapFileEntry {
   hasTilemap?: boolean
   /** Map dir has an AI art-reference image (`source.png`) usable as a backdrop. */
   hasBackdrop?: boolean
+  /** Map has native-resolution scenery in art.json. */
+  hasArt?: boolean
 }
 
 /** One file that references a map by name (from `GET /api/maps-references`). */

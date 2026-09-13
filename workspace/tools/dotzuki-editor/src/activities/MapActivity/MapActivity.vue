@@ -14,6 +14,7 @@ import MapBackdropGen from './MapBackdropGen.vue'
 import MapTraceDialog from './MapTraceDialog.vue'
 import AutotileSetDialog from './AutotileSetDialog.vue'
 import TilePixelEditor from '../TilesActivity/TilePixelEditor.vue'
+import NativeMapArtEditor from './NativeMapArtEditor.vue'
 import type { MapActivityConfig } from '@/types/project'
 
 const { t } = useI18n()
@@ -219,7 +220,7 @@ const mapTileSize = computed(() => {
 // ── Sub-tab system (map + building editors) ──
 interface SubTabEntry {
   id: string // 'map:<mapName>' or 'building:<groupId>'
-  type: 'map' | 'building'
+  type: 'map' | 'building' | 'art'
   label: string
   group?: GroupEntry
 }
@@ -419,6 +420,12 @@ function closeMapTab(name: string): void {
 }
 
 function closeTab(tabId: string): void {
+  if (tabId.startsWith('art:')) {
+    if (artDirty.value[tabId] && !confirm(t('map.confirmDiscard'))) return
+    delete artDirty.value[tabId]
+    closeBuildingTab(tabId)
+    return
+  }
   if (tabId.startsWith('map:')) {
     closeMapTab(tabId.replace('map:', ''))
   } else if (tabId.startsWith('building:')) {
@@ -451,6 +458,17 @@ function closeBuildingTab(id: string): void {
 /** Sub-tabs filtered by type. */
 const mapTabs = computed(() => subTabs.value.filter(t => t.type === 'map'))
 const buildingTabs = computed(() => subTabs.value.filter(t => t.type === 'building'))
+const artTabs = computed(() => subTabs.value.filter(t => t.type === 'art'))
+const artDirty = ref<Record<string, boolean>>({})
+function openArtTab(name: string): void {
+  const id = `art:${name}`
+  if (!subTabs.value.some(t => t.id === id)) subTabs.value.push({ id, type: 'art', label: name })
+  activeSubTab.value = id
+}
+function editArtAsset(id: string): void {
+  const group = tilesStore.groups.find(g => g.id === id)
+  if (group) openBuildingTab(group)
+}
 
 /** The GroupEntry for the currently-active building tab (if any). */
 const activeBuildingGroup = computed(() => {
@@ -2067,6 +2085,11 @@ watch(activeSubTab, (tab, prev) => {
             class="ml-0.5 w-3.5 h-3.5 rounded-control flex items-center justify-center text-micro leading-none hover:bg-overlay hover:text-ink"
           >×</span>
         </button>
+        <button v-for="at in artTabs" :key="at.id" @click="activeSubTab = at.id"
+          :class="['px-3 py-1.5 text-xs border-b-2 shrink-0 whitespace-nowrap', activeSubTab === at.id ? 'border-accent-ink text-accent-ink' : 'border-transparent text-ink-muted']">
+          {{ at.label }} · {{ $t('map.nativeArt') }}{{ artDirty[at.id] ? ' *' : '' }}
+          <span @click.stop="closeTab(at.id)" class="ml-2">×</span>
+        </button>
         <div v-if="subTabs.length === 0" class="px-3 py-1.5 text-xs text-ink-faint">
           {{ $t('map.selectToEdit') }}
         </div>
@@ -2082,6 +2105,9 @@ watch(activeSubTab, (tab, prev) => {
         <button v-if="mapName" @click="showBackdropGen = true"
           class="px-2 py-0.5 text-xs rounded-control bg-raised hover:bg-overlay text-ink-secondary"
         >✨ {{ $t('map.backdrop') }}</button>
+
+        <button v-if="mapList.find(m => m.name === mapName)?.hasArt" @click="openArtTab(mapName)"
+          class="px-2 py-0.5 text-xs rounded-control bg-accent text-white" data-testid="open-native-art">{{ $t('map.nativeArt') }}</button>
 
         <!-- Backdrop-only: this map is just an art reference — offer to author over it -->
         <template v-if="backdropOnly">
@@ -2298,6 +2324,11 @@ watch(activeSubTab, (tab, prev) => {
         </div>
       </div>
 
+      <div v-for="at in artTabs" :key="at.id" v-show="activeSubTab === at.id" class="flex flex-col flex-1 min-h-0">
+        <NativeMapArtEditor :name="at.label" :active="activeSubTab === at.id"
+          @dirty="artDirty[at.id] = $event" @edit-asset="editArtAsset" />
+      </div>
+
       <!-- ═══ Building editors (v-show = keep TilePixelEditor alive when switching tabs) ═══ -->
       <div v-show="activeSubTab?.startsWith('building:')" class="flex flex-col flex-1 min-h-0">
         <div
@@ -2327,7 +2358,7 @@ watch(activeSubTab, (tab, prev) => {
     </div>
 
     <!-- ═══ Right sidebar ═══ -->
-    <aside class="w-64 bg-surface border-l border-border flex flex-col shrink-0 overflow-hidden">
+    <aside v-if="!activeSubTab?.startsWith('art:')" class="w-64 bg-surface border-l border-border flex flex-col shrink-0 overflow-hidden">
       <!-- ═══ Building groups (建筑) — always visible ═══ -->
       <div class="border-b border-border shrink-0">
         <div class="px-3 py-2 flex items-center justify-between">
