@@ -41,7 +41,7 @@ use alloc::collections::VecDeque;
 /// A cutscene is a named JS async function that runs to completion,
 /// suspending normal player input while active. Cutscenes can be
 /// queued — when one finishes, the next one starts automatically.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CutsceneManager {
     /// Whether a cutscene is currently executing.
     pub active: bool,

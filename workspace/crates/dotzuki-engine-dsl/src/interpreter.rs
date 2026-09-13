@@ -32,7 +32,7 @@ use crate::ast::{BinOp, Expression, LocalizedText, StoryStmt};
 /// Runtime value of a DSL expression. Deliberately small — the compiled JS
 /// subset only produces primitives and arrays (objects only appear inside
 /// `@run`, which the interpreter rejects).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value {
     Undefined,
     Bool(bool),
@@ -161,7 +161,7 @@ pub trait ScriptHost {
 }
 
 /// Interpreter execution state (mirrors `dotzuki_engine_script::EngineState`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum InterpState {
     Idle,
     Running,
@@ -169,7 +169,7 @@ pub enum InterpState {
     Finished,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 enum Suspended {
     None,
     /// An awaited command whose result is discarded; advance the frame index
@@ -188,7 +188,7 @@ enum Suspended {
 
 /// One execution frame: a statement list with a cursor and its own `let`
 /// scope (JS block scoping — reads walk outward, writes stay innermost).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct Frame {
     stmts: Vec<StoryStmt>,
     index: usize,
@@ -197,7 +197,7 @@ struct Frame {
     each: Option<EachState>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct EachState {
     item_var: String,
     source: Vec<Value>,
@@ -224,6 +224,7 @@ enum StepOutcome {
 /// `load_function` starts a fresh execution (fresh locals — same as calling
 /// an exported JS async function); `tick` runs it until the next `await`
 /// (or completion); `signal_done` delivers the awaited result and resumes.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Interpreter<H: ScriptHost> {
     host: H,
     state: InterpState,

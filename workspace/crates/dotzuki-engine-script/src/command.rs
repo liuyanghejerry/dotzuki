@@ -180,7 +180,7 @@ pub enum ScriptCommand {
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub enum CommandResult {
     Void,
     Bool(bool),

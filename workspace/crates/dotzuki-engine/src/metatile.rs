@@ -85,7 +85,7 @@ impl CollisionCell {
 // ---------------------------------------------------------------------------
 
 /// When a trigger associated with a metatile fires.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TriggerType {
     /// Fires every frame the player (or NPC) stands on the tile.
     OnStep,
