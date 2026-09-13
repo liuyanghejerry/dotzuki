@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b0967458.js";
+            window.path_to_searchindex_js = "../../searchindex-d5d99721.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-be14a74b.js"></script>
@@ -237,6 +237,20 @@ string. <code>@t</code> also mixes with template bindings:
 (see <a href="../../how-to/i18n.html">how-to/i18n.md</a>).</p>
 </blockquote>
 <h2 id="syntax-rules"><a class="header" href="#syntax-rules">Syntax rules</a></h2>
+<h3 id="build-time-static-layouts"><a class="header" href="#build-time-static-layouts">Build-time static layouts</a></h3>
+<p>A game can opt selected screens into the static layout backend through
+<code>dotzuki_engine_dsl::static_ui::compile</code>. It consumes the same schema v2 JSON
+as the editor and emits a Rust layout expression for build-time embedding.
+The <code>.gui</code> file remains the authored source; the game binds state at runtime.</p>
+<p>The supported subset is flat default panels, unwrapped text with alignment,
+literal tiles, grid cursors, localized text, direct <code>{key}</code> bindings, visibility,
+and stable <code>z_index</code> ordering. Themes, nested containers, custom elements, word
+wrapping, and compound template expressions produce compilation errors. A game
+must extend the compiler or retain the dynamic renderer for those screens.</p>
+<p>The renderer stores generated elements in borrowed static slices. Text and
+cursor drawing share primitives with dynamic layouts. Binding storage has a
+fixed capacity; formatting runtime values can still allocate. Editors continue
+to use the dynamic layout and hot-reload path.</p>
 <h3 id="document-structure"><a class="header" href="#document-structure">Document structure</a></h3>
 <p>A <code>.gui</code> file holds one <code>screen</code> declaration:</p>
 <pre><code>screen Name {
