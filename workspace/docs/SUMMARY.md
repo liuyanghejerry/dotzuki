@@ -11,7 +11,7 @@
 # How-To Guides
 
 - [Authoring Maps](how-to/maps.md)
-- [Linked Buildings and Walls](how-to/map-components.md)
+- [Linked Buildings and Auto-tiles](how-to/map-components.md)
 - [Authoring Scenes](how-to/scenes.md)
 - [Authoring UI Layouts](how-to/ui.md)
 - [Authoring Battles](how-to/battles.md)
