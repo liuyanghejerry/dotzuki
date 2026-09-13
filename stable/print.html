@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ec137ca7.js";
+            window.path_to_searchindex_js = "searchindex-adb05a92.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-d524b668.js"></script>
@@ -9269,6 +9269,17 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<ul>
+<li>Fix: HarmonyOS hosts export with a layered launcher icon, which API 11 and
+later require, so the home screen shows the game’s own icon instead of the
+system placeholder. Re-export a host to pick up the icon; the
+<code>dotzuki export --harmony</code> template and <code>scripts/export-mobile-host.py</code> both
+carry the layered bitmaps.</li>
+<li>Fix: Android hosts export with adaptive launcher icons. The manifest now
+points at <code>@mipmap/ic_launcher</code>, and the template ships the API 26 layers,
+the legacy icons, and one bitmap per screen density. Re-export a host to pick
+up the icons.</li>
+</ul>
 <h2 id="v080"><a class="header" href="#v080">v0.8.0</a></h2>
 <p>This release contains breaking API and feature-gate changes. See the
 <a href="#migrating-to-v080">migration guide</a> for consumer updates.</p>
@@ -21487,6 +21498,13 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<ul>
+<li>修复：鸿蒙宿主改用分层启动图标（API 11 及以上要求），桌面显示游戏自己的图标
+而不是系统占位图。重新导出宿主即可生效；<code>dotzuki export --harmony</code> 模板与
+<code>scripts/export-mobile-host.py</code> 都会带上分层位图资源。</li>
+<li>修复：安卓宿主改用自适应启动图标。manifest 指向 <code>@mipmap/ic_launcher</code>，模板
+同时带上 API 26 图层、旧式图标与各屏幕密度的位图。重新导出宿主即可生效。</li>
+</ul>
 <h2 id="v080-1"><a class="header" href="#v080-1">v0.8.0</a></h2>
 <p>本版本包含破坏性 API 与 feature gate 变更。使用方更新方式见
 <a href="#迁移到-v080">迁移指南</a>。</p>
