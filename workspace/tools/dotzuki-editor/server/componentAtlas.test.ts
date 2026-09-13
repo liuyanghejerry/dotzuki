@@ -89,4 +89,20 @@ describe('component atlas preparation', () => {
     const bad=await call(server.routes,'/api/groups-prepare',mockReq('POST',{map:'../Room',groupIds:['wall']}))
     expect(bad.status).toBe(400)
   })
+  it('persists auto-tile sets through the editor API and validates them before writing', async () => {
+    const server=makeServer();registerGroups(server)
+    const set={id:'stone',name:'Stone walls',mode:'cardinal',
+      variants:Object.fromEntries(Array.from({length:16},(_,mask)=>[mask,'wall']))}
+    const saved=await call(server.routes,'/api/connection-sets',mockReq('PUT',{sets:[set]}))
+    expect(saved.json()).toMatchObject({ok:true,sets:[set]})
+    expect(JSON.parse(fs.readFileSync(file('tiles/connections.json'),'utf8'))).toEqual({version:2,sets:[set]})
+    const loaded=await call(server.routes,'/api/connection-sets',mockReq('GET'))
+    expect(loaded.json()).toEqual({sets:[set]})
+
+    const invalid=await call(server.routes,'/api/connection-sets',mockReq('PUT',{
+      sets:[{...set,mode:'blob'}],
+    }))
+    expect(invalid.status).toBe(400)
+    expect(JSON.parse(fs.readFileSync(file('tiles/connections.json'),'utf8'))).toEqual({version:2,sets:[set]})
+  })
 })

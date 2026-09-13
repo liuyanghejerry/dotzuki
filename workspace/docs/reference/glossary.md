@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.1
+> - **Last verified**: v0.8.0
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -39,8 +39,11 @@ original form in Chinese text.
 
 - **linked component**（关联组件）— a building instance with its source ID, revision,
   footprint, and previous cells stored on a map layer; source updates preserve its position.
+- **auto-tile**（自动地形）— a visual map cell whose neighboring cells determine its artwork
+  within the same rule set. Cardinal sets join walls; blob sets form filled terrain edges.
 - **connection mask**（连接掩码）— the sum of occupied cardinal neighbors: north=1,
-  east=2, south=4, and west=8. Selects one of sixteen wall component variants.
+  east=2, south=4, and west=8. Blob masks also use gated diagonal bits to select one of
+  47 terrain component variants.
   See [map components](../how-to/map-components.md).
 
 ## Engine
