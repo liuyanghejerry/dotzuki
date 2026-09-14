@@ -2,6 +2,7 @@
 name = "dotzuki-runner-mobile"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "C ABI mobile host for the dotzuki zero-Rust game runner"
 license.workspace = true
 repository.workspace = true

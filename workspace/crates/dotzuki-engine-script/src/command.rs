@@ -1,5 +1,45 @@
 use serde::{Deserialize, Serialize};
 
+/// Generic asynchronous functions installed by both the Boa runtime and the
+/// native AST host adapter. This is the single capability catalog used by DSL
+/// validation and runtime conformance tests.
+pub const CORE_ASYNC_FUNCTIONS: &[&str] = &[
+    "showText",
+    "showChoice",
+    "moveNpc",
+    "startNpcMove",
+    "awaitNpcMove",
+    "movePlayer",
+    "movePlayerRelative",
+    "moveNpcTo",
+    "startNpcMoveTo",
+    "movePlayerTo",
+    "faceNpc",
+    "facePlayer",
+    "setNpcFrame",
+    "playMusic",
+    "playSound",
+    "stopMusic",
+    "fadeOutMusic",
+    "delay",
+    "warpTo",
+    "heal",
+    "fadeScreen",
+    "showObject",
+    "hideObject",
+    "showObjectByName",
+    "hideObjectByName",
+    "setJoyIgnore",
+    "clearJoyIgnore",
+    "followNpc",
+    "openShop",
+    "showEmotionBubble",
+    "setNpcPosition",
+    "showScene",
+    "hideScene",
+    "updateUI",
+];
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ScriptCommand {
     ShowText {

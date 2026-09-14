@@ -199,8 +199,8 @@ fn data_value_to_string(value: &DataValue) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotzuki_engine::render::TileRect;
     use core::cell::RefCell;
+    use dotzuki_engine::render::TileRect;
 
     // ── Test double: MockPainter ─────────────────────────────────────
 

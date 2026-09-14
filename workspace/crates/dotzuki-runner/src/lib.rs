@@ -67,10 +67,10 @@ pub use map::{
     EncounterConfig, EncounterTableEntry, EncounterZone, MapObjects, NpcDef, RuntimeMap, SignDef,
     WarpDef,
 };
+pub use pack::PackFiles;
 pub use project::LoadedProject;
 pub use save::{GameSave, PlayerSave, DEFAULT_SAVE_FILE, SAVE_VERSION};
 pub use tileset::PngTileset;
-pub use pack::PackFiles;
 pub use vfs::{DiskFiles, MemoryFiles, ProjectFiles};
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
 pub use watch::ProjectWatcher;

@@ -80,7 +80,8 @@ fn fixture_files() -> HashMap<String, String> {
 #[test]
 fn boots_fixture_ticks_and_round_trips_save() {
     let files_json = fixture_files_json();
-    let mut runner = WasmRunner::new(&files_json, None).expect("boot fixture project");
+    let mut runner =
+        WasmRunner::new(&files_json, None, Some("zh".to_string())).expect("boot fixture project");
 
     assert_eq!(runner.width(), 320);
     assert_eq!(runner.height(), 240);
@@ -102,12 +103,14 @@ fn boots_fixture_ticks_and_round_trips_save() {
         }
     }
     let save = save.expect("game should reach a stable, exportable state");
+    let save_value: serde_json::Value = serde_json::from_str(&save).unwrap();
+    assert_eq!(save_value["lang"], "zh");
 
     // The save imports back, and garbage is rejected without losing state.
     assert!(runner.import_save(&save));
     assert!(!runner.import_save("this is not save json"));
     // A corrupt save passed to the constructor is ignored (boot still works).
-    let _fresh = WasmRunner::new(&files_json, Some("garbage".to_string()))
+    let _fresh = WasmRunner::new(&files_json, Some("garbage".to_string()), None)
         .expect("boot with corrupt save should fall through");
 }
 
@@ -153,7 +156,7 @@ fn tick_accumulates_pcm_and_take_audio_drains() {
     );
     let files_json = serde_json::to_string(&files).unwrap();
 
-    let mut runner = WasmRunner::new(&files_json, None).expect("boot fixture with audio");
+    let mut runner = WasmRunner::new(&files_json, None, None).expect("boot fixture with audio");
 
     // The on_enter storyline starts the theme; give the sequencer a few video
     // frames to trigger the first note.

@@ -302,12 +302,18 @@ mod tests {
         battle_a.send(TestMessage::RequestBattle).unwrap();
         a.poll();
         b.poll();
-        assert_eq!(battle_b.try_recv().unwrap(), Some(TestMessage::RequestBattle));
+        assert_eq!(
+            battle_b.try_recv().unwrap(),
+            Some(TestMessage::RequestBattle)
+        );
 
         battle_b.send(TestMessage::AcceptBattle).unwrap();
         b.poll();
         a.poll();
-        assert_eq!(battle_a.try_recv().unwrap(), Some(TestMessage::AcceptBattle));
+        assert_eq!(
+            battle_a.try_recv().unwrap(),
+            Some(TestMessage::AcceptBattle)
+        );
     }
 
     /// Battle and trade traffic must be routed independently: a trade
@@ -323,13 +329,14 @@ mod tests {
         a.battle_transport()
             .send(TestMessage::RequestBattle)
             .unwrap();
-        a.trade_transport()
-            .send(TestMessage::RequestTrade)
-            .unwrap();
+        a.trade_transport().send(TestMessage::RequestTrade).unwrap();
         a.poll();
         b.poll();
 
-        assert_eq!(battle_b.try_recv().unwrap(), Some(TestMessage::RequestBattle));
+        assert_eq!(
+            battle_b.try_recv().unwrap(),
+            Some(TestMessage::RequestBattle)
+        );
         assert_eq!(battle_b.try_recv().unwrap(), None);
         assert_eq!(trade_b.try_recv().unwrap(), Some(TestMessage::RequestTrade));
         assert_eq!(trade_b.try_recv().unwrap(), None);
@@ -414,7 +421,10 @@ mod tests {
 
         t_b.send(TestMessage::RequestTrade).unwrap();
         session.poll();
-        assert!(matches!(trade_t.try_recv(), Ok(Some(TestMessage::RequestTrade))));
+        assert!(matches!(
+            trade_t.try_recv(),
+            Ok(Some(TestMessage::RequestTrade))
+        ));
         assert!(matches!(battle_t.try_recv(), Ok(None)));
     }
 }

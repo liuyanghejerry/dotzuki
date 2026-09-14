@@ -627,8 +627,8 @@ mod tests {
 
     #[test]
     fn expr_number_lit_float() {
-        let v = expr_to_json(&Expression::NumberLit(3.14));
-        assert_eq!(v, json!(3.14));
+        let v = expr_to_json(&Expression::NumberLit(3.125));
+        assert_eq!(v, json!(3.125));
     }
 
     #[test]

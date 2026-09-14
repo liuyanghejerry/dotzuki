@@ -33,7 +33,7 @@
 //! ## Typical JS loop
 //!
 //! ```js
-//! const runner = new WasmRunner(filesJson, localStorage.getItem("save"));
+//! const runner = new WasmRunner(filesJson, localStorage.getItem("save"), "en");
 //! const ctx = canvas.getContext("2d");
 //! const image = ctx.createImageData(runner.width(), runner.height());
 //! function frame() {
@@ -100,12 +100,20 @@ impl WasmRunner {
     ///
     /// Fails with a human-readable message naming the offending file/step.
     #[wasm_bindgen(constructor)]
-    pub fn new(files_json: &str, save_json: Option<String>) -> Result<WasmRunner, JsValue> {
-        #[cfg(feature = "debug-panic-hook")]
+    pub fn new(
+        files_json: &str,
+        save_json: Option<String>,
+        language: Option<String>,
+    ) -> Result<WasmRunner, JsValue> {
+        #[cfg(all(feature = "debug-panic-hook", target_arch = "wasm32"))]
         console_error_panic_hook::set_once();
         let files = decode_files(files_json).map_err(|e| JsValue::from_str(&e))?;
-        Self::boot_with_files(Arc::new(MemoryFiles::new(files)), save_json.as_deref())
-            .map_err(|e| JsValue::from_str(&e))
+        Self::boot_with_files(
+            Arc::new(MemoryFiles::new(files)),
+            save_json.as_deref(),
+            language.as_deref(),
+        )
+        .map_err(|e| JsValue::from_str(&e))
     }
 
     /// Boot a project shipped as a `.dzpk` binary pack (the format
@@ -117,11 +125,11 @@ impl WasmRunner {
     /// Fails with a human-readable message naming the offending file/step.
     #[wasm_bindgen(js_name = fromPack)]
     pub fn from_pack(pack: Vec<u8>, save_json: Option<String>) -> Result<WasmRunner, JsValue> {
-        #[cfg(feature = "debug-panic-hook")]
+        #[cfg(all(feature = "debug-panic-hook", target_arch = "wasm32"))]
         console_error_panic_hook::set_once();
         let files = PackFiles::from_bytes(pack)
             .map_err(|e| JsValue::from_str(&format!("invalid game pack: {e:#}")))?;
-        Self::boot_with_files(Arc::new(files), save_json.as_deref())
+        Self::boot_with_files(Arc::new(files), save_json.as_deref(), None)
             .map_err(|e| JsValue::from_str(&e))
     }
 
@@ -189,7 +197,11 @@ impl WasmRunner {
 impl WasmRunner {
     /// Native/testable boot path (no `JsValue`): every failure is a plain
     /// `String` naming the file or step that failed.
-    fn boot_with_files(files: Arc<dyn ProjectFiles>, save_json: Option<&str>) -> Result<Self, String> {
+    fn boot_with_files(
+        files: Arc<dyn ProjectFiles>,
+        save_json: Option<&str>,
+        language: Option<&str>,
+    ) -> Result<Self, String> {
         let project = LoadedProject::load_with_files(files)
             .map_err(|e| format!("project load failed: {e:#}"))?;
         let opts = RunnerOptions {
@@ -202,6 +214,7 @@ impl WasmRunner {
             pcm_audio: true,
             fresh: true,
             external_saves: true,
+            lang: language.unwrap_or("en").to_string(),
             ..RunnerOptions::default()
         };
         let mut game =
@@ -268,9 +281,13 @@ mod tests {
     #[test]
     fn boot_fails_with_named_step() {
         // An empty project: the manifest read fails inside project load.
-        let err = WasmRunner::boot_with_files(Arc::new(MemoryFiles::new(HashMap::new())), None)
-            .err()
-            .expect("boot should fail");
+        let err = WasmRunner::boot_with_files(
+            Arc::new(MemoryFiles::new(HashMap::new())),
+            None,
+            Some("zh"),
+        )
+        .err()
+        .expect("boot should fail");
         assert!(err.contains("project load failed"), "{err}");
         assert!(err.contains(".dotzuki-editor.json"), "{err}");
     }

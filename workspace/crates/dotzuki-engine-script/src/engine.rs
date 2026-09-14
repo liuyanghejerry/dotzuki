@@ -16,6 +16,36 @@ use boa_engine::{
 use crate::api_registrar::ScriptApiRegistrar;
 use crate::command::{CommandResult, ScriptCommand};
 
+fn checked_integer(
+    value: &JsValue,
+    ctx: &mut Context,
+    what: &str,
+    min: f64,
+    max: f64,
+) -> JsResult<f64> {
+    let number = value.to_number(ctx)?;
+    if !number.is_finite() || number.fract() != 0.0 || number < min || number > max {
+        return Err(JsNativeError::range()
+            .with_message(format!(
+                "{what}: expected an integer in {min:.0}..={max:.0}, got {number}"
+            ))
+            .into());
+    }
+    Ok(number)
+}
+
+fn checked_u8(value: &JsValue, ctx: &mut Context, what: &str) -> JsResult<u8> {
+    checked_integer(value, ctx, what, u8::MIN as f64, u8::MAX as f64).map(|number| number as u8)
+}
+
+fn checked_u16(value: &JsValue, ctx: &mut Context, what: &str) -> JsResult<u16> {
+    checked_integer(value, ctx, what, u16::MIN as f64, u16::MAX as f64).map(|number| number as u16)
+}
+
+fn checked_i16(value: &JsValue, ctx: &mut Context, what: &str) -> JsResult<i16> {
+    checked_integer(value, ctx, what, i16::MIN as f64, i16::MAX as f64).map(|number| number as i16)
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum ScriptEngineError {
     #[error("JS error: {0}")]
@@ -821,8 +851,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
             let mut path = Vec::new();
             for i in 0..len {
                 let point = arr.get(i, ctx)?.to_object(ctx)?;
-                let x = point.get(0, ctx)?.to_u32(ctx)? as u8;
-                let y = point.get(1, ctx)?.to_u32(ctx)? as u8;
+                let x = checked_u8(&point.get(0, ctx)?, ctx, "moveNpc path x")?;
+                let y = checked_u8(&point.get(1, ctx)?, ctx, "moveNpc path y")?;
                 path.push((x, y));
             }
             Ok(ScriptCommand::MoveNpc { npc_id, path })
@@ -846,8 +876,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
             let mut path = Vec::new();
             for i in 0..len {
                 let point = arr.get(i, ctx)?.to_object(ctx)?;
-                let x = point.get(0, ctx)?.to_u32(ctx)? as u8;
-                let y = point.get(1, ctx)?.to_u32(ctx)? as u8;
+                let x = checked_u8(&point.get(0, ctx)?, ctx, "startNpcMove path x")?;
+                let y = checked_u8(&point.get(1, ctx)?, ctx, "startNpcMove path y")?;
                 path.push((x, y));
             }
             Ok(ScriptCommand::StartNpcMove { npc_id, path })
@@ -883,8 +913,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
             let mut path = Vec::new();
             for i in 0..len {
                 let point = arr.get(i, ctx)?.to_object(ctx)?;
-                let x = point.get(0, ctx)?.to_u32(ctx)? as u8;
-                let y = point.get(1, ctx)?.to_u32(ctx)? as u8;
+                let x = checked_u8(&point.get(0, ctx)?, ctx, "movePlayer path x")?;
+                let y = checked_u8(&point.get(1, ctx)?, ctx, "movePlayer path y")?;
                 path.push((x, y));
             }
             Ok(ScriptCommand::MovePlayer { path })
@@ -925,8 +955,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                     steps.push(delta);
                 } else {
                     let point = entry.to_object(ctx)?;
-                    let dx = point.get(0, ctx)?.to_i32(ctx)? as i16;
-                    let dy = point.get(1, ctx)?.to_i32(ctx)? as i16;
+                    let dx = checked_i16(&point.get(0, ctx)?, ctx, "movePlayerRelative dx")?;
+                    let dy = checked_i16(&point.get(1, ctx)?, ctx, "movePlayerRelative dy")?;
                     steps.push((dx, dy));
                 }
             }
@@ -946,8 +976,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let x = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            let y = args.get_or_undefined(2).to_u32(ctx)? as u8;
+            let x = checked_u8(args.get_or_undefined(1), ctx, "moveNpcTo x")?;
+            let y = checked_u8(args.get_or_undefined(2), ctx, "moveNpcTo y")?;
             Ok(ScriptCommand::MoveNpcTo { npc_id, x, y })
         }
     );
@@ -964,8 +994,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let x = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            let y = args.get_or_undefined(2).to_u32(ctx)? as u8;
+            let x = checked_u8(args.get_or_undefined(1), ctx, "startNpcMoveTo x")?;
+            let y = checked_u8(args.get_or_undefined(2), ctx, "startNpcMoveTo y")?;
             Ok(ScriptCommand::StartNpcMoveTo { npc_id, x, y })
         }
     );
@@ -978,8 +1008,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
         context,
         game_obj,
         |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let x = args.get_or_undefined(0).to_u32(ctx)? as u8;
-            let y = args.get_or_undefined(1).to_u32(ctx)? as u8;
+            let x = checked_u8(args.get_or_undefined(0), ctx, "movePlayerTo x")?;
+            let y = checked_u8(args.get_or_undefined(1), ctx, "movePlayerTo y")?;
             Ok(ScriptCommand::MovePlayerTo { x, y })
         }
     );
@@ -1029,7 +1059,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let frame = args.get_or_undefined(1).to_number(ctx)? as u8;
+            let frame = checked_u8(args.get_or_undefined(1), ctx, "setNpcFrame frame")?;
             Ok(ScriptCommand::SetNpcFrame { npc_id, frame })
         }
     );
@@ -1092,7 +1122,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
      -> JsResult<
         ScriptCommand,
     > {
-        let frames = args.get_or_undefined(0).to_u32(ctx)? as u16;
+        let frames = checked_u16(args.get_or_undefined(0), ctx, "delay frames")?;
         Ok(ScriptCommand::Delay { frames })
     });
 
@@ -1106,8 +1136,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
             .get_or_undefined(0)
             .to_string(ctx)?
             .to_std_string_lossy();
-        let x = args.get_or_undefined(1).to_u32(ctx)? as u8;
-        let y = args.get_or_undefined(2).to_u32(ctx)? as u8;
+        let x = checked_u8(args.get_or_undefined(1), ctx, "warpTo x")?;
+        let y = checked_u8(args.get_or_undefined(2), ctx, "warpTo y")?;
         Ok(ScriptCommand::WarpTo { map, x, y })
     });
 
@@ -1147,7 +1177,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 let toggle_id = arg.to_string(ctx)?.to_std_string_lossy();
                 Ok(ScriptCommand::ShowObjectByName { toggle_id })
             } else {
-                let object_index = arg.to_u32(ctx)? as u8;
+                let object_index = checked_u8(arg, ctx, "showObject object")?;
                 Ok(ScriptCommand::ShowObject { object_index })
             }
         }
@@ -1165,7 +1195,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 let toggle_id = arg.to_string(ctx)?.to_std_string_lossy();
                 Ok(ScriptCommand::HideObjectByName { toggle_id })
             } else {
-                let object_index = arg.to_u32(ctx)? as u8;
+                let object_index = checked_u8(arg, ctx, "hideObject object")?;
                 Ok(ScriptCommand::HideObject { object_index })
             }
         }
@@ -1211,7 +1241,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
         context,
         game_obj,
         |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-            let mask = args.get_or_undefined(0).to_u32(ctx)? as u8;
+            let mask = checked_u8(args.get_or_undefined(0), ctx, "setJoyIgnore mask")?;
             Ok(ScriptCommand::SetJoyIgnore { mask })
         }
     );
@@ -1238,8 +1268,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let target_x = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            let target_y = args.get_or_undefined(2).to_u32(ctx)? as u8;
+            let target_x = checked_u8(args.get_or_undefined(1), ctx, "followNpc x")?;
+            let target_y = checked_u8(args.get_or_undefined(2), ctx, "followNpc y")?;
             Ok(ScriptCommand::FollowNpc {
                 npc_id,
                 target_x,
@@ -1296,8 +1326,8 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 .get_or_undefined(0)
                 .to_string(ctx)?
                 .to_std_string_lossy();
-            let x = args.get_or_undefined(1).to_u32(ctx)? as u8;
-            let y = args.get_or_undefined(2).to_u32(ctx)? as u8;
+            let x = checked_u8(args.get_or_undefined(1), ctx, "setNpcPosition x")?;
+            let y = checked_u8(args.get_or_undefined(2), ctx, "setNpcPosition y")?;
             Ok(ScriptCommand::SetNpcPosition { npc_id, x, y })
         }
     );

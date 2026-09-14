@@ -119,7 +119,9 @@ impl PackFiles {
         }
         let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
         if version != FORMAT_VERSION {
-            bail!("unsupported .dzpk format version {version} (this player reads {FORMAT_VERSION})");
+            bail!(
+                "unsupported .dzpk format version {version} (this player reads {FORMAT_VERSION})"
+            );
         }
         let index_len = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
         let data_start = HEADER_LEN + index_len;
@@ -131,9 +133,10 @@ impl PackFiles {
         let data_len = (bytes.len() - data_start) as u64;
         let mut entries = BTreeMap::new();
         for (path, entry) in index.files {
-            let end = entry.offset.checked_add(entry.size).with_context(|| {
-                format!("corrupt .dzpk pack: file '{path}' range overflows")
-            })?;
+            let end = entry
+                .offset
+                .checked_add(entry.size)
+                .with_context(|| format!("corrupt .dzpk pack: file '{path}' range overflows"))?;
             if end > data_len {
                 bail!(
                     "corrupt .dzpk pack: file '{path}' (offset {}, size {}) points past the data section ({data_len} bytes)",
@@ -198,7 +201,10 @@ mod tests {
     }
 
     fn sample_pack() -> Vec<u8> {
-        encode_pack(&sample_files(), serde_json::json!({"tool": "test", "version": "0.0.0"}))
+        encode_pack(
+            &sample_files(),
+            serde_json::json!({"tool": "test", "version": "0.0.0"}),
+        )
     }
 
     #[test]
@@ -276,8 +282,8 @@ mod tests {
 
     #[test]
     fn an_empty_pack_boots_an_empty_file_set() {
-        let pack = PackFiles::from_bytes(encode_pack(&BTreeMap::new(), serde_json::json!({})))
-            .unwrap();
+        let pack =
+            PackFiles::from_bytes(encode_pack(&BTreeMap::new(), serde_json::json!({}))).unwrap();
         assert_eq!(pack.list(""), Vec::<String>::new());
         assert!(pack.read("anything").is_err());
     }

@@ -82,6 +82,7 @@ DotzukiHost::~DotzukiHost() {
     }
     ShutdownAudio();
     std::lock_guard<std::mutex> lock(gameMutex_);
+    std::unique_lock<std::shared_mutex> lifetimeLock(runnerLifetimeMutex_);
     ShutdownEgl();
     if (runner_ != nullptr) {
         dotzuki_mobile_destroy(runner_);
@@ -250,6 +251,7 @@ void DotzukiHost::ReplaceRunner(
     const uint8_t *pack, size_t packLen, const char *save, size_t saveLen) {
     ShutdownAudio();
     std::lock_guard<std::mutex> lock(gameMutex_);
+    std::unique_lock<std::shared_mutex> lifetimeLock(runnerLifetimeMutex_);
     if (runner_ != nullptr) {
         dotzuki_mobile_destroy(runner_);
     }
@@ -466,6 +468,9 @@ OH_AudioData_Callback_Result DotzukiHost::AudioWrite(
     const uint32_t requestedFrames = static_cast<uint32_t>(size / (sizeof(int16_t) * 2));
     thread_local std::vector<float> pcm;
     pcm.resize(static_cast<size_t>(requestedFrames) * 2);
+    // Audio reads only the concurrent ring, but it must keep the runner handle
+    // alive while page teardown stops and destroys the runtime.
+    std::shared_lock<std::shared_mutex> lifetimeLock(host->runnerLifetimeMutex_);
     uint32_t frames = host->runner_ == nullptr ? 0 :
         dotzuki_mobile_audio_fill(host->runner_, pcm.data(), requestedFrames);
     size_t samples = static_cast<size_t>(frames) * 2;

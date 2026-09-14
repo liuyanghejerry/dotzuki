@@ -3,13 +3,13 @@
 use std::sync::mpsc::{self, Receiver};
 
 use dotzuki_engine::link::{NetworkTransport, TransportError};
-use serde::Serialize;
 use serde::de::DeserializeOwned;
-use wasm_bindgen::JsCast;
+use serde::Serialize;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
-use super::envelope::{Frame, decode_line, encode_line};
+use super::envelope::{decode_line, encode_line, Frame};
 
 /// A link transport over `BroadcastChannel` (see [module docs](super)).
 pub struct BroadcastChannelTransport<M> {
@@ -87,9 +87,9 @@ where
             msg,
         };
         let line = encode_line(&frame)?;
-        self.channel.post_message(&JsValue::from_str(&line)).map_err(|e| {
-            TransportError::IoError(format!("BroadcastChannel post failed: {:?}", e))
-        })
+        self.channel
+            .post_message(&JsValue::from_str(&line))
+            .map_err(|e| TransportError::IoError(format!("BroadcastChannel post failed: {:?}", e)))
     }
 
     fn recv(&mut self) -> Result<M, TransportError> {
@@ -121,5 +121,8 @@ impl<M> Drop for BroadcastChannelTransport<M> {
 /// side would filter the other's frames as its own and the handshake would
 /// stall (visible in the UI, no data corruption).
 fn random_tag() -> String {
-    format!("{:x}", (js_sys::Math::random() * 9_007_199_254_740_992.0) as u64)
+    format!(
+        "{:x}",
+        (js_sys::Math::random() * 9_007_199_254_740_992.0) as u64
+    )
 }

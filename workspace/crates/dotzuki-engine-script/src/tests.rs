@@ -1,4 +1,4 @@
-use crate::command::{CommandResult, ScriptCommand};
+use crate::command::{CommandResult, ScriptCommand, CORE_ASYNC_FUNCTIONS};
 use crate::cutscene::CutsceneManager;
 use crate::engine::ScriptEngine;
 use crate::ScriptApiRegistrar;
@@ -1821,4 +1821,45 @@ fn test_seed_number_text_set_roundtrip() {
 fn test_default_flag_is_false() {
     let engine = ScriptEngine::new();
     assert!(!engine.get_flag("ANY_NONEXISTENT_FLAG"));
+}
+
+#[test]
+fn boa_installs_every_function_in_the_shared_core_catalog() {
+    let names = serde_json::to_string(CORE_ASYNC_FUNCTIONS).unwrap();
+    let source = format!(
+        r#"
+        export function verifyCoreCatalog() {{
+            for (const name of {names}) {{
+                if (typeof game[name] !== "function") {{
+                    throw new Error(`missing core function: ${{name}}`);
+                }}
+            }}
+        }}
+        "#
+    );
+    let mut engine = ScriptEngine::new();
+    engine.load_script(&source).unwrap();
+    assert_eq!(
+        engine.call_function("verifyCoreCatalog", &[]).unwrap(),
+        None
+    );
+}
+
+#[test]
+fn boa_rejects_integer_arguments_that_native_ast_rejects() {
+    for invalid in ["-1", "1.5", "256", "NaN", "Infinity"] {
+        let source =
+            format!("export async function invalid() {{ await game.movePlayerTo({invalid}, 0); }}");
+        let mut engine = ScriptEngine::new();
+        engine.load_script(&source).unwrap();
+        assert_eq!(
+            engine.call_function("invalid", &[]).unwrap(),
+            None,
+            "{invalid}"
+        );
+        assert!(
+            engine.is_idle(),
+            "rejected promise must not leave a command pending"
+        );
+    }
 }

@@ -398,12 +398,12 @@ mod tests {
 
         // Force the tracked mtime into the past so the rewrite is detected
         // regardless of filesystem timestamp granularity.
-        provider
-            .file_meta
-            .get_mut("StartTown")
-            .unwrap()
-            .modified = SystemTime::UNIX_EPOCH;
-        fs::write(&path, scene_source("StartTown", "intro_v2", "Welcome back!")).unwrap();
+        provider.file_meta.get_mut("StartTown").unwrap().modified = SystemTime::UNIX_EPOCH;
+        fs::write(
+            &path,
+            scene_source("StartTown", "intro_v2", "Welcome back!"),
+        )
+        .unwrap();
 
         let changed = provider.check_reload();
         assert_eq!(changed, vec!["StartTown".to_string()]);
@@ -420,12 +420,12 @@ mod tests {
         let mut provider = SceneScriptProvider::new();
         provider.load_from_directory(&tmp.0).unwrap();
 
-        provider
-            .file_meta
-            .get_mut("StartTown")
-            .unwrap()
-            .modified = SystemTime::UNIX_EPOCH;
-        fs::write(&path, scene_source("StartTown", "intro_v2", "Welcome back!")).unwrap();
+        provider.file_meta.get_mut("StartTown").unwrap().modified = SystemTime::UNIX_EPOCH;
+        fs::write(
+            &path,
+            scene_source("StartTown", "intro_v2", "Welcome back!"),
+        )
+        .unwrap();
 
         let changed = provider.check_reload();
         assert_eq!(changed, vec!["StartTown".to_string()]);

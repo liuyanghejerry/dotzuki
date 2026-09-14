@@ -278,7 +278,7 @@ mod tests {
                     path.strip_prefix(base)
                         .unwrap()
                         .to_string_lossy()
-                        .into_owned(),
+                        .replace('\\', "/"),
                 );
             }
         }

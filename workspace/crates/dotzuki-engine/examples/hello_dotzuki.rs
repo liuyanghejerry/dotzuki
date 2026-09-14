@@ -84,12 +84,14 @@ enum StatId {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 enum StatusKind {
     Healthy,
     Burned,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 enum Ability {
     Brave,
     Arcane,
@@ -102,6 +104,7 @@ enum ItemKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 enum ItemEffect {
     Heal(u16),
     CureStatus,

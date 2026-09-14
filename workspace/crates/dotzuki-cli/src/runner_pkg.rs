@@ -74,7 +74,14 @@ fn build(crate_dir: &Path) -> Result<()> {
     println!("building dotzuki-runner-web wasm package (wasm-pack --release)…");
     let status = Command::new("wasm-pack")
         .args([
-            "build", "--target", "web", "--out-dir", "pkg", "--release", "--", "--features",
+            "build",
+            "--target",
+            "web",
+            "--out-dir",
+            "pkg",
+            "--release",
+            "--",
+            "--features",
             "modern-audio",
         ])
         .current_dir(crate_dir)

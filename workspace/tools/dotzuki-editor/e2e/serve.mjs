@@ -31,7 +31,7 @@ console.log(`[e2e] fixture copied to ${scratch}`)
 const workspaceBin = path.join(root, '..', 'node_modules', '.bin', 'vite')
 const localBin = path.join(root, 'node_modules', '.bin', 'vite')
 const viteBin = fs.existsSync(workspaceBin) ? workspaceBin : localBin
-const child = spawn(viteBin, ['--port', String(port), '--strictPort'], {
+const child = spawn(viteBin, ['--configLoader', 'runner', '--port', String(port), '--strictPort'], {
   cwd: root,
   env: { ...process.env, DOTZUKI_PROJECT_ROOT: scratch },
   stdio: 'inherit',

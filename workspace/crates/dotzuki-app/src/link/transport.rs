@@ -21,8 +21,8 @@ use std::thread::JoinHandle;
 
 use dotzuki_engine::link::codec::{decode_line, encode_line};
 use dotzuki_engine::link::{NetworkTransport, TransportError};
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 fn io_err(e: std::io::Error) -> TransportError {
     TransportError::IoError(e.to_string())
@@ -99,9 +99,7 @@ impl<M: Serialize + DeserializeOwned + Send + 'static> TcpTransport<M> {
     }
 }
 
-impl<M: Serialize + DeserializeOwned + Send + 'static> NetworkTransport<M>
-    for TcpTransport<M>
-{
+impl<M: Serialize + DeserializeOwned + Send + 'static> NetworkTransport<M> for TcpTransport<M> {
     fn send(&mut self, msg: M) -> Result<(), TransportError> {
         let json = encode_line(&msg)?;
         let mut writer = self
@@ -354,12 +352,14 @@ mod tests {
         // The reader thread must reassemble the line no matter how the
         // fragments interleave with its reads.
         let mut received = None;
-        assert!(wait_until(Duration::from_secs(5), || match server.try_recv() {
-            Ok(Some(msg)) => {
-                received = Some(msg);
-                true
+        assert!(wait_until(Duration::from_secs(5), || {
+            match server.try_recv() {
+                Ok(Some(msg)) => {
+                    received = Some(msg);
+                    true
+                }
+                _ => false,
             }
-            _ => false,
         }));
         assert_eq!(received, Some(hello()));
     }

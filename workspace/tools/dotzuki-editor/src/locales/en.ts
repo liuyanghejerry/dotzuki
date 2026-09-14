@@ -829,6 +829,7 @@ export default {
     title: 'Playtest',
     restart: 'Restart',
     clearSave: 'Clear save',
+    language: 'Game language',
     retry: 'Retry',
     loading: 'Loading project bundle…',
     running: 'Running',

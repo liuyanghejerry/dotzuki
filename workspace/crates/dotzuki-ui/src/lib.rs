@@ -7,19 +7,19 @@ extern crate alloc;
 
 #[allow(unused_imports)]
 mod alloc_prelude {
-    pub use core::prelude::v1::*;
-    pub use core::convert::{TryFrom, TryInto};
     pub use alloc::borrow::ToOwned;
-    pub use core::iter::FromIterator;
     pub use alloc::boxed::Box;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
     pub use alloc::vec;
     pub use alloc::vec::Vec;
+    pub use core::convert::{TryFrom, TryInto};
+    pub use core::iter::FromIterator;
+    pub use core::prelude::v1::*;
     // Macros that std injects via `#[macro_use] extern crate std` but core
     // does not export through its prelude.
-    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
     pub use core::debug_assert;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
 }
 
 #[cfg_attr(target_os = "none", prelude_import)]
@@ -53,7 +53,10 @@ impl<'fb> FrameBufferPainter<'fb> {
     /// instead of the `[NNN]` placeholder (e.g. a game might map its
     /// battle-menu ligature tiles 0xE1/0xE2 to "PK"/"MN"). The engine ships
     /// no game-specific tile glyphs itself; games inject their own here.
-    pub fn with_custom_tiles(mut self, tiles: impl IntoIterator<Item = (u8, &'static str)>) -> Self {
+    pub fn with_custom_tiles(
+        mut self,
+        tiles: impl IntoIterator<Item = (u8, &'static str)>,
+    ) -> Self {
         self.custom_tiles.extend(tiles);
         self
     }

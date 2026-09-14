@@ -2,6 +2,7 @@
 name = "dotzuki-renderer"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "A general-purpose JRPG renderer built from Game Boy tile rendering principles"
 repository = "https://github.com/liuyanghejerry/dotzuki"
 license.workspace = true

@@ -36,17 +36,17 @@ extern crate alloc;
 
 #[allow(unused_imports)]
 mod alloc_prelude {
-    pub use core::prelude::v1::*;
-    pub use core::convert::{TryFrom, TryInto};
     pub use alloc::borrow::ToOwned;
-    pub use core::iter::FromIterator;
     pub use alloc::boxed::Box;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
     pub use alloc::vec;
     pub use alloc::vec::Vec;
-    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
+    pub use core::convert::{TryFrom, TryInto};
     pub use core::debug_assert;
+    pub use core::iter::FromIterator;
+    pub use core::prelude::v1::*;
+    pub use core::{assert_eq, assert_ne, matches, todo, unimplemented, write, writeln};
 }
 
 #[cfg_attr(target_os = "none", prelude_import)]
@@ -88,11 +88,7 @@ pub mod loader {
         }
         pub fn register_script(&mut self, _map_id: &str, _source: &str) {}
         pub fn register_config(&mut self, _map_id: &str, _config: MapScriptConfig) {}
-        pub fn register_config_json(
-            &mut self,
-            _map_id: &str,
-            _json: &str,
-        ) -> Result<(), String> {
+        pub fn register_config_json(&mut self, _map_id: &str, _json: &str) -> Result<(), String> {
             Ok(())
         }
         pub fn get_script(&self, _map_id: &str) -> Option<&str> {
@@ -124,11 +120,11 @@ mod embedded_scripts {
 #[cfg(all(test, feature = "script-boa"))]
 mod tests;
 
+#[cfg(feature = "script-boa")]
+pub use api_registrar::ScriptApiRegistrar;
 pub use command::{CommandResult, ScriptCommand};
 pub use config::MapScriptConfig;
 pub use cutscene::CutsceneManager;
-#[cfg(feature = "script-boa")]
-pub use api_registrar::ScriptApiRegistrar;
 #[cfg(feature = "script-boa")]
 pub use engine::{BridgeView, ScriptEngine, ScriptEngineError};
 #[cfg(not(target_os = "none"))]

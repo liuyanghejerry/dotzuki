@@ -14,42 +14,7 @@ use dotzuki_engine_script::ScriptCommand;
 /// This catalog is also suitable for build-time capability validation by DSL
 /// consumers. Stateful synchronous verbs (`getFlag`, `setFlag`, `lang`, ...)
 /// intentionally are not listed: those are supplied by each host.
-pub const CORE_ASYNC_FUNCTIONS: &[&str] = &[
-    "showText",
-    "showChoice",
-    "moveNpc",
-    "startNpcMove",
-    "awaitNpcMove",
-    "movePlayer",
-    "movePlayerRelative",
-    "moveNpcTo",
-    "startNpcMoveTo",
-    "movePlayerTo",
-    "faceNpc",
-    "facePlayer",
-    "setNpcFrame",
-    "playMusic",
-    "playSound",
-    "stopMusic",
-    "fadeOutMusic",
-    "delay",
-    "warpTo",
-    "heal",
-    "fadeScreen",
-    "showObject",
-    "hideObject",
-    "showObjectByName",
-    "hideObjectByName",
-    "setJoyIgnore",
-    "clearJoyIgnore",
-    "followNpc",
-    "openShop",
-    "showEmotionBubble",
-    "setNpcPosition",
-    "showScene",
-    "hideScene",
-    "updateUI",
-];
+pub use dotzuki_engine_script::command::CORE_ASYNC_FUNCTIONS;
 
 /// Generic verbs whose implementation needs mutable/read-only host state and
 /// therefore cannot be handled by [`dispatch_core_async`].
@@ -356,12 +321,26 @@ fn number(value: &Value, what: &str) -> Result<f64, String> {
     }
 }
 
+fn integer_arg(value: &Value, what: &str, min: f64, max: f64) -> Result<f64, String> {
+    let value = number(value, what)?;
+    if !value.is_finite() || value.fract() != 0.0 || value < min || value > max {
+        return Err(format!(
+            "{what}: expected an integer in {min:.0}..={max:.0}, got {value}"
+        ));
+    }
+    Ok(value)
+}
+
 fn u8_arg(value: &Value, what: &str) -> Result<u8, String> {
-    number(value, what).map(|value| value as u8)
+    integer_arg(value, what, u8::MIN as f64, u8::MAX as f64).map(|value| value as u8)
 }
 
 fn u16_arg(value: &Value, what: &str) -> Result<u16, String> {
-    number(value, what).map(|value| value as u16)
+    integer_arg(value, what, u16::MIN as f64, u16::MAX as f64).map(|value| value as u16)
+}
+
+fn i16_arg(value: &Value, what: &str) -> Result<i16, String> {
+    integer_arg(value, what, i16::MIN as f64, i16::MAX as f64).map(|value| value as i16)
 }
 
 fn string_array(value: &Value, what: &str) -> Result<Vec<String>, String> {
@@ -408,8 +387,8 @@ fn relative_steps(value: &Value, what: &str) -> Result<Vec<(i16, i16)>, String> 
                     other => Err(format!("{what}[{index}]: unknown direction '{other}'")),
                 },
                 Value::Array(pair) if pair.len() == 2 => Ok((
-                    number(&pair[0], &format!("{what}[{index}].dx"))? as i16,
-                    number(&pair[1], &format!("{what}[{index}].dy"))? as i16,
+                    i16_arg(&pair[0], &format!("{what}[{index}].dx"))?,
+                    i16_arg(&pair[1], &format!("{what}[{index}].dy"))?,
                 )),
                 other => Err(format!(
                     "{what}[{index}]: expected direction string or [dx, dy], got {}",
@@ -485,6 +464,26 @@ mod tests {
     fn recognized_command_errors_do_not_fall_through() {
         let error = dispatch_core_async("warpTo", &[text_value("PALLET_TOWN")]).unwrap_err();
         assert_eq!(error, "warpTo: missing x");
+    }
+
+    #[test]
+    fn integer_arguments_reject_fractional_non_finite_and_out_of_range_values() {
+        for value in [-1.0, 1.5, 256.0, f64::NAN, f64::INFINITY] {
+            let error =
+                dispatch_core_async("movePlayerTo", &[Value::Number(value), Value::Number(4.0)])
+                    .unwrap_err();
+            assert!(error.contains("expected an integer in 0..=255"), "{error}");
+        }
+
+        let relative = Value::Array(vec![Value::Array(vec![
+            Value::Number(32_768.0),
+            Value::Number(0.0),
+        ])]);
+        let error = dispatch_core_async("movePlayerRelative", &[relative]).unwrap_err();
+        assert!(
+            error.contains("expected an integer in -32768..=32767"),
+            "{error}"
+        );
     }
 
     #[test]

@@ -9,7 +9,7 @@
 use crate::battle::rng::BattleRng;
 use crate::battle::{BattleAction, BattleProvider, BattleState, BattlerRef, BattlerState};
 
-use super::event::{Effect, EffectId};
+use super::event::{Effect, EffectId, Event, HookScope};
 
 /// The game's effect registry, extending [`BattleProvider`] (design §1.5).
 ///
@@ -24,6 +24,29 @@ pub trait EffectProvider: BattleProvider + 'static {
     /// the host). pokered supplies the Gen-1 enum (Toxic counter, Substitute hp,
     /// …).
     type EffectStateKind: Clone;
+
+    /// Current speed used by effect-handler ordering. Games map their typed
+    /// speed stat (including battle modifiers) here; the default preserves
+    /// deterministic ordering for games without a speed concept.
+    fn handler_speed(state: &BattleState<Self>, who: BattlerRef) -> u32
+    where
+        Self: Sized,
+    {
+        let _ = (state, who);
+        0
+    }
+
+    /// Relative scope for an effect's subscription to `event`.
+    ///
+    /// This associated resolver keeps existing `EventHook` literals compatible
+    /// while enabling `OnAny`/`OnSource`/`OnFoe`/`OnAlly` behavior.
+    fn hook_scope(effect: &Effect<Self>, event: Event) -> HookScope
+    where
+        Self: Sized,
+    {
+        let _ = (effect, event);
+        HookScope::Direct
+    }
 
     /// Resolve the [`Effect`] registered for a given move. Returns `None` if the
     /// move registers no stack hooks.

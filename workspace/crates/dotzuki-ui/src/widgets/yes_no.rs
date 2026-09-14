@@ -4,75 +4,9 @@
 //! cursor indicator. Uses `&[MenuConfig]` — first config is the choice box.
 
 use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{Painter, Rgba, TileRect, Ui};
-
-#[derive(Debug, Clone)]
-#[deprecated(note = "Use draw_yes_no with &[MenuConfig] and separate options/selected instead")]
-pub struct YesNoConfig {
-    pub rect: TileRect,
-    pub color: Rgba,
-    pub options: [String; 2],
-    pub selected: usize,
-    pub cursor_tx: u32,
-    pub cursor_base_ty: u32,
-    pub cursor_row_step: u32,
-    pub cursor_glyph: char,
-    pub cursor_color: Rgba,
-}
-
-#[allow(deprecated)]
-impl Default for YesNoConfig {
-    fn default() -> Self {
-        Self {
-            rect: TileRect::new(10, 16, 10, 5),
-            color: Rgba::INK_BLACK,
-            options: ["YES".to_string(), "NO".to_string()],
-            selected: 0,
-            cursor_tx: 0,
-            cursor_base_ty: 1,
-            cursor_row_step: 2,
-            cursor_glyph: '\u{25B6}',
-            cursor_color: Rgba::INK_BLACK,
-        }
-    }
-}
-
-#[allow(deprecated)]
-impl YesNoConfig {
-    pub fn new(tx: u32, ty: u32, tw: u32, th: u32) -> Self {
-        Self {
-            rect: TileRect::new(tx, ty, tw, th),
-            ..Default::default()
-        }
-    }
-    pub fn with_options(mut self, yes: impl Into<String>, no: impl Into<String>) -> Self {
-        self.options = [yes.into(), no.into()];
-        self
-    }
-    pub fn with_selected(mut self, idx: usize) -> Self {
-        self.selected = idx.min(1);
-        self
-    }
-    pub fn with_cursor(
-        mut self,
-        tx: u32,
-        base_ty: u32,
-        row_step: u32,
-        glyph: char,
-        color: Rgba,
-    ) -> Self {
-        self.cursor_tx = tx;
-        self.cursor_base_ty = base_ty;
-        self.cursor_row_step = row_step;
-        self.cursor_glyph = glyph;
-        self.cursor_color = color;
-        self
-    }
-    pub fn with_color(mut self, color: Rgba) -> Self {
-        self.color = color;
-        self
-    }
-}
+#[cfg(test)]
+use dotzuki_engine::render::TileRect;
+use dotzuki_engine::render::{Painter, Rgba, Ui};
 
 pub fn draw_yes_no<P: Painter>(
     options: &[String],
@@ -102,20 +36,6 @@ pub fn draw_yes_no<P: Painter>(
             frame.cursor_glyph_at(rel_tx, cursor_ty, '\u{25B6}', Rgba::INK_BLACK);
         }
     });
-}
-
-#[deprecated(note = "Use draw_yes_no with &[MenuConfig] instead")]
-pub fn draw_yes_no_legacy<P: Painter>(config: &YesNoConfig, painter: &mut P) {
-    let content = TileRect::new(
-        config.rect.tx + 1,
-        config.rect.ty + 1,
-        config.rect.tw.saturating_sub(2),
-        config.rect.th.saturating_sub(2),
-    );
-    let cursor = dotzuki_engine::menu::CursorStyle::new(Some(223), Default::default());
-    let mc = MenuConfig::new(config.rect, None, content, cursor);
-    let options: Vec<String> = config.options.iter().cloned().collect();
-    draw_yes_no(&options, config.selected, &[mc], painter);
 }
 
 #[cfg(test)]

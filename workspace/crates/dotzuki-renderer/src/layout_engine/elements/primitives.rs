@@ -72,8 +72,8 @@ mod tests {
     use super::*;
     use crate::layout_engine::types::ElementParams;
     use crate::layout_engine::types::{Coord, ElementRect, LayoutElement, Visibility};
-    use dotzuki_engine::render::{TilePos, TileRect};
     use core::cell::RefCell;
+    use dotzuki_engine::render::{TilePos, TileRect};
 
     #[derive(Default)]
     struct PxRec {

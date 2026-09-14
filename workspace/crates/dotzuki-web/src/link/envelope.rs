@@ -5,5 +5,6 @@
 //! native TCP transport (`dotzuki-app`) and this crate's wasm
 //! `BroadcastChannel` transport can share byte-identical framing.
 
-pub(crate) use dotzuki_engine::link::codec::{decode_line, encode_line};
 pub use dotzuki_engine::link::codec::Frame;
+#[cfg(target_arch = "wasm32")]
+pub(crate) use dotzuki_engine::link::codec::{decode_line, encode_line};

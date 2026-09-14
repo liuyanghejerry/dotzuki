@@ -60,11 +60,6 @@ pub fn draw_naming_screen<P: Painter>(
         // Underscore row
         let name_len = data.name.len() as u32;
         let max_len = data.max_length as u32;
-        let cursor_char = if data.cursor_pos < data.max_length {
-            '_'
-        } else {
-            ' '
-        };
         for i in 0..max_len {
             let ch = if i < name_len {
                 data.name.chars().nth(i as usize).unwrap_or('_')

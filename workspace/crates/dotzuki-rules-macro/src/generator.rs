@@ -30,7 +30,7 @@ fn generate_ruleset_with_imports(ruleset: &RulesetInput) -> TokenStream {
 
     quote! {
         {
-            use dotzuki_rules::{Ruleset, TypeChartEntry, Rational, EffectRecord, EffectKind, HookRecord, ResourceCost, Op, Predicate, Selector, FractionOf, DamageValue, HitCount, FinalHitRider};
+            use dotzuki_rules::{AmountSpec, Ruleset, TypeChartEntry, Rational, EffectRecord, EffectKind, HookRecord, ResourceCost, Op, Predicate, Selector, FractionOf, DamageValue, HitCount, FinalHitRider};
 
             Ruleset {
                 stats: #stats,
@@ -227,12 +227,33 @@ fn generate_op(op: &OpInput) -> TokenStream {
                 }
             }
         }
-        OpInput::InflictStatus { status, target } => {
+        OpInput::InflictStatus {
+            status,
+            target,
+            amount,
+        } => {
             let target = generate_selector(target);
+            let amount = generate_amount_spec(amount);
             quote! {
                 Op::InflictStatus {
                     status: #status.to_string(),
                     target: #target,
+                    amount: #amount,
+                }
+            }
+        }
+        OpInput::InflictVolatile {
+            kind,
+            target,
+            amount,
+        } => {
+            let target = generate_selector(target);
+            let amount = generate_amount_spec(amount);
+            quote! {
+                Op::InflictVolatile {
+                    kind: #kind.to_string(),
+                    target: #target,
+                    amount: #amount,
                 }
             }
         }
@@ -420,6 +441,19 @@ fn generate_damage_value(value: &DamageValueInput) -> TokenStream {
                 num: #num,
                 den: #den,
             }
+        },
+    }
+}
+
+/// Generate code for a status or volatile numeric amount.
+fn generate_amount_spec(value: &AmountSpecInput) -> TokenStream {
+    match value {
+        AmountSpecInput::Const(value) => quote! { AmountSpec::Const(#value) },
+        AmountSpecInput::RngMask { mask, plus } => quote! {
+            AmountSpec::RngMask { mask: #mask, plus: #plus }
+        },
+        AmountSpecInput::RngRange { lo, hi } => quote! {
+            AmountSpec::RngRange { lo: #lo, hi: #hi }
         },
     }
 }

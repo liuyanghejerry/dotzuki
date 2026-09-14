@@ -34,6 +34,22 @@ impl From<bool> for Value<'_> {
 pub struct Context<'a, const N: usize = 20> {
     values: [Option<(&'static str, Value<'a>)>; N],
 }
+
+/// Returned when a static layout context has no free binding slot.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContextCapacityError {
+    pub capacity: usize,
+}
+
+impl core::fmt::Display for ContextCapacityError {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            formatter,
+            "static UI context capacity of {} bindings exceeded",
+            self.capacity
+        )
+    }
+}
 impl<'a, const N: usize> Default for Context<'a, N> {
     fn default() -> Self {
         Self {
@@ -45,13 +61,18 @@ impl<'a, const N: usize> Context<'a, N> {
     pub fn new() -> Self {
         Self::default()
     }
-    pub fn set(&mut self, key: &'static str, value: impl Into<Value<'a>>) {
+    pub fn set(
+        &mut self,
+        key: &'static str,
+        value: impl Into<Value<'a>>,
+    ) -> Result<(), ContextCapacityError> {
         let slot = self
             .values
             .iter_mut()
             .find(|v| v.as_ref().map_or(true, |(k, _)| *k == key))
-            .expect("static UI context capacity exceeded");
+            .ok_or(ContextCapacityError { capacity: N })?;
         *slot = Some((key, value.into()));
+        Ok(())
     }
     fn get(&self, key: &str) -> Option<&Value<'a>> {
         self.values
@@ -114,7 +135,7 @@ mod tests {
         ];
         for value in values {
             let mut ctx: Context<'_, 1> = Context::new();
-            ctx.set("key", value);
+            ctx.set("key", value).unwrap();
             let dynamic = ctx.dynamic();
             assert_eq!(
                 ctx.number("key"),
@@ -123,6 +144,17 @@ mod tests {
             assert_eq!(ctx.truthy("key"), dynamic.is_truthy("key"));
             assert_eq!(Text::Binding("key").resolve(&ctx), dynamic.resolve("{key}"));
         }
+    }
+
+    #[test]
+    fn context_overflow_is_reported_without_panicking() {
+        let mut ctx: Context<'_, 1> = Context::new();
+        ctx.set("first", 1i64).unwrap();
+        assert_eq!(
+            ctx.set("second", 2i64),
+            Err(ContextCapacityError { capacity: 1 })
+        );
+        assert!(ctx.set("first", 3i64).is_ok(), "updates reuse their slot");
     }
 }
 

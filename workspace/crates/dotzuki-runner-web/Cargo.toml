@@ -2,6 +2,7 @@
 name = "dotzuki-runner-web"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "wasm-bindgen shell that embeds dotzuki-runner's RunnerGame in the browser editor for in-page playtests"
 license.workspace = true
 repository.workspace = true

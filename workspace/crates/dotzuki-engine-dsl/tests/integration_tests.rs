@@ -6,6 +6,8 @@
 
 use dotzuki_engine_dsl::ast::*;
 use dotzuki_engine_dsl::codegen::js_storyline::compile_storyline;
+use dotzuki_engine_dsl::core_host::dispatch_core_async;
+use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, ScriptHost, Value};
 use dotzuki_engine_dsl::lexer::Lexer;
 use dotzuki_engine_dsl::parser;
 use dotzuki_engine_dsl::sourcemap::SourceMapBuilder;
@@ -96,6 +98,66 @@ fn execute_js_collect_all(js: &str) -> Vec<ScriptCommand> {
             .expect("signal_done should not error");
     }
     commands
+}
+
+struct CoreOnlyHost;
+
+impl ScriptHost for CoreOnlyHost {
+    fn call(&mut self, name: &str, args: &[Value]) -> Result<HostCall, String> {
+        dispatch_core_async(name, args)?
+            .map(HostCall::Command)
+            .ok_or_else(|| format!("unknown core function: {name}"))
+    }
+}
+
+fn execute_native_collect_all(statements: &[StoryStmt]) -> Vec<ScriptCommand> {
+    let mut interpreter = Interpreter::new(CoreOnlyHost);
+    interpreter.load_function(statements);
+    let mut commands = Vec::new();
+    let mut command = interpreter.tick().unwrap();
+    while let Some(current) = command {
+        commands.push(current);
+        command = interpreter.signal_done(CommandResult::Void).unwrap();
+    }
+    commands
+}
+
+#[test]
+fn native_ast_and_boa_emit_the_same_core_command_stream() {
+    let span = SourceSpan::point("conformance.scene", 1, 1);
+    let statements = vec![
+        StoryStmt::Command {
+            name: "showText".into(),
+            args: vec![Expression::StringLit("Welcome".into())],
+            span: span.clone(),
+        },
+        StoryStmt::Command {
+            name: "movePlayerTo".into(),
+            args: vec![Expression::NumberLit(3.0), Expression::NumberLit(4.0)],
+            span: span.clone(),
+        },
+        StoryStmt::Command {
+            name: "delay".into(),
+            args: vec![Expression::NumberLit(12.0)],
+            span: span.clone(),
+        },
+        StoryStmt::Command {
+            name: "showObject".into(),
+            args: vec![Expression::StringLit("gate".into())],
+            span: span.clone(),
+        },
+    ];
+    let block = StorylineBlock {
+        statements: statements.clone(),
+        span,
+    };
+    let mut source_map = SourceMapBuilder::new("conformance.scene", "conformance.js");
+    let js = compile_storyline("main", &block, &mut source_map);
+
+    assert_eq!(
+        execute_native_collect_all(&statements),
+        execute_js_collect_all(&js)
+    );
 }
 
 // ═════════════════════════════════════════════════════════════════════════

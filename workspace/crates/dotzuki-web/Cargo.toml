@@ -2,6 +2,7 @@
 name = "dotzuki-web"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "WASM bridges for the dotzuki JRPG engine: editor layout preview, pixels+winit game shell, BroadcastChannel link transport"
 license.workspace = true
 repository.workspace = true

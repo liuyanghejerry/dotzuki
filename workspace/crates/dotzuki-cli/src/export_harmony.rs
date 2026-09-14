@@ -278,6 +278,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn native_host_keeps_runner_alive_during_audio_callbacks() {
+        let header = template_body("entry/src/main/cpp/dotzuki_host.h");
+        let host = template_body("entry/src/main/cpp/dotzuki_host.cpp");
+        assert!(header.contains("std::shared_mutex runnerLifetimeMutex_"));
+        assert!(host.contains(
+            "std::shared_lock<std::shared_mutex> lifetimeLock(host->runnerLifetimeMutex_)"
+        ));
+        assert_eq!(
+            host.matches("std::unique_lock<std::shared_mutex> lifetimeLock")
+                .count(),
+            2,
+            "replace and destruction must both exclude audio callbacks"
+        );
+    }
+
     fn png_size(body: &[u8]) -> (u32, u32) {
         assert_eq!(&body[..8], b"\x89PNG\r\n\x1a\n", "asset is not a PNG");
         let width = u32::from_be_bytes(body[16..20].try_into().unwrap());

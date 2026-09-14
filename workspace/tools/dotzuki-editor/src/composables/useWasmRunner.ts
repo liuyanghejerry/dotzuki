@@ -8,7 +8,8 @@
 // in dotzuki-web/pkg). The module is a module-level singleton cache.
 //
 // WASM contract (see crates/dotzuki-runner-web):
-//   new WasmRunner(files_json, save_json?)  — files_json: {"<posix path>": "<base64>"}
+//   new WasmRunner(files_json, save_json?, language?)
+//       files_json: {"<posix path>": "<base64>"}
 //   tick(input_bitmask) → Uint8Array (320×240×4 RGBA)
 //   take_audio() → Float32Array — interleaved stereo f32 (LRLR…) @ 44100Hz,
 //                  drains the internal buffer (~738 frames/tick), empty while
@@ -33,7 +34,11 @@ export interface WasmRunner {
 
 interface WasmRunnerModule {
   default(): Promise<void>
-  WasmRunner: new (filesJson: string, saveJson?: string | null) => WasmRunner
+  WasmRunner: new (
+    filesJson: string,
+    saveJson?: string | null,
+    language?: string | null,
+  ) => WasmRunner
 }
 
 let wasmModule: WasmRunnerModule | null = null
@@ -89,9 +94,10 @@ export async function loadBundle(): Promise<PlayBundle> {
 export async function createRunner(
   files: Record<string, string>,
   saveJson?: string | null,
+  language?: string | null,
 ): Promise<WasmRunner> {
   const mod = await loadRunnerModule()
-  return new mod.WasmRunner(JSON.stringify(files), saveJson ?? null)
+  return new mod.WasmRunner(JSON.stringify(files), saveJson ?? null, language ?? null)
 }
 
 // Input bitmask bits (contract above).

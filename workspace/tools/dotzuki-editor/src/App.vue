@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, shallowRef } from 'vue'
+import { ref, computed, watch, onMounted, shallowRef, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProjectStore } from './stores/project'
@@ -109,8 +109,13 @@ import { useEditorStore } from './stores/editor'
 import { useLocalize } from './composables/useLocalize'
 import WelcomeScreen from './components/WelcomeScreen.vue'
 import AppIcon from './components/AppIcon.vue'
-import AssistantPanel from './components/assistant/AssistantPanel.vue'
-import HelpPanel from './components/help/HelpPanel.vue'
+
+// These panels pull in the AI SDK and the markdown help corpus. Keep them out
+// of the editor's startup chunk and load them when their shell first renders.
+const AssistantPanel = defineAsyncComponent(
+  () => import('./components/assistant/AssistantPanel.vue'),
+)
+const HelpPanel = defineAsyncComponent(() => import('./components/help/HelpPanel.vue'))
 
 const { t, locale: i18nLocale } = useI18n()
 const { localize } = useLocalize()

@@ -27,6 +27,7 @@ function sampleFrame(page: Page) {
 
 test.describe('play activity (wasm runner)', () => {
   test('boots the game, responds to input and persists a save', async ({ page, request }) => {
+    test.setTimeout(120_000)
     test.skip(
       (await request.get(`${playBase}/wasm/dotzuki_runner_web.js`)).status() === 404,
       'runner wasm not built — run pnpm build:wasm-runner',
@@ -45,6 +46,13 @@ test.describe('play activity (wasm runner)', () => {
     }
     expect([first.w, first.h]).toEqual([320, 240])
     expect(first.distinct).toBeGreaterThan(2)
+
+    // Game language is independent from the editor UI language. Changing it
+    // reboots the WASM runner and is reflected in the runner-owned save.
+    const language = page.getByTestId('play-language')
+    await language.selectOption('zh')
+    await expect(language).toHaveValue('zh')
+    await page.waitForTimeout(500)
 
     // Advance the intro dialogue with A (KeyZ). Holds are deliberate: a ~0ms
     // down/up tap can fall between two game ticks and be lost, same as the
@@ -70,12 +78,19 @@ test.describe('play activity (wasm runner)', () => {
     const afterMove = await sampleFrame(page)
     expect(afterMove.sum).not.toBe(afterDialogue.sum)
 
-    // Save export runs on an interval and lands in localStorage.
-    await page.waitForTimeout(2500)
-    const saveKeys = await page.evaluate(() =>
-      Object.keys(localStorage).filter(k => k.startsWith('dotzuki-play-save')),
-    )
-    expect(saveKeys.length).toBeGreaterThan(0)
+    // Save export runs on an interval and lands in localStorage. Poll instead
+    // of sleeping so cold CI runners only wait as long as necessary.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const key = Object.keys(localStorage).find(k => k.startsWith('dotzuki-play-save'))
+            const raw = key ? localStorage.getItem(key) : null
+            return raw ? JSON.parse(raw).lang : null
+          }),
+        { timeout: 10_000 },
+      )
+      .toBe('zh')
 
     // Audio: the fixture's StartTown scene plays "TownTheme" on boot, the wasm
     // runner renders PCM per tick, and the WebAudio graph starts consuming it

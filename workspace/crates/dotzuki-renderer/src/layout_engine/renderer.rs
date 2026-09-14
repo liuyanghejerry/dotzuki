@@ -332,13 +332,14 @@ fn parse_bg_color(hex: &str) -> Rgba {
 mod tests {
     use super::*;
     use crate::layout_engine::types::Theme;
+    use dotzuki_engine::hash::HashMap;
     use dotzuki_engine::render::Rgba as EngineRgba;
     use dotzuki_engine::render::TilePos;
-    use dotzuki_engine::hash::HashMap;
 
     // ── RecordingPainter ──────────────────────────────────────────────
 
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     enum DrawOp {
         Clear(EngineRgba),
         TextBox(TileRect, EngineRgba),

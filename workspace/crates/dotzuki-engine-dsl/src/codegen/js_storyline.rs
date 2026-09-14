@@ -762,7 +762,7 @@ mod tests {
     #[test]
     fn test_expression_number_lit() {
         assert_eq!(compile_expression(&n(42.0)), "42");
-        assert_eq!(compile_expression(&n(3.14)), "3.14");
+        assert_eq!(compile_expression(&n(3.125)), "3.125");
         assert_eq!(compile_expression(&n(0.0)), "0");
         assert_eq!(compile_expression(&n(-5.0)), "-5");
     }
@@ -1345,8 +1345,6 @@ mod tests {
     #[test]
     fn test_run_block_indentation() {
         let js_text = "game.speak(\"Hello\");";
-        let mut sm = SourceMapBuilder::new("test.scene", "test.scene.js");
-        let mut line = 0;
         let js = compile_run(js_text, 2); // depth=2 → 4 spaces indent
         assert!(
             js.contains("    game.speak(\"Hello\");"),

@@ -249,12 +249,8 @@ pub fn update_npc_movement<T: TilesetTrait>(
                 };
                 let axis_ok = match npc.wander_axis {
                     NpcWanderAxis::Any => true,
-                    NpcWanderAxis::Vertical => {
-                        dir == Direction::Up || dir == Direction::Down
-                    }
-                    NpcWanderAxis::Horizontal => {
-                        dir == Direction::Left || dir == Direction::Right
-                    }
+                    NpcWanderAxis::Vertical => dir == Direction::Up || dir == Direction::Down,
+                    NpcWanderAxis::Horizontal => dir == Direction::Left || dir == Direction::Right,
                 };
                 if !axis_ok {
                     npc.delay_counter = rng_value & NPC_MAX_DELAY;

@@ -32,7 +32,7 @@ pub use ctx::{BattleCtx, EffectHost, EffectProvider, EffectState, MoveContext};
 pub use dispatch::{collect_handlers, compare, run_event, run_event_checked, CollectedHandler};
 pub use driver::{FirstMover, StackDriver, StackTurnResult};
 pub use event::{
-    Effect, EffectId, EffectType, Event, EventHook, HandlerFn, HandlerResult, RelayVar,
+    Effect, EffectId, EffectType, Event, EventHook, HandlerFn, HandlerResult, HookScope, RelayVar,
 };
 pub use log::{HpChangeCause, TurnEvent, TurnLog};
 
@@ -1176,7 +1176,10 @@ mod multi_source_tests {
     fn collects_ability_item_field_in_order() {
         // Player has BOTH ability+item; field is ON. Event targets the OPPONENT
         // (source = player). The opponent's own ability/item are absent (Plain).
-        let provider = TProvider { field_on: true };
+        let provider = TProvider {
+            field_on: true,
+            ..TProvider::default()
+        };
         let (mut state, mut effects, mut mv, mut rng) =
             parts(mon(100, TSpecies::HasBoth), mon(100, TSpecies::Plain));
         let mut ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
@@ -1210,11 +1213,53 @@ mod multi_source_tests {
         );
     }
 
+    #[test]
+    fn source_scope_filters_target_hooks_and_uses_provider_speed() {
+        let provider = TProvider::default();
+        let (mut state, mut effects, mut mv, mut rng) = parts(
+            mon(100, TSpecies::HasSourceAbility),
+            mon(100, TSpecies::Plain),
+        );
+        let ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
+
+        let mut target_handlers = Vec::new();
+        collect_handlers(
+            &ctx,
+            &provider,
+            None,
+            Event::DamagingHit,
+            BattlerRef::PLAYER,
+            BattlerRef::OPPONENT,
+            &mut target_handlers,
+        );
+        assert!(
+            target_handlers.is_empty(),
+            "OnSource must not fire for the target"
+        );
+
+        let mut source_handlers = Vec::new();
+        collect_handlers(
+            &ctx,
+            &provider,
+            None,
+            Event::DamagingHit,
+            BattlerRef::OPPONENT,
+            BattlerRef::PLAYER,
+            &mut source_handlers,
+        );
+        assert_eq!(source_handlers.len(), 1);
+        assert_eq!(source_handlers[0].speed, 200);
+        assert_eq!(source_handlers[0].target, BattlerRef::OPPONENT);
+    }
+
     // ── Proof 1b: multi-source ordering is by the comparator. Manually verify
     //    the collected order is ability(10) < volatile(15) < item(20) < field(30).
     #[test]
     fn multi_source_comparator_order() {
-        let provider = TProvider { field_on: true };
+        let provider = TProvider {
+            field_on: true,
+            ..TProvider::default()
+        };
         let (mut state, mut effects, mut mv, mut rng) =
             parts(mon(100, TSpecies::HasBoth), mon(100, TSpecies::Plain));
         // Add a live volatile on the source (player) → MOCK_VOLATILE (order 15).
@@ -1430,7 +1475,10 @@ mod multi_source_tests {
         // A Field-hosted effect fires via the field_effects resolver path:
         // collect_handlers with field_on=true yields the field hook, and running
         // it marks the target — i.e. a Field-hosted residual is routed.
-        let provider = TProvider { field_on: true };
+        let provider = TProvider {
+            field_on: true,
+            ..TProvider::default()
+        };
         let (mut state, mut effects, mut mv, mut rng) =
             parts(mon(100, TSpecies::Plain), mon(100, TSpecies::Plain));
         let mut ctx = ctx_from(&mut state, &mut effects, &mut mv, &mut rng);
