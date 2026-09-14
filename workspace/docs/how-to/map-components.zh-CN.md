@@ -3,10 +3,10 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.0
+> - **Last verified**: v0.8.2
 >
-> 本文是 [map-components.md](./map-components.md) 的中文翻译，同步至引擎版本 v0.8.0
->（源文档 commit `a7559eb`）。内容以英文源为准；发现不一致请更新英文源再同步翻译。
+> 本文是 [map-components.md](./map-components.md) 的中文翻译，同步至引擎版本 v0.8.2
+>（源文档 commit `b876d5e`）。内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 在地图中复用像素素材，并根据相邻格选择地形边缘、内角和墙体连接点。
 
@@ -97,3 +97,5 @@ cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255�
 地图保存和撤销影响地图格子，追加的图集位置在撤销后仍保留，编辑器不会压缩未使用位置。
 
 素材备份和源格式请参阅[素材指南](./assets.zh-CN.md)。
+
+如果需要编排高于逻辑地图网格密度的完整 PNG 组件，请阅读[编排高密度地图布景](./native-map-art.zh-CN.md)。

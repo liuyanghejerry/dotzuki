@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.0
+> - **Last verified**: v0.8.2
 
 Reuse pixel artwork across a map and select terrain edges, inner corners, and wall junctions
 from neighboring cells.
@@ -103,3 +103,6 @@ before writing files. Restore the missing image and retry. Map save and undo aff
 appended atlas slots remain available after undo. The editor does not compact unused slots.
 
 For asset backup and source formats, see [Assets](./assets.md).
+
+For complete PNG components at a higher pixel density than the logical map grid, see [Arrange
+native-resolution map scenery](./native-map-art.md).

@@ -386,6 +386,7 @@ export default {
     lintClean: '未发现问题。',
   },
   map: {
+    nativeArt: '原生布景',
     linkComponents: '关联建筑',
     connectionHint: '拖动绘制自动地形。右键拖动擦除，并重新计算相邻边缘与转角。',
     autotileMode: {

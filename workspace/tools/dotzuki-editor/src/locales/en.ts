@@ -386,6 +386,7 @@ export default {
     lintClean: 'No issues found.',
   },
   map: {
+    nativeArt: 'Native scenery',
     linkComponents: 'Link buildings',
     connectionHint: 'Drag to paint auto-tiles. Right-drag erases and recalculates neighboring edges and corners.',
     autotileMode: {

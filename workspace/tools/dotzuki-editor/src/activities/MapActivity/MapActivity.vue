@@ -14,6 +14,7 @@ import MapBackdropGen from './MapBackdropGen.vue'
 import MapTraceDialog from './MapTraceDialog.vue'
 import AutotileSetDialog from './AutotileSetDialog.vue'
 import TilePixelEditor from '../TilesActivity/TilePixelEditor.vue'
+import NativeMapArtEditor from './NativeMapArtEditor.vue'
 import type { MapActivityConfig } from '@/types/project'
 
 const { t } = useI18n()
@@ -219,7 +220,7 @@ const mapTileSize = computed(() => {
 // ── Sub-tab system (map + building editors) ──
 interface SubTabEntry {
   id: string // 'map:<mapName>' or 'building:<groupId>'
-  type: 'map' | 'building'
+  type: 'map' | 'building' | 'art'
   label: string
   group?: GroupEntry
 }
@@ -419,6 +420,12 @@ function closeMapTab(name: string): void {
 }
 
 function closeTab(tabId: string): void {
+  if (tabId.startsWith('art:')) {
+    if (artDirty.value[tabId] && !confirm(t('map.confirmDiscard'))) return
+    delete artDirty.value[tabId]
+    closeBuildingTab(tabId)
+    return
+  }
   if (tabId.startsWith('map:')) {
     closeMapTab(tabId.replace('map:', ''))
   } else if (tabId.startsWith('building:')) {
@@ -451,6 +458,17 @@ function closeBuildingTab(id: string): void {
 /** Sub-tabs filtered by type. */
 const mapTabs = computed(() => subTabs.value.filter(t => t.type === 'map'))
 const buildingTabs = computed(() => subTabs.value.filter(t => t.type === 'building'))
+const artTabs = computed(() => subTabs.value.filter(t => t.type === 'art'))
+const artDirty = ref<Record<string, boolean>>({})
+function openArtTab(name: string): void {
+  const id = `art:${name}`
+  if (!subTabs.value.some(t => t.id === id)) subTabs.value.push({ id, type: 'art', label: name })
+  activeSubTab.value = id
+}
+function editArtAsset(id: string): void {
+  const group = tilesStore.groups.find(g => g.id === id)
+  if (group) openBuildingTab(group)
+}
 
 /** The GroupEntry for the currently-active building tab (if any). */
 const activeBuildingGroup = computed(() => {
