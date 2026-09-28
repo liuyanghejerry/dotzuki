@@ -7,6 +7,7 @@
 //! Each logical channel has its own command pointer, note delay, volume,
 //! vibrato state, pitch slide state, etc.
 
+use alloc::vec::Vec;
 use crate::apu::Apu;
 use crate::commands::{self, Command};
 use crate::{HwChannel, NUM_CHANNELS, NUM_MUSIC_CHANNELS, NUM_NOTES, WAVE_INSTRUMENTS};
@@ -93,7 +94,7 @@ pub struct Sequencer {
 impl Sequencer {
     pub fn new() -> Self {
         Self {
-            channels: std::array::from_fn(|_| ChannelState::new()),
+            channels: core::array::from_fn(|_| ChannelState::new()),
             music_tempo: 0x0100, // default: 1.0 (256)
             sfx_tempo: 0x0100,
             stereo_panning: 0xFF,
@@ -135,7 +136,7 @@ impl Sequencer {
             let ch = &mut self.channels[i];
             ch.reset();
             ch.data = data.clone();
-            ch.active = true;
+            ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
             ch.octave = 4;
@@ -177,6 +178,7 @@ impl Sequencer {
         self.sfx_playing = true;
 
         for (i, data) in channel_data.iter().enumerate() {
+            if data.is_empty() { continue; }
             let ch_idx = NUM_MUSIC_CHANNELS + start_channel + i;
             if ch_idx >= NUM_CHANNELS {
                 break;
@@ -184,7 +186,7 @@ impl Sequencer {
             let ch = &mut self.channels[ch_idx];
             ch.reset();
             ch.data = data.clone();
-            ch.active = true;
+            ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
             ch.octave = 4;
@@ -270,6 +272,7 @@ impl Sequencer {
         // than through the power-gated write_register.
         if let Some(vol) = self.pending_nr50.take() {
             apu.nr50 = vol;
+            apu.write_register(0xFF24, vol);
         }
     }
 
@@ -297,6 +300,7 @@ impl Sequencer {
         loop {
             if max_commands == 0 {
                 self.channels[ch_idx].active = false;
+                self.check_sfx_end(ch_idx);
                 return;
             }
             max_commands -= 1;
@@ -304,6 +308,7 @@ impl Sequencer {
             let ch = &self.channels[ch_idx];
             if !ch.active || ch.ptr >= ch.data.len() {
                 self.channels[ch_idx].active = false;
+                self.check_sfx_end(ch_idx);
                 return;
             }
 
@@ -311,9 +316,8 @@ impl Sequencer {
             let is_noise = hw_channel_for(ch_idx) == 3;
             let is_sfx = is_sfx_channel(ch_idx);
             let exec_music = ch.flags2.contains(ChannelFlags2::EXECUTE_MUSIC);
-            let data_clone = ch.data.clone(); // Clone to avoid borrow conflict
             let (cmd, new_pos) =
-                commands::decode_command(&data_clone, pos, is_noise, is_sfx, exec_music);
+                commands::decode_command(&ch.data, pos, is_noise, is_sfx, exec_music);
             self.channels[ch_idx].ptr = new_pos;
 
             match cmd {
@@ -788,6 +792,7 @@ impl Sequencer {
         }
 
         apu.nr51 = panning;
+        apu.write_register(0xFF25, panning);
     }
 
     /// Write pulse channel state to APU.

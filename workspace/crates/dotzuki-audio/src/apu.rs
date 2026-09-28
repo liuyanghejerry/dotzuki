@@ -15,6 +15,7 @@ use crate::CYCLES_PER_FRAME_SEQ_TICK;
 /// sweep (128 Hz, channel 1 only).
 #[derive(Debug, Clone)]
 pub struct Apu {
+    register_sink: Option<fn(u16, u8)>,
     // ── Channels ──
     /// Channel 1: Pulse with sweep.
     pub ch1: PulseChannel,
@@ -44,6 +45,7 @@ pub struct Apu {
 impl Apu {
     pub fn new() -> Self {
         Self {
+            register_sink: None,
             ch1: PulseChannel::new(true),  // Channel 1 has sweep
             ch2: PulseChannel::new(false), // Channel 2 does not
             ch3: WaveChannel::new(),
@@ -54,6 +56,12 @@ impl Apu {
             frame_seq_counter: 0,
             frame_seq_step: 0,
         }
+    }
+
+    /// Forward accepted register writes to compatible physical sound hardware.
+    /// The software APU remains available for deterministic tests and PCM output.
+    pub fn set_register_sink(&mut self, sink: Option<fn(u16, u8)>) {
+        self.register_sink = sink;
     }
 
     /// Advance the APU by one CPU cycle.
@@ -201,6 +209,8 @@ impl Apu {
                 _ => return,
             }
         }
+
+        if let Some(sink) = self.register_sink { sink(addr, val); }
 
         match addr {
             // ── Channel 1 (Pulse + Sweep) ──
@@ -386,5 +396,31 @@ impl Apu {
 impl Default for Apu {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod register_sink_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(address: u16, value: u8) { WRITES.lock().unwrap().push((address, value)); }
+
+    #[test]
+    fn forwards_power_wave_and_channel_writes_but_respects_power_off() {
+        let mut apu = Apu::new();
+        apu.set_register_sink(Some(record));
+        apu.write_register(0xFF12, 0xF0);
+        assert!(WRITES.lock().unwrap().is_empty());
+        for (address, value) in [(0xFF30, 0xAB), (0xFF26, 0x80), (0xFF12, 0xF0),
+            (0xFF14, 0x87), (0xFF24, 0x53), (0xFF25, 0x11), (0xFF26, 0)] {
+            apu.write_register(address, value);
+        }
+        assert_eq!(*WRITES.lock().unwrap(), vec![(0xFF30,0xAB),(0xFF26,0x80),
+            (0xFF12,0xF0),(0xFF14,0x87),(0xFF24,0x53),(0xFF25,0x11),(0xFF26,0)]);
+        assert!(!apu.power);
+        apu.set_register_sink(None);
+        apu.write_register(0xFF26, 0x80);
+        assert_eq!(WRITES.lock().unwrap().len(), 7);
     }
 }

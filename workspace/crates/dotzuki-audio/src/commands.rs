@@ -9,6 +9,7 @@
 //! - $E0-$E7: octave (octave = 8 - low nibble)
 //! - $E8+:    control commands (vibrato, pitch slide, duty, tempo, etc.)
 
+use alloc::vec::Vec;
 use crate::{NOTE_FREQUENCIES, NUM_NOTES};
 
 // ── Command Enum ─────────────────────────────────────────────────────────

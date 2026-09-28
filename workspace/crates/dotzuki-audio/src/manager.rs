@@ -39,8 +39,9 @@
 //!   stream override before the next tick (the classic
 //!   fade-out-then-overwrite-channel-pointer routine).
 
-use std::collections::HashMap;
-use std::hash::Hash;
+use alloc::vec::Vec;
+use alloc::boxed::Box;
+use core::hash::Hash;
 
 use crate::apu::Apu;
 use crate::sequencer::Sequencer;
@@ -112,7 +113,7 @@ pub struct AudioManager<M, S> {
     last_music_id: Option<M>,
 
     /// Resume snapshots of previously playing tracks, keyed by music id.
-    saved_music_states: HashMap<M, Sequencer>,
+    saved_music_states: Vec<(M, Sequencer)>,
 }
 
 impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
@@ -134,7 +135,7 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
             post_frame_hook: None,
             no_audio_fade_out: false,
             last_music_id: None,
-            saved_music_states: HashMap::new(),
+            saved_music_states: Vec::new(),
         }
     }
 
@@ -176,6 +177,11 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.post_frame_hook = hook;
     }
 
+    fn take_saved_music(&mut self, id: M) -> Option<Sequencer> {
+        let index = self.saved_music_states.iter().position(|(key, _)| *key == id)?;
+        Some(self.saved_music_states.swap_remove(index).1)
+    }
+
     /// Play a music track. If a *different* track is currently playing, its
     /// live sequencer state is snapshotted under its id first; if the
     /// requested track has a snapshot, playback resumes from it
@@ -186,14 +192,14 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         if self.sequencer.music_playing {
             if let Some(last_id) = self.last_music_id {
                 if last_id != id {
-                    self.saved_music_states
-                        .insert(last_id, self.sequencer.clone());
+                    self.take_saved_music(last_id);
+                    self.saved_music_states.push((last_id, self.sequencer.clone()));
                 }
             }
         }
 
         // If we have a saved resume state for this track, restore it.
-        if let Some(saved) = self.saved_music_states.remove(&id) {
+        if let Some(saved) = self.take_saved_music(id) {
             self.sequencer.restore_music_from(&saved);
             self.last_music_id = Some(id);
             self.clear_fade();
@@ -208,8 +214,7 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         let channel_data: Vec<Vec<u8>> = track
             .channels
             .iter()
-            .flatten()
-            .map(|data| data.to_vec())
+            .map(|data| data.unwrap_or(&[]).to_vec())
             .collect();
         self.sequencer
             .play_music(track.sound_id, &channel_data, track.tempo);
@@ -280,8 +285,8 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         let channel_data: Vec<Vec<u8>> = track
             .channels
             .iter()
-            .flatten()
-            .map(|data| data.to_vec())
+            .skip(start_channel)
+            .map(|data| data.unwrap_or(&[]).to_vec())
             .collect();
         self.sequencer.frequency_modifier = frequency_mod;
         self.sequencer
@@ -314,7 +319,7 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
     /// Drop the resume snapshot of a single track, so the next
     /// [`play_music`](Self::play_music) for it starts fresh.
     pub fn discard_saved_music_state(&mut self, id: M) {
-        self.saved_music_states.remove(&id);
+        self.take_saved_music(id);
     }
 
     pub fn stop_sfx(&mut self) {
@@ -434,6 +439,7 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
     fn apply_master_volume(&mut self) {
         let nr50 = (self.master_volume_left << 4) | self.master_volume_right;
         self.apu.nr50 = nr50;
+        self.apu.write_register(0xFF24, nr50);
     }
 }
 
@@ -488,6 +494,40 @@ mod tests {
 
     fn manager() -> AudioManager<Music, Sfx> {
         AudioManager::new(music_track, sfx_track)
+    }
+
+    #[test]
+    fn sparse_tracks_keep_their_hardware_channel_positions() {
+        fn sparse(_: Sfx) -> TrackData {
+            TrackData { sound_id: 0x40, channels: [Some(SFX_BEEP_CH5), None, None, Some(&[0xFF])], tempo: 0 }
+        }
+        fn sparse_music(_: Music) -> TrackData {
+            TrackData { sound_id: 1, channels: [None, Some(THEME_A_CH1), None, Some(&[0xFF])], tempo: 0x100 }
+        }
+        let mut mgr = AudioManager::new(sparse_music, sparse);
+        mgr.play_music(Music::ThemeA);
+        assert!(!mgr.sequencer.channels[0].active);
+        assert_eq!(mgr.sequencer.channels[1].data, THEME_A_CH1);
+        assert!(!mgr.sequencer.channels[2].active);
+        assert_eq!(mgr.sequencer.channels[3].data, [0xFF]);
+        mgr.play_sfx(Sfx::Beep);
+        assert_eq!(mgr.sequencer.channels[4].data, SFX_BEEP_CH5);
+        assert!(!mgr.sequencer.channels[5].active);
+        assert!(!mgr.sequencer.channels[6].active);
+        assert_eq!(mgr.sequencer.channels[7].data, [0xFF]);
+        for _ in 0..100 { mgr.update_frame(); }
+        assert!(!mgr.is_sfx_playing());
+    }
+
+    #[test]
+    fn truncated_sfx_does_not_leave_sound_waiters_busy() {
+        fn truncated(_: Sfx) -> TrackData {
+            TrackData { sound_id: 1, channels: [Some(&[0xD8]), None, None, None], tempo: 0 }
+        }
+        let mut mgr = AudioManager::new(music_track, truncated);
+        mgr.play_sfx(Sfx::Beep);
+        for _ in 0..100 { mgr.update_frame(); }
+        assert!(!mgr.is_sfx_playing());
     }
 
     #[test]

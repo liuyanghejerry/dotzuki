@@ -17,6 +17,10 @@
 //! This crate has no pokered-specific dependencies — it is a standalone
 //! Game Boy audio emulator suitable for any GB emulation project.
 
+#![cfg_attr(target_os = "none", no_std)]
+extern crate alloc;
+use alloc::vec::Vec;
+
 pub mod apu;
 pub mod channel;
 pub mod commands;
