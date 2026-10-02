@@ -31,6 +31,11 @@ with a migration guide under `migration/` (created per release).
 - Fix: outward battle spirals probe the unfilled cell to the left of the current
   heading and finish after 120 batches; the old forward probe could cycle
   indefinitely and block a consumer waiting for visual completion.
+- Add: `StackDriver::execute_turn_logged_with_before_action` lets a game
+  replace an actor's action after turn ordering and before forced-action
+  resolution. The callback sees the first actor's completed action when the
+  second actor is reached; a faint that cancels that actor also skips its
+  callback. Existing turn entry points keep their behavior.
 
 ## v0.8.2
 
