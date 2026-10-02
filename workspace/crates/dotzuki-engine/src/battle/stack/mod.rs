@@ -462,6 +462,22 @@ mod tests {
                 (1, 0)
             }
         }
+        fn resolved_move(
+            &self,
+            _state: &BattleState<Self>,
+            effects: &[EffectState<Self>],
+            actor: BattlerRef,
+            selected: &Self::Move,
+        ) -> Self::Move {
+            if effects
+                .iter()
+                .any(|e| e.host == actor && matches!(e.kind, TKind::Mist))
+            {
+                TMove { power: 77 }
+            } else {
+                selected.clone()
+            }
+        }
         fn forced_action(
             &self,
             effects: &[EffectState<Self>],
@@ -681,6 +697,37 @@ mod tests {
         );
         assert!(result.second_cancelled);
         assert_eq!(seen, vec![BattlerRef::PLAYER]);
+        assert_eq!(rng.consumed(), 0);
+    }
+
+    #[test]
+    fn resolved_move_is_logged_after_ordering_the_originally_selected_actions() {
+        let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
+        let mut effects = vec![EffectState {
+            id: EffectId(30),
+            host: BattlerRef::PLAYER,
+            effect_order: 0,
+            kind: TKind::Mist,
+        }];
+        let mut rng = EngineScriptedRng::new(vec![]);
+        let (result, log) = StackDriver::execute_turn_logged(
+            &TForce,
+            &mut state,
+            &mut effects,
+            [
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+            ],
+            &mut rng,
+        );
+        assert_eq!(result.first, FirstMover::Player);
+        assert!(
+            matches!(log.events.first(), Some(TurnEvent::MoveUsed { actor, move_ }) if *actor == BattlerRef::PLAYER && move_.power == 77)
+        );
         assert_eq!(rng.consumed(), 0);
     }
 

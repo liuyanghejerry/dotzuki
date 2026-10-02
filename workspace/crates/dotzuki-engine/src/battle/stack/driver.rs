@@ -294,6 +294,11 @@ impl StackDriver {
             return; // move aborted (e.g. fully paralyzed)
         }
 
+        let move_ = provider.resolved_move(ctx.state, ctx.effects, actor, &move_);
+        let Some(eff) = provider.effect_for_move(&move_) else {
+            return;
+        };
+
         // 2a′. RESOURCE COST GATE (doc 13 §4 — the MP/SP/mana cost check). Fires
         // AFTER the `BeforeMove` status gate has allowed the move, and BEFORE the
         // crit/accuracy/damage draws, so a move the actor CANNOT pay is prevented
