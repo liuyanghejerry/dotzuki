@@ -608,6 +608,82 @@ mod tests {
         assert!(!log.is_empty(), "the logged path recorded events");
     }
 
+    #[test]
+    fn before_action_callback_sees_the_first_hit_and_can_force_the_second_action() {
+        let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(100)]);
+        let mut effects = Vec::new();
+        let mut rng = EngineScriptedRng::new(vec![200]);
+        let mut seen = Vec::new();
+        let (result, log) = StackDriver::execute_turn_logged_with_before_action(
+            &TForce,
+            &mut state,
+            &mut effects,
+            [
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+            ],
+            &mut rng,
+            &mut |state, effects, actor, _action, rng| {
+                seen.push((actor, state.opponent_battlers[0].hp));
+                if actor == BattlerRef::OPPONENT {
+                    assert_eq!(rng.next_u8(), 200);
+                    effects.push(EffectState {
+                        id: EffectId(50),
+                        host: actor,
+                        effect_order: 0,
+                        kind: TKind::Toxic { counter: 0 },
+                    });
+                }
+            },
+        );
+        assert_eq!(result.first, FirstMover::Player);
+        assert_eq!(
+            seen,
+            vec![(BattlerRef::PLAYER, 100), (BattlerRef::OPPONENT, 90)]
+        );
+        assert_eq!(state.player_battlers[0].hp, 100);
+        assert_eq!(rng.consumed(), 1);
+        assert_eq!(
+            log.events
+                .iter()
+                .filter(|e| matches!(e, TurnEvent::MoveUsed { .. }))
+                .count(),
+            1
+        );
+    }
+
+    #[test]
+    fn a_cancelled_second_actor_does_not_invoke_the_action_callback() {
+        let mut state = BattleState::new(vec![force_mon(100)], vec![force_mon(5)]);
+        let mut effects = Vec::new();
+        let mut rng = EngineScriptedRng::new(vec![]);
+        let mut seen = Vec::new();
+        let (result, _) = StackDriver::execute_turn_logged_with_before_action(
+            &TForce,
+            &mut state,
+            &mut effects,
+            [
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+                BattleAction::Fight {
+                    move_: TMove { power: 10 },
+                },
+            ],
+            &mut rng,
+            &mut |_state, _effects, actor, _action, _rng| {
+                seen.push(actor);
+            },
+        );
+        assert!(result.second_cancelled);
+        assert_eq!(seen, vec![BattlerRef::PLAYER]);
+        assert_eq!(rng.consumed(), 0);
+    }
+
     /// The log captures `MoveUsed` + `Damaged` for both movers, in order. With
     /// `TForce`: player first (deals 10 → opp 90), then opponent (deals 10 → player
     /// 90). No crit/miss handlers ⇒ no `Crit`/`Missed`.

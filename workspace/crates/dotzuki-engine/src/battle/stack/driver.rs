@@ -63,7 +63,7 @@ impl StackDriver {
         actions: [BattleAction<P>; 2],
         rng: &mut dyn BattleRng,
     ) -> StackTurnResult {
-        Self::execute_turn_inner(provider, state, effects, actions, rng, None)
+        Self::execute_turn_inner(provider, state, effects, actions, rng, None, None)
     }
 
     /// Like [`execute_turn`](Self::execute_turn) but also returns a generic
@@ -84,7 +84,38 @@ impl StackDriver {
     ) -> (StackTurnResult, TurnLog<P>) {
         let mut log = TurnLog::new();
         let result =
-            Self::execute_turn_inner(provider, state, effects, actions, rng, Some(&mut log));
+            Self::execute_turn_inner(provider, state, effects, actions, rng, Some(&mut log), None);
+        (result, log)
+    }
+
+    /// Execute a logged turn with a frontend action immediately before each actor.
+    /// Ordering uses the selected actions before the callback; a cancelled second
+    /// actor never invokes it. The callback may replace state/effects, for example
+    /// when a trainer item or switch replaces that actor's selected move.
+    pub fn execute_turn_logged_with_before_action<P: EffectProvider>(
+        provider: &P,
+        state: &mut BattleState<P>,
+        effects: &mut Vec<EffectState<P>>,
+        actions: [BattleAction<P>; 2],
+        rng: &mut dyn BattleRng,
+        before_action: &mut dyn FnMut(
+            &mut BattleState<P>,
+            &mut Vec<EffectState<P>>,
+            BattlerRef,
+            &mut BattleAction<P>,
+            &mut dyn BattleRng,
+        ),
+    ) -> (StackTurnResult, TurnLog<P>) {
+        let mut log = TurnLog::new();
+        let result = Self::execute_turn_inner(
+            provider,
+            state,
+            effects,
+            actions,
+            rng,
+            Some(&mut log),
+            Some(before_action),
+        );
         (result, log)
     }
 
@@ -99,6 +130,15 @@ impl StackDriver {
         actions: [BattleAction<P>; 2],
         rng: &mut dyn BattleRng,
         mut log: Option<&mut TurnLog<P>>,
+        mut before_action: Option<
+            &mut dyn FnMut(
+                &mut BattleState<P>,
+                &mut Vec<EffectState<P>>,
+                BattlerRef,
+                &mut BattleAction<P>,
+                &mut dyn BattleRng,
+            ),
+        >,
     ) -> StackTurnResult {
         // ── 1. Turn order (draws the order/speed-tie byte first, like pokered
         //       turn_order.rs:41 / move_execution draw order §4). ──
@@ -107,9 +147,9 @@ impl StackDriver {
             FirstMover::Player => (BattlerRef::PLAYER, BattlerRef::OPPONENT),
             FirstMover::Opponent => (BattlerRef::OPPONENT, BattlerRef::PLAYER),
         };
-        let (first_action, second_action) = match first {
-            FirstMover::Player => (&actions[0], &actions[1]),
-            FirstMover::Opponent => (&actions[1], &actions[0]),
+        let (mut first_action, mut second_action) = match first {
+            FirstMover::Player => (actions[0].clone(), actions[1].clone()),
+            FirstMover::Opponent => (actions[1].clone(), actions[0].clone()),
         };
 
         // ── 2. First mover acts, then per-mover residual + faint check. ──
@@ -120,8 +160,11 @@ impl StackDriver {
         // turn 2, Hyper Beam recharge forces `Nothing`. This is the seam that
         // proves a per-turn `[Action; 2]` input is insufficient; it is defaulted
         // to `None` (inert) for every game that registers no forcing volatile.
+        if let Some(callback) = before_action.as_deref_mut() {
+            callback(state, effects, first_ref, &mut first_action, rng);
+        }
         let first_effective = provider
-            .forced_action(effects, first_ref, first_action)
+            .forced_action(effects, first_ref, &first_action)
             .unwrap_or_else(|| first_action.clone());
         // Snapshot before the action (target first, then actor → natural log order:
         // the hit precedes self-effects like recoil). Only when logging.
@@ -164,8 +207,11 @@ impl StackDriver {
         }
 
         // ── Second mover acts, then its own per-mover residual. ──
+        if let Some(callback) = before_action.as_deref_mut() {
+            callback(state, effects, second_ref, &mut second_action, rng);
+        }
         let second_effective = provider
-            .forced_action(effects, second_ref, second_action)
+            .forced_action(effects, second_ref, &second_action)
             .unwrap_or_else(|| second_action.clone());
         let act_pre2 = Self::snap_pair(state, Self::opposing(second_ref), second_ref, &log);
         let mut mv2 = MoveContext::default();
