@@ -28,6 +28,10 @@ with a migration guide under `migration/` (created per release).
   frequency and duration, retain fractional carries and historical byte
   arithmetic, and stop on crossing the target without snapping to it.
 
+- Fix: outward battle spirals probe the unfilled cell to the left of the current
+  heading and finish after 120 batches; the old forward probe could cycle
+  indefinitely and block a consumer waiting for visual completion.
+
 ## v0.8.2
 
 This patch release adds trait implementations only; there are no breaking
