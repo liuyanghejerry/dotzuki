@@ -36,6 +36,9 @@ with a migration guide under `migration/` (created per release).
   resolution. The callback sees the first actor's completed action when the
   second actor is reached; a faint that cancels that actor also skips its
   callback. Existing turn entry points keep their behavior.
+- Add: the defaulted `EffectProvider::resolved_move` hook selects a move's
+  effect and log identity after `BeforeMove` succeeds. Called moves can run
+  status checks once and retain the selected action's turn priority.
 
 ## v0.8.2
 
