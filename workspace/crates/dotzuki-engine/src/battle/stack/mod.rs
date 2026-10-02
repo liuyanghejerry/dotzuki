@@ -80,6 +80,7 @@ mod tests {
     #[allow(dead_code)] // `None` is the inert variant of the typed-state shape
     enum TKind {
         None,
+        CallOverride,
         Toxic { counter: u8 },
     }
 
@@ -353,7 +354,7 @@ mod tests {
                 *counter = counter.saturating_add(1);
                 *counter
             }
-            TKind::None => 0,
+            TKind::None | TKind::CallOverride => 0,
         };
         assert_eq!(n, 1);
         // binary-search miss returns None.
@@ -471,7 +472,7 @@ mod tests {
         ) -> Self::Move {
             if effects
                 .iter()
-                .any(|e| e.host == actor && matches!(e.kind, TKind::Mist))
+                .any(|e| e.host == actor && matches!(e.kind, TKind::CallOverride))
             {
                 TMove { power: 77 }
             } else {
@@ -707,7 +708,7 @@ mod tests {
             id: EffectId(30),
             host: BattlerRef::PLAYER,
             effect_order: 0,
-            kind: TKind::Mist,
+            kind: TKind::CallOverride,
         }];
         let mut rng = EngineScriptedRng::new(vec![]);
         let (result, log) = StackDriver::execute_turn_logged(
