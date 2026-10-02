@@ -7,10 +7,10 @@
 //! Each logical channel has its own command pointer, note delay, volume,
 //! vibrato state, pitch slide state, etc.
 
-use alloc::vec::Vec;
 use crate::apu::Apu;
 use crate::commands::{self, Command};
 use crate::{HwChannel, NUM_CHANNELS, NUM_MUSIC_CHANNELS, NUM_NOTES, WAVE_INSTRUMENTS};
+use alloc::vec::Vec;
 
 // Re-export shared types from crate for backward compatibility
 pub use crate::{ChannelFlags1, ChannelFlags2, ChannelState, PitchSlideState, VibratoState};
@@ -178,7 +178,9 @@ impl Sequencer {
         self.sfx_playing = true;
 
         for (i, data) in channel_data.iter().enumerate() {
-            if data.is_empty() { continue; }
+            if data.is_empty() {
+                continue;
+            }
             let ch_idx = NUM_MUSIC_CHANNELS + start_channel + i;
             if ch_idx >= NUM_CHANNELS {
                 break;
@@ -453,11 +455,6 @@ impl Sequencer {
         ch.freq_lo_saved = (freq & 0xFF) as u8;
         ch.note_length = length;
 
-        // Apply perfect pitch
-        if ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
-            ch.frequency = ch.frequency.wrapping_add(1) & 0x07FF;
-        }
-
         // Reset vibrato delay for this note
         ch.vibrato.delay_counter = ch.vibrato.delay_reload;
 
@@ -471,6 +468,13 @@ impl Sequencer {
             commands::calculate_delay(length, ch.note_speed, tempo, ch.delay_frac);
         ch.delay_counter = delay;
         ch.delay_frac = new_frac;
+        if ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON) {
+            crate::effects::init_pitch_slide(ch);
+        }
+        // Perfect pitch affects the onset hardware write, not the slide base.
+        if ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
+            ch.frequency = ch.frequency.wrapping_add(1) & 0x07FF;
+        }
         ch.trigger = true;
     }
 
@@ -611,32 +615,8 @@ impl Sequencer {
         ch.pitch_slide.target_freq = target_freq;
         ch.pitch_slide.length_modifier = length_modifier;
         ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
-
-        // Determine direction
-        if target_freq < ch.frequency {
-            ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_DEC);
-        } else {
-            ch.flags1.remove(ChannelFlags1::PITCH_SLIDE_DEC);
-        }
-
-        // The next command should be a note — we need to read it to get the
-        // starting frequency and calculate the step. But in our decode-execute loop,
-        // the note will be processed naturally. We pre-calculate the step here
-        // based on current info.
-
-        // For now, calculate step as simple linear interpolation
-        let current = ch.frequency;
-        let diff = if target_freq > current {
-            target_freq - current
-        } else {
-            current - target_freq
-        };
-
-        // Step per frame — the original divides by (delay - length_modifier)
-        // Since we don't know the delay yet (it depends on the next note),
-        // we store the modifier and calculate the step when the note plays.
-        ch.pitch_slide.freq_step = if diff > 0 { diff.max(1) } else { 0 };
-        ch.pitch_slide.current_freq = current;
+        // The following note supplies both the start frequency and duration.
+        // Initializing here would use the previous note (or silence).
     }
 
     /// Handle sound_loop command.
@@ -742,15 +722,20 @@ impl Sequencer {
             return;
         }
 
+        if self.channels[ch_idx]
+            .flags1
+            .contains(ChannelFlags1::PITCH_SLIDE_ON)
+        {
+            self.channels[ch_idx].vibrato_freq_lo = None;
+            if let Some(new_freq) = crate::effects::apply_pitch_slide(&mut self.channels[ch_idx]) {
+                self.channels[ch_idx].frequency = new_freq;
+            }
+            return;
+        }
         if let Some(vibrato_lo) = crate::effects::apply_vibrato(&mut self.channels[ch_idx]) {
             self.channels[ch_idx].vibrato_freq_lo = Some(vibrato_lo);
         } else {
             self.channels[ch_idx].vibrato_freq_lo = None;
-        }
-
-        // Apply pitch slide
-        if let Some(new_freq) = crate::effects::apply_pitch_slide(&mut self.channels[ch_idx]) {
-            self.channels[ch_idx].frequency = new_freq;
         }
     }
 

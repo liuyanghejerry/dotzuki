@@ -19,6 +19,17 @@
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
+## 未发布
+
+- 不兼容变更：`NpcRuntimeState::delay_counter` 改为 `u16`，以表示
+  八位计数器零值回绕对应的 256 帧等待。赋入已定型 `u8` 的调用方须用
+  `u16::from` 转换。
+- 新增：`update_npc_movement_with_policy` 与 `NpcWanderPolicy::Classic`
+  可选择四个等宽随机方向区间、受限轴方向映射与回绕等待；原有
+  `update_npc_movement` 保留默认游走策略。
+- 修复：GB 字节流音高滑音从紧随命令的新音符频率和时长初始化，保留
+  小数进位与历史字节运算，越过目标时停止且不直接跳到目标频率。
+
 ## v0.8.2
 
 此补丁版本只新增 trait 实现，没有破坏性变更。使用方更新方式见

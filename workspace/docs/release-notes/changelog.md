@@ -16,6 +16,18 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
+## Unreleased
+
+- Breaking: `NpcRuntimeState::delay_counter` is now `u16`, allowing a
+  wrapping eight-bit zero roll to represent a 256-frame pause. Consumers
+  assigning typed `u8` values must convert them with `u16::from`.
+- Add: `update_npc_movement_with_policy` and `NpcWanderPolicy::Classic`
+  select four equal direction intervals, axis remapping, and wrapping delays;
+  `update_npc_movement` retains its default wandering behavior.
+- Fix: GB byte-stream pitch slides initialize from the following note's
+  frequency and duration, retain fractional carries and historical byte
+  arithmetic, and stop on crossing the target without snapping to it.
+
 ## v0.8.2
 
 This patch release adds trait implementations only; there are no breaking

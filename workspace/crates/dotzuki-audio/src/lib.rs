@@ -408,6 +408,8 @@ pub struct PitchSlideState {
     pub freq_step: u16,
     /// Fractional accumulator for sub-frame precision.
     pub freq_frac: u8,
+    /// Byte remainder carried between slide ticks.
+    pub step_frac: u8,
     /// Length modifier for slide duration.
     pub length_modifier: u8,
 }
