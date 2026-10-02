@@ -35,7 +35,7 @@ pub struct NpcRuntimeState {
     pub wander_axis: NpcWanderAxis,
     pub range: u8,
     pub walk_counter: u8,
-    pub delay_counter: u8,
+    pub delay_counter: u16,
     pub text_id: u8,
     pub defeated: bool,
     pub visible: bool,
@@ -47,10 +47,50 @@ pub struct NpcRuntimeState {
 /// Frames to walk one tile. The classic GB walkers take $10 frames per tile —
 /// HALF the player's speed (WALKANIMATIONCOUNTER = $10, movement.asm:296-339).
 pub const NPC_WALK_FRAMES: u8 = 16;
-/// Maximum delay between random NPC movements: `Random & $7F` ∈ 0..=127
-/// (movement.asm:352-361; a rolled 0 becomes 256 — that quirk is preserved
-/// by callers as an immediate re-roll, matching the original's wrap).
+/// Mask for the delay between random NPC movements.
 pub const NPC_MAX_DELAY: u8 = 127;
+
+/// Selects the random direction and delay interpretation for wandering NPCs.
+/// The default preserves the engine's existing low-bit direction selection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum NpcWanderPolicy {
+    #[default]
+    Default,
+    /// Four equally sized direction intervals; restricted axes remap directions.
+    /// A zero delay represents the wrapping eight-bit countdown of 256 frames.
+    Classic,
+}
+
+impl NpcWanderPolicy {
+    fn direction(self, random: u8, index: usize, axis: NpcWanderAxis) -> Option<Direction> {
+        use Direction::{Down, Left, Right, Up};
+        let bits = match self {
+            Self::Default => random.wrapping_add(index as u8) & 3,
+            Self::Classic => random >> 6,
+        } as usize;
+        if self == Self::Classic {
+            return Some(match axis {
+                NpcWanderAxis::Any => [Down, Up, Left, Right][bits],
+                NpcWanderAxis::Horizontal => [Left, Right, Left, Right][bits],
+                NpcWanderAxis::Vertical => [Down, Up, Up, Down][bits],
+            });
+        }
+        let dir = [Down, Up, Left, Right][bits];
+        match axis {
+            NpcWanderAxis::Any => Some(dir),
+            NpcWanderAxis::Horizontal if dir == Left || dir == Right => Some(dir),
+            NpcWanderAxis::Vertical if dir == Up || dir == Down => Some(dir),
+            _ => None,
+        }
+    }
+
+    fn delay(self, random: u8) -> u16 {
+        match (self, random & NPC_MAX_DELAY) {
+            (Self::Classic, 0) => 256,
+            (_, delay) => delay as u16,
+        }
+    }
+}
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -151,6 +191,35 @@ pub fn update_npc_movement<T: TilesetTrait>(
     tileset: T,
     provider: &impl CollisionProvider<T>,
 ) {
+    update_npc_movement_with_policy(
+        npcs,
+        player_x,
+        player_y,
+        player_dest,
+        map_width_blocks,
+        map_height_blocks,
+        rng_value,
+        blocks,
+        tileset,
+        provider,
+        NpcWanderPolicy::Default,
+    );
+}
+
+/// Updates NPCs with an explicitly selected random-wandering policy.
+pub fn update_npc_movement_with_policy<T: TilesetTrait>(
+    npcs: &mut [NpcRuntimeState],
+    player_x: u16,
+    player_y: u16,
+    player_dest: Option<(u16, u16)>,
+    map_width_blocks: u8,
+    map_height_blocks: u8,
+    rng_value: u8,
+    blocks: &[u8],
+    tileset: T,
+    provider: &impl CollisionProvider<T>,
+    policy: NpcWanderPolicy,
+) {
     let max_x = (map_width_blocks as u16) * 2;
     let max_y = (map_height_blocks as u16) * 2;
 
@@ -234,32 +303,10 @@ pub fn update_npc_movement<T: TilesetTrait>(
                     continue;
                 }
 
-                // Pick a random direction from the lower 2 bits of rng_value,
-                // filtered by the classic axis byte (movement byte 2:
-                // UP_DOWN $01 → vertical only, LEFT_RIGHT $02 → horizontal
-                // only, ANY $00 → all four — movement.asm:195-251). An
-                // axis-off roll re-rolls the delay instead of moving.
-                let dir_bits = (rng_value.wrapping_add(i as u8)) & 0x03;
-                let dir = match dir_bits {
-                    0 => Direction::Down,
-                    1 => Direction::Up,
-                    2 => Direction::Left,
-                    3 => Direction::Right,
-                    _ => unreachable!(),
-                };
-                let axis_ok = match npc.wander_axis {
-                    NpcWanderAxis::Any => true,
-                    NpcWanderAxis::Vertical => {
-                        dir == Direction::Up || dir == Direction::Down
-                    }
-                    NpcWanderAxis::Horizontal => {
-                        dir == Direction::Left || dir == Direction::Right
-                    }
-                };
-                if !axis_ok {
-                    npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                let Some(dir) = policy.direction(rng_value, i, npc.wander_axis) else {
+                    npc.delay_counter = policy.delay(rng_value);
                     continue;
-                }
+                };
 
                 let (dx, dy) = direction_delta(dir);
                 let tx = (npc.x as i32 + dx as i32) as u16;
@@ -269,7 +316,7 @@ pub fn update_npc_movement<T: TilesetTrait>(
                 // none — they walk until blocked.)
                 if tx >= max_x || ty >= max_y {
                     npc.facing = dir;
-                    npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                    npc.delay_counter = policy.delay(rng_value);
                     continue;
                 }
 
@@ -282,7 +329,7 @@ pub fn update_npc_movement<T: TilesetTrait>(
 
                 if blocked || player_blocked {
                     npc.facing = dir;
-                    npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                    npc.delay_counter = policy.delay(rng_value);
                     continue;
                 }
 
@@ -291,13 +338,13 @@ pub fn update_npc_movement<T: TilesetTrait>(
                     provider.get_tile_at_position(tileset, blocks, map_width_blocks, tx, ty);
                 if !provider.is_tile_passable(tileset, target_tile) {
                     npc.facing = dir;
-                    npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                    npc.delay_counter = policy.delay(rng_value);
                     continue;
                 }
 
                 npc.facing = dir;
                 npc.walk_counter = NPC_WALK_FRAMES;
-                npc.delay_counter = rng_value & NPC_MAX_DELAY;
+                npc.delay_counter = policy.delay(rng_value);
             }
             NpcMovementType::FacePlayer => {
                 let dx = player_x as i32 - npc.x as i32;
@@ -363,4 +410,131 @@ pub fn npc_in_front_of_player<'a, M: MapTrait, T: TilesetTrait, Mus>(
     }
 
     None
+}
+
+#[cfg(test)]
+mod wander_policy_tests {
+    use super::*;
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct Floor;
+    impl TilesetTrait for Floor {
+        fn id(&self) -> u8 {
+            0
+        }
+        fn name(&self) -> &'static str {
+            "floor"
+        }
+    }
+    struct OpenFloor;
+    impl CollisionProvider<Floor> for OpenFloor {
+        fn is_tile_passable(&self, _: Floor, _: u8) -> bool {
+            true
+        }
+        fn check_tile_pair_collision(&self, _: Floor, _: u8, _: u8, _: bool) -> bool {
+            false
+        }
+        fn check_ledge_jump(&self, _: Floor, _: u8, _: u8, _: u8, _: u8) -> bool {
+            false
+        }
+        fn is_counter_tile(&self, _: Floor, _: u8) -> bool {
+            false
+        }
+        fn get_tile_at_position(&self, _: Floor, _: &[u8], _: u8, _: u16, _: u16) -> u8 {
+            0
+        }
+        fn uses_warp_tile_in_front_check(&self, _: Floor) -> bool {
+            false
+        }
+        fn check_extra_warp_special(&self, _: Floor, _: u8) -> Option<bool> {
+            None
+        }
+        fn is_door_tile(&self, _: Floor, _: u8) -> bool {
+            false
+        }
+        fn is_warp_tile(&self, _: Floor, _: u8) -> bool {
+            false
+        }
+        fn is_warp_carpet_tile_in_front(&self, _: Floor, _: u8, _: u8) -> bool {
+            false
+        }
+    }
+    fn walker(axis: NpcWanderAxis) -> NpcRuntimeState {
+        NpcRuntimeState {
+            npc_index: 0,
+            sprite_id: 1,
+            x: 5,
+            y: 5,
+            home_x: 5,
+            home_y: 5,
+            facing: Direction::Down,
+            scripted_frame: None,
+            movement_type: NpcMovementType::Wander,
+            wander_axis: axis,
+            range: 0,
+            walk_counter: 0,
+            delay_counter: 0,
+            text_id: 0,
+            defeated: false,
+            visible: true,
+            scripted_path: VecDeque::new(),
+        }
+    }
+    fn tick(npc: &mut NpcRuntimeState, random: u8, policy: NpcWanderPolicy) {
+        update_npc_movement_with_policy(
+            core::slice::from_mut(npc),
+            0,
+            0,
+            None,
+            10,
+            10,
+            random,
+            &[],
+            Floor,
+            &OpenFloor,
+            policy,
+        );
+    }
+    #[test]
+    fn classic_axis_rolls_all_start_a_walk() {
+        use Direction::{Down, Left, Right, Up};
+        for (axis, expected) in [
+            (NpcWanderAxis::Any, [Down, Up, Left, Right]),
+            (NpcWanderAxis::Horizontal, [Left, Right, Left, Right]),
+            (NpcWanderAxis::Vertical, [Down, Up, Up, Down]),
+        ] {
+            for random in 0..=255u8 {
+                let mut npc = walker(axis);
+                tick(&mut npc, random, NpcWanderPolicy::Classic);
+                assert_eq!(npc.facing, expected[(random >> 6) as usize]);
+                assert_eq!(npc.walk_counter, NPC_WALK_FRAMES);
+            }
+        }
+    }
+    #[test]
+    fn classic_zero_delay_waits_256_frames_after_finishing_walk() {
+        let mut npc = walker(NpcWanderAxis::Vertical);
+        tick(&mut npc, 0, NpcWanderPolicy::Classic);
+        for _ in 0..NPC_WALK_FRAMES {
+            tick(&mut npc, 1, NpcWanderPolicy::Classic);
+        }
+        assert_eq!((npc.x, npc.y), (5, 6));
+        assert_eq!(npc.delay_counter, 256);
+        for remaining in (0..256).rev() {
+            tick(&mut npc, 1, NpcWanderPolicy::Classic);
+            assert_eq!(npc.walk_counter, 0);
+            assert_eq!(npc.delay_counter, remaining);
+        }
+        tick(&mut npc, 1, NpcWanderPolicy::Classic);
+        assert_eq!(npc.walk_counter, NPC_WALK_FRAMES);
+    }
+    #[test]
+    fn default_keeps_axis_rejection_and_zero_delay() {
+        let mut npc = walker(NpcWanderAxis::Horizontal);
+        tick(&mut npc, 0, NpcWanderPolicy::Default);
+        assert_eq!(npc.walk_counter, 0);
+        assert_eq!(npc.delay_counter, 0);
+        tick(&mut npc, 2, NpcWanderPolicy::Default);
+        assert_eq!(npc.walk_counter, NPC_WALK_FRAMES);
+        assert_eq!(npc.facing, Direction::Left);
+    }
 }

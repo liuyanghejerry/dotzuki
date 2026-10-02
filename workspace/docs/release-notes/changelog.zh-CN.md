@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.2
->（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
+>（源文档 commit 4a6d4ee5c71bd3593cd80121251d94478191b315）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -18,6 +18,27 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## 未发布
+
+- 不兼容变更：`NpcRuntimeState::delay_counter` 改为 `u16`，以表示
+  八位计数器零值回绕对应的 256 帧等待。赋入已定型 `u8` 的调用方须用
+  `u16::from` 转换。
+- 新增：`update_npc_movement_with_policy` 与 `NpcWanderPolicy::Classic`
+  可选择四个等宽随机方向区间、受限轴方向映射与回绕等待；原有
+  `update_npc_movement` 保留默认游走策略。
+- 修复：GB 字节流音高滑音从紧随命令的新音符频率和时长初始化，保留
+  小数进位与历史字节运算，越过目标时停止且不直接跳到目标频率。
+
+- 修复：战斗向外螺旋转场探测当前方向左侧的未填充格，并在 120 批次后
+  结束；旧的前方探测可能永久循环，使等待视觉转场完成的游戏卡住。
+- 新增：`StackDriver::execute_turn_logged_with_before_action` 允许游戏在
+  回合排序之后、强制行动解析之前替换行动。第二个行动者的回调能读取
+  第一个行动者完成行动后的状态；若倒下判定取消第二次行动，也会跳过其
+  回调。既有回合入口的行为保持不变。
+- 新增：带默认实现的 `EffectProvider::resolved_move` 在 `BeforeMove`
+  通过后选择招式效果与日志身份。被调用招式可以只执行一次状态检查，
+  并保留所选行动的回合优先级。
 
 ## v0.8.2
 

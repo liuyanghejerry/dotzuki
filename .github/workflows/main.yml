@@ -5,14 +5,14 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
-      # Workflow-only changes (this file, docs-pages.yml, …) must not run
-      # the full suite: GitHub parses every workflow's YAML on push anyway,
-      # and `workflow_dispatch` remains for manual re-runs.
-      - '.github/workflows/*'
+      - '.github/workflows/docs-pages.yml'
+      - '.github/workflows/docs-review.yml'
   pull_request:
     paths-ignore:
       - '**.md'
-      - '.github/workflows/*'
+      - '.github/workflows/docs-pages.yml'
+      - '.github/workflows/docs-review.yml'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -72,7 +72,7 @@ jobs:
           ./target/debug/dotzuki run examples/your-first-game --headless --frames 180
 
   build-android-export:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     name: Build Android export
@@ -81,7 +81,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -91,12 +91,29 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -yq pkg-config libasound2-dev
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Use runner Android SDK
+        run: |
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          : "${sdk_root:?Ubuntu runner Android SDK is missing}"
+          sdk_manager="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdk_manager"
+          echo "ANDROID_HOME=$sdk_root" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk_root" >> "$GITHUB_ENV"
+          echo "$sdk_root/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$sdk_root/platform-tools" >> "$GITHUB_PATH"
+          "$sdk_manager" --version
 
       - name: Install Android build tools
         run: |
-          sdkmanager \
+          python3 - <<'PY'
+          import os
+          import subprocess
+          subprocess.run(
+              ["sdkmanager", "--sdk_root=" + os.environ["ANDROID_SDK_ROOT"], "--licenses"],
+              input="y\n" * 100, text=True, check=True,
+          )
+          PY
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
             "platforms;android-35" \
             "build-tools;35.0.0" \
             "cmake;3.22.1" \

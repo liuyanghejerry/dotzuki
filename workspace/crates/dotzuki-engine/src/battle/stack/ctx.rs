@@ -109,6 +109,22 @@ pub trait EffectProvider: BattleProvider + 'static {
         None
     }
 
+    /// Select the move's effect after BeforeMove handlers have passed. Games
+    /// may resolve a copied/random move inside those handlers; turn ordering
+    /// still uses the originally selected action and status gates run once.
+    fn resolved_move(
+        &self,
+        _state: &BattleState<Self>,
+        _effects: &[EffectState<Self>],
+        _actor: BattlerRef,
+        selected: &Self::Move,
+    ) -> Self::Move
+    where
+        Self: Sized,
+    {
+        selected.clone()
+    }
+
     // ── Multi-source collection resolvers (design §2.4, P0b) ─────────────────
     //
     // These four seams are what turns "abilities/items/weather/side-conditions
