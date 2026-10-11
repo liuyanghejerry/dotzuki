@@ -70,6 +70,9 @@ pub struct OverworldActor {
     idle: u32,
     /// Whether the consumer is holding "run" this frame (faster speed + animation).
     running: bool,
+    walk_speed: f32,
+    run_speed: f32,
+    step_speed: Option<f32>,
     tile: i32,
     /// Elevation level the actor walks on (0 = ground). Collision is queried
     /// per level; stair tiles move the actor between levels (caller-side).
@@ -89,6 +92,9 @@ impl OverworldActor {
             anim: 0,
             idle: IDLE_GRACE,
             running: false,
+            walk_speed: WALK_SPEED,
+            run_speed: RUN_SPEED,
+            step_speed: None,
             tile,
             elevation: 0,
         }
@@ -113,6 +119,44 @@ impl OverworldActor {
     pub fn is_running(&self) -> bool {
         self.running
     }
+    /// Configure walking and running speeds in pixels per update. Defaults are
+    /// 2 and 4. Animation cadence is unchanged. Changes also affect an active step.
+    ///
+    /// # Panics
+    /// Panics if either speed is non-positive or non-finite.
+    pub fn set_movement_speeds(&mut self, walk: f32, run: f32) {
+        assert!(walk.is_finite() && walk > 0.0, "invalid walking speed");
+        assert!(run.is_finite() && run > 0.0, "invalid running speed");
+        self.walk_speed = walk;
+        self.run_speed = run;
+    }
+
+    /// Override the walk/run speed in pixels per update (for vehicles or terrain).
+    /// `None` restores the configured walk/run speeds. Changes take effect on the
+    /// next update, including during a step; set this while idle for per-step timing.
+    ///
+    /// # Panics
+    /// Panics if the supplied speed is non-positive or non-finite.
+    pub fn set_step_speed(&mut self, speed: Option<f32>) {
+        if let Some(speed) = speed {
+            assert!(speed.is_finite() && speed > 0.0, "invalid step speed");
+        }
+        self.step_speed = speed;
+    }
+
+    /// Current speed override, or `None` for the configured walk/run speeds.
+    pub fn step_speed(&self) -> Option<f32> {
+        self.step_speed
+    }
+
+    /// Shift the rendered world position without changing the target tile,
+    /// facing, or walk state. This bypasses collision for caller-driven scenes.
+    /// An active step still interpolates toward its original target on update.
+    pub fn nudge(&mut self, dx: f32, dy: f32) {
+        self.px += dx;
+        self.py += dy;
+    }
+
     /// Target tile coordinates.
     pub fn tile(&self) -> (i32, i32) {
         (self.tile_x, self.tile_y)
@@ -175,7 +219,11 @@ impl OverworldActor {
                 (self.tile_x * self.tile) as f32,
                 (self.tile_y * self.tile) as f32,
             );
-            let speed = if self.running { RUN_SPEED } else { WALK_SPEED };
+            let speed = self.step_speed.unwrap_or(if self.running {
+                self.run_speed
+            } else {
+                self.walk_speed
+            });
             self.px = step_toward(self.px, tx, speed);
             self.py = step_toward(self.py, ty, speed);
             if (self.px - tx).abs() < 0.001 && (self.py - ty).abs() < 0.001 {
@@ -287,6 +335,55 @@ mod tests {
         fn is_blocked(&self, x: i32, y: i32) -> bool {
             self.0.contains(&(x, y))
         }
+    }
+
+    #[test]
+    fn configured_speeds_and_fractional_override_report_exact_arrival() {
+        for (running, speed, frames) in [
+            (false, None, 16),
+            (true, None, 8),
+            (false, Some(16.0 / 6.0), 6),
+            (false, Some(4.0), 4),
+        ] {
+            let mut actor = OverworldActor::new(0, 0, 16);
+            actor.set_movement_speeds(1.0, 2.0);
+            actor.set_running(running);
+            actor.set_step_speed(speed);
+            for frame in 1..=frames {
+                let arrived = actor.update(Some(Direction::Right), &Walls(&[]));
+                assert_eq!(arrived, if frame == frames { Some((1, 0)) } else { None });
+            }
+            assert_eq!(actor.px(), 16.0);
+            actor.set_step_speed(None);
+            assert_eq!(actor.step_speed(), None);
+            actor.update(Some(Direction::Right), &Walls(&[]));
+            assert_eq!(actor.px(), if running { 18.0 } else { 17.0 });
+        }
+    }
+
+    #[test]
+    fn scripted_offset_preserves_logical_pose() {
+        let mut actor = OverworldActor::new(2, 3, 16);
+        actor.set_facing(Direction::Left);
+        actor.nudge(1.0, -4.0);
+        assert_eq!((actor.px(), actor.py()), (33.0, 44.0));
+        assert_eq!(actor.tile(), (2, 3));
+        assert_eq!(actor.facing(), Direction::Left);
+        assert!(!actor.is_moving());
+        actor.place(2, 3, Direction::Down);
+        assert_eq!((actor.px(), actor.py()), (32.0, 48.0));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid step speed")]
+    fn rejects_nan_speed() {
+        OverworldActor::new(0, 0, 16).set_step_speed(Some(f32::NAN));
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid walking speed")]
+    fn rejects_zero_walk_speed() {
+        OverworldActor::new(0, 0, 16).set_movement_speeds(0.0, 4.0);
     }
 
     /// A two-level map: per-level solid sets (index = level).

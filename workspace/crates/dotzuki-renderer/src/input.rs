@@ -131,3 +131,88 @@ pub fn keycode_to_gb_button(keycode: KeyCode) -> Option<GbButton> {
         _ => None,
     }
 }
+
+/// Accumulates button events between simulation frames. A press followed by a
+/// release before the next frame is exposed as a one-frame press. Multiple taps
+/// between frames coalesce; held keys do not generate repeated press edges.
+#[derive(Debug, Clone, Default)]
+pub struct BufferedInput {
+    held: u8,
+    pending: u8,
+    frame: InputState,
+}
+
+impl BufferedInput {
+    /// Record a button transition. Repeated key-down events are ignored.
+    pub fn set_button(&mut self, button: GbButton, pressed: bool) {
+        let bit = button.bit_mask();
+        if pressed {
+            self.pending |= bit & !self.held;
+            self.held |= bit;
+        } else {
+            self.held &= !bit;
+        }
+    }
+
+    /// Produce input for one simulation update and consume pending presses.
+    pub fn next_frame(&mut self) -> InputState {
+        self.frame.begin_frame();
+        self.frame.set_from_bitmask(self.held | self.pending);
+        self.pending = 0;
+        self.frame.clone()
+    }
+
+    /// Forget held buttons, pending taps and edge history (for focus loss).
+    pub fn clear(&mut self) {
+        *self = Self::default();
+    }
+
+    /// Record a physical key using the renderer's standard button mapping.
+    #[cfg(feature = "gpu")]
+    pub fn set_from_keycode(&mut self, keycode: KeyCode, pressed: bool) {
+        if let Some(button) = keycode_to_gb_button(keycode) {
+            self.set_button(button, pressed);
+        }
+    }
+}
+
+#[cfg(test)]
+mod buffered_tests {
+    use super::*;
+
+    #[test]
+    fn quick_tap_survives_until_one_update() {
+        let mut input = BufferedInput::default();
+        input.set_button(GbButton::Start, true);
+        input.set_button(GbButton::Start, false);
+        assert!(input.next_frame().is_just_pressed(GbButton::Start));
+        assert!(input.next_frame().is_just_released(GbButton::Start));
+        assert!(!input.next_frame().any_held());
+    }
+
+    #[test]
+    fn holding_and_repeat_do_not_repeat_edges() {
+        let mut input = BufferedInput::default();
+        input.set_button(GbButton::Right, true);
+        assert!(input.next_frame().is_just_pressed(GbButton::Right));
+        input.set_button(GbButton::Right, true);
+        let frame = input.next_frame();
+        assert!(frame.is_held(GbButton::Right));
+        assert!(!frame.is_just_pressed(GbButton::Right));
+        input.set_button(GbButton::Right, false);
+        assert!(input.next_frame().is_just_released(GbButton::Right));
+    }
+
+    #[test]
+    fn focus_loss_clears_held_and_pending_buttons() {
+        let mut input = BufferedInput::default();
+        input.set_button(GbButton::Right, true);
+        input.next_frame();
+        input.set_button(GbButton::A, true);
+        input.set_button(GbButton::A, false);
+        input.clear();
+        assert!(!input.next_frame().any_held());
+        input.set_button(GbButton::Right, true);
+        assert!(input.next_frame().is_just_pressed(GbButton::Right));
+    }
+}
