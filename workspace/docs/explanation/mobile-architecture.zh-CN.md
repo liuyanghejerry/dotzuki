@@ -1,13 +1,13 @@
 # 移动端架构
 
-> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.7.0
+> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.8.2
 >（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.8.2
 
 本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
 外壳；Android 和鸿蒙使用同一套带版本号的 C ABI。
@@ -98,10 +98,27 @@ SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 O
 工厂定义初始化字节和存档 JSON；宿主从运行时查询画面尺寸。
 
 公共 Android 和鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻采样、
-独立触控区和 44.1 kHz PCM。它们每 500 ms 检查已提交存档，并在生命周期切换时
+适配安全区的触控覆盖层和 44.1 kHz PCM。它们每 500 ms 检查已提交存档，并在生命周期切换时
 刷新。游戏决定何时提交存档。持久化是异步的；如果刷新完成前进程被终止，
 最近一次提交可能丢失。销毁运行时前必须停止音频回调。
 
 自定义静态库可通过 `scripts/export-mobile-host.py --help` 查看宿主导出参数，
 无需经过零 Rust 项目校验和打包。输出目录必须为空。游戏的构建脚本只提供库、
 初始化字节、名称和包标识，平台源代码仍在引擎仓库维护。
+
+## 共享触控控制器
+
+原生外壳保持 framebuffer 比例，把控件叠加在完整窗口上。
+共享 C++ 控制器负责布局、触点归属、四向选择、死区与取消。
+Android 在 SurfaceView 上方放置透明 View；HarmonyOS 在 XComponent 上方放置 Canvas。
+两端默认支持随设备旋转切换横屏方向，并提供原生布局编辑器。
+编辑期间外壳暂停游戏，失焦时释放触点和游戏输入。
+
+[DotzukiTouch package](../../crates/dotzuki-mobile/controls/README.zh-CN.md)
+为 iOS 宿主提供采用同一控制器的 UIKit 覆盖层，不替换现有 iOS 游戏外壳。
+宿主把输入回调和设置暂停回调转交给自己的运行时。
+组件文档包含接入契约和共享控制器测试命令。
+
+布局设置属于设备外壳，不写入游戏存档。ABI 保持版本 1，
+A/B/Select/Start 和四方向仍使用原来的输入位。
+通用 ABI 不提供具体游戏的 UI 状态，因此按场景隐藏按钮、切换实体手柄仍由宿主决定。

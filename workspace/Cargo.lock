@@ -1102,6 +1102,7 @@ dependencies = [
  "clap",
  "dotzuki-app",
  "dotzuki-engine-dsl",
+ "dotzuki-mobile",
  "dotzuki-rules",
  "dotzuki-runner",
  "env_logger",

@@ -1,0 +1,36 @@
+name: iOS touch controls
+on:
+  pull_request:
+    paths:
+      - 'workspace/crates/dotzuki-mobile/controls/**'
+      - '.github/workflows/mobile-touch-ios.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'workspace/crates/dotzuki-mobile/controls/**'
+      - '.github/workflows/mobile-touch-ios.yml'
+  workflow_dispatch:
+jobs:
+  ios-overlay:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and test UIKit package
+        working-directory: workspace/crates/dotzuki-mobile/controls
+        run: |
+          device_id=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          print(next(d["udid"] for runtime, values in devices.items() if "iOS" in runtime
+                     for d in values if d["name"].startswith("iPhone")))')
+          xcodebuild -scheme DotzukiTouch -destination "platform=iOS Simulator,id=$device_id" \
+            -derivedDataPath "$RUNNER_TEMP/dotzuki-touch-build" \
+            -resultBundlePath "$RUNNER_TEMP/dotzuki-touch-tests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-touch-test-results
+          path: ${{ runner.temp }}/dotzuki-touch-tests.xcresult

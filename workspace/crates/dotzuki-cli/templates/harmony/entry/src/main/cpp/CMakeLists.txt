@@ -6,7 +6,7 @@ set_target_properties(dotzuki_runner_mobile PROPERTIES
   IMPORTED_LOCATION
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/${OHOS_ARCH}/libdotzuki_runner_mobile.a)
 
-add_library(entry SHARED napi_init.cpp dotzuki_host.cpp)
+add_library(entry SHARED napi_init.cpp dotzuki_host.cpp touch_bridge.cpp)
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(entry PRIVATE cxx_std_17)
 

@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.8.2
 
 Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.
@@ -90,3 +90,18 @@ shell update does not fork game logic.
 
 See [Mobile Architecture](../explanation/mobile-architecture.md) for the
 threading and ownership contract.
+
+## Landscape touch controls
+
+The exported shell supports both landscape orientations and preserves the game's aspect ratio.
+The direction pad sits at the lower left, A/B at the lower right, and Start/Select at the upper
+right. All controls respect the window's safe area.
+Open the upper-left gear to adjust size, inward/vertical position, opacity, side swapping,
+a floating pad, and haptics. Settings persist on the device without changing game saves;
+gameplay pauses while the editor is open.
+
+Slide within the direction pad to turn without lifting. Movement and A/B can be held together.
+System interruptions, window changes, and canceled gestures release input.
+Re-export updates generated shell sources; preserve custom host changes before replacing them.
+See [Shared Touch Controls](../../crates/dotzuki-mobile/controls/README.md) for the implementation
+and iOS integration contract.

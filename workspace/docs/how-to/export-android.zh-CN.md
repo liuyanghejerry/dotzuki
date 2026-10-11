@@ -1,13 +1,13 @@
 # 导出 Android 游戏
 
-> 本文是 `export-android.md` 的中文翻译，同步至引擎版本 v0.7.0
+> 本文是 `export-android.md` 的中文翻译，同步至引擎版本 v0.8.2
 >（源文档 commit e5978b51abd75570080230acfd5c86341103ae5e）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.8.2
 
 构建共用移动运行时，并把零 Rust 游戏导出为面向 arm64 手机和平板的
 Android Studio 工程。
@@ -96,3 +96,14 @@ Activity 布局。保持 C ABI header、`game.dzpk` 和 ABI 版本 1 不变，�
 与游戏逻辑保持独立。
 
 线程和所有权契约见[移动端架构](../explanation/mobile-architecture.zh-CN.md)。
+
+## 横屏触控布局
+
+导出的外壳支持正反横屏，游戏画面保持比例。方向盘位于左下，A/B 位于右下，
+Start/Select 位于右上，所有控件避让窗口安全区。
+点击左上齿轮可调整大小、向内/垂直位置、不透明度、左右交换、浮动方向盘和触觉反馈。
+设置保存在设备上，不改变游戏存档；编辑时游戏暂停。
+
+方向盘支持不抬指换向，方向与 A/B 可同时按住。系统打断、窗口变化和取消事件会释放输入。
+重新导出会更新生成的外壳源文件；保留自行修改的宿主代码后再替换。
+实现与 iOS 接入见[共享触控控制器](../../crates/dotzuki-mobile/controls/README.zh-CN.md)。

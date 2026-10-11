@@ -8,9 +8,11 @@
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
+    "requestPermissions": [{ "name": "ohos.permission.VIBRATE" }],
     "abilities": [
       {
         "name": "EntryAbility",
+        "orientation": "auto_rotation_landscape",
         "srcEntry": "./ets/entryability/EntryAbility.ets",
         "description": "$string:ability_desc",
         "icon": "$media:layered_image",

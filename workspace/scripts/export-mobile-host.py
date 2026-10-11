@@ -53,6 +53,10 @@ def export_host(platform, library, payload, output, title, bundle):
     raw.write_bytes(payload)
     inc.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(workspace / "crates/dotzuki-mobile/include/dotzuki_runner_mobile.h", inc)
+    shutil.copyfile(
+        workspace / "crates/dotzuki-mobile/controls/include/dotzuki_touch.hpp",
+        inc.parent / "dotzuki_touch.hpp",
+    )
     lib.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(library, lib)
 

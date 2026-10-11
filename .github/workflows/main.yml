@@ -64,6 +64,9 @@ jobs:
         working-directory: workspace
         run: cargo build --workspace
 
+      - name: Test shared mobile touch controls
+        run: workspace/crates/dotzuki-mobile/controls/tests/run.sh
+
       - name: Test workspace
         working-directory: workspace
         run: cargo test --workspace
