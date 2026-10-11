@@ -87,7 +87,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)、[`v0.8.2`](./release-notes/migration/v0.8.2.zh-CN.md)）
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)、[`v0.8.2`](./release-notes/migration/v0.8.2.zh-CN.md), [`v0.9.0`](./release-notes/migration/v0.9.0.zh-CN.md)）
 
 ## 归档
 

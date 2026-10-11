@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.8.2
->（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.9.0
+>（源文档 commit ce902be18620041f13dd89c66ffffb582dd44758）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,37 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## v0.9.0
+
+本版本包含不兼容的 UI API 变更，要求 Rust 1.88 或更新版本。
+更新消费方前请阅读[迁移指南](migration/v0.9.0.zh-CN.md)。
+
+不兼容变更：
+
+- 移除已弃用的 `DialogConfig`、`FlexMenuConfig`、`YesNoConfig`、旧绘制包装函数，
+  以及 flex-menu 的旧 `EdgeInsets`、`Justify`、`SizeMode` 类型。改用 `MenuConfig`
+  与当前 widget 绘制函数。
+- Static layout 的 `Context::set` 改为返回 `Result<(), ContextCapacityError>`，
+  绑定数组满时不再 panic。调用方需处理返回值。
+
+运行时新增与修复：
+
+- 支持配置角色行走/跑步速度，为交通工具或地形覆盖移动速度，并在调用方驱动的
+  演出中偏移角色位置。默认速度保持每次 update 2/4 像素。
+- Game shell 缓存短按直到下一次 update，并在失焦时清空按住状态和待处理输入。
+  一帧内的多次短按会合并。
+- 同步 Android 与 Harmony runner 生命周期，拒绝 DSL 数值转换越界，对齐 native
+  与 Boa 命令行为，实现 battle hook scope 和 handler 速度排序。
+
+编辑器与验证：
+
+- 支持 cardinal 和 47-mask blob autotile 的可视化 mask 分配、连续绘制/擦除、
+  预览及规则原子保存。
+- 支持原生分辨率场景素材的透明度感知选择、拖动/微移、撤销/重做、碰撞与事件
+  叠加、像素编辑器往返，以及保存 `art.json` 时的 revision 检查。
+- 增加编辑器语言选择与延迟加载、GBA 帧预算检查、MSRV/依赖/移动端/浏览器
+  CI 门禁，并修正 Android SDK 安装包配置。
 
 ## v0.8.2
 

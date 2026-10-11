@@ -142,3 +142,4 @@ archive pages stay English-only (doc-standard §5).
 - [迁移至 v0.8.0](release-notes/migration/v0.8.0.zh-CN.md)
 - [迁移至 v0.8.1](release-notes/migration/v0.8.1.zh-CN.md)
 - [迁移至 v0.8.2](release-notes/migration/v0.8.2.zh-CN.md)
+- [迁移至 v0.9.0](release-notes/migration/v0.9.0.zh-CN.md)
