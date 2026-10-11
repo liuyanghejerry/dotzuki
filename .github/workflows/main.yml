@@ -150,6 +150,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Legacy SDK "tools" is no longer in the Android repository.
+          packages: platform-tools
 
       - name: Install Android build tools
         run: |

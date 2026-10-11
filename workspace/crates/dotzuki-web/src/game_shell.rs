@@ -10,6 +10,9 @@
 //! `EventLoop::spawn`; without `Poll`, winit 0.30's web backend only ticks
 //! when an event arrives, producing ~5 FPS).
 //!
+//! Button events are buffered until the next simulation update, so short taps
+//! survive frame pacing. Losing focus clears held and pending buttons.
+//!
 //! Game-specific wiring stays in the game crate: it builds a
 //! [`GameShellConfig`], implements [`GameLoop`], and — when the host page
 //! needs runtime control over the live game (join/leave a link session, …) —
@@ -28,7 +31,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
-use dotzuki_renderer::input::InputState;
+use dotzuki_renderer::input::{BufferedInput, InputState};
 use dotzuki_renderer::FbSurface;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -212,7 +215,7 @@ pub async fn run_game<G: GameLoop + 'static>(
     };
 
     let mut frame_buffer = G::Fb::new_screen(fb_width, fb_height);
-    let mut input = InputState::new();
+    let mut input = BufferedInput::default();
 
     #[cfg(not(target_arch = "wasm32"))]
     let mut next_frame_time = Instant::now();
@@ -230,6 +233,7 @@ pub async fn run_game<G: GameLoop + 'static>(
     let event_handler = move |event, elwt: &winit::event_loop::ActiveEventLoop| match event {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => elwt.exit(),
+            WindowEvent::Focused(false) => input.clear(),
             WindowEvent::RedrawRequested => {
                 game.borrow_mut().draw(&mut frame_buffer);
                 frame_buffer.present_into(pixels.frame_mut());
@@ -278,8 +282,7 @@ pub async fn run_game<G: GameLoop + 'static>(
                 }
 
                 if now >= next_frame_ms {
-                    game.borrow_mut().update(&input);
-                    input.begin_frame();
+                    game.borrow_mut().update(&input.next_frame());
                     if game.borrow().should_exit() {
                         elwt.exit();
                         return;
@@ -317,8 +320,7 @@ pub async fn run_game<G: GameLoop + 'static>(
             {
                 let now = Instant::now();
                 if now >= next_frame_time {
-                    game.borrow_mut().update(&input);
-                    input.begin_frame();
+                    game.borrow_mut().update(&input.next_frame());
                     if game.borrow().should_exit() {
                         elwt.exit();
                         return;
