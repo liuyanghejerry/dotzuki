@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,40 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## v0.9.0
+
+This release includes breaking UI API changes and requires Rust 1.88 or newer.
+See the [migration guide](migration/v0.9.0.md) before updating consumers.
+
+Breaking changes:
+
+- Remove deprecated `DialogConfig`, `FlexMenuConfig`, `YesNoConfig`, their
+  legacy drawing wrappers, and the legacy flex-menu `EdgeInsets`, `Justify`,
+  and `SizeMode` types. Use `MenuConfig` and the current widget drawing functions.
+- Static layout `Context::set` returns `Result<(), ContextCapacityError>`
+  instead of panicking when the binding array is full. Handle the result.
+
+Runtime additions and fixes:
+
+- Configure actor walk/run speeds, override movement speed for vehicles or
+  terrain, and offset actors during caller-driven scenes. Default speeds remain
+  2/4 pixels per update.
+- Buffer short button taps until the game shell's next update and discard held
+  and pending input on focus loss. Multiple taps within a frame coalesce.
+- Synchronize Android and Harmony runner lifetimes, reject out-of-range DSL
+  numeric conversions, align native and Boa command behavior, and implement
+  battle hook scopes and handler speed ordering.
+
+Editor and verification:
+
+- Author cardinal and 47-mask blob autotiles with visual mask assignment,
+  continuous paint/erase strokes, previews, and atomic rule persistence.
+- Arrange native-resolution scenery with alpha-aware selection, drag/nudge,
+  undo/redo, collision/event overlays, pixel-editor round trips, and revision
+  checks when saving `art.json`.
+- Add editor language selection and lazy loading, GBA frame-budget checks,
+  MSRV/dependency/mobile/browser CI gates, and supported Android SDK setup.
 
 ## v0.8.2
 

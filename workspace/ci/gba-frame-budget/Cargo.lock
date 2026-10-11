@@ -246,7 +246,7 @@ checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.8.2"
+version = "0.9.0"
 dependencies = [
  "hashbrown",
  "libm",
@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.8.2"
+version = "0.9.0"
 dependencies = [
  "dotzuki-engine",
  "getrandom",
