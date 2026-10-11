@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-999adb80.js";
+            window.path_to_searchindex_js = "searchindex-cdb48f19.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d8e34e91.js"></script>
+        <script src="toc-1c89e8e1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -288,7 +288,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9376,7 +9376,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.2</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9388,6 +9388,38 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v090"><a class="header" href="#v090">v0.9.0</a></h2>
+<p>This release includes breaking UI API changes and requires Rust 1.88 or newer.
+See the <a href="#migrating-to-v090">migration guide</a> before updating consumers.</p>
+<p>Breaking changes:</p>
+<ul>
+<li>Remove deprecated <code>DialogConfig</code>, <code>FlexMenuConfig</code>, <code>YesNoConfig</code>, their
+legacy drawing wrappers, and the legacy flex-menu <code>EdgeInsets</code>, <code>Justify</code>,
+and <code>SizeMode</code> types. Use <code>MenuConfig</code> and the current widget drawing functions.</li>
+<li>Static layout <code>Context::set</code> returns <code>Result&lt;(), ContextCapacityError&gt;</code>
+instead of panicking when the binding array is full. Handle the result.</li>
+</ul>
+<p>Runtime additions and fixes:</p>
+<ul>
+<li>Configure actor walk/run speeds, override movement speed for vehicles or
+terrain, and offset actors during caller-driven scenes. Default speeds remain
+2/4 pixels per update.</li>
+<li>Buffer short button taps until the game shell’s next update and discard held
+and pending input on focus loss. Multiple taps within a frame coalesce.</li>
+<li>Synchronize Android and Harmony runner lifetimes, reject out-of-range DSL
+numeric conversions, align native and Boa command behavior, and implement
+battle hook scopes and handler speed ordering.</li>
+</ul>
+<p>Editor and verification:</p>
+<ul>
+<li>Author cardinal and 47-mask blob autotiles with visual mask assignment,
+continuous paint/erase strokes, previews, and atomic rule persistence.</li>
+<li>Arrange native-resolution scenery with alpha-aware selection, drag/nudge,
+undo/redo, collision/event overlays, pixel-editor round trips, and revision
+checks when saving <code>art.json</code>.</li>
+<li>Add editor language selection and lazy loading, GBA frame-budget checks,
+MSRV/dependency/mobile/browser CI gates, and supported Android SDK setup.</li>
 </ul>
 <h2 id="v082"><a class="header" href="#v082">v0.8.2</a></h2>
 <p>This patch release adds trait implementations only; there are no breaking
@@ -9906,6 +9938,51 @@ the DSL <code>Interpreter</code> also implements <code>Debug</code> and <code>Cl
 <p>Derive snapshot types over those values directly when a game saves and
 restores frame-level state; no per-struct mirror type and no private engine
 branch to pin.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v090"><a class="header" href="#migrating-to-v090">Migrating to v0.9.0</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
+</ul>
+</blockquote>
+<p>Update consumers from v0.8.2 and replace removed UI APIs before rebuilding.
+Before you start, read the <a href="#changelog">changelog</a> for the release scope.</p>
+<h2 id="update-dependencies-and-toolchain"><a class="header" href="#update-dependencies-and-toolchain">Update dependencies and toolchain</a></h2>
+<p>Use Rust 1.88 or newer and update every <code>dotzuki-*</code> dependency together.
+For registry dependencies, set each version to <code>0.9.0</code>; for git dependencies,
+set each tag to <code>v0.9.0</code>. Refresh the consumer lockfile after editing the manifest.</p>
+<h2 id="replace-deprecated-ui-calls"><a class="header" href="#replace-deprecated-ui-calls">Replace deprecated UI calls</a></h2>
+<p>Replace <code>DialogConfig</code>, <code>FlexMenuConfig</code>, and <code>YesNoConfig</code> with
+<code>dotzuki_engine::menu::MenuConfig</code>. Replace <code>draw_dialog_legacy</code>,
+<code>draw_flex_menu_legacy</code>, and <code>draw_yes_no_legacy</code> with the corresponding
+<code>draw_dialog</code>, <code>draw_flex_menu</code>, and <code>draw_yes_no</code> calls using <code>MenuConfig</code>
+slices and <code>Ui</code>. Remove imports of the old flex-menu <code>EdgeInsets</code>, <code>Justify</code>,
+and <code>SizeMode</code> types.</p>
+<p>Handle the <code>Result</code> from static layout <code>Context::set</code>. An exhausted context
+returns <code>ContextCapacityError</code>; increase its const capacity or report the
+binding failure. Updating an existing binding reuses its slot.</p>
+<h2 id="replace-actor-patches-and-input-workarounds"><a class="header" href="#replace-actor-patches-and-input-workarounds">Replace actor patches and input workarounds</a></h2>
+<p>Use <code>OverworldActor::set_movement_speeds</code> for game-specific walking/running
+cadence and <code>set_step_speed</code> for a temporary override. Speeds must be positive
+and finite. An override of <code>None</code> restores the configured pair; changes affect
+the next update even during an active step. Set speeds while idle when timing
+must remain fixed for the entire step. The default pair remains 2/4 pixels per
+update, and animation cadence is unchanged.</p>
+<p>Use <code>OverworldActor::nudge</code> for caller-driven pixel offsets. It bypasses
+collision and preserves the target tile, facing, and walking state. An active
+step continues toward its original tile target on the next update.</p>
+<p>The Web game shell now uses <code>BufferedInput</code> for browser and native fallback
+windows. Remove duplicate consumer key listeners that implemented short-tap
+buffering. Custom loops can collect events through <code>set_button</code>, call
+<code>next_frame</code> once per simulation update, and call <code>clear</code> on focus loss.
+Multiple taps between updates coalesce; this is not an event replay queue.</p>
+<h2 id="refresh-exported-mobile-hosts"><a class="header" href="#refresh-exported-mobile-hosts">Refresh exported mobile hosts</a></h2>
+<p>Re-export Android and Harmony hosts to obtain the runner lifetime fixes.
+Existing autotile connection sets without a <code>mode</code> retain cardinal behavior.
+The native scenery editor preserves the generic runner’s rendering behavior.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-engine-开发者指南"><a class="header" href="#dotzuki-engine-开发者指南">dotzuki-engine 开发者指南</a></h1>
 <blockquote>
@@ -13547,8 +13624,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.8.2
-（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit ce902be）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13657,7 +13734,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -21751,8 +21828,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.8.2
-（源文档 commit fb79fec1a883b1727c129c29dea74c4174204379）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit ce902be18620041f13dd89c66ffffb582dd44758）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21760,7 +21837,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.2</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -21771,6 +21848,35 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="v090-1"><a class="header" href="#v090-1">v0.9.0</a></h2>
+<p>本版本包含不兼容的 UI API 变更，要求 Rust 1.88 或更新版本。
+更新消费方前请阅读<a href="#迁移至-v090">迁移指南</a>。</p>
+<p>不兼容变更：</p>
+<ul>
+<li>移除已弃用的 <code>DialogConfig</code>、<code>FlexMenuConfig</code>、<code>YesNoConfig</code>、旧绘制包装函数，
+以及 flex-menu 的旧 <code>EdgeInsets</code>、<code>Justify</code>、<code>SizeMode</code> 类型。改用 <code>MenuConfig</code>
+与当前 widget 绘制函数。</li>
+<li>Static layout 的 <code>Context::set</code> 改为返回 <code>Result&lt;(), ContextCapacityError&gt;</code>，
+绑定数组满时不再 panic。调用方需处理返回值。</li>
+</ul>
+<p>运行时新增与修复：</p>
+<ul>
+<li>支持配置角色行走/跑步速度，为交通工具或地形覆盖移动速度，并在调用方驱动的
+演出中偏移角色位置。默认速度保持每次 update 2/4 像素。</li>
+<li>Game shell 缓存短按直到下一次 update，并在失焦时清空按住状态和待处理输入。
+一帧内的多次短按会合并。</li>
+<li>同步 Android 与 Harmony runner 生命周期，拒绝 DSL 数值转换越界，对齐 native
+与 Boa 命令行为，实现 battle hook scope 和 handler 速度排序。</li>
+</ul>
+<p>编辑器与验证：</p>
+<ul>
+<li>支持 cardinal 和 47-mask blob autotile 的可视化 mask 分配、连续绘制/擦除、
+预览及规则原子保存。</li>
+<li>支持原生分辨率场景素材的透明度感知选择、拖动/微移、撤销/重做、碰撞与事件
+叠加、像素编辑器往返，以及保存 <code>art.json</code> 时的 revision 检查。</li>
+<li>增加编辑器语言选择与延迟加载、GBA 帧预算检查、MSRV/依赖/移动端/浏览器
+CI 门禁，并修正 Android SDK 安装包配置。</li>
 </ul>
 <h2 id="v082-1"><a class="header" href="#v082-1">v0.8.2</a></h2>
 <p>此补丁版本只新增 trait 实现，没有破坏性变更。使用方更新方式见
@@ -22267,6 +22373,50 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 <code>Interpreter</code> 还实现 <code>Debug</code> 与 <code>Clone</code>。</p>
 <p>需要逐帧保存与恢复状态的游戏，可以直接对这些值派生快照类型；不必为每个引擎结构
 另写镜像类型，也不必再固定一份私有引擎分支。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移至-v090"><a class="header" href="#迁移至-v090">迁移至 v0.9.0</a></h1>
+<blockquote>
+<p>本文是 <code>release-notes/migration/v0.9.0.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit ce902be18620041f13dd89c66ffffb582dd44758）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
+</ul>
+</blockquote>
+<p>将消费方从 v0.8.2 升级，并在重新构建前替换已移除的 UI API。
+开始前请阅读<a href="#变更日志">变更日志</a>，了解发布范围。</p>
+<h2 id="更新依赖与工具链"><a class="header" href="#更新依赖与工具链">更新依赖与工具链</a></h2>
+<p>使用 Rust 1.88 或更新版本，并同步更新全部 <code>dotzuki-*</code> 依赖。
+Registry 依赖的版本设为 <code>0.9.0</code>；git 依赖的 tag 设为 <code>v0.9.0</code>。
+修改 manifest 后刷新消费方 lockfile。</p>
+<h2 id="替换已弃用的-ui-调用"><a class="header" href="#替换已弃用的-ui-调用">替换已弃用的 UI 调用</a></h2>
+<p>将 <code>DialogConfig</code>、<code>FlexMenuConfig</code>、<code>YesNoConfig</code> 替换为
+<code>dotzuki_engine::menu::MenuConfig</code>。将 <code>draw_dialog_legacy</code>、
+<code>draw_flex_menu_legacy</code>、<code>draw_yes_no_legacy</code> 替换为对应的 <code>draw_dialog</code>、
+<code>draw_flex_menu</code>、<code>draw_yes_no</code> 调用，传入 <code>MenuConfig</code> slice 和 <code>Ui</code>。
+移除 flex-menu 旧 <code>EdgeInsets</code>、<code>Justify</code>、<code>SizeMode</code> 类型的 import。</p>
+<p>处理 static layout <code>Context::set</code> 的 <code>Result</code>。容量耗尽时返回
+<code>ContextCapacityError</code>；增大 const 容量或报告绑定失败。更新已有绑定会复用其槽位。</p>
+<h2 id="替换角色补丁与输入补救实现"><a class="header" href="#替换角色补丁与输入补救实现">替换角色补丁与输入补救实现</a></h2>
+<p>使用 <code>OverworldActor::set_movement_speeds</code> 配置游戏的行走/跑步节奏，使用
+<code>set_step_speed</code> 临时覆盖速度。速度必须为有限正数。传入 <code>None</code> 恢复配置的速度对；
+变更会在下一次 update 生效，包括正在进行的步进。若整步必须保持固定节奏，请在
+idle 时设置速度。默认速度保持每次 update 2/4 像素，动画节奏不变。</p>
+<p>使用 <code>OverworldActor::nudge</code> 执行调用方驱动的像素偏移。它绕过碰撞检查，保留
+目标 tile、朝向和行走状态。正在进行的步进会在下一次 update 继续朝原目标移动。</p>
+<p>Web game shell 在浏览器和原生回退窗口中统一使用 <code>BufferedInput</code>。
+移除消费方为缓存短按安装的重复键盘监听器。自定义循环可用 <code>set_button</code> 收集事件，
+每次 simulation update 调用一次 <code>next_frame</code>，失焦时调用 <code>clear</code>。
+两次 update 之间的多次短按会合并；它不是事件重放队列。</p>
+<h2 id="刷新导出的移动宿主"><a class="header" href="#刷新导出的移动宿主">刷新导出的移动宿主</a></h2>
+<p>重新导出 Android 与 Harmony 宿主，以获得 runner 生命周期修复。
+未声明 <code>mode</code> 的现有 autotile connection set 保持 cardinal 行为。
+原生场景编辑器保留通用 runner 的渲染行为。</p>
 
                     </main>
 

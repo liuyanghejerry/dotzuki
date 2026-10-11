@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-999adb80.js";
+            window.path_to_searchindex_js = "../searchindex-cdb48f19.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d8e34e91.js"></script>
+        <script src="../toc-1c89e8e1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.2</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -198,6 +198,38 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v090"><a class="header" href="#v090">v0.9.0</a></h2>
+<p>This release includes breaking UI API changes and requires Rust 1.88 or newer.
+See the <a href="migration/v0.9.0.html">migration guide</a> before updating consumers.</p>
+<p>Breaking changes:</p>
+<ul>
+<li>Remove deprecated <code>DialogConfig</code>, <code>FlexMenuConfig</code>, <code>YesNoConfig</code>, their
+legacy drawing wrappers, and the legacy flex-menu <code>EdgeInsets</code>, <code>Justify</code>,
+and <code>SizeMode</code> types. Use <code>MenuConfig</code> and the current widget drawing functions.</li>
+<li>Static layout <code>Context::set</code> returns <code>Result&lt;(), ContextCapacityError&gt;</code>
+instead of panicking when the binding array is full. Handle the result.</li>
+</ul>
+<p>Runtime additions and fixes:</p>
+<ul>
+<li>Configure actor walk/run speeds, override movement speed for vehicles or
+terrain, and offset actors during caller-driven scenes. Default speeds remain
+2/4 pixels per update.</li>
+<li>Buffer short button taps until the game shell’s next update and discard held
+and pending input on focus loss. Multiple taps within a frame coalesce.</li>
+<li>Synchronize Android and Harmony runner lifetimes, reject out-of-range DSL
+numeric conversions, align native and Boa command behavior, and implement
+battle hook scopes and handler speed ordering.</li>
+</ul>
+<p>Editor and verification:</p>
+<ul>
+<li>Author cardinal and 47-mask blob autotiles with visual mask assignment,
+continuous paint/erase strokes, previews, and atomic rule persistence.</li>
+<li>Arrange native-resolution scenery with alpha-aware selection, drag/nudge,
+undo/redo, collision/event overlays, pixel-editor round trips, and revision
+checks when saving <code>art.json</code>.</li>
+<li>Add editor language selection and lazy loading, GBA frame-budget checks,
+MSRV/dependency/mobile/browser CI gates, and supported Android SDK setup.</li>
 </ul>
 <h2 id="v082"><a class="header" href="#v082">v0.8.2</a></h2>
 <p>This patch release adds trait implementations only; there are no breaking
