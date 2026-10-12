@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.9.1
->（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.0
+>（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.9.1
+> - **Last verified**: v0.10.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,26 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## v0.10.0
+
+本版本整合此前仅存在于 `fix/gba-psg-audio` 分支的 GBA 音频与游戏行为修复。
+请阅读[迁移指南](migration/v0.10.0.zh-CN.md)。
+
+破坏性变更：
+
+- `NpcRuntimeState::delay_counter` 从 `u8` 改为 `u16`，以表示 256 帧倒计时。
+  请更新带类型的赋值及二进制存档适配器。
+
+运行时新增与修复：
+
+- 支持关闭默认 feature 的裸机音频，以及向物理 PSG 硬件转发寄存器写入。
+  保留稀疏音乐/音效声道的位置，并在音效结束时释放等待状态。
+- 修正滑音初始化、小数进位及到达目标后的终止行为。
+- 增加显式启用的经典 NPC 游走策略；已有入口保留默认策略。
+- 增加每个行动者执行前的回调，以及状态门之后带默认实现的招式解析钩子。
+  消费游戏可用它们实现训练师行动和调用招式。
+- 向外螺旋转场在有界遍历结束后终止。
 
 ## v0.9.1
 
