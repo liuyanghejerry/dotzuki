@@ -21,6 +21,11 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
+      preview:
+        description: 'Publish an unofficial editor prerelease from the selected branch (no crates.io publish)'
+        required: false
+        default: false
+        type: boolean
       tag:
         description: 'Release tag to attach to (default: workspace version, e.g. v0.1.1). Must match the workspace version of the checked-out ref — you cannot back-fill an older tag this way.'
         required: false
@@ -35,10 +40,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+      version: ${{ steps.metadata.outputs.version }}
+      preview: ${{ steps.metadata.outputs.preview }}
+      release_exists: ${{ steps.metadata.outputs.release_exists }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Resolve and validate release metadata before building
+        id: metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW: ${{ inputs.preview || false }}
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: python3 workspace/scripts/editor-release.py
+
   # Build platform-independent release resources on Linux and hand them to both
   # packaging jobs. The dotzuki CLI + player binaries below are built on each
   # packaging runner because they are native executables.
   build-wasm:
+    needs: prepare
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -102,6 +128,7 @@ jobs:
             workspace/crates/dotzuki-runner-web/pkg
 
   build-android-runtime:
+    needs: prepare
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -149,7 +176,7 @@ jobs:
   # the packaged app ships the layout preview + playtest runner, and builds the
   # dotzuki CLI + player binaries natively so /api/export works in the app.
   build-app:
-    needs: [build-wasm, build-android-runtime]
+    needs: [prepare, build-wasm, build-android-runtime]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -259,10 +286,12 @@ jobs:
             file target/release/dotzuki target/release/dotzuki-player
           fi
 
-      - name: Sync editor version with the workspace version
+      - name: Sync editor version with release metadata
         shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          VERSION=$(awk '/^\[workspace\.package\]/{f=1} f && /^version *=/{gsub(/"/,"",$3); print $3; exit}' workspace/Cargo.toml)
+          # Version was validated before any builds started.
           node -e '
             const fs = require("fs")
             const p = "workspace/tools/dotzuki-editor/package.json"
@@ -307,7 +336,7 @@ jobs:
   # Attach the installers to the GitHub Release. The release may not exist yet
   # (tag push); action-gh-release creates it, or updates an existing one.
   publish:
-    needs: build-app
+    needs: [prepare, build-app]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -315,40 +344,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Resolve release tag
-        id: resolve
-        shell: bash
+      - name: Write preview provenance
+        if: needs.prepare.outputs.preview == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          SOURCE_REF: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
         run: |
-          VERSION=$(awk '/^\[workspace\.package\]/{f=1} f && /^version *=/{gsub(/"/,"",$3); print $3; exit}' workspace/Cargo.toml)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
-            [ -z "$TAG" ] && TAG="v${VERSION}"
-          else
-            TAG="${GITHUB_REF_NAME}"
-          fi
-          # Same assertion publish-crates.sh makes: the tag must name the
-          # workspace version (e.g. tag v0.1.1 → version 0.1.1).
-          TV="${TAG#v}"
-          if [ "$TV" != "$VERSION" ]; then
-            echo "ERROR: tag ${TAG} does not match workspace version ${VERSION}." >&2
-            exit 1
-          fi
-          # Creating a Release needs a real tag in the repo (workflow_dispatch
-          # can name one that was never pushed); fail with a clear message.
-          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/${TAG}" >/dev/null 2>&1; then
-            echo "ERROR: tag ${TAG} does not exist — push it first (git tag ${TAG} && git push origin ${TAG})." >&2
-            exit 1
-          fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          # Whether the Release already exists — used below to generate notes
-          # only on creation, so a re-run never clobbers hand-edited notes.
-          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/${TAG}" >/dev/null 2>&1; then
-            echo "release_exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_exists=false" >> "$GITHUB_OUTPUT"
-          fi
+          printf 'Unofficial editor preview for testing.\n\nSource: `%s` at `%s`.\n\nIncludes macOS and Windows installers. No crates.io packages are published.\n' "$SOURCE_REF" "$SOURCE_SHA" > preview-notes.md
 
       - name: Download distributables
         # Only the two platform distributable artifacts. WASM packages and the
@@ -362,12 +364,16 @@ jobs:
       - name: Create/update GitHub Release with editor apps
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.resolve.outputs.tag }}
-          name: ${{ steps.resolve.outputs.tag }}
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ needs.prepare.outputs.preview == 'true' }}
+          make_latest: ${{ needs.prepare.outputs.preview == 'true' && 'false' || 'legacy' }}
+          body_path: ${{ needs.prepare.outputs.preview == 'true' && 'preview-notes.md' || '' }}
           # Auto notes only when the Release is first created; on updates
           # (re-runs, duplicate tag-push + release-published triggers) keep
           # whatever notes are already there.
-          generate_release_notes: ${{ steps.resolve.outputs.release_exists == 'false' }}
+          generate_release_notes: ${{ needs.prepare.outputs.preview != 'true' && needs.prepare.outputs.release_exists == 'false' }}
           files: |
             artifacts/*.dmg
             artifacts/*.zip
