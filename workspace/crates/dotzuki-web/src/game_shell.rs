@@ -225,6 +225,7 @@ pub async fn run_game<G: GameLoop + 'static>(
     let mut cursor = None;
     let mut click_start: Option<(f64, f64)> = None;
     let mut touch_id = None;
+    let mut active_touches = std::collections::BTreeSet::new();
 
     #[cfg(not(target_arch = "wasm32"))]
     let mut next_frame_time = Instant::now();
@@ -247,6 +248,7 @@ pub async fn run_game<G: GameLoop + 'static>(
                 cursor = None;
                 click_start = None;
                 touch_id = None;
+                active_touches.clear();
                 game.borrow_mut().cancel_pointer_input();
             }
             WindowEvent::RedrawRequested => {
@@ -299,12 +301,14 @@ pub async fn run_game<G: GameLoop + 'static>(
                 use winit::event::TouchPhase;
                 let point = (touch.location.x, touch.location.y);
                 match touch.phase {
-                    TouchPhase::Started if touch_id.is_none() => {
+                    TouchPhase::Started if active_touches.is_empty() => {
+                        active_touches.insert(touch.id);
                         game.borrow().on_user_gesture();
                         touch_id = Some(touch.id);
                         click_start = Some(point);
                     }
                     TouchPhase::Started => {
+                        active_touches.insert(touch.id);
                         click_start = None;
                     }
                     TouchPhase::Moved if touch_id == Some(touch.id) => {
@@ -315,6 +319,7 @@ pub async fn run_game<G: GameLoop + 'static>(
                         }
                     }
                     TouchPhase::Ended if touch_id == Some(touch.id) => {
+                        active_touches.remove(&touch.id);
                         touch_id = None;
                         if click_start.take().is_some_and(|(x, y)| {
                             (x - point.0).abs() <= 8.0 && (y - point.1).abs() <= 8.0
@@ -326,7 +331,11 @@ pub async fn run_game<G: GameLoop + 'static>(
                             }
                         }
                     }
+                    TouchPhase::Ended => {
+                        active_touches.remove(&touch.id);
+                    }
                     TouchPhase::Cancelled => {
+                        active_touches.clear();
                         touch_id = None;
                         click_start = None;
                         game.borrow_mut().cancel_pointer_input();
