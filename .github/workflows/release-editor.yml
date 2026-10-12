@@ -36,7 +36,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-editor
+  group: ${{ inputs.preview && format('release-editor-preview-{0}', github.ref) || 'release-editor' }}
   cancel-in-progress: false
 
 jobs:
