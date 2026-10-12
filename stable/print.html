@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9ba0e767.js";
+            window.path_to_searchindex_js = "searchindex-8086c03c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-1c89e8e1.js"></script>
+        <script src="toc-8bde47b2.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -288,7 +288,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>, <a href="#migrating-to-v091"><code>v0.9.1</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9415,7 +9415,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.9.1</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9427,6 +9427,19 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v091"><a class="header" href="#v091">v0.9.1</a></h2>
+<p>This patch release preserves Rust APIs and replaces the exported mobile control layout.
+See the <a href="#migrating-to-v091">migration guide</a> before regenerating custom shells.</p>
+<ul>
+<li>Android and HarmonyOS render safe-area-aware landscape controls over the game surface.
+Shared pointer ownership supports movement plus actions, retains short taps, and releases
+input on focus loss, cancellation, and resize.</li>
+<li>Persist control size, position, opacity, mirrored layout, floating direction pad, and
+optional haptics. Reserve space above bottom dialogue, including on taller HarmonyOS screens.</li>
+<li>Provide a reusable UIKit Swift package and integration guide for game-owned iOS shells.</li>
+<li>Add shared sanitizer tests, Android native instrumentation, and iOS simulator CI.</li>
+<li>Fix release automation to install supported Android SDK packages.</li>
 </ul>
 <h2 id="v090"><a class="header" href="#v090">v0.9.0</a></h2>
 <p>This release includes breaking UI API changes and requires Rust 1.88 or newer.
@@ -9977,6 +9990,44 @@ the DSL <code>Interpreter</code> also implements <code>Debug</code> and <code>Cl
 <p>Derive snapshot types over those values directly when a game saves and
 restores frame-level state; no per-struct mirror type and no private engine
 branch to pin.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v091"><a class="header" href="#migrating-to-v091">Migrating to v0.9.1</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.9.1</li>
+</ul>
+</blockquote>
+<p>Update from v0.9.0 to adopt the shared landscape touch controls without changing Rust APIs.
+Before you start, read the <a href="#changelog">changelog</a> for the release scope.</p>
+<h2 id="update-dependencies-5"><a class="header" href="#update-dependencies-5">Update dependencies</a></h2>
+<p>Update every dotzuki dependency together: use version <code>0.9.1</code> for registry dependencies
+or tag <code>v0.9.1</code> for git dependencies, then refresh the consumer lockfile.
+The minimum Rust version remains 1.88.</p>
+<h2 id="refresh-android-and-harmonyos-shells"><a class="header" href="#refresh-android-and-harmonyos-shells">Refresh Android and HarmonyOS shells</a></h2>
+<p>Back up custom host changes before regenerating an export. Follow the
+<a href="#export-a-game-for-android">Android</a> or
+<a href="#export-a-game-for-harmonyos">HarmonyOS</a> export guide.
+The new hosts use the full game surface with overlaid controls and support both landscape
+orientations. They retain the existing eight input bits and mobile ABI version 1.</p>
+<p>Use the gear to adjust size, position, opacity, side swapping, floating movement, and haptics.
+Settings persist separately from saves. Check the default and mirrored layouts against your
+game’s dialogue and choice menus: the generic ABI does not expose menu bounds, so choice
+menus can still overlap controls.</p>
+<h2 id="integrate-ios-controls"><a class="header" href="#integrate-ios-controls">Integrate iOS controls</a></h2>
+<p>Add the reusable UIKit package using the
+<a href="../crates/dotzuki-mobile/controls/README.html">shared touch integration guide</a>.
+The consuming game still owns its iOS shell, rendering, audio, and lifecycle.
+Read <code>consumeInput()</code> once per game tick and combine it with hardware input; pause gameplay
+while editing controls and release touch input when the scene loses focus.
+This release does not add an iOS exporter.</p>
+<h2 id="verify-the-consumer"><a class="header" href="#verify-the-consumer">Verify the consumer</a></h2>
+<p>Exercise movement plus A/B, quick taps, both landscape orientations, background/foreground
+transitions, and settings persistence. Validate safe areas and dialogue clearance on target
+devices. CI covers shared input logic and UIKit simulator integration; device-specific
+behavior still needs testing on the consuming game’s supported hardware.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migrating-to-v090"><a class="header" href="#migrating-to-v090">Migrating to v0.9.0</a></h1>
 <blockquote>
@@ -13663,8 +13714,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.9.0
-（源文档 commit ce902be）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.9.1
+（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13773,7 +13824,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>、<a href="#迁移至-v091"><code>v0.9.1</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -21896,8 +21947,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.9.0
-（源文档 commit ce902be18620041f13dd89c66ffffb582dd44758）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.9.1
+（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21905,7 +21956,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.9.1</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -21916,6 +21967,18 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="v091-1"><a class="header" href="#v091-1">v0.9.1</a></h2>
+<p>本补丁版本保持 Rust API 不变，并替换导出的移动端控制布局。
+重新生成自定义外壳前，请阅读<a href="#迁移至-v091">迁移指南</a>。</p>
+<ul>
+<li>Android 和 HarmonyOS 在游戏画面上绘制适配安全区的横屏控件。
+共享的触点归属逻辑支持移动与动作同时输入、保留短按，并在失焦、取消及尺寸变化时释放输入。</li>
+<li>持久化控件大小、位置、不透明度、镜像布局、浮动方向盘和可选触觉反馈。
+在底部对话上方预留空间，包括较高的 HarmonyOS 屏幕。</li>
+<li>为游戏自行维护的 iOS 外壳提供可复用的 UIKit Swift package 和接入指南。</li>
+<li>增加共享 sanitizer 测试、Android 原生 instrumentation 和 iOS 模拟器 CI。</li>
+<li>修复发布自动化，使其安装受支持的 Android SDK 包。</li>
 </ul>
 <h2 id="v090-1"><a class="header" href="#v090-1">v0.9.0</a></h2>
 <p>本版本包含不兼容的 UI API 变更，要求 Rust 1.88 或更新版本。
@@ -22441,6 +22504,48 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 <code>Interpreter</code> 还实现 <code>Debug</code> 与 <code>Clone</code>。</p>
 <p>需要逐帧保存与恢复状态的游戏，可以直接对这些值派生快照类型；不必为每个引擎结构
 另写镜像类型，也不必再固定一份私有引擎分支。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移至-v091"><a class="header" href="#迁移至-v091">迁移至 v0.9.1</a></h1>
+<blockquote>
+<p>本文是 <code>v0.9.1.md</code> 的中文翻译，同步至引擎版本 v0.9.1
+（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers, game authors</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.9.1</li>
+</ul>
+</blockquote>
+<p>从 v0.9.0 更新以采用共享横屏触控布局，无需修改 Rust API。
+开始前，请阅读<a href="#变更日志">变更日志</a>了解发布范围。</p>
+<h2 id="更新依赖-5"><a class="header" href="#更新依赖-5">更新依赖</a></h2>
+<p>一起更新所有 dotzuki 依赖：registry 依赖使用版本 <code>0.9.1</code>，
+git 依赖使用 tag <code>v0.9.1</code>，然后刷新消费项目的 lockfile。
+最低 Rust 版本仍为 1.88。</p>
+<h2 id="更新-android-和-harmonyos-外壳"><a class="header" href="#更新-android-和-harmonyos-外壳">更新 Android 和 HarmonyOS 外壳</a></h2>
+<p>重新生成导出项前，备份自定义外壳改动。按照
+<a href="#导出-android-游戏">Android</a> 或
+<a href="#导出鸿蒙游戏">HarmonyOS</a> 导出指南操作。
+新外壳在完整游戏画面上叠加控件，并支持两个横屏方向。
+现有八个输入位及移动端 ABI 版本 1 保持不变。</p>
+<p>使用齿轮调整大小、位置、不透明度、左右交换、浮动移动和触觉反馈。
+设置与存档分别持久化。请对照游戏的对话与选项菜单检查默认布局和镜像布局：
+通用 ABI 不提供菜单边界，因此选项菜单仍可能与控件重叠。</p>
+<h2 id="接入-ios-控件"><a class="header" href="#接入-ios-控件">接入 iOS 控件</a></h2>
+<p>按照<a href="../crates/dotzuki-mobile/controls/README.zh-CN.html">共享触控接入指南</a>
+添加可复用的 UIKit package。
+消费游戏仍负责自己的 iOS 外壳、渲染、音频和生命周期。
+每个游戏 tick 读取一次 <code>consumeInput()</code>，并与硬件输入合并；
+编辑控件时暂停游戏，场景失焦时释放触控输入。
+本版本不增加 iOS 导出器。</p>
+<h2 id="验证消费项目"><a class="header" href="#验证消费项目">验证消费项目</a></h2>
+<p>检查移动与 A/B 同时输入、短按、两个横屏方向、前后台切换和设置持久化。
+在目标设备上验证安全区与对话区的间距。
+CI 覆盖共享输入逻辑和 UIKit 模拟器集成；
+设备相关行为仍需在消费游戏支持的硬件上测试。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="迁移至-v090"><a class="header" href="#迁移至-v090">迁移至 v0.9.0</a></h1>
 <blockquote>

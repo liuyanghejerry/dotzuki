@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9ba0e767.js";
+            window.path_to_searchindex_js = "../searchindex-8086c03c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-1c89e8e1.js"></script>
+        <script src="../toc-8bde47b2.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.9.1</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -198,6 +198,19 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v091"><a class="header" href="#v091">v0.9.1</a></h2>
+<p>This patch release preserves Rust APIs and replaces the exported mobile control layout.
+See the <a href="migration/v0.9.1.html">migration guide</a> before regenerating custom shells.</p>
+<ul>
+<li>Android and HarmonyOS render safe-area-aware landscape controls over the game surface.
+Shared pointer ownership supports movement plus actions, retains short taps, and releases
+input on focus loss, cancellation, and resize.</li>
+<li>Persist control size, position, opacity, mirrored layout, floating direction pad, and
+optional haptics. Reserve space above bottom dialogue, including on taller HarmonyOS screens.</li>
+<li>Provide a reusable UIKit Swift package and integration guide for game-owned iOS shells.</li>
+<li>Add shared sanitizer tests, Android native instrumentation, and iOS simulator CI.</li>
+<li>Fix release automation to install supported Android SDK packages.</li>
 </ul>
 <h2 id="v090"><a class="header" href="#v090">v0.9.0</a></h2>
 <p>This release includes breaking UI API changes and requires Rust 1.88 or newer.
