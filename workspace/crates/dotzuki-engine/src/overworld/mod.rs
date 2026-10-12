@@ -49,7 +49,8 @@ pub use npc_interaction::{
 pub use npc_movement::{
     direction_toward, get_npc_positions, is_scripted_move_done, npc_at_position,
     npc_at_position_mut, npc_in_front_of_player, start_scripted_move, update_npc_movement,
-    NpcRuntimeState, NPC_MAX_DELAY, NPC_WALK_FRAMES,
+    update_npc_movement_with_policy, NpcRuntimeState, NpcWanderPolicy, NPC_MAX_DELAY,
+    NPC_WALK_FRAMES,
 };
 pub use player_movement::{
     advance_step, direction_delta, frames_per_step, get_tile_at_position, opposite_direction,

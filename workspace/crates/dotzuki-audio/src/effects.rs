@@ -81,49 +81,76 @@ pub fn apply_vibrato(channel: &mut ChannelState) -> Option<u8> {
 
 // ── Pitch Slide ──────────────────────────────────────────────────────────
 
-/// Apply pitch slide to a channel.
+/// Initialize a slide after decoding its following note.
 ///
-/// Replicates the classic GB pitch-slide application.
-/// Returns `Some(new_freq)` if the frequency changed, or `None` if slide
-/// has reached target and should be deactivated.
+/// The byte-stream format uses byte-sized quotient/remainder arithmetic,
+/// including its historical increasing-frequency borrow behavior.
+pub fn init_pitch_slide(channel: &mut ChannelState) {
+    let current = channel.frequency;
+    let target = channel.pitch_slide.target_freq;
+    let frames = channel
+        .delay_counter
+        .checked_sub(channel.pitch_slide.length_modifier)
+        .unwrap_or(1)
+        .max(1); // A zero divisor in malformed streams must not hang playback.
+    channel.pitch_slide.length_modifier = frames;
+    channel.pitch_slide.current_freq = current;
+    let decreasing = current >= target;
+    channel
+        .flags1
+        .set(ChannelFlags1::PITCH_SLIDE_DEC, decreasing);
+    let diff = if decreasing {
+        current.wrapping_sub(target)
+    } else {
+        // Legacy byte subtraction borrows from the current high byte.
+        target
+            .wrapping_sub(current)
+            .wrapping_add(if (current as u8) > (target as u8) {
+                0x200
+            } else {
+                0
+            })
+    };
+    channel.pitch_slide.freq_step = ((diff / u16::from(frames)) as u8).wrapping_add(1) as u16;
+    let remainder = (diff % u16::from(frames)) as u8;
+    channel.pitch_slide.step_frac = remainder;
+    channel.pitch_slide.freq_frac = remainder;
+}
+
+/// Apply one byte-stream pitch-slide tick. Crossing the target stops the
+/// effect without writing the overshoot or snapping the register to target.
 pub fn apply_pitch_slide(channel: &mut ChannelState) -> Option<u16> {
     if !channel.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON) {
         return None;
     }
-
-    let step = channel.pitch_slide.freq_step;
-    let current = channel.frequency;
+    let current = channel.pitch_slide.current_freq;
     let target = channel.pitch_slide.target_freq;
-
-    let new_freq;
-
-    if channel.flags1.contains(ChannelFlags1::PITCH_SLIDE_DEC) {
-        // Sliding down (decreasing frequency register = higher pitch in GB terms)
-        if current <= target {
-            // Reached target
-            channel.flags1.remove(ChannelFlags1::PITCH_SLIDE_ON);
-            return None;
-        }
-        new_freq = current.saturating_sub(step);
-        if new_freq <= target {
-            channel.flags1.remove(ChannelFlags1::PITCH_SLIDE_ON);
-            return Some(target);
-        }
+    let step = channel.pitch_slide.freq_step;
+    let decreasing = channel.flags1.contains(ChannelFlags1::PITCH_SLIDE_DEC);
+    let next = if decreasing {
+        // The legacy descending path doubles its remainder byte each tick.
+        let (fraction, borrow) = channel.pitch_slide.step_frac.overflowing_mul(2);
+        channel.pitch_slide.step_frac = fraction;
+        current.wrapping_sub(step).wrapping_sub(u16::from(borrow))
     } else {
-        // Sliding up (increasing frequency register)
-        if current >= target {
-            channel.flags1.remove(ChannelFlags1::PITCH_SLIDE_ON);
-            return None;
-        }
-        new_freq = current.saturating_add(step);
-        if new_freq >= target {
-            channel.flags1.remove(ChannelFlags1::PITCH_SLIDE_ON);
-            return Some(target);
-        }
+        let (fraction, carry) = channel
+            .pitch_slide
+            .freq_frac
+            .overflowing_add(channel.pitch_slide.step_frac);
+        channel.pitch_slide.freq_frac = fraction;
+        current.wrapping_add(step).wrapping_add(u16::from(carry))
+    };
+    if (decreasing && (next < target || next > current))
+        || (!decreasing && (next > target || next < current))
+    {
+        channel
+            .flags1
+            .remove(ChannelFlags1::PITCH_SLIDE_ON | ChannelFlags1::PITCH_SLIDE_DEC);
+        return None;
     }
-
-    channel.frequency = new_freq;
-    Some(new_freq)
+    channel.pitch_slide.current_freq = next;
+    channel.frequency = next;
+    Some(next)
 }
 
 // ── Duty Cycle Rotation ──────────────────────────────────────────────────
