@@ -33,6 +33,12 @@ uint32_t dotzuki_mobile_width(const DotzukiMobileRunner *runner);
 uint32_t dotzuki_mobile_height(const DotzukiMobileRunner *runner);
 size_t dotzuki_mobile_frame_len(const DotzukiMobileRunner *runner);
 bool dotzuki_mobile_tick(DotzukiMobileRunner *runner, uint8_t input_bits);
+/* Optional ABI v1 extension; requires a library exporting these symbols.
+ * Call on the serialized game thread. Coordinates are RGBA framebuffer pixels.
+ * False means ignored (unsupported game, modal state, or invalid coordinates).
+ * Accepted clicks may still fail path planning; the game presents that result. */
+bool dotzuki_mobile_pointer_click(DotzukiMobileRunner *runner, float x, float y);
+void dotzuki_mobile_cancel_pointer_input(DotzukiMobileRunner *runner);
 size_t dotzuki_mobile_copy_frame(
     const DotzukiMobileRunner *runner,
     uint8_t *output,

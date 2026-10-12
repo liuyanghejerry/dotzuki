@@ -23,6 +23,9 @@
 
 export interface WasmRunner {
   tick(inputBitmask: number): Uint8Array
+  /** Optional for compatibility with previously built WASM packages. */
+  click_to_move?(x: number, y: number): boolean
+  cancel_navigation?(): void
   /** See the contract above — absent in pre-audio pkgs, hence optional. */
   take_audio?(): Float32Array
   width(): number

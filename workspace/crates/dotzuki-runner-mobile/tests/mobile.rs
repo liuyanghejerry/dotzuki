@@ -146,3 +146,52 @@ fn c_abi_drives_a_real_pack() {
     );
     unsafe { dotzuki_mobile_destroy(runner) };
 }
+
+#[test]
+fn pointer_ffi_preserves_buttons_and_warp_events() {
+    use dotzuki_runner_mobile::{
+        dotzuki_mobile_cancel_pointer_input, dotzuki_mobile_pointer_click,
+    };
+    let pack = fixture_pack();
+    let runner = unsafe { dotzuki_mobile_create(pack.as_ptr(), pack.len(), std::ptr::null(), 0) };
+    assert!(!runner.is_null());
+    assert!(!unsafe { dotzuki_mobile_pointer_click(std::ptr::null_mut(), 0.0, 0.0) });
+    assert!(!unsafe { dotzuki_mobile_pointer_click(runner, f32::NAN, 0.0) });
+    assert!(!unsafe { dotzuki_mobile_pointer_click(runner, 320.0, 0.0) });
+    assert!(!unsafe { dotzuki_mobile_pointer_click(runner, 136.0, 120.0) }); // intro
+    for _ in 0..20 {
+        unsafe {
+            dotzuki_mobile_tick(runner, 1);
+            dotzuki_mobile_tick(runner, 0);
+        }
+    }
+    assert!(unsafe { dotzuki_mobile_pointer_click(runner, 136.0, 120.0) });
+    unsafe {
+        dotzuki_mobile_cancel_pointer_input(runner);
+    }
+    for _ in 0..40 {
+        unsafe {
+            dotzuki_mobile_tick(runner, 0);
+        }
+    }
+    let runtime = unsafe { &*runner };
+    let save: serde_json::Value = serde_json::from_str(&runtime.export_save().unwrap()).unwrap();
+    assert_eq!(save["map"], "Town");
+    assert!(unsafe { dotzuki_mobile_pointer_click(runner, 136.0, 120.0) });
+    for _ in 0..40 {
+        unsafe {
+            dotzuki_mobile_tick(runner, 0);
+        }
+    }
+    for _ in 0..20 {
+        unsafe {
+            dotzuki_mobile_tick(runner, 1);
+            dotzuki_mobile_tick(runner, 0);
+        }
+    }
+    let save: serde_json::Value = serde_json::from_str(&runtime.export_save().unwrap()).unwrap();
+    assert_eq!(save["map"], "Cave");
+    unsafe {
+        dotzuki_mobile_destroy(runner);
+    }
+}

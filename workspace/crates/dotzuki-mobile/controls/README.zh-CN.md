@@ -3,9 +3,9 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 >
-> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.0（源文档 commit 843113598fd46471c136faac0b5b4145b4104bde）。
+> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.1（源文档基线 commit b7804fa；本次点击移动更新与英文源同步）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 将共享移动触控覆盖层接入 iOS 游戏，或修改 Android 和 HarmonyOS 导出器使用的控制器。
@@ -39,7 +39,7 @@ Swift 导入 `DotzukiTouch`，Objective-C 导入 `DotzukiTouchOverlay.h`。
 触觉反馈默认关闭。状态栏、Home 指示条和系统手势仍由宿主管理，组件不会禁用系统导航。
 
 此 package 提供控制器，不包含游戏循环、音频、存档或 iOS 导出器。
-SwiftUI 宿主可通过 `UIViewRepresentable` 嵌入视图，把两个回调转交给输入和暂停状态，
+SwiftUI 宿主可通过 `UIViewRepresentable` 嵌入视图，把回调转交给宿主的输入和暂停状态，
 并确保存在能呈现设置编辑器的宿主视图控制器。
 
 ## Android 和 HarmonyOS
@@ -104,3 +104,20 @@ iOS package 的 `tests/ios` 包含 XCTest 接入测试；**iOS touch controls** 
 在 macOS runner 的 iPhone 模拟器中构建并测试组件。
 UIKit 测试验证 Swift API 导入、布局命中、镜像偏好和释放回调，
 并将覆盖层渲染图附加到测试结果。
+
+## 可选点击移动
+
+Android 和 HarmonyOS 导出模板将非控件区域的单指轻触转换为游戏 framebuffer 坐标，
+排除黑边后调用 `dotzuki_mobile_pointer_click`。`GameTap` 过滤位移超过 8 个逻辑单位
+的手势、取消事件与多指触摸；虚拟控件保持优先。Runner 仅在地图模式接受目标。
+
+iOS 宿主启用此功能时，配置 `gameViewport`（overlay 坐标系中的游戏内容矩形，排除黑边）
+与 `gameFramebufferSize`，并在布局变化后刷新几何信息。把 `onGameTap` 回调的像素坐标
+传给 `dotzuki_mobile_pointer_click`，把 `onGameTapCancelled` 接到
+`dotzuki_mobile_cancel_pointer_input`。两个回调均在主线程运行；如果游戏线程独立，
+由宿主排队转发，确保与 tick、存档操作串行。几何变化时先调用 `releaseAll()`。
+未设置 `onGameTap` 时，空白区域仍向下透传。
+
+这两个 C 函数是 ABI v1 的增量符号；旧二进制库不提供它们，宿主和 Rust 库必须配套更新。
+`MobileGame` 默认忽略指针，现有仅按键游戏可继续编译。此改动不提供 iOS 游戏宿主。
+新增手势路径由共享 C++ sanitizer 测试覆盖；iOS 回调需在接入的宿主中验证。

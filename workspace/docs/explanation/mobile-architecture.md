@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 
 Why dotzuki uses one Rust runtime contract and a native shell for each mobile
 platform, with Android and HarmonyOS using the same versioned C ABI.
@@ -55,6 +55,13 @@ The contract contains these groups:
 | input | the `tick` bitmask | A, B, Select, Start, Right, Left, Up, Down use bits 0–7 |
 | audio | `audio_fill` | one real-time consumer pulls stereo PCM at 44.1 kHz |
 | persistence | `export_save`, `import_save` | shell stores UTF-8 JSON in platform-private storage |
+
+Pointer input uses the additive symbols `dotzuki_mobile_pointer_click` and
+`dotzuki_mobile_cancel_pointer_input`. The first accepts framebuffer pixel coordinates; the
+second cancels navigation. Calls serialize with ticks. Shells filter letterboxing, virtual
+controls, drags, and multiple fingers. Older ABI v1 binaries lack these symbols, so a
+pointer-enabled shell requires a matching Rust library. Existing `MobileGame` implementations
+ignore pointers by default; the button contract is unchanged.
 
 The game thread is the sole caller for frame and save operations. One audio
 callback may call `audio_fill` concurrently. A lock-free single-producer,

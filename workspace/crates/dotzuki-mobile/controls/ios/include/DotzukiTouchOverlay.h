@@ -8,6 +8,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// A, B, Select, Start, Right, Left, Up, Down are bits 0...7.
 /// This callback supplies touch state only; the host merges hardware input.
 @property(nonatomic, copy, nullable) void (^onInputChanged)(uint8_t bits);
+/// Optional primary game tap in framebuffer pixels. Configure both geometry
+/// properties from the host's rendered content rectangle before enabling this.
+@property(nonatomic, copy, nullable) void (^onGameTap)(float x, float y);
+/// Cancel navigation on lifecycle loss, gesture cancellation, or controls settings.
+@property(nonatomic, copy, nullable) void (^onGameTapCancelled)(void);
+/// Game content rectangle in this overlay's coordinates (excludes letterboxing).
+@property(nonatomic) CGRect gameViewport;
+@property(nonatomic) CGSize gameFramebufferSize;
 /// Pause/resume the host while the controls editor is presented.
 /// The host must also consider its own application/scene lifecycle.
 @property(nonatomic, copy, nullable) void (^onSettingsVisibilityChanged)(BOOL visible);

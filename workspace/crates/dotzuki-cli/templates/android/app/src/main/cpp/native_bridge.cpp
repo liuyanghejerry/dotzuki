@@ -17,6 +17,7 @@ std::shared_mutex runner_lifetime_mutex;
 DotzukiMobileRunner *runner = nullptr;
 // Called only on the UI thread, independently of the game/audio locks.
 dotzuki::touch::Controller touch;
+dotzuki::touch::GameTap game_tap;
 
 jbyteArray bytes_to_array(JNIEnv *env, const uint8_t *bytes, size_t length) {
     auto result = env->NewByteArray(static_cast<jsize>(length));
@@ -35,6 +36,7 @@ Java_com_dotzuki_player_NativeBridge_touchConfigure(
     dotzuki::touch::Options options;
     options.scale = scale; options.inset = inset; options.lift = lift;
     options.mirrored = mirrored; options.floating = floating;
+    game_tap.reset();
     touch.layout({x, y, w, h}, options, viewport_height);
 }
 
@@ -55,8 +57,9 @@ Java_com_dotzuki_player_NativeBridge_touchLayout(JNIEnv *env, jobject) {
 extern "C" JNIEXPORT jint JNICALL
 Java_com_dotzuki_player_NativeBridge_touchEvent(
     JNIEnv *, jobject, jint kind, jint id, jfloat x, jfloat y) {
+    const bool tap = game_tap.event(kind, id, x, y, touch.accepts(x, y));
     const bool settings = touch.event(kind, id, x, y);
-    return touch.bits() | (settings ? 256 : 0);
+    return touch.bits() | (settings ? 256 : 0) | (tap ? 512 : 0);
 }
 
 extern "C" JNIEXPORT jint JNICALL
@@ -173,4 +176,15 @@ Java_com_dotzuki_player_NativeBridge_lastError(JNIEnv *env, jobject) {
     dotzuki_mobile_last_error(bytes.data(), bytes.size());
     std::string message(bytes.begin(), bytes.end());
     return env->NewStringUTF(message.c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_dotzuki_player_NativeBridge_pointerClick(JNIEnv *, jobject, jfloat x, jfloat y) {
+    std::lock_guard<std::mutex> lock(game_mutex);
+    return runner != nullptr && dotzuki_mobile_pointer_click(runner, x, y);
+}
+extern "C" JNIEXPORT void JNICALL
+Java_com_dotzuki_player_NativeBridge_cancelPointer(JNIEnv *, jobject) {
+    std::lock_guard<std::mutex> lock(game_mutex);
+    if (runner) dotzuki_mobile_cancel_pointer_input(runner);
 }

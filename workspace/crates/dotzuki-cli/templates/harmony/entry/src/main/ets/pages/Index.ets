@@ -90,6 +90,7 @@ struct Index {
   }
 
   releaseAll(): void {
+    this.native?.cancelPointer();
     this.native?.touchEvent(3, 0, 0, 0);
     this.inputBits = 0;
     this.native?.setInput(0);
@@ -143,6 +144,9 @@ struct Index {
     // changedTouches carries the departing ID; touches does not on Up.
     for (const point of event.changedTouches) {
       result = this.native.touchEvent(kind, point.id, point.x, point.y);
+      if ((result & 512) !== 0 && this.viewWidth > 0 && this.viewHeight > 0) {
+        this.native.pointerClick(point.x / this.viewWidth, point.y / this.viewHeight);
+      }
       openSettings = openSettings || (result & 256) !== 0;
     }
     const next = result & 255;

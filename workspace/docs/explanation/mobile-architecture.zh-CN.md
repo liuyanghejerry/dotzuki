@@ -1,13 +1,13 @@
 # 移动端架构
 
-> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.9.0
+> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.9.1
 >（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 
 本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
 外壳；Android 和鸿蒙使用同一套带版本号的 C ABI。
@@ -55,6 +55,12 @@ Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共�
 | 输入 | `tick` 的 bitmask | A、B、Select、Start、Right、Left、Up、Down 使用 bit 0–7 |
 | 音频 | `audio_fill` | 一个实时消费者按 44.1 kHz 拉取双声道 PCM |
 | 持久化 | `export_save`、`import_save` | 外壳把 UTF-8 JSON 存入平台私有存储 |
+
+指针输入通过增量符号 `dotzuki_mobile_pointer_click` 与
+`dotzuki_mobile_cancel_pointer_input` 传递。前者使用 framebuffer 像素坐标，后者取消导航。
+调用与 tick 串行执行；外壳负责过滤黑边、虚拟按键、拖动与多指手势。
+旧 ABI v1 二进制库没有这两个符号，使用指针的外壳必须配套更新 Rust 库。
+现有 `MobileGame` 实现默认忽略指针，按键契约保持不变。
 
 游戏线程独占帧和存档操作。一个音频回调可同时调用 `audio_fill`。
 无锁的单生产者、单消费者 ring buffer 隔离游戏循环和音频回调。
