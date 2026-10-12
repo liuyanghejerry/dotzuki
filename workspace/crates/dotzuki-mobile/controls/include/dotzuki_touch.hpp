@@ -47,11 +47,13 @@ public:
         const float margin = 20;
         // Keep both thumb clusters in their own half, even in compact windows.
         const float inset = std::min(options.inset, std::max(0.f, area.w / 2 - 184 * s - margin));
-        // Leave the lower dialogue band readable on 16:9 phones. Cap the reserve
-        // on tablets so the thumb clusters stay near the bottom edge.
+        // Dialogue grows with the viewport, including on unfolded phones and
+        // tablets. Only limit its reserve when a compact window needs room for
+        // the thumb clusters below the top controls.
         const float fullHeight = viewportHeight > 0 ? viewportHeight : area.y + area.h;
         const float bottomAvoid = std::max(0.f, fullHeight - area.y - area.h);
-        const float bottomMargin = std::max(20.f, std::clamp(fullHeight * .22f, 48.f, 88.f) - bottomAvoid);
+        const float bottomMargin = std::max(20.f, std::min(
+            std::max(48.f, fullHeight * .22f) - bottomAvoid, area.h - 144 * s - 76));
         const float lift = std::clamp(options.lift, 20 - bottomMargin,
             std::max(0.f, area.h - 144 * s - bottomMargin - 76));
         auto circle = [](float x, float y, float diameter) {

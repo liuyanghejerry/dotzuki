@@ -5,7 +5,7 @@
 > - **Status**: active
 > - **Last verified**: v0.9.0
 >
-> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.0（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
+> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.0（源文档 commit 843113598fd46471c136faac0b5b4145b4104bde）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 将共享移动触控覆盖层接入 iOS 游戏，或修改 Android 和 HarmonyOS 导出器使用的控制器。
@@ -60,11 +60,24 @@ A/B 的可见圆形小于触摸矩形。独立热区互不重叠，菜单热区�
 控件可适配到 320×220 的安全区域；窗口更小时禁用触控，恢复可用尺寸后重新显示。
 浮动方向盘只在移动侧的拇指区域内开始。
 
+使用默认垂直位置时，固定拇指控件下方为 runner 底部对话预留视口高度的 22%，
+展开的折叠屏和平板也按此比例预留。该空间只计算一次底部系统避让区。
+小窗口会按需缩减预留空间，确保拇指控件位于顶部按钮下方。
+向下移动控件或使用浮动方向盘时，控件可能进入这一区域；
+对话面板更大的自定义游戏需要检查自己的布局。
+
 ## 验证
 
-本次在 Linux 上通过共享控制器的 sanitizer 测试、Android 模拟器原生测试及
-HarmonyOS 未签名 HAP 构建。鸿蒙设备上的运行行为仍需实机验证。UIKit 未在本机编译；
-请通过下述 iOS CI 工作流进行 Xcode 验证。
+已完成共享控制器 sanitizer 测试、Android 模拟器原生测试、HarmonyOS 模拟器交互
+和 UIKit 模拟器测试。HarmonyOS 与 iOS 真机上的运行行为仍需实机验证。
+
+对话避让回归在 HarmonyOS 6.1.1 API 24 arm64 模拟器的 2584×1828 窗口中验证，
+覆盖默认布局和大小为 1.2 的镜像布局：
+[修复前](../../../docs/assets/harmony-touch/harmony-dialogue-before.png)、
+[修复后](../../../docs/assets/harmony-touch/harmony-dialogue-after.png)、
+[镜像布局](../../../docs/assets/harmony-touch/harmony-dialogue-mirrored.png)。
+截图使用同一段 NPC 对话。底部对话区上方的选项菜单仍可能与 A/B 重叠；
+通用移动 ABI 不提供这些菜单的边界。
 
 从仓库根目录运行共享控制器测试：
 
