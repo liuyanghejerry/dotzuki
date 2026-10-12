@@ -39,6 +39,7 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
     fun pauseFrames() {
         active = false
+        NativeBridge.cancelPointer()
         inputBits = 0
         Choreographer.getInstance().removeFrameCallback(this)
     }
@@ -73,12 +74,22 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
         }
     }
 
-    private fun fitRect(canvas: Canvas): RectF {
-        val scale = minOf(canvas.width.toFloat() / frameWidth, canvas.height.toFloat() / frameHeight)
+    fun clickToMove(x: Float, y: Float) {
+        if (!active || !surfaceReady) return
+        val rect = fitRect(width, height)
+        if (!rect.contains(x, y)) return
+        NativeBridge.pointerClick((x - rect.left) * frameWidth / rect.width(),
+            (y - rect.top) * frameHeight / rect.height())
+    }
+
+    private fun fitRect(canvas: Canvas): RectF = fitRect(canvas.width, canvas.height)
+
+    private fun fitRect(viewWidth: Int, viewHeight: Int): RectF {
+        val scale = minOf(viewWidth.toFloat() / frameWidth, viewHeight.toFloat() / frameHeight)
         val width = frameWidth * scale
         val height = frameHeight * scale
-        val left = (canvas.width - width) / 2f
-        val top = (canvas.height - height) / 2f
+        val left = (viewWidth - width) / 2f
+        val top = (viewHeight - height) / 2f
         return RectF(left, top, left + width, top + height)
     }
 

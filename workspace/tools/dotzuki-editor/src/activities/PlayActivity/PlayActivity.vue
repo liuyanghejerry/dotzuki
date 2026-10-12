@@ -78,6 +78,7 @@
         :width="WIDTH"
         :height="HEIGHT"
         tabindex="0"
+        style="touch-action: none"
         @blur="clearKeys"
         class="w-[960px] h-[720px] max-w-full bg-black [image-rendering:pixelated] outline-none focus:ring-2 focus:ring-accent-strong"
       ></canvas>
@@ -108,6 +109,7 @@ import {
   keyToBit,
   type WasmRunner,
 } from '@/composables/useWasmRunner'
+import { bindPlayPointer } from '@/composables/playPointer'
 import { createPlayAudio, type PlayAudio } from '@/composables/usePlayAudio'
 
 const { t, locale: editorLocale } = useI18n()
@@ -140,6 +142,7 @@ const statusText = computed(() => {
   return t('play.error')
 })
 
+let unbindPointer: (() => void) | undefined
 let runner: WasmRunner | null = null
 let ctx: CanvasRenderingContext2D | null = null
 let bundleFiles: Record<string, string> | null = null
@@ -167,6 +170,7 @@ function inputMask(): number {
 }
 
 function clearKeys() {
+  runner?.cancel_navigation?.()
   pressed.clear()
 }
 
@@ -239,7 +243,7 @@ function persistSave() {
 }
 
 function onVisibilityChange() {
-  if (document.visibilityState === 'hidden') persistSave()
+  if (document.visibilityState === 'hidden') { clearKeys(); persistSave() }
 }
 
 function destroyRunner() {
@@ -342,6 +346,11 @@ async function exportGame(target: ExportTarget) {
 }
 
 onMounted(() => {
+  if (canvasEl.value) {
+    unbindPointer = bindPlayPointer(canvasEl.value,
+      (x, y) => { runner?.click_to_move?.(x, y) },
+      () => { runner?.cancel_navigation?.() })
+  }
   void boot(true, true)
   audio = createPlayAudio()
   // Dev-only observability for manual/e2e debugging: live audio stats.
@@ -354,6 +363,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  unbindPointer?.()
   persistSave()
 })
 

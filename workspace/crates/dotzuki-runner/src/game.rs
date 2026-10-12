@@ -78,6 +78,7 @@ use anyhow::{Context, Result};
 use dotzuki_engine::camera::{Camera, Rect, Vec2};
 use dotzuki_engine::menu::MenuConfig;
 use dotzuki_engine::overworld::actor::{frame_col, OverworldActor, OverworldCollision};
+use dotzuki_engine::overworld::navigation::{NavNode, NavigationWorld, Navigator};
 use dotzuki_engine::overworld::types::Direction;
 use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_engine_script::command::{CommandResult, ScriptCommand};
@@ -276,6 +277,46 @@ impl OverworldCollision for CollisionView<'_> {
     }
 }
 
+/// Navigation uses the same destination collision and post-step stairs as walking.
+struct NavigationView<'a> {
+    map: &'a RuntimeMap,
+    start: NavNode,
+}
+
+impl NavigationWorld for NavigationView<'_> {
+    fn transition(&self, from: NavNode, direction: Direction) -> Option<NavNode> {
+        // A warp is an endpoint, never a shortcut through another map.
+        if from != self.start
+            && self
+                .map
+                .objects()
+                .warps
+                .iter()
+                .any(|w| (w.x, w.y) == (from.x, from.y) && !w.dest_map.is_empty())
+        {
+            return None;
+        }
+        let (dx, dy) = direction_delta(direction);
+        let (x, y) = (from.x.checked_add(dx)?, from.y.checked_add(dy)?);
+        if (CollisionView { map: self.map }).is_blocked_at(from.level, x, y) {
+            return None;
+        }
+        Some(NavNode {
+            x,
+            y,
+            level: stair_level(self.map, from.level, x, y),
+        })
+    }
+}
+
+fn stair_level(map: &RuntimeMap, level: u8, x: i32, y: i32) -> u8 {
+    match map.stair_at(x, y) {
+        Some(1) => (level as usize + 1).min(map.level_count() - 1) as u8,
+        Some(2) => level.saturating_sub(1),
+        _ => level,
+    }
+}
+
 /// A booted zero-Rust game: overworld + scene VM + dialogue/choice UI.
 ///
 /// Owns the [`LoadedProject`], the current [`RuntimeMap`], the player
@@ -289,6 +330,10 @@ pub struct RunnerGame {
     map: Option<RuntimeMap>,
     camera: Camera,
     actor: OverworldActor,
+    navigation: Navigator,
+    pending_destination: Option<(i32, i32)>,
+    /// Rejected destination and remaining feedback frames.
+    navigation_failure: Option<(i32, i32, u8)>,
     /// `gfx/overworld/player/sheet.png` when the project ships one.
     player_sprite: Option<WalkSprite>,
     /// Persistent story flags (cross-scene truth).
@@ -368,6 +413,14 @@ impl dotzuki_app::GameLoop for RunnerGame {
 
     fn update(&mut self, input: &InputState) {
         RunnerGame::update(self, input);
+    }
+
+    fn pointer_click(&mut self, x: f32, y: f32) {
+        self.click_to_move(x, y);
+    }
+
+    fn cancel_pointer_input(&mut self) {
+        self.cancel_navigation();
     }
 
     fn draw(&mut self, frame_buffer: &mut FrameBuffer) {

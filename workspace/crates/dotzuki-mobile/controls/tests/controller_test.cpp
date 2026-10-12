@@ -5,6 +5,24 @@
 using namespace dotzuki::touch;
 
 int main() {
+    GameTap tap;
+    assert(!tap.event(0, 1, 200, 100, false));
+    assert(tap.event(2, 1, 202, 103, false));
+    assert(!tap.event(2, 1, 202, 103, false)); // no duplicate up
+    tap.event(0, 1, 200, 100, true);
+    assert(!tap.event(2, 1, 200, 100, false)); // began on a control
+    tap.event(0, 1, 200, 100, false);
+    tap.event(1, 1, 220, 100, false);
+    assert(!tap.event(2, 1, 200, 100, false)); // dragged and returned
+    tap.event(0, 1, 200, 100, false);
+    tap.event(0, 2, 220, 100, false);
+    assert(!tap.event(2, 2, 220, 100, false));
+    assert(!tap.event(2, 1, 200, 100, false)); // multi-touch
+    tap.event(0, 1, 200, 100, false);
+    tap.event(3, 0, 0, 0, false);
+    assert(!tap.event(2, 1, 200, 100, false)); // cancel
+    tap.event(0, 1, 200, 100, false);
+    assert(!tap.event(2, 1, 200, 100, true)); // ended over control
     Controller c;
     c.layout({44, 0, 756, 369}, {});
     auto pad = c.bounds(Pad);

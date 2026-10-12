@@ -840,6 +840,6 @@ export default {
     exportHarmony: '导出鸿蒙',
     exporting: '正在导出…',
     exportDone: '已导出到 {path}（dist 目录不会被打进项目包，可重复导出）',
-    keyHelp: '方向键 / WASD：移动 · Z：A 键 · X：B 键 · Enter / 空格：Start · Backspace / 右 Shift：Select',
+    keyHelp: '点击地图：自动行走 · 方向键 / WASD：移动 · Z：A 键 · X：B 键 · Enter / 空格：Start · Backspace / 右 Shift：Select',
   },
 }

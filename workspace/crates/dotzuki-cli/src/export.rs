@@ -163,7 +163,7 @@ fn page_strings(lang: &str) -> PageStrings {
             downloading: "下载游戏包…",
             starting: "启动中…",
             failed_prefix: "加载失败: ",
-            hint: "方向键 / WASD — 移动 &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — 静音",
+            hint: "点击地图 — 自动行走 &nbsp;·&nbsp; 方向键 / WASD — 移动 &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — 静音",
         },
         _ => PageStrings {
             loading: "Loading…",
@@ -171,7 +171,7 @@ fn page_strings(lang: &str) -> PageStrings {
             downloading: "Downloading game…",
             starting: "Starting…",
             failed_prefix: "Failed to load: ",
-            hint: "Arrows / WASD — move &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — mute",
+            hint: "Click map — walk to tile &nbsp;·&nbsp; Arrows / WASD — move &nbsp;·&nbsp; Z — A &nbsp;·&nbsp; X — B &nbsp;·&nbsp; Enter — Start &nbsp;·&nbsp; Backspace — Select &nbsp;·&nbsp; M — mute",
         },
     }
 }

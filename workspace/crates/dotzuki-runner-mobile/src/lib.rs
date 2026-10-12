@@ -52,6 +52,12 @@ impl MobileGame for RunnerAdapter {
     fn dimensions(&self) -> (u32, u32) {
         (SCREEN_W as u32, SCREEN_H as u32)
     }
+    fn pointer_click(&mut self, x: f32, y: f32) -> bool {
+        self.game.click_to_move(x, y)
+    }
+    fn cancel_pointer_input(&mut self) {
+        self.game.cancel_navigation();
+    }
     fn tick(&mut self, bits: u8) {
         self.input.set_from_bitmask(bits);
         self.game.update(&self.input);

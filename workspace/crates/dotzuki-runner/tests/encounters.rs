@@ -375,3 +375,27 @@ fn winning_a_sceneless_battle_returns_to_the_overworld() {
     assert_eq!(game.player_tile(), (2, 3), "walking resumes after the win");
     assert!(game.battle().is_none());
 }
+
+#[test]
+fn click_navigation_rolls_encounters_and_does_not_resume_after_battle() {
+    let (_tmp, root) = demo_project("click-encounter");
+    inject_cave_encounters(
+        &root,
+        serde_json::json!({
+            "rate": 255,
+            "zones": [{"x":3,"y":1,"w":1,"h":3,"table":[{"id":"slime","weight":1}]}]
+        }),
+    );
+    let mut game = boot(&root, vec![0, 0, 50, 100, 1]);
+    reach_cave(&mut game);
+    // Cave origin is (120,72). Start on its return warp (3,4); allow walking off.
+    assert!(game.click_to_move(176.0, 96.0)); // tile (3,1)
+    idle(&mut game, 8);
+    assert_eq!(game.player_tile(), (3, 3));
+    assert!(game.battle().is_some());
+    assert_eq!(game.navigation_target(), None);
+    assert!(!game.click_to_move(176.0, 96.0));
+    auto_battle(&mut game);
+    idle(&mut game, 60);
+    assert_eq!(game.player_tile(), (3, 3));
+}
