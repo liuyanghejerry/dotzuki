@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   publish:
+    if: github.event_name != 'release' || !github.event.release.prerelease
     name: Publish dotzuki crates
     runs-on: ubuntu-latest
     steps:
