@@ -1,7 +1,7 @@
 # 导出鸿蒙游戏
 
 > 本文是 `export-harmonyos.md` 的中文翻译，同步至引擎版本 v0.9.0
->（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
+>（源文档 commit c70887ec6b8aeccf034c2508051efa80fd5d727f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
@@ -77,7 +77,7 @@ workspace target 目录中，请在启动编辑器 server 前设置
 - 从 Preferences 恢复 UTF-8 存档 JSON；
 - 由 XComponent 原生帧回调推进游戏；
 - 用 nearest filtering 把每个 320×240 RGBA 帧上传到 GLES3 纹理；
-- 把 ArkUI 多点触摸按键组合成公共八键 bitmask；
+- 用 ArkUI Canvas 绘制控件，由共享 C++ 控制器将多点触摸转换成公共八键 bitmask；
 - 在 OHAudio 回调中从 Rust 拉取 44.1 kHz 双声道 PCM；
 - 页面进入后台时暂停音频并持久化稳定存档。
 
