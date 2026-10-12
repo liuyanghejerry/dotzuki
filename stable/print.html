@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8086c03c.js";
+            window.path_to_searchindex_js = "searchindex-37457bfb.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8bde47b2.js"></script>
+        <script src="toc-70bafa49.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -288,7 +288,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>, <a href="#migrating-to-v091"><code>v0.9.1</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>, <a href="#migrating-to-v091"><code>v0.9.1</code></a>, <a href="#migrating-to-v0100"><code>v0.10.0</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9415,7 +9415,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.1</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9427,6 +9427,24 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v0100"><a class="header" href="#v0100">v0.10.0</a></h2>
+<p>This release integrates the GBA audio and gameplay fixes previously available only on the
+<code>fix/gba-psg-audio</code> branch. See the <a href="#migrating-to-v0100">migration guide</a>.</p>
+<p>Breaking change:</p>
+<ul>
+<li><code>NpcRuntimeState::delay_counter</code> changes from <code>u8</code> to <code>u16</code> to represent a 256-frame
+countdown. Update typed assignments and binary save adapters.</li>
+</ul>
+<p>Runtime additions and fixes:</p>
+<ul>
+<li>Support default-feature-free bare-metal audio and optional register forwarding to physical PSG
+hardware. Preserve sparse music/SFX channel positions and release completed sound waiters.</li>
+<li>Correct pitch-slide initialization, fractional carry, and target termination.</li>
+<li>Add an opt-in classic NPC wander policy; the existing entry point retains its default policy.</li>
+<li>Add a callback before each acting battler and a defaulted resolved-move hook after the
+status gate. These support consumer-owned trainer actions and called moves.</li>
+<li>Terminate outward spiral transitions after their bounded traversal.</li>
 </ul>
 <h2 id="v091"><a class="header" href="#v091">v0.9.1</a></h2>
 <p>This patch release preserves Rust APIs and replaces the exported mobile control layout.
@@ -9991,6 +10009,55 @@ the DSL <code>Interpreter</code> also implements <code>Debug</code> and <code>Cl
 restores frame-level state; no per-struct mirror type and no private engine
 branch to pin.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v0100"><a class="header" href="#migrating-to-v0100">Migrating to v0.10.0</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
+</ul>
+</blockquote>
+<p>Update from v0.9.1 or the <code>fix/gba-psg-audio</code> branch while preserving consumer-owned game rules.
+Before you start, read the <a href="#changelog">changelog</a> and
+<a href="#the-effect-stack-battle-engine">effect stack architecture</a>.</p>
+<h2 id="update-dependencies-5"><a class="header" href="#update-dependencies-5">Update dependencies</a></h2>
+<p>Update all dotzuki dependencies together to registry version <code>0.10.0</code> or git tag <code>v0.10.0</code>.
+Consumers pinned to <code>92ba95f</code> can replace that branch revision with the release tag after
+testing their game. The minimum Rust version remains 1.88.
+Consumers that skip v0.9.0 must also follow its <a href="#migrating-to-v090">migration guide</a> for removed UI APIs.</p>
+<h2 id="update-npc-state-adapters"><a class="header" href="#update-npc-state-adapters">Update NPC state adapters</a></h2>
+<p><code>NpcRuntimeState::delay_counter</code> now uses <code>u16</code>. Widen typed <code>u8</code> assignments with
+<code>u16::from(value)</code>; preserve values through 256 when writing saves.
+Do not truncate this field back to <code>u8</code>. Audit binary serialization layouts and version
+their save format when it stores the field at a fixed width.</p>
+<p>The existing <code>update_npc_movement</code> entry point retains the default policy.
+Use <code>update_npc_movement_with_policy</code> with <code>NpcWanderPolicy::Classic</code> for four equal
+direction intervals, restricted-axis remapping, and a zero random delay interpreted as
+256 frames. The choice belongs to the consuming game.</p>
+<h2 id="preserve-battle-action-timing"><a class="header" href="#preserve-battle-action-timing">Preserve battle action timing</a></h2>
+<p><code>StackDriver::execute_turn_logged_with_before_action</code> invokes a consumer callback after
+turn ordering and before each acting battler’s forced-action resolution. The callback can
+inspect the state left by the first actor and replace the current action, state, or effects.
+A cancelled second actor does not invoke the callback. Existing turn entry points use no callback.</p>
+<p><code>EffectProvider::resolved_move</code> defaults to the selected move. Override it when a successful
+<code>BeforeMove</code> gate resolves a called move. Ordering still uses the selected action; the
+resolved move supplies the subsequent move pipeline and log entry. The status gate runs once.
+Keep trainer decisions and game-specific called-move rules in the consumer.</p>
+<h2 id="connect-bare-metal-audio"><a class="header" href="#connect-bare-metal-audio">Connect bare-metal audio</a></h2>
+<p>Build <code>dotzuki-audio</code> without default features on a bare-metal target.
+<code>Apu::set_register_sink</code> installs an optional register-write callback for the host’s PSG
+adapter. Accepted register writes continue to update the software APU.
+The consumer supplies hardware-address translation and output timing.</p>
+<p>Sparse track slots now retain their channel positions. Remove workarounds that compacted or
+reindexed those slots. Test music, sound-effect completion, volume, panning, and pitch slides
+on each supported backend; register-level tests do not replace hardware listening tests.</p>
+<h2 id="verify-game-behavior"><a class="header" href="#verify-game-behavior">Verify game behavior</a></h2>
+<p>Exercise trainer item/switch decisions before both actors, forced actions, a first-actor KO,
+called moves, restricted-axis NPC wandering, zero-delay countdowns, and outward spiral
+transitions. Games already using the branch hooks should retain their existing callbacks
+and explicit classic policy when switching dependencies.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migrating-to-v091"><a class="header" href="#migrating-to-v091">Migrating to v0.9.1</a></h1>
 <blockquote>
 <ul>
@@ -10002,7 +10069,7 @@ branch to pin.</p>
 </blockquote>
 <p>Update from v0.9.0 to adopt the shared landscape touch controls without changing Rust APIs.
 Before you start, read the <a href="#changelog">changelog</a> for the release scope.</p>
-<h2 id="update-dependencies-5"><a class="header" href="#update-dependencies-5">Update dependencies</a></h2>
+<h2 id="update-dependencies-6"><a class="header" href="#update-dependencies-6">Update dependencies</a></h2>
 <p>Update every dotzuki dependency together: use version <code>0.9.1</code> for registry dependencies
 or tag <code>v0.9.1</code> for git dependencies, then refresh the consumer lockfile.
 The minimum Rust version remains 1.88.</p>
@@ -13714,8 +13781,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.9.1
-（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.10.0
+（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13824,7 +13891,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>、<a href="#迁移至-v091"><code>v0.9.1</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>、<a href="#迁移至-v091"><code>v0.9.1</code></a>、<a href="#迁移至-v0100"><code>v0.10.0</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -21947,8 +22014,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.9.1
-（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.0
+（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21956,7 +22023,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.1</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -21967,6 +22034,24 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="v0100-1"><a class="header" href="#v0100-1">v0.10.0</a></h2>
+<p>本版本整合此前仅存在于 <code>fix/gba-psg-audio</code> 分支的 GBA 音频与游戏行为修复。
+请阅读<a href="#迁移至-v0100">迁移指南</a>。</p>
+<p>破坏性变更：</p>
+<ul>
+<li><code>NpcRuntimeState::delay_counter</code> 从 <code>u8</code> 改为 <code>u16</code>，以表示 256 帧倒计时。
+请更新带类型的赋值及二进制存档适配器。</li>
+</ul>
+<p>运行时新增与修复：</p>
+<ul>
+<li>支持关闭默认 feature 的裸机音频，以及向物理 PSG 硬件转发寄存器写入。
+保留稀疏音乐/音效声道的位置，并在音效结束时释放等待状态。</li>
+<li>修正滑音初始化、小数进位及到达目标后的终止行为。</li>
+<li>增加显式启用的经典 NPC 游走策略；已有入口保留默认策略。</li>
+<li>增加每个行动者执行前的回调，以及状态门之后带默认实现的招式解析钩子。
+消费游戏可用它们实现训练师行动和调用招式。</li>
+<li>向外螺旋转场在有界遍历结束后终止。</li>
 </ul>
 <h2 id="v091-1"><a class="header" href="#v091-1">v0.9.1</a></h2>
 <p>本补丁版本保持 Rust API 不变，并替换导出的移动端控制布局。
@@ -22505,6 +22590,59 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 <p>需要逐帧保存与恢复状态的游戏，可以直接对这些值派生快照类型；不必为每个引擎结构
 另写镜像类型，也不必再固定一份私有引擎分支。</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移至-v0100"><a class="header" href="#迁移至-v0100">迁移至 v0.10.0</a></h1>
+<blockquote>
+<p>本文是 <code>v0.10.0.md</code> 的中文翻译，同步至引擎版本 v0.10.0
+（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
+</ul>
+</blockquote>
+<p>从 v0.9.1 或 <code>fix/gba-psg-audio</code> 分支更新，同时保留由消费游戏管理的规则。
+开始前，请阅读<a href="#变更日志">变更日志</a>及
+<a href="#效果栈战斗引擎">effect stack 架构</a>。</p>
+<h2 id="更新依赖-5"><a class="header" href="#更新依赖-5">更新依赖</a></h2>
+<p>一起更新所有 dotzuki 依赖，使用 registry 版本 <code>0.10.0</code> 或 git tag <code>v0.10.0</code>。
+固定在 <code>92ba95f</code> 的消费者可在测试游戏后，将分支 revision 换成正式发布标签。
+最低 Rust 版本仍为 1.88。
+跳过 v0.9.0 的消费者还需按其<a href="#迁移至-v090">迁移指南</a>处理已移除的 UI API。</p>
+<h2 id="更新-npc-状态适配器"><a class="header" href="#更新-npc-状态适配器">更新 NPC 状态适配器</a></h2>
+<p><code>NpcRuntimeState::delay_counter</code> 现在使用 <code>u16</code>。
+用 <code>u16::from(value)</code> 扩宽带类型的 <code>u8</code> 赋值；写入存档时保留直至 256 的值。
+不要将该字段截断回 <code>u8</code>。审查二进制序列化布局；
+若存档以固定宽度保存该字段，应升级存档格式版本。</p>
+<p>已有的 <code>update_npc_movement</code> 入口保留默认策略。
+使用 <code>update_npc_movement_with_policy</code> 并传入 <code>NpcWanderPolicy::Classic</code>，
+可启用四个等宽方向区间、受限轴方向映射，以及将零随机延迟解释为 256 帧的行为。
+由消费游戏选择策略。</p>
+<h2 id="保留战斗行动时序"><a class="header" href="#保留战斗行动时序">保留战斗行动时序</a></h2>
+<p><code>StackDriver::execute_turn_logged_with_before_action</code> 在回合排序之后、
+每个行动者的强制行动解析之前调用消费方回调。
+回调可以检查首个行动者留下的状态，并替换当前行动、状态或效果。
+被取消的第二个行动者不会触发回调。已有回合入口不使用回调。</p>
+<p><code>EffectProvider::resolved_move</code> 默认返回选定招式。
+当成功通过 <code>BeforeMove</code> 状态门后需要解析调用招式时，可覆盖该方法。
+排序仍使用选定行动；后续招式流程及日志条目使用解析后的招式。
+状态门仅运行一次。训练师决策和游戏专用的招式调用规则保留在消费者中。</p>
+<h2 id="接入裸机音频"><a class="header" href="#接入裸机音频">接入裸机音频</a></h2>
+<p>在裸机目标上关闭默认 feature 构建 <code>dotzuki-audio</code>。
+<code>Apu::set_register_sink</code> 为宿主的 PSG 适配器安装可选寄存器写入回调。
+接受的寄存器写入仍会更新软件 APU。
+消费者负责硬件地址转换和输出时序。</p>
+<p>稀疏音轨槽位现在保留其声道位置。移除压缩或重新索引这些槽位的临时处理。
+在每个受支持后端上测试音乐、音效结束、音量、声像和滑音；
+寄存器级测试不能替代硬件试听。</p>
+<h2 id="验证游戏行为"><a class="header" href="#验证游戏行为">验证游戏行为</a></h2>
+<p>检查两个行动者执行前的训练师道具/换人决策、强制行动、首个行动者造成 KO、
+调用招式、受限轴 NPC 游走、零延迟倒计时和向外螺旋转场。
+已使用分支钩子的游戏在切换依赖时，应保留现有回调及显式经典策略。</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="迁移至-v091"><a class="header" href="#迁移至-v091">迁移至 v0.9.1</a></h1>
 <blockquote>
 <p>本文是 <code>v0.9.1.md</code> 的中文翻译，同步至引擎版本 v0.9.1
@@ -22521,7 +22659,7 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 </blockquote>
 <p>从 v0.9.0 更新以采用共享横屏触控布局，无需修改 Rust API。
 开始前，请阅读<a href="#变更日志">变更日志</a>了解发布范围。</p>
-<h2 id="更新依赖-5"><a class="header" href="#更新依赖-5">更新依赖</a></h2>
+<h2 id="更新依赖-6"><a class="header" href="#更新依赖-6">更新依赖</a></h2>
 <p>一起更新所有 dotzuki 依赖：registry 依赖使用版本 <code>0.9.1</code>，
 git 依赖使用 tag <code>v0.9.1</code>，然后刷新消费项目的 lockfile。
 最低 Rust 版本仍为 1.88。</p>
