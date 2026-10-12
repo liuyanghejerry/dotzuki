@@ -77,7 +77,8 @@ The generated shell performs these operations:
 - restores UTF-8 save JSON from Preferences;
 - advances the game from the native XComponent frame callback;
 - uploads each 320×240 RGBA frame to a GLES3 texture with nearest filtering;
-- combines ArkUI multi-touch buttons into the common eight-button bitmask;
+- draws controls with ArkUI Canvas and routes multiple touches through the shared C++
+  controller into the common eight-button bitmask;
 - pulls 44.1 kHz stereo PCM from Rust in the OHAudio callback; and
 - pauses audio and persists a stable save when the page moves to background.
 
