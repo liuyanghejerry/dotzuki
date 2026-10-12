@@ -3,9 +3,9 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 >
-> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.8.2（源文档与本文件同次提交）。
+> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.0（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 将共享移动触控覆盖层接入 iOS 游戏，或修改 Android 和 HarmonyOS 导出器使用的控制器。

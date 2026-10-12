@@ -1,13 +1,13 @@
 # 导出 Android 游戏
 
-> 本文是 `export-android.md` 的中文翻译，同步至引擎版本 v0.8.2
->（源文档 commit e5978b51abd75570080230acfd5c86341103ae5e）。
+> 本文是 `export-android.md` 的中文翻译，同步至引擎版本 v0.9.0
+>（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 构建共用移动运行时，并把零 Rust 游戏导出为面向 arm64 手机和平板的
 Android Studio 工程。

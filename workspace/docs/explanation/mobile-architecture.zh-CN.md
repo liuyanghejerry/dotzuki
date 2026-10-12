@@ -1,13 +1,13 @@
 # 移动端架构
 
-> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.8.2
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.9.0
+>（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
 外壳；Android 和鸿蒙使用同一套带版本号的 C ABI。
