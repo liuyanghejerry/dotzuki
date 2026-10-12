@@ -9,12 +9,16 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.widget.LinearLayout
+import android.widget.FrameLayout
 import android.widget.Toast
 import java.nio.charset.StandardCharsets
 
 class MainActivity : Activity() {
     private lateinit var gameView: GameSurfaceView
+    private lateinit var gamepad: GamepadView
+    private var windowFocused = false
+    private var resumed = false
+    private var editingControls = false
     private val audio = DotzukiAudio()
     private val handler = Handler(Looper.getMainLooper())
     private var runtimeReady = false
@@ -42,22 +46,20 @@ class MainActivity : Activity() {
         runtimeReady = true
 
         gameView = GameSurfaceView(this)
-        val gamepad = GamepadView(this).apply {
+        gamepad = GamepadView(this).apply {
             onInputChanged = {
                 touchBits = it
                 updateInput()
             }
         }
-        setContentView(LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+        gamepad.onSettingsChanged = {
+            editingControls = it
+            updatePlayback()
+        }
+        setContentView(FrameLayout(this).apply {
             setBackgroundColor(android.graphics.Color.BLACK)
-            addView(gameView, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f,
-            ))
-            addView(gamepad, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (260 * resources.displayMetrics.density).toInt(),
-            ))
+            addView(gameView, FrameLayout.LayoutParams(-1, -1))
+            addView(gamepad, FrameLayout.LayoutParams(-1, -1))
         })
         enterImmersiveMode()
         handler.postDelayed(savePoll, SAVE_POLL_MS)
@@ -65,22 +67,22 @@ class MainActivity : Activity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        windowFocused = hasFocus
         if (hasFocus) enterImmersiveMode()
+        if (runtimeReady) updatePlayback()
     }
 
     override fun onResume() {
         super.onResume()
         if (!runtimeReady) return
-        gameView.resumeFrames()
-        audio.start()
+        resumed = true
+        updatePlayback()
     }
 
     override fun onPause() {
+        resumed = false
         if (runtimeReady) {
-            gameView.pauseFrames()
-            touchBits = 0
-            hardwareBits = 0
-            audio.stop()
+            updatePlayback()
             persistSave()
         }
         super.onPause()
@@ -99,6 +101,7 @@ class MainActivity : Activity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val bit = inputBit(keyCode) ?: return super.onKeyDown(keyCode, event)
+        if (editingControls || !resumed) return true
         hardwareBits = hardwareBits or (1 shl bit)
         updateInput()
         return true
@@ -109,6 +112,19 @@ class MainActivity : Activity() {
         hardwareBits = hardwareBits and (1 shl bit).inv()
         updateInput()
         return true
+    }
+
+    private fun updatePlayback() {
+        if (resumed && windowFocused && !editingControls) {
+            gameView.resumeFrames()
+            audio.start()
+        } else {
+            gamepad.releaseAll()
+            touchBits = 0
+            hardwareBits = 0
+            gameView.pauseFrames()
+            audio.stop()
+        }
     }
 
     private fun updateInput() {

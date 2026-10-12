@@ -8,12 +8,15 @@
 #include <vector>
 
 #include "dotzuki_runner_mobile.h"
+#include "dotzuki_touch.hpp"
 
 namespace {
 constexpr uint32_t MOBILE_ABI_VERSION = 1;
 std::mutex game_mutex;
 std::shared_mutex runner_lifetime_mutex;
 DotzukiMobileRunner *runner = nullptr;
+// Called only on the UI thread, independently of the game/audio locks.
+dotzuki::touch::Controller touch;
 
 jbyteArray bytes_to_array(JNIEnv *env, const uint8_t *bytes, size_t length) {
     auto result = env->NewByteArray(static_cast<jsize>(length));
@@ -24,6 +27,37 @@ jbyteArray bytes_to_array(JNIEnv *env, const uint8_t *bytes, size_t length) {
     return result;
 }
 }  // namespace
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_dotzuki_player_NativeBridge_touchConfigure(
+    JNIEnv *, jobject, jfloat x, jfloat y, jfloat w, jfloat h,
+    jfloat scale, jfloat inset, jfloat lift, jboolean mirrored, jboolean floating, jfloat viewport_height) {
+    dotzuki::touch::Options options;
+    options.scale = scale; options.inset = inset; options.lift = lift;
+    options.mirrored = mirrored; options.floating = floating;
+    touch.layout({x, y, w, h}, options, viewport_height);
+}
+
+extern "C" JNIEXPORT jfloatArray JNICALL
+Java_com_dotzuki_player_NativeBridge_touchLayout(JNIEnv *env, jobject) {
+    float data[30];
+    size_t i = 0;
+    for (const auto &control : touch.controls) {
+        data[i++] = static_cast<float>(control.id);
+        data[i++] = control.bounds.x; data[i++] = control.bounds.y;
+        data[i++] = control.bounds.w; data[i++] = control.bounds.h;
+    }
+    auto result = env->NewFloatArray(30);
+    if (result) env->SetFloatArrayRegion(result, 0, 30, data);
+    return result;
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_dotzuki_player_NativeBridge_touchEvent(
+    JNIEnv *, jobject, jint kind, jint id, jfloat x, jfloat y) {
+    const bool settings = touch.event(kind, id, x, y);
+    return touch.bits() | (settings ? 256 : 0);
+}
 
 extern "C" JNIEXPORT jint JNICALL
 Java_com_dotzuki_player_NativeBridge_abiVersion(JNIEnv *, jobject) {
@@ -88,7 +122,8 @@ Java_com_dotzuki_player_NativeBridge_frameLength(JNIEnv *, jobject) {
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_dotzuki_player_NativeBridge_tick(JNIEnv *, jobject, jint input_bits) {
     std::lock_guard<std::mutex> lock(game_mutex);
-    return runner != nullptr && dotzuki_mobile_tick(runner, static_cast<uint8_t>(input_bits));
+    return runner != nullptr && dotzuki_mobile_tick(
+        runner, touch.sample(static_cast<uint8_t>(input_bits)));
 }
 
 extern "C" JNIEXPORT jint JNICALL

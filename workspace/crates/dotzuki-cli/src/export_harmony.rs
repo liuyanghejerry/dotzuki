@@ -67,6 +67,7 @@ const TEMPLATES: &[TemplateFile] = &[
     template!("entry/src/main/cpp/dotzuki_host.cpp"),
     template!("entry/src/main/cpp/dotzuki_host.h"),
     template!("entry/src/main/cpp/napi_init.cpp"),
+    template!("entry/src/main/cpp/touch_bridge.cpp"),
     template!("entry/src/main/cpp/types/libentry/index.d.ts"),
     template!("entry/src/main/cpp/types/libentry/oh-package.json5"),
 ];
@@ -176,6 +177,11 @@ fn write_project(
     fs::write(
         &include,
         include_bytes!("../templates/mobile/dotzuki_runner_mobile.h"),
+    )?;
+    write_file(
+        out,
+        "entry/src/main/cpp/include/dotzuki_touch.hpp",
+        dotzuki_mobile::TOUCH_CONTROLLER_HEADER.as_bytes(),
     )?;
     let library = out.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a");
     fs::create_dir_all(library.parent().unwrap())?;
@@ -335,6 +341,10 @@ mod tests {
         assert_eq!(
             fs::read(root.join("entry/libs/arm64-v8a/libdotzuki_runner_mobile.a")).unwrap(),
             b"archive"
+        );
+        assert_eq!(
+            fs::read(root.join("entry/src/main/cpp/include/dotzuki_touch.hpp")).unwrap(),
+            dotzuki_mobile::TOUCH_CONTROLLER_HEADER.as_bytes(),
         );
         for asset in ASSETS {
             assert_eq!(

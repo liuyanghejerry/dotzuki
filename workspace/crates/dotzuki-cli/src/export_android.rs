@@ -180,6 +180,11 @@ fn write_project(
         &include,
         include_bytes!("../templates/mobile/dotzuki_runner_mobile.h"),
     )?;
+    write_file(
+        out,
+        "app/src/main/cpp/include/dotzuki_touch.hpp",
+        dotzuki_mobile::TOUCH_CONTROLLER_HEADER.as_bytes(),
+    )?;
     let library = out.join("app/src/main/jniLibs/arm64-v8a/libdotzuki_runner_mobile.a");
     fs::create_dir_all(library.parent().unwrap())?;
     fs::copy(mobile_lib, &library).with_context(|| {
@@ -359,6 +364,10 @@ mod tests {
             fs::read(root.join("app/src/main/jniLibs/arm64-v8a/libdotzuki_runner_mobile.a"))
                 .unwrap(),
             b"archive"
+        );
+        assert_eq!(
+            fs::read(root.join("app/src/main/cpp/include/dotzuki_touch.hpp")).unwrap(),
+            dotzuki_mobile::TOUCH_CONTROLLER_HEADER.as_bytes(),
         );
         for asset in ASSETS {
             assert_eq!(

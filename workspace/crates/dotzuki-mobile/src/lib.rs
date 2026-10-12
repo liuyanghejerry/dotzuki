@@ -5,6 +5,10 @@ use std::ffi::CString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 mod audio_ring;
 use audio_ring::AudioRing;
+/// Portable C++ touch controller shipped with native shells and the iOS package.
+/// Exporters use this source rather than reaching outside their Cargo package.
+pub const TOUCH_CONTROLLER_HEADER: &str = include_str!("../controls/include/dotzuki_touch.hpp");
+
 pub const ABI_VERSION: u32 = 1;
 pub const AUDIO_SAMPLE_RATE: u32 = 44_100;
 pub const GAME_FRAME_RATE: f64 = 59.7275;

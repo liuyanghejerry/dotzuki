@@ -1,13 +1,13 @@
 # 导出鸿蒙游戏
 
-> 本文是 `export-harmonyos.md` 的中文翻译，同步至引擎版本 v0.7.0
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+> 本文是 `export-harmonyos.md` 的中文翻译，同步至引擎版本 v0.9.0
+>（源文档 commit c70887ec6b8aeccf034c2508051efa80fd5d727f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.9.0
 
 构建公共移动运行时，并把零 Rust 游戏导出为 DevEco Studio 鸿蒙工程。
 
@@ -77,7 +77,7 @@ workspace target 目录中，请在启动编辑器 server 前设置
 - 从 Preferences 恢复 UTF-8 存档 JSON；
 - 由 XComponent 原生帧回调推进游戏；
 - 用 nearest filtering 把每个 320×240 RGBA 帧上传到 GLES3 纹理；
-- 把 ArkUI 多点触摸按键组合成公共八键 bitmask；
+- 用 ArkUI Canvas 绘制控件，由共享 C++ 控制器将多点触摸转换成公共八键 bitmask；
 - 在 OHAudio 回调中从 Rust 拉取 44.1 kHz 双声道 PCM；
 - 页面进入后台时暂停音频并持久化稳定存档。
 
@@ -89,3 +89,14 @@ workspace target 目录中，请在启动编辑器 server 前设置
 外壳升级就不会分叉游戏逻辑。
 
 线程与所有权契约见[移动端架构](../explanation/mobile-architecture.zh-CN.md)。
+
+## 横屏触控布局
+
+导出的外壳支持正反横屏，游戏画面保持比例。方向盘位于左下，A/B 位于右下，
+Start/Select 位于右上，所有控件避让窗口安全区。
+点击左上齿轮可调整大小、向内/垂直位置、不透明度、左右交换、浮动方向盘和触觉反馈。
+设置保存在设备上，不改变游戏存档；编辑时游戏暂停。
+
+方向盘支持不抬指换向，方向与 A/B 可同时按住。系统打断、窗口变化和取消事件会释放输入。
+重新导出会更新生成的外壳源文件；保留自行修改的宿主代码后再替换。
+实现与 iOS 接入见[共享触控控制器](../../crates/dotzuki-mobile/controls/README.zh-CN.md)。

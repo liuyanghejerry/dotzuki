@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.9.0
 
 Why dotzuki uses one Rust runtime contract and a native shell for each mobile
 platform, with Android and HarmonyOS using the same versioned C ABI.
@@ -106,7 +106,7 @@ initialization bytes and the save JSON. The host queries frame dimensions
 from the runtime.
 
 The common Android and HarmonyOS hosts use a monotonic fixed-step clock
-(59.7275 Hz), nearest sampling, a separate touch-control area, and 44.1 kHz
+(59.7275 Hz), nearest sampling, a safe-area-aware touch overlay, and 44.1 kHz
 PCM. They poll committed saves every 500 ms and flush during lifecycle
 transitions. A game controls what constitutes a committed save. Persistence is
 asynchronous, so abrupt process death before a flush completes can lose the
@@ -117,3 +117,21 @@ exporting the same host without the zero-Rust project validation/pack step.
 Its output directory must be empty. The game's build wrapper supplies a library,
 initialization bytes, title, and bundle name; it does not copy platform sources
 into the game's repository.
+
+## Shared touch controls
+
+The native shells keep the framebuffer aspect ratio and place controls above the full window.
+A shared C++ controller owns layout, finger ownership, four-direction selection, dead zones,
+and cancellation. Android uses a transparent View above SurfaceView; HarmonyOS uses Canvas
+above XComponent. Both default to sensor-driven landscape and expose a native controls editor.
+The shell pauses gameplay during editing and releases touch and game input on focus loss.
+
+The [DotzukiTouch package](../../crates/dotzuki-mobile/controls/README.md) provides the same
+controller as a UIKit overlay for iOS hosts. It does not replace the existing iOS game shell.
+Hosts forward the input callback and the settings-pause callback to their own runtime.
+The package contains the integration contract and shared-controller test command.
+
+Settings belong to the device shell, not the game save. The ABI remains version 1;
+A/B/Select/Start and four directions retain their existing bit positions. Contextual button
+hiding and physical-controller handoff remain host decisions because the generic ABI does
+not expose a game's UI state.

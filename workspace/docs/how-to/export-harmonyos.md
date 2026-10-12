@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.9.0
 
 Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.
@@ -77,7 +77,8 @@ The generated shell performs these operations:
 - restores UTF-8 save JSON from Preferences;
 - advances the game from the native XComponent frame callback;
 - uploads each 320×240 RGBA frame to a GLES3 texture with nearest filtering;
-- combines ArkUI multi-touch buttons into the common eight-button bitmask;
+- draws controls with ArkUI Canvas and routes multiple touches through the shared C++
+  controller into the common eight-button bitmask;
 - pulls 44.1 kHz stereo PCM from Rust in the OHAudio callback; and
 - pauses audio and persists a stable save when the page moves to background.
 
@@ -90,3 +91,18 @@ shell update does not fork game logic.
 
 See [Mobile Architecture](../explanation/mobile-architecture.md) for the
 threading and ownership contract.
+
+## Landscape touch controls
+
+The exported shell supports both landscape orientations and preserves the game's aspect ratio.
+The direction pad sits at the lower left, A/B at the lower right, and Start/Select at the upper
+right. All controls respect the window's safe area.
+Open the upper-left gear to adjust size, inward/vertical position, opacity, side swapping,
+a floating pad, and haptics. Settings persist on the device without changing game saves;
+gameplay pauses while the editor is open.
+
+Slide within the direction pad to turn without lifting. Hold movement and A/B together.
+System interruptions, window changes, and canceled gestures release input.
+Re-export updates generated shell sources; preserve custom host changes before replacing them.
+See [Shared Touch Controls](../../crates/dotzuki-mobile/controls/README.md) for the implementation
+and iOS integration contract.

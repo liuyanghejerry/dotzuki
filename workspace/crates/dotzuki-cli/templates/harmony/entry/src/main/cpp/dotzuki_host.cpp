@@ -9,6 +9,8 @@
 #include <hilog/log.h>
 #include <js_native_api_types.h>
 
+uint8_t SampleTouchInput(uint8_t held);
+
 namespace {
 constexpr uint32_t DOTZUKI_LOG_DOMAIN = 0xD07A;
 constexpr const char *DOTZUKI_LOG_TAG = "Dotzuki";
@@ -368,7 +370,7 @@ void DotzukiHost::RenderFrame(uint64_t timestamp) {
     }
     lastTimestamp_ = timestamp;
     while (accumulator_ >= step) {
-        if (!dotzuki_mobile_tick(runner_, input_.load(std::memory_order_relaxed))) return;
+        if (!dotzuki_mobile_tick(runner_, SampleTouchInput(input_.load(std::memory_order_relaxed)))) return;
         accumulator_ -= step;
     }
     if (dotzuki_mobile_copy_frame(runner_, frame_.data(), frame_.size()) != frame_.size()) {

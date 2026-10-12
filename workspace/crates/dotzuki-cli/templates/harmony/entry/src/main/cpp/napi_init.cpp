@@ -2,10 +2,13 @@
 
 #include <napi/native_api.h>
 
+void ExportTouchFunctions(napi_env env, napi_value exports);
+
 extern "C" napi_value Init(napi_env env, napi_value exports) {
     auto &host = DotzukiHost::Instance();
     host.RegisterXComponent(env, exports);
     host.ExportFunctions(env, exports);
+    ExportTouchFunctions(env, exports);
     return exports;
 }
 
