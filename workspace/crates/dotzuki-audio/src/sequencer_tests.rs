@@ -718,6 +718,7 @@ fn test_pitch_slide_increasing() {
     ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
     ch.flags1.remove(ChannelFlags1::PITCH_SLIDE_DEC);
     ch.frequency = 0x100;
+    ch.pitch_slide.current_freq = 0x100;
     ch.pitch_slide.target_freq = 0x110;
     ch.pitch_slide.freq_step = 0x08;
 
@@ -732,12 +733,116 @@ fn test_pitch_slide_reaches_target() {
     ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
     ch.flags1.remove(ChannelFlags1::PITCH_SLIDE_DEC);
     ch.frequency = 0x0FE;
+    ch.pitch_slide.current_freq = 0x0FE;
     ch.pitch_slide.target_freq = 0x100;
     ch.pitch_slide.freq_step = 0x10; // step > remaining distance
 
     let result = effects::apply_pitch_slide(&mut ch);
-    assert_eq!(result, Some(0x100)); // snaps to target
+    assert_eq!(result, None); // crossing stops without writing another frequency
+    assert_eq!(ch.frequency, 0x0FE);
     assert!(!ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON)); // deactivated
+}
+
+#[test]
+fn pitch_slide_uses_the_following_note_and_its_duration() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    seq.play_music(
+        1,
+        &[vec![
+            0xD1, 0xF0, 0xE4, 0xEB, 2, 0x47, 0x07, 0xEB, 2, 0x49, 0x47, 0xFF,
+        ]],
+        0x0100,
+    );
+    seq.channels[CHAN1].frequency = 0x777; // previous note must not seed the slide
+    seq.update_frame(&mut apu);
+    let ch = &seq.channels[CHAN1];
+    assert_eq!(ch.frequency, commands::calculate_frequency(0, 4));
+    assert_eq!(ch.pitch_slide.current_freq, ch.frequency);
+    assert_eq!(ch.pitch_slide.length_modifier, 6);
+    assert_eq!(
+        ch.pitch_slide.target_freq,
+        commands::calculate_frequency(7, 4)
+    );
+    for _ in 0..8 {
+        seq.update_frame(&mut apu);
+    }
+    let ch = &seq.channels[CHAN1];
+    assert_eq!(ch.frequency, commands::calculate_frequency(4, 4));
+    assert_eq!(ch.pitch_slide.current_freq, ch.frequency);
+    assert_eq!(
+        ch.pitch_slide.target_freq,
+        commands::calculate_frequency(9, 4)
+    );
+    assert_eq!(ch.pitch_slide.length_modifier, 6);
+    assert!(ch.pitch_slide.freq_step < 100);
+}
+
+#[test]
+fn pitch_slide_perfect_pitch_changes_only_note_onset() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    seq.play_music(1, &[vec![0xE8, 0xE4, 0xEB, 1, 0x47, 0x07, 0xFF]], 0x0100);
+    seq.update_frame(&mut apu);
+    let base = commands::calculate_frequency(0, 4);
+    assert_eq!(seq.channels[CHAN1].frequency, base + 1);
+    assert_eq!(seq.channels[CHAN1].pitch_slide.current_freq, base);
+    let step = seq.channels[CHAN1].pitch_slide.freq_step;
+    seq.update_frame(&mut apu);
+    assert_eq!(seq.channels[CHAN1].frequency, base + step);
+}
+
+#[test]
+fn pitch_slide_register_traces_keep_byte_arithmetic() {
+    let mut ch = ChannelState::new();
+    ch.frequency = 0x100;
+    ch.delay_counter = 9;
+    ch.pitch_slide.length_modifier = 1;
+    ch.pitch_slide.target_freq = 0x150;
+    ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
+    effects::init_pitch_slide(&mut ch);
+    let mut trace = vec![ch.frequency];
+    for _ in 0..8 {
+        effects::apply_pitch_slide(&mut ch);
+        trace.push(ch.frequency);
+    }
+    assert_eq!(trace, [256, 267, 278, 289, 300, 311, 322, 333, 333]);
+    assert!(!ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON));
+
+    ch.frequency = 0x180;
+    ch.delay_counter = 11;
+    ch.pitch_slide.length_modifier = 1;
+    ch.pitch_slide.target_freq = 0x100;
+    ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
+    effects::init_pitch_slide(&mut ch);
+    let mut trace = vec![ch.frequency];
+    for _ in 0..10 {
+        effects::apply_pitch_slide(&mut ch);
+        trace.push(ch.frequency);
+    }
+    assert_eq!(
+        trace,
+        [384, 371, 358, 345, 332, 318, 305, 292, 279, 266, 266]
+    );
+    assert!(!ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON));
+}
+
+#[test]
+fn pitch_slide_retains_increasing_frequency_borrow_and_guards_zero_divisor() {
+    let mut ch = ChannelState::new();
+    ch.frequency = 0x1F0;
+    ch.delay_counter = 11;
+    ch.pitch_slide.length_modifier = 1;
+    ch.pitch_slide.target_freq = 0x220;
+    ch.flags1.insert(ChannelFlags1::PITCH_SLIDE_ON);
+    effects::init_pitch_slide(&mut ch);
+    assert_eq!(ch.pitch_slide.freq_step, 57); // byte borrow adds 0x200 to 48
+    assert_eq!(effects::apply_pitch_slide(&mut ch), None);
+    assert_eq!(ch.frequency, 0x1F0);
+    ch.delay_counter = 2;
+    ch.pitch_slide.length_modifier = 2;
+    effects::init_pitch_slide(&mut ch);
+    assert_eq!(ch.pitch_slide.length_modifier, 1);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

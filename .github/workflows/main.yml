@@ -107,6 +107,12 @@ jobs:
           toolchain: nightly-2025-12-06
           components: rust-src
 
+      - name: Check bare-metal PSG audio
+        working-directory: workspace
+        run: >-
+          cargo +nightly-2025-12-06 check -p dotzuki-audio --no-default-features
+          --target thumbv4t-none-eabi -Zbuild-std=core,alloc
+
       - name: Cache GBA cargo registry and build
         uses: Swatinem/rust-cache@v2
         with:

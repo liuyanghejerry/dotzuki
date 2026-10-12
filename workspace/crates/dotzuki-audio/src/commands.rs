@@ -10,6 +10,7 @@
 //! - $E8+:    control commands (vibrato, pitch slide, duty, tempo, etc.)
 
 use crate::{NOTE_FREQUENCIES, NUM_NOTES};
+use alloc::vec::Vec;
 
 // ── Command Enum ─────────────────────────────────────────────────────────
 

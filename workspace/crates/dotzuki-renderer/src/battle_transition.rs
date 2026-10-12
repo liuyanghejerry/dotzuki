@@ -483,49 +483,33 @@ impl BattleTransitionState {
     }
 
     fn tick_spiral_outward(&mut self) {
-        // Outward spiral wipe: starts from center (10,10), fills 3 tiles per
-        // inner loop, 120 outer loops. Direction rotates when hitting a
-        // filled tile: up → left → down → right
+        // Each write probes the cell on the left of the current heading.
+        // An unfilled cell starts the next arm; an already black cell keeps
+        // the current heading. Probing ahead instead makes a bounded cycle.
         const DIRECTIONS: [(i16, i16); 4] = [(0, -1), (-1, 0), (0, 1), (1, 0)];
-
-        let w = self.width_tiles as i16;
-        let h = self.height_tiles as i16;
-
-        if self.spiral_x < 0 || self.spiral_x >= w || self.spiral_y < 0 || self.spiral_y >= h {
-            self.fill_black();
-            self.done = true;
-            return;
-        }
-
-        // Write 3 tiles per frame (the original's inner loop count is 3)
         for _ in 0..3 {
-            if self.spiral_x >= 0 && self.spiral_x < w && self.spiral_y >= 0 && self.spiral_y < h {
+            let turn = (self.spiral_dir + 1) & 3;
+            let (dx, dy) = DIRECTIONS[turn as usize];
+            let px = self.spiral_x + dx;
+            let py = self.spiral_y + dy;
+            let filled = px >= 0
+                && py >= 0
+                && (px as usize) < self.width_tiles
+                && (py as usize) < self.height_tiles
+                && self.tiles[py as usize * self.width_tiles + px as usize] == BLACK_TILE;
+            let direction = if filled { self.spiral_dir } else { turn };
+            let (dx, dy) = DIRECTIONS[direction as usize];
+            self.spiral_x += dx;
+            self.spiral_y += dy;
+            self.spiral_dir = direction;
+            if self.spiral_x >= 0 && self.spiral_y >= 0 {
                 self.set_tile(self.spiral_x as usize, self.spiral_y as usize);
             }
-
-            let (dx, dy) = DIRECTIONS[self.spiral_dir as usize];
-            let nx = self.spiral_x + dx;
-            let ny = self.spiral_y + dy;
-
-            // Check if next tile in current direction is already filled
-            if nx >= 0
-                && nx < w
-                && ny >= 0
-                && ny < h
-                && self.tiles[ny as usize * self.width_tiles + nx as usize] == 0
-            {
-                self.spiral_x = nx;
-                self.spiral_y = ny;
-            } else {
-                // Change direction
-                self.spiral_dir = (self.spiral_dir + 1) % 4;
-                let (ndx, ndy) = DIRECTIONS[self.spiral_dir as usize];
-                self.spiral_x += ndx;
-                self.spiral_y += ndy;
-            }
         }
-
-        if self.spiral_x < 0 || self.spiral_x >= w || self.spiral_y < 0 || self.spiral_y >= h {
+        // The byte-stream transition runs 120 batches of three writes,
+        // then clears the whole screen, including cells outside the spiral.
+        self.frame += 1;
+        if self.frame == 120 {
             self.fill_black();
             self.done = true;
         }
@@ -844,6 +828,41 @@ mod tests {
 
     fn src_of(state: &BattleTransitionState, x: usize, y: usize) -> (u8, u8) {
         state.src[y * state.width_tiles + x]
+    }
+
+    #[test]
+    fn outward_spiral_starts_by_turning_into_the_unfilled_left_cell() {
+        let mut state =
+            BattleTransitionState::new(BattleTransitionKind::Spiral { outward: true }, 20, 18);
+        state.tick();
+        for (x, y) in [(10, 9), (9, 9), (9, 10)] {
+            assert!(tile_is_black(&state, x, y));
+        }
+        assert!(!tile_is_black(&state, 10, 10));
+        assert!(!tile_is_black(&state, 11, 10));
+        state.tick();
+        for (x, y) in [(10, 10), (11, 10), (11, 9)] {
+            assert!(tile_is_black(&state, x, y));
+        }
+    }
+
+    #[test]
+    fn outward_spiral_finishes_at_the_fixed_batch_count() {
+        for kind in [
+            BattleTransitionKind::Spiral { outward: true },
+            BattleTransitionKind::SpiralTrainerStronger,
+        ] {
+            let mut state = BattleTransitionState::new(kind, 20, 18);
+            for _ in 0..119 {
+                state.tick();
+                assert!(!state.is_done());
+            }
+            state.tick();
+            assert!(state.is_done());
+            assert!(state.all_black());
+            state.tick();
+            assert!(state.all_black());
+        }
     }
 
     #[test]

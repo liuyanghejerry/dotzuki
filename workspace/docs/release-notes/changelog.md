@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.9.1
+> - **Last verified**: v0.10.0
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,26 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## v0.10.0
+
+This release integrates the GBA audio and gameplay fixes previously available only on the
+`fix/gba-psg-audio` branch. See the [migration guide](migration/v0.10.0.md).
+
+Breaking change:
+
+- `NpcRuntimeState::delay_counter` changes from `u8` to `u16` to represent a 256-frame
+  countdown. Update typed assignments and binary save adapters.
+
+Runtime additions and fixes:
+
+- Support default-feature-free bare-metal audio and optional register forwarding to physical PSG
+  hardware. Preserve sparse music/SFX channel positions and release completed sound waiters.
+- Correct pitch-slide initialization, fractional carry, and target termination.
+- Add an opt-in classic NPC wander policy; the existing entry point retains its default policy.
+- Add a callback before each acting battler and a defaulted resolved-move hook after the
+  status gate. These support consumer-owned trainer actions and called moves.
+- Terminate outward spiral transitions after their bounded traversal.
 
 ## v0.9.1
 
