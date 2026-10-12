@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-cdb48f19.js";
+            window.path_to_searchindex_js = "searchindex-9ba0e767.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-1c89e8e1.js"></script>
@@ -3158,7 +3158,7 @@ older saves (v1/v2/v3 load fine); an older engine refuses newer ones.</p>
 <li><strong>Audience</strong>: game authors, engine contributors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>Build the shared mobile runtime and export a zero-Rust game as an Android
@@ -3224,6 +3224,18 @@ the controls or activity layout. Keep the C ABI header, <code>game.dzpk</code>, 
 version 1 unchanged so platform changes remain independent of game logic.</p>
 <p>See <a href="#mobile-architecture">Mobile Architecture</a> for the
 threading and ownership contract.</p>
+<h2 id="landscape-touch-controls"><a class="header" href="#landscape-touch-controls">Landscape touch controls</a></h2>
+<p>The exported shell supports both landscape orientations and preserves the game’s aspect ratio.
+The direction pad sits at the lower left, A/B at the lower right, and Start/Select at the upper
+right. All controls respect the window’s safe area.
+Open the upper-left gear to adjust size, inward/vertical position, opacity, side swapping,
+a floating pad, and haptics. Settings persist on the device without changing game saves;
+gameplay pauses while the editor is open.</p>
+<p>Slide within the direction pad to turn without lifting. Hold movement and A/B together.
+System interruptions, window changes, and canceled gestures release input.
+Re-export updates generated shell sources; preserve custom host changes before replacing them.
+See <a href="../crates/dotzuki-mobile/controls/README.html">Shared Touch Controls</a> for the implementation
+and iOS integration contract.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="export-a-game-for-harmonyos"><a class="header" href="#export-a-game-for-harmonyos">Export a Game for HarmonyOS</a></h1>
 <blockquote>
@@ -3231,7 +3243,7 @@ threading and ownership contract.</p>
 <li><strong>Audience</strong>: game authors, engine contributors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>Build the common mobile runtime and export a zero-Rust game as a DevEco
@@ -3285,7 +3297,8 @@ select the <code>entry</code> module, and run it on an arm64 phone or tablet.</p
 <li>restores UTF-8 save JSON from Preferences;</li>
 <li>advances the game from the native XComponent frame callback;</li>
 <li>uploads each 320×240 RGBA frame to a GLES3 texture with nearest filtering;</li>
-<li>combines ArkUI multi-touch buttons into the common eight-button bitmask;</li>
+<li>draws controls with ArkUI Canvas and routes multiple touches through the shared C++
+controller into the common eight-button bitmask;</li>
 <li>pulls 44.1 kHz stereo PCM from Rust in the OHAudio callback; and</li>
 <li>pauses audio and persists a stable save when the page moves to background.</li>
 </ul>
@@ -3296,6 +3309,18 @@ Keep <code>dotzuki_runner_mobile.h</code>, <code>game.dzpk</code>, and ABI versi
 shell update does not fork game logic.</p>
 <p>See <a href="#mobile-architecture">Mobile Architecture</a> for the
 threading and ownership contract.</p>
+<h2 id="landscape-touch-controls-1"><a class="header" href="#landscape-touch-controls-1">Landscape touch controls</a></h2>
+<p>The exported shell supports both landscape orientations and preserves the game’s aspect ratio.
+The direction pad sits at the lower left, A/B at the lower right, and Start/Select at the upper
+right. All controls respect the window’s safe area.
+Open the upper-left gear to adjust size, inward/vertical position, opacity, side swapping,
+a floating pad, and haptics. Settings persist on the device without changing game saves;
+gameplay pauses while the editor is open.</p>
+<p>Slide within the direction pad to turn without lifting. Hold movement and A/B together.
+System interruptions, window changes, and canceled gestures release input.
+Re-export updates generated shell sources; preserve custom host changes before replacing them.
+See <a href="../crates/dotzuki-mobile/controls/README.html">Shared Touch Controls</a> for the implementation
+and iOS integration contract.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="game-project-spec--zero-rust-dotzuki-engine-projects"><a class="header" href="#game-project-spec--zero-rust-dotzuki-engine-projects">Game Project Spec — zero-Rust dotzuki-engine projects</a></h1>
 <p>The zero-Rust project contract: directory layout, manifest schema, and run/check/playtest behavior.</p>
@@ -8510,7 +8535,7 @@ the engine crates contain no concrete game data and no platform calls
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
@@ -8607,7 +8632,7 @@ link exactly one factory per application. That factory defines the
 initialization bytes and the save JSON. The host queries frame dimensions
 from the runtime.</p>
 <p>The common Android and HarmonyOS hosts use a monotonic fixed-step clock
-(59.7275 Hz), nearest sampling, a separate touch-control area, and 44.1 kHz
+(59.7275 Hz), nearest sampling, a safe-area-aware touch overlay, and 44.1 kHz
 PCM. They poll committed saves every 500 ms and flush during lifecycle
 transitions. A game controls what constitutes a committed save. Persistence is
 asynchronous, so abrupt process death before a flush completes can lose the
@@ -8617,6 +8642,20 @@ exporting the same host without the zero-Rust project validation/pack step.
 Its output directory must be empty. The game’s build wrapper supplies a library,
 initialization bytes, title, and bundle name; it does not copy platform sources
 into the game’s repository.</p>
+<h2 id="shared-touch-controls"><a class="header" href="#shared-touch-controls">Shared touch controls</a></h2>
+<p>The native shells keep the framebuffer aspect ratio and place controls above the full window.
+A shared C++ controller owns layout, finger ownership, four-direction selection, dead zones,
+and cancellation. Android uses a transparent View above SurfaceView; HarmonyOS uses Canvas
+above XComponent. Both default to sensor-driven landscape and expose a native controls editor.
+The shell pauses gameplay during editing and releases touch and game input on focus loss.</p>
+<p>The <a href="../crates/dotzuki-mobile/controls/README.html">DotzukiTouch package</a> provides the same
+controller as a UIKit overlay for iOS hosts. It does not replace the existing iOS game shell.
+Hosts forward the input callback and the settings-pause callback to their own runtime.
+The package contains the integration contract and shared-controller test command.</p>
+<p>Settings belong to the device shell, not the game save. The ABI remains version 1;
+A/B/Select/Start and four directions retain their existing bit positions. Contextual button
+hiding and physical-controller handoff remain host decisions because the generic ABI does
+not expose a game’s UI state.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="the-effect-stack-battle-engine"><a class="header" href="#the-effect-stack-battle-engine">The effect-stack battle engine</a></h1>
 <p>This page explains the design of <code>dotzuki_engine::battle::stack</code> — the
@@ -16293,8 +16332,8 @@ repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="导出-android-游戏"><a class="header" href="#导出-android-游戏">导出 Android 游戏</a></h1>
 <blockquote>
-<p>本文是 <code>export-android.md</code> 的中文翻译，同步至引擎版本 v0.7.0
-（源文档 commit e5978b51abd75570080230acfd5c86341103ae5e）。
+<p>本文是 <code>export-android.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -16302,7 +16341,7 @@ repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v
 <li><strong>Audience</strong>: game authors, engine contributors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>构建共用移动运行时，并把零 Rust 游戏导出为面向 arm64 手机和平板的
@@ -16366,11 +16405,19 @@ arm64 运行时静态库。</p>
 Activity 布局。保持 C ABI header、<code>game.dzpk</code> 和 ABI 版本 1 不变，平台变更就能
 与游戏逻辑保持独立。</p>
 <p>线程和所有权契约见<a href="#移动端架构">移动端架构</a>。</p>
+<h2 id="横屏触控布局"><a class="header" href="#横屏触控布局">横屏触控布局</a></h2>
+<p>导出的外壳支持正反横屏，游戏画面保持比例。方向盘位于左下，A/B 位于右下，
+Start/Select 位于右上，所有控件避让窗口安全区。
+点击左上齿轮可调整大小、向内/垂直位置、不透明度、左右交换、浮动方向盘和触觉反馈。
+设置保存在设备上，不改变游戏存档；编辑时游戏暂停。</p>
+<p>方向盘支持不抬指换向，方向与 A/B 可同时按住。系统打断、窗口变化和取消事件会释放输入。
+重新导出会更新生成的外壳源文件；保留自行修改的宿主代码后再替换。
+实现与 iOS 接入见<a href="../crates/dotzuki-mobile/controls/README.zh-CN.html">共享触控控制器</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="导出鸿蒙游戏"><a class="header" href="#导出鸿蒙游戏">导出鸿蒙游戏</a></h1>
 <blockquote>
-<p>本文是 <code>export-harmonyos.md</code> 的中文翻译，同步至引擎版本 v0.7.0
-（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+<p>本文是 <code>export-harmonyos.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit c70887ec6b8aeccf034c2508051efa80fd5d727f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -16378,7 +16425,7 @@ Activity 布局。保持 C ABI header、<code>game.dzpk</code> 和 ABI 版本 1 
 <li><strong>Audience</strong>: game authors, engine contributors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>构建公共移动运行时，并把零 Rust 游戏导出为 DevEco Studio 鸿蒙工程。</p>
@@ -16428,7 +16475,7 @@ workspace target 目录中，请在启动编辑器 server 前设置
 <li>从 Preferences 恢复 UTF-8 存档 JSON；</li>
 <li>由 XComponent 原生帧回调推进游戏；</li>
 <li>用 nearest filtering 把每个 320×240 RGBA 帧上传到 GLES3 纹理；</li>
-<li>把 ArkUI 多点触摸按键组合成公共八键 bitmask；</li>
+<li>用 ArkUI Canvas 绘制控件，由共享 C++ 控制器将多点触摸转换成公共八键 bitmask；</li>
 <li>在 OHAudio 回调中从 Rust 拉取 44.1 kHz 双声道 PCM；</li>
 <li>页面进入后台时暂停音频并持久化稳定存档。</li>
 </ul>
@@ -16438,6 +16485,14 @@ workspace target 目录中，请在启动编辑器 server 前设置
 <code>dotzuki_runner_mobile.h</code>、<code>game.dzpk</code> 和 ABI 版本 1 不变，
 外壳升级就不会分叉游戏逻辑。</p>
 <p>线程与所有权契约见<a href="#移动端架构">移动端架构</a>。</p>
+<h2 id="横屏触控布局-1"><a class="header" href="#横屏触控布局-1">横屏触控布局</a></h2>
+<p>导出的外壳支持正反横屏，游戏画面保持比例。方向盘位于左下，A/B 位于右下，
+Start/Select 位于右上，所有控件避让窗口安全区。
+点击左上齿轮可调整大小、向内/垂直位置、不透明度、左右交换、浮动方向盘和触觉反馈。
+设置保存在设备上，不改变游戏存档；编辑时游戏暂停。</p>
+<p>方向盘支持不抬指换向，方向与 A/B 可同时按住。系统打断、窗口变化和取消事件会释放输入。
+重新导出会更新生成的外壳源文件；保留自行修改的宿主代码后再替换。
+实现与 iOS 接入见<a href="../crates/dotzuki-mobile/controls/README.zh-CN.html">共享触控控制器</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
 <blockquote>
@@ -20754,8 +20809,8 @@ provider；JS provider 只编译地图场景。</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="移动端架构"><a class="header" href="#移动端架构">移动端架构</a></h1>
 <blockquote>
-<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.7.0
-（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.9.0
+（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -20763,7 +20818,7 @@ provider；JS provider 只编译地图场景。</li>
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.9.0</li>
 </ul>
 </blockquote>
 <p>本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
@@ -20848,12 +20903,25 @@ SDK linker。华为 NDK 样例定义了生成外壳所采用的 XComponent 和 O
 自定义 Rust 游戏实现同一接口并导出自己的工厂；每个应用只链接一个工厂。
 工厂定义初始化字节和存档 JSON；宿主从运行时查询画面尺寸。</p>
 <p>公共 Android 和鸿蒙宿主使用单调时钟按 59.7275 Hz 推进游戏、最近邻采样、
-独立触控区和 44.1 kHz PCM。它们每 500 ms 检查已提交存档，并在生命周期切换时
+适配安全区的触控覆盖层和 44.1 kHz PCM。它们每 500 ms 检查已提交存档，并在生命周期切换时
 刷新。游戏决定何时提交存档。持久化是异步的；如果刷新完成前进程被终止，
 最近一次提交可能丢失。销毁运行时前必须停止音频回调。</p>
 <p>自定义静态库可通过 <code>scripts/export-mobile-host.py --help</code> 查看宿主导出参数，
 无需经过零 Rust 项目校验和打包。输出目录必须为空。游戏的构建脚本只提供库、
 初始化字节、名称和包标识，平台源代码仍在引擎仓库维护。</p>
+<h2 id="共享触控控制器"><a class="header" href="#共享触控控制器">共享触控控制器</a></h2>
+<p>原生外壳保持 framebuffer 比例，把控件叠加在完整窗口上。
+共享 C++ 控制器负责布局、触点归属、四向选择、死区与取消。
+Android 在 SurfaceView 上方放置透明 View；HarmonyOS 在 XComponent 上方放置 Canvas。
+两端默认支持随设备旋转切换横屏方向，并提供原生布局编辑器。
+编辑期间外壳暂停游戏，失焦时释放触点和游戏输入。</p>
+<p><a href="../crates/dotzuki-mobile/controls/README.zh-CN.html">DotzukiTouch package</a>
+为 iOS 宿主提供采用同一控制器的 UIKit 覆盖层，不替换现有 iOS 游戏外壳。
+宿主把输入回调和设置暂停回调转交给自己的运行时。
+组件文档包含接入契约和共享控制器测试命令。</p>
+<p>布局设置属于设备外壳，不写入游戏存档。ABI 保持版本 1，
+A/B/Select/Start 和四方向仍使用原来的输入位。
+通用 ABI 不提供具体游戏的 UI 状态，因此按场景隐藏按钮、切换实体手柄仍由宿主决定。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="效果栈战斗引擎"><a class="header" href="#效果栈战斗引擎">效果栈战斗引擎</a></h1>
 <blockquote>
