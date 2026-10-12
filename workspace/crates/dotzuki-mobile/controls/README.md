@@ -67,11 +67,26 @@ overlap; menu targets are 64×48 logical units. Controls adapt to compact window
 320×220 safe area. Below that size, controls remain disabled until the window becomes usable.
 The floating pad only starts within the movement-side thumb region.
 
+With the default vertical offset, fixed thumb controls leave 22% of the viewport
+height below them for the runner's bottom dialogue, including on unfolded phones
+and tablets. This reserve includes the bottom system inset once. Compact windows
+reduce the reserve when needed to keep the thumb controls below the top buttons.
+Moving controls downward or using a floating pad can place them in this band;
+custom games with larger dialogue panels should check their own layout.
+
 ## Verification
 
-The implementation was checked on Linux with the shared sanitizer suite, Android emulator
-instrumentation, and an unsigned HarmonyOS HAP build. HarmonyOS device behavior still needs
-device testing. UIKit was not compiled locally; use the iOS CI workflow below for Xcode validation.
+Verification includes the shared sanitizer suite, Android emulator instrumentation,
+HarmonyOS emulator interaction, and UIKit simulator tests. Physical HarmonyOS and
+iOS device behavior still needs device testing.
+
+The dialogue-clearance regression was checked on a HarmonyOS 6.1.1 API 24 arm64
+emulator at 2584×1828, with the default layout and mirrored controls at scale 1.2:
+[before](../../../docs/assets/harmony-touch/harmony-dialogue-before.png),
+[after](../../../docs/assets/harmony-touch/harmony-dialogue-after.png), and
+[mirrored](../../../docs/assets/harmony-touch/harmony-dialogue-mirrored.png).
+These captures use the same NPC dialogue. Choice menus above the bottom dialogue
+band can still overlap A/B; the generic mobile ABI does not expose their bounds.
 
 Run the shared controller tests from the repository root:
 

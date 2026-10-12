@@ -83,6 +83,20 @@ int main() {
             assert(c.bounds(Pad).x == pad.x && c.bounds(Pad).y == pad.y);
         }
     }
+    // The runner's bottom dialogue occupies 20% of the viewport, including on
+    // unfolded phones/tablets. Default thumb clusters must clear that band.
+    for (const auto viewport : {Rect{0, 0, 932, 660}, Rect{0, 0, 1024, 768}, Rect{0, 0, 1366, 1024}}) {
+        for (bool mirror : {false, true}) for (float scale : {.85f, 1.f, 1.2f}) {
+            for (float bottomInset : {0.f, 34.f}) {
+                Options options; options.mirrored = mirror; options.scale = scale;
+                c.layout({viewport.x, viewport.y, viewport.w, viewport.h - bottomInset}, options, viewport.h);
+                for (int id : {Pad, 0, 1}) {
+                    const auto r = c.bounds(id);
+                    assert(r.y + r.h <= viewport.h * .8f);
+                }
+            }
+        }
+    }
     // The dialogue reserve already includes the bottom system inset.
     c.layout({0, 0, 800, 400}, {}, 400);
     const float withoutBottomInset = c.bounds(Pad).cy();
