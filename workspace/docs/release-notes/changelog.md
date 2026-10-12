@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,20 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## v0.9.1
+
+This patch release preserves Rust APIs and replaces the exported mobile control layout.
+See the [migration guide](migration/v0.9.1.md) before regenerating custom shells.
+
+- Android and HarmonyOS render safe-area-aware landscape controls over the game surface.
+  Shared pointer ownership supports movement plus actions, retains short taps, and releases
+  input on focus loss, cancellation, and resize.
+- Persist control size, position, opacity, mirrored layout, floating direction pad, and
+  optional haptics. Reserve space above bottom dialogue, including on taller HarmonyOS screens.
+- Provide a reusable UIKit Swift package and integration guide for game-owned iOS shells.
+- Add shared sanitizer tests, Android native instrumentation, and iOS simulator CI.
+- Fix release automation to install supported Android SDK packages.
 
 ## v0.9.0
 
