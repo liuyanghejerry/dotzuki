@@ -5,7 +5,7 @@
 > - **Status**: active
 > - **Last verified**: v0.9.1
 >
-> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.1（源文档基线 commit b7804fa；本次点击移动更新与英文源同步）。
+> 本文是 `README.md` 的中文翻译，同步至引擎版本 v0.9.1（源文档 commit 4c9fe70a83c46a02080d4d8c5ac35544775770cc）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 将共享移动触控覆盖层接入 iOS 游戏，或修改 Android 和 HarmonyOS 导出器使用的控制器。

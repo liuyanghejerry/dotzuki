@@ -1,7 +1,7 @@
 # 移动端架构
 
 > 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.9.1
->（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
+>（源文档 commit 4c9fe70a83c46a02080d4d8c5ac35544775770cc）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
