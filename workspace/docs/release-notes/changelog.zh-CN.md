@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.9.0
->（源文档 commit ce902be18620041f13dd89c66ffffb582dd44758）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.9.1
+>（源文档 commit f4f87e6d9aa255de753a97cbaa8ab39f72dae831）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,19 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## v0.9.1
+
+本补丁版本保持 Rust API 不变，并替换导出的移动端控制布局。
+重新生成自定义外壳前，请阅读[迁移指南](migration/v0.9.1.zh-CN.md)。
+
+- Android 和 HarmonyOS 在游戏画面上绘制适配安全区的横屏控件。
+  共享的触点归属逻辑支持移动与动作同时输入、保留短按，并在失焦、取消及尺寸变化时释放输入。
+- 持久化控件大小、位置、不透明度、镜像布局、浮动方向盘和可选触觉反馈。
+  在底部对话上方预留空间，包括较高的 HarmonyOS 屏幕。
+- 为游戏自行维护的 iOS 外壳提供可复用的 UIKit Swift package 和接入指南。
+- 增加共享 sanitizer 测试、Android 原生 instrumentation 和 iOS 模拟器 CI。
+- 修复发布自动化，使其安装受支持的 Android SDK 包。
 
 ## v0.9.0
 
