@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 Add the shared mobile touch overlay to an iOS game, or change the controller
 used by the Android and HarmonyOS exporters.

@@ -3,7 +3,7 @@
 > - **Audience**: game authors, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.9.0
 
 Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.
@@ -100,7 +100,7 @@ Open the upper-left gear to adjust size, inward/vertical position, opacity, side
 a floating pad, and haptics. Settings persist on the device without changing game saves;
 gameplay pauses while the editor is open.
 
-Slide within the direction pad to turn without lifting. Movement and A/B can be held together.
+Slide within the direction pad to turn without lifting. Hold movement and A/B together.
 System interruptions, window changes, and canceled gestures release input.
 Re-export updates generated shell sources; preserve custom host changes before replacing them.
 See [Shared Touch Controls](../../crates/dotzuki-mobile/controls/README.md) for the implementation
