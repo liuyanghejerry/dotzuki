@@ -19,6 +19,14 @@
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
+## 未发布
+
+- 为运行器及支持指针输入的宿主添加[点击移动](../how-to/maps.zh-CN.md#点击移动)。
+- 为移动端 C ABI 添加 `dotzuki_mobile_pointer_click` 和
+  `dotzuki_mobile_cancel_pointer_input`，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
+  更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
+  现有 `MobileGame` 实现保留默认指针回调，按键契约保持不变。
+
 ## v0.10.0
 
 本版本整合此前仅存在于 `fix/gba-psg-audio` 分支的 GBA 音频与游戏行为修复。

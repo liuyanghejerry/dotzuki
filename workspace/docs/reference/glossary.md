@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.8.2
+> - **Last verified**: v0.10.0
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -209,6 +209,15 @@ original form in Chinese text.
   maps.
 
 ## Maps
+
+- **click to move**（点击移动）— select a destination tile by click or tap to start automatic
+  walking. For example, clicking a reachable tile starts a four-direction route to that tile.
+  UI hints describe the resulting movement as “automatic walking”（自动行走）.
+- **navigation**（导航）— follow a route toward the selected destination, rechecking each step.
+  For example, directional input cancels navigation and gives the player manual control.
+- **pathfinding**（寻路）— search map states for a walkable route to a destination.
+  For example, the runner searches around walls and NPCs within the current map.
+  See [click to move](../how-to/maps.md#click-to-move).
 
 - **tile** — one cell of a map grid; kept in English in Chinese text.
 - **tileset** — the `tileset.png` atlas plus its Tiled `.tsx` metadata; kept
