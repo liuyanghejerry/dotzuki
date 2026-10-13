@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-868aaeb0.js";
+            window.path_to_searchindex_js = "../searchindex-817f25d8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -198,6 +198,23 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<p>Breaking Rust API change:</p>
+<ul>
+<li>Add <code>NpcRuntimeState::step_direction: Option&lt;Direction&gt;</code>. Add <code>step_direction: None</code> to
+idle NPC struct literals. Manual walking-state fixtures must retain their movement direction
+in this field. Binary save adapters must account for the additional field.</li>
+</ul>
+<p>NPC movement fixes:</p>
+<ul>
+<li>Capture the direction when each autonomous or scripted step starts. A change to <code>facing</code>
+during that step no longer redirects the remaining movement or its occupied destination.</li>
+<li>Use <code>NpcRuntimeState::walking_direction()</code> for movement offsets and collision predictions;
+keep <code>facing</code> for the sprite’s orientation.</li>
+<li>Preserve the captured direction in JSON snapshots. Legacy JSON without <code>step_direction</code>
+loads with <code>None</code> and falls back to its saved facing. Completed steps remove the captured
+direction; consecutive scripted steps capture their next direction independently.</li>
 </ul>
 <h2 id="v0101"><a class="header" href="#v0101">v0.10.1</a></h2>
 <p>This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
