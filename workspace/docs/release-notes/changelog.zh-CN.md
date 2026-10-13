@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.0
->（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1
+>（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.10.1
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,18 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## v0.10.1
+
+本补丁版本恢复 DSL 在裸机目标上的编译，并纳入 `fix/gba-psg-audio` 消费者使用的 NPC 钩子。
+请阅读[迁移指南](migration/v0.10.1.zh-CN.md)。已有 API 保持原有行为，没有破坏性变更。
+
+- 将 DSL 整数检查中不可用的 `f64::fract()` 调用换成兼容 no_std 的检查。
+  保留接受的整数范围及对无效参数的拒绝行为。
+- CI 在 `thumbv4t-none-eabi` 上检查音频与 DSL 库。
+- 在移动遍历中增加可选回调，处理可见且空闲的静止 NPC。
+  已有入口保留原有的静止 NPC 行为。
+- 用一个预分配向量收集 NPC 占用格，保留碰撞语义。
 
 ## v0.10.0
 
