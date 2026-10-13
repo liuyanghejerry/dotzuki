@@ -39,6 +39,7 @@
 | 文档 | 涵盖内容 |
 |---|---|
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx`（JSON）地图、tilesets、海拔、实体以及 `objects.json` 伴生文件 |
+| [`how-to/map-components.md`](./how-to/map-components.md) | 链接建筑、源更新、导入图集保留，以及 cardinal/blob 自动图块 |
 | [`how-to/native-map-art.zh-CN.md`](./how-to/native-map-art.zh-CN.md) | 高密度布景、逻辑坐标、碰撞叠层与来源像素编辑 |
 | [`how-to/scenes.md`](./how-to/scenes.md) | 编写 `.scene` 剧情：NPC 对话、进图过场、选项、flag、场景内战斗 |
 | [`how-to/ui.md`](./how-to/ui.md) | 编写 `.gui` 布局：20×18 网格、面板/文本、模板绑定、`@t` 标签、自定义组件 |
