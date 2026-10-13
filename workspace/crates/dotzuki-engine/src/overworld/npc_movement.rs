@@ -247,23 +247,17 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
 
     // Build the occupied-tile set: current position of each visible NPC,
     // plus its destination if it is mid-step (to avoid inter-NPC collisions).
-    let occupied: Vec<(u16, u16)> = npcs
-        .iter()
-        .filter(|n| n.visible)
-        .flat_map(|n| {
-            let cur = (n.x, n.y);
-            if n.walk_counter > 0 {
-                let (dx, dy) = direction_delta(n.facing);
-                let dest = (
-                    (n.x as i32 + dx as i32).max(0) as u16,
-                    (n.y as i32 + dy as i32).max(0) as u16,
-                );
-                vec![cur, dest]
-            } else {
-                vec![cur]
-            }
-        })
-        .collect();
+    let mut occupied = Vec::with_capacity(npcs.len() * 2);
+    for npc in npcs.iter().filter(|npc| npc.visible) {
+        occupied.push((npc.x, npc.y));
+        if npc.walk_counter > 0 {
+            let (dx, dy) = direction_delta(npc.facing);
+            occupied.push((
+                (npc.x as i32 + dx as i32).max(0) as u16,
+                (npc.y as i32 + dy as i32).max(0) as u16,
+            ));
+        }
+    }
 
     for i in 0..npcs.len() {
         let npc = &mut npcs[i];
