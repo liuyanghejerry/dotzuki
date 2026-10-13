@@ -323,7 +323,9 @@ fn number(value: &Value, what: &str) -> Result<f64, String> {
 
 fn integer_arg(value: &Value, what: &str, min: f64, max: f64) -> Result<f64, String> {
     let value = number(value, what)?;
-    if !value.is_finite() || value.fract() != 0.0 || value < min || value > max {
+    // All callers accept u8, u16, or i16 values, which fit exactly in i32.
+    // A round trip avoids f64::fract(), unavailable on no_std targets.
+    if !value.is_finite() || value < min || value > max || (value as i32) as f64 != value {
         return Err(format!(
             "{what}: expected an integer in {min:.0}..={max:.0}, got {value}"
         ));
@@ -484,6 +486,38 @@ mod tests {
             error.contains("expected an integer in -32768..=32767"),
             "{error}"
         );
+    }
+
+    #[test]
+    fn integer_arguments_preserve_supported_ranges() {
+        for value in [0, 1, u8::MAX] {
+            assert_eq!(u8_arg(&Value::Number(value as f64), "test"), Ok(value));
+        }
+        for value in [0, 256, u16::MAX] {
+            assert_eq!(u16_arg(&Value::Number(value as f64), "test"), Ok(value));
+        }
+        for value in [i16::MIN, -1, 0, i16::MAX] {
+            assert_eq!(i16_arg(&Value::Number(value as f64), "test"), Ok(value));
+        }
+        assert_eq!(u8_arg(&Value::Number(-0.0), "test"), Ok(0));
+        assert!(u16_arg(&Value::Number(65_536.0), "test").is_err());
+        assert!(i16_arg(&Value::Number(-32_769.0), "test").is_err());
+        for value in [
+            -1.5,
+            0.5,
+            f64::MIN_POSITIVE,
+            -f64::MIN_POSITIVE,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::MAX,
+            f64::MIN,
+        ] {
+            let value = Value::Number(value);
+            assert!(u8_arg(&value, "test").is_err());
+            assert!(u16_arg(&value, "test").is_err());
+            assert!(i16_arg(&value, "test").is_err());
+        }
     }
 
     #[test]
