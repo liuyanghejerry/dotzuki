@@ -29,6 +29,10 @@ pub struct NpcRuntimeState {
     pub home_x: u16,
     pub home_y: u16,
     pub facing: Direction,
+    /// Direction captured when the current stride starts, independent of
+    /// a later facing change. Legacy snapshots fall back to their facing.
+    #[serde(default)]
+    pub step_direction: Option<Direction>,
     pub scripted_frame: Option<u8>,
     pub movement_type: NpcMovementType,
     /// Axis restriction for Wander NPCs (classic GB movement byte 2).
@@ -40,6 +44,18 @@ pub struct NpcRuntimeState {
     pub defeated: bool,
     pub visible: bool,
     pub scripted_path: VecDeque<(u16, u16)>,
+}
+
+impl NpcRuntimeState {
+    /// Physical direction for pending pixels and occupied destination tiles.
+    /// Facing remains the display orientation, including while walking.
+    pub fn walking_direction(&self) -> Direction {
+        if self.walk_counter > 0 {
+            self.step_direction.unwrap_or(self.facing)
+        } else {
+            self.facing
+        }
+    }
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -262,7 +278,7 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
     for npc in npcs.iter().filter(|npc| npc.visible) {
         occupied.push((npc.x, npc.y));
         if npc.walk_counter > 0 {
-            let (dx, dy) = direction_delta(npc.facing);
+            let (dx, dy) = direction_delta(npc.walking_direction());
             occupied.push((
                 (npc.x as i32 + dx as i32).max(0) as u16,
                 (npc.y as i32 + dy as i32).max(0) as u16,
@@ -280,7 +296,8 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
         if npc.walk_counter > 0 {
             npc.walk_counter -= 1;
             if npc.walk_counter == 0 {
-                let (dx, dy) = direction_delta(npc.facing);
+                let direction = npc.step_direction.take().unwrap_or(npc.facing);
+                let (dx, dy) = direction_delta(direction);
                 npc.x = (npc.x as i32 + dx as i32).max(0) as u16;
                 npc.y = (npc.y as i32 + dy as i32).max(0) as u16;
 
@@ -294,6 +311,7 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
                         if let Some(dir) = direction_toward(npc.x, npc.y, ntx, nty) {
                             npc.facing = dir;
                             npc.walk_counter = NPC_WALK_FRAMES;
+                            npc.step_direction = Some(dir);
                         }
                     }
                 }
@@ -313,10 +331,12 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
                 if let Some(dir) = direction_toward(npc.x, npc.y, tx, ty) {
                     npc.facing = dir;
                     npc.walk_counter = NPC_WALK_FRAMES;
+                    npc.step_direction = Some(dir);
                 }
             } else if let Some(dir) = direction_toward(npc.x, npc.y, tx, ty) {
                 npc.facing = dir;
                 npc.walk_counter = NPC_WALK_FRAMES;
+                npc.step_direction = Some(dir);
             }
             continue;
         }
@@ -371,6 +391,7 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
 
                 npc.facing = dir;
                 npc.walk_counter = NPC_WALK_FRAMES;
+                npc.step_direction = Some(dir);
                 npc.delay_counter = policy.delay(rng_value);
             }
             NpcMovementType::FacePlayer => {
@@ -494,6 +515,7 @@ mod wander_policy_tests {
             home_x: 5,
             home_y: 5,
             facing: Direction::Down,
+            step_direction: None,
             scripted_frame: None,
             movement_type: NpcMovementType::Wander,
             wander_axis: axis,
@@ -506,6 +528,103 @@ mod wander_policy_tests {
             scripted_path: VecDeque::new(),
         }
     }
+    #[test]
+    fn facing_changes_do_not_redirect_an_active_stride() {
+        for (random, direction) in [
+            (0, Direction::Down),
+            (64, Direction::Up),
+            (128, Direction::Left),
+            (192, Direction::Right),
+        ] {
+            let mut npc = walker(NpcWanderAxis::Any);
+            tick(&mut npc, random, NpcWanderPolicy::Classic);
+            assert_eq!(npc.step_direction, Some(direction));
+            npc.facing = match direction {
+                Direction::Down => Direction::Up,
+                Direction::Up => Direction::Down,
+                Direction::Left => Direction::Right,
+                Direction::Right => Direction::Left,
+            };
+            let display_facing = npc.facing;
+            assert_eq!(npc.walking_direction(), direction);
+            for _ in 0..NPC_WALK_FRAMES {
+                tick(&mut npc, random, NpcWanderPolicy::Classic);
+            }
+            let (dx, dy) = direction_delta(direction);
+            assert_eq!(
+                (npc.x, npc.y),
+                ((5i32 + i32::from(dx)) as u16, (5i32 + i32::from(dy)) as u16)
+            );
+            assert_eq!(npc.facing, display_facing);
+            assert_eq!(npc.step_direction, None);
+        }
+    }
+
+    #[test]
+    fn turned_walker_still_reserves_its_original_destination() {
+        let mut leader = walker(NpcWanderAxis::Any);
+        tick(&mut leader, 192, NpcWanderPolicy::Classic);
+        leader.facing = Direction::Left;
+        let mut follower = walker(NpcWanderAxis::Any);
+        follower.npc_index = 1;
+        follower.x = 6;
+        follower.y = 4;
+        let mut npcs = [leader, follower];
+        update_npc_movement_with_policy(
+            &mut npcs,
+            0,
+            0,
+            None,
+            10,
+            10,
+            0,
+            &[],
+            Floor,
+            &OpenFloor,
+            NpcWanderPolicy::Classic,
+        );
+        assert_eq!(npcs[0].walking_direction(), Direction::Right);
+        assert_eq!(
+            npcs[1].walk_counter, 0,
+            "(6,5) is still occupied by the pending stride"
+        );
+    }
+
+    #[test]
+    fn scripted_chain_captures_each_stride_independently_of_facing() {
+        let mut npc = walker(NpcWanderAxis::Any);
+        start_scripted_move(&mut npc, &[(6, 5), (6, 6)]);
+        tick(&mut npc, 0, NpcWanderPolicy::Classic);
+        assert_eq!(npc.walking_direction(), Direction::Right);
+        npc.facing = Direction::Up;
+        for _ in 0..NPC_WALK_FRAMES {
+            tick(&mut npc, 0, NpcWanderPolicy::Classic);
+        }
+        assert_eq!((npc.x, npc.y), (6, 5));
+        assert_eq!(npc.walking_direction(), Direction::Down);
+        npc.facing = Direction::Left;
+        for _ in 0..NPC_WALK_FRAMES {
+            tick(&mut npc, 0, NpcWanderPolicy::Classic);
+        }
+        assert_eq!((npc.x, npc.y), (6, 6));
+        assert!(is_scripted_move_done(&npc));
+        assert_eq!(npc.facing, Direction::Left);
+    }
+
+    #[test]
+    fn stride_direction_survives_snapshots_and_legacy_falls_back() {
+        let mut npc = walker(NpcWanderAxis::Any);
+        tick(&mut npc, 128, NpcWanderPolicy::Classic);
+        npc.facing = Direction::Right;
+        let mut value = serde_json::to_value(&npc).unwrap();
+        let restored: NpcRuntimeState = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(restored.walking_direction(), Direction::Left);
+        value.as_object_mut().unwrap().remove("step_direction");
+        let legacy: NpcRuntimeState = serde_json::from_value(value).unwrap();
+        assert_eq!(legacy.step_direction, None);
+        assert_eq!(legacy.walking_direction(), Direction::Right);
+    }
+
     fn tick(npc: &mut NpcRuntimeState, random: u8, policy: NpcWanderPolicy) {
         update_npc_movement_with_policy(
             core::slice::from_mut(npc),
@@ -621,6 +740,7 @@ mod stationary_callback_tests {
             home_x: 1 + u16::from(i),
             home_y: 4,
             facing: Direction::Down,
+            step_direction: None,
             scripted_frame: None,
             movement_type: NpcMovementType::Stationary,
             wander_axis: NpcWanderAxis::Any,

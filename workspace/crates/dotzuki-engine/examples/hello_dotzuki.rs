@@ -557,6 +557,7 @@ fn build_npc_states(npcs: &[NpcDefinition]) -> Vec<NpcRuntimeState> {
                 home_x: def.x as u16,
                 home_y: def.y as u16,
                 facing: def.facing,
+                step_direction: None,
                 scripted_frame: None,
                 movement_type: def.movement,
                 range: def.range,
