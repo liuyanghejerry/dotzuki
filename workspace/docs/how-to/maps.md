@@ -79,7 +79,8 @@ still processes stairs, warps, and random encounters.
 
 Another click replaces the destination after the current step finishes. Directional input
 cancels [navigation](../reference/glossary.md#maps) and takes control. Dialogue, menus, battles,
-warps, focus loss, map reload, and save import cancel the route; returning to play does not resume it.
+warps, focus loss, map reload, and save import cancel the route; returning to play does not
+resume it.
 The game ignores clicks during menus or dialogue. Drags, multiple fingers, and virtual controls
 do not create goals.
 

@@ -58,7 +58,7 @@ Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共�
 
 指针输入通过 `dotzuki_mobile_pointer_click` 接收 framebuffer 像素坐标。
 `dotzuki_mobile_cancel_pointer_input` 取消[导航](../reference/glossary.md#maps)。
-调用与 tick 串行执行；外壳负责过滤黑边、虚拟按键、拖动与多指手势。
+外壳将指针调用与 tick 串行执行，并过滤黑边、虚拟按键、拖动与多指手势。
 使用指针的外壳要求 Rust 库导出这两个符号。
 `MobileGame` 实现默认忽略指针，`tick` 的 bitmask 处理按键。
 更新外壳及运行时库前，请阅读[未发布兼容性说明](../release-notes/changelog.zh-CN.md#未发布)。
