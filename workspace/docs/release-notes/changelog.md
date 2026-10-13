@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.10.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,19 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## v0.10.1
+
+This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
+used by consumers of `fix/gba-psg-audio`. See the [migration guide](migration/v0.10.1.md).
+Existing APIs retain their behavior; there are no breaking changes.
+
+- Replace the DSL integer check's unavailable `f64::fract()` call with a no_std-compatible
+  check. Preserve accepted integer ranges and rejection of invalid arguments.
+- Check both audio and DSL libraries on `thumbv4t-none-eabi` in CI.
+- Add an opt-in callback for visible, idle stationary NPCs in the movement traversal.
+  Existing entry points keep their stationary-NPC behavior.
+- Collect NPC occupied tiles in one preallocated vector, preserving collision semantics.
 
 ## v0.10.0
 
