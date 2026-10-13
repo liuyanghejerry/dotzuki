@@ -4,6 +4,7 @@
 namespace {
 // ArkUI invokes these functions on its UI thread.
 dotzuki::touch::Controller controller;
+dotzuki::touch::GameTap gameTap;
 napi_value Configure(napi_env env, napi_callback_info info) {
     size_t count = 1;
     napi_value args[1];
@@ -22,6 +23,7 @@ napi_value Configure(napi_env env, napi_callback_info info) {
     dotzuki::touch::Options options;
     options.scale = values[4]; options.inset = values[5]; options.lift = values[6];
     options.mirrored = values[7] != 0; options.floating = values[8] != 0;
+    gameTap.reset();
     controller.layout({static_cast<float>(values[0]), static_cast<float>(values[1]),
         static_cast<float>(values[2]), static_cast<float>(values[3])}, options, static_cast<float>(values[9]));
     napi_value result;
@@ -51,9 +53,10 @@ napi_value Event(napi_env env, napi_callback_info info) {
     double x = 0, y = 0;
     napi_get_value_int32(env, args[0], &kind); napi_get_value_int32(env, args[1], &id);
     napi_get_value_double(env, args[2], &x); napi_get_value_double(env, args[3], &y);
+    bool tap = gameTap.event(kind, id, x, y, controller.accepts(x, y));
     bool settings = controller.event(kind, id, x, y);
     napi_value result;
-    napi_create_int32(env, controller.bits() | (settings ? 256 : 0), &result);
+    napi_create_int32(env, controller.bits() | (settings ? 256 : 0) | (tap ? 512 : 0), &result);
     return result;
 }
 }

@@ -281,6 +281,24 @@ fn stairs_change_player_elevation() {
     }
     assert_eq!(game.player_tile(), (1, 1));
     assert_eq!(game.player_elevation(), 0, "GID 2 descends one level");
+    // Click an ascend stair, then replace the destination before arrival.
+    assert!(game.click_to_move(136.0, 120.0));
+    frame(&mut game, 0);
+    assert!(game.click_to_move(152.0, 120.0));
+    idle(&mut game, 40);
+    assert_eq!(game.player_tile(), (1, 1));
+    assert_eq!(game.player_elevation(), 0);
+    assert_eq!(game.navigation_target(), None);
+    assert!(game.click_to_move(136.0, 120.0));
+    idle(&mut game, 20);
+    assert_eq!(game.player_tile(), (0, 1));
+    assert_eq!(game.player_elevation(), 1);
+    assert_eq!(game.navigation_target(), None);
+    assert!(game.click_to_move(136.0, 120.0)); // current stair tile is a stop request
+    idle(&mut game, 20);
+    assert_eq!(game.player_tile(), (0, 1));
+    assert_eq!(game.player_elevation(), 1);
+    assert_eq!(game.navigation_target(), None);
 }
 
 // ── (f) signs: face + A reads the sign text ─────────────────────────────────
@@ -344,5 +362,140 @@ fn mapless_project_boots_dialogue_only() {
     assert!(
         colors.len() > 2,
         "end card should render text, got {colors:?}"
+    );
+}
+
+// Click navigation runs through the same update/draw loop as native/Web/mobile.
+fn navigation_game(name: &str) -> (TestDir, RunnerGame) {
+    let (tmp, mut game) = boot(name);
+    dismiss_dialogue(&mut game);
+    let dir = tmp.path().join("demo/data/maps/Town");
+    let mut collision = vec![0; 20 * 15];
+    for y in 0..7 {
+        collision[y * 20 + 5] = 1;
+    }
+    let map = serde_json::json!({
+        "width":20, "height":15, "tilewidth":16, "tileheight":16,
+        "layers":[
+            {"name":"ground", "width":20,"height":15,"data":vec![1;300]},
+            {"name":"collision", "width":20,"height":15,"data":collision}
+        ],
+        "tilesets":[{"firstgid":1,"name":"demo","tilewidth":16,"tileheight":16,"tilecount":4}]
+    });
+    fs::write(dir.join("map.tmx.json"), map.to_string()).unwrap();
+    fs::write(
+        dir.join("objects.json"),
+        r#"{"npcs":[{"id":1,"x":4,"y":7}]}"#,
+    )
+    .unwrap();
+    assert!(game.reload_current_map());
+    game.debug_place(3, 3, Direction::Down);
+    (tmp, game)
+}
+
+#[test]
+fn click_walk_detours_around_wall_and_npc_then_stops() {
+    let (_tmp, mut game) = navigation_game("click-detour");
+    assert!(game.click_to_move(7.0 * 16.0 + 8.0, 3.0 * 16.0 + 8.0));
+    let mut saw_detour = false;
+    for _ in 0..240 {
+        frame(&mut game, 0);
+        let (x, y) = game.player_tile();
+        assert!(!(x == 5 && y < 7), "must not enter wall");
+        assert_ne!((x, y), (4, 7), "must not enter NPC tile");
+        saw_detour |= y >= 7;
+    }
+    assert!(saw_detour);
+    assert_eq!(game.player_tile(), (7, 3));
+    assert_eq!(game.navigation_target(), None);
+    idle(&mut game, 40);
+    assert_eq!(game.player_tile(), (7, 3));
+}
+
+#[test]
+fn click_replacement_waits_for_step_and_manual_input_cancels() {
+    let (_tmp, mut game) = navigation_game("click-replace");
+    assert!(game.click_to_move(3.0 * 16.0 + 8.0, 8.0 * 16.0 + 8.0));
+    frame(&mut game, 0); // target tile is already (3,4), pixels are still moving
+    assert_eq!(game.player_tile(), (3, 4));
+    assert!(game.click_to_move(1.0 * 16.0 + 8.0, 4.0 * 16.0 + 8.0));
+    idle(&mut game, 60);
+    assert_eq!(game.player_tile(), (1, 4));
+    assert_eq!(game.navigation_target(), None);
+    assert!(game.click_to_move(3.0 * 16.0 + 8.0, 8.0 * 16.0 + 8.0));
+    frame(&mut game, GbButton::Up.bit_mask());
+    idle(&mut game, 40);
+    assert_eq!(game.player_tile(), (1, 3));
+    assert_eq!(game.navigation_target(), None);
+}
+
+#[test]
+fn unreachable_click_flashes_and_modal_or_invalid_clicks_do_not_walk() {
+    let (_tmp, mut game) = navigation_game("click-reject");
+    for point in [
+        (f32::NAN, 1.0),
+        (1.0, f32::INFINITY),
+        (-1.0, 0.0),
+        (320.0, 0.0),
+        (0.0, 240.0),
+    ] {
+        assert!(!game.click_to_move(point.0, point.1));
+    }
+    assert!(game.click_to_move(5.0 * 16.0 + 8.0, 3.0 * 16.0 + 8.0));
+    frame(&mut game, 0);
+    let mut fb = FrameBuffer::new(RenderConfig::new(320, 240), Rgba::BLACK);
+    game.draw(&mut fb);
+    assert_eq!(fb.get_pixel(82, 50), Some(Rgba::rgb(255, 80, 80)));
+    assert_eq!(game.navigation_target(), None);
+    idle(&mut game, 50);
+    assert_eq!(game.player_tile(), (3, 3));
+    assert!(game.click_to_move(24.0, 56.0));
+    frame(&mut game, GbButton::Start.bit_mask());
+    assert_eq!(game.navigation_target(), None);
+    assert!(!game.click_to_move(24.0, 56.0));
+    frame(&mut game, GbButton::B.bit_mask());
+    idle(&mut game, 50);
+    assert_eq!(game.player_tile(), (3, 3));
+}
+
+#[test]
+fn click_on_warp_preserves_transition_and_cancels_route() {
+    let (_tmp, mut game) = boot("click-warp");
+    assert!(!game.click_to_move(136.0, 120.0), "dialogue owns input");
+    dismiss_dialogue(&mut game);
+    // Town is 64x48, centered in the 320x240 framebuffer: origin (128,96).
+    assert!(game.click_to_move(136.0, 120.0));
+    idle(&mut game, 40);
+    assert_eq!(game.current_map_id(), Some("Cave"));
+    assert_eq!(game.navigation_target(), None);
+    assert!(game.dialogue_text().is_some());
+}
+
+#[test]
+fn click_snapshot_survives_camera_scroll_and_cancel_does_not_teleport() {
+    let (tmp, mut game) = navigation_game("click-scroll");
+    let path = tmp.path().join("demo/data/maps/Town/map.tmx.json");
+    let mut map: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    map["width"] = 40.into();
+    for layer in map["layers"].as_array_mut().unwrap() {
+        layer["width"] = 40.into();
+        let gid = if layer["name"] == "ground" { 1 } else { 0 };
+        layer["data"] = serde_json::json!(vec![gid; 600]);
+    }
+    fs::write(path, map.to_string()).unwrap();
+    assert!(game.reload_current_map());
+    game.debug_place(20, 3, Direction::Right); // camera x = 168
+    assert!(game.click_to_move(224.0, 56.0)); // world x 392 => tile 24
+    idle(&mut game, 60);
+    assert_eq!(game.player_tile(), (24, 3));
+    assert!(game.click_to_move(224.0, 56.0)); // a new world destination
+    frame(&mut game, 0);
+    game.cancel_navigation();
+    idle(&mut game, 60);
+    assert_eq!(
+        game.player_tile(),
+        (25, 3),
+        "finish only the already started step"
     );
 }

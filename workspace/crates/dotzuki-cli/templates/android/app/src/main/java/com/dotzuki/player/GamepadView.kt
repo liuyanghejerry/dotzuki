@@ -20,6 +20,7 @@ import android.widget.TextView
 /** Transparent controls in window coordinates; the game keeps its own aspect ratio. */
 class GamepadView(context: Context) : View(context) {
     var onInputChanged: (Int) -> Unit = {}
+    var onGameTap: (Float, Float) -> Unit = { _, _ -> }
     var onSettingsChanged: (Boolean) -> Unit = {}
     private val prefs = context.getSharedPreferences("dotzuki-touch-v1", Context.MODE_PRIVATE)
     private val density get() = resources.displayMetrics.density
@@ -91,6 +92,7 @@ class GamepadView(context: Context) : View(context) {
 
     fun releaseAll() {
         NativeBridge.touchEvent(3, 0, 0f, 0f)
+        NativeBridge.cancelPointer()
         inputBits = 0
         onInputChanged(0)
         layout = NativeBridge.touchLayout()
@@ -168,6 +170,7 @@ class GamepadView(context: Context) : View(context) {
         fun send(kind: Int, index: Int) {
             result = NativeBridge.touchEvent(kind, event.getPointerId(index),
                 event.getX(index) / density, event.getY(index) / density)
+            if (result and 512 != 0) onGameTap(event.getX(index), event.getY(index))
         }
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> send(0, event.actionIndex)

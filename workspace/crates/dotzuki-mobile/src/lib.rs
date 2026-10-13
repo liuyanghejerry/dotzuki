@@ -18,6 +18,11 @@ pub const GAME_FRAME_RATE: f64 = 59.7275;
 pub trait MobileGame {
     fn dimensions(&self) -> (u32, u32);
     fn tick(&mut self, input: u8);
+    /// Optional direct-touch input in framebuffer pixels. Existing games ignore it.
+    fn pointer_click(&mut self, _x: f32, _y: f32) -> bool {
+        false
+    }
+    fn cancel_pointer_input(&mut self) {}
     fn copy_rgba(&self, output: &mut [u8]);
     /// Fill 44.1 kHz stereo interleaved PCM from the active game sound source.
     fn render_audio(&mut self, output: &mut [f32]);
@@ -54,6 +59,22 @@ impl MobileRuntime {
             width,
             height,
         })
+    }
+    /// Reject invalid coordinates before dispatching on the serialized game thread.
+    pub fn pointer_click(&self, x: f32, y: f32) -> bool {
+        if !x.is_finite()
+            || !y.is_finite()
+            || x < 0.0
+            || y < 0.0
+            || x >= self.width as f32
+            || y >= self.height as f32
+        {
+            return false;
+        }
+        self.main.borrow_mut().game.pointer_click(x, y)
+    }
+    pub fn cancel_pointer_input(&self) {
+        self.main.borrow_mut().game.cancel_pointer_input();
     }
     pub fn tick(&self, input: u8) {
         let mut main = self.main.borrow_mut();
@@ -231,6 +252,28 @@ macro_rules! export_mobile_abi {
                 runner.tick(input_bits);
                 true
             })
+        }
+
+        /// Optional ABI v1 extension. Call on the same serialized thread as tick.
+        #[no_mangle]
+        pub unsafe extern "C" fn dotzuki_mobile_pointer_click(
+            runner: *mut $crate::MobileRuntime,
+            x: f32,
+            y: f32,
+        ) -> bool {
+            let Some(runner) = runner.as_ref() else {
+                return false;
+            };
+            $crate::ffi_guard(false, || runner.pointer_click(x, y))
+        }
+
+        #[no_mangle]
+        pub unsafe extern "C" fn dotzuki_mobile_cancel_pointer_input(
+            runner: *mut $crate::MobileRuntime,
+        ) {
+            if let Some(runner) = runner.as_ref() {
+                $crate::ffi_guard((), || runner.cancel_pointer_input());
+            }
         }
 
         /// Copy the last RGBA frame. Returns the required byte count, even when the

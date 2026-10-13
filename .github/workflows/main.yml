@@ -64,6 +64,9 @@ jobs:
         working-directory: workspace
         run: cargo build --workspace
 
+      - name: Test editor release metadata
+        run: python3 workspace/scripts/test-editor-release.py
+
       - name: Test shared mobile touch controls
         run: workspace/crates/dotzuki-mobile/controls/tests/run.sh
 

@@ -5,7 +5,7 @@ How to define maps: Tiled JSON, tileset, `objects.json` sidecar, levels, and enc
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.0
 
 Before you start, read [the project manifest](../reference/project-manifest.md),
 which defines the map directories and the runner contract these files plug
@@ -67,3 +67,28 @@ never rolls, and turning in place is not a step. Absent (or `null`)
 The encounter record schema lives in
 [Encounter records](../reference/data-tables/encounters.md); sceneless
 battle outcomes live in [battle rules](../reference/battle-rules.md).
+
+## Click to move
+
+[Click to move](../reference/glossary.md#maps) lets players select a walkable map tile
+in the editor's **Play** activity, desktop player, Web export, or Android/HarmonyOS export.
+The player follows a four-direction route. You can use the existing map format.
+A yellow outline marks the destination. An unreachable destination, or a search that exceeds
+16,384 states, flashes red. Walls and NPCs block routes. Every completed step
+still processes stairs, warps, and random encounters.
+
+Another click replaces the destination after the current step finishes. Directional input
+cancels [navigation](../reference/glossary.md#maps) and takes control. Dialogue, menus, battles,
+warps, focus loss, map reload, and save import cancel the route; returning to play does not
+resume it.
+The game ignores clicks during menus or dialogue. Drags, multiple fingers, and virtual controls
+do not create goals.
+
+Routes stay within the current map. Clicking an NPC does not start a conversation; A retains
+its interaction behavior. Ordinary destinations use the player's collision layer; stair targets
+use the layer after entering that stair. Overlapping floors have no separate layer picker.
+A destination warp may change maps, but a route cannot pass through an intermediate warp.
+
+Custom Rust games must wire navigation and pointer callbacks into their own game loop.
+Updating dependencies alone does not enable this behavior. For iOS host integration, see
+[Native Touch Controls](../../crates/dotzuki-mobile/controls/README.md).

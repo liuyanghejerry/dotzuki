@@ -114,6 +114,8 @@ bool DotzukiHost::RegisterXComponent(napi_env env, napi_value exports) {
 void DotzukiHost::ExportFunctions(napi_env env, napi_value exports) {
     napi_property_descriptor functions[] = {
         {"start", nullptr, Start, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"cancelPointer", nullptr, CancelPointer, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"pointerClick", nullptr, PointerClick, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setInput", nullptr, SetInput, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"pause", nullptr, Pause, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"resume", nullptr, Resume, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -147,6 +149,38 @@ napi_value DotzukiHost::Start(napi_env env, napi_callback_info info) {
     return result;
 }
 
+napi_value DotzukiHost::CancelPointer(napi_env env, napi_callback_info) {
+    auto &host = Instance();
+    std::lock_guard<std::mutex> lock(host.gameMutex_);
+    if (host.runner_) dotzuki_mobile_cancel_pointer_input(host.runner_);
+    return Undefined(env);
+}
+
+napi_value DotzukiHost::PointerClick(napi_env env, napi_callback_info info) {
+    size_t count = 2;
+    napi_value args[2];
+    double nx = 0, ny = 0;
+    napi_get_cb_info(env, info, &count, args, nullptr, nullptr);
+    if (count != 2 || napi_get_value_double(env, args[0], &nx) != napi_ok ||
+        napi_get_value_double(env, args[1], &ny) != napi_ok) return Undefined(env);
+    auto &host = Instance();
+    std::lock_guard<std::mutex> lock(host.gameMutex_);
+    if (!host.runner_ || host.paused_.load() || !std::isfinite(nx) || !std::isfinite(ny) ||
+        nx < 0 || ny < 0 || nx >= 1 || ny >= 1 || !host.surfaceWidth_ || !host.surfaceHeight_) return Undefined(env);
+    const float fw = dotzuki_mobile_width(host.runner_), fh = dotzuki_mobile_height(host.runner_);
+    // Match RenderFrame's integer GL viewport; pointer coordinates start at top left.
+    int width = host.surfaceWidth_, height = host.surfaceHeight_;
+    if (static_cast<float>(width) / height > fw / fh) width = static_cast<int>(height * fw / fh);
+    else height = static_cast<int>(width * fh / fw);
+    const int left = (host.surfaceWidth_ - width) / 2;
+    const int bottom = (host.surfaceHeight_ - height) / 2;
+    const int top = host.surfaceHeight_ - bottom - height;
+    if (width > 0 && height > 0) dotzuki_mobile_pointer_click(host.runner_,
+        (nx * host.surfaceWidth_ - left) * fw / width,
+        (ny * host.surfaceHeight_ - top) * fh / height);
+    return Undefined(env);
+}
+
 napi_value DotzukiHost::SetInput(napi_env env, napi_callback_info info) {
     size_t count = 1;
     napi_value arg = nullptr;
@@ -164,6 +198,10 @@ napi_value DotzukiHost::Pause(napi_env env, napi_callback_info info) {
     auto &host = Instance();
     host.paused_.store(true, std::memory_order_release);
     host.input_.store(0, std::memory_order_relaxed);
+    {
+        std::lock_guard<std::mutex> lock(host.gameMutex_);
+        if (host.runner_) dotzuki_mobile_cancel_pointer_input(host.runner_);
+    }
     if (host.audioRenderer_ != nullptr) {
         OH_AudioRenderer_Pause(host.audioRenderer_);
     }

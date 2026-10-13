@@ -133,6 +133,16 @@ impl WasmRunner {
             .map_err(|e| JsValue::from_str(&e))
     }
 
+    /// Primary click in logical framebuffer pixels; planning occurs on tick.
+    pub fn click_to_move(&mut self, x: f32, y: f32) -> bool {
+        self.game.click_to_move(x, y)
+    }
+
+    /// Cancel a route on focus loss or when the host takes input ownership.
+    pub fn cancel_navigation(&mut self) {
+        self.game.cancel_navigation();
+    }
+
     /// Advance one frame: feed `input_bitmask` (see crate docs) to the game,
     /// update, draw, and return the 320×240×4 RGBA framebuffer.
     ///

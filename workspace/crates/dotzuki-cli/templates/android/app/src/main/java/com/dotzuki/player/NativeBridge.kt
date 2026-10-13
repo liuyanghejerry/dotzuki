@@ -14,6 +14,8 @@ object NativeBridge {
     external fun height(): Int
     external fun frameLength(): Int
     external fun tick(inputBits: Int): Boolean
+    external fun pointerClick(x: Float, y: Float): Boolean
+    external fun cancelPointer()
     external fun copyFrame(output: ByteBuffer): Int
     external fun audioFill(output: FloatArray, frames: Int): Int
     external fun exportSave(): ByteArray?

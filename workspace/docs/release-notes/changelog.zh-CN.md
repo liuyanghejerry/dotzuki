@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.0
->（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+>（源文档 commit 727c7758766eae4cea64df38d57b9f8679f4344e）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -18,6 +18,14 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## 未发布
+
+- 为运行器及支持指针输入的宿主添加[点击移动](../how-to/maps.zh-CN.md#点击移动)。
+- 为移动端 C ABI 添加 `dotzuki_mobile_pointer_click` 和
+  `dotzuki_mobile_cancel_pointer_input`，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
+  更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
+  现有 `MobileGame` 实现保留默认指针回调，按键契约保持不变。
 
 ## v0.10.0
 
