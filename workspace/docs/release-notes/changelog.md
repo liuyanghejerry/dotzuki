@@ -16,6 +16,24 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
+## Unreleased
+
+Breaking Rust API change:
+
+- Add `NpcRuntimeState::step_direction: Option<Direction>`. Add `step_direction: None` to
+  idle NPC struct literals. Manual walking-state fixtures must retain their movement direction
+  in this field. Binary save adapters must account for the additional field.
+
+NPC movement fixes:
+
+- Capture the direction when each autonomous or scripted step starts. A change to `facing`
+  during that step no longer redirects the remaining movement or its occupied destination.
+- Use `NpcRuntimeState::walking_direction()` for movement offsets and collision predictions;
+  keep `facing` for the sprite's orientation.
+- Preserve the captured direction in JSON snapshots. Legacy JSON without `step_direction`
+  loads with `None` and falls back to its saved facing. Completed steps remove the captured
+  direction; consecutive scripted steps capture their next direction independently.
+
 ## v0.10.1
 
 This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
