@@ -59,7 +59,8 @@ The contract contains these groups:
 Pointer input uses `dotzuki_mobile_pointer_click` to accept framebuffer pixel coordinates.
 `dotzuki_mobile_cancel_pointer_input` cancels [navigation](../reference/glossary.md#maps).
 The shell serializes pointer calls with ticks. Shells filter letterboxing, virtual controls,
-drags, and multiple fingers. A pointer-enabled shell requires a Rust library that exports both symbols.
+drags, and multiple fingers. A pointer-enabled shell requires a Rust library that exports
+both symbols.
 `MobileGame` implementations ignore pointers by default. The `tick` bitmask handles buttons.
 See the [unreleased compatibility notes](../release-notes/changelog.md#unreleased) before
 updating a shell and its runtime library.

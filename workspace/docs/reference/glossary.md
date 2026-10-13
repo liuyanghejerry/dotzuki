@@ -212,7 +212,7 @@ original form in Chinese text.
 
 - **click to move**（点击移动）— select a destination tile by click or tap to start automatic
   walking. For example, clicking a reachable tile starts a four-direction route to that tile.
-  UI hints describe the resulting movement as “automatic walking”（自动行走）.
+  Chinese UI hints use “自动行走” to describe the movement after destination selection.
 - **navigation**（导航）— follow a route toward the selected destination, rechecking each step.
   For example, directional input cancels navigation and gives the player manual control.
 - **pathfinding**（寻路）— search map states for a walkable route to a destination.
