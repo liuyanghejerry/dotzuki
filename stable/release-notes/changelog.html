@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-37457bfb.js";
+            window.path_to_searchindex_js = "../searchindex-868aaeb0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-70bafa49.js"></script>
+        <script src="../toc-7b7e3677.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -198,6 +198,18 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v0101"><a class="header" href="#v0101">v0.10.1</a></h2>
+<p>This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
+used by consumers of <code>fix/gba-psg-audio</code>. See the <a href="migration/v0.10.1.html">migration guide</a>.
+Existing APIs retain their behavior; there are no breaking changes.</p>
+<ul>
+<li>Replace the DSL integer check’s unavailable <code>f64::fract()</code> call with a no_std-compatible
+check. Preserve accepted integer ranges and rejection of invalid arguments.</li>
+<li>Check both audio and DSL libraries on <code>thumbv4t-none-eabi</code> in CI.</li>
+<li>Add an opt-in callback for visible, idle stationary NPCs in the movement traversal.
+Existing entry points keep their stationary-NPC behavior.</li>
+<li>Collect NPC occupied tiles in one preallocated vector, preserving collision semantics.</li>
 </ul>
 <h2 id="v0100"><a class="header" href="#v0100">v0.10.0</a></h2>
 <p>This release integrates the GBA audio and gameplay fixes previously available only on the

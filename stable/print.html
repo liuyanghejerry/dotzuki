@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-37457bfb.js";
+            window.path_to_searchindex_js = "searchindex-868aaeb0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-70bafa49.js"></script>
+        <script src="toc-7b7e3677.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -288,7 +288,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 </div>
 <h2 id="release-notes"><a class="header" href="#release-notes">Release notes</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>, <a href="#migrating-to-v091"><code>v0.9.1</code></a>, <a href="#migrating-to-v0100"><code>v0.10.0</code></a>)</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> — version history; migration guides live next to it per release (<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>, <a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>, <a href="#migrating-to-v070"><code>v0.7.0</code></a>, <a href="#migrating-to-v071"><code>v0.7.1</code></a>, <a href="#migrating-to-v080"><code>v0.8.0</code></a>, <a href="#migrating-to-v081"><code>v0.8.1</code></a>, <a href="#migrating-to-v082"><code>v0.8.2</code></a>, <a href="#migrating-to-v090"><code>v0.9.0</code></a>, <a href="#migrating-to-v091"><code>v0.9.1</code></a>, <a href="#migrating-to-v0100"><code>v0.10.0</code></a>, <a href="#migrating-to-v0101"><code>v0.10.1</code></a>)</li>
 </ul>
 <h2 id="archive"><a class="header" href="#archive">Archive</a></h2>
 <p>Historical documents, kept for context. Their links are not maintained; read
@@ -9415,7 +9415,7 @@ while <code>dotzuki new</code> emits the minimal skeleton.</li>
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -9427,6 +9427,18 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="v0101"><a class="header" href="#v0101">v0.10.1</a></h2>
+<p>This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
+used by consumers of <code>fix/gba-psg-audio</code>. See the <a href="#migrating-to-v0101">migration guide</a>.
+Existing APIs retain their behavior; there are no breaking changes.</p>
+<ul>
+<li>Replace the DSL integer check’s unavailable <code>f64::fract()</code> call with a no_std-compatible
+check. Preserve accepted integer ranges and rejection of invalid arguments.</li>
+<li>Check both audio and DSL libraries on <code>thumbv4t-none-eabi</code> in CI.</li>
+<li>Add an opt-in callback for visible, idle stationary NPCs in the movement traversal.
+Existing entry points keep their stationary-NPC behavior.</li>
+<li>Collect NPC occupied tiles in one preallocated vector, preserving collision semantics.</li>
 </ul>
 <h2 id="v0100"><a class="header" href="#v0100">v0.10.0</a></h2>
 <p>This release integrates the GBA audio and gameplay fixes previously available only on the
@@ -10058,6 +10070,39 @@ called moves, restricted-axis NPC wandering, zero-delay countdowns, and outward 
 transitions. Games already using the branch hooks should retain their existing callbacks
 and explicit classic policy when switching dependencies.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrating-to-v0101"><a class="header" href="#migrating-to-v0101">Migrating to v0.10.1</a></h1>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
+</ul>
+</blockquote>
+<p>Update dependencies and remove downstream copies of the DSL no_std integer-check fix.
+Before you start, read the <a href="#changelog">changelog</a> and, if upgrading from an older
+release, the <a href="#migrating-to-v0100">v0.10.0 migration guide</a>.</p>
+<h2 id="update-dependencies-6"><a class="header" href="#update-dependencies-6">Update dependencies</a></h2>
+<p>Update all dotzuki dependencies together to registry version <code>0.10.1</code> or git tag <code>v0.10.1</code>.
+Keep the main workspace and any standalone bare-metal manifests on the same release,
+and refresh their lockfiles. The minimum Rust version remains 1.88.</p>
+<p>Remove Cargo patch entries that redirect <code>dotzuki-engine-dsl</code> to a local copy containing
+only the integer-check workaround. Delete that copy after confirming no other changes
+remain in it. Keep unrelated dependency patches required by your target.</p>
+<h2 id="preserve-stationary-npc-behavior"><a class="header" href="#preserve-stationary-npc-behavior">Preserve stationary NPC behavior</a></h2>
+<p>Consumers of the branch-only <code>update_npc_movement_with_policy_and_stationary</code> API can now
+use that API from the release. Retain the game’s callback and chosen <code>NpcWanderPolicy</code>.
+The callback receives visible, idle stationary NPCs in the existing movement traversal;
+walking and scripted NPCs stay outside the callback. Existing movement entry points need
+no changes and keep their stationary-NPC behavior.</p>
+<h2 id="verify-the-upgrade"><a class="header" href="#verify-the-upgrade">Verify the upgrade</a></h2>
+<p>Compile your no_std target with the updated lockfile and run your scene-command tests.
+Valid u8, u16, and i16 boundaries remain accepted; fractional, non-finite, and out-of-range
+arguments remain rejected. Check stationary facing, wander delays, scripted movement,
+and NPC collisions in consumers that use the movement callback.</p>
+<p>The engine CI checks the audio and DSL libraries on <code>thumbv4t-none-eabi</code> with default
+features disabled. Host-only DSL compiler binaries are excluded from this bare-metal check.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migrating-to-v091"><a class="header" href="#migrating-to-v091">Migrating to v0.9.1</a></h1>
 <blockquote>
 <ul>
@@ -10069,7 +10114,7 @@ and explicit classic policy when switching dependencies.</p>
 </blockquote>
 <p>Update from v0.9.0 to adopt the shared landscape touch controls without changing Rust APIs.
 Before you start, read the <a href="#changelog">changelog</a> for the release scope.</p>
-<h2 id="update-dependencies-6"><a class="header" href="#update-dependencies-6">Update dependencies</a></h2>
+<h2 id="update-dependencies-7"><a class="header" href="#update-dependencies-7">Update dependencies</a></h2>
 <p>Update every dotzuki dependency together: use version <code>0.9.1</code> for registry dependencies
 or tag <code>v0.9.1</code> for git dependencies, then refresh the consumer lockfile.
 The minimum Rust version remains 1.88.</p>
@@ -13781,8 +13826,8 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dotzuki-引擎--文档索引"><a class="header" href="#dotzuki-引擎--文档索引">dotzuki 引擎 — 文档索引</a></h1>
 <blockquote>
-<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.10.0
-（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+<p>本文是 <code>index.md</code> 的中文翻译，同步至引擎版本 v0.10.1
+（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本目录是 <strong>dotzuki 开发者文档的入口</strong>。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -13831,6 +13876,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </thead>
 <tbody>
 <tr><td><a href="#maps"><code>how-to/maps.md</code></a></td><td>Tiled <code>.tmx</code>（JSON）地图、tilesets、海拔、实体以及 <code>objects.json</code> 伴生文件</td></tr>
+<tr><td><a href="#edit-linked-buildings-and-auto-tiles"><code>how-to/map-components.md</code></a></td><td>链接建筑、源更新、导入图集保留，以及 cardinal/blob 自动图块</td></tr>
 <tr><td><a href="#编排高密度地图布景"><code>how-to/native-map-art.zh-CN.md</code></a></td><td>高密度布景、逻辑坐标、碰撞叠层与来源像素编辑</td></tr>
 <tr><td><a href="#scenes"><code>how-to/scenes.md</code></a></td><td>编写 <code>.scene</code> 剧情：NPC 对话、进图过场、选项、flag、场景内战斗</td></tr>
 <tr><td><a href="#ui-layouts"><code>how-to/ui.md</code></a></td><td>编写 <code>.gui</code> 布局：20×18 网格、面板/文本、模板绑定、<code>@t</code> 标签、自定义组件</td></tr>
@@ -13891,7 +13937,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 </div>
 <h2 id="发布说明"><a class="header" href="#发布说明">发布说明</a></h2>
 <ul>
-<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>、<a href="#迁移至-v091"><code>v0.9.1</code></a>、<a href="#迁移至-v0100"><code>v0.10.0</code></a>）</li>
+<li><a href="#changelog"><code>release-notes/changelog.md</code></a> —— 版本历史；每个版本的迁移指南与它放在一起（<a href="#migration-guide--v05x-pre-release--v010"><code>v0.1.0</code></a>、<a href="#migration-guide--v01x--v054"><code>v0.5.4</code></a>、<a href="#迁移到-v070"><code>v0.7.0</code></a>、<a href="#迁移到-v071"><code>v0.7.1</code></a>、<a href="#迁移到-v080"><code>v0.8.0</code></a>、<a href="#迁移到-v081"><code>v0.8.1</code></a>、<a href="#迁移到-v082"><code>v0.8.2</code></a>, <a href="#迁移至-v090"><code>v0.9.0</code></a>、<a href="#迁移至-v091"><code>v0.9.1</code></a>、<a href="#迁移至-v0100"><code>v0.10.0</code></a>、<a href="#迁移至-v0101"><code>v0.10.1</code></a>）</li>
 </ul>
 <h2 id="归档"><a class="header" href="#归档">归档</a></h2>
 <p>历史文档，保留作为背景参考。其中的链接不再维护；请改读上面的现行页面。</p>
@@ -22014,8 +22060,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.0
-（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.1
+（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -22023,7 +22069,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -22034,6 +22080,17 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>每个版本先列出 <strong>breaking changes</strong>（附其迁移指南的链接），然后是值得注意
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
+</ul>
+<h2 id="v0101-1"><a class="header" href="#v0101-1">v0.10.1</a></h2>
+<p>本补丁版本恢复 DSL 在裸机目标上的编译，并纳入 <code>fix/gba-psg-audio</code> 消费者使用的 NPC 钩子。
+请阅读<a href="#迁移至-v0101">迁移指南</a>。已有 API 保持原有行为，没有破坏性变更。</p>
+<ul>
+<li>将 DSL 整数检查中不可用的 <code>f64::fract()</code> 调用换成兼容 no_std 的检查。
+保留接受的整数范围及对无效参数的拒绝行为。</li>
+<li>CI 在 <code>thumbv4t-none-eabi</code> 上检查音频与 DSL 库。</li>
+<li>在移动遍历中增加可选回调，处理可见且空闲的静止 NPC。
+已有入口保留原有的静止 NPC 行为。</li>
+<li>用一个预分配向量收集 NPC 占用格，保留碰撞语义。</li>
 </ul>
 <h2 id="v0100-1"><a class="header" href="#v0100-1">v0.10.0</a></h2>
 <p>本版本整合此前仅存在于 <code>fix/gba-psg-audio</code> 分支的 GBA 音频与游戏行为修复。
@@ -22643,6 +22700,42 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 调用招式、受限轴 NPC 游走、零延迟倒计时和向外螺旋转场。
 已使用分支钩子的游戏在切换依赖时，应保留现有回调及显式经典策略。</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="迁移至-v0101"><a class="header" href="#迁移至-v0101">迁移至 v0.10.1</a></h1>
+<blockquote>
+<p>本文是 <code>v0.10.1.md</code> 的中文翻译，同步至引擎版本 v0.10.1
+（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
+内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong>Audience</strong>: rust developers</li>
+<li><strong>Type</strong>: how-to</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
+</ul>
+</blockquote>
+<p>更新依赖，并移除消费方保存的 DSL no_std 整数检查修复副本。
+开始前，请阅读<a href="#变更日志">变更日志</a>；若从更早版本升级，
+还需阅读 <a href="#迁移至-v0100">v0.10.0 迁移指南</a>。</p>
+<h2 id="更新依赖-6"><a class="header" href="#更新依赖-6">更新依赖</a></h2>
+<p>一起更新所有 dotzuki 依赖，使用 registry 版本 <code>0.10.1</code> 或 git tag <code>v0.10.1</code>。
+主 workspace 与独立裸机 manifest 应使用同一发布版本，并刷新各自的 lockfile。
+最低 Rust 版本仍为 1.88。</p>
+<p>移除将 <code>dotzuki-engine-dsl</code> 重定向至本地副本的 Cargo patch 条目，前提是副本中
+仅包含整数检查的临时修复。确认副本中没有其他改动后将其删除。
+保留目标平台所需的其他依赖补丁。</p>
+<h2 id="保留静止-npc-行为"><a class="header" href="#保留静止-npc-行为">保留静止 NPC 行为</a></h2>
+<p>此前使用分支专有 <code>update_npc_movement_with_policy_and_stationary</code> API 的消费者，
+现在可以从发布版本使用该 API。保留游戏的回调及所选 <code>NpcWanderPolicy</code>。
+回调在已有移动遍历中接收可见且空闲的静止 NPC；行走中或受脚本控制的 NPC 不进入回调。
+已有移动入口不需要改动，并保留原有的静止 NPC 行为。</p>
+<h2 id="验证升级"><a class="header" href="#验证升级">验证升级</a></h2>
+<p>使用更新后的 lockfile 编译 no_std 目标，并运行场景命令测试。
+有效的 u8、u16 和 i16 边界仍被接受；小数、非有限值和越界参数仍被拒绝。
+使用移动回调的消费者还应检查静止转向、游走延迟、脚本移动和 NPC 碰撞。</p>
+<p>引擎 CI 在 <code>thumbv4t-none-eabi</code> 上关闭默认 feature 检查音频与 DSL 库。
+仅用于宿主机的 DSL 编译器二进制不属于该裸机检查范围。</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="迁移至-v091"><a class="header" href="#迁移至-v091">迁移至 v0.9.1</a></h1>
 <blockquote>
 <p>本文是 <code>v0.9.1.md</code> 的中文翻译，同步至引擎版本 v0.9.1
@@ -22659,7 +22752,7 @@ trigger manager、NPC 运行时状态、cutscene manager、连接过场、<code>
 </blockquote>
 <p>从 v0.9.0 更新以采用共享横屏触控布局，无需修改 Rust API。
 开始前，请阅读<a href="#变更日志">变更日志</a>了解发布范围。</p>
-<h2 id="更新依赖-6"><a class="header" href="#更新依赖-6">更新依赖</a></h2>
+<h2 id="更新依赖-7"><a class="header" href="#更新依赖-7">更新依赖</a></h2>
 <p>一起更新所有 dotzuki 依赖：registry 依赖使用版本 <code>0.9.1</code>，
 git 依赖使用 tag <code>v0.9.1</code>，然后刷新消费项目的 lockfile。
 最低 Rust 版本仍为 1.88。</p>
