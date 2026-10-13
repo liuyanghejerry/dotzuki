@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1
->（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
+>（源文档 commit 9bc4da66b7499e9ff9472913e005932ae7828fb7）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -18,6 +18,23 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## 未发布
+
+Rust API 破坏性变更：
+
+- `NpcRuntimeState` 新增 `step_direction: Option<Direction>`。空闲 NPC 结构体字面量
+  需补上 `step_direction: None`。手工构造行走状态的测试需在此字段保存移动方向。
+  二进制存档适配器需处理新增字段。
+
+NPC 移动修复：
+
+- 自动行走和脚本行走的每一步均在开始时保存方向。步子进行中修改 `facing`，
+  不再改变剩余移动或其占用的目的格。
+- 移动偏移和碰撞预测使用 `NpcRuntimeState::walking_direction()`；
+  角色图像朝向继续使用 `facing`。
+- JSON 快照保留已保存的移动方向。缺少 `step_direction` 的旧 JSON 会加载为 `None`，
+  并使用其保存的朝向。步子完成后移除已保存方向；连续脚本步子独立保存下一步方向。
 
 ## v0.10.1
 
