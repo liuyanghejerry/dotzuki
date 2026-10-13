@@ -61,7 +61,8 @@ Pointer input uses `dotzuki_mobile_pointer_click` to accept framebuffer pixel co
 The shell serializes pointer calls with ticks. Shells filter letterboxing, virtual controls,
 drags, and multiple fingers. A pointer-enabled shell requires a Rust library that exports
 both symbols.
-[`MobileGame`](../reference/glossary.md#engine) implementations ignore pointers by default. The `tick` bitmask handles buttons.
+[`MobileGame`](../reference/glossary.md#engine) implementations ignore pointers by default.
+The `tick` bitmask handles buttons.
 See the [unreleased compatibility notes](../release-notes/changelog.md#unreleased) before
 updating a shell and its runtime library.
 
