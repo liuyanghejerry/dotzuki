@@ -220,9 +220,20 @@ pub fn update_npc_movement_with_policy<T: TilesetTrait>(
     provider: &impl CollisionProvider<T>,
     policy: NpcWanderPolicy,
 ) {
-    update_npc_movement_with_policy_and_stationary(npcs, player_x, player_y, player_dest,
-        map_width_blocks, map_height_blocks, rng_value, blocks, tileset, provider, policy,
-        |_, _| {});
+    update_npc_movement_with_policy_and_stationary(
+        npcs,
+        player_x,
+        player_y,
+        player_dest,
+        map_width_blocks,
+        map_height_blocks,
+        rng_value,
+        blocks,
+        tileset,
+        provider,
+        policy,
+        |_, _| {},
+    );
 }
 
 /// Run a game-provided idle-facing update in the same NPC traversal.
@@ -561,47 +572,129 @@ mod stationary_callback_tests {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     struct Tiles;
     impl TilesetTrait for Tiles {
-        fn id(&self) -> u8 { 0 }
-        fn name(&self) -> &'static str { "test" }
+        fn id(&self) -> u8 {
+            0
+        }
+        fn name(&self) -> &'static str {
+            "test"
+        }
     }
     struct Open;
     impl CollisionProvider<Tiles> for Open {
-        fn is_tile_passable(&self, _: Tiles, _: u8) -> bool { true }
-        fn check_tile_pair_collision(&self, _: Tiles, _: u8, _: u8, _: bool) -> bool { false }
-        fn check_ledge_jump(&self, _: Tiles, _: u8, _: u8, _: u8, _: u8) -> bool { false }
-        fn is_counter_tile(&self, _: Tiles, _: u8) -> bool { false }
-        fn get_tile_at_position(&self, _: Tiles, _: &[u8], _: u8, _: u16, _: u16) -> u8 { 0 }
-        fn is_door_tile(&self, _: Tiles, _: u8) -> bool { false }
-        fn is_warp_tile(&self, _: Tiles, _: u8) -> bool { false }
-        fn is_warp_carpet_tile_in_front(&self, _: Tiles, _: u8, _: u8) -> bool { false }
-        fn uses_warp_tile_in_front_check(&self, _: Tiles) -> bool { false }
-        fn check_extra_warp_special(&self, _: Tiles, _: u8) -> Option<bool> { None }
+        fn is_tile_passable(&self, _: Tiles, _: u8) -> bool {
+            true
+        }
+        fn check_tile_pair_collision(&self, _: Tiles, _: u8, _: u8, _: bool) -> bool {
+            false
+        }
+        fn check_ledge_jump(&self, _: Tiles, _: u8, _: u8, _: u8, _: u8) -> bool {
+            false
+        }
+        fn is_counter_tile(&self, _: Tiles, _: u8) -> bool {
+            false
+        }
+        fn get_tile_at_position(&self, _: Tiles, _: &[u8], _: u8, _: u16, _: u16) -> u8 {
+            0
+        }
+        fn is_door_tile(&self, _: Tiles, _: u8) -> bool {
+            false
+        }
+        fn is_warp_tile(&self, _: Tiles, _: u8) -> bool {
+            false
+        }
+        fn is_warp_carpet_tile_in_front(&self, _: Tiles, _: u8, _: u8) -> bool {
+            false
+        }
+        fn uses_warp_tile_in_front_check(&self, _: Tiles) -> bool {
+            false
+        }
+        fn check_extra_warp_special(&self, _: Tiles, _: u8) -> Option<bool> {
+            None
+        }
     }
     fn npc(i: u8) -> NpcRuntimeState {
-        NpcRuntimeState { npc_index:i, sprite_id:1, x:1+u16::from(i), y:4,
-            home_x:1+u16::from(i), home_y:4, facing:Direction::Down, scripted_frame:None,
-            movement_type:NpcMovementType::Stationary, wander_axis:NpcWanderAxis::Any,
-            range:0, walk_counter:0, delay_counter:0, text_id:i, defeated:false,
-            visible:true, scripted_path:VecDeque::new() }
+        NpcRuntimeState {
+            npc_index: i,
+            sprite_id: 1,
+            x: 1 + u16::from(i),
+            y: 4,
+            home_x: 1 + u16::from(i),
+            home_y: 4,
+            facing: Direction::Down,
+            scripted_frame: None,
+            movement_type: NpcMovementType::Stationary,
+            wander_axis: NpcWanderAxis::Any,
+            range: 0,
+            walk_counter: 0,
+            delay_counter: 0,
+            text_id: i,
+            defeated: false,
+            visible: true,
+            scripted_path: VecDeque::new(),
+        }
     }
     #[test]
     fn callback_only_receives_visible_stationary_idle_npcs_and_default_stays_inert() {
         let mut states: Vec<_> = (0..5).map(npc).collect();
-        states[1].visible=false;
-        states[2].walk_counter=1;
-        states[3].scripted_path.push_back((5,4));
-        states[4].movement_type=NpcMovementType::Wander;
-        states[4].delay_counter=1;
-        let mut calls=Vec::new();
-        update_npc_movement_with_policy_and_stationary(&mut states,20,20,None,10,10,0,&[],Tiles,&Open,
-            NpcWanderPolicy::Default, |slot,n| { calls.push(slot); n.facing=Direction::Right; n.delay_counter=7; });
-        assert_eq!(calls,vec![0]);
-        assert_eq!((states[0].x,states[0].y,states[0].facing,states[0].delay_counter), (1,4,Direction::Right,7));
-        assert_eq!(states[2].walk_counter,0);
-        assert_eq!(states[3].walk_counter,NPC_WALK_FRAMES);
-        assert_eq!(states[4].delay_counter,0);
-        let mut old_api=vec![npc(0)];
-        update_npc_movement_with_policy(&mut old_api,20,20,None,10,10,0,&[],Tiles,&Open,NpcWanderPolicy::Default);
-        assert_eq!((old_api[0].x,old_api[0].y,old_api[0].facing,old_api[0].delay_counter),(1,4,Direction::Down,0));
+        states[1].visible = false;
+        states[2].walk_counter = 1;
+        states[3].scripted_path.push_back((5, 4));
+        states[4].movement_type = NpcMovementType::Wander;
+        states[4].delay_counter = 1;
+        let mut calls = Vec::new();
+        update_npc_movement_with_policy_and_stationary(
+            &mut states,
+            20,
+            20,
+            None,
+            10,
+            10,
+            0,
+            &[],
+            Tiles,
+            &Open,
+            NpcWanderPolicy::Default,
+            |slot, n| {
+                calls.push(slot);
+                n.facing = Direction::Right;
+                n.delay_counter = 7;
+            },
+        );
+        assert_eq!(calls, vec![0]);
+        assert_eq!(
+            (
+                states[0].x,
+                states[0].y,
+                states[0].facing,
+                states[0].delay_counter
+            ),
+            (1, 4, Direction::Right, 7)
+        );
+        assert_eq!(states[2].walk_counter, 0);
+        assert_eq!(states[3].walk_counter, NPC_WALK_FRAMES);
+        assert_eq!(states[4].delay_counter, 0);
+        let mut old_api = vec![npc(0)];
+        update_npc_movement_with_policy(
+            &mut old_api,
+            20,
+            20,
+            None,
+            10,
+            10,
+            0,
+            &[],
+            Tiles,
+            &Open,
+            NpcWanderPolicy::Default,
+        );
+        assert_eq!(
+            (
+                old_api[0].x,
+                old_api[0].y,
+                old_api[0].facing,
+                old_api[0].delay_counter
+            ),
+            (1, 4, Direction::Down, 0)
+        );
     }
 }
