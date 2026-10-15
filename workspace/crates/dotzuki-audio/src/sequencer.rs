@@ -752,10 +752,15 @@ impl Sequencer {
     /// Uses the ordinary SFX-over-music priority without advancing commands,
     /// effects, delays, or trigger flags. Oscillator/envelope phase restarts.
     /// The caller must power the APU and restore its master volume separately.
+    /// Music CHAN4 is a drum-command clock, not a hardware noise voice. Its
+    /// retained APU noise controls (e.g. a completed drum's envelope tail)
+    /// must be saved/restored by the caller; this method leaves them alone.
     pub fn rebuild_apu(&mut self, apu: &mut Apu) {
         let triggers = self.channels.each_ref().map(|channel| channel.trigger);
-        for channel in &mut self.channels {
-            if channel.active {
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            if index == CHAN4 && channel.flags1.contains(ChannelFlags1::NOISE_OR_SFX) {
+                channel.trigger = false;
+            } else if channel.active {
                 channel.trigger = true;
             }
         }
