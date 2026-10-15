@@ -77,6 +77,7 @@ pub const NUM_NOTES: usize = 12;
 /// Pulse wave duty cycle patterns.
 /// Each pattern is 8 steps; 1 = high, 0 = low.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum DutyCycle {
     /// 12.5% — waveform: 00000001
@@ -278,6 +279,7 @@ impl HwChannel {
 
 /// Direction of volume envelope change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum EnvelopeDirection {
     Decrease,
     Increase,
@@ -293,6 +295,7 @@ impl Default for EnvelopeDirection {
 
 /// Direction of frequency sweep (Channel 1 only).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SweepDirection {
     Increase,
     Decrease,
