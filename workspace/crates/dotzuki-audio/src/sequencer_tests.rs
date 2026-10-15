@@ -1106,6 +1106,112 @@ fn seq_with_drums() -> Sequencer {
 }
 
 #[test]
+fn rebuild_apu_preserves_full_state_and_mixed_sfx_drum_priority() {
+    let mut seq = seq_with_drums();
+    let mut old_apu = Apu::new();
+    old_apu.write_register(0xFF26, 0x80);
+    seq.play_music(
+        1,
+        &[
+            vec![0xDC, 0xC7, 0xE5, 0x0F, 0xFF],
+            vec![0xDC, 0xB3, 0xE5, 0x2F, 0xFF],
+            vec![0xDC, 0x12, 0xE5, 0x4F, 0xFF],
+            vec![0xBF, 0x01, 0xFF],
+        ],
+        0x0100,
+    );
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut old_apu);
+    assert!(seq.channels[CHAN1].active && seq.channels[CHAN5].active);
+    assert!(seq.channels[CHAN4].active && seq.channels[CHAN8].active);
+    assert!(!seq.channels[CHAN4].trigger);
+    let full_state = format!("{seq:?}");
+    let mut ordinary = seq.clone();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    apu.write_register(0xFF24, 0x77);
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    // The SFX pulse wins over the music pulse, the second pulse/wave stay
+    // audible, and the drum on CHAN8 wins over the CHAN4 command stream.
+    assert_eq!(apu.read_register(0xFF12), 0xE2);
+    assert_eq!(apu.read_register(0xFF17), 0xB3);
+    assert_eq!(apu.read_register(0xFF1C) & 0x60, 0x20);
+    assert_eq!(apu.read_register(0xFF21), 0xC1);
+    assert_eq!(apu.read_register(0xFF22), 0x33);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0x0F);
+    for mask in [0x11, 0x22, 0x44, 0x88] {
+        apu.write_register(0xFF25, mask);
+        let mut samples = [0.0; 256];
+        crate::output::render_apu_stereo(&mut apu, &mut samples, 44_100);
+        assert!(
+            samples.iter().any(|&sample| sample != 0.0),
+            "mask{mask:02x}"
+        );
+    }
+    // Rebuild consumed no note time: the very next update equals one
+    // ordinary update of the untouched saved state, including all triggers.
+    seq.update_frame(&mut apu);
+    ordinary.update_frame(&mut old_apu);
+    assert_eq!(format!("{seq:?}"), format!("{ordinary:?}"));
+}
+
+#[test]
+fn rebuild_apu_silences_stopped_state_without_advancing_it() {
+    let mut seq = seq_with_drums();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut apu);
+    assert_ne!(apu.read_register(0xFF26) & 1, 0);
+    seq.stop_all();
+    let full_state = format!("{seq:?}");
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0);
+}
+
+#[test]
+fn rebuild_apu_between_drums_preserves_real_noise_tail_without_inventing_one() {
+    let mut seq = seq_with_drums();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    seq.play_music(1, &[vec![], vec![], vec![], vec![0xB3, 1, 0xFF]], 0x0100);
+    seq.update_frame(&mut apu);
+    assert!(seq.channels[CHAN8].active);
+    seq.update_frame(&mut apu); // drum stream has returned; music waits
+    assert!(seq.channels[CHAN4].active);
+    assert!(!seq.channels[CHAN8].active);
+    assert_eq!(apu.read_register(0xFF21), 0xC1);
+    assert_eq!(apu.read_register(0xFF22), 0x33);
+    let full_state = format!("{seq:?}");
+    let noise_before = format!("{:?}", apu.ch4);
+    let mut untouched_apu = apu.clone();
+    let mut ordinary = seq.clone();
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(format!("{:?}", apu.ch4), noise_before);
+    let mut samples = [0.0; 512];
+    let mut untouched_samples = [0.0; 512];
+    crate::output::render_apu_stereo(&mut apu, &mut samples, 44_100);
+    crate::output::render_apu_stereo(&mut untouched_apu, &mut untouched_samples, 44_100);
+    assert_eq!(samples, untouched_samples);
+    assert!(samples.iter().any(|&sample| sample != 0.0));
+
+    // A fresh APU has no saved drum tail: the command clock's default
+    // envelope/frequency must not manufacture a new hardware noise note.
+    let mut fresh = Apu::new();
+    fresh.write_register(0xFF26, 0x80);
+    seq.rebuild_apu(&mut fresh);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(fresh.read_register(0xFF21), 0);
+    assert_eq!(fresh.read_register(0xFF26) & 8, 0);
+    seq.update_frame(&mut apu);
+    ordinary.update_frame(&mut untouched_apu);
+    assert_eq!(format!("{seq:?}"), format!("{ordinary:?}"));
+}
+
+#[test]
 fn test_drum_note_triggers_noise_instrument_on_chan8() {
     let mut seq = seq_with_drums();
     let mut apu = Apu::new();
@@ -1371,5 +1477,103 @@ fn test_override_music_channel_alternate_tempo_pattern() {
         seq.channels[CHAN1].frequency,
         commands::calculate_frequency(2, 4),
         "loop landed in the appended normal body (note D_)"
+    );
+}
+
+#[test]
+fn tempo_resets_music_fraction_before_note_and_preserves_sfx() {
+    // These fixed-point controls start with zero, 1/4, or 255/256 of an
+    // old tick. A tempo command starts all four music carries from zero.
+    for (tempo, delay, fraction) in [(0x00a0u16, 3, 192), (0x007c, 2, 232), (0x0100, 6, 0)] {
+        for previous in [0, 64, 255] {
+            let mut seq = Sequencer::new();
+            for (ch, carry) in seq
+                .channels
+                .iter_mut()
+                .zip([previous, 96, 128, 160, 17, 34, 51, 68])
+            {
+                ch.delay_frac = carry;
+                ch.delay_counter = 1;
+            }
+            let ch = &mut seq.channels[CHAN1];
+            ch.active = true;
+            ch.sound_id = 1;
+            ch.note_speed = 6;
+            ch.data = vec![0xed, (tempo >> 8) as u8, tempo as u8, 0xc0];
+            seq.update_frame(&mut Apu::new());
+            assert_eq!(seq.music_tempo, tempo);
+            assert_eq!(
+                seq.channels[CHAN1].delay_counter, delay,
+                "tempo={tempo}, previous={previous}"
+            );
+            assert_eq!(
+                seq.channels
+                    .iter()
+                    .map(|ch| ch.delay_frac)
+                    .collect::<Vec<_>>(),
+                [fraction, 0, 0, 0, 17, 34, 51, 68],
+                "tempo={tempo}, previous={previous}"
+            );
+        }
+    }
+}
+
+#[test]
+fn tempo_resets_sfx_fraction_before_note_and_preserves_music() {
+    let mut seq = Sequencer::new();
+    seq.music_tempo = 0x017f;
+    for (ch, carry) in seq
+        .channels
+        .iter_mut()
+        .zip([17, 34, 51, 68, 64, 96, 128, 160])
+    {
+        ch.delay_frac = carry;
+        ch.delay_counter = 1;
+    }
+    let ch = &mut seq.channels[CHAN5];
+    ch.active = true;
+    ch.sound_id = 1;
+    ch.flags2.insert(ChannelFlags2::EXECUTE_MUSIC);
+    ch.note_speed = 6;
+    ch.data = vec![0xed, 0x01, 0x00, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(seq.music_tempo, 0x017f);
+    assert_eq!(seq.sfx_tempo, 0x0100);
+    assert_eq!(seq.channels[CHAN5].delay_counter, 6);
+    assert_eq!(
+        seq.channels
+            .iter()
+            .map(|ch| ch.delay_frac)
+            .collect::<Vec<_>>(),
+        [17, 34, 51, 68, 0, 0, 0, 0]
+    );
+}
+
+#[test]
+fn tempo_on_later_channel_clears_earlier_fraction_without_retiming_its_note() {
+    let mut seq = Sequencer::new();
+    for i in [CHAN1, CHAN2] {
+        let ch = &mut seq.channels[i];
+        ch.active = true;
+        ch.sound_id = 1;
+        ch.note_speed = 6;
+        ch.delay_counter = 1;
+        ch.delay_frac = 37;
+    }
+    seq.channels[CHAN1].data = vec![0xc0];
+    seq.channels[CHAN2].data = vec![0xed, 0x00, 0xa0, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(
+        seq.channels[CHAN1].delay_counter, 6,
+        "earlier note used the old tempo"
+    );
+    assert_eq!(
+        seq.channels[CHAN1].delay_frac, 0,
+        "later tempo command clears the group"
+    );
+    assert_eq!(seq.channels[CHAN2].delay_counter, 3);
+    assert_eq!(
+        seq.channels[CHAN2].delay_frac, 192,
+        "this note accumulates after the reset"
     );
 }

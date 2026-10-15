@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1
 
 The 22 `AudioCommand` variants that channel command lists may contain, with
 their fields; see [the audio guide](../how-to/audio.md) for the `TrackDef`
@@ -24,7 +24,7 @@ the engine's byte-code channel commands one-to-one. The authoritative schema is
 | `vibrato` | `delay`, `depth_rate` (depth<<4 \| rate) | Vibrato with onset delay |
 | `pitch_slide` | `length_modifier`, `octave_pitch` (octave<<4 \| pitch) | Begin a pitch slide |
 | `duty_cycle` | `value` 0–3 | Square-wave duty cycle |
-| `tempo` | `value` | Set tempo (8.8 fixed-point) |
+| `tempo` | `value` | Set tempo (8.8 fixed-point) and reset the channel group’s fractional note delays |
 | `stereo_panning` | `value` | NR51 panning byte |
 | `unknown_ef` | `value` | Unused `$EF` command (round-trip only) |
 | `volume` | `value` | Master volume (NR50) |
@@ -37,6 +37,12 @@ the engine's byte-code channel commands one-to-one. The authoritative schema is
 | `sfx_square_note` | `length`, `volume_envelope`, `frequency` | SFX square note with explicit envelope + 11-bit frequency |
 | `sfx_noise_note` | `length`, `volume_envelope`, `noise_params` | SFX noise note with explicit envelope |
 | `end_of_data` | — | Terminator |
+
+A `tempo` command on a music channel resets the fractional note-delay remainders of all four
+music channels; an SFX channel resets the four SFX channels instead. The other group retains its
+remainders. This reset precedes the next note or rest in the command stream and leaves integer
+note-delay counters unchanged. For example, at tempo `0x00A0` and note speed `6`, a length-`1`
+rest starts with delay `3` and remainder `192`, regardless of the previous remainder.
 
 ## File tracks (optional `modern-audio`)
 

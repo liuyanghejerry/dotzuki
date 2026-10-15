@@ -1,12 +1,12 @@
 # 音频命令参考
 
-> 本文是 `reference/audio-commands.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/audio-commands.md` 的中文翻译，同步至引擎版本 v0.10.1（源文档 commit a717a6106cb8b44a5cdd5c6226f29f20d0d9a496）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1
 
 通道命令列表中可包含的 22 个 `AudioCommand` 变体及其字段；`TrackDef` 格式与
 播放调用见[音频指南](../how-to/audio.md)。
@@ -25,7 +25,7 @@
 | `vibrato` | `delay`，`depth_rate` (depth<<4 \| rate) | 带起始延迟的颤音 |
 | `pitch_slide` | `length_modifier`，`octave_pitch` (octave<<4 \| pitch) | 开始滑音 |
 | `duty_cycle` | `value` 0–3 | 方波占空比 |
-| `tempo` | `value` | 设置 tempo（8.8 定点数） |
+| `tempo` | `value` | 设置 tempo（8.8 定点数）并重置该通道组的小数音符延迟 |
 | `stereo_panning` | `value` | NR51 声像字节 |
 | `unknown_ef` | `value` | 未使用的 `$EF` 命令（仅往返保留） |
 | `volume` | `value` | 主音量（NR50） |
@@ -38,6 +38,11 @@
 | `sfx_square_note` | `length`，`volume_envelope`，`frequency` | 带显式包络与 11 位频率的 SFX 方波音符 |
 | `sfx_noise_note` | `length`，`volume_envelope`，`noise_params` | 带显式包络的 SFX 噪声音符 |
 | `end_of_data` | — | 结束标记 |
+
+音乐通道的 `tempo` 命令会重置全部四个音乐通道的音符延迟小数余量；SFX 通道则重置四个
+SFX 通道。另一组通道保留原有余量。重置发生在命令流中的下一个音符或休止符之前，整数
+音符延迟计数器保持不变。例如，tempo 为 `0x00A0`、音符速度为 `6` 时，长度为 `1` 的
+休止符以延迟 `3`、余量 `192` 开始，不受先前余量影响。
 
 ## 文件音轨（可选 `modern-audio`）
 

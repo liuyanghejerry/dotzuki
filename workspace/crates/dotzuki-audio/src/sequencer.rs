@@ -359,10 +359,17 @@ impl Sequencer {
                     self.channels[ch_idx].duty_cycle = duty & 0x03;
                 }
                 Command::Tempo(tempo) => {
-                    if is_sfx_channel(ch_idx) {
+                    let first_channel = if is_sfx_channel(ch_idx) {
                         self.sfx_tempo = tempo;
+                        CHAN5
                     } else {
                         self.music_tempo = tempo;
+                        CHAN1
+                    };
+                    // A tempo command starts the group's fixed-point carries
+                    // over before the following note computes its duration.
+                    for channel in &mut self.channels[first_channel..first_channel + 4] {
+                        channel.delay_frac = 0;
                     }
                 }
                 Command::StereoPanning(pan) => {
@@ -740,6 +747,28 @@ impl Sequencer {
     }
 
     // ── APU Interface ────────────────────────────────────────────────────
+
+    /// Rebuild hardware registers after restoring logical playback state.
+    /// Uses the ordinary SFX-over-music priority without advancing commands,
+    /// effects, delays, or trigger flags. Oscillator/envelope phase restarts.
+    /// The caller must power the APU and restore its master volume separately.
+    /// Music CHAN4 is a drum-command clock, not a hardware noise voice. Its
+    /// retained APU noise controls (e.g. a completed drum's envelope tail)
+    /// must be saved/restored by the caller; this method leaves them alone.
+    pub fn rebuild_apu(&mut self, apu: &mut Apu) {
+        let triggers = self.channels.each_ref().map(|channel| channel.trigger);
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            if index == CHAN4 && channel.flags1.contains(ChannelFlags1::NOISE_OR_SFX) {
+                channel.trigger = false;
+            } else if channel.active {
+                channel.trigger = true;
+            }
+        }
+        self.apply_to_apu(apu);
+        for (channel, trigger) in self.channels.iter_mut().zip(triggers) {
+            channel.trigger = trigger;
+        }
+    }
 
     /// Apply all channel states to the APU hardware registers.
     ///
