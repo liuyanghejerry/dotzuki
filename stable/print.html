@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-817f25d8.js";
+            window.path_to_searchindex_js = "searchindex-65f46b46.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7b7e3677.js"></script>
@@ -6097,7 +6097,7 @@ only on the AST provider; the JS provider compiles map scenes only.</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
 </ul>
 </blockquote>
 <p>The 22 <code>AudioCommand</code> variants that channel command lists may contain, with
@@ -6121,7 +6121,7 @@ the engine’s byte-code channel commands one-to-one. The authoritative schema i
 <tr><td><code>vibrato</code></td><td><code>delay</code>, <code>depth_rate</code> (depth&lt;&lt;4 | rate)</td><td>Vibrato with onset delay</td></tr>
 <tr><td><code>pitch_slide</code></td><td><code>length_modifier</code>, <code>octave_pitch</code> (octave&lt;&lt;4 | pitch)</td><td>Begin a pitch slide</td></tr>
 <tr><td><code>duty_cycle</code></td><td><code>value</code> 0–3</td><td>Square-wave duty cycle</td></tr>
-<tr><td><code>tempo</code></td><td><code>value</code></td><td>Set tempo (8.8 fixed-point)</td></tr>
+<tr><td><code>tempo</code></td><td><code>value</code></td><td>Set tempo (8.8 fixed-point) and reset the channel group’s fractional note delays</td></tr>
 <tr><td><code>stereo_panning</code></td><td><code>value</code></td><td>NR51 panning byte</td></tr>
 <tr><td><code>unknown_ef</code></td><td><code>value</code></td><td>Unused <code>$EF</code> command (round-trip only)</td></tr>
 <tr><td><code>volume</code></td><td><code>value</code></td><td>Master volume (NR50)</td></tr>
@@ -6137,6 +6137,11 @@ the engine’s byte-code channel commands one-to-one. The authoritative schema i
 </tbody>
 </table>
 </div>
+<p>A <code>tempo</code> command on a music channel resets the fractional note-delay remainders of all four
+music channels; an SFX channel resets the four SFX channels instead. The other group retains its
+remainders. This reset precedes the next note or rest in the command stream and leaves integer
+note-delay counters unchanged. For example, at tempo <code>0x00A0</code> and note speed <code>6</code>, a length-<code>1</code>
+rest starts with delay <code>3</code> and remainder <code>192</code>, regardless of the previous remainder.</p>
 <h2 id="file-tracks-optional-modern-audio"><a class="header" href="#file-tracks-optional-modern-audio">File tracks (optional <code>modern-audio</code>)</a></h2>
 <p>Beyond the <code>AudioCommand</code> chiptune vocabulary above, a project may provide
 real audio files (<code>.wav</code>, <code>.ogg</code>, <code>.flac</code>, <code>.mp3</code>) under <code>data/audio/</code>. Scene
@@ -17280,7 +17285,7 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="音频命令参考"><a class="header" href="#音频命令参考">音频命令参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/audio-commands.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/audio-commands.md</code> 的中文翻译，同步至引擎版本 v0.10.1（源文档 commit a717a6106cb8b44a5cdd5c6226f29f20d0d9a496）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -17288,7 +17293,7 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1</li>
 </ul>
 </blockquote>
 <p>通道命令列表中可包含的 22 个 <code>AudioCommand</code> 变体及其字段；<code>TrackDef</code> 格式与
@@ -17310,7 +17315,7 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 <tr><td><code>vibrato</code></td><td><code>delay</code>，<code>depth_rate</code> (depth&lt;&lt;4 | rate)</td><td>带起始延迟的颤音</td></tr>
 <tr><td><code>pitch_slide</code></td><td><code>length_modifier</code>，<code>octave_pitch</code> (octave&lt;&lt;4 | pitch)</td><td>开始滑音</td></tr>
 <tr><td><code>duty_cycle</code></td><td><code>value</code> 0–3</td><td>方波占空比</td></tr>
-<tr><td><code>tempo</code></td><td><code>value</code></td><td>设置 tempo（8.8 定点数）</td></tr>
+<tr><td><code>tempo</code></td><td><code>value</code></td><td>设置 tempo（8.8 定点数）并重置该通道组的小数音符延迟</td></tr>
 <tr><td><code>stereo_panning</code></td><td><code>value</code></td><td>NR51 声像字节</td></tr>
 <tr><td><code>unknown_ef</code></td><td><code>value</code></td><td>未使用的 <code>$EF</code> 命令（仅往返保留）</td></tr>
 <tr><td><code>volume</code></td><td><code>value</code></td><td>主音量（NR50）</td></tr>
@@ -17326,6 +17331,10 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 </tbody>
 </table>
 </div>
+<p>音乐通道的 <code>tempo</code> 命令会重置全部四个音乐通道的音符延迟小数余量；SFX 通道则重置四个
+SFX 通道。另一组通道保留原有余量。重置发生在命令流中的下一个音符或休止符之前，整数
+音符延迟计数器保持不变。例如，tempo 为 <code>0x00A0</code>、音符速度为 <code>6</code> 时，长度为 <code>1</code> 的
+休止符以延迟 <code>3</code>、余量 <code>192</code> 开始，不受先前余量影响。</p>
 <h2 id="文件音轨可选-modern-audio"><a class="header" href="#文件音轨可选-modern-audio">文件音轨（可选 <code>modern-audio</code>）</a></h2>
 <p>在上述 <code>AudioCommand</code> 芯片音乐词汇表之外，项目还可以在 <code>data/audio/</code> 下提供真实的
 音频文件（<code>.wav</code>、<code>.ogg</code>、<code>.flac</code>、<code>.mp3</code>）。场景音轨 id 先按 JSON <code>TrackDef</code> 文档
