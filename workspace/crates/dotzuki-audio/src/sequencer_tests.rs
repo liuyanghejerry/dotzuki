@@ -1106,6 +1106,72 @@ fn seq_with_drums() -> Sequencer {
 }
 
 #[test]
+fn rebuild_apu_preserves_full_state_and_mixed_sfx_drum_priority() {
+    let mut seq = seq_with_drums();
+    let mut old_apu = Apu::new();
+    old_apu.write_register(0xFF26, 0x80);
+    seq.play_music(
+        1,
+        &[
+            vec![0xDC, 0xC7, 0xE5, 0x0F, 0xFF],
+            vec![0xDC, 0xB3, 0xE5, 0x2F, 0xFF],
+            vec![0xDC, 0x12, 0xE5, 0x4F, 0xFF],
+            vec![0xBF, 0x01, 0xFF],
+        ],
+        0x0100,
+    );
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut old_apu);
+    assert!(seq.channels[CHAN1].active && seq.channels[CHAN5].active);
+    assert!(seq.channels[CHAN4].active && seq.channels[CHAN8].active);
+    assert!(!seq.channels[CHAN4].trigger);
+    let full_state = format!("{seq:?}");
+    let mut ordinary = seq.clone();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    apu.write_register(0xFF24, 0x77);
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    // The SFX pulse wins over the music pulse, the second pulse/wave stay
+    // audible, and the drum on CHAN8 wins over the CHAN4 command stream.
+    assert_eq!(apu.read_register(0xFF12), 0xE2);
+    assert_eq!(apu.read_register(0xFF17), 0xB3);
+    assert_eq!(apu.read_register(0xFF1C) & 0x60, 0x20);
+    assert_eq!(apu.read_register(0xFF21), 0xC1);
+    assert_eq!(apu.read_register(0xFF22), 0x33);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0x0F);
+    for mask in [0x11, 0x22, 0x44, 0x88] {
+        apu.write_register(0xFF25, mask);
+        let mut samples = [0.0; 256];
+        crate::output::render_apu_stereo(&mut apu, &mut samples, 44_100);
+        assert!(
+            samples.iter().any(|&sample| sample != 0.0),
+            "mask{mask:02x}"
+        );
+    }
+    // Rebuild consumed no note time: the very next update equals one
+    // ordinary update of the untouched saved state, including all triggers.
+    seq.update_frame(&mut apu);
+    ordinary.update_frame(&mut old_apu);
+    assert_eq!(format!("{seq:?}"), format!("{ordinary:?}"));
+}
+
+#[test]
+fn rebuild_apu_silences_stopped_state_without_advancing_it() {
+    let mut seq = seq_with_drums();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut apu);
+    assert_ne!(apu.read_register(0xFF26) & 1, 0);
+    seq.stop_all();
+    let full_state = format!("{seq:?}");
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0);
+}
+
+#[test]
 fn test_drum_note_triggers_noise_instrument_on_chan8() {
     let mut seq = seq_with_drums();
     let mut apu = Apu::new();
