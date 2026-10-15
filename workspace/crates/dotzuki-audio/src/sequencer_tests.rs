@@ -1373,3 +1373,101 @@ fn test_override_music_channel_alternate_tempo_pattern() {
         "loop landed in the appended normal body (note D_)"
     );
 }
+
+#[test]
+fn tempo_resets_music_fraction_before_note_and_preserves_sfx() {
+    // These fixed-point controls start with zero, 1/4, or 255/256 of an
+    // old tick. A tempo command starts all four music carries from zero.
+    for (tempo, delay, fraction) in [(0x00a0u16, 3, 192), (0x007c, 2, 232), (0x0100, 6, 0)] {
+        for previous in [0, 64, 255] {
+            let mut seq = Sequencer::new();
+            for (ch, carry) in seq
+                .channels
+                .iter_mut()
+                .zip([previous, 96, 128, 160, 17, 34, 51, 68])
+            {
+                ch.delay_frac = carry;
+                ch.delay_counter = 1;
+            }
+            let ch = &mut seq.channels[CHAN1];
+            ch.active = true;
+            ch.sound_id = 1;
+            ch.note_speed = 6;
+            ch.data = vec![0xed, (tempo >> 8) as u8, tempo as u8, 0xc0];
+            seq.update_frame(&mut Apu::new());
+            assert_eq!(seq.music_tempo, tempo);
+            assert_eq!(
+                seq.channels[CHAN1].delay_counter, delay,
+                "tempo={tempo}, previous={previous}"
+            );
+            assert_eq!(
+                seq.channels
+                    .iter()
+                    .map(|ch| ch.delay_frac)
+                    .collect::<Vec<_>>(),
+                [fraction, 0, 0, 0, 17, 34, 51, 68],
+                "tempo={tempo}, previous={previous}"
+            );
+        }
+    }
+}
+
+#[test]
+fn tempo_resets_sfx_fraction_before_note_and_preserves_music() {
+    let mut seq = Sequencer::new();
+    seq.music_tempo = 0x017f;
+    for (ch, carry) in seq
+        .channels
+        .iter_mut()
+        .zip([17, 34, 51, 68, 64, 96, 128, 160])
+    {
+        ch.delay_frac = carry;
+        ch.delay_counter = 1;
+    }
+    let ch = &mut seq.channels[CHAN5];
+    ch.active = true;
+    ch.sound_id = 1;
+    ch.flags2.insert(ChannelFlags2::EXECUTE_MUSIC);
+    ch.note_speed = 6;
+    ch.data = vec![0xed, 0x01, 0x00, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(seq.music_tempo, 0x017f);
+    assert_eq!(seq.sfx_tempo, 0x0100);
+    assert_eq!(seq.channels[CHAN5].delay_counter, 6);
+    assert_eq!(
+        seq.channels
+            .iter()
+            .map(|ch| ch.delay_frac)
+            .collect::<Vec<_>>(),
+        [17, 34, 51, 68, 0, 0, 0, 0]
+    );
+}
+
+#[test]
+fn tempo_on_later_channel_clears_earlier_fraction_without_retiming_its_note() {
+    let mut seq = Sequencer::new();
+    for i in [CHAN1, CHAN2] {
+        let ch = &mut seq.channels[i];
+        ch.active = true;
+        ch.sound_id = 1;
+        ch.note_speed = 6;
+        ch.delay_counter = 1;
+        ch.delay_frac = 37;
+    }
+    seq.channels[CHAN1].data = vec![0xc0];
+    seq.channels[CHAN2].data = vec![0xed, 0x00, 0xa0, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(
+        seq.channels[CHAN1].delay_counter, 6,
+        "earlier note used the old tempo"
+    );
+    assert_eq!(
+        seq.channels[CHAN1].delay_frac, 0,
+        "later tempo command clears the group"
+    );
+    assert_eq!(seq.channels[CHAN2].delay_counter, 3);
+    assert_eq!(
+        seq.channels[CHAN2].delay_frac, 192,
+        "this note accumulates after the reset"
+    );
+}
