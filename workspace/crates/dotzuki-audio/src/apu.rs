@@ -8,6 +8,29 @@ use crate::CYCLES_PER_FRAME_SEQ_TICK;
 
 // ── APU ──────────────────────────────────────────────────────────────────
 
+/// Complete software APU playback state, including oscillator and frame-sequencer phase.
+///
+/// Capture this value with [`Apu::playback_state`], including when the APU is silent or
+/// powered off. The value contains no register sink or device binding and cannot advance
+/// playback. Sequencer state and device buffers remain with their respective owners.
+///
+/// With the `serde` feature, the value can round-trip through a snapshot without replacing
+/// private counters with register defaults. Restoring this software state does not rewind
+/// the phases of physical sound hardware connected through a register sink.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ApuPlaybackState {
+    ch1: PulseChannel,
+    ch2: PulseChannel,
+    ch3: WaveChannel,
+    ch4: NoiseChannel,
+    nr50: u8,
+    nr51: u8,
+    power: bool,
+    frame_seq_counter: u32,
+    frame_seq_step: u8,
+}
+
 /// The Game Boy APU.
 ///
 /// Tick this once per CPU cycle. The frame sequencer internally drives
@@ -62,6 +85,53 @@ impl Apu {
     /// The software APU remains available for deterministic tests and PCM output.
     pub fn set_register_sink(&mut self, sink: Option<fn(u16, u8)>) {
         self.register_sink = sink;
+    }
+
+    /// Capture all software playback fields without advancing time or writing registers.
+    ///
+    /// ```
+    /// use dotzuki_audio::apu::Apu;
+    ///
+    /// let mut apu = Apu::new();
+    /// apu.write_register(0xFF26, 0x80);
+    /// apu.tick_n(12_345);
+    /// let saved = apu.playback_state();
+    /// apu.tick_n(777);
+    /// apu.restore_playback_state(&saved);
+    /// assert_eq!(apu.playback_state(), saved);
+    /// ```
+    pub fn playback_state(&self) -> ApuPlaybackState {
+        ApuPlaybackState {
+            ch1: self.ch1.clone(),
+            ch2: self.ch2.clone(),
+            ch3: self.ch3.clone(),
+            ch4: self.ch4.clone(),
+            nr50: self.nr50,
+            nr51: self.nr51,
+            power: self.power,
+            frame_seq_counter: self.frame_seq_counter,
+            frame_seq_step: self.frame_seq_step,
+        }
+    }
+
+    /// Replace software playback fields while retaining this APU's register sink.
+    ///
+    /// This operation does not tick, trigger channels, write registers, or clamp counters
+    /// to current periods. Use a state captured from a software APU; external sequencer
+    /// state and physical sound hardware are not restored by this operation.
+    pub fn restore_playback_state(&mut self, state: &ApuPlaybackState) {
+        *self = Self {
+            register_sink: self.register_sink,
+            ch1: state.ch1.clone(),
+            ch2: state.ch2.clone(),
+            ch3: state.ch3.clone(),
+            ch4: state.ch4.clone(),
+            nr50: state.nr50,
+            nr51: state.nr51,
+            power: state.power,
+            frame_seq_counter: state.frame_seq_counter,
+            frame_seq_step: state.frame_seq_step,
+        };
     }
 
     /// Advance the APU by one CPU cycle.
@@ -400,6 +470,10 @@ impl Default for Apu {
         Self::new()
     }
 }
+
+#[cfg(test)]
+#[path = "apu_playback_state_tests.rs"]
+mod playback_state_tests;
 
 #[cfg(test)]
 mod register_sink_tests {

@@ -9,7 +9,8 @@ use crate::{DutyCycle, EnvelopeDirection, SweepDirection, WAVE_RAM_SIZE};
 
 /// Shared length counter component (all 4 channels have one).
 /// When enabled and the counter reaches zero the channel is disabled.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LengthCounter {
     /// Whether the length counter is active.
     pub enabled: bool,
@@ -48,7 +49,8 @@ impl Default for LengthCounter {
 
 /// Volume envelope (Channels 1, 2, 4).
 /// Adjusts volume at 64 Hz (frame sequencer step 7).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VolumeEnvelope {
     /// Initial volume (0-15), loaded on trigger.
     pub initial_volume: u8,
@@ -137,7 +139,8 @@ impl Default for VolumeEnvelope {
 
 /// Frequency sweep (Channel 1 only).
 /// Adjusts frequency at 128 Hz (frame sequencer steps 2, 6).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FrequencySweep {
     /// Sweep period (0 = disabled, 1-7).
     pub period: u8,
@@ -258,7 +261,8 @@ impl Default for FrequencySweep {
 
 /// Pulse wave channel (Channels 1 and 2).
 /// Channel 1 has a frequency sweep; Channel 2 does not.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PulseChannel {
     /// Whether this channel is currently active.
     pub enabled: bool,
@@ -413,7 +417,8 @@ impl PulseChannel {
 
 /// Programmable wave channel (Channel 3).
 /// Plays a custom 32-sample (4-bit each) waveform from wave RAM.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WaveChannel {
     /// Whether this channel is currently active.
     pub enabled: bool,
@@ -556,7 +561,8 @@ impl Default for WaveChannel {
 // ── Noise Channel ────────────────────────────────────────────────────────
 
 /// Noise channel (Channel 4) using a Linear Feedback Shift Register (LFSR).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NoiseChannel {
     /// Whether this channel is currently active.
     pub enabled: bool,
