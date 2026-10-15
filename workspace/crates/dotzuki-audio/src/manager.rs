@@ -161,6 +161,19 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.last_music_id
     }
 
+    /// Resume states retained when switching away from a playing track.
+    /// A logical playback snapshot must preserve these alongside the current
+    /// music id and sequencer, so later track switches resume the saved past.
+    pub fn saved_music_states(&self) -> &[(M, Sequencer)] {
+        &self.saved_music_states
+    }
+
+    /// Install resume states previously captured by [`Self::saved_music_states`].
+    /// This does not select a track, advance the sequencer, or touch the APU.
+    pub fn restore_saved_music_states(&mut self, states: Vec<(M, Sequencer)>) {
+        self.saved_music_states = states;
+    }
+
     pub fn set_no_audio_fade_out(&mut self, val: bool) {
         self.no_audio_fade_out = val;
     }
@@ -498,6 +511,52 @@ mod tests {
 
     fn manager() -> AudioManager<Music, Sfx> {
         AudioManager::new(music_track, sfx_track)
+    }
+
+    #[test]
+    fn restored_resume_cache_returns_to_the_saved_past_instead_of_the_future() {
+        let mut original = manager();
+        original.play_music(Music::ThemeA);
+        for _ in 0..3 {
+            original.update_frame();
+        }
+        original.play_music(Music::ThemeB);
+        original.update_frame();
+        let saved_current = original.sequencer.clone();
+        let saved_cache = original.saved_music_states().to_vec();
+        assert_eq!(saved_cache.len(), 1);
+        assert_eq!(saved_cache[0].0, Music::ThemeA);
+        let saved_past = format!("{:?}", saved_cache[0].1);
+
+        let mut restored = manager();
+        restored.play_music(Music::ThemeA);
+        for _ in 0..12 {
+            restored.update_frame();
+        }
+        restored.play_music(Music::ThemeB);
+        assert_ne!(
+            format!("{:?}", restored.saved_music_states()[0].1),
+            saved_past
+        );
+        restored.sequencer = saved_current;
+        let current_before = format!("{:?}", restored.sequencer);
+        restored.restore_saved_music_states(saved_cache);
+        assert_eq!(format!("{:?}", restored.sequencer), current_before);
+        assert_eq!(restored.last_music_id(), Some(Music::ThemeB));
+
+        original.play_music(Music::ThemeA);
+        restored.play_music(Music::ThemeA);
+        assert_eq!(format!("{:?}", restored.sequencer), saved_past);
+        for _ in 0..60 {
+            assert_eq!(
+                format!("{:?}", restored.sequencer),
+                format!("{:?}", original.sequencer)
+            );
+            original.update_frame();
+            restored.update_frame();
+        }
+        restored.restore_saved_music_states(Vec::new());
+        assert!(restored.saved_music_states().is_empty());
     }
 
     #[test]

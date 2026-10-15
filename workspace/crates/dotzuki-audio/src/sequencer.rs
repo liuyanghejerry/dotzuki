@@ -748,6 +748,28 @@ impl Sequencer {
 
     // ── APU Interface ────────────────────────────────────────────────────
 
+    /// Rebuild hardware registers after restoring logical playback state.
+    /// Uses the ordinary SFX-over-music priority without advancing commands,
+    /// effects, delays, or trigger flags. Oscillator/envelope phase restarts.
+    /// The caller must power the APU and restore its master volume separately.
+    /// Music CHAN4 is a drum-command clock, not a hardware noise voice. Its
+    /// retained APU noise controls (e.g. a completed drum's envelope tail)
+    /// must be saved/restored by the caller; this method leaves them alone.
+    pub fn rebuild_apu(&mut self, apu: &mut Apu) {
+        let triggers = self.channels.each_ref().map(|channel| channel.trigger);
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            if index == CHAN4 && channel.flags1.contains(ChannelFlags1::NOISE_OR_SFX) {
+                channel.trigger = false;
+            } else if channel.active {
+                channel.trigger = true;
+            }
+        }
+        self.apply_to_apu(apu);
+        for (channel, trigger) in self.channels.iter_mut().zip(triggers) {
+            channel.trigger = trigger;
+        }
+    }
+
     /// Apply all channel states to the APU hardware registers.
     ///
     /// For each HW channel, determine which logical channel takes priority
