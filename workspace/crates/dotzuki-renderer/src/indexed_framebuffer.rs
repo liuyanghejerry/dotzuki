@@ -1679,12 +1679,7 @@ impl<C: ColorIndex, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
             palette.color(GbColor::DarkGray),
             palette.color(GbColor::Black),
         ];
-        let mapped = [
-            self.quantize_color(rgba[0]),
-            self.quantize_color(rgba[1]),
-            self.quantize_color(rgba[2]),
-            self.quantize_color(rgba[3]),
-        ];
+        let mapped = self.map_tile_palette(rgba, transparent);
         let width = self.width() as i32;
         let height = self.height() as i32;
 
@@ -1776,6 +1771,21 @@ impl<C: ColorIndex, const LINEAR: bool> RgbaIndexedFrameBuffer<C, LINEAR> {
                 }
             }
         }
+    }
+
+    // Share the four-color conversion between tile blits without changing
+    // the scalar quantizer used by pixels, glyphs and rectangles.
+    #[inline(never)]
+    fn map_tile_palette(&self, rgba: [Rgba; 4], transparent: bool) -> [C; 4] {
+        rgba.map(|color| {
+            if transparent && color == Rgba::TRANSPARENT {
+                // Both tile write paths skip this exact color. Index zero
+                // is a placeholder; the identity test also ignores skipped zero.
+                C::from_u8(0)
+            } else {
+                self.quantize_color(color)
+            }
+        })
     }
 
     /// Copy a horizontal line of RGBA data into the buffer (each pixel
@@ -2173,6 +2183,197 @@ mod facade_tests {
         let mut fb = fb();
         fb.set_pixel(3, 3, Rgba::TRANSPARENT);
         assert_eq!(fb.get_index(3, 3), Some(GbColor::Black));
+    }
+
+    #[test]
+    fn rgba_fallback_preserves_palette_count_and_lower_index_ties() {
+        fn check<const LINEAR: bool>(base: Palette, expected: GbColor) {
+            let blue = Rgba::rgb(0, 0, 200);
+            let halfway = Rgba::rgb(100, 0, 100);
+            let mut fb = RgbaIndexedFrameBuffer::<GbColor, LINEAR>::with_palette(
+                RenderConfig::new(8, 1),
+                blue,
+                base,
+            );
+            assert!(!fb.fast_grayscale);
+            assert_eq!(fb.get_index(0, 0), Some(GbColor::LightGray));
+            assert!(fb.set_pixel(0, 0, halfway));
+            assert_eq!(fb.get_index(0, 0), Some(expected));
+
+            let draw_palette = Palette::new(&[halfway, blue, Rgba::BLACK, Rgba::WHITE]);
+            fb.blit_gb_tile(0, 0, &Tile::blank(), &draw_palette, false, false, false);
+            for x in 0..8 {
+                assert_eq!(fb.get_index(x, 0), Some(expected));
+            }
+        }
+
+        let mut base = Palette::new(&[Rgba::rgb(200, 0, 0), Rgba::rgb(0, 0, 200)]);
+        // A perfect match outside count must not win over the first tied entry.
+        base.colors[2] = Rgba::rgb(100, 0, 100);
+        check::<false>(base, GbColor::White);
+        check::<true>(base, GbColor::White);
+        // Including that entry makes the exact match win in either storage layout.
+        base.count = 3;
+        check::<false>(base, GbColor::DarkGray);
+        check::<true>(base, GbColor::DarkGray);
+    }
+
+    #[test]
+    fn tile_palette_skips_only_exact_transparent_rgba_when_enabled() {
+        fn check<const LINEAR: bool>() {
+            let red = Rgba::rgb(200, 0, 0);
+            let blue = Rgba::rgb(0, 0, 200);
+            let zero_alpha_color = Rgba::new(1, 2, 3, 0);
+            let base = Palette::new(&[red, Rgba::TRANSPARENT, zero_alpha_color, blue]);
+            let mut tile = Tile::blank();
+            for row in &mut tile.pixels {
+                *row = [0, 1, 2, 3, 0, 1, 2, 3];
+            }
+            // Put the exact transparent color at both zero and nonzero source
+            // indices. A nonzero transparent entry must disable the bulk copy.
+            for (draw, opaque, transparent) in [
+                (
+                    Palette::new(&[Rgba::TRANSPARENT, zero_alpha_color, red, blue]),
+                    [1, 2, 0, 3],
+                    [3, 2, 0, 3],
+                ),
+                (
+                    Palette::new(&[red, Rgba::TRANSPARENT, zero_alpha_color, blue]),
+                    [0, 1, 2, 3],
+                    [0, 3, 2, 3],
+                ),
+            ] {
+                for (enabled, indices) in [(false, opaque), (true, transparent)] {
+                    let mut fb = RgbaIndexedFrameBuffer::<GbColor, LINEAR>::with_palette(
+                        RenderConfig::new(8, 8),
+                        blue,
+                        base,
+                    );
+                    assert!(!fb.fast_grayscale);
+                    fb.blit_gb_tile(0, 0, &tile, &draw, enabled, false, false);
+                    for y in 0..8 {
+                        for x in 0..8 {
+                            assert_eq!(
+                                fb.get_index(x, y),
+                                Some(GbColor::from_u8(indices[x as usize % 4])),
+                                "transparent={enabled}, layout={LINEAR}, ({x}, {y})"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        check::<false>();
+        check::<true>();
+    }
+
+    #[test]
+    fn tile_palette_mapping_preserves_full_sixteen_color_indices() {
+        fn check<const LINEAR: bool>() {
+            let red = Rgba::rgb(200, 0, 0);
+            let blue = Rgba::rgb(0, 0, 200);
+            let zero_alpha_color = Rgba::new(1, 2, 3, 0);
+            let mut colors = [Rgba::BLACK; 16];
+            colors[0] = red;
+            colors[9] = blue;
+            colors[10] = Rgba::TRANSPARENT;
+            colors[15] = zero_alpha_color;
+            let base = Palette::<GbaColor>::from_gba_palette(colors);
+            let draw = Palette::new(&[blue, Rgba::TRANSPARENT, zero_alpha_color, red]);
+            let mut tile = Tile::blank();
+            for row in &mut tile.pixels {
+                *row = [0, 1, 2, 3, 0, 1, 2, 3];
+            }
+            for (enabled, indices) in [(false, [9, 10, 15, 0]), (true, [9, 1, 15, 0])] {
+                let mut fb = RgbaIndexedFrameBuffer::<GbaColor, LINEAR>::with_palette(
+                    RenderConfig::new(8, 8),
+                    Rgba::BLACK,
+                    base,
+                );
+                assert_eq!(fb.get_index(0, 0), Some(GbaColor(1)));
+                fb.blit_gb_tile(0, 0, &tile, &draw, enabled, false, false);
+                for y in 0..8 {
+                    for x in 0..8 {
+                        assert_eq!(fb.get_index(x, y), Some(GbaColor(indices[x as usize % 4])));
+                    }
+                }
+            }
+        }
+        check::<false>();
+        check::<true>();
+    }
+
+    #[test]
+    fn tile_palette_blits_match_scalar_writes_across_clipping_and_flips() {
+        fn check<const LINEAR: bool>(base: Palette, draw: Palette) {
+            let mut tile = Tile::blank();
+            for (row, pixels) in tile.pixels.iter_mut().enumerate() {
+                for (column, pixel) in pixels.iter_mut().enumerate() {
+                    *pixel = ((row * 3 + column) & 3) as u8;
+                }
+            }
+            for (x, y) in [(-3, -2), (0, 0), (3, 2), (8, 7), (-9, 0), (0, -9), (12, 0)] {
+                for flip_x in [false, true] {
+                    for flip_y in [false, true] {
+                        for transparent in [false, true] {
+                            let mut actual =
+                                RgbaIndexedFrameBuffer::<GbColor, LINEAR>::with_palette(
+                                    RenderConfig::new(11, 10),
+                                    Rgba::rgb(17, 33, 245),
+                                    base,
+                                );
+                            let mut expected = actual.clone();
+                            let before = actual.clone();
+                            // Forward-map source pixels through the unchanged
+                            // scalar API. This does not use tile mapping or its
+                            // clipped/backward-gather loops as an oracle.
+                            for row in 0..8 {
+                                for column in 0..8 {
+                                    let color =
+                                        draw.color(GbColor::from_u8(tile.pixels[row][column]));
+                                    if transparent && color == Rgba::TRANSPARENT {
+                                        continue;
+                                    }
+                                    let dx = x + if flip_x { 7 - column } else { column } as i32;
+                                    let dy = y + if flip_y { 7 - row } else { row } as i32;
+                                    if dx >= 0 && dy >= 0 {
+                                        expected.set_pixel(dx as u32, dy as u32, color);
+                                    }
+                                }
+                            }
+                            actual.blit_gb_tile(x, y, &tile, &draw, transparent, flip_x, flip_y);
+                            assert_eq!(
+                                actual, expected,
+                                "layout={LINEAR} ({x}, {y}), flips={flip_x}/{flip_y}, transparent={transparent}"
+                            );
+                            if x > -8 && y > -8 && x < 11 && y < 10 {
+                                assert_ne!(
+                                    actual, before,
+                                    "visible mixed-color tile must draw pixels"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let red = Rgba::rgb(200, 0, 0);
+        let blue = Rgba::rgb(0, 0, 200);
+        let halfway = Rgba::rgb(100, 0, 100);
+        let mut two = Palette::new(&[red, blue]);
+        two.colors[2] = halfway; // Perfect match deliberately outside count.
+        let mut three = two;
+        three.count = 3;
+        let colored = Palette::new(&[halfway, blue, red, Rgba::new(1, 2, 3, 0)]);
+        for (base, draw) in [
+            (GRAYSCALE_PALETTE, GRAYSCALE_PALETTE),
+            (GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE),
+            (two, colored),
+            (three, colored),
+        ] {
+            check::<false>(base, draw);
+            check::<true>(base, draw);
+        }
     }
 
     #[test]
