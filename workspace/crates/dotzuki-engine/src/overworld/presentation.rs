@@ -569,6 +569,25 @@ impl TileAnimState {
     pub fn kind(&self) -> TileAnimKind {
         self.kind
     }
+
+    /// Live update and water-phase counters. An instruction-timed scheduler
+    /// borrows these same counters instead of creating a second animation.
+    pub fn counters(&self) -> (u8, u8) {
+        (self.counter1, self.counter2)
+    }
+
+    /// Store the update counter without advancing time or changing the
+    /// tileset, water phase, or rendering projections.
+    pub fn set_counter1(&mut self, value: u8) {
+        self.counter1 = value;
+    }
+
+    /// Store the water-phase counter without advancing time or changing the
+    /// update counter or rendering projections. The scheduler applies its
+    /// own masking at the actual counter-update instruction.
+    pub fn set_counter2(&mut self, value: u8) {
+        self.counter2 = value;
+    }
 }
 
 impl Default for TileAnimState {
@@ -1467,6 +1486,30 @@ mod tests {
             None,
             "water-only tilesets never flower"
         );
+    }
+
+    #[test]
+    fn tile_anim_instruction_stores_share_native_counters_without_a_tick() {
+        let mut anim = TileAnimState::new();
+        anim.set_tileset(TileAnimKind::WaterFlower);
+        anim.set_counter1(19);
+        anim.set_counter2(6);
+        assert_eq!(anim.counters(), (19, 6));
+        assert_eq!((anim.water_shift(), anim.flower_frame()), (0, None));
+
+        // The next ordinary update uses the scheduler's live phase, rather
+        // than a fresh or reconstructed counter value.
+        anim.tick();
+        assert_eq!(anim.counters(), (20, 7));
+        assert_eq!(anim.water_shift(), -1);
+        anim.tick();
+        assert_eq!(anim.counters(), (0, 7));
+        assert_eq!(anim.flower_frame(), Some(3));
+
+        anim.set_counter1(255);
+        anim.set_tileset(TileAnimKind::Water);
+        assert_eq!(anim.counters(), (0, 7));
+        assert_eq!((anim.water_shift(), anim.flower_frame()), (-1, Some(3)));
     }
 
     // ── FishingAnimState ──────────────────────────────────────────
