@@ -491,6 +491,10 @@ pub struct ChannelState {
     /// Panning enable mask for this channel (bits in NR51 format).
     pub stereo_panning: u8,
 
+    /// Logical rest state, retained by clones for an explicit hardware rebuild.
+    /// This is not an instruction to mute a voice covered by a one-shot.
+    pub resting: bool,
+
     /// Trigger requested by the current update; covered notes are not deferred.
     pub trigger: bool,
 
@@ -528,6 +532,7 @@ impl ChannelState {
             wave_instrument: 0,
             stereo_panning: 0xFF,
             trigger: false,
+            resting: false,
             vibrato_freq_lo: None,
             pitch_sweep_value: 0,
         }

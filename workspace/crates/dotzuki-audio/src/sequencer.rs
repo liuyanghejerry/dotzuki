@@ -44,6 +44,7 @@ pub const fn is_sfx_channel(ch: usize) -> bool {
 enum ChannelOutput {
     None,
     Note,
+    Rest,
     FrequencyLow,
     Slide,
 }
@@ -310,7 +311,17 @@ impl Sequencer {
             self.channels[ch_idx].trigger = false;
             ChannelOutput::None
         } else if self.channels[ch_idx].trigger {
-            ChannelOutput::Note
+            if self.channels[ch_idx].resting {
+                let ch = &self.channels[ch_idx];
+                if ch.flags1.contains(ChannelFlags1::NOISE_OR_SFX)
+                    && !ch.flags2.contains(ChannelFlags2::EXECUTE_MUSIC)
+                {
+                    return ChannelOutput::None;
+                }
+                ChannelOutput::Rest
+            } else {
+                ChannelOutput::Note
+            }
         } else {
             ChannelOutput::None
         }
@@ -318,6 +329,12 @@ impl Sequencer {
 
     /// Execute commands from the stream until a note, rest, or end is encountered.
     fn execute_commands(&mut self, ch_idx: usize) {
+        // The next-note entry runs for rests as well as pitched notes, before
+        // parsing any new no-time commands (including a fresh slide command).
+        let ch = &mut self.channels[ch_idx];
+        ch.vibrato.delay_counter = ch.vibrato.delay_reload;
+        ch.flags1
+            .remove(ChannelFlags1::PITCH_SLIDE_ON | ChannelFlags1::PITCH_SLIDE_DEC);
         // Safety: limit iterations to prevent infinite loops on bad data
         let mut max_commands = 256;
 
@@ -474,6 +491,7 @@ impl Sequencer {
         let music_output_overridden =
             !is_sfx_channel(ch_idx) && self.channels[ch_idx + NUM_MUSIC_CHANNELS].active;
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         // If duty cycle rotation is enabled, rotate and use new duty
         if ch.flags1.contains(ChannelFlags1::ROTATE_DUTY) {
@@ -527,6 +545,7 @@ impl Sequencer {
     /// from before.
     fn handle_drum_note(&mut self, ch_idx: usize, length: u8, instrument: u8) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
         ch.note_length = length;
 
         // Calculate delay
@@ -578,6 +597,7 @@ impl Sequencer {
     fn handle_rest(&mut self, ch_idx: usize, length: u8) {
         let ch = &mut self.channels[ch_idx];
         ch.note_length = length;
+        ch.resting = true;
 
         let tempo = if is_sfx_channel(ch_idx) {
             self.sfx_tempo
@@ -691,6 +711,7 @@ impl Sequencer {
         frequency: u16,
     ) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         let tempo = self.sfx_tempo;
         let (delay, new_frac) =
@@ -713,6 +734,7 @@ impl Sequencer {
         noise_params: u8,
     ) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         // CHAN8 noise notes always use the fixed tempo $0100, never
         // the SFX tempo field (the classic note-length routine hardcodes
@@ -801,7 +823,11 @@ impl Sequencer {
         }
         let output = self.channels.each_ref().map(|channel| {
             if channel.trigger {
-                ChannelOutput::Note
+                if channel.resting {
+                    ChannelOutput::Rest
+                } else {
+                    ChannelOutput::Note
+                }
             } else {
                 ChannelOutput::None
             }
@@ -816,7 +842,9 @@ impl Sequencer {
     /// note state is not a request to replay it after a one-shot ends.
     /// SFX still takes priority over music on the corresponding hardware voice.
     fn apply_to_apu(&mut self, apu: &mut Apu, output: &[ChannelOutput; NUM_CHANNELS]) {
-        let mut panning = 0u8;
+        // Routing is hardware state. Sustain/effect updates must not enable a
+        // wave voice muted by a rest, or apply a covered rest on SFX release.
+        let mut panning = apu.nr51;
 
         for hw in 0..4usize {
             let sfx_idx = hw + NUM_MUSIC_CHANNELS;
@@ -828,19 +856,32 @@ impl Sequencer {
                 music_idx
             } else {
                 self.silence_hw_channel(apu, hw);
+                panning &= !HwChannel::from_u8(hw as u8).unwrap().enable_mask();
                 continue;
             };
 
             let hw_mask = HwChannel::from_u8(hw as u8)
                 .map(|h| h.enable_mask())
                 .unwrap_or(0);
-            panning |= self.channels[active_idx].stereo_panning & hw_mask;
-
             let request = output[active_idx];
             if request == ChannelOutput::None {
                 continue;
             }
             let ch = &mut self.channels[active_idx];
+            if request == ChannelOutput::Note {
+                panning = (panning & !hw_mask) | (ch.stereo_panning & hw_mask);
+            }
+            if request == ChannelOutput::Rest {
+                if hw == 2 {
+                    panning &= !hw_mask;
+                } else {
+                    let envelope = [0xff12, 0xff17, 0, 0xff21][hw];
+                    apu.write_register(envelope, 0x08);
+                    apu.write_register(envelope + 2, 0x80);
+                }
+                ch.trigger = false;
+                continue;
+            }
             if request == ChannelOutput::Slide && hw < 3 {
                 let low_port = [0xff13, 0xff18, 0xff1d][hw];
                 apu.write_register(low_port, ch.frequency as u8);
