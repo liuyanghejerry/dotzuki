@@ -5,6 +5,7 @@ use crate::apu::Apu;
 use crate::commands::{self, Command};
 use crate::effects;
 use crate::sequencer::*;
+use crate::NUM_MUSIC_CHANNELS;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Command Decoding Tests
@@ -1576,4 +1577,71 @@ fn tempo_on_later_channel_clears_earlier_fraction_without_retiming_its_note() {
         seq.channels[CHAN2].delay_frac, 192,
         "this note accumulates after the reset"
     );
+}
+
+#[test]
+fn paired_one_shot_pauses_music_vibrato_but_not_note_countdown() {
+    for channel in 0..NUM_MUSIC_CHANNELS {
+        for paired in [false, true] {
+            let mut seq = Sequencer::new();
+            let music = &mut seq.channels[channel];
+            music.active = true;
+            music.sound_id = 1;
+            music.delay_counter = 13;
+            music.vibrato.delay_counter = 5;
+            music.vibrato.extent = 0x22;
+            let voice = &mut seq.channels[NUM_MUSIC_CHANNELS + channel];
+            voice.active = paired;
+            voice.sound_id = 200;
+            voice.delay_counter = 13;
+            voice.flags1.insert(ChannelFlags1::NOISE_OR_SFX);
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[channel].delay_counter, 12);
+            assert_eq!(
+                seq.channels[channel].vibrato.delay_counter,
+                if paired { 5 } else { 4 },
+                "channel {channel}, paired {paired}"
+            );
+        }
+    }
+}
+
+#[test]
+fn ordinary_one_shot_stream_holds_music_effects_until_the_following_tick() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    apu.write_register(0xff26, 0x80);
+    // Both streams enter through their ordinary constructors. The long music
+    // note has a five-tick vibrato delay; the pulse one-shot lasts 12 ticks.
+    let music = vec![0xea, 5, 0x22, 0xdf, 0xb3, 0xe4, 0xaf, 0xff];
+    seq.play_music(1, &[music.clone(), music], 0x100);
+    seq.update_frame(&mut apu);
+    assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 5);
+    seq.play_sfx(
+        200,
+        &[vec![
+            0xec, 1, 0x24, 0xb2, 0x70, 6, 0x25, 0x91, 0x80, 6, 0xff,
+        ]],
+        0,
+        0x100,
+    );
+    for tick in 0..12 {
+        assert!(seq.channels[CHAN5].active, "one-shot entering tick {tick}");
+        let delay = seq.channels[CHAN1].delay_counter;
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.channels[CHAN1].delay_counter, delay - 1);
+        assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 5, "tick {tick}");
+        if tick < 5 {
+            assert_eq!(
+                seq.channels[CHAN2].vibrato.delay_counter,
+                4 - tick,
+                "unpaired music must continue"
+            );
+        }
+    }
+    assert!(!seq.channels[CHAN5].active);
+    seq.update_frame(&mut apu);
+    assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 4);
 }
