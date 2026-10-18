@@ -4,10 +4,10 @@
 //! [`Apu`](crate::apu::Apu) pair and owns everything that happens once per
 //! VBlank (~60 Hz) rather than per audio sample:
 //!
-//! - **master volume** — a logical left/right level (0-7 each) stamped onto
-//!   NR50 every frame *before* the sequencer tick, so an in-stream `volume`
-//!   command can still override NR50 for the rest of that frame and the fade
-//!   machinery re-owns it on the next one;
+//! - **master volume** — logical left/right levels (0-7 each), applied before
+//!   the sequencer when automatic volume is enabled and no fade is active;
+//!   fade countdown frames preserve the live NR50 register, and a due fade
+//!   step continues from the volume last written by music;
 //! - **fade-out** — [`FadeState`] walks the master volume down one step per
 //!   `fade_counter_reload` frames (the countdown lives in
 //!   [`Sequencer::fade_counter`]); on completion the music is stopped and an
@@ -350,15 +350,12 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.saved_music_states.clear();
     }
 
-    /// Call once per VBlank (~60 Hz): advance the fade, stamp the master
-    /// volume onto NR50, tick the sequencer, then run the post-frame hook.
+    /// Call once per VBlank (~60 Hz): let the fade state machine update
+    /// volume when due, tick the sequencer, then run the post-frame hook.
     pub fn update_frame(&mut self) {
+        // A countdown frame or disabled automatic volume preserves the live
+        // register. Music commands may then change it during this update.
         self.process_fade();
-        // Apply the fade/master volume *before* the sequencer tick, matching
-        // the original VBlank order (fade-out routine runs before the music
-        // update). This lets an in-song `volume` command override NR50 for
-        // the rest of the frame; the fade machinery re-owns NR50 next frame.
-        self.apply_master_volume();
         self.sequencer.update_frame(&mut self.apu);
         // The hook writes after the sequencer so it can override the sound
         // engine's registers for this frame (e.g. an alarm tone poked
@@ -423,6 +420,12 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         }
 
         self.sequencer.fade_counter = self.fade_counter_reload;
+
+        // Music commands can overwrite NR50 between fade steps. Continue
+        // from that live level rather than the last cached volume request.
+        let live_volume = self.apu.nr50;
+        self.master_volume_left = (live_volume >> 4) & FULL_VOLUME;
+        self.master_volume_right = live_volume & FULL_VOLUME;
 
         if self.master_volume_left == 0 && self.master_volume_right == 0 {
             self.fade_complete();
@@ -607,6 +610,54 @@ mod tests {
             mgr.update_frame();
         }
         assert!(!mgr.is_sfx_playing());
+    }
+
+    #[test]
+    fn disabled_automatic_volume_preserves_the_live_register() {
+        let mut m = manager();
+        m.apu.write_register(0xff26, 0x80);
+        m.set_no_audio_fade_out(true);
+        m.apu.write_register(0xff24, 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+    }
+
+    fn volume_command_track(_: Music) -> TrackData {
+        TrackData {
+            sound_id: 1,
+            channels: [
+                Some(&[0xf0, 0x22, 0xdc, 0xc7, 0xe5, 0x0f, 0xff]),
+                None,
+                None,
+                None,
+            ],
+            tempo: 0x0100,
+        }
+    }
+
+    #[test]
+    fn fade_countdown_preserves_a_music_volume_command_until_the_next_step() {
+        let mut m = AudioManager::new(volume_command_track, sfx_track);
+        m.apu.write_register(0xff26, 0x80);
+        m.play_music(Music::ThemeA);
+        m.fade_out(4);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+    }
+
+    #[test]
+    fn fade_step_decrements_the_live_volume_written_by_music() {
+        let mut m = AudioManager::new(volume_command_track, sfx_track);
+        m.apu.write_register(0xff26, 0x80);
+        m.play_music(Music::ThemeA);
+        m.fade_out(1);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x11);
+        assert_eq!((m.master_volume_left(), m.master_volume_right()), (1, 1));
     }
 
     #[test]
