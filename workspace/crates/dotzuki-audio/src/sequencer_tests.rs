@@ -1701,3 +1701,120 @@ fn music_commands_on_a_one_shot_voice_still_update_its_saved_pitch() {
         commands::calculate_frequency(2, 4) as u8
     );
 }
+
+mod one_shot_output_ownership {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(address: u16, value: u8) {
+        WRITES.lock().unwrap().push((address, value));
+    }
+    fn voice_writes(hw: usize) -> Vec<(u16, u8)> {
+        let range = [0xff10..=0xff14, 0xff16..=0xff19, 0xff1c..=0xff1e][hw].clone();
+        WRITES
+            .lock()
+            .unwrap()
+            .iter()
+            .copied()
+            .filter(|(a, _)| range.contains(a))
+            .collect()
+    }
+    fn covered_note(hw: usize, vibrato: bool) -> (Sequencer, Apu) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+        music[hw] = if vibrato { vec![0xea, 0, 0x20] } else { vec![] };
+        music[hw].extend([0xd1, 0xb3, 0xe4, 0x00, 0x27, 0x47, 0xff]);
+        seq.play_music(1, &music, 0x100);
+        seq.update_frame(&mut apu);
+        seq.play_sfx(200, &[vec![0x23, 0xb2, 0x70, 6, 0xff]], hw, 0x100);
+        apu.set_register_sink(Some(record));
+        for _ in 0..4 {
+            seq.update_frame(&mut apu);
+            assert!(seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+        }
+        WRITES.lock().unwrap().clear();
+        seq.update_frame(&mut apu);
+        assert!(!seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+        assert_eq!(seq.channels[hw].delay_counter, 4);
+        (seq, apu)
+    }
+    #[test]
+    fn one_shot_end_does_not_replay_covered_notes_and_next_real_note_still_triggers() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = covered_note(hw, false);
+            assert!(
+                voice_writes(hw).is_empty(),
+                "voice {hw}: {:?}",
+                voice_writes(hw)
+            );
+            for _ in 0..3 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(
+                    voice_writes(hw).is_empty(),
+                    "unmodified sustain must not rewrite pitch"
+                );
+            }
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            let high = [0xff14, 0xff19, 0xff1e][hw];
+            assert!(
+                voice_writes(hw)
+                    .iter()
+                    .any(|&(a, v)| a == high && v & 128 != 0),
+                "next actual note must trigger"
+            );
+        }
+    }
+    #[test]
+    fn released_music_can_write_only_vibrato_low_byte_before_the_next_note() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = covered_note(hw, true);
+            assert!(voice_writes(hw).is_empty());
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            let low = seq.channels[hw]
+                .vibrato_freq_lo
+                .expect("actual vibrato update");
+            assert_eq!(voice_writes(hw), vec![([0xff13, 0xff18, 0xff1d][hw], low)]);
+        }
+    }
+    #[test]
+    fn active_pitch_slide_writes_both_frequency_bytes_without_retrigger() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[hw] = vec![0xd1, 0xb3, 0xe4, 0xeb, 0, 0x54, 0x0f, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            assert!(seq.channels[hw]
+                .flags1
+                .contains(ChannelFlags1::PITCH_SLIDE_ON));
+            apu.set_register_sink(Some(record));
+            WRITES.lock().unwrap().clear();
+            let old = seq.channels[hw].frequency;
+            seq.update_frame(&mut apu);
+            let freq = seq.channels[hw].frequency;
+            assert_ne!(old, freq);
+            let low = [0xff13, 0xff18, 0xff1d][hw];
+            assert_eq!(
+                voice_writes(hw),
+                vec![(low, freq as u8), (low + 1, (freq >> 8) as u8 & 7)]
+            );
+        }
+    }
+}
