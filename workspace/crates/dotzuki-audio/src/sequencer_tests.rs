@@ -1645,3 +1645,59 @@ fn ordinary_one_shot_stream_holds_music_effects_until_the_following_tick() {
     seq.update_frame(&mut apu);
     assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 4);
 }
+
+#[test]
+fn next_music_note_preserves_saved_pitch_under_its_paired_one_shot() {
+    for channel in [CHAN1, CHAN2, CHAN3] {
+        for paired in [false, true] {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[channel] = vec![0xd1, 0xb3, 0xe4, 0x00, 0x27, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            let old_pitch = seq.channels[channel].freq_lo_saved;
+            let one_shot_channel = if paired { channel } else { (channel + 1) % 3 };
+            seq.play_sfx(
+                200,
+                &[vec![0x2f, 0xb2, 0x70, 6, 0xff]],
+                one_shot_channel,
+                0x100,
+            );
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[channel].ptr, 5, "note parsing must continue");
+            assert_eq!(seq.channels[channel].delay_counter, 8);
+            let next_pitch = commands::calculate_frequency(2, 4) as u8;
+            assert_ne!(old_pitch, next_pitch);
+            assert_eq!(
+                seq.channels[channel].freq_lo_saved,
+                if paired { old_pitch } else { next_pitch },
+                "channel {channel}, paired {paired}"
+            );
+        }
+    }
+}
+
+#[test]
+fn music_commands_on_a_one_shot_voice_still_update_its_saved_pitch() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    apu.write_register(0xff26, 0x80);
+    seq.play_music(1, &[vec![0xd1, 0xb3, 0xe4, 0xaf, 0xff]], 0x100);
+    seq.play_sfx(
+        200,
+        &[vec![0xf8, 0xd1, 0xb3, 0xe4, 0x00, 0x27, 0xff]],
+        0,
+        0x100,
+    );
+    seq.update_frame(&mut apu);
+    let previous = seq.channels[CHAN5].freq_lo_saved;
+    seq.update_frame(&mut apu);
+    assert!(seq.channels[CHAN1].active && seq.channels[CHAN5].active);
+    assert_ne!(previous, seq.channels[CHAN5].freq_lo_saved);
+    assert_eq!(
+        seq.channels[CHAN5].freq_lo_saved,
+        commands::calculate_frequency(2, 4) as u8
+    );
+}
