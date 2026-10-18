@@ -491,7 +491,7 @@ pub struct ChannelState {
     /// Panning enable mask for this channel (bits in NR51 format).
     pub stereo_panning: u8,
 
-    /// Set when a new note starts; cleared after APU trigger write.
+    /// Trigger requested by the current update; covered notes are not deferred.
     pub trigger: bool,
 
     /// Vibrato-modified frequency low byte for APU write (None = no vibrato active).
