@@ -501,11 +501,6 @@ impl Sequencer {
         // Calculate frequency for this note + octave
         let freq = commands::calculate_frequency(pitch, ch.octave);
         ch.frequency = freq;
-        // Parsing and slide setup still advance. The saved modulation base
-        // belongs to the last music note that could write its output.
-        if !music_output_overridden {
-            ch.freq_lo_saved = (freq & 0xFF) as u8;
-        }
         ch.note_length = length;
 
         // Reset vibrato delay for this note
@@ -527,6 +522,12 @@ impl Sequencer {
         // Perfect pitch affects the onset hardware write, not the slide base.
         if ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
             ch.frequency = ch.frequency.wrapping_add(1) & 0x07FF;
+        }
+        // Modulation uses the emitted pitch, including perfect pitch. Slide
+        // initialization above still uses the untuned note. A covered music
+        // note does not replace the base last written to its hardware voice.
+        if !music_output_overridden {
+            ch.freq_lo_saved = ch.frequency as u8;
         }
         ch.trigger = true;
     }
