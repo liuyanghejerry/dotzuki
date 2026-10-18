@@ -1960,3 +1960,88 @@ mod rest_output_tests {
         }
     }
 }
+
+mod perfect_pitch_cache_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    #[test]
+    fn saved_modulation_pitch_matches_each_actual_tonal_onset() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            for note in 0..12 {
+                for octave in 0..8 {
+                    for perfect in [false, true] {
+                        let mut seq = Sequencer::new();
+                        let mut apu = Apu::new();
+                        apu.write_register(0xff26, 0x80);
+                        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+                        music[hw] = vec![0xd1, 0xb3, 0xe0 | octave];
+                        if perfect {
+                            music[hw].push(0xe8);
+                        }
+                        music[hw].extend([(note << 4) | 0x0f, 0xff]);
+                        seq.play_music(1, &music, 0x100);
+                        apu.set_register_sink(Some(record));
+                        WRITES.lock().unwrap().clear();
+                        seq.update_frame(&mut apu);
+                        let port = [0xff13, 0xff18, 0xff1d][hw];
+                        let lows: Vec<_> = WRITES
+                            .lock()
+                            .unwrap()
+                            .iter()
+                            .filter_map(|&(a, v)| (a == port).then_some(v))
+                            .collect();
+                        assert_eq!(lows.len(), 1);
+                        assert_eq!(
+                            seq.channels[hw].freq_lo_saved, lows[0],
+                            "voice{hw}, note{note}, octave{octave}, perfect{perfect}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    #[test]
+    fn perfect_note_keeps_slide_origin_untuned_and_holds_cache_when_covered() {
+        for hw in 0..3 {
+            for paired in [false, true] {
+                let mut seq = Sequencer::new();
+                let mut apu = Apu::new();
+                apu.write_register(0xff26, 0x80);
+                let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+                music[hw] = vec![0xd1, 0xb3, 0xe4, 0x00, 0xe8, 0xeb, 0, 0x54, 0x27, 0xff];
+                seq.play_music(1, &music, 0x100);
+                seq.update_frame(&mut apu);
+                let previous = seq.channels[hw].freq_lo_saved;
+                seq.play_sfx(
+                    200,
+                    &[vec![0x2f, 0xb2, 0x70, 6, 0xff]],
+                    if paired { hw } else { (hw + 1) % 3 },
+                    0x100,
+                );
+                seq.update_frame(&mut apu);
+                let base = commands::calculate_frequency(2, 4);
+                assert_eq!(
+                    seq.channels[hw].pitch_slide.current_freq, base,
+                    "slide must start from the untuned pitch"
+                );
+                assert_eq!(
+                    seq.channels[hw].freq_lo_saved,
+                    if paired {
+                        previous
+                    } else {
+                        (base as u8).wrapping_add(1)
+                    },
+                    "voice{hw}, paired{paired}"
+                );
+            }
+        }
+    }
+}
