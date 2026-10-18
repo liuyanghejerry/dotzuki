@@ -1359,11 +1359,10 @@ fn test_override_channel_stream_executes_new_stream_from_start() {
 }
 
 #[test]
-fn test_override_channel_stream_music_resumes_after_end() {
-    // Battle music keeps running on the music channels while the hijacked
-    // SFX channel owns the hardware; when the override stream ends, the
-    // music channel takes the hardware back (a sound_ret on an SFX channel
-    // re-enables the music channel's output).
+fn test_override_channel_stream_returns_to_music_rest_after_end() {
+    // Battle music continues parsing under the hijacked SFX voice. Ending
+    // the override does not replay an old note; the next actual music rest
+    // writes the original silent envelope.
     let mut seq = Sequencer::new();
     let mut apu = Apu::new();
     apu.power = true;
@@ -1389,8 +1388,9 @@ fn test_override_channel_stream_music_resumes_after_end() {
     }
     assert!(!seq.channels[CHAN5].active);
     assert!(seq.channels[CHAN1].active, "music channel still active");
-    // Music channel owns the hardware again: its next trigger writes NR12.
-    assert_eq!(apu.read_register(0xFF12), 0xF0);
+    // The next looping rest writes envelope $08, not the retained default
+    // note volume $F0 (Audio3_note_pitch's rest branch).
+    assert_eq!(apu.read_register(0xFF12), 0x08);
 }
 
 #[test]
@@ -1815,6 +1815,148 @@ mod one_shot_output_ownership {
                 voice_writes(hw),
                 vec![(low, freq as u8), (low + 1, (freq >> 8) as u8 & 7)]
             );
+        }
+    }
+}
+
+mod rest_output_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    fn writes(hw: usize) -> Vec<(u16, u8)> {
+        let range = [0xff10..=0xff14, 0xff16..=0xff19, 0xff1a..=0xff1e][hw].clone();
+        WRITES
+            .lock()
+            .unwrap()
+            .iter()
+            .copied()
+            .filter(|(a, _)| range.contains(a))
+            .collect()
+    }
+    fn at_rest(hw: usize) -> (Sequencer, Apu) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+        music[hw] = vec![0xea, 3, 0x20, 0xd1, 0xb3, 0xe4, 0x03, 0xc3, 0x27, 0xff];
+        if hw == 2 {
+            music[0] = vec![0xd1, 0xb3, 0xe4, 0x0f, 0xff];
+        }
+        seq.play_music(1, &music, 0x100);
+        seq.update_frame(&mut apu);
+        for _ in 0..3 {
+            seq.update_frame(&mut apu);
+        }
+        assert_eq!(seq.channels[hw].vibrato.delay_counter, 0);
+        apu.set_register_sink(Some(record));
+        WRITES.lock().unwrap().clear();
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.channels[hw].delay_counter, 4);
+        (seq, apu)
+    }
+    #[test]
+    fn rests_use_silent_pulse_envelope_or_wave_routing_then_restore_the_next_note() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = at_rest(hw);
+            if hw < 2 {
+                assert_eq!(
+                    writes(hw),
+                    vec![([0xff12, 0xff17][hw], 8), ([0xff14, 0xff19][hw], 128)]
+                );
+            } else {
+                assert!(writes(hw).is_empty());
+                assert_eq!(apu.nr51 & 0x44, 0);
+                assert_eq!(apu.nr51 & 0x11, 0x11);
+            }
+            assert_eq!(seq.channels[hw].volume_envelope, 0xb3);
+            assert_eq!(
+                seq.channels[hw].vibrato.delay_counter, 3,
+                "rest reloads vibrato delay"
+            );
+            for _ in 0..3 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(writes(hw).is_empty());
+                if hw == 2 {
+                    assert_eq!(apu.nr51 & 0x44, 0);
+                }
+            }
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            assert!(writes(hw)
+                .iter()
+                .any(|&(a, v)| a == [0xff14, 0xff19, 0xff1e][hw] && v & 128 != 0));
+            assert_eq!(apu.nr51 & [0x11, 0x22, 0x44][hw], [0x11, 0x22, 0x44][hw]);
+        }
+    }
+    #[test]
+    fn covered_rest_does_not_mute_or_retrigger_the_one_shot_at_release() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[hw] = vec![0xd1, 0xb3, 0xe4, 0x00, 0xcf, 0x27, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            seq.play_sfx(200, &[vec![0x21, 0xa1, 0x70, 6, 0xff]], hw, 0x100);
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[hw].delay_counter, 16);
+            apu.set_register_sink(Some(record));
+            for _ in 0..2 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(writes(hw).is_empty());
+            }
+            assert!(!seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+            assert_eq!(
+                apu.nr51 & [0x11, 0x22, 0x44][hw],
+                [0x11, 0x22, 0x44][hw],
+                "covered logical rest has not written hardware routing"
+            );
+        }
+    }
+    #[test]
+    fn clone_and_explicit_rebuild_keep_an_uncovered_rest_silent_without_advancing() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (seq, _) = at_rest(hw);
+            let mut restored = seq.clone();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            apu.set_register_sink(Some(record));
+            WRITES.lock().unwrap().clear();
+            restored.rebuild_apu(&mut apu);
+            if hw < 2 {
+                assert_eq!(
+                    writes(hw),
+                    vec![([0xff12, 0xff17][hw], 8), ([0xff14, 0xff19][hw], 128)]
+                );
+            } else {
+                assert!(writes(hw).is_empty());
+                assert_eq!(apu.nr51 & 0x44, 0);
+            }
+            assert_eq!(
+                restored.channels[hw].delay_counter,
+                seq.channels[hw].delay_counter
+            );
+            assert_eq!(
+                restored.channels[hw].vibrato.delay_counter,
+                seq.channels[hw].vibrato.delay_counter
+            );
+            assert_eq!(restored.channels[hw].ptr, seq.channels[hw].ptr);
         }
     }
 }
