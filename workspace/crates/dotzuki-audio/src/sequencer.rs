@@ -720,6 +720,11 @@ impl Sequencer {
     /// Apply per-frame effects to a channel (vibrato, pitch slide).
     fn apply_effects(&mut self, ch_idx: usize) {
         let is_music = !is_sfx_channel(ch_idx);
+        // A paired one-shot holds modulation until the next music tick after
+        // it ends. update_channel has already decremented the note delay.
+        if is_music && self.channels[ch_idx + crate::NUM_MUSIC_CHANNELS].active {
+            return;
+        }
         let has_execute_music = self.channels[ch_idx]
             .flags2
             .contains(ChannelFlags2::EXECUTE_MUSIC);
