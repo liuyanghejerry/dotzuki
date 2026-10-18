@@ -449,6 +449,8 @@ impl Sequencer {
 
     /// Handle a note command: set frequency, calculate delay, apply effects setup.
     fn handle_note(&mut self, ch_idx: usize, pitch: u8, length: u8) {
+        let music_output_overridden =
+            !is_sfx_channel(ch_idx) && self.channels[ch_idx + NUM_MUSIC_CHANNELS].active;
         let ch = &mut self.channels[ch_idx];
 
         // If duty cycle rotation is enabled, rotate and use new duty
@@ -459,7 +461,11 @@ impl Sequencer {
         // Calculate frequency for this note + octave
         let freq = commands::calculate_frequency(pitch, ch.octave);
         ch.frequency = freq;
-        ch.freq_lo_saved = (freq & 0xFF) as u8;
+        // Parsing and slide setup still advance. The saved modulation base
+        // belongs to the last music note that could write its output.
+        if !music_output_overridden {
+            ch.freq_lo_saved = (freq & 0xFF) as u8;
+        }
         ch.note_length = length;
 
         // Reset vibrato delay for this note
