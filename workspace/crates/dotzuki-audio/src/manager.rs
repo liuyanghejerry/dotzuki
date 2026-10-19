@@ -832,10 +832,14 @@ mod tests {
     #[test]
     fn play_sfx_with_modifiers_sets_cry_parameters() {
         let mut mgr = manager();
+        mgr.apu.write_register(0xff26, 0x80);
         mgr.play_sfx_with_modifiers(Sfx::Beep, 0x20, 0x0140);
         assert!(mgr.is_sfx_playing());
         assert_eq!(mgr.sequencer.sfx_tempo, 0x0140);
         assert_eq!(mgr.sequencer.frequency_modifier, 0x20);
+        mgr.update_frame();
+        assert_eq!(mgr.sequencer.channels[4].frequency, 0x8770);
+        assert_eq!(mgr.apu.ch1.freq_reg, 0x770);
     }
 
     #[test]
