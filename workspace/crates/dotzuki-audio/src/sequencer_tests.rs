@@ -548,6 +548,56 @@ fn test_sequencer_play_sfx() {
 }
 
 #[test]
+fn sfx_frequency_modifier_reaches_each_tonal_note_and_apu() {
+    for hw in 0..2 {
+        for modifier in [0i16, 0x20, -0x20] {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            seq.frequency_modifier = modifier;
+            // Two distinct notes ensure the addend applies to every note,
+            // without accumulating onto the previous note's frequency.
+            let notes = vec![0x21, 0xa1, 0xf0, 7, 0x21, 0xa1, 0x70, 6, 0xff];
+            seq.play_sfx(200, &[notes], hw, 0x100);
+            for base in [0x07f0u16, 0x0670] {
+                seq.update_frame(&mut apu);
+                let expected = base.wrapping_add(modifier as u16);
+                assert_eq!(seq.channels[hw + NUM_MUSIC_CHANNELS].frequency, expected);
+                let hardware = if hw == 0 {
+                    apu.ch1.freq_reg
+                } else {
+                    apu.ch2.freq_reg
+                };
+                assert_eq!(hardware, expected & 0x7ff);
+                seq.update_frame(&mut apu);
+            }
+        }
+    }
+}
+
+#[test]
+fn sfx_frequency_modifier_leaves_noise_and_music_notes_unchanged() {
+    fn run(modifier: i16) -> (u16, u16, u8) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        seq.frequency_modifier = modifier;
+        seq.play_music(1, &[vec![0xd1, 0xa1, 0xe4, 0x03, 0xff]], 0x100);
+        seq.play_sfx(200, &[vec![0x23, 0xa1, 0x37, 0xff]], 3, 0x100);
+        seq.update_frame(&mut apu);
+        (
+            seq.channels[CHAN1].frequency,
+            seq.channels[CHAN8].frequency,
+            seq.channels[CHAN8].delay_counter,
+        )
+    }
+    let control = run(0);
+    assert_ne!(control.0, 0);
+    assert_eq!(control.1, 0x37);
+    assert_eq!(run(0x20), control);
+}
+
+#[test]
 fn test_sequencer_sfx_overrides_music() {
     let mut seq = Sequencer::new();
     let mut apu = Apu::new();

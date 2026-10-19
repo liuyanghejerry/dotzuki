@@ -80,7 +80,8 @@ pub struct Sequencer {
     /// The SFX sound ID currently playing.
     pub current_sfx_id: u8,
 
-    /// Frequency modifier for cries (added to base frequency).
+    /// Signed frequency addend for each tonal SFX note. The caller selects
+    /// zero for unmodified effects; music and noise notes do not use it.
     pub frequency_modifier: i16,
     /// Tempo modifier for cries (added to base tempo).
     pub tempo_modifier: i16,
@@ -721,7 +722,7 @@ impl Sequencer {
         ch.delay_frac = new_frac;
 
         ch.volume_envelope = volume_envelope;
-        ch.frequency = frequency;
+        ch.frequency = frequency.wrapping_add(self.frequency_modifier as u16);
         ch.trigger = true;
     }
 
