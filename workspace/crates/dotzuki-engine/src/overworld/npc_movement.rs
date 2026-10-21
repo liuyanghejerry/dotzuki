@@ -108,6 +108,82 @@ impl NpcWanderPolicy {
     }
 }
 
+/// Customize per-actor decisions and movement outcomes in slot order.
+///
+/// The engine owns terrain checks, occupied tiles, scripted paths, and coordinate
+/// updates. Hooks let a game draw random values on demand, reject a destination,
+/// or select a delay when a stride finishes rather than when it starts.
+///
+/// ```
+/// use dotzuki_engine::overworld::{Direction, NpcMovementHooks, NpcRuntimeState};
+/// struct PauseAfterStep;
+/// impl NpcMovementHooks for PauseAfterStep {
+///     fn choose_direction(&mut self, _slot: usize, _npc: &NpcRuntimeState) -> Option<Direction> {
+///         Some(Direction::Right)
+///     }
+///     fn step_finished(&mut self, _slot: usize, npc: &mut NpcRuntimeState,
+///         _direction: Direction, scripted: bool) {
+///         if !scripted { npc.delay_counter = 24; }
+///     }
+/// }
+/// let _hooks = PauseAfterStep;
+/// ```
+pub trait NpcMovementHooks {
+    /// Called once for each visible, ready Wander actor without a scripted path.
+    /// Returning `None` invokes `step_blocked` without changing the facing.
+    fn choose_direction(&mut self, slot: usize, npc: &NpcRuntimeState) -> Option<Direction>;
+
+    /// Runs after bounds, occupancy, and terrain accept the destination, before
+    /// the engine starts a stride. Returning `false` invokes `step_blocked`.
+    fn can_start_step(
+        &mut self,
+        _slot: usize,
+        _npc: &NpcRuntimeState,
+        _direction: Direction,
+    ) -> bool {
+        true
+    }
+
+    fn step_blocked(&mut self, _slot: usize, _npc: &mut NpcRuntimeState) {}
+    fn step_started(&mut self, _slot: usize, _npc: &mut NpcRuntimeState) {}
+
+    /// Runs after committing the completed stride's coordinates, before a
+    /// scripted path advances. `direction` retains the stride's physical
+    /// direction even if the actor changed its facing during that stride.
+    fn step_finished(
+        &mut self,
+        _slot: usize,
+        _npc: &mut NpcRuntimeState,
+        _direction: Direction,
+        _scripted: bool,
+    ) {
+    }
+
+    /// Called for visible stationary actors without a stride or scripted path.
+    fn stationary(&mut self, _slot: usize, _npc: &mut NpcRuntimeState) {}
+}
+
+struct PolicyMovementHooks<F> {
+    policy: NpcWanderPolicy,
+    random: u8,
+    stationary: F,
+}
+
+impl<F: FnMut(usize, &mut NpcRuntimeState)> NpcMovementHooks for PolicyMovementHooks<F> {
+    fn choose_direction(&mut self, slot: usize, npc: &NpcRuntimeState) -> Option<Direction> {
+        self.policy.direction(self.random, slot, npc.wander_axis)
+    }
+    fn step_blocked(&mut self, _: usize, npc: &mut NpcRuntimeState) {
+        npc.delay_counter = self.policy.delay(self.random);
+    }
+    fn step_started(&mut self, slot: usize, npc: &mut NpcRuntimeState) {
+        self.step_blocked(slot, npc);
+    }
+    fn stationary(&mut self, slot: usize, npc: &mut NpcRuntimeState) {
+        (self.stationary)(slot, npc);
+    }
+}
+
 // ── Helpers ────────────────────────────────────────────────────────
 
 /// Determine direction from `from` toward `to`.
@@ -267,7 +343,41 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
     tileset: T,
     provider: &impl CollisionProvider<T>,
     policy: NpcWanderPolicy,
-    mut stationary: impl FnMut(usize, &mut NpcRuntimeState),
+    stationary: impl FnMut(usize, &mut NpcRuntimeState),
+) {
+    update_npc_movement_with_hooks(
+        npcs,
+        player_x,
+        player_y,
+        player_dest,
+        map_width_blocks,
+        map_height_blocks,
+        blocks,
+        tileset,
+        provider,
+        &mut PolicyMovementHooks {
+            policy,
+            random: rng_value,
+            stationary,
+        },
+    );
+}
+
+/// Update actors with game-owned decisions and step-outcome callbacks.
+///
+/// The policy-based entry points retain their direction and delay behavior.
+/// This entry point instead delegates those decisions to [`NpcMovementHooks`].
+pub fn update_npc_movement_with_hooks<T: TilesetTrait>(
+    npcs: &mut [NpcRuntimeState],
+    player_x: u16,
+    player_y: u16,
+    player_dest: Option<(u16, u16)>,
+    map_width_blocks: u8,
+    map_height_blocks: u8,
+    blocks: &[u8],
+    tileset: T,
+    provider: &impl CollisionProvider<T>,
+    hooks: &mut impl NpcMovementHooks,
 ) {
     let max_x = (map_width_blocks as u16) * 2;
     let max_y = (map_height_blocks as u16) * 2;
@@ -300,6 +410,8 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
                 let (dx, dy) = direction_delta(direction);
                 npc.x = (npc.x as i32 + dx as i32).max(0) as u16;
                 npc.y = (npc.y as i32 + dy as i32).max(0) as u16;
+                let scripted = !npc.scripted_path.is_empty();
+                hooks.step_finished(i, npc, direction, scripted);
 
                 // Advance scripted path if we reached the next waypoint
                 if !npc.scripted_path.is_empty() {
@@ -343,15 +455,15 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
 
         // ── Autonomous movement by type ──────────────────────────
         match npc.movement_type {
-            NpcMovementType::Stationary => stationary(i, npc),
+            NpcMovementType::Stationary => hooks.stationary(i, npc),
             NpcMovementType::Wander => {
                 if npc.delay_counter > 0 {
                     npc.delay_counter -= 1;
                     continue;
                 }
 
-                let Some(dir) = policy.direction(rng_value, i, npc.wander_axis) else {
-                    npc.delay_counter = policy.delay(rng_value);
+                let Some(dir) = hooks.choose_direction(i, npc) else {
+                    hooks.step_blocked(i, npc);
                     continue;
                 };
 
@@ -363,7 +475,7 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
                 // none — they walk until blocked.)
                 if tx >= max_x || ty >= max_y {
                     npc.facing = dir;
-                    npc.delay_counter = policy.delay(rng_value);
+                    hooks.step_blocked(i, npc);
                     continue;
                 }
 
@@ -376,7 +488,7 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
 
                 if blocked || player_blocked {
                     npc.facing = dir;
-                    npc.delay_counter = policy.delay(rng_value);
+                    hooks.step_blocked(i, npc);
                     continue;
                 }
 
@@ -385,14 +497,20 @@ pub fn update_npc_movement_with_policy_and_stationary<T: TilesetTrait>(
                     provider.get_tile_at_position(tileset, blocks, map_width_blocks, tx, ty);
                 if !provider.is_tile_passable(tileset, target_tile) {
                     npc.facing = dir;
-                    npc.delay_counter = policy.delay(rng_value);
+                    hooks.step_blocked(i, npc);
+                    continue;
+                }
+
+                if !hooks.can_start_step(i, npc, dir) {
+                    npc.facing = dir;
+                    hooks.step_blocked(i, npc);
                     continue;
                 }
 
                 npc.facing = dir;
                 npc.walk_counter = NPC_WALK_FRAMES;
                 npc.step_direction = Some(dir);
-                npc.delay_counter = policy.delay(rng_value);
+                hooks.step_started(i, npc);
             }
             NpcMovementType::FacePlayer => {
                 let dx = player_x as i32 - npc.x as i32;
@@ -464,7 +582,7 @@ pub fn npc_in_front_of_player<'a, M: MapTrait, T: TilesetTrait, Mus>(
 mod wander_policy_tests {
     use super::*;
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    struct Floor;
+    pub(super) struct Floor;
     impl TilesetTrait for Floor {
         fn id(&self) -> u8 {
             0
@@ -473,7 +591,7 @@ mod wander_policy_tests {
             "floor"
         }
     }
-    struct OpenFloor;
+    pub(super) struct OpenFloor;
     impl CollisionProvider<Floor> for OpenFloor {
         fn is_tile_passable(&self, _: Floor, _: u8) -> bool {
             true
@@ -506,7 +624,7 @@ mod wander_policy_tests {
             false
         }
     }
-    fn walker(axis: NpcWanderAxis) -> NpcRuntimeState {
+    pub(super) fn walker(axis: NpcWanderAxis) -> NpcRuntimeState {
         NpcRuntimeState {
             npc_index: 0,
             sprite_id: 1,
@@ -818,3 +936,6 @@ mod stationary_callback_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod movement_hooks_tests;
