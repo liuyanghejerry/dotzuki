@@ -46,6 +46,9 @@ mod tests;
 #[cfg(test)]
 mod sequencer_tests;
 
+#[cfg(test)]
+mod logical_frame_tests;
+
 // ── Constants ────────────────────────────────────────────────────────────
 
 /// Game Boy CPU clock frequency in Hz (≈4.194304 MHz).
@@ -356,6 +359,7 @@ impl Default for ChannelFlags2 {
 
 /// Per-channel vibrato parameters and running state.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct VibratoState {
     /// Delay before vibrato starts (reload value in frames).
     pub delay_reload: u8,
@@ -402,6 +406,7 @@ impl VibratoState {
 
 /// Per-channel pitch slide (portamento) parameters and running state.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct PitchSlideState {
     /// Target frequency (11-bit).
     pub target_freq: u16,
@@ -430,6 +435,7 @@ impl PitchSlideState {
 /// Models the classic GB engine's per-channel variables (one set per
 /// channel, stored in the channel struct array).
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct ChannelState {
     // ── Command stream ──
     /// The sound data (byte stream) for this channel.

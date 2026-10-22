@@ -49,6 +49,17 @@ enum ChannelOutput {
     Slide,
 }
 
+/// Register work consumed by a logical frame without writing to an APU.
+///
+/// This is not a register event log: commands in one frame may request several
+/// master-volume changes, and ordinary sequencer output retains only the last.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct LogicalFrameOutcome {
+    /// The final pending master-volume (NR50) value, consumed by this frame.
+    /// `None` means that the frame had no pending master-volume write.
+    pub nr50: Option<u8>,
+}
+
 // ── Sequencer ────────────────────────────────────────────────────────────
 
 /// The music/SFX sequencer.
@@ -58,6 +69,7 @@ enum ChannelOutput {
 ///
 /// Call `update_frame()` once per VBlank (~60 Hz).
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct Sequencer {
     /// 8 logical channels: [0-3] = music, [4-7] = SFX.
     pub channels: [ChannelState; NUM_CHANNELS],
@@ -92,8 +104,8 @@ pub struct Sequencer {
     pub fade_counter: u8,
 
     /// Pending master-volume (NR50) write from a `volume` ($F0) command.
-    /// Applied to the APU at the end of `update_frame`, so it takes effect
-    /// on the same frame the command executes.
+    /// Consumed at the end of a frame: written to the APU by `update_frame`,
+    /// or returned by `advance_frame_without_output` without a register write.
     pub pending_nr50: Option<u8>,
 
     /// Noise-instrument (drum) SFX streams, indexed by instrument number - 1
@@ -266,6 +278,45 @@ impl Sequencer {
     /// 3. Apply per-frame effects (vibrato, pitch slide, duty rotation)
     /// 4. Write results to APU
     pub fn update_frame(&mut self, apu: &mut Apu) {
+        let output = self.advance_channels();
+        self.apply_to_apu(apu, &output);
+        let outcome = self.consume_output(&output);
+
+        // Written directly (like the fade machinery's NR50 writes) rather
+        // than only through the power-gated write_register.
+        if let Some(vol) = outcome.nr50 {
+            apu.nr50 = vol;
+            apu.write_register(0xFF24, vol);
+        }
+    }
+
+    /// Advance one frame and consume its output requests without writing audio.
+    ///
+    /// Use this when an external clock already owns register writes for the
+    /// frame. Commands, delays, effects and SFX priority advance exactly as in
+    /// [`Self::update_frame`]. Output triggers and pending NR50 are consumed
+    /// using ordinary playback's selection rules, so a later ordinary frame
+    /// cannot replay them. No APU or device sink is accessed. This does not run
+    /// an audio manager's fade or hooks.
+    ///
+    /// Call either this method or `update_frame` once for each logical frame.
+    /// The returned volume is informational when the external clock has already
+    /// applied that frame's writes; applying it again would duplicate output.
+    ///
+    /// ```
+    /// use dotzuki_audio::sequencer::Sequencer;
+    ///
+    /// let mut sequencer = Sequencer::new();
+    /// sequencer.play_music(1, &[vec![0xf0, 0x53, 0x03, 0xff]], 0x100);
+    /// assert_eq!(sequencer.advance_frame_without_output().nr50, Some(0x53));
+    /// assert_eq!(sequencer.advance_frame_without_output().nr50, None);
+    /// ```
+    pub fn advance_frame_without_output(&mut self) -> LogicalFrameOutcome {
+        let output = self.advance_channels();
+        self.consume_output(&output)
+    }
+
+    fn advance_channels(&mut self) -> [ChannelOutput; NUM_CHANNELS] {
         let mut output = [ChannelOutput::None; NUM_CHANNELS];
         for (ch_idx, request) in output.iter_mut().enumerate() {
             if !self.channels[ch_idx].active {
@@ -275,17 +326,38 @@ impl Sequencer {
             *request = self.update_channel(ch_idx);
         }
 
-        self.apply_to_apu(apu, &output);
+        output
+    }
 
-        // Apply a pending master-volume write from a `volume` ($F0) command.
-        // The classic engine's volume routine writes the param byte straight
-        // to NR50 in the middle of command processing, so it takes effect on
-        // the same frame the command executes.
-        // Written directly (like the fade machinery's NR50 writes) rather
-        // than through the power-gated write_register.
-        if let Some(vol) = self.pending_nr50.take() {
-            apu.nr50 = vol;
-            apu.write_register(0xFF24, vol);
+    fn selected_channel(&self, hw: usize) -> Option<usize> {
+        let sfx = hw + NUM_MUSIC_CHANNELS;
+        if self.channels[sfx].active {
+            Some(sfx)
+        } else if self.channels[hw].active {
+            Some(hw)
+        } else {
+            None
+        }
+    }
+
+    fn consume_output(&mut self, output: &[ChannelOutput; NUM_CHANNELS]) -> LogicalFrameOutcome {
+        for hw in 0..NUM_MUSIC_CHANNELS {
+            if let Some(index) = self.selected_channel(hw) {
+                // Preserve the ordinary output branches: no request and tonal
+                // slides bypass the note helpers. Every other request either
+                // handles a rest or enters a helper that consumes its trigger.
+                let consumes_trigger = match output[index] {
+                    ChannelOutput::None => false,
+                    ChannelOutput::Slide if hw < 3 => false,
+                    _ => true,
+                };
+                if consumes_trigger {
+                    self.channels[index].trigger = false;
+                }
+            }
+        }
+        LogicalFrameOutcome {
+            nr50: self.pending_nr50.take(),
         }
     }
 
@@ -843,20 +915,13 @@ impl Sequencer {
     /// Apply the register requests produced by this update. Retained logical
     /// note state is not a request to replay it after a one-shot ends.
     /// SFX still takes priority over music on the corresponding hardware voice.
-    fn apply_to_apu(&mut self, apu: &mut Apu, output: &[ChannelOutput; NUM_CHANNELS]) {
+    fn apply_to_apu(&self, apu: &mut Apu, output: &[ChannelOutput; NUM_CHANNELS]) {
         // Routing is hardware state. Sustain/effect updates must not enable a
         // wave voice muted by a rest, or apply a covered rest on SFX release.
         let mut panning = apu.nr51;
 
         for hw in 0..4usize {
-            let sfx_idx = hw + NUM_MUSIC_CHANNELS;
-            let music_idx = hw;
-
-            let active_idx = if self.channels[sfx_idx].active {
-                sfx_idx
-            } else if self.channels[music_idx].active {
-                music_idx
-            } else {
+            let Some(active_idx) = self.selected_channel(hw) else {
                 self.silence_hw_channel(apu, hw);
                 panning &= !HwChannel::from_u8(hw as u8).unwrap().enable_mask();
                 continue;
@@ -869,7 +934,7 @@ impl Sequencer {
             if request == ChannelOutput::None {
                 continue;
             }
-            let ch = &mut self.channels[active_idx];
+            let ch = &self.channels[active_idx];
             if request == ChannelOutput::Note {
                 panning = (panning & !hw_mask) | (ch.stereo_panning & hw_mask);
             }
@@ -881,7 +946,6 @@ impl Sequencer {
                     apu.write_register(envelope, 0x08);
                     apu.write_register(envelope + 2, 0x80);
                 }
-                ch.trigger = false;
                 continue;
             }
             if request == ChannelOutput::Slide && hw < 3 {
@@ -904,9 +968,9 @@ impl Sequencer {
     }
 
     /// Write pulse channel state to APU.
-    /// On new note (trigger=true): writes all registers and clears trigger.
+    /// On new note (trigger=true): writes all registers.
     /// On sustain: only updates frequency low byte (for vibrato/pitch slide).
-    fn apply_pulse_channel(apu: &mut Apu, ch: &mut ChannelState, is_ch1: bool) {
+    fn apply_pulse_channel(apu: &mut Apu, ch: &ChannelState, is_ch1: bool) {
         let freq = ch.frequency;
         let nrx3 = ch.vibrato_freq_lo.unwrap_or((freq & 0xFF) as u8);
 
@@ -930,8 +994,6 @@ impl Sequencer {
                 apu.write_register(0xFF18, nrx3);
                 apu.write_register(0xFF19, nrx4);
             }
-
-            ch.trigger = false;
         } else {
             if is_ch1 {
                 apu.write_register(0xFF13, nrx3);
@@ -942,7 +1004,7 @@ impl Sequencer {
     }
 
     /// Write wave channel state to APU.
-    fn apply_wave_channel(apu: &mut Apu, ch: &mut ChannelState) {
+    fn apply_wave_channel(apu: &mut Apu, ch: &ChannelState) {
         let freq = ch.frequency;
 
         if ch.trigger {
@@ -961,8 +1023,6 @@ impl Sequencer {
             apu.write_register(0xFF1C, volume_code << 5);
             apu.write_register(0xFF1D, (freq & 0xFF) as u8);
             apu.write_register(0xFF1E, 0x80 | ((freq >> 8) & 0x07) as u8);
-
-            ch.trigger = false;
         } else {
             let nrx3 = ch.vibrato_freq_lo.unwrap_or((freq & 0xFF) as u8);
             apu.write_register(0xFF1D, nrx3);
@@ -970,7 +1030,7 @@ impl Sequencer {
     }
 
     /// Write noise channel state to APU.
-    fn apply_noise_channel(apu: &mut Apu, ch: &mut ChannelState) {
+    fn apply_noise_channel(apu: &mut Apu, ch: &ChannelState) {
         if ch.trigger {
             apu.write_register(0xFF21, ch.volume_envelope);
 
@@ -979,8 +1039,6 @@ impl Sequencer {
             let divisor = (freq & 0x07) as u8;
             apu.write_register(0xFF22, (shift << 4) | divisor);
             apu.write_register(0xFF23, 0x80);
-
-            ch.trigger = false;
         }
     }
 
@@ -1056,5 +1114,52 @@ impl Sequencer {
 impl Default for Sequencer {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod output_consumption_tests {
+    use super::*;
+
+    #[test]
+    fn retained_triggers_follow_the_original_output_branch_table() {
+        // The pre-extraction output implementation consumes trigger inside
+        // note helpers and the rest branch. Tonal Slide writes frequency
+        // registers directly; noise Slide enters the noise helper. These
+        // fixed expectations also cover retained triggers that ordinary
+        // update_channel currently clears before producing an effect request.
+        let cases = [
+            (ChannelOutput::None, [true, true, true, true]),
+            (ChannelOutput::Note, [false, false, false, false]),
+            (ChannelOutput::Rest, [false, false, false, false]),
+            (ChannelOutput::FrequencyLow, [false, false, false, false]),
+            (ChannelOutput::Slide, [true, true, true, false]),
+        ];
+        for (request, expected_triggers) in cases {
+            for (hw, expected_trigger) in expected_triggers.into_iter().enumerate() {
+                for sfx_selected in [false, true] {
+                    let sfx = hw + NUM_MUSIC_CHANNELS;
+                    let selected = if sfx_selected { sfx } else { hw };
+                    let mut before = Sequencer::new();
+                    before.channels[hw].active = true;
+                    before.channels[sfx].active = sfx_selected;
+                    before.channels[hw].trigger = true;
+                    before.channels[sfx].trigger = true;
+                    let mut output = [ChannelOutput::None; NUM_CHANNELS];
+                    output[hw] = request;
+                    output[sfx] = request;
+
+                    let mut expected = before.clone();
+                    expected.channels[selected].trigger = expected_trigger;
+                    let mut ordinary = before.clone();
+                    ordinary.apply_to_apu(&mut Apu::new(), &output);
+                    ordinary.consume_output(&output);
+                    assert_eq!(ordinary, expected, "ordinary {hw} {request:?}");
+                    let mut logical = before;
+                    logical.consume_output(&output);
+                    assert_eq!(logical, expected, "logical {hw} {request:?}");
+                }
+            }
+        }
     }
 }
