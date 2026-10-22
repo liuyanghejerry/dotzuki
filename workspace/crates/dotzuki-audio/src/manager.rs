@@ -190,6 +190,13 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.post_frame_hook = hook;
     }
 
+    /// Whether ordinary frame updates have a post-sequencer hook installed.
+    /// Callers that own register scheduling can reject an unsupported hook
+    /// before advancing any audio state. This query does not invoke the hook.
+    pub fn has_post_frame_hook(&self) -> bool {
+        self.post_frame_hook.is_some()
+    }
+
     fn take_saved_music(&mut self, id: M) -> Option<Sequencer> {
         let index = self
             .saved_music_states
@@ -858,6 +865,7 @@ mod tests {
     #[test]
     fn post_frame_hook_overrides_registers_after_sequencer() {
         let mut mgr = manager();
+        assert!(!mgr.has_post_frame_hook());
         mgr.apu.write_register(0xFF26, 0x80); // NR52 power on
         mgr.play_music(Music::ThemeA);
         // An alarm-style hook pokes the pulse-1 registers directly.
@@ -868,11 +876,16 @@ mod tests {
             apu.write_register(0xFF13, 0x50);
             apu.write_register(0xFF14, 0x87);
         })));
+        let before_query = (mgr.apu.playback_state(), mgr.sequencer.clone());
+        assert!(mgr.has_post_frame_hook());
+        assert_eq!(mgr.apu.playback_state(), before_query.0);
+        assert_eq!(mgr.sequencer, before_query.1);
         mgr.update_frame();
         assert_eq!(mgr.apu.read_register(0xFF12), 0xE2);
         assert_eq!(mgr.apu.ch1.freq_reg, 0x750);
 
         mgr.set_post_frame_hook(None);
+        assert!(!mgr.has_post_frame_hook());
         // With the hook gone nothing pokes the registers anymore: a manual
         // write survives the frame (the music stream has ended, so the
         // sequencer no longer touches channel 1 either).
