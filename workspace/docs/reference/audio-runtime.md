@@ -92,8 +92,10 @@ stick (read back with `no_audio_fade_out()`).
 
 ### Resume snapshots
 
-`play_music(id)` clones the live sequencer into `saved_music_states` under the
-old id when switching to a different track; requesting a track that has a
+`play_music(id)` copies the four music channels, music tempo, playing flag,
+and music id into `saved_music_states` under the old id when switching to a
+different track. Snapshots omit SFX channels and the drum library; those stay
+with the live sequencer. Requesting a track that has a
 snapshot resumes it through `Sequencer::restore_music_from` instead of
 restarting. `stop_music()` and `stop_all()` drop every snapshot;
 `clear_saved_music_states()` drops them without touching playback (the
