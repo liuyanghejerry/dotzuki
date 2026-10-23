@@ -40,6 +40,11 @@ closures — at construction: `AudioManager::new(music_track, sfx_track)` with
 The fields `sequencer`, `apu`, `fade_state`, `fade_counter_reload`, and
 `fade_queued_music` are public for engine-level integrations.
 
+Track loading copies each nonempty static stream directly into its live
+channel's owned buffer. The manager does not first build a temporary vector
+of copied streams. Channel data remains mutable and independently owned;
+the existing `Sequencer::play_music` / `play_sfx` vector APIs remain available.
+
 **The APU starts unpowered.** Someone — the output layer or the game — must
 write NR52 (`0xFF26 = 0x80`) before any sound comes out; register writes to a
 powered-down APU are ignored.

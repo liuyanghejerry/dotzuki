@@ -145,6 +145,15 @@ impl Sequencer {
     /// `sound_id` is the music ID.
     /// `tempo` is the initial tempo.
     pub fn play_music(&mut self, sound_id: u8, channel_data: &[Vec<u8>], tempo: u16) {
+        self.play_music_streams(sound_id, channel_data.iter().map(Vec::as_slice), tempo);
+    }
+
+    pub(crate) fn play_music_streams<'a>(
+        &mut self,
+        sound_id: u8,
+        channel_data: impl IntoIterator<Item = &'a [u8]>,
+        tempo: u16,
+    ) {
         // Stop any existing music
         self.stop_music();
 
@@ -152,13 +161,13 @@ impl Sequencer {
         self.music_tempo = tempo;
         self.music_playing = true;
 
-        for (i, data) in channel_data.iter().enumerate() {
+        for (i, data) in channel_data.into_iter().enumerate() {
             if i >= NUM_MUSIC_CHANNELS {
                 break;
             }
             let ch = &mut self.channels[i];
             ch.reset();
-            ch.data = data.clone();
+            ch.data = data.to_vec();
             ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
@@ -188,6 +197,21 @@ impl Sequencer {
         start_channel: usize,
         tempo: u16,
     ) {
+        self.play_sfx_streams(
+            sound_id,
+            channel_data.iter().map(Vec::as_slice),
+            start_channel,
+            tempo,
+        );
+    }
+
+    pub(crate) fn play_sfx_streams<'a>(
+        &mut self,
+        sound_id: u8,
+        channel_data: impl IntoIterator<Item = &'a [u8]>,
+        start_channel: usize,
+        tempo: u16,
+    ) {
         // Match the original game's behavior: if this SFX is already playing,
         // don't restart it. The original checks the SFX sound-ID field for
         // CHAN5 and skips the sound init if it matches (e.g. the collision
@@ -200,7 +224,7 @@ impl Sequencer {
         self.sfx_tempo = tempo;
         self.sfx_playing = true;
 
-        for (i, data) in channel_data.iter().enumerate() {
+        for (i, data) in channel_data.into_iter().enumerate() {
             if data.is_empty() {
                 continue;
             }
@@ -210,7 +234,7 @@ impl Sequencer {
             }
             let ch = &mut self.channels[ch_idx];
             ch.reset();
-            ch.data = data.clone();
+            ch.data = data.to_vec();
             ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
