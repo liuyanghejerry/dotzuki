@@ -18,6 +18,12 @@
 
 ## AudioManager
 
+只暂停音乐时，每个暂停帧调用 `update_frame_with_music_paused()`，替代
+`update_frame()`。四个音乐通道的指令、延时与效果冻结，SFX、淡出和帧后
+钩子继续推进。调用方在进入暂停时将硬件静音一次；此 API 不会在后续帧
+反复静音，因此持续的音效可以自然结束。恢复时继续调用 `update_frame()`，
+无需重启曲目或新增恢复缓存。`Sequencer` 也提供接受 `&mut Apu` 的同名方法。
+
 `AudioManager<M, S>` 掌管[音序器](./glossary.md) + [GB-APU](./glossary.md)
 之上每个 VBlank（约 60 Hz）发生的一切：NR50 主音量盖印、音乐淡出状态机、
 跨曲目断点续播快照，以及带音高/速度修饰的 SFX/叫声播放。id 类型是泛型的

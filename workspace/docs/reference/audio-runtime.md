@@ -61,6 +61,14 @@ whatever the sound engine produced that frame.
 
 ### Master volume
 
+For a music-only pause, call `update_frame_with_music_paused()` instead of
+`update_frame()` for each paused frame. It freezes all four music channels'
+commands, delays and effects while advancing SFX, fade and the post-frame hook.
+The caller mutes hardware once at the pause boundary; this API does not mute
+again on subsequent frames, so sustained SFX can finish. Resume with ordinary
+`update_frame()`, without restarting a track or making a resume-cache entry.
+The same operation is available on `Sequencer` with an explicit `&mut Apu`.
+
 | Method | Effect |
 |---|---|
 | `master_volume_left()` / `master_volume_right()` | Logical per-side levels, 0–7 each |

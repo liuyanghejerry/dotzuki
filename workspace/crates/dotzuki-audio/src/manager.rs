@@ -363,10 +363,25 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
     /// Call once per VBlank (~60 Hz): let the fade state machine update
     /// volume when due, tick the sequencer, then run the post-frame hook.
     pub fn update_frame(&mut self) {
+        self.update_frame_inner(false);
+    }
+
+    /// Run one frame with music commands/effects frozen while SFX, fade and
+    /// the post-frame hook continue. The caller owns hardware muting at the
+    /// pause boundary; see [`Sequencer::update_frame_with_music_paused`].
+    pub fn update_frame_with_music_paused(&mut self) {
+        self.update_frame_inner(true);
+    }
+
+    fn update_frame_inner(&mut self, music_paused: bool) {
         // A countdown frame or disabled automatic volume preserves the live
         // register. Music commands may then change it during this update.
         self.process_fade();
-        self.sequencer.update_frame(&mut self.apu);
+        if music_paused {
+            self.sequencer.update_frame_with_music_paused(&mut self.apu);
+        } else {
+            self.sequencer.update_frame(&mut self.apu);
+        }
         // The hook writes after the sequencer so it can override the sound
         // engine's registers for this frame (e.g. an alarm tone poked
         // straight into NR11–NR14).
@@ -524,6 +539,43 @@ mod tests {
 
     fn manager() -> AudioManager<Music, Sfx> {
         AudioManager::new(music_track, sfx_track)
+    }
+
+    #[test]
+    fn paused_music_freezes_all_channels_while_sfx_finishes_then_resumes() {
+        let mut mgr = manager();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(Music::ThemeA);
+        let streams: [Vec<u8>; 4] = core::array::from_fn(|_| THEME_A_CH1.to_vec());
+        mgr.sequencer.play_music(1, &streams, 0x0070);
+        mgr.update_frame();
+        let music = mgr.sequencer.channels[..4].to_vec();
+        assert!(music.iter().all(|channel| channel.active));
+        let tempo = mgr.sequencer.music_tempo;
+        let mut reference = mgr.sequencer.clone();
+        let mut reference_apu = mgr.apu.clone();
+        // Boundary muting belongs to the caller. It must not be repeated on
+        // every frame, or it would cut off a sustained reward/confirmation SFX.
+        mgr.apu.write_register(0xff25, 0);
+        mgr.play_sfx(Sfx::Beep);
+        let mut sfx_played = false;
+        let mut sfx_ended = false;
+        for frame in 0..120 {
+            mgr.update_frame_with_music_paused();
+            assert_eq!(&mgr.sequencer.channels[..4], &music);
+            assert_eq!(mgr.sequencer.music_tempo, tempo);
+            assert_eq!(mgr.last_music_id(), Some(Music::ThemeA));
+            if frame == 0 {
+                assert!(mgr.is_sfx_playing());
+                assert_ne!(mgr.apu.nr51 & 0x11, 0);
+                sfx_played = true;
+            }
+            sfx_ended |= !mgr.is_sfx_playing();
+        }
+        assert!(sfx_played && sfx_ended);
+        mgr.update_frame();
+        reference.update_frame(&mut reference_apu);
+        assert_eq!(&mgr.sequencer.channels[..4], &reference.channels[..4]);
     }
 
     #[test]
