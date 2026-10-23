@@ -87,8 +87,9 @@ NR50 在 tick *之前*盖印，这样流内的 `volume` 命令可以在该帧剩
 
 ### 断点续播快照
 
-切到不同曲目时，`play_music(id)` 会把当前音序器克隆进
-`saved_music_states`、以旧 id 为键；再次请求有快照的曲目时经
+切到不同曲目时，`play_music(id)` 会把四个音乐通道、音乐速度、播放标志和
+音乐 id 复制进 `saved_music_states`，以旧 id 为键。快照不保存音效通道和
+鼓声库；这些数据留在当前音序器中。再次请求有快照的曲目时经
 `Sequencer::restore_music_from` 续播，而不是重新开始。`stop_music()` 与
 `stop_all()` 丢弃全部快照；`clear_saved_music_states()` 只丢弃快照、不动
 播放（地图切换场景）；`discard_saved_music_state(id)` 让某条曲目下次重新

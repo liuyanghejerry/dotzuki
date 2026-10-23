@@ -164,6 +164,8 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
     /// Resume states retained when switching away from a playing track.
     /// A logical playback snapshot must preserve these alongside the current
     /// music id and sequencer, so later track switches resume the saved past.
+    /// Entries contain only the fields consumed by `restore_music_from`;
+    /// SFX channels and the live drum library are not part of a music resume.
     pub fn saved_music_states(&self) -> &[(M, Sequencer)] {
         &self.saved_music_states
     }
@@ -216,8 +218,9 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
             if let Some(last_id) = self.last_music_id {
                 if last_id != id {
                     self.take_saved_music(last_id);
-                    self.saved_music_states
-                        .push((last_id, self.sequencer.clone()));
+                    let mut saved = Sequencer::new();
+                    saved.restore_music_from(&self.sequencer);
+                    self.saved_music_states.push((last_id, saved));
                 }
             }
         }
@@ -521,6 +524,48 @@ mod tests {
 
     fn manager() -> AudioManager<Music, Sfx> {
         AudioManager::new(music_track, sfx_track)
+    }
+
+    #[test]
+    fn music_resume_omits_sfx_and_drums_without_changing_live_playback() {
+        fn playing() -> AudioManager<Music, Sfx> {
+            let mut mgr = manager();
+            mgr.sequencer
+                .register_noise_instruments(vec![vec![0x20, 0xE2, 0x50, 0x87, 0xFF]; 19]);
+            mgr.play_music(Music::ThemeA);
+            mgr.play_sfx(Sfx::Beep);
+            mgr.update_frame();
+            mgr
+        }
+        let mut compact = playing();
+        let mut full = playing();
+        let full_snapshot = full.sequencer.clone();
+        assert!(!full_snapshot.channels[4].data.is_empty());
+        compact.play_music(Music::ThemeB);
+        full.play_music(Music::ThemeB);
+        // Reproduce the former full-clone resume cache as an independent
+        // behavioral baseline, including the SFX and drum data it retained.
+        full.restore_saved_music_states(vec![(Music::ThemeA, full_snapshot.clone())]);
+        let saved = &compact.saved_music_states()[0].1;
+        assert_eq!(&saved.channels[..4], &full_snapshot.channels[..4]);
+        assert!(saved.channels[4..].iter().all(|ch| ch.data.is_empty()));
+        assert_eq!(saved.noise_instruments.capacity(), 0);
+        assert_eq!(compact.sequencer, full.sequencer);
+        assert_eq!(compact.sequencer.noise_instruments.len(), 19);
+        for frame in 0..60 {
+            if frame == 3 || frame == 20 {
+                compact.play_music(Music::ThemeA);
+                full.play_music(Music::ThemeA);
+            }
+            if frame == 12 {
+                compact.play_music(Music::ThemeB);
+                full.play_music(Music::ThemeB);
+            }
+            assert_eq!(compact.sequencer, full.sequencer);
+            assert_eq!(format!("{:?}", compact.apu), format!("{:?}", full.apu));
+            compact.update_frame();
+            full.update_frame();
+        }
     }
 
     #[test]
