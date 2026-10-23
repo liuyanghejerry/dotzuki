@@ -278,7 +278,20 @@ impl Sequencer {
     /// 3. Apply per-frame effects (vibrato, pitch slide, duty rotation)
     /// 4. Write results to APU
     pub fn update_frame(&mut self, apu: &mut Apu) {
-        let output = self.advance_channels();
+        self.update_frame_from(apu, 0);
+    }
+
+    /// Advance only SFX channels, preserving every music command/effect state.
+    ///
+    /// The caller owns the pause boundary's hardware muting. This method does
+    /// not repeatedly mute output: a sustained SFX must survive paused frames.
+    /// Resume with `update_frame`; paused music is neither stopped nor cached.
+    pub fn update_frame_with_music_paused(&mut self, apu: &mut Apu) {
+        self.update_frame_from(apu, NUM_MUSIC_CHANNELS);
+    }
+
+    fn update_frame_from(&mut self, apu: &mut Apu, first_channel: usize) {
+        let output = self.advance_channels_from(first_channel);
         self.apply_to_apu(apu, &output);
         let outcome = self.consume_output(&output);
 
@@ -317,8 +330,12 @@ impl Sequencer {
     }
 
     fn advance_channels(&mut self) -> [ChannelOutput; NUM_CHANNELS] {
+        self.advance_channels_from(0)
+    }
+
+    fn advance_channels_from(&mut self, first_channel: usize) -> [ChannelOutput; NUM_CHANNELS] {
         let mut output = [ChannelOutput::None; NUM_CHANNELS];
-        for (ch_idx, request) in output.iter_mut().enumerate() {
+        for (ch_idx, request) in output.iter_mut().enumerate().skip(first_channel) {
             if !self.channels[ch_idx].active {
                 continue;
             }
