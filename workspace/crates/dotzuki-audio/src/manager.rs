@@ -238,13 +238,11 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.last_music_id = Some(id);
 
         let track = (self.music_track)(id);
-        let channel_data: Vec<Vec<u8>> = track
-            .channels
-            .iter()
-            .map(|data| data.unwrap_or(&[]).to_vec())
-            .collect();
-        self.sequencer
-            .play_music(track.sound_id, &channel_data, track.tempo);
+        self.sequencer.play_music_streams(
+            track.sound_id,
+            track.channels.into_iter().map(|data| data.unwrap_or(&[])),
+            track.tempo,
+        );
         self.reset_master_volume();
     }
 
@@ -309,15 +307,17 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         let Some(start_channel) = self.sfx_start_channel(id) else {
             return;
         };
-        let channel_data: Vec<Vec<u8>> = track
-            .channels
-            .iter()
-            .skip(start_channel)
-            .map(|data| data.unwrap_or(&[]).to_vec())
-            .collect();
         self.sequencer.frequency_modifier = frequency_mod;
-        self.sequencer
-            .play_sfx(track.sound_id, &channel_data, start_channel, tempo);
+        self.sequencer.play_sfx_streams(
+            track.sound_id,
+            track
+                .channels
+                .into_iter()
+                .skip(start_channel)
+                .map(|data| data.unwrap_or(&[])),
+            start_channel,
+            tempo,
+        );
     }
 
     /// The first hardware channel (0-3) this SFX uses — the index of the
