@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-65f46b46.js";
+            window.path_to_searchindex_js = "../searchindex-e8199125.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -273,8 +273,10 @@ the taken fade-complete hook runs. <code>fade_speed = 0</code> steps once per fr
 <code>set_no_audio_fade_out(true)</code> was set, which lets in-stream <code>volume</code> writes
 stick (read back with <code>no_audio_fade_out()</code>).</p>
 <h3 id="resume-snapshots"><a class="header" href="#resume-snapshots">Resume snapshots</a></h3>
-<p><code>play_music(id)</code> clones the live sequencer into <code>saved_music_states</code> under the
-old id when switching to a different track; requesting a track that has a
+<p><code>play_music(id)</code> copies the four music channels, music tempo, playing flag,
+and music id into <code>saved_music_states</code> under the old id when switching to a
+different track. Snapshots omit SFX channels and the drum library; those stay
+with the live sequencer. Requesting a track that has a
 snapshot resumes it through <code>Sequencer::restore_music_from</code> instead of
 restarting. <code>stop_music()</code> and <code>stop_all()</code> drop every snapshot;
 <code>clear_saved_music_states()</code> drops them without touching playback (the

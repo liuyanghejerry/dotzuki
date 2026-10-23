@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-65f46b46.js";
+            window.path_to_searchindex_js = "../searchindex-e8199125.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -269,8 +269,9 @@
 <code>set_no_audio_fade_out(true)</code>，它让流内 <code>volume</code> 写入保持生效（用
 <code>no_audio_fade_out()</code> 读回）。</p>
 <h3 id="断点续播快照"><a class="header" href="#断点续播快照">断点续播快照</a></h3>
-<p>切到不同曲目时，<code>play_music(id)</code> 会把当前音序器克隆进
-<code>saved_music_states</code>、以旧 id 为键；再次请求有快照的曲目时经
+<p>切到不同曲目时，<code>play_music(id)</code> 会把四个音乐通道、音乐速度、播放标志和
+音乐 id 复制进 <code>saved_music_states</code>，以旧 id 为键。快照不保存音效通道和
+鼓声库；这些数据留在当前音序器中。再次请求有快照的曲目时经
 <code>Sequencer::restore_music_from</code> 续播，而不是重新开始。<code>stop_music()</code> 与
 <code>stop_all()</code> 丢弃全部快照；<code>clear_saved_music_states()</code> 只丢弃快照、不动
 播放（地图切换场景）；<code>discard_saved_music_state(id)</code> 让某条曲目下次重新

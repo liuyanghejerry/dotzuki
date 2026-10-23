@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-65f46b46.js";
+            window.path_to_searchindex_js = "searchindex-e8199125.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7b7e3677.js"></script>
@@ -6245,8 +6245,10 @@ the taken fade-complete hook runs. <code>fade_speed = 0</code> steps once per fr
 <code>set_no_audio_fade_out(true)</code> was set, which lets in-stream <code>volume</code> writes
 stick (read back with <code>no_audio_fade_out()</code>).</p>
 <h3 id="resume-snapshots"><a class="header" href="#resume-snapshots">Resume snapshots</a></h3>
-<p><code>play_music(id)</code> clones the live sequencer into <code>saved_music_states</code> under the
-old id when switching to a different track; requesting a track that has a
+<p><code>play_music(id)</code> copies the four music channels, music tempo, playing flag,
+and music id into <code>saved_music_states</code> under the old id when switching to a
+different track. Snapshots omit SFX channels and the drum library; those stay
+with the live sequencer. Requesting a track that has a
 snapshot resumes it through <code>Sequencer::restore_music_from</code> instead of
 restarting. <code>stop_music()</code> and <code>stop_all()</code> drop every snapshot;
 <code>clear_saved_music_states()</code> drops them without touching playback (the
@@ -17432,8 +17434,9 @@ SFX 通道。另一组通道保留原有余量。重置发生在命令流中的�
 <code>set_no_audio_fade_out(true)</code>，它让流内 <code>volume</code> 写入保持生效（用
 <code>no_audio_fade_out()</code> 读回）。</p>
 <h3 id="断点续播快照"><a class="header" href="#断点续播快照">断点续播快照</a></h3>
-<p>切到不同曲目时，<code>play_music(id)</code> 会把当前音序器克隆进
-<code>saved_music_states</code>、以旧 id 为键；再次请求有快照的曲目时经
+<p>切到不同曲目时，<code>play_music(id)</code> 会把四个音乐通道、音乐速度、播放标志和
+音乐 id 复制进 <code>saved_music_states</code>，以旧 id 为键。快照不保存音效通道和
+鼓声库；这些数据留在当前音序器中。再次请求有快照的曲目时经
 <code>Sequencer::restore_music_from</code> 续播，而不是重新开始。<code>stop_music()</code> 与
 <code>stop_all()</code> 丢弃全部快照；<code>clear_saved_music_states()</code> 只丢弃快照、不动
 播放（地图切换场景）；<code>discard_saved_music_state(id)</code> 让某条曲目下次重新
