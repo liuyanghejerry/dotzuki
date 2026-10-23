@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ccceed3e.js";
+            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -223,6 +223,10 @@ closures — at construction: <code>AudioManager::new(music_track, sfx_track)</c
 </div>
 <p>The fields <code>sequencer</code>, <code>apu</code>, <code>fade_state</code>, <code>fade_counter_reload</code>, and
 <code>fade_queued_music</code> are public for engine-level integrations.</p>
+<p>Track loading copies each nonempty static stream directly into its live
+channel’s owned buffer. The manager does not first build a temporary vector
+of copied streams. Channel data remains mutable and independently owned;
+the existing <code>Sequencer::play_music</code> / <code>play_sfx</code> vector APIs remain available.</p>
 <p><strong>The APU starts unpowered.</strong> Someone — the output layer or the game — must
 write NR52 (<code>0xFF26 = 0x80</code>) before any sound comes out; register writes to a
 powered-down APU are ignored.</p>

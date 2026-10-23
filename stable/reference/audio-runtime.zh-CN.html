@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ccceed3e.js";
+            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -200,6 +200,9 @@
 <a href="./audio-commands.html">音频命令参考</a>。本页讲播放这些音轨的代码：
 <code>crates/dotzuki-audio/src/manager.rs</code> 与 <code>crates/dotzuki-audio/src/output/</code>。</p>
 <h2 id="audiomanager"><a class="header" href="#audiomanager">AudioManager</a></h2>
+<p>载入曲目时，每个非空静态字节流直接复制到对应活动通道的独立缓冲区，
+管理器不再先创建一组临时字节流副本。通道数据仍然独立拥有且可修改；
+<code>Sequencer::play_music</code> / <code>play_sfx</code> 原有的向量参数接口继续保留。</p>
 <p>只暂停音乐时，每个暂停帧调用 <code>update_frame_with_music_paused()</code>，替代
 <code>update_frame()</code>。四个音乐通道的指令、延时与效果冻结，SFX、淡出和帧后
 钩子继续推进。调用方在进入暂停时将硬件静音一次；此 API 不会在后续帧
