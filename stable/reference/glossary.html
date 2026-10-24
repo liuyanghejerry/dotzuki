@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
+            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.2</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -391,26 +391,66 @@ maps.</li>
 </ul>
 <h2 id="maps"><a class="header" href="#maps">Maps</a></h2>
 <ul>
-<li><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</li>
-<li><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
-in English in Chinese text.</li>
-<li><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
-kept in English in Chinese text.</li>
-<li><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
-in English in Chinese text.</li>
-<li><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
-below, higher layers render above.</li>
-<li><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
-(npcs, warps, signs, encounters).</li>
-<li><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</li>
-<li><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</li>
-<li><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
-the <code>@trigger</code> keyword stays as code.</li>
-<li><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</li>
-<li><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</li>
-<li><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
-dialogue, and menus.</li>
-<li><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</li>
+<li>
+<p><strong>click to move</strong>（点击移动）— select a destination tile by click or tap to start automatic
+walking. For example, clicking a reachable tile starts a four-direction route to that tile.
+Chinese UI hints use “自动行走” to describe the movement after destination selection.</p>
+</li>
+<li>
+<p><strong>navigation</strong>（导航）— follow a route toward the selected destination, rechecking each step.
+For example, directional input cancels navigation and gives the player manual control.</p>
+</li>
+<li>
+<p><strong>pathfinding</strong>（寻路）— search map states for a walkable route to a destination.
+For example, the runner searches around walls and NPCs within the current map.
+See <a href="../how-to/maps.html#click-to-move">click to move</a>.</p>
+</li>
+<li>
+<p><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
+in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
+kept in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
+in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
+below, higher layers render above.</p>
+</li>
+<li>
+<p><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
+(npcs, warps, signs, encounters).</p>
+</li>
+<li>
+<p><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</p>
+</li>
+<li>
+<p><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</p>
+</li>
+<li>
+<p><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
+the <code>@trigger</code> keyword stays as code.</p>
+</li>
+<li>
+<p><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</p>
+</li>
+<li>
+<p><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</p>
+</li>
+<li>
+<p><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
+dialogue, and menus.</p>
+</li>
+<li>
+<p><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</p>
+</li>
 </ul>
 <h2 id="assets"><a class="header" href="#assets">Assets</a></h2>
 <ul>

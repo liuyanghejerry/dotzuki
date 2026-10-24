@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2e800d8b.js";
+            window.path_to_searchindex_js = "searchindex-1dcba271.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7b7e3677.js"></script>
@@ -1263,7 +1263,7 @@ for the rule formats.</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Before you start, read <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest</a>,
@@ -1316,6 +1316,26 @@ never rolls, and turning in place is not a step. Absent (or <code>null</code>)
 <p>The encounter record schema lives in
 <a href="#encounter-records">Encounter records</a>; sceneless
 battle outcomes live in <a href="#battles">battle rules</a>.</p>
+<h2 id="click-to-move"><a class="header" href="#click-to-move">Click to move</a></h2>
+<p><a href="#maps-2">Click to move</a> lets players select a walkable map tile
+in the editor’s <strong>Play</strong> activity, desktop player, Web export, or Android/HarmonyOS export.
+The player follows a four-direction route. You can use the existing map format.
+A yellow outline marks the destination. An unreachable destination, or a search that exceeds
+16,384 states, flashes red. Walls and NPCs block routes. Every completed step
+still processes stairs, warps, and random encounters.</p>
+<p>Another click replaces the destination after the current step finishes. Directional input
+cancels <a href="#maps-2">navigation</a> and takes control. Dialogue, menus, battles,
+warps, focus loss, map reload, and save import cancel the route; returning to play does not
+resume it.
+The game ignores clicks during menus or dialogue. Drags, multiple fingers, and virtual controls
+do not create goals.</p>
+<p>Routes stay within the current map. Clicking an NPC does not start a conversation; A retains
+its interaction behavior. Ordinary destinations use the player’s collision layer; stair targets
+use the layer after entering that stair. Overlapping floors have no separate layer picker.
+A destination warp may change maps, but a route cannot pass through an intermediate warp.</p>
+<p>Custom Rust games must wire navigation and pointer callbacks into their own game loop.
+Updating dependencies alone does not enable this behavior. For iOS host integration, see
+<a href="../crates/dotzuki-mobile/controls/README.html">Native Touch Controls</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="edit-linked-buildings-and-auto-tiles"><a class="header" href="#edit-linked-buildings-and-auto-tiles">Edit linked buildings and auto-tiles</a></h1>
 <blockquote>
@@ -8103,7 +8123,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.8.2</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -8308,26 +8328,66 @@ maps.</li>
 </ul>
 <h2 id="maps-2"><a class="header" href="#maps-2">Maps</a></h2>
 <ul>
-<li><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</li>
-<li><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
-in English in Chinese text.</li>
-<li><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
-kept in English in Chinese text.</li>
-<li><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
-in English in Chinese text.</li>
-<li><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
-below, higher layers render above.</li>
-<li><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
-(npcs, warps, signs, encounters).</li>
-<li><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</li>
-<li><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</li>
-<li><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
-the <code>@trigger</code> keyword stays as code.</li>
-<li><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</li>
-<li><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</li>
-<li><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
-dialogue, and menus.</li>
-<li><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</li>
+<li>
+<p><strong>click to move</strong>（点击移动）— select a destination tile by click or tap to start automatic
+walking. For example, clicking a reachable tile starts a four-direction route to that tile.
+Chinese UI hints use “自动行走” to describe the movement after destination selection.</p>
+</li>
+<li>
+<p><strong>navigation</strong>（导航）— follow a route toward the selected destination, rechecking each step.
+For example, directional input cancels navigation and gives the player manual control.</p>
+</li>
+<li>
+<p><strong>pathfinding</strong>（寻路）— search map states for a walkable route to a destination.
+For example, the runner searches around walls and NPCs within the current map.
+See <a href="#click-to-move">click to move</a>.</p>
+</li>
+<li>
+<p><strong>tile</strong> — one cell of a map grid; kept in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>tileset</strong> — the <code>tileset.png</code> atlas plus its Tiled <code>.tsx</code> metadata; kept
+in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>atlas</strong> — a packed texture with named regions (<code>@atlas</code> in the DSL);
+kept in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>GID</strong> — the 1-based row-major tile id in Tiled maps and tilesets; kept
+in English in Chinese text.</p>
+</li>
+<li>
+<p><strong>elevation</strong>（海拔）— the player’s vertical level; lower layers render
+below, higher layers render above.</p>
+</li>
+<li>
+<p><strong>sidecar</strong>（伴生文件）— the editor-written <code>objects.json</code> beside a map
+(npcs, warps, signs, encounters).</p>
+</li>
+<li>
+<p><strong>warp</strong>（传送点）— a tile that fades the player to <code>dest_map</code>.</p>
+</li>
+<li>
+<p><strong>entity</strong>（实体）— a map object: an NPC, a warp, or a sign.</p>
+</li>
+<li>
+<p><strong>trigger</strong>（触发器）— the mechanism binding storylines to map objects;
+the <code>@trigger</code> keyword stays as code.</p>
+</li>
+<li>
+<p><strong>spawn</strong>（出生点）— where the player appears on map load or respawn.</p>
+</li>
+<li>
+<p><strong>entry map</strong>（入口地图）— the map the player boots and respawns on.</p>
+</li>
+<li>
+<p><strong>overworld</strong>（大地图）— the walkable map mode, as opposed to battle,
+dialogue, and menus.</p>
+</li>
+<li>
+<p><strong>collision</strong>（碰撞）— the layer(s) marking solid tiles.</p>
+</li>
 </ul>
 <h2 id="assets-1"><a class="header" href="#assets-1">Assets</a></h2>
 <ul>
@@ -8553,7 +8613,7 @@ the engine crates contain no concrete game data and no platform calls
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
@@ -8602,6 +8662,15 @@ The contract contains these groups:</p>
 </tbody>
 </table>
 </div>
+<p>Pointer input uses <code>dotzuki_mobile_pointer_click</code> to accept framebuffer pixel coordinates.
+<code>dotzuki_mobile_cancel_pointer_input</code> cancels <a href="#maps-2">navigation</a>.
+The shell serializes pointer calls with ticks. Shells filter letterboxing, virtual controls,
+drags, and multiple fingers. A pointer-enabled shell requires a Rust library that exports
+both symbols.
+<a href="#engine"><code>MobileGame</code></a> implementations ignore pointers by default.
+The <code>tick</code> bitmask handles buttons.
+See the <a href="#unreleased">unreleased compatibility notes</a> before
+updating a shell and its runtime library.</p>
 <p>The game thread is the sole caller for frame and save operations. One audio
 callback may call <code>audio_fill</code> concurrently. A lock-free single-producer,
 single-consumer ring separates the game loop from the audio callback.</p>
@@ -9447,6 +9516,14 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<ul>
+<li>Add <a href="#click-to-move">click to move</a> to the runner and pointer-enabled hosts.</li>
+<li>Add <code>dotzuki_mobile_pointer_click</code> and <code>dotzuki_mobile_cancel_pointer_input</code> to the mobile
+C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
+Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
+does not establish symbol availability. Existing <code>MobileGame</code> implementations keep their
+default pointer callbacks, and the button contract remains unchanged.</li>
+</ul>
 <p>Breaking Rust API change:</p>
 <ul>
 <li>Add <code>NpcRuntimeState::step_direction: Option&lt;Direction&gt;</code>. Add <code>step_direction: None</code> to
@@ -14906,7 +14983,7 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="地图"><a class="header" href="#地图">地图</a></h1>
 <blockquote>
-<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.10.0（源文档 commit db361944364d45440dd6997bb268859cbcd85a7c）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>如何定义地图：Tiled JSON、tileset、<code>objects.json</code> 伴生文件、海拔与 encounters。</p>
@@ -14915,7 +14992,7 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>开始前，请先阅读<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>——它定义了地图目录以及
@@ -14957,6 +15034,21 @@ encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录
 <code>encounters</code> 缺失（或为 <code>null</code>）⇒ 地图从不掷骰——旧的伴生文件保持原样继续工作。</p>
 <p>encounter 记录的 schema 见 <a href="#encounter-records">Encounter 记录</a>；
 sceneless 战斗的结算见<a href="#battles">战斗规则</a>。</p>
+<h2 id="点击移动"><a class="header" href="#点击移动">点击移动</a></h2>
+<p><a href="#maps-2">点击移动</a>允许玩家在编辑器 <strong>Play</strong>、桌面播放器、
+Web 导出或 Android/HarmonyOS 导出中选择可通行的地图格子。
+玩家会沿四方向路径走到该格，地图沿用现有格式。
+黄色方框标记目标；目标不可达或搜索达到 16,384 个状态上限时，目标格短暂显示红框。
+墙壁与 NPC 会阻挡路径；每步仍会触发楼梯、传送和随机遇敌。</p>
+<p>再次点击会替换目标，当前已开始的一步先走完。方向键接管并取消<a href="#maps-2">导航</a>。
+对话、菜单、战斗、传送、失焦、地图重载或读档会取消路径；恢复游戏后不会自动继续。
+菜单与对话中的点击不会排队等待执行。拖动、多指操作及虚拟按键不会生成移动目标。</p>
+<p><a href="#maps-2">寻路</a>仅覆盖当前地图。点击 NPC 不会自动对话；按 A 仍使用原有交互。
+普通目标按玩家所在碰撞层解释；楼梯目标使用进入该楼梯后的层。
+同一屏幕位置的重叠楼层没有额外的选层界面。走上目标传送点可以切图，
+但路径不会穿过中途传送点继续前进。</p>
+<p>自定义 Rust 游戏需接入导航与指针接口，不能仅靠升级依赖启用此行为。
+iOS 宿主的触控接法见<a href="../crates/dotzuki-mobile/controls/README.zh-CN.html">原生触控组件</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="编辑关联建筑与自动地形"><a class="header" href="#编辑关联建筑与自动地形">编辑关联建筑与自动地形</a></h1>
 <blockquote>
@@ -21021,8 +21113,8 @@ provider；JS provider 只编译地图场景。</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="移动端架构"><a class="header" href="#移动端架构">移动端架构</a></h1>
 <blockquote>
-<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.9.0
-（源文档 commit efb964354f9b772479ed26a7811cfa432c7d0a87）。
+<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.10.0
+（源文档 commit 42bd07c7689ea7d9fbef4d49ea613f7efdd36238）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21030,7 +21122,7 @@ provider；JS provider 只编译地图场景。</li>
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
@@ -21075,6 +21167,12 @@ Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共�
 </tbody>
 </table>
 </div>
+<p>指针输入通过 <code>dotzuki_mobile_pointer_click</code> 接收 framebuffer 像素坐标。
+<code>dotzuki_mobile_cancel_pointer_input</code> 取消<a href="#maps-2">导航</a>。
+外壳将指针调用与 tick 串行执行，并过滤黑边、虚拟按键、拖动与多指手势。
+使用指针的外壳要求 Rust 库导出这两个符号。
+<a href="#engine"><code>MobileGame</code></a> 实现默认忽略指针，<code>tick</code> 的 bitmask 处理按键。
+更新外壳及运行时库前，请阅读<a href="#未发布">未发布兼容性说明</a>。</p>
 <p>游戏线程独占帧和存档操作。一个音频回调可同时调用 <code>audio_fill</code>。
 无锁的单生产者、单消费者 ring buffer 隔离游戏循环和音频回调。</p>
 <p>移动宿主设置 <code>RunnerOptions::external_saves</code>。这会禁止磁盘加载与写入，
@@ -22130,6 +22228,13 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<ul>
+<li>为运行器及支持指针输入的宿主添加<a href="#点击移动">点击移动</a>。</li>
+<li>为移动端 C ABI 添加 <code>dotzuki_mobile_pointer_click</code> 和
+<code>dotzuki_mobile_cancel_pointer_input</code>，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
+更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
+现有 <code>MobileGame</code> 实现保留默认指针回调，按键契约保持不变。</li>
+</ul>
 <p>Rust API 破坏性变更：</p>
 <ul>
 <li><code>NpcRuntimeState</code> 新增 <code>step_direction: Option&lt;Direction&gt;</code>。空闲 NPC 结构体字面量

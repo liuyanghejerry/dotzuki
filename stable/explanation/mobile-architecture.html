@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
+            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.9.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
@@ -235,6 +235,15 @@ The contract contains these groups:</p>
 </tbody>
 </table>
 </div>
+<p>Pointer input uses <code>dotzuki_mobile_pointer_click</code> to accept framebuffer pixel coordinates.
+<code>dotzuki_mobile_cancel_pointer_input</code> cancels <a href="../reference/glossary.html#maps">navigation</a>.
+The shell serializes pointer calls with ticks. Shells filter letterboxing, virtual controls,
+drags, and multiple fingers. A pointer-enabled shell requires a Rust library that exports
+both symbols.
+<a href="../reference/glossary.html#engine"><code>MobileGame</code></a> implementations ignore pointers by default.
+The <code>tick</code> bitmask handles buttons.
+See the <a href="../release-notes/changelog.html#unreleased">unreleased compatibility notes</a> before
+updating a shell and its runtime library.</p>
 <p>The game thread is the sole caller for frame and save operations. One audio
 callback may call <code>audio_fill</code> concurrently. A lock-free single-producer,
 single-consumer ring separates the game loop from the audio callback.</p>

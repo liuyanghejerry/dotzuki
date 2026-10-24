@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
+            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -200,6 +200,14 @@ guide), then notable additions and fixes.</li>
 version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<ul>
+<li>Add <a href="../how-to/maps.html#click-to-move">click to move</a> to the runner and pointer-enabled hosts.</li>
+<li>Add <code>dotzuki_mobile_pointer_click</code> and <code>dotzuki_mobile_cancel_pointer_input</code> to the mobile
+C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
+Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
+does not establish symbol availability. Existing <code>MobileGame</code> implementations keep their
+default pointer callbacks, and the button contract remains unchanged.</li>
+</ul>
 <p>Breaking Rust API change:</p>
 <ul>
 <li>Add <code>NpcRuntimeState::step_direction: Option&lt;Direction&gt;</code>. Add <code>step_direction: None</code> to

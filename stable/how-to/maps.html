@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2e800d8b.js";
+            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -187,7 +187,7 @@
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.0</li>
 </ul>
 </blockquote>
 <p>Before you start, read <a href="../reference/project-manifest.html">the project manifest</a>,
@@ -240,6 +240,26 @@ never rolls, and turning in place is not a step. Absent (or <code>null</code>)
 <p>The encounter record schema lives in
 <a href="../reference/data-tables/encounters.html">Encounter records</a>; sceneless
 battle outcomes live in <a href="../reference/battle-rules.html">battle rules</a>.</p>
+<h2 id="click-to-move"><a class="header" href="#click-to-move">Click to move</a></h2>
+<p><a href="../reference/glossary.html#maps">Click to move</a> lets players select a walkable map tile
+in the editor’s <strong>Play</strong> activity, desktop player, Web export, or Android/HarmonyOS export.
+The player follows a four-direction route. You can use the existing map format.
+A yellow outline marks the destination. An unreachable destination, or a search that exceeds
+16,384 states, flashes red. Walls and NPCs block routes. Every completed step
+still processes stairs, warps, and random encounters.</p>
+<p>Another click replaces the destination after the current step finishes. Directional input
+cancels <a href="../reference/glossary.html#maps">navigation</a> and takes control. Dialogue, menus, battles,
+warps, focus loss, map reload, and save import cancel the route; returning to play does not
+resume it.
+The game ignores clicks during menus or dialogue. Drags, multiple fingers, and virtual controls
+do not create goals.</p>
+<p>Routes stay within the current map. Clicking an NPC does not start a conversation; A retains
+its interaction behavior. Ordinary destinations use the player’s collision layer; stair targets
+use the layer after entering that stair. Overlapping floors have no separate layer picker.
+A destination warp may change maps, but a route cannot pass through an intermediate warp.</p>
+<p>Custom Rust games must wire navigation and pointer callbacks into their own game loop.
+Updating dependencies alone does not enable this behavior. For iOS host integration, see
+<a href="../../crates/dotzuki-mobile/controls/README.html">Native Touch Controls</a>.</p>
 
                     </main>
 
