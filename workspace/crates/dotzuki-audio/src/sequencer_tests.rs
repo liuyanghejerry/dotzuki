@@ -5,6 +5,7 @@ use crate::apu::Apu;
 use crate::commands::{self, Command};
 use crate::effects;
 use crate::sequencer::*;
+use crate::NUM_MUSIC_CHANNELS;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Command Decoding Tests
@@ -544,6 +545,56 @@ fn test_sequencer_play_sfx() {
     assert!(seq.sfx_playing);
     assert!(seq.channels[CHAN5].active); // SFX channel 5 = HW channel 0
     assert_eq!(seq.current_sfx_id, 10);
+}
+
+#[test]
+fn sfx_frequency_modifier_reaches_each_tonal_note_and_apu() {
+    for hw in 0..2 {
+        for modifier in [0i16, 0x20, -0x20] {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            seq.frequency_modifier = modifier;
+            // Two distinct notes ensure the addend applies to every note,
+            // without accumulating onto the previous note's frequency.
+            let notes = vec![0x21, 0xa1, 0xf0, 7, 0x21, 0xa1, 0x70, 6, 0xff];
+            seq.play_sfx(200, &[notes], hw, 0x100);
+            for base in [0x07f0u16, 0x0670] {
+                seq.update_frame(&mut apu);
+                let expected = base.wrapping_add(modifier as u16);
+                assert_eq!(seq.channels[hw + NUM_MUSIC_CHANNELS].frequency, expected);
+                let hardware = if hw == 0 {
+                    apu.ch1.freq_reg
+                } else {
+                    apu.ch2.freq_reg
+                };
+                assert_eq!(hardware, expected & 0x7ff);
+                seq.update_frame(&mut apu);
+            }
+        }
+    }
+}
+
+#[test]
+fn sfx_frequency_modifier_leaves_noise_and_music_notes_unchanged() {
+    fn run(modifier: i16) -> (u16, u16, u8) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        seq.frequency_modifier = modifier;
+        seq.play_music(1, &[vec![0xd1, 0xa1, 0xe4, 0x03, 0xff]], 0x100);
+        seq.play_sfx(200, &[vec![0x23, 0xa1, 0x37, 0xff]], 3, 0x100);
+        seq.update_frame(&mut apu);
+        (
+            seq.channels[CHAN1].frequency,
+            seq.channels[CHAN8].frequency,
+            seq.channels[CHAN8].delay_counter,
+        )
+    }
+    let control = run(0);
+    assert_ne!(control.0, 0);
+    assert_eq!(control.1, 0x37);
+    assert_eq!(run(0x20), control);
 }
 
 #[test]
@@ -1106,6 +1157,112 @@ fn seq_with_drums() -> Sequencer {
 }
 
 #[test]
+fn rebuild_apu_preserves_full_state_and_mixed_sfx_drum_priority() {
+    let mut seq = seq_with_drums();
+    let mut old_apu = Apu::new();
+    old_apu.write_register(0xFF26, 0x80);
+    seq.play_music(
+        1,
+        &[
+            vec![0xDC, 0xC7, 0xE5, 0x0F, 0xFF],
+            vec![0xDC, 0xB3, 0xE5, 0x2F, 0xFF],
+            vec![0xDC, 0x12, 0xE5, 0x4F, 0xFF],
+            vec![0xBF, 0x01, 0xFF],
+        ],
+        0x0100,
+    );
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut old_apu);
+    assert!(seq.channels[CHAN1].active && seq.channels[CHAN5].active);
+    assert!(seq.channels[CHAN4].active && seq.channels[CHAN8].active);
+    assert!(!seq.channels[CHAN4].trigger);
+    let full_state = format!("{seq:?}");
+    let mut ordinary = seq.clone();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    apu.write_register(0xFF24, 0x77);
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    // The SFX pulse wins over the music pulse, the second pulse/wave stay
+    // audible, and the drum on CHAN8 wins over the CHAN4 command stream.
+    assert_eq!(apu.read_register(0xFF12), 0xE2);
+    assert_eq!(apu.read_register(0xFF17), 0xB3);
+    assert_eq!(apu.read_register(0xFF1C) & 0x60, 0x20);
+    assert_eq!(apu.read_register(0xFF21), 0xC1);
+    assert_eq!(apu.read_register(0xFF22), 0x33);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0x0F);
+    for mask in [0x11, 0x22, 0x44, 0x88] {
+        apu.write_register(0xFF25, mask);
+        let mut samples = [0.0; 256];
+        crate::output::render_apu_stereo(&mut apu, &mut samples, 44_100);
+        assert!(
+            samples.iter().any(|&sample| sample != 0.0),
+            "mask{mask:02x}"
+        );
+    }
+    // Rebuild consumed no note time: the very next update equals one
+    // ordinary update of the untouched saved state, including all triggers.
+    seq.update_frame(&mut apu);
+    ordinary.update_frame(&mut old_apu);
+    assert_eq!(format!("{seq:?}"), format!("{ordinary:?}"));
+}
+
+#[test]
+fn rebuild_apu_silences_stopped_state_without_advancing_it() {
+    let mut seq = seq_with_drums();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    seq.play_sfx(2, &[vec![0x2F, 0xE2, 0x50, 0x87, 0xFF]], 0, 0x0100);
+    seq.update_frame(&mut apu);
+    assert_ne!(apu.read_register(0xFF26) & 1, 0);
+    seq.stop_all();
+    let full_state = format!("{seq:?}");
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(apu.read_register(0xFF26) & 0x0F, 0);
+}
+
+#[test]
+fn rebuild_apu_between_drums_preserves_real_noise_tail_without_inventing_one() {
+    let mut seq = seq_with_drums();
+    let mut apu = Apu::new();
+    apu.write_register(0xFF26, 0x80);
+    seq.play_music(1, &[vec![], vec![], vec![], vec![0xB3, 1, 0xFF]], 0x0100);
+    seq.update_frame(&mut apu);
+    assert!(seq.channels[CHAN8].active);
+    seq.update_frame(&mut apu); // drum stream has returned; music waits
+    assert!(seq.channels[CHAN4].active);
+    assert!(!seq.channels[CHAN8].active);
+    assert_eq!(apu.read_register(0xFF21), 0xC1);
+    assert_eq!(apu.read_register(0xFF22), 0x33);
+    let full_state = format!("{seq:?}");
+    let noise_before = format!("{:?}", apu.ch4);
+    let mut untouched_apu = apu.clone();
+    let mut ordinary = seq.clone();
+    seq.rebuild_apu(&mut apu);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(format!("{:?}", apu.ch4), noise_before);
+    let mut samples = [0.0; 512];
+    let mut untouched_samples = [0.0; 512];
+    crate::output::render_apu_stereo(&mut apu, &mut samples, 44_100);
+    crate::output::render_apu_stereo(&mut untouched_apu, &mut untouched_samples, 44_100);
+    assert_eq!(samples, untouched_samples);
+    assert!(samples.iter().any(|&sample| sample != 0.0));
+
+    // A fresh APU has no saved drum tail: the command clock's default
+    // envelope/frequency must not manufacture a new hardware noise note.
+    let mut fresh = Apu::new();
+    fresh.write_register(0xFF26, 0x80);
+    seq.rebuild_apu(&mut fresh);
+    assert_eq!(format!("{seq:?}"), full_state);
+    assert_eq!(fresh.read_register(0xFF21), 0);
+    assert_eq!(fresh.read_register(0xFF26) & 8, 0);
+    seq.update_frame(&mut apu);
+    ordinary.update_frame(&mut untouched_apu);
+    assert_eq!(format!("{seq:?}"), format!("{ordinary:?}"));
+}
+
+#[test]
 fn test_drum_note_triggers_noise_instrument_on_chan8() {
     let mut seq = seq_with_drums();
     let mut apu = Apu::new();
@@ -1252,11 +1409,10 @@ fn test_override_channel_stream_executes_new_stream_from_start() {
 }
 
 #[test]
-fn test_override_channel_stream_music_resumes_after_end() {
-    // Battle music keeps running on the music channels while the hijacked
-    // SFX channel owns the hardware; when the override stream ends, the
-    // music channel takes the hardware back (a sound_ret on an SFX channel
-    // re-enables the music channel's output).
+fn test_override_channel_stream_returns_to_music_rest_after_end() {
+    // Battle music continues parsing under the hijacked SFX voice. Ending
+    // the override does not replay an old note; the next actual music rest
+    // writes the original silent envelope.
     let mut seq = Sequencer::new();
     let mut apu = Apu::new();
     apu.power = true;
@@ -1282,8 +1438,9 @@ fn test_override_channel_stream_music_resumes_after_end() {
     }
     assert!(!seq.channels[CHAN5].active);
     assert!(seq.channels[CHAN1].active, "music channel still active");
-    // Music channel owns the hardware again: its next trigger writes NR12.
-    assert_eq!(apu.read_register(0xFF12), 0xF0);
+    // The next looping rest writes envelope $08, not the retained default
+    // note volume $F0 (Audio3_note_pitch's rest branch).
+    assert_eq!(apu.read_register(0xFF12), 0x08);
 }
 
 #[test]
@@ -1372,4 +1529,569 @@ fn test_override_music_channel_alternate_tempo_pattern() {
         commands::calculate_frequency(2, 4),
         "loop landed in the appended normal body (note D_)"
     );
+}
+
+#[test]
+fn tempo_resets_music_fraction_before_note_and_preserves_sfx() {
+    // These fixed-point controls start with zero, 1/4, or 255/256 of an
+    // old tick. A tempo command starts all four music carries from zero.
+    for (tempo, delay, fraction) in [(0x00a0u16, 3, 192), (0x007c, 2, 232), (0x0100, 6, 0)] {
+        for previous in [0, 64, 255] {
+            let mut seq = Sequencer::new();
+            for (ch, carry) in seq
+                .channels
+                .iter_mut()
+                .zip([previous, 96, 128, 160, 17, 34, 51, 68])
+            {
+                ch.delay_frac = carry;
+                ch.delay_counter = 1;
+            }
+            let ch = &mut seq.channels[CHAN1];
+            ch.active = true;
+            ch.sound_id = 1;
+            ch.note_speed = 6;
+            ch.data = vec![0xed, (tempo >> 8) as u8, tempo as u8, 0xc0];
+            seq.update_frame(&mut Apu::new());
+            assert_eq!(seq.music_tempo, tempo);
+            assert_eq!(
+                seq.channels[CHAN1].delay_counter, delay,
+                "tempo={tempo}, previous={previous}"
+            );
+            assert_eq!(
+                seq.channels
+                    .iter()
+                    .map(|ch| ch.delay_frac)
+                    .collect::<Vec<_>>(),
+                [fraction, 0, 0, 0, 17, 34, 51, 68],
+                "tempo={tempo}, previous={previous}"
+            );
+        }
+    }
+}
+
+#[test]
+fn tempo_resets_sfx_fraction_before_note_and_preserves_music() {
+    let mut seq = Sequencer::new();
+    seq.music_tempo = 0x017f;
+    for (ch, carry) in seq
+        .channels
+        .iter_mut()
+        .zip([17, 34, 51, 68, 64, 96, 128, 160])
+    {
+        ch.delay_frac = carry;
+        ch.delay_counter = 1;
+    }
+    let ch = &mut seq.channels[CHAN5];
+    ch.active = true;
+    ch.sound_id = 1;
+    ch.flags2.insert(ChannelFlags2::EXECUTE_MUSIC);
+    ch.note_speed = 6;
+    ch.data = vec![0xed, 0x01, 0x00, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(seq.music_tempo, 0x017f);
+    assert_eq!(seq.sfx_tempo, 0x0100);
+    assert_eq!(seq.channels[CHAN5].delay_counter, 6);
+    assert_eq!(
+        seq.channels
+            .iter()
+            .map(|ch| ch.delay_frac)
+            .collect::<Vec<_>>(),
+        [17, 34, 51, 68, 0, 0, 0, 0]
+    );
+}
+
+#[test]
+fn tempo_on_later_channel_clears_earlier_fraction_without_retiming_its_note() {
+    let mut seq = Sequencer::new();
+    for i in [CHAN1, CHAN2] {
+        let ch = &mut seq.channels[i];
+        ch.active = true;
+        ch.sound_id = 1;
+        ch.note_speed = 6;
+        ch.delay_counter = 1;
+        ch.delay_frac = 37;
+    }
+    seq.channels[CHAN1].data = vec![0xc0];
+    seq.channels[CHAN2].data = vec![0xed, 0x00, 0xa0, 0xc0];
+    seq.update_frame(&mut Apu::new());
+    assert_eq!(
+        seq.channels[CHAN1].delay_counter, 6,
+        "earlier note used the old tempo"
+    );
+    assert_eq!(
+        seq.channels[CHAN1].delay_frac, 0,
+        "later tempo command clears the group"
+    );
+    assert_eq!(seq.channels[CHAN2].delay_counter, 3);
+    assert_eq!(
+        seq.channels[CHAN2].delay_frac, 192,
+        "this note accumulates after the reset"
+    );
+}
+
+#[test]
+fn paired_one_shot_pauses_music_vibrato_but_not_note_countdown() {
+    for channel in 0..NUM_MUSIC_CHANNELS {
+        for paired in [false, true] {
+            let mut seq = Sequencer::new();
+            let music = &mut seq.channels[channel];
+            music.active = true;
+            music.sound_id = 1;
+            music.delay_counter = 13;
+            music.vibrato.delay_counter = 5;
+            music.vibrato.extent = 0x22;
+            let voice = &mut seq.channels[NUM_MUSIC_CHANNELS + channel];
+            voice.active = paired;
+            voice.sound_id = 200;
+            voice.delay_counter = 13;
+            voice.flags1.insert(ChannelFlags1::NOISE_OR_SFX);
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[channel].delay_counter, 12);
+            assert_eq!(
+                seq.channels[channel].vibrato.delay_counter,
+                if paired { 5 } else { 4 },
+                "channel {channel}, paired {paired}"
+            );
+        }
+    }
+}
+
+#[test]
+fn ordinary_one_shot_stream_holds_music_effects_until_the_following_tick() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    apu.write_register(0xff26, 0x80);
+    // Both streams enter through their ordinary constructors. The long music
+    // note has a five-tick vibrato delay; the pulse one-shot lasts 12 ticks.
+    let music = vec![0xea, 5, 0x22, 0xdf, 0xb3, 0xe4, 0xaf, 0xff];
+    seq.play_music(1, &[music.clone(), music], 0x100);
+    seq.update_frame(&mut apu);
+    assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 5);
+    seq.play_sfx(
+        200,
+        &[vec![
+            0xec, 1, 0x24, 0xb2, 0x70, 6, 0x25, 0x91, 0x80, 6, 0xff,
+        ]],
+        0,
+        0x100,
+    );
+    for tick in 0..12 {
+        assert!(seq.channels[CHAN5].active, "one-shot entering tick {tick}");
+        let delay = seq.channels[CHAN1].delay_counter;
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.channels[CHAN1].delay_counter, delay - 1);
+        assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 5, "tick {tick}");
+        if tick < 5 {
+            assert_eq!(
+                seq.channels[CHAN2].vibrato.delay_counter,
+                4 - tick,
+                "unpaired music must continue"
+            );
+        }
+    }
+    assert!(!seq.channels[CHAN5].active);
+    seq.update_frame(&mut apu);
+    assert_eq!(seq.channels[CHAN1].vibrato.delay_counter, 4);
+}
+
+#[test]
+fn next_music_note_preserves_saved_pitch_under_its_paired_one_shot() {
+    for channel in [CHAN1, CHAN2, CHAN3] {
+        for paired in [false, true] {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[channel] = vec![0xd1, 0xb3, 0xe4, 0x00, 0x27, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            let old_pitch = seq.channels[channel].freq_lo_saved;
+            let one_shot_channel = if paired { channel } else { (channel + 1) % 3 };
+            seq.play_sfx(
+                200,
+                &[vec![0x2f, 0xb2, 0x70, 6, 0xff]],
+                one_shot_channel,
+                0x100,
+            );
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[channel].ptr, 5, "note parsing must continue");
+            assert_eq!(seq.channels[channel].delay_counter, 8);
+            let next_pitch = commands::calculate_frequency(2, 4) as u8;
+            assert_ne!(old_pitch, next_pitch);
+            assert_eq!(
+                seq.channels[channel].freq_lo_saved,
+                if paired { old_pitch } else { next_pitch },
+                "channel {channel}, paired {paired}"
+            );
+        }
+    }
+}
+
+#[test]
+fn music_commands_on_a_one_shot_voice_still_update_its_saved_pitch() {
+    let mut seq = Sequencer::new();
+    let mut apu = Apu::new();
+    apu.write_register(0xff26, 0x80);
+    seq.play_music(1, &[vec![0xd1, 0xb3, 0xe4, 0xaf, 0xff]], 0x100);
+    seq.play_sfx(
+        200,
+        &[vec![0xf8, 0xd1, 0xb3, 0xe4, 0x00, 0x27, 0xff]],
+        0,
+        0x100,
+    );
+    seq.update_frame(&mut apu);
+    let previous = seq.channels[CHAN5].freq_lo_saved;
+    seq.update_frame(&mut apu);
+    assert!(seq.channels[CHAN1].active && seq.channels[CHAN5].active);
+    assert_ne!(previous, seq.channels[CHAN5].freq_lo_saved);
+    assert_eq!(
+        seq.channels[CHAN5].freq_lo_saved,
+        commands::calculate_frequency(2, 4) as u8
+    );
+}
+
+mod one_shot_output_ownership {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(address: u16, value: u8) {
+        WRITES.lock().unwrap().push((address, value));
+    }
+    fn voice_writes(hw: usize) -> Vec<(u16, u8)> {
+        let range = [0xff10..=0xff14, 0xff16..=0xff19, 0xff1c..=0xff1e][hw].clone();
+        WRITES
+            .lock()
+            .unwrap()
+            .iter()
+            .copied()
+            .filter(|(a, _)| range.contains(a))
+            .collect()
+    }
+    fn covered_note(hw: usize, vibrato: bool) -> (Sequencer, Apu) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+        music[hw] = if vibrato { vec![0xea, 0, 0x20] } else { vec![] };
+        music[hw].extend([0xd1, 0xb3, 0xe4, 0x00, 0x27, 0x47, 0xff]);
+        seq.play_music(1, &music, 0x100);
+        seq.update_frame(&mut apu);
+        seq.play_sfx(200, &[vec![0x23, 0xb2, 0x70, 6, 0xff]], hw, 0x100);
+        apu.set_register_sink(Some(record));
+        for _ in 0..4 {
+            seq.update_frame(&mut apu);
+            assert!(seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+        }
+        WRITES.lock().unwrap().clear();
+        seq.update_frame(&mut apu);
+        assert!(!seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+        assert_eq!(seq.channels[hw].delay_counter, 4);
+        (seq, apu)
+    }
+    #[test]
+    fn one_shot_end_does_not_replay_covered_notes_and_next_real_note_still_triggers() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = covered_note(hw, false);
+            assert!(
+                voice_writes(hw).is_empty(),
+                "voice {hw}: {:?}",
+                voice_writes(hw)
+            );
+            for _ in 0..3 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(
+                    voice_writes(hw).is_empty(),
+                    "unmodified sustain must not rewrite pitch"
+                );
+            }
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            let high = [0xff14, 0xff19, 0xff1e][hw];
+            assert!(
+                voice_writes(hw)
+                    .iter()
+                    .any(|&(a, v)| a == high && v & 128 != 0),
+                "next actual note must trigger"
+            );
+        }
+    }
+    #[test]
+    fn released_music_can_write_only_vibrato_low_byte_before_the_next_note() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = covered_note(hw, true);
+            assert!(voice_writes(hw).is_empty());
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            let low = seq.channels[hw]
+                .vibrato_freq_lo
+                .expect("actual vibrato update");
+            assert_eq!(voice_writes(hw), vec![([0xff13, 0xff18, 0xff1d][hw], low)]);
+        }
+    }
+    #[test]
+    fn active_pitch_slide_writes_both_frequency_bytes_without_retrigger() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[hw] = vec![0xd1, 0xb3, 0xe4, 0xeb, 0, 0x54, 0x0f, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            assert!(seq.channels[hw]
+                .flags1
+                .contains(ChannelFlags1::PITCH_SLIDE_ON));
+            apu.set_register_sink(Some(record));
+            WRITES.lock().unwrap().clear();
+            let old = seq.channels[hw].frequency;
+            seq.update_frame(&mut apu);
+            let freq = seq.channels[hw].frequency;
+            assert_ne!(old, freq);
+            let low = [0xff13, 0xff18, 0xff1d][hw];
+            assert_eq!(
+                voice_writes(hw),
+                vec![(low, freq as u8), (low + 1, (freq >> 8) as u8 & 7)]
+            );
+        }
+    }
+}
+
+mod rest_output_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    fn writes(hw: usize) -> Vec<(u16, u8)> {
+        let range = [0xff10..=0xff14, 0xff16..=0xff19, 0xff1a..=0xff1e][hw].clone();
+        WRITES
+            .lock()
+            .unwrap()
+            .iter()
+            .copied()
+            .filter(|(a, _)| range.contains(a))
+            .collect()
+    }
+    fn at_rest(hw: usize) -> (Sequencer, Apu) {
+        let mut seq = Sequencer::new();
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+        music[hw] = vec![0xea, 3, 0x20, 0xd1, 0xb3, 0xe4, 0x03, 0xc3, 0x27, 0xff];
+        if hw == 2 {
+            music[0] = vec![0xd1, 0xb3, 0xe4, 0x0f, 0xff];
+        }
+        seq.play_music(1, &music, 0x100);
+        seq.update_frame(&mut apu);
+        for _ in 0..3 {
+            seq.update_frame(&mut apu);
+        }
+        assert_eq!(seq.channels[hw].vibrato.delay_counter, 0);
+        apu.set_register_sink(Some(record));
+        WRITES.lock().unwrap().clear();
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.channels[hw].delay_counter, 4);
+        (seq, apu)
+    }
+    #[test]
+    fn rests_use_silent_pulse_envelope_or_wave_routing_then_restore_the_next_note() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (mut seq, mut apu) = at_rest(hw);
+            if hw < 2 {
+                assert_eq!(
+                    writes(hw),
+                    vec![([0xff12, 0xff17][hw], 8), ([0xff14, 0xff19][hw], 128)]
+                );
+            } else {
+                assert!(writes(hw).is_empty());
+                assert_eq!(apu.nr51 & 0x44, 0);
+                assert_eq!(apu.nr51 & 0x11, 0x11);
+            }
+            assert_eq!(seq.channels[hw].volume_envelope, 0xb3);
+            assert_eq!(
+                seq.channels[hw].vibrato.delay_counter, 3,
+                "rest reloads vibrato delay"
+            );
+            for _ in 0..3 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(writes(hw).is_empty());
+                if hw == 2 {
+                    assert_eq!(apu.nr51 & 0x44, 0);
+                }
+            }
+            WRITES.lock().unwrap().clear();
+            seq.update_frame(&mut apu);
+            assert!(writes(hw)
+                .iter()
+                .any(|&(a, v)| a == [0xff14, 0xff19, 0xff1e][hw] && v & 128 != 0));
+            assert_eq!(apu.nr51 & [0x11, 0x22, 0x44][hw], [0x11, 0x22, 0x44][hw]);
+        }
+    }
+    #[test]
+    fn covered_rest_does_not_mute_or_retrigger_the_one_shot_at_release() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let mut seq = Sequencer::new();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+            music[hw] = vec![0xd1, 0xb3, 0xe4, 0x00, 0xcf, 0x27, 0xff];
+            seq.play_music(1, &music, 0x100);
+            seq.update_frame(&mut apu);
+            seq.play_sfx(200, &[vec![0x21, 0xa1, 0x70, 6, 0xff]], hw, 0x100);
+            seq.update_frame(&mut apu);
+            assert_eq!(seq.channels[hw].delay_counter, 16);
+            apu.set_register_sink(Some(record));
+            for _ in 0..2 {
+                WRITES.lock().unwrap().clear();
+                seq.update_frame(&mut apu);
+                assert!(writes(hw).is_empty());
+            }
+            assert!(!seq.channels[hw + NUM_MUSIC_CHANNELS].active);
+            assert_eq!(
+                apu.nr51 & [0x11, 0x22, 0x44][hw],
+                [0x11, 0x22, 0x44][hw],
+                "covered logical rest has not written hardware routing"
+            );
+        }
+    }
+    #[test]
+    fn clone_and_explicit_rebuild_keep_an_uncovered_rest_silent_without_advancing() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            let (seq, _) = at_rest(hw);
+            let mut restored = seq.clone();
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            apu.set_register_sink(Some(record));
+            WRITES.lock().unwrap().clear();
+            restored.rebuild_apu(&mut apu);
+            if hw < 2 {
+                assert_eq!(
+                    writes(hw),
+                    vec![([0xff12, 0xff17][hw], 8), ([0xff14, 0xff19][hw], 128)]
+                );
+            } else {
+                assert!(writes(hw).is_empty());
+                assert_eq!(apu.nr51 & 0x44, 0);
+            }
+            assert_eq!(
+                restored.channels[hw].delay_counter,
+                seq.channels[hw].delay_counter
+            );
+            assert_eq!(
+                restored.channels[hw].vibrato.delay_counter,
+                seq.channels[hw].vibrato.delay_counter
+            );
+            assert_eq!(restored.channels[hw].ptr, seq.channels[hw].ptr);
+        }
+    }
+}
+
+mod perfect_pitch_cache_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    #[test]
+    fn saved_modulation_pitch_matches_each_actual_tonal_onset() {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for hw in 0..3 {
+            for note in 0..12 {
+                for octave in 0..8 {
+                    for perfect in [false, true] {
+                        let mut seq = Sequencer::new();
+                        let mut apu = Apu::new();
+                        apu.write_register(0xff26, 0x80);
+                        let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+                        music[hw] = vec![0xd1, 0xb3, 0xe0 | octave];
+                        if perfect {
+                            music[hw].push(0xe8);
+                        }
+                        music[hw].extend([(note << 4) | 0x0f, 0xff]);
+                        seq.play_music(1, &music, 0x100);
+                        apu.set_register_sink(Some(record));
+                        WRITES.lock().unwrap().clear();
+                        seq.update_frame(&mut apu);
+                        let port = [0xff13, 0xff18, 0xff1d][hw];
+                        let lows: Vec<_> = WRITES
+                            .lock()
+                            .unwrap()
+                            .iter()
+                            .filter_map(|&(a, v)| (a == port).then_some(v))
+                            .collect();
+                        assert_eq!(lows.len(), 1);
+                        assert_eq!(
+                            seq.channels[hw].freq_lo_saved, lows[0],
+                            "voice{hw}, note{note}, octave{octave}, perfect{perfect}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    #[test]
+    fn perfect_note_keeps_slide_origin_untuned_and_holds_cache_when_covered() {
+        for hw in 0..3 {
+            for paired in [false, true] {
+                let mut seq = Sequencer::new();
+                let mut apu = Apu::new();
+                apu.write_register(0xff26, 0x80);
+                let mut music = vec![vec![]; NUM_MUSIC_CHANNELS];
+                music[hw] = vec![0xd1, 0xb3, 0xe4, 0x00, 0xe8, 0xeb, 0, 0x54, 0x27, 0xff];
+                seq.play_music(1, &music, 0x100);
+                seq.update_frame(&mut apu);
+                let previous = seq.channels[hw].freq_lo_saved;
+                seq.play_sfx(
+                    200,
+                    &[vec![0x2f, 0xb2, 0x70, 6, 0xff]],
+                    if paired { hw } else { (hw + 1) % 3 },
+                    0x100,
+                );
+                seq.update_frame(&mut apu);
+                let base = commands::calculate_frequency(2, 4);
+                assert_eq!(
+                    seq.channels[hw].pitch_slide.current_freq, base,
+                    "slide must start from the untuned pitch"
+                );
+                assert_eq!(
+                    seq.channels[hw].freq_lo_saved,
+                    if paired {
+                        previous
+                    } else {
+                        (base as u8).wrapping_add(1)
+                    },
+                    "voice{hw}, paired{paired}"
+                );
+            }
+        }
+    }
 }

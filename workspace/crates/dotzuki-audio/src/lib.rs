@@ -46,6 +46,9 @@ mod tests;
 #[cfg(test)]
 mod sequencer_tests;
 
+#[cfg(test)]
+mod logical_frame_tests;
+
 // ── Constants ────────────────────────────────────────────────────────────
 
 /// Game Boy CPU clock frequency in Hz (≈4.194304 MHz).
@@ -77,6 +80,7 @@ pub const NUM_NOTES: usize = 12;
 /// Pulse wave duty cycle patterns.
 /// Each pattern is 8 steps; 1 = high, 0 = low.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum DutyCycle {
     /// 12.5% — waveform: 00000001
@@ -278,6 +282,7 @@ impl HwChannel {
 
 /// Direction of volume envelope change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum EnvelopeDirection {
     Decrease,
     Increase,
@@ -293,6 +298,7 @@ impl Default for EnvelopeDirection {
 
 /// Direction of frequency sweep (Channel 1 only).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SweepDirection {
     Increase,
     Decrease,
@@ -353,6 +359,7 @@ impl Default for ChannelFlags2 {
 
 /// Per-channel vibrato parameters and running state.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct VibratoState {
     /// Delay before vibrato starts (reload value in frames).
     pub delay_reload: u8,
@@ -399,6 +406,7 @@ impl VibratoState {
 
 /// Per-channel pitch slide (portamento) parameters and running state.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct PitchSlideState {
     /// Target frequency (11-bit).
     pub target_freq: u16,
@@ -427,6 +435,7 @@ impl PitchSlideState {
 /// Models the classic GB engine's per-channel variables (one set per
 /// channel, stored in the channel struct array).
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct ChannelState {
     // ── Command stream ──
     /// The sound data (byte stream) for this channel.
@@ -488,7 +497,11 @@ pub struct ChannelState {
     /// Panning enable mask for this channel (bits in NR51 format).
     pub stereo_panning: u8,
 
-    /// Set when a new note starts; cleared after APU trigger write.
+    /// Logical rest state, retained by clones for an explicit hardware rebuild.
+    /// This is not an instruction to mute a voice covered by a one-shot.
+    pub resting: bool,
+
+    /// Trigger requested by the current update; covered notes are not deferred.
     pub trigger: bool,
 
     /// Vibrato-modified frequency low byte for APU write (None = no vibrato active).
@@ -525,6 +538,7 @@ impl ChannelState {
             wave_instrument: 0,
             stereo_panning: 0xFF,
             trigger: false,
+            resting: false,
             vibrato_freq_lo: None,
             pitch_sweep_value: 0,
         }

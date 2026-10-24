@@ -11,6 +11,7 @@
 //! [`ScriptedRng`](dotzuki_engine::battle::rng::ScriptedRng) therefore replays a
 //! data ruleset identically.
 
+use dotzuki_engine::battle::rng::BattleRng;
 use dotzuki_engine::battle::stack::{BattleCtx, EffectId, HandlerResult, RelayVar};
 use dotzuki_engine::battle::BattlerRef;
 
@@ -337,24 +338,24 @@ fn apply_op<P: RulesProvider>(
             OpOutcome::Unchanged
         }
 
-        // The Gen-1 multi-hit loop, GAME-SIDE (no engine seam). On `DamagingHit`
-        // the driver has already dealt the FIRST hit (`take_damage(ctx.mv.damage)`),
-        // so re-apply the SAME per-hit number `(N-1)` more times. N is drawn from
-        // `count`; `TwoToFive` consumes ONE byte via `determine_hit_count` (the
-        // legacy `multi_hit_roll`). The final-hit rider (Twineedle poison) draws its
-        // `chance` byte UNCONDITIONALLY after the last hit (the consumed() invariant),
-        // then runs its guard/inflict ops if the gate passes. Only `ctx.rng` is
-        // touched (count byte + optional final-hit byte), at this op's ordinal.
+        // DamagingHit follows the first hit, so repeat the same damage N-1 times.
+        // TwoToFive samples the low two bits and conditionally draws a second
+        // count byte. The final-hit rider draws its own chance byte afterwards.
         Op::RepeatHits {
             count,
             target: sel,
             final_hit,
         } => {
             let who = resolve(*sel, target, source);
+            // The first hit may already have ended the attack. Do not sample
+            // a repeat count or run a final-hit rider against a defeated target.
+            if ctx.battler(who).hp == 0 {
+                return OpOutcome::Unchanged;
+            }
             let per_hit = ctx.mv.damage;
             let n = match count {
                 crate::model::HitCount::Fixed(k) => *k,
-                crate::model::HitCount::TwoToFive => determine_hit_count(ctx.rng.next_u8()),
+                crate::model::HitCount::TwoToFive => determine_hit_count(ctx.rng),
             };
             // The driver already dealt hit #1 (through the Event::Damage fold, so a
             // Substitute absorbed it); deal the remaining (N-1), each likewise routed
@@ -363,9 +364,12 @@ fn apply_op<P: RulesProvider>(
                 if !bindings.redirect_hp_loss(ctx, who, source, per_hit) {
                     ctx.battler_mut(who).take_damage(per_hit);
                 }
+                if ctx.battler(who).hp == 0 {
+                    return OpOutcome::Unchanged;
+                }
             }
-            // Final-hit-only secondary (Twineedle 52/256 poison). The chance byte is
-            // drawn UNCONDITIONALLY (consumed() invariant), then — if it passes — the
+            // Final-hit-only secondary for a surviving target. The chance byte is
+            // drawn before the rider guards, then — if it passes — the
             // rider ops (VetoIf guards + InflictStatus) run exactly like a side-status
             // hook. Resolved against the same `target` (the defender).
             if let crate::model::FinalHitRider::OnFinal { chance, ops } = final_hit {
@@ -399,19 +403,13 @@ fn apply_op<P: RulesProvider>(
     }
 }
 
-/// Gen-1 two-to-five hit distribution (`3/8` each for 2/3, `1/8` each for 4/5),
-/// bit-identical to the legacy pokered `determine_hit_count` (multi_hit_effects.rs):
-/// `roll<96⇒2, <192⇒3, <224⇒4, else⇒5`. Pure; the SOLE caller draws the byte once.
-fn determine_hit_count(roll: u8) -> u8 {
-    if roll < 96 {
-        2
-    } else if roll < 192 {
-        3
-    } else if roll < 224 {
-        4
-    } else {
-        5
-    }
+/// Weighted 2/3/4/5 hits with probabilities 3/8, 3/8, 1/8, 1/8.
+/// Low-bit values 0/1 select 2/3 immediately; 2/3 draw another low-bit value.
+/// The conditional second draw is part of the deterministic random stream.
+fn determine_hit_count(rng: &mut dyn BattleRng) -> u8 {
+    let first = rng.next_u8() & 3;
+    let selected = if first < 2 { first } else { rng.next_u8() & 3 };
+    selected + 2
 }
 
 /// Resolve an [`AmountSpec`] to a number, drawing from the `ctx.rng` byte stream

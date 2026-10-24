@@ -579,14 +579,18 @@ pub enum Op {
     /// once, deal it N times" (no per-hit recompute). N comes from [`count`]:
     ///   * `Fixed(k)` ⇒ exactly k hits, NO byte (Double Kick / Bonemerang / the
     ///     Twineedle double-hit);
-    ///   * `TwoToFive` ⇒ ONE byte folded by the legacy `determine_hit_count`
-    ///     distribution (the `multi_hit_roll`).
+    ///   * `TwoToFive` ⇒ the first byte's low two bits select 2/3 immediately
+    ///     for values 0/1; values 2/3 draw a second byte's low bits and add 2.
     /// [`final_hit`] runs Twineedle's final-hit-only secondary (one `chance` byte +
     /// guarded `InflictStatus`) AFTER the last hit, at the legacy `side_effect`
     /// ordinal. This op needs NO engine seam: it loops `take_damage` on the existing
-    /// `BattleCtx`, drawing only `ctx.rng` (one count byte + the optional final-hit
-    /// chance byte) at its ordinal — so a `ScriptedRng` replays it identically and
-    /// `consumed()` is a pure function of the op-list.
+    /// `BattleCtx`, drawing only `ctx.rng` (one or two count bytes + the optional
+    /// final-hit chance byte) at its ordinal. A `ScriptedRng` therefore replays
+    /// both the outcome and conditional draw count identically.
+    /// A target at zero HP ends the sequence immediately: no remaining hits or
+    /// final-hit rider run, and an initial knockout does not sample the count.
+    /// HP is checked after each damage redirection, so a sink that protects a
+    /// living target does not itself stop the sequence.
     RepeatHits {
         /// Where N comes from (fixed, or the 2-5 distribution draw).
         count: HitCount,
@@ -618,17 +622,16 @@ fn default_source_selector() -> Selector {
 /// (blueprint `15` §2/§3, the new game-side multi-hit construct). Gen-1 multi-hit
 /// checks accuracy ONCE then deals the SAME computed damage N times; this enum is
 /// the **source of N**. Every variant is game-agnostic — the rules crate names no
-/// game-specific concept, only "a count, optionally drawn from one byte".
+/// game-specific concept, only a count optionally sampled from the byte stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum HitCount {
     /// A fixed number of hits (Double Kick / Bonemerang / Twineedle = `Fixed(2)`).
     /// Draws NO rng.
     Fixed(u8),
-    /// The Gen-1 two-to-five distribution (`TwoToFiveAttacksEffect`): draws ONE
-    /// byte and folds it `3/8·3/8·1/8·1/8` over `{2,3,4,5}` — bit-identical to the
-    /// legacy `determine_hit_count` (`roll<96⇒2, <192⇒3, <224⇒4, else⇒5`). The byte
-    /// is the legacy `multi_hit_roll`; it is the SOLE entropy of this variant, drawn
-    /// at the op's ordinal so the stream stays a pure function of the op-list.
+    /// Weighted `{2,3,4,5}` with probabilities `{3/8,3/8,1/8,1/8}`. The first
+    /// byte's low two bits select 2 or 3 directly for values 0 or 1. Values 2 or 3
+    /// draw a second byte and select `(second & 3) + 2`. Thus the count consumes
+    /// one or two bytes, preserving the conditional draw before later effects.
     TwoToFive,
 }
 
@@ -643,7 +646,8 @@ pub enum HitCount {
 pub enum FinalHitRider {
     /// No final-hit secondary.
     None,
-    /// On the final hit only: draw the `chance` byte, then (if it passes) run the
+    /// On the final hit, if the target survives: draw the `chance` byte, then (if
+    /// it passes) run the
     /// rider ops (`VetoIf` guards + `InflictStatus`) exactly like a side-status
     /// hook. `chance` is `[num, den]`; the byte is drawn UNCONDITIONALLY of whether
     /// the secondary fires (the `consumed()` invariant).

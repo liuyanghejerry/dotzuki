@@ -4,10 +4,10 @@
 //! [`Apu`](crate::apu::Apu) pair and owns everything that happens once per
 //! VBlank (~60 Hz) rather than per audio sample:
 //!
-//! - **master volume** — a logical left/right level (0-7 each) stamped onto
-//!   NR50 every frame *before* the sequencer tick, so an in-stream `volume`
-//!   command can still override NR50 for the rest of that frame and the fade
-//!   machinery re-owns it on the next one;
+//! - **master volume** — logical left/right levels (0-7 each), applied before
+//!   the sequencer when automatic volume is enabled and no fade is active;
+//!   fade countdown frames preserve the live NR50 register, and a due fade
+//!   step continues from the volume last written by music;
 //! - **fade-out** — [`FadeState`] walks the master volume down one step per
 //!   `fade_counter_reload` frames (the countdown lives in
 //!   [`Sequencer::fade_counter`]); on completion the music is stopped and an
@@ -161,6 +161,21 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.last_music_id
     }
 
+    /// Resume states retained when switching away from a playing track.
+    /// A logical playback snapshot must preserve these alongside the current
+    /// music id and sequencer, so later track switches resume the saved past.
+    /// Entries contain only the fields consumed by `restore_music_from`;
+    /// SFX channels and the live drum library are not part of a music resume.
+    pub fn saved_music_states(&self) -> &[(M, Sequencer)] {
+        &self.saved_music_states
+    }
+
+    /// Install resume states previously captured by [`Self::saved_music_states`].
+    /// This does not select a track, advance the sequencer, or touch the APU.
+    pub fn restore_saved_music_states(&mut self, states: Vec<(M, Sequencer)>) {
+        self.saved_music_states = states;
+    }
+
     pub fn set_no_audio_fade_out(&mut self, val: bool) {
         self.no_audio_fade_out = val;
     }
@@ -175,6 +190,13 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         hook: Option<Box<dyn FnMut(&mut Apu, &mut Sequencer) + Send>>,
     ) {
         self.post_frame_hook = hook;
+    }
+
+    /// Whether ordinary frame updates have a post-sequencer hook installed.
+    /// Callers that own register scheduling can reject an unsupported hook
+    /// before advancing any audio state. This query does not invoke the hook.
+    pub fn has_post_frame_hook(&self) -> bool {
+        self.post_frame_hook.is_some()
     }
 
     fn take_saved_music(&mut self, id: M) -> Option<Sequencer> {
@@ -196,8 +218,9 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
             if let Some(last_id) = self.last_music_id {
                 if last_id != id {
                     self.take_saved_music(last_id);
-                    self.saved_music_states
-                        .push((last_id, self.sequencer.clone()));
+                    let mut saved = Sequencer::new();
+                    saved.restore_music_from(&self.sequencer);
+                    self.saved_music_states.push((last_id, saved));
                 }
             }
         }
@@ -215,13 +238,11 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.last_music_id = Some(id);
 
         let track = (self.music_track)(id);
-        let channel_data: Vec<Vec<u8>> = track
-            .channels
-            .iter()
-            .map(|data| data.unwrap_or(&[]).to_vec())
-            .collect();
-        self.sequencer
-            .play_music(track.sound_id, &channel_data, track.tempo);
+        self.sequencer.play_music_streams(
+            track.sound_id,
+            track.channels.into_iter().map(|data| data.unwrap_or(&[])),
+            track.tempo,
+        );
         self.reset_master_volume();
     }
 
@@ -286,15 +307,17 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         let Some(start_channel) = self.sfx_start_channel(id) else {
             return;
         };
-        let channel_data: Vec<Vec<u8>> = track
-            .channels
-            .iter()
-            .skip(start_channel)
-            .map(|data| data.unwrap_or(&[]).to_vec())
-            .collect();
         self.sequencer.frequency_modifier = frequency_mod;
-        self.sequencer
-            .play_sfx(track.sound_id, &channel_data, start_channel, tempo);
+        self.sequencer.play_sfx_streams(
+            track.sound_id,
+            track
+                .channels
+                .into_iter()
+                .skip(start_channel)
+                .map(|data| data.unwrap_or(&[])),
+            start_channel,
+            tempo,
+        );
     }
 
     /// The first hardware channel (0-3) this SFX uses — the index of the
@@ -337,16 +360,28 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         self.saved_music_states.clear();
     }
 
-    /// Call once per VBlank (~60 Hz): advance the fade, stamp the master
-    /// volume onto NR50, tick the sequencer, then run the post-frame hook.
+    /// Call once per VBlank (~60 Hz): let the fade state machine update
+    /// volume when due, tick the sequencer, then run the post-frame hook.
     pub fn update_frame(&mut self) {
+        self.update_frame_inner(false);
+    }
+
+    /// Run one frame with music commands/effects frozen while SFX, fade and
+    /// the post-frame hook continue. The caller owns hardware muting at the
+    /// pause boundary; see [`Sequencer::update_frame_with_music_paused`].
+    pub fn update_frame_with_music_paused(&mut self) {
+        self.update_frame_inner(true);
+    }
+
+    fn update_frame_inner(&mut self, music_paused: bool) {
+        // A countdown frame or disabled automatic volume preserves the live
+        // register. Music commands may then change it during this update.
         self.process_fade();
-        // Apply the fade/master volume *before* the sequencer tick, matching
-        // the original VBlank order (fade-out routine runs before the music
-        // update). This lets an in-song `volume` command override NR50 for
-        // the rest of the frame; the fade machinery re-owns NR50 next frame.
-        self.apply_master_volume();
-        self.sequencer.update_frame(&mut self.apu);
+        if music_paused {
+            self.sequencer.update_frame_with_music_paused(&mut self.apu);
+        } else {
+            self.sequencer.update_frame(&mut self.apu);
+        }
         // The hook writes after the sequencer so it can override the sound
         // engine's registers for this frame (e.g. an alarm tone poked
         // straight into NR11–NR14).
@@ -410,6 +445,12 @@ impl<M: Copy + Eq + Hash + 'static, S: Copy + 'static> AudioManager<M, S> {
         }
 
         self.sequencer.fade_counter = self.fade_counter_reload;
+
+        // Music commands can overwrite NR50 between fade steps. Continue
+        // from that live level rather than the last cached volume request.
+        let live_volume = self.apu.nr50;
+        self.master_volume_left = (live_volume >> 4) & FULL_VOLUME;
+        self.master_volume_right = live_volume & FULL_VOLUME;
 
         if self.master_volume_left == 0 && self.master_volume_right == 0 {
             self.fade_complete();
@@ -501,6 +542,131 @@ mod tests {
     }
 
     #[test]
+    fn paused_music_freezes_all_channels_while_sfx_finishes_then_resumes() {
+        let mut mgr = manager();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(Music::ThemeA);
+        let streams: [Vec<u8>; 4] = core::array::from_fn(|_| THEME_A_CH1.to_vec());
+        mgr.sequencer.play_music(1, &streams, 0x0070);
+        mgr.update_frame();
+        let music = mgr.sequencer.channels[..4].to_vec();
+        assert!(music.iter().all(|channel| channel.active));
+        let tempo = mgr.sequencer.music_tempo;
+        let mut reference = mgr.sequencer.clone();
+        let mut reference_apu = mgr.apu.clone();
+        // Boundary muting belongs to the caller. It must not be repeated on
+        // every frame, or it would cut off a sustained reward/confirmation SFX.
+        mgr.apu.write_register(0xff25, 0);
+        mgr.play_sfx(Sfx::Beep);
+        let mut sfx_played = false;
+        let mut sfx_ended = false;
+        for frame in 0..120 {
+            mgr.update_frame_with_music_paused();
+            assert_eq!(&mgr.sequencer.channels[..4], &music);
+            assert_eq!(mgr.sequencer.music_tempo, tempo);
+            assert_eq!(mgr.last_music_id(), Some(Music::ThemeA));
+            if frame == 0 {
+                assert!(mgr.is_sfx_playing());
+                assert_ne!(mgr.apu.nr51 & 0x11, 0);
+                sfx_played = true;
+            }
+            sfx_ended |= !mgr.is_sfx_playing();
+        }
+        assert!(sfx_played && sfx_ended);
+        mgr.update_frame();
+        reference.update_frame(&mut reference_apu);
+        assert_eq!(&mgr.sequencer.channels[..4], &reference.channels[..4]);
+    }
+
+    #[test]
+    fn music_resume_omits_sfx_and_drums_without_changing_live_playback() {
+        fn playing() -> AudioManager<Music, Sfx> {
+            let mut mgr = manager();
+            mgr.sequencer
+                .register_noise_instruments(vec![vec![0x20, 0xE2, 0x50, 0x87, 0xFF]; 19]);
+            mgr.play_music(Music::ThemeA);
+            mgr.play_sfx(Sfx::Beep);
+            mgr.update_frame();
+            mgr
+        }
+        let mut compact = playing();
+        let mut full = playing();
+        let full_snapshot = full.sequencer.clone();
+        assert!(!full_snapshot.channels[4].data.is_empty());
+        compact.play_music(Music::ThemeB);
+        full.play_music(Music::ThemeB);
+        // Reproduce the former full-clone resume cache as an independent
+        // behavioral baseline, including the SFX and drum data it retained.
+        full.restore_saved_music_states(vec![(Music::ThemeA, full_snapshot.clone())]);
+        let saved = &compact.saved_music_states()[0].1;
+        assert_eq!(&saved.channels[..4], &full_snapshot.channels[..4]);
+        assert!(saved.channels[4..].iter().all(|ch| ch.data.is_empty()));
+        assert_eq!(saved.noise_instruments.capacity(), 0);
+        assert_eq!(compact.sequencer, full.sequencer);
+        assert_eq!(compact.sequencer.noise_instruments.len(), 19);
+        for frame in 0..60 {
+            if frame == 3 || frame == 20 {
+                compact.play_music(Music::ThemeA);
+                full.play_music(Music::ThemeA);
+            }
+            if frame == 12 {
+                compact.play_music(Music::ThemeB);
+                full.play_music(Music::ThemeB);
+            }
+            assert_eq!(compact.sequencer, full.sequencer);
+            assert_eq!(format!("{:?}", compact.apu), format!("{:?}", full.apu));
+            compact.update_frame();
+            full.update_frame();
+        }
+    }
+
+    #[test]
+    fn restored_resume_cache_returns_to_the_saved_past_instead_of_the_future() {
+        let mut original = manager();
+        original.play_music(Music::ThemeA);
+        for _ in 0..3 {
+            original.update_frame();
+        }
+        original.play_music(Music::ThemeB);
+        original.update_frame();
+        let saved_current = original.sequencer.clone();
+        let saved_cache = original.saved_music_states().to_vec();
+        assert_eq!(saved_cache.len(), 1);
+        assert_eq!(saved_cache[0].0, Music::ThemeA);
+        let saved_past = format!("{:?}", saved_cache[0].1);
+
+        let mut restored = manager();
+        restored.play_music(Music::ThemeA);
+        for _ in 0..12 {
+            restored.update_frame();
+        }
+        restored.play_music(Music::ThemeB);
+        assert_ne!(
+            format!("{:?}", restored.saved_music_states()[0].1),
+            saved_past
+        );
+        restored.sequencer = saved_current;
+        let current_before = format!("{:?}", restored.sequencer);
+        restored.restore_saved_music_states(saved_cache);
+        assert_eq!(format!("{:?}", restored.sequencer), current_before);
+        assert_eq!(restored.last_music_id(), Some(Music::ThemeB));
+
+        original.play_music(Music::ThemeA);
+        restored.play_music(Music::ThemeA);
+        assert_eq!(format!("{:?}", restored.sequencer), saved_past);
+        for _ in 0..60 {
+            assert_eq!(
+                format!("{:?}", restored.sequencer),
+                format!("{:?}", original.sequencer)
+            );
+            original.update_frame();
+            restored.update_frame();
+        }
+        restored.restore_saved_music_states(Vec::new());
+        assert!(restored.saved_music_states().is_empty());
+    }
+
+    #[test]
     fn sparse_tracks_keep_their_hardware_channel_positions() {
         fn sparse(_: Sfx) -> TrackData {
             TrackData {
@@ -548,6 +714,54 @@ mod tests {
             mgr.update_frame();
         }
         assert!(!mgr.is_sfx_playing());
+    }
+
+    #[test]
+    fn disabled_automatic_volume_preserves_the_live_register() {
+        let mut m = manager();
+        m.apu.write_register(0xff26, 0x80);
+        m.set_no_audio_fade_out(true);
+        m.apu.write_register(0xff24, 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+    }
+
+    fn volume_command_track(_: Music) -> TrackData {
+        TrackData {
+            sound_id: 1,
+            channels: [
+                Some(&[0xf0, 0x22, 0xdc, 0xc7, 0xe5, 0x0f, 0xff]),
+                None,
+                None,
+                None,
+            ],
+            tempo: 0x0100,
+        }
+    }
+
+    #[test]
+    fn fade_countdown_preserves_a_music_volume_command_until_the_next_step() {
+        let mut m = AudioManager::new(volume_command_track, sfx_track);
+        m.apu.write_register(0xff26, 0x80);
+        m.play_music(Music::ThemeA);
+        m.fade_out(4);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+    }
+
+    #[test]
+    fn fade_step_decrements_the_live_volume_written_by_music() {
+        let mut m = AudioManager::new(volume_command_track, sfx_track);
+        m.apu.write_register(0xff26, 0x80);
+        m.play_music(Music::ThemeA);
+        m.fade_out(1);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x22);
+        m.update_frame();
+        assert_eq!(m.nr50(), 0x11);
+        assert_eq!((m.master_volume_left(), m.master_volume_right()), (1, 1));
     }
 
     #[test]
@@ -722,10 +936,14 @@ mod tests {
     #[test]
     fn play_sfx_with_modifiers_sets_cry_parameters() {
         let mut mgr = manager();
+        mgr.apu.write_register(0xff26, 0x80);
         mgr.play_sfx_with_modifiers(Sfx::Beep, 0x20, 0x0140);
         assert!(mgr.is_sfx_playing());
         assert_eq!(mgr.sequencer.sfx_tempo, 0x0140);
         assert_eq!(mgr.sequencer.frequency_modifier, 0x20);
+        mgr.update_frame();
+        assert_eq!(mgr.sequencer.channels[4].frequency, 0x8770);
+        assert_eq!(mgr.apu.ch1.freq_reg, 0x770);
     }
 
     #[test]
@@ -744,6 +962,7 @@ mod tests {
     #[test]
     fn post_frame_hook_overrides_registers_after_sequencer() {
         let mut mgr = manager();
+        assert!(!mgr.has_post_frame_hook());
         mgr.apu.write_register(0xFF26, 0x80); // NR52 power on
         mgr.play_music(Music::ThemeA);
         // An alarm-style hook pokes the pulse-1 registers directly.
@@ -754,11 +973,16 @@ mod tests {
             apu.write_register(0xFF13, 0x50);
             apu.write_register(0xFF14, 0x87);
         })));
+        let before_query = (mgr.apu.playback_state(), mgr.sequencer.clone());
+        assert!(mgr.has_post_frame_hook());
+        assert_eq!(mgr.apu.playback_state(), before_query.0);
+        assert_eq!(mgr.sequencer, before_query.1);
         mgr.update_frame();
         assert_eq!(mgr.apu.read_register(0xFF12), 0xE2);
         assert_eq!(mgr.apu.ch1.freq_reg, 0x750);
 
         mgr.set_post_frame_hook(None);
+        assert!(!mgr.has_post_frame_hook());
         // With the hook gone nothing pokes the registers anymore: a manual
         // write survives the frame (the music stream has ended, so the
         // sequencer no longer touches channel 1 either).

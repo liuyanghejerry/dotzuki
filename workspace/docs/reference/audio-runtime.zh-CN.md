@@ -18,6 +18,16 @@
 
 ## AudioManager
 
+载入曲目时，每个非空静态字节流直接复制到对应活动通道的独立缓冲区，
+管理器不再先创建一组临时字节流副本。通道数据仍然独立拥有且可修改；
+`Sequencer::play_music` / `play_sfx` 原有的向量参数接口继续保留。
+
+只暂停音乐时，每个暂停帧调用 `update_frame_with_music_paused()`，替代
+`update_frame()`。四个音乐通道的指令、延时与效果冻结，SFX、淡出和帧后
+钩子继续推进。调用方在进入暂停时将硬件静音一次；此 API 不会在后续帧
+反复静音，因此持续的音效可以自然结束。恢复时继续调用 `update_frame()`，
+无需重启曲目或新增恢复缓存。`Sequencer` 也提供接受 `&mut Apu` 的同名方法。
+
 `AudioManager<M, S>` 掌管[音序器](./glossary.md) + [GB-APU](./glossary.md)
 之上每个 VBlank（约 60 Hz）发生的一切：NR50 主音量盖印、音乐淡出状态机、
 跨曲目断点续播快照，以及带音高/速度修饰的 SFX/叫声播放。id 类型是泛型的
@@ -87,8 +97,9 @@ NR50 在 tick *之前*盖印，这样流内的 `volume` 命令可以在该帧剩
 
 ### 断点续播快照
 
-切到不同曲目时，`play_music(id)` 会把当前音序器克隆进
-`saved_music_states`、以旧 id 为键；再次请求有快照的曲目时经
+切到不同曲目时，`play_music(id)` 会把四个音乐通道、音乐速度、播放标志和
+音乐 id 复制进 `saved_music_states`，以旧 id 为键。快照不保存音效通道和
+鼓声库；这些数据留在当前音序器中。再次请求有快照的曲目时经
 `Sequencer::restore_music_from` 续播，而不是重新开始。`stop_music()` 与
 `stop_all()` 丢弃全部快照；`clear_saved_music_states()` 只丢弃快照、不动
 播放（地图切换场景）；`discard_saved_music_state(id)` 让某条曲目下次重新

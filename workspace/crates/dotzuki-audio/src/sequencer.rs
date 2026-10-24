@@ -39,6 +39,27 @@ pub const fn is_sfx_channel(ch: usize) -> bool {
     ch >= NUM_MUSIC_CHANNELS
 }
 
+/// Register work produced by this update, rather than retained note state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ChannelOutput {
+    None,
+    Note,
+    Rest,
+    FrequencyLow,
+    Slide,
+}
+
+/// Register work consumed by a logical frame without writing to an APU.
+///
+/// This is not a register event log: commands in one frame may request several
+/// master-volume changes, and ordinary sequencer output retains only the last.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct LogicalFrameOutcome {
+    /// The final pending master-volume (NR50) value, consumed by this frame.
+    /// `None` means that the frame had no pending master-volume write.
+    pub nr50: Option<u8>,
+}
+
 // ── Sequencer ────────────────────────────────────────────────────────────
 
 /// The music/SFX sequencer.
@@ -48,6 +69,7 @@ pub const fn is_sfx_channel(ch: usize) -> bool {
 ///
 /// Call `update_frame()` once per VBlank (~60 Hz).
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct Sequencer {
     /// 8 logical channels: [0-3] = music, [4-7] = SFX.
     pub channels: [ChannelState; NUM_CHANNELS],
@@ -70,7 +92,8 @@ pub struct Sequencer {
     /// The SFX sound ID currently playing.
     pub current_sfx_id: u8,
 
-    /// Frequency modifier for cries (added to base frequency).
+    /// Signed frequency addend for each tonal SFX note. The caller selects
+    /// zero for unmodified effects; music and noise notes do not use it.
     pub frequency_modifier: i16,
     /// Tempo modifier for cries (added to base tempo).
     pub tempo_modifier: i16,
@@ -81,8 +104,8 @@ pub struct Sequencer {
     pub fade_counter: u8,
 
     /// Pending master-volume (NR50) write from a `volume` ($F0) command.
-    /// Applied to the APU at the end of `update_frame`, so it takes effect
-    /// on the same frame the command executes.
+    /// Consumed at the end of a frame: written to the APU by `update_frame`,
+    /// or returned by `advance_frame_without_output` without a register write.
     pub pending_nr50: Option<u8>,
 
     /// Noise-instrument (drum) SFX streams, indexed by instrument number - 1
@@ -122,6 +145,15 @@ impl Sequencer {
     /// `sound_id` is the music ID.
     /// `tempo` is the initial tempo.
     pub fn play_music(&mut self, sound_id: u8, channel_data: &[Vec<u8>], tempo: u16) {
+        self.play_music_streams(sound_id, channel_data.iter().map(Vec::as_slice), tempo);
+    }
+
+    pub(crate) fn play_music_streams<'a>(
+        &mut self,
+        sound_id: u8,
+        channel_data: impl IntoIterator<Item = &'a [u8]>,
+        tempo: u16,
+    ) {
         // Stop any existing music
         self.stop_music();
 
@@ -129,13 +161,13 @@ impl Sequencer {
         self.music_tempo = tempo;
         self.music_playing = true;
 
-        for (i, data) in channel_data.iter().enumerate() {
+        for (i, data) in channel_data.into_iter().enumerate() {
             if i >= NUM_MUSIC_CHANNELS {
                 break;
             }
             let ch = &mut self.channels[i];
             ch.reset();
-            ch.data = data.clone();
+            ch.data = data.to_vec();
             ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
@@ -165,6 +197,21 @@ impl Sequencer {
         start_channel: usize,
         tempo: u16,
     ) {
+        self.play_sfx_streams(
+            sound_id,
+            channel_data.iter().map(Vec::as_slice),
+            start_channel,
+            tempo,
+        );
+    }
+
+    pub(crate) fn play_sfx_streams<'a>(
+        &mut self,
+        sound_id: u8,
+        channel_data: impl IntoIterator<Item = &'a [u8]>,
+        start_channel: usize,
+        tempo: u16,
+    ) {
         // Match the original game's behavior: if this SFX is already playing,
         // don't restart it. The original checks the SFX sound-ID field for
         // CHAN5 and skips the sound init if it matches (e.g. the collision
@@ -177,7 +224,7 @@ impl Sequencer {
         self.sfx_tempo = tempo;
         self.sfx_playing = true;
 
-        for (i, data) in channel_data.iter().enumerate() {
+        for (i, data) in channel_data.into_iter().enumerate() {
             if data.is_empty() {
                 continue;
             }
@@ -187,7 +234,7 @@ impl Sequencer {
             }
             let ch = &mut self.channels[ch_idx];
             ch.reset();
-            ch.data = data.clone();
+            ch.data = data.to_vec();
             ch.active = !data.is_empty();
             ch.sound_id = sound_id;
             ch.note_speed = 1;
@@ -255,47 +302,153 @@ impl Sequencer {
     /// 3. Apply per-frame effects (vibrato, pitch slide, duty rotation)
     /// 4. Write results to APU
     pub fn update_frame(&mut self, apu: &mut Apu) {
-        for ch_idx in 0..NUM_CHANNELS {
-            if !self.channels[ch_idx].active {
-                continue;
-            }
+        self.update_frame_from(apu, 0);
+    }
 
-            self.update_channel(ch_idx);
-        }
+    /// Advance only SFX channels, preserving every music command/effect state.
+    ///
+    /// The caller owns the pause boundary's hardware muting. This method does
+    /// not repeatedly mute output: a sustained SFX must survive paused frames.
+    /// Resume with `update_frame`; paused music is neither stopped nor cached.
+    pub fn update_frame_with_music_paused(&mut self, apu: &mut Apu) {
+        self.update_frame_from(apu, NUM_MUSIC_CHANNELS);
+    }
 
-        // Apply channel states to APU
-        self.apply_to_apu(apu);
+    fn update_frame_from(&mut self, apu: &mut Apu, first_channel: usize) {
+        let output = self.advance_channels_from(first_channel);
+        self.apply_to_apu(apu, &output);
+        let outcome = self.consume_output(&output);
 
-        // Apply a pending master-volume write from a `volume` ($F0) command.
-        // The classic engine's volume routine writes the param byte straight
-        // to NR50 in the middle of command processing, so it takes effect on
-        // the same frame the command executes.
         // Written directly (like the fade machinery's NR50 writes) rather
-        // than through the power-gated write_register.
-        if let Some(vol) = self.pending_nr50.take() {
+        // than only through the power-gated write_register.
+        if let Some(vol) = outcome.nr50 {
             apu.nr50 = vol;
             apu.write_register(0xFF24, vol);
         }
     }
 
+    /// Advance one frame and consume its output requests without writing audio.
+    ///
+    /// Use this when an external clock already owns register writes for the
+    /// frame. Commands, delays, effects and SFX priority advance exactly as in
+    /// [`Self::update_frame`]. Output triggers and pending NR50 are consumed
+    /// using ordinary playback's selection rules, so a later ordinary frame
+    /// cannot replay them. No APU or device sink is accessed. This does not run
+    /// an audio manager's fade or hooks.
+    ///
+    /// Call either this method or `update_frame` once for each logical frame.
+    /// The returned volume is informational when the external clock has already
+    /// applied that frame's writes; applying it again would duplicate output.
+    ///
+    /// ```
+    /// use dotzuki_audio::sequencer::Sequencer;
+    ///
+    /// let mut sequencer = Sequencer::new();
+    /// sequencer.play_music(1, &[vec![0xf0, 0x53, 0x03, 0xff]], 0x100);
+    /// assert_eq!(sequencer.advance_frame_without_output().nr50, Some(0x53));
+    /// assert_eq!(sequencer.advance_frame_without_output().nr50, None);
+    /// ```
+    pub fn advance_frame_without_output(&mut self) -> LogicalFrameOutcome {
+        let output = self.advance_channels();
+        self.consume_output(&output)
+    }
+
+    fn advance_channels(&mut self) -> [ChannelOutput; NUM_CHANNELS] {
+        self.advance_channels_from(0)
+    }
+
+    fn advance_channels_from(&mut self, first_channel: usize) -> [ChannelOutput; NUM_CHANNELS] {
+        let mut output = [ChannelOutput::None; NUM_CHANNELS];
+        for (ch_idx, request) in output.iter_mut().enumerate().skip(first_channel) {
+            if !self.channels[ch_idx].active {
+                continue;
+            }
+
+            *request = self.update_channel(ch_idx);
+        }
+
+        output
+    }
+
+    fn selected_channel(&self, hw: usize) -> Option<usize> {
+        let sfx = hw + NUM_MUSIC_CHANNELS;
+        if self.channels[sfx].active {
+            Some(sfx)
+        } else if self.channels[hw].active {
+            Some(hw)
+        } else {
+            None
+        }
+    }
+
+    fn consume_output(&mut self, output: &[ChannelOutput; NUM_CHANNELS]) -> LogicalFrameOutcome {
+        for hw in 0..NUM_MUSIC_CHANNELS {
+            if let Some(index) = self.selected_channel(hw) {
+                // Preserve the ordinary output branches: no request and tonal
+                // slides bypass the note helpers. Every other request either
+                // handles a rest or enters a helper that consumes its trigger.
+                let consumes_trigger = match output[index] {
+                    ChannelOutput::None => false,
+                    ChannelOutput::Slide if hw < 3 => false,
+                    _ => true,
+                };
+                if consumes_trigger {
+                    self.channels[index].trigger = false;
+                }
+            }
+        }
+        LogicalFrameOutcome {
+            nr50: self.pending_nr50.take(),
+        }
+    }
+
     /// Update a single channel for one frame.
-    fn update_channel(&mut self, ch_idx: usize) {
+    fn update_channel(&mut self, ch_idx: usize) -> ChannelOutput {
+        let overridden =
+            !is_sfx_channel(ch_idx) && self.channels[ch_idx + NUM_MUSIC_CHANNELS].active;
         let ch = &mut self.channels[ch_idx];
+        // A covered note is not a deferred hardware command. Effects also
+        // produce a new write request only when they actually execute.
+        ch.trigger = false;
+        ch.vibrato_freq_lo = None;
 
         // Decrement delay
         if ch.delay_counter > 1 {
             ch.delay_counter -= 1;
             // Apply effects while waiting
-            self.apply_effects(ch_idx);
-            return;
+            return self.apply_effects(ch_idx);
         }
 
         // Delay expired (or first frame) — execute commands
         self.execute_commands(ch_idx);
+        if overridden {
+            self.channels[ch_idx].trigger = false;
+            ChannelOutput::None
+        } else if self.channels[ch_idx].trigger {
+            if self.channels[ch_idx].resting {
+                let ch = &self.channels[ch_idx];
+                if ch.flags1.contains(ChannelFlags1::NOISE_OR_SFX)
+                    && !ch.flags2.contains(ChannelFlags2::EXECUTE_MUSIC)
+                {
+                    return ChannelOutput::None;
+                }
+                ChannelOutput::Rest
+            } else {
+                ChannelOutput::Note
+            }
+        } else {
+            ChannelOutput::None
+        }
     }
 
     /// Execute commands from the stream until a note, rest, or end is encountered.
     fn execute_commands(&mut self, ch_idx: usize) {
+        // The next-note entry runs for rests as well as pitched notes, before
+        // parsing any new no-time commands (including a fresh slide command).
+        let ch = &mut self.channels[ch_idx];
+        ch.vibrato.delay_counter = ch.vibrato.delay_reload;
+        ch.flags1
+            .remove(ChannelFlags1::PITCH_SLIDE_ON | ChannelFlags1::PITCH_SLIDE_DEC);
         // Safety: limit iterations to prevent infinite loops on bad data
         let mut max_commands = 256;
 
@@ -359,10 +512,17 @@ impl Sequencer {
                     self.channels[ch_idx].duty_cycle = duty & 0x03;
                 }
                 Command::Tempo(tempo) => {
-                    if is_sfx_channel(ch_idx) {
+                    let first_channel = if is_sfx_channel(ch_idx) {
                         self.sfx_tempo = tempo;
+                        CHAN5
                     } else {
                         self.music_tempo = tempo;
+                        CHAN1
+                    };
+                    // A tempo command starts the group's fixed-point carries
+                    // over before the following note computes its duration.
+                    for channel in &mut self.channels[first_channel..first_channel + 4] {
+                        channel.delay_frac = 0;
                     }
                 }
                 Command::StereoPanning(pan) => {
@@ -442,7 +602,10 @@ impl Sequencer {
 
     /// Handle a note command: set frequency, calculate delay, apply effects setup.
     fn handle_note(&mut self, ch_idx: usize, pitch: u8, length: u8) {
+        let music_output_overridden =
+            !is_sfx_channel(ch_idx) && self.channels[ch_idx + NUM_MUSIC_CHANNELS].active;
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         // If duty cycle rotation is enabled, rotate and use new duty
         if ch.flags1.contains(ChannelFlags1::ROTATE_DUTY) {
@@ -452,7 +615,6 @@ impl Sequencer {
         // Calculate frequency for this note + octave
         let freq = commands::calculate_frequency(pitch, ch.octave);
         ch.frequency = freq;
-        ch.freq_lo_saved = (freq & 0xFF) as u8;
         ch.note_length = length;
 
         // Reset vibrato delay for this note
@@ -475,6 +637,12 @@ impl Sequencer {
         if ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
             ch.frequency = ch.frequency.wrapping_add(1) & 0x07FF;
         }
+        // Modulation uses the emitted pitch, including perfect pitch. Slide
+        // initialization above still uses the untuned note. A covered music
+        // note does not replace the base last written to its hardware voice.
+        if !music_output_overridden {
+            ch.freq_lo_saved = ch.frequency as u8;
+        }
         ch.trigger = true;
     }
 
@@ -492,6 +660,7 @@ impl Sequencer {
     /// from before.
     fn handle_drum_note(&mut self, ch_idx: usize, length: u8, instrument: u8) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
         ch.note_length = length;
 
         // Calculate delay
@@ -543,6 +712,7 @@ impl Sequencer {
     fn handle_rest(&mut self, ch_idx: usize, length: u8) {
         let ch = &mut self.channels[ch_idx];
         ch.note_length = length;
+        ch.resting = true;
 
         let tempo = if is_sfx_channel(ch_idx) {
             self.sfx_tempo
@@ -656,6 +826,7 @@ impl Sequencer {
         frequency: u16,
     ) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         let tempo = self.sfx_tempo;
         let (delay, new_frac) =
@@ -664,7 +835,7 @@ impl Sequencer {
         ch.delay_frac = new_frac;
 
         ch.volume_envelope = volume_envelope;
-        ch.frequency = frequency;
+        ch.frequency = frequency.wrapping_add(self.frequency_modifier as u16);
         ch.trigger = true;
     }
 
@@ -678,6 +849,7 @@ impl Sequencer {
         noise_params: u8,
     ) {
         let ch = &mut self.channels[ch_idx];
+        ch.resting = false;
 
         // CHAN8 noise notes always use the fixed tempo $0100, never
         // the SFX tempo field (the classic note-length routine hardcodes
@@ -711,15 +883,20 @@ impl Sequencer {
     // ── Effects ──────────────────────────────────────────────────────────
 
     /// Apply per-frame effects to a channel (vibrato, pitch slide).
-    fn apply_effects(&mut self, ch_idx: usize) {
+    fn apply_effects(&mut self, ch_idx: usize) -> ChannelOutput {
         let is_music = !is_sfx_channel(ch_idx);
+        // A paired one-shot holds modulation until the next music tick after
+        // it ends. update_channel has already decremented the note delay.
+        if is_music && self.channels[ch_idx + crate::NUM_MUSIC_CHANNELS].active {
+            return ChannelOutput::None;
+        }
         let has_execute_music = self.channels[ch_idx]
             .flags2
             .contains(ChannelFlags2::EXECUTE_MUSIC);
 
         // Effects only apply to music channels, or SFX with execute_music flag
         if !is_music && !has_execute_music {
-            return;
+            return ChannelOutput::None;
         }
 
         if self.channels[ch_idx]
@@ -729,44 +906,95 @@ impl Sequencer {
             self.channels[ch_idx].vibrato_freq_lo = None;
             if let Some(new_freq) = crate::effects::apply_pitch_slide(&mut self.channels[ch_idx]) {
                 self.channels[ch_idx].frequency = new_freq;
+                return ChannelOutput::Slide;
             }
-            return;
+            return ChannelOutput::None;
         }
         if let Some(vibrato_lo) = crate::effects::apply_vibrato(&mut self.channels[ch_idx]) {
             self.channels[ch_idx].vibrato_freq_lo = Some(vibrato_lo);
+            ChannelOutput::FrequencyLow
         } else {
-            self.channels[ch_idx].vibrato_freq_lo = None;
+            ChannelOutput::None
         }
     }
 
     // ── APU Interface ────────────────────────────────────────────────────
 
-    /// Apply all channel states to the APU hardware registers.
-    ///
-    /// For each HW channel, determine which logical channel takes priority
-    /// (SFX over music), and write its frequency/volume/duty to the APU.
-    fn apply_to_apu(&mut self, apu: &mut Apu) {
-        let mut panning = 0u8;
+    /// Rebuild hardware registers after restoring logical playback state.
+    /// Uses the ordinary SFX-over-music priority without advancing commands,
+    /// effects, delays, or trigger flags. Oscillator/envelope phase restarts.
+    /// The caller must power the APU and restore its master volume separately.
+    /// Music CHAN4 is a drum-command clock, not a hardware noise voice. Its
+    /// retained APU noise controls (e.g. a completed drum's envelope tail)
+    /// must be saved/restored by the caller; this method leaves them alone.
+    pub fn rebuild_apu(&mut self, apu: &mut Apu) {
+        let triggers = self.channels.each_ref().map(|channel| channel.trigger);
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            if index == CHAN4 && channel.flags1.contains(ChannelFlags1::NOISE_OR_SFX) {
+                channel.trigger = false;
+            } else if channel.active {
+                channel.trigger = true;
+            }
+        }
+        let output = self.channels.each_ref().map(|channel| {
+            if channel.trigger {
+                if channel.resting {
+                    ChannelOutput::Rest
+                } else {
+                    ChannelOutput::Note
+                }
+            } else {
+                ChannelOutput::None
+            }
+        });
+        self.apply_to_apu(apu, &output);
+        for (channel, trigger) in self.channels.iter_mut().zip(triggers) {
+            channel.trigger = trigger;
+        }
+    }
+
+    /// Apply the register requests produced by this update. Retained logical
+    /// note state is not a request to replay it after a one-shot ends.
+    /// SFX still takes priority over music on the corresponding hardware voice.
+    fn apply_to_apu(&self, apu: &mut Apu, output: &[ChannelOutput; NUM_CHANNELS]) {
+        // Routing is hardware state. Sustain/effect updates must not enable a
+        // wave voice muted by a rest, or apply a covered rest on SFX release.
+        let mut panning = apu.nr51;
 
         for hw in 0..4usize {
-            let sfx_idx = hw + NUM_MUSIC_CHANNELS;
-            let music_idx = hw;
-
-            let active_idx = if self.channels[sfx_idx].active {
-                sfx_idx
-            } else if self.channels[music_idx].active {
-                music_idx
-            } else {
+            let Some(active_idx) = self.selected_channel(hw) else {
                 self.silence_hw_channel(apu, hw);
+                panning &= !HwChannel::from_u8(hw as u8).unwrap().enable_mask();
                 continue;
             };
 
             let hw_mask = HwChannel::from_u8(hw as u8)
                 .map(|h| h.enable_mask())
                 .unwrap_or(0);
-            panning |= self.channels[active_idx].stereo_panning & hw_mask;
-
-            let ch = &mut self.channels[active_idx];
+            let request = output[active_idx];
+            if request == ChannelOutput::None {
+                continue;
+            }
+            let ch = &self.channels[active_idx];
+            if request == ChannelOutput::Note {
+                panning = (panning & !hw_mask) | (ch.stereo_panning & hw_mask);
+            }
+            if request == ChannelOutput::Rest {
+                if hw == 2 {
+                    panning &= !hw_mask;
+                } else {
+                    let envelope = [0xff12, 0xff17, 0, 0xff21][hw];
+                    apu.write_register(envelope, 0x08);
+                    apu.write_register(envelope + 2, 0x80);
+                }
+                continue;
+            }
+            if request == ChannelOutput::Slide && hw < 3 {
+                let low_port = [0xff13, 0xff18, 0xff1d][hw];
+                apu.write_register(low_port, ch.frequency as u8);
+                apu.write_register(low_port + 1, ((ch.frequency >> 8) & 7) as u8);
+                continue;
+            }
             match hw {
                 0 => Self::apply_pulse_channel(apu, ch, true),
                 1 => Self::apply_pulse_channel(apu, ch, false),
@@ -781,9 +1009,9 @@ impl Sequencer {
     }
 
     /// Write pulse channel state to APU.
-    /// On new note (trigger=true): writes all registers and clears trigger.
+    /// On new note (trigger=true): writes all registers.
     /// On sustain: only updates frequency low byte (for vibrato/pitch slide).
-    fn apply_pulse_channel(apu: &mut Apu, ch: &mut ChannelState, is_ch1: bool) {
+    fn apply_pulse_channel(apu: &mut Apu, ch: &ChannelState, is_ch1: bool) {
         let freq = ch.frequency;
         let nrx3 = ch.vibrato_freq_lo.unwrap_or((freq & 0xFF) as u8);
 
@@ -807,8 +1035,6 @@ impl Sequencer {
                 apu.write_register(0xFF18, nrx3);
                 apu.write_register(0xFF19, nrx4);
             }
-
-            ch.trigger = false;
         } else {
             if is_ch1 {
                 apu.write_register(0xFF13, nrx3);
@@ -819,7 +1045,7 @@ impl Sequencer {
     }
 
     /// Write wave channel state to APU.
-    fn apply_wave_channel(apu: &mut Apu, ch: &mut ChannelState) {
+    fn apply_wave_channel(apu: &mut Apu, ch: &ChannelState) {
         let freq = ch.frequency;
 
         if ch.trigger {
@@ -838,8 +1064,6 @@ impl Sequencer {
             apu.write_register(0xFF1C, volume_code << 5);
             apu.write_register(0xFF1D, (freq & 0xFF) as u8);
             apu.write_register(0xFF1E, 0x80 | ((freq >> 8) & 0x07) as u8);
-
-            ch.trigger = false;
         } else {
             let nrx3 = ch.vibrato_freq_lo.unwrap_or((freq & 0xFF) as u8);
             apu.write_register(0xFF1D, nrx3);
@@ -847,7 +1071,7 @@ impl Sequencer {
     }
 
     /// Write noise channel state to APU.
-    fn apply_noise_channel(apu: &mut Apu, ch: &mut ChannelState) {
+    fn apply_noise_channel(apu: &mut Apu, ch: &ChannelState) {
         if ch.trigger {
             apu.write_register(0xFF21, ch.volume_envelope);
 
@@ -856,8 +1080,6 @@ impl Sequencer {
             let divisor = (freq & 0x07) as u8;
             apu.write_register(0xFF22, (shift << 4) | divisor);
             apu.write_register(0xFF23, 0x80);
-
-            ch.trigger = false;
         }
     }
 
@@ -933,5 +1155,52 @@ impl Sequencer {
 impl Default for Sequencer {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod output_consumption_tests {
+    use super::*;
+
+    #[test]
+    fn retained_triggers_follow_the_original_output_branch_table() {
+        // The pre-extraction output implementation consumes trigger inside
+        // note helpers and the rest branch. Tonal Slide writes frequency
+        // registers directly; noise Slide enters the noise helper. These
+        // fixed expectations also cover retained triggers that ordinary
+        // update_channel currently clears before producing an effect request.
+        let cases = [
+            (ChannelOutput::None, [true, true, true, true]),
+            (ChannelOutput::Note, [false, false, false, false]),
+            (ChannelOutput::Rest, [false, false, false, false]),
+            (ChannelOutput::FrequencyLow, [false, false, false, false]),
+            (ChannelOutput::Slide, [true, true, true, false]),
+        ];
+        for (request, expected_triggers) in cases {
+            for (hw, expected_trigger) in expected_triggers.into_iter().enumerate() {
+                for sfx_selected in [false, true] {
+                    let sfx = hw + NUM_MUSIC_CHANNELS;
+                    let selected = if sfx_selected { sfx } else { hw };
+                    let mut before = Sequencer::new();
+                    before.channels[hw].active = true;
+                    before.channels[sfx].active = sfx_selected;
+                    before.channels[hw].trigger = true;
+                    before.channels[sfx].trigger = true;
+                    let mut output = [ChannelOutput::None; NUM_CHANNELS];
+                    output[hw] = request;
+                    output[sfx] = request;
+
+                    let mut expected = before.clone();
+                    expected.channels[selected].trigger = expected_trigger;
+                    let mut ordinary = before.clone();
+                    ordinary.apply_to_apu(&mut Apu::new(), &output);
+                    ordinary.consume_output(&output);
+                    assert_eq!(ordinary, expected, "ordinary {hw} {request:?}");
+                    let mut logical = before;
+                    logical.consume_output(&output);
+                    assert_eq!(logical, expected, "logical {hw} {request:?}");
+                }
+            }
+        }
     }
 }

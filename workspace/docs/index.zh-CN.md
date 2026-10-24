@@ -1,7 +1,7 @@
 # dotzuki 引擎 — 文档索引
 
-> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.10.0
->（源文档 commit 5916df548155f7e31eb3ce8b8ceaa2c6ce853095）。
+> 本文是 `index.md` 的中文翻译，同步至引擎版本 v0.10.1
+>（源文档 commit 0977b7b39699b1c96df51c520d8c3e8d9eeec492）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本目录是 **dotzuki 开发者文档的入口**。引擎不绑定任何具体游戏，游戏仓库以 Cargo git
@@ -39,6 +39,7 @@
 | 文档 | 涵盖内容 |
 |---|---|
 | [`how-to/maps.md`](./how-to/maps.md) | Tiled `.tmx`（JSON）地图、tilesets、海拔、实体以及 `objects.json` 伴生文件 |
+| [`how-to/map-components.md`](./how-to/map-components.md) | 链接建筑、源更新、导入图集保留，以及 cardinal/blob 自动图块 |
 | [`how-to/native-map-art.zh-CN.md`](./how-to/native-map-art.zh-CN.md) | 高密度布景、逻辑坐标、碰撞叠层与来源像素编辑 |
 | [`how-to/scenes.md`](./how-to/scenes.md) | 编写 `.scene` 剧情：NPC 对话、进图过场、选项、flag、场景内战斗 |
 | [`how-to/ui.md`](./how-to/ui.md) | 编写 `.gui` 布局：20×18 网格、面板/文本、模板绑定、`@t` 标签、自定义组件 |
@@ -87,7 +88,7 @@
 
 ## 发布说明
 
-- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)、[`v0.8.2`](./release-notes/migration/v0.8.2.zh-CN.md), [`v0.9.0`](./release-notes/migration/v0.9.0.zh-CN.md)、[`v0.9.1`](./release-notes/migration/v0.9.1.zh-CN.md)、[`v0.10.0`](./release-notes/migration/v0.10.0.zh-CN.md)）
+- [`release-notes/changelog.md`](./release-notes/changelog.md) —— 版本历史；每个版本的迁移指南与它放在一起（[`v0.1.0`](./release-notes/migration/v0.1.0.md)、[`v0.5.4`](./release-notes/migration/v0.5.4.md)、[`v0.7.0`](./release-notes/migration/v0.7.0.zh-CN.md)、[`v0.7.1`](./release-notes/migration/v0.7.1.zh-CN.md)、[`v0.8.0`](./release-notes/migration/v0.8.0.zh-CN.md)、[`v0.8.1`](./release-notes/migration/v0.8.1.zh-CN.md)、[`v0.8.2`](./release-notes/migration/v0.8.2.zh-CN.md), [`v0.9.0`](./release-notes/migration/v0.9.0.zh-CN.md)、[`v0.9.1`](./release-notes/migration/v0.9.1.zh-CN.md)、[`v0.10.0`](./release-notes/migration/v0.10.0.zh-CN.md)、[`v0.10.1`](./release-notes/migration/v0.10.1.zh-CN.md)）
 
 ## 归档
 

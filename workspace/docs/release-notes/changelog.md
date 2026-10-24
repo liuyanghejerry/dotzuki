@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.10.1
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -24,6 +24,35 @@ with a migration guide under `migration/` (created per release).
   Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
   does not establish symbol availability. Existing `MobileGame` implementations keep their
   default pointer callbacks, and the button contract remains unchanged.
+
+Breaking Rust API change:
+
+- Add `NpcRuntimeState::step_direction: Option<Direction>`. Add `step_direction: None` to
+  idle NPC struct literals. Manual walking-state fixtures must retain their movement direction
+  in this field. Binary save adapters must account for the additional field.
+
+NPC movement fixes:
+
+- Capture the direction when each autonomous or scripted step starts. A change to `facing`
+  during that step no longer redirects the remaining movement or its occupied destination.
+- Use `NpcRuntimeState::walking_direction()` for movement offsets and collision predictions;
+  keep `facing` for the sprite's orientation.
+- Preserve the captured direction in JSON snapshots. Legacy JSON without `step_direction`
+  loads with `None` and falls back to its saved facing. Completed steps remove the captured
+  direction; consecutive scripted steps capture their next direction independently.
+
+## v0.10.1
+
+This patch release restores DSL compilation on bare-metal targets and includes the NPC hooks
+used by consumers of `fix/gba-psg-audio`. See the [migration guide](migration/v0.10.1.md).
+Existing APIs retain their behavior; there are no breaking changes.
+
+- Replace the DSL integer check's unavailable `f64::fract()` call with a no_std-compatible
+  check. Preserve accepted integer ranges and rejection of invalid arguments.
+- Check both audio and DSL libraries on `thumbv4t-none-eabi` in CI.
+- Add an opt-in callback for visible, idle stationary NPCs in the movement traversal.
+  Existing entry points keep their stationary-NPC behavior.
+- Collect NPC occupied tiles in one preallocated vector, preserving collision semantics.
 
 ## v0.10.0
 

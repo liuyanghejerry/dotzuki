@@ -6,7 +6,7 @@ use log::error;
 use pixels::{PixelsBuilder, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{ElementState, Event, WindowEvent};
-use winit::event_loop::EventLoop;
+use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
@@ -230,10 +230,9 @@ pub fn run<G: GameLoop + 'static>(
                     next_frame_time = now + FRAME_DURATION;
                 }
             }
-            let sleep_duration = next_frame_time.saturating_duration_since(Instant::now());
-            if !sleep_duration.is_zero() {
-                std::thread::sleep(sleep_duration);
-            }
+            // Let the event loop wake for input/redraws while waiting for the
+            // next simulation frame; sleeping here blocks presentation too.
+            elwt.set_control_flow(ControlFlow::WaitUntil(next_frame_time));
         }
         _ => {}
     });

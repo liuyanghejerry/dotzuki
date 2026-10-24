@@ -40,6 +40,11 @@ closures — at construction: `AudioManager::new(music_track, sfx_track)` with
 The fields `sequencer`, `apu`, `fade_state`, `fade_counter_reload`, and
 `fade_queued_music` are public for engine-level integrations.
 
+Track loading copies each nonempty static stream directly into its live
+channel's owned buffer. The manager does not first build a temporary vector
+of copied streams. Channel data remains mutable and independently owned;
+the existing `Sequencer::play_music` / `play_sfx` vector APIs remain available.
+
 **The APU starts unpowered.** Someone — the output layer or the game — must
 write NR52 (`0xFF26 = 0x80`) before any sound comes out; register writes to a
 powered-down APU are ignored.
@@ -60,6 +65,14 @@ register write there (an alarm poked into NR11–NR14, for example) overrides
 whatever the sound engine produced that frame.
 
 ### Master volume
+
+For a music-only pause, call `update_frame_with_music_paused()` instead of
+`update_frame()` for each paused frame. It freezes all four music channels'
+commands, delays and effects while advancing SFX, fade and the post-frame hook.
+The caller mutes hardware once at the pause boundary; this API does not mute
+again on subsequent frames, so sustained SFX can finish. Resume with ordinary
+`update_frame()`, without restarting a track or making a resume-cache entry.
+The same operation is available on `Sequencer` with an explicit `&mut Apu`.
 
 | Method | Effect |
 |---|---|
@@ -92,8 +105,10 @@ stick (read back with `no_audio_fade_out()`).
 
 ### Resume snapshots
 
-`play_music(id)` clones the live sequencer into `saved_music_states` under the
-old id when switching to a different track; requesting a track that has a
+`play_music(id)` copies the four music channels, music tempo, playing flag,
+and music id into `saved_music_states` under the old id when switching to a
+different track. Snapshots omit SFX channels and the drum library; those stay
+with the live sequencer. Requesting a track that has a
 snapshot resumes it through `Sequencer::restore_music_from` instead of
 restarting. `stop_music()` and `stop_all()` drop every snapshot;
 `clear_saved_music_states()` drops them without touching playback (the
