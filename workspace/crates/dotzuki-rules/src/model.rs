@@ -587,6 +587,10 @@ pub enum Op {
     /// `BattleCtx`, drawing only `ctx.rng` (one or two count bytes + the optional
     /// final-hit chance byte) at its ordinal. A `ScriptedRng` therefore replays
     /// both the outcome and conditional draw count identically.
+    /// A target at zero HP ends the sequence immediately: no remaining hits or
+    /// final-hit rider run, and an initial knockout does not sample the count.
+    /// HP is checked after each damage redirection, so a sink that protects a
+    /// living target does not itself stop the sequence.
     RepeatHits {
         /// Where N comes from (fixed, or the 2-5 distribution draw).
         count: HitCount,
@@ -642,7 +646,8 @@ pub enum HitCount {
 pub enum FinalHitRider {
     /// No final-hit secondary.
     None,
-    /// On the final hit only: draw the `chance` byte, then (if it passes) run the
+    /// On the final hit, if the target survives: draw the `chance` byte, then (if
+    /// it passes) run the
     /// rider ops (`VetoIf` guards + `InflictStatus`) exactly like a side-status
     /// hook. `chance` is `[num, den]`; the byte is drawn UNCONDITIONALLY of whether
     /// the secondary fires (the `consumed()` invariant).

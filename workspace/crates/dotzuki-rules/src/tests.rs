@@ -132,7 +132,39 @@ impl EffectProvider for TestProvider {
 
 struct TestBindings;
 
+#[derive(Default)]
+struct HpLossTrace {
+    hp_before_hits: Vec<u16>,
+    redirects_left: usize,
+}
+
+thread_local! {
+    static HP_LOSS_TRACE: RefCell<Option<HpLossTrace>> = const { RefCell::new(None) };
+}
+
 impl RuleBindings<TestProvider> for TestBindings {
+    fn redirect_hp_loss(
+        &self,
+        ctx: &mut BattleCtx<'_, TestProvider>,
+        who: BattlerRef,
+        _source: BattlerRef,
+        _amount: u16,
+    ) -> bool {
+        HP_LOSS_TRACE.with(|trace| {
+            let mut trace = trace.borrow_mut();
+            let Some(trace) = trace.as_mut() else {
+                return false;
+            };
+            trace.hp_before_hits.push(ctx.battler(who).hp);
+            if trace.redirects_left > 0 {
+                trace.redirects_left -= 1;
+                true
+            } else {
+                false
+            }
+        })
+    }
+
     fn apply_boost(
         &self,
         b: &mut BattlerState<TestProvider>,
@@ -1493,4 +1525,106 @@ fn fixed_repeat_hits_leave_the_random_stream_untouched() {
     assert_eq!(h.opp_hp(), 86);
     assert_eq!(rng.consumed(), 0);
     assert_eq!(rng.next_u8(), 89);
+}
+
+#[test]
+fn repeat_hits_stop_at_knockout_before_more_hits_or_random_draws() {
+    for (count, hits, count_draws, bytes) in [
+        ("Fixed(2)", 2, 0, vec![0, 89]),
+        ("TwoToFive", 5, 2, vec![3, 3, 0, 89]),
+    ] {
+        let ron = format!(
+            r#"Ruleset(
+            stats:["Hp","Atk","SpD"],
+            effects: [ Effect(id:"repeated", kind:Move, hooks:[
+                Hook(on:"DamagingHit", do:[ RepeatHits(count:{count}, target:Target,
+                    final_hit:OnFinal(chance:[52,256], ops:[
+                        Boost(stat:"Atk", stages:1, target:Source) ])) ]) ]) ],
+        )"#
+        );
+        compile_and_install(&ron).unwrap();
+        // HP here is AFTER the first hit. Cover first-hit, intermediate-hit,
+        // exact final-hit knockouts and a survivor on either side of each boundary.
+        for hp in [0u16, 1, 7, 8, 14, 15, 21, 22, 28, 29, 93] {
+            let mut h = Harness::new(MType::Normal, MType::Normal);
+            h.mv.damage = 7;
+            h.set_opp_hp(hp);
+            HP_LOSS_TRACE.with(|trace| *trace.borrow_mut() = Some(HpLossTrace::default()));
+            let mut rng = ScriptedRng::new(bytes.clone());
+            h.fire(Event::DamagingHit, RelayVar::Damage(7), &mut rng);
+            let trace = HP_LOSS_TRACE.with(|trace| trace.borrow_mut().take().unwrap());
+            let remaining_hits = hp.div_ceil(7).min(hits - 1);
+            let hp_after = hp.saturating_sub(7 * (hits - 1));
+            let expected_draws = if hp == 0 {
+                0
+            } else {
+                count_draws + usize::from(hp_after > 0)
+            };
+            assert_eq!(
+                trace.hp_before_hits,
+                (0..remaining_hits).map(|i| hp - 7 * i).collect::<Vec<_>>(),
+                "{count}, HP {hp}"
+            );
+            assert_eq!(h.opp_hp(), hp_after, "{count}, HP {hp}");
+            assert_eq!(
+                h.state.player_battlers[0]
+                    .stat_stages
+                    .get(Stat::Atk)
+                    .copied()
+                    .unwrap_or(0),
+                i8::from(hp_after > 0),
+                "{count}, HP {hp}"
+            );
+            assert_eq!(rng.consumed(), expected_draws, "{count}, HP {hp}");
+            assert_eq!(rng.next_u8(), bytes[expected_draws], "{count}, HP {hp}");
+            assert_eq!(h.player_hp(), 100);
+        }
+    }
+}
+
+#[test]
+fn repeat_hits_follow_live_hp_after_redirects_and_preserve_zero_damage_riders() {
+    let ron = r#"Ruleset(
+        stats:["Hp","Atk","SpD"],
+        effects: [ Effect(id:"repeated", kind:Move, hooks:[
+            Hook(on:"DamagingHit", do:[ RepeatHits(count:Fixed(5), target:Target,
+                final_hit:OnFinal(chance:[52,256], ops:[
+                    Boost(stat:"Atk", stages:1, target:Source) ])) ]) ]) ],
+    )"#;
+    compile_and_install(ron).unwrap();
+    for damage in [0, 7] {
+        let mut h = Harness::new(MType::Normal, MType::Normal);
+        h.mv.damage = damage;
+        h.set_opp_hp(1);
+        HP_LOSS_TRACE.with(|trace| {
+            *trace.borrow_mut() = Some(HpLossTrace {
+                hp_before_hits: Vec::new(),
+                redirects_left: 2,
+            })
+        });
+        let mut rng = ScriptedRng::new(vec![0, 89]);
+        h.fire(Event::DamagingHit, RelayVar::Damage(damage), &mut rng);
+        let trace = HP_LOSS_TRACE.with(|trace| trace.borrow_mut().take().unwrap());
+        if damage == 0 {
+            assert_eq!(trace.hp_before_hits, vec![1; 4]);
+            assert_eq!(h.opp_hp(), 1);
+            assert_eq!(
+                h.state.player_battlers[0].stat_stages.get(Stat::Atk),
+                Some(&1)
+            );
+            assert_eq!(rng.consumed(), 1);
+        } else {
+            assert_eq!(trace.hp_before_hits, vec![1; 3]);
+            assert_eq!(h.opp_hp(), 0);
+            assert_eq!(
+                h.state.player_battlers[0]
+                    .stat_stages
+                    .get(Stat::Atk)
+                    .copied()
+                    .unwrap_or(0),
+                0
+            );
+            assert_eq!(rng.consumed(), 0);
+        }
+    }
 }
