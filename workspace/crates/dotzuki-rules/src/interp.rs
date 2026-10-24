@@ -347,6 +347,11 @@ fn apply_op<P: RulesProvider>(
             final_hit,
         } => {
             let who = resolve(*sel, target, source);
+            // The first hit may already have ended the attack. Do not sample
+            // a repeat count or run a final-hit rider against a defeated target.
+            if ctx.battler(who).hp == 0 {
+                return OpOutcome::Unchanged;
+            }
             let per_hit = ctx.mv.damage;
             let n = match count {
                 crate::model::HitCount::Fixed(k) => *k,
@@ -359,9 +364,12 @@ fn apply_op<P: RulesProvider>(
                 if !bindings.redirect_hp_loss(ctx, who, source, per_hit) {
                     ctx.battler_mut(who).take_damage(per_hit);
                 }
+                if ctx.battler(who).hp == 0 {
+                    return OpOutcome::Unchanged;
+                }
             }
-            // Final-hit-only secondary (Twineedle 52/256 poison). The chance byte is
-            // drawn UNCONDITIONALLY (consumed() invariant), then — if it passes — the
+            // Final-hit-only secondary for a surviving target. The chance byte is
+            // drawn before the rider guards, then — if it passes — the
             // rider ops (VetoIf guards + InflictStatus) run exactly like a side-status
             // hook. Resolved against the same `target` (the defender).
             if let crate::model::FinalHitRider::OnFinal { chance, ops } = final_hit {
