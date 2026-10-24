@@ -56,6 +56,12 @@ pub trait GameLoop {
     /// Called once per GB frame. Process input before returning.
     fn update(&mut self, input: &InputState);
 
+    /// Primary click in framebuffer pixels. Default preserves button-only games.
+    fn pointer_click(&mut self, _x: f32, _y: f32) {}
+
+    /// Focus loss or canceled touch; discard pending pointer-driven actions.
+    fn cancel_pointer_input(&mut self) {}
+
     /// Called once per redraw. Draw the current screen into the framebuffer.
     fn draw(&mut self, fb: &mut Self::Fb);
 
@@ -214,6 +220,10 @@ pub async fn run_game<G: GameLoop + 'static>(
 
     let mut frame_buffer = G::Fb::new_screen(fb_width, fb_height);
     let mut input = BufferedInput::default();
+    let mut cursor = None;
+    let mut click_start: Option<(f64, f64)> = None;
+    let mut touch_id = None;
+    let mut active_touches = std::collections::BTreeSet::new();
 
     #[cfg(not(target_arch = "wasm32"))]
     let mut next_frame_time = Instant::now();
@@ -231,7 +241,14 @@ pub async fn run_game<G: GameLoop + 'static>(
     let event_handler = move |event, elwt: &winit::event_loop::ActiveEventLoop| match event {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => elwt.exit(),
-            WindowEvent::Focused(false) => input.clear(),
+            WindowEvent::Focused(false) => {
+                input.clear();
+                cursor = None;
+                click_start = None;
+                touch_id = None;
+                active_touches.clear();
+                game.borrow_mut().cancel_pointer_input();
+            }
             WindowEvent::RedrawRequested => {
                 game.borrow_mut().draw(&mut frame_buffer);
                 frame_buffer.present_into(pixels.frame_mut());
@@ -246,6 +263,82 @@ pub async fn run_game<G: GameLoop + 'static>(
                         log_error("pixels.resize_surface", err);
                         elwt.exit();
                     }
+                }
+            }
+            WindowEvent::CursorLeft { .. } => {
+                cursor = None;
+                click_start = None;
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                cursor = Some((position.x, position.y));
+                if click_start.is_some_and(|(x, y)| {
+                    (x - position.x).abs() > 8.0 || (y - position.y).abs() > 8.0
+                }) {
+                    click_start = None;
+                }
+            }
+            WindowEvent::MouseInput {
+                state,
+                button: winit::event::MouseButton::Left,
+                ..
+            } => {
+                if state == ElementState::Pressed {
+                    game.borrow().on_user_gesture();
+                    click_start = cursor;
+                } else if click_start.take().is_some() {
+                    if let Some(point) = cursor {
+                        if let Ok((x, y)) =
+                            pixels.window_pos_to_pixel((point.0 as f32, point.1 as f32))
+                        {
+                            game.borrow_mut().pointer_click(x as f32, y as f32);
+                        }
+                    }
+                }
+            }
+            WindowEvent::Touch(touch) => {
+                use winit::event::TouchPhase;
+                let point = (touch.location.x, touch.location.y);
+                match touch.phase {
+                    TouchPhase::Started if active_touches.is_empty() => {
+                        active_touches.insert(touch.id);
+                        game.borrow().on_user_gesture();
+                        touch_id = Some(touch.id);
+                        click_start = Some(point);
+                    }
+                    TouchPhase::Started => {
+                        active_touches.insert(touch.id);
+                        click_start = None;
+                    }
+                    TouchPhase::Moved if touch_id == Some(touch.id) => {
+                        if click_start.is_some_and(|(x, y)| {
+                            (x - point.0).abs() > 8.0 || (y - point.1).abs() > 8.0
+                        }) {
+                            click_start = None;
+                        }
+                    }
+                    TouchPhase::Ended if touch_id == Some(touch.id) => {
+                        active_touches.remove(&touch.id);
+                        touch_id = None;
+                        if click_start.take().is_some_and(|(x, y)| {
+                            (x - point.0).abs() <= 8.0 && (y - point.1).abs() <= 8.0
+                        }) {
+                            if let Ok((x, y)) =
+                                pixels.window_pos_to_pixel((point.0 as f32, point.1 as f32))
+                            {
+                                game.borrow_mut().pointer_click(x as f32, y as f32);
+                            }
+                        }
+                    }
+                    TouchPhase::Ended => {
+                        active_touches.remove(&touch.id);
+                    }
+                    TouchPhase::Cancelled => {
+                        active_touches.clear();
+                        touch_id = None;
+                        click_start = None;
+                        game.borrow_mut().cancel_pointer_input();
+                    }
+                    _ => {}
                 }
             }
             WindowEvent::KeyboardInput {

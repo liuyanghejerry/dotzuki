@@ -27,6 +27,7 @@ pub mod collision;
 pub mod encounter;
 pub mod event_flags;
 pub mod map_transitions;
+pub mod navigation;
 pub mod npc_interaction;
 pub mod npc_movement;
 pub mod player_movement;

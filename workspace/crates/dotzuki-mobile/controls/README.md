@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.9.0
+> - **Last verified**: v0.9.1
 
 Add the shared mobile touch overlay to an iOS game, or change the controller
 used by the Android and HarmonyOS exporters.
@@ -43,7 +43,7 @@ The host retains ownership of status bars, Home indicator preferences, and syste
 The overlay does not disable system navigation.
 
 The package supplies controls, not a game loop, audio, save storage, or an iOS exporter.
-For SwiftUI hosts, embed the view through `UIViewRepresentable` and forward its two callbacks
+For SwiftUI hosts, embed the view through `UIViewRepresentable` and forward its callbacks
 into the host's input and pause state. Ensure a host view controller can present the editor.
 
 ## Android and HarmonyOS
@@ -116,3 +116,23 @@ The iOS package contains XCTest integration tests under `tests/ios`; the
 **iOS touch controls** workflow builds and tests the package on a macOS runner's iPhone simulator.
 The UIKit tests validate Swift API import, layout hit testing, mirrored preferences, and
 release callbacks, and attach a rendered overlay to the test result.
+
+## Optional click navigation
+
+The Android and HarmonyOS export templates map single-finger taps outside controls to game
+framebuffer pixels, reject letterboxing, and call `dotzuki_mobile_pointer_click`. `GameTap`
+rejects movement beyond 8 logical units, canceled gestures, and multiple fingers. Virtual
+controls retain priority. The runner accepts destinations only in overworld mode.
+
+For an iOS host, configure `gameViewport` (the game content rectangle in overlay coordinates,
+excluding letterboxing) and `gameFramebufferSize`; refresh geometry after layout changes.
+Forward `onGameTap`'s pixel coordinates to `dotzuki_mobile_pointer_click` and wire
+`onGameTapCancelled` to `dotzuki_mobile_cancel_pointer_input`. Both callbacks run on the main
+thread. If the game uses another thread, queue callbacks onto that thread and serialize them
+with ticks and saves. Call `releaseAll()` before changing geometry. Without `onGameTap`, blank
+areas still pass through to the underlying view.
+
+These C functions are additive ABI v1 symbols. Older libraries lack them, so update the host
+and Rust library together. `MobileGame` ignores pointers by default; button-only games remain
+source-compatible. This change does not supply an iOS game host. Shared C++ sanitizer tests
+cover the new gesture path; verify iOS callbacks in the integrating host.

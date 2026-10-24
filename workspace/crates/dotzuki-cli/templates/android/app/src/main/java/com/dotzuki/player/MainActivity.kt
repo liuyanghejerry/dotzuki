@@ -52,6 +52,7 @@ class MainActivity : Activity() {
                 updateInput()
             }
         }
+        gamepad.onGameTap = { x, y -> gameView.clickToMove(x, y) }
         gamepad.onSettingsChanged = {
             editingControls = it
             updatePlayback()

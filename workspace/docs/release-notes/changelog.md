@@ -18,6 +18,13 @@ with a migration guide under `migration/` (created per release).
 
 ## Unreleased
 
+- Add [click to move](../how-to/maps.md#click-to-move) to the runner and pointer-enabled hosts.
+- Add `dotzuki_mobile_pointer_click` and `dotzuki_mobile_cancel_pointer_input` to the mobile
+  C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
+  Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
+  does not establish symbol availability. Existing `MobileGame` implementations keep their
+  default pointer callbacks, and the button contract remains unchanged.
+
 Breaking Rust API change:
 
 - Add `NpcRuntimeState::step_direction: Option<Direction>`. Add `step_direction: None` to

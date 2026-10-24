@@ -10,7 +10,7 @@
   h1{font-size:18px;font-weight:600;margin:0}
   #status{color:#9aa0a6;font-size:14px}
   #hint{color:#5f6368;font-size:12px}
-  canvas{image-rendering:pixelated;width:960px;max-width:96vw;background:#000;
+  canvas{touch-action:none;image-rendering:pixelated;width:960px;max-width:96vw;background:#000;
          box-shadow:0 8px 40px rgba(0,0,0,.6);border-radius:4px}
 </style>
 </head>
@@ -135,6 +135,28 @@ try {
   const pack = await res.arrayBuffer()
   say(STR.starting)
   const runner = mod.WasmRunner.fromPack(new Uint8Array(pack), localStorage.getItem(SAVE_KEY))
+  let tap = null
+  canvas.addEventListener('pointerdown', e => {
+    tap = e.isPrimary && e.button === 0 ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null
+  })
+  canvas.addEventListener('pointermove', e => {
+    if (tap && (Math.abs(e.clientX - tap.x) > 8 || Math.abs(e.clientY - tap.y) > 8)) tap = null
+  })
+  canvas.addEventListener('pointerup', e => {
+    const start = tap; tap = null
+    if (!start || start.id !== e.pointerId || !e.isPrimary || e.button !== 0 ||
+        Math.abs(e.clientX - start.x) > 8 || Math.abs(e.clientY - start.y) > 8) return
+    const rect = canvas.getBoundingClientRect()
+    runner.click_to_move?.((e.clientX - rect.left) * canvas.width / rect.width,
+      (e.clientY - rect.top) * canvas.height / rect.height)
+  })
+  const cancelPointer = () => { tap = null; runner.cancel_navigation?.() }
+  canvas.addEventListener('pointercancel', cancelPointer)
+  canvas.addEventListener('pointerleave', () => { tap = null })
+  addEventListener('blur', () => { input = 0; cancelPointer() })
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { input = 0; cancelPointer() }
+  })
   const ctx = canvas.getContext('2d')
   const image = ctx.createImageData(runner.width(), runner.height())
   canvas.hidden = false

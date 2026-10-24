@@ -95,6 +95,34 @@ All `dotzuki-*` crates are published to crates.io under one shared version — t
 
 The same `vX.Y.Z` tag also packages the dotzuki-editor desktop app: `.github/workflows/release-editor.yml` builds the WASM pkgs once (Linux, release profile), packages the Electron app on macOS (arm64 + x64 dmg/zip) and Windows (nsis exe) — unsigned unless cert secrets are set — and attaches the installers to the GitHub Release. The editor's `package.json` version is synced to the workspace version during packaging, and the workflow asserts tag ↔ workspace version exactly like `publish-crates.sh` (so a `workflow_dispatch` run can only target the workspace version of the checked-out ref — no back-filling older tags). Linux AppImages are not CI-built; build locally with `pnpm electron:dist` in `workspace/tools/dotzuki-editor`.
 
+### Unofficial editor previews
+
+Run the existing **Release Editor (Electron apps)** workflow on the feature branch,
+with `preview=true` and an empty `tag` input:
+
+```bash
+gh workflow run release-editor.yml --ref feat/click-to-move -f preview=true
+```
+
+The workflow publishes a GitHub Pre-release only after both installer jobs succeed.
+Preview tags use `editor-preview-<run-id>.<attempt>.g<sha>`; installer versions use
+`<workspace-version>-preview.<run-id>.<attempt>.g<sha>`. Each attempt gets a new
+identity. The release records the selected branch and full commit, and its tag
+points to that commit. Preview builds provide the same macOS arm64/x64 and Windows
+x64 installers as stable releases, including the WASM and Android runtime resources.
+They retain the editor's app ID and settings location; they are not isolated installs.
+Signing behavior is unchanged. No crates.io packages are published, and previews
+are never marked Latest. No workspace version bump or pre-existing tag is needed.
+
+Stable manual releases still require an existing `vX.Y.Z` tag matching both the
+workspace version and the selected commit. Metadata validation runs before builds.
+The release-event jobs skip prereleases. GitHub releases created by the workflow's
+`GITHUB_TOKEN` do not recursively trigger the release workflows.
+
+Validate metadata locally with `python3 workspace/scripts/test-editor-release.py`.
+The regular CI workflow runs these tests; the preview workflow itself verifies the
+packaging and upload path end to end.
+
 ## Known Gotchas
 - A workspace-wide `cargo test` unifies features across crates and can fail feature-gated suites (e.g. `dotzuki-engine-script` embedded-scripts tests) that pass per-crate — re-run `cargo test -p <crate>` before assuming a real failure
 - `crates/dotzuki-app/` is a workspace member since the repo split; it used to be a path-only dep

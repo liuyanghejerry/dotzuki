@@ -61,6 +61,9 @@ impl RunnerGame {
             map: None,
             camera,
             actor: OverworldActor::new(0, 0, 16),
+            navigation: Navigator::default(),
+            pending_destination: None,
+            navigation_failure: None,
             player_sprite,
             flags: HashMap::new(),
             lang,
@@ -150,6 +153,7 @@ impl RunnerGame {
     /// destination can't be loaded, so a bad warp aborts gracefully.
     #[must_use]
     fn enter_map(&mut self, map_id: &str, spawn: (i32, i32), facing: Direction) -> bool {
+        self.cancel_navigation();
         let map = match self.project.load_map(map_id) {
             Ok(m) => m,
             Err(e) => {
@@ -200,6 +204,7 @@ impl RunnerGame {
     /// state of a dialogue-only project). Returns `false` — fresh boot —
     /// when the saved map can't be loaded.
     fn resume_from(&mut self, save: GameSave) -> bool {
+        self.cancel_navigation();
         self.flags.extend(save.flags);
         // v2 fields: a v1 save (or a v2 save that never battled) has neither —
         // the first battle then starts from the records / starting counts.
@@ -883,6 +888,7 @@ impl RunnerGame {
     /// pixel position and the story flags. On a load error the old map is
     /// kept (`false`); `false` also when there is no current map.
     pub fn reload_current_map(&mut self) -> bool {
+        self.cancel_navigation();
         let Some(map) = &self.map else {
             return false;
         };
@@ -914,6 +920,15 @@ impl RunnerGame {
     /// tests, the `run_headless` driver); the `GameLoop` impl forwards here.
     pub fn update(&mut self, input: &InputState) {
         self.frame_count += 1;
+        if let Some((_, _, frames)) = &mut self.navigation_failure {
+            *frames = frames.saturating_sub(1);
+            if *frames == 0 {
+                self.navigation_failure = None;
+            }
+        }
+        if !matches!(self.mode, Mode::Overworld) || self.transition.is_some() {
+            self.cancel_navigation();
+        }
         self.poll_watch();
         self.audio.update_frame();
         if self.flash > 0 {
@@ -1045,6 +1060,9 @@ impl RunnerGame {
             }
         }
 
+        if !matches!(self.mode, Mode::Overworld) || self.transition.is_some() {
+            self.cancel_navigation();
+        }
         self.center_camera();
         self.camera.update(0.0);
     }
@@ -1105,7 +1123,11 @@ impl RunnerGame {
             }
         }
 
-        let held = held_direction(input);
+        let manual = held_direction(input);
+        if manual.is_some() || input.is_just_pressed(GbButton::A) {
+            self.cancel_navigation();
+        }
+        let held = manual.or_else(|| self.navigation_direction());
         self.actor.set_running(input.is_held(GbButton::B));
         let step = {
             let map = self.map.as_ref().expect("checked above");
@@ -1236,11 +1258,7 @@ impl RunnerGame {
             return;
         };
         let level = self.actor.elevation();
-        let next = match map.stair_at(x, y) {
-            Some(1) => (level as usize + 1).min(map.level_count() - 1) as u8,
-            Some(2) => level.saturating_sub(1),
-            _ => return,
-        };
+        let next = stair_level(map, level, x, y);
         if next != level {
             self.actor.set_elevation(next);
         }
@@ -1363,6 +1381,7 @@ impl RunnerGame {
             {
                 log::warn!("map render: {e:#}");
             }
+            self.draw_navigation_marker(fb, cam_x, cam_y);
         } else {
             // Dialogue-only backdrop.
             fb.clear(Rgba::rgb(0x10, 0x10, 0x18));
@@ -1596,6 +1615,7 @@ impl RunnerGame {
 
     /// Teleport the player (test/debug helper; no scene side effects).
     pub fn debug_place(&mut self, x: i32, y: i32, facing: Direction) {
+        self.cancel_navigation();
         self.actor.place(x, y, facing);
         self.center_camera();
         self.camera.update(0.0);
@@ -1606,3 +1626,5 @@ impl RunnerGame {
         self.frame_count
     }
 }
+
+include!("navigation.rs");

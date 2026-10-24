@@ -10,6 +10,7 @@ static NSString *Text(NSString *en, NSString *zh) {
 @class DTZTouchSettings;
 @interface DTZTouchOverlay () {
     Controller _controller;
+    dotzuki::touch::GameTap _gameTap;
     Options _options;
     NSMutableDictionary<NSValue *, NSNumber *> *_touchIDs;
     int _nextID;
@@ -92,6 +93,8 @@ static NSString *Text(NSString *en, NSString *zh) {
 }
 - (void)releaseAll {
     _controller.reset();
+    _gameTap.reset();
+    if (self.onGameTapCancelled) self.onGameTapCancelled();
     [_touchIDs removeAllObjects];
     _nextID = 0;
     _bits = 0;
@@ -108,7 +111,16 @@ static NSString *Text(NSString *en, NSString *zh) {
         NSNumber *identifier = _touchIDs[key];
         if (!identifier) continue;
         CGPoint point = [touch locationInView:self];
+        BOOL tap = _gameTap.event(kind, identifier.intValue, point.x, point.y,
+            _controller.accepts(point.x, point.y));
         settings |= _controller.event(kind, identifier.intValue, point.x, point.y);
+        CGRect viewport = self.gameViewport;
+        CGSize pixels = self.gameFramebufferSize;
+        if (tap && self.onGameTap && viewport.size.width > 0 && viewport.size.height > 0 &&
+            pixels.width > 0 && pixels.height > 0 && CGRectContainsPoint(viewport, point)) {
+            self.onGameTap((point.x - viewport.origin.x) * pixels.width / viewport.size.width,
+                (point.y - viewport.origin.y) * pixels.height / viewport.size.height);
+        }
         if (kind == 2) [_touchIDs removeObjectForKey:key];
     }
     uint8_t next = _controller.bits();
@@ -123,9 +135,9 @@ static NSString *Text(NSString *en, NSString *zh) {
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event { [self sendTouches:touches kind:2]; }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event { [self releaseAll]; }
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-    // Blank areas remain available to the host's direct-touch game UI.
+    // Without a game-tap callback, blank areas pass through to the host.
     if (!_controlsEnabled || _editing) return NO;
-    return _controller.accepts(point.x, point.y);
+    return _controller.accepts(point.x, point.y) || (self.onGameTap && CGRectContainsPoint(self.gameViewport, point));
 }
 - (void)drawLabel:(NSString *)label at:(CGPoint)point size:(CGFloat)size pressed:(BOOL)pressed {
     UIColor *color = pressed ? [UIColor colorWithRed:.55 green:.875 blue:1 alpha:1] :

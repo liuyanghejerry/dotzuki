@@ -26,6 +26,37 @@ struct Options {
 struct Control { int id; Rect bounds; };
 struct Finger { int control; int bits; };
 
+// Recognize a single stationary tap that never belonged to a virtual control.
+// Coordinates use the same pt/dp/vp units as Controller. A second finger cancels
+// the gesture until all fingers leave; cancellation never generates a click.
+class GameTap {
+public:
+    void reset() { fingers_.clear(); candidate_ = false; }
+    bool event(int kind, int id, float x, float y, bool control) {
+        if (kind == 3) { reset(); return false; }
+        if (!std::isfinite(x) || !std::isfinite(y)) { reset(); return false; }
+        if (kind == 0) {
+            const bool first = fingers_.empty();
+            fingers_[id] = true;
+            candidate_ = first && !control;
+            if (candidate_) { id_ = id; x_ = x; y_ = y; }
+            return false;
+        }
+        if (!fingers_.count(id)) return false;
+        if (control || std::abs(x - x_) > 8 || std::abs(y - y_) > 8) candidate_ = false;
+        if (kind != 2) return false;
+        bool tap = candidate_ && id == id_ && fingers_.size() == 1;
+        fingers_.erase(id);
+        candidate_ = false;
+        return tap;
+    }
+private:
+    std::map<int, bool> fingers_;
+    bool candidate_ = false;
+    int id_ = 0;
+    float x_ = 0, y_ = 0;
+};
+
 class Controller {
 public:
     Options options;

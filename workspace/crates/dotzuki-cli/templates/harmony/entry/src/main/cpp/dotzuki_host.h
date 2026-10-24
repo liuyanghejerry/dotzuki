@@ -29,6 +29,8 @@ private:
     DotzukiHost &operator=(const DotzukiHost &) = delete;
 
     static napi_value Start(napi_env env, napi_callback_info info);
+    static napi_value CancelPointer(napi_env env, napi_callback_info info);
+    static napi_value PointerClick(napi_env env, napi_callback_info info);
     static napi_value SetInput(napi_env env, napi_callback_info info);
     static napi_value Pause(napi_env env, napi_callback_info info);
     static napi_value Resume(napi_env env, napi_callback_info info);

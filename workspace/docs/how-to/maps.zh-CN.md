@@ -1,6 +1,6 @@
 # 地图
 
-> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.10.0（源文档 commit db361944364d45440dd6997bb268859cbcd85a7c）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 如何定义地图：Tiled JSON、tileset、`objects.json` 伴生文件、海拔与 encounters。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.0
 
 开始前，请先阅读[项目清单](../reference/project-manifest.md)——它定义了地图目录以及
 这些文件所接入的运行器契约。
@@ -59,3 +59,23 @@ encounter 记录（包括 trainer 队伍/队列），再解析单个敌人记录
 
 encounter 记录的 schema 见 [Encounter 记录](../reference/data-tables/encounters.md)；
 sceneless 战斗的结算见[战斗规则](../reference/battle-rules.md)。
+
+## 点击移动
+
+[点击移动](../reference/glossary.md#maps)允许玩家在编辑器 **Play**、桌面播放器、
+Web 导出或 Android/HarmonyOS 导出中选择可通行的地图格子。
+玩家会沿四方向路径走到该格，地图沿用现有格式。
+黄色方框标记目标；目标不可达或搜索达到 16,384 个状态上限时，目标格短暂显示红框。
+墙壁与 NPC 会阻挡路径；每步仍会触发楼梯、传送和随机遇敌。
+
+再次点击会替换目标，当前已开始的一步先走完。方向键接管并取消[导航](../reference/glossary.md#maps)。
+对话、菜单、战斗、传送、失焦、地图重载或读档会取消路径；恢复游戏后不会自动继续。
+菜单与对话中的点击不会排队等待执行。拖动、多指操作及虚拟按键不会生成移动目标。
+
+[寻路](../reference/glossary.md#maps)仅覆盖当前地图。点击 NPC 不会自动对话；按 A 仍使用原有交互。
+普通目标按玩家所在碰撞层解释；楼梯目标使用进入该楼梯后的层。
+同一屏幕位置的重叠楼层没有额外的选层界面。走上目标传送点可以切图，
+但路径不会穿过中途传送点继续前进。
+
+自定义 Rust 游戏需接入导航与指针接口，不能仅靠升级依赖启用此行为。
+iOS 宿主的触控接法见[原生触控组件](../../crates/dotzuki-mobile/controls/README.zh-CN.md)。
