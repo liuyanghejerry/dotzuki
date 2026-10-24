@@ -6,9 +6,9 @@
 //! (4194304 Hz / 70224 cycles ≈ 59.7275 Hz), plus the browser plumbing a wasm
 //! game needs — replacing a placeholder `<canvas>` in the host page, tracking
 //! its parent's width on window resize, an optional FPS-counter element, and
-//! `requestAnimationFrame`-driven polling (`ControlFlow::Poll` +
-//! `EventLoop::spawn`; without `Poll`, winit 0.30's web backend only ticks
-//! when an event arrives, producing ~5 FPS).
+//! deadline-driven simulation (`ControlFlow::WaitUntil` + `EventLoop::spawn`).
+//! Redraw requests are presented by the browser. Explicit deadlines keep the
+//! game advancing without input while yielding the main thread between frames.
 //!
 //! Button events are buffered until the next simulation update, so short taps
 //! survive frame pacing. Losing focus clears held and pending buttons.
@@ -159,8 +159,6 @@ pub async fn run_game<G: GameLoop + 'static>(
     game: Rc<RefCell<G>>,
 ) -> Result<(), GameShellError> {
     let event_loop = EventLoop::new().map_err(|e| GameShellError::EventLoop(e.to_string()))?;
-    // Drive the loop continuously (see the module docs).
-    event_loop.set_control_flow(ControlFlow::Poll);
 
     let (fb_width, fb_height) = (config.width, config.height);
     let window = {
@@ -315,6 +313,18 @@ pub async fn run_game<G: GameLoop + 'static>(
                         next_frame_ms = now + FRAME_MS;
                     }
                 }
+                // Yield between simulation deadlines. Poll otherwise queues
+                // thousands of scheduler tasks per second even when no frame
+                // is due, competing with rendering, input, and Web Audio.
+                let after_update = web_sys::window()
+                    .and_then(|w| w.performance())
+                    .map(|p| p.now())
+                    .unwrap_or(now);
+                elwt.set_control_flow(ControlFlow::wait_duration(
+                    std::time::Duration::from_secs_f64(
+                        (next_frame_ms - after_update).max(0.0) / 1_000.0,
+                    ),
+                ));
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -331,10 +341,7 @@ pub async fn run_game<G: GameLoop + 'static>(
                         next_frame_time = now + FRAME_DURATION;
                     }
                 }
-                let sleep_duration = next_frame_time.saturating_duration_since(Instant::now());
-                if !sleep_duration.is_zero() {
-                    std::thread::sleep(sleep_duration);
-                }
+                elwt.set_control_flow(ControlFlow::WaitUntil(next_frame_time));
             }
         }
         _ => {}
