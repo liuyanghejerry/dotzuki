@@ -1447,3 +1447,50 @@ fn remove_status_clears_target_status() {
         "RemoveStatus is a pure field write, no rng"
     );
 }
+
+#[test]
+fn two_to_five_repeat_hits_preserves_low_bit_rerolls_and_the_next_draw() {
+    let ron = r#"Ruleset(
+        effects: [ Effect(id:"repeated", kind:Move, hooks:[
+            Hook(on:"DamagingHit", do:[ RepeatHits(count:TwoToFive, target:Target) ]) ]) ],
+    )"#;
+    compile_and_install(ron).unwrap();
+    // Rows are the first byte's low two bits; columns are the second byte's.
+    // The first two rows finish immediately and leave the second byte unread.
+    let counts = [[2, 2, 2, 2], [3, 3, 3, 3], [2, 3, 4, 5], [2, 3, 4, 5]];
+    let draws = [1, 1, 2, 2];
+    let mut histogram = [0; 4];
+    for first in 0..=255u8 {
+        for second in [0, 1, 2, 3, 252, 253, 254, 255] {
+            let row = usize::from(first & 3);
+            let count = counts[row][usize::from(second & 3)];
+            let mut h = Harness::new(MType::Normal, MType::Normal);
+            h.mv.damage = 7;
+            h.set_opp_hp(93); // DamagingHit runs after the first hit.
+            let mut rng = ScriptedRng::new(vec![first, second, 89]);
+            h.fire(Event::DamagingHit, RelayVar::Damage(7), &mut rng);
+            assert_eq!(h.opp_hp(), 100 - 7 * count, "bytes {first}/{second}");
+            assert_eq!(rng.consumed(), draws[row], "bytes {first}/{second}");
+            assert_eq!(rng.next_u8(), [second, second, 89, 89][row]);
+            histogram[usize::from(count - 2)] += 1;
+        }
+    }
+    assert_eq!(histogram, [768, 768, 256, 256]);
+}
+
+#[test]
+fn fixed_repeat_hits_leave_the_random_stream_untouched() {
+    let ron = r#"Ruleset(
+        effects: [ Effect(id:"repeated", kind:Move, hooks:[
+            Hook(on:"DamagingHit", do:[ RepeatHits(count:Fixed(2), target:Target) ]) ]) ],
+    )"#;
+    compile_and_install(ron).unwrap();
+    let mut h = Harness::new(MType::Normal, MType::Normal);
+    h.mv.damage = 7;
+    h.set_opp_hp(93);
+    let mut rng = ScriptedRng::new(vec![89]);
+    h.fire(Event::DamagingHit, RelayVar::Damage(7), &mut rng);
+    assert_eq!(h.opp_hp(), 86);
+    assert_eq!(rng.consumed(), 0);
+    assert_eq!(rng.next_u8(), 89);
+}
