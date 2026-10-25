@@ -54,7 +54,7 @@ pub enum Command {
     /// Set tempo (16-bit big-endian in original; we store as u16).
     Tempo(u16),
 
-    /// Set stereo panning byte.
+    /// Set the global routing mask used by subsequent music/noise notes.
     StereoPanning(u8),
 
     /// Unknown command 0xEF (mostly unused, 1 param byte).

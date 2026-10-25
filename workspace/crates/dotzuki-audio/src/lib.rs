@@ -494,7 +494,9 @@ pub struct ChannelState {
     pub wave_instrument: u8,
 
     // ── Stereo ──
-    /// Panning enable mask for this channel (bits in NR51 format).
+    /// Routing mask captured when this channel last emitted a note (NR51 bits).
+    /// Retained for hardware rebuilds; commands update the sequencer's global
+    /// mask, and sustain frames leave this last-note mask unchanged.
     pub stereo_panning: u8,
 
     /// Logical rest state, retained by clones for an explicit hardware rebuild.

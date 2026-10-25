@@ -7,6 +7,131 @@ use crate::effects;
 use crate::sequencer::*;
 use crate::NUM_MUSIC_CHANNELS;
 
+mod global_panning {
+    use super::*;
+
+    fn powered_apu() -> Apu {
+        let mut apu = Apu::new();
+        apu.write_register(0xff26, 0x80);
+        apu
+    }
+
+    #[test]
+    fn command_routes_later_voices_and_explicit_rebuild() {
+        let mut seq = Sequencer::new();
+        seq.play_music(1, &[vec![0xee, 0x52, 0x03], vec![0x03], vec![0x03]], 0x100);
+        let mut apu = powered_apu();
+        seq.update_frame(&mut apu);
+        // Pulse 1 left, pulse 2 right, wave left; the command is global.
+        assert_eq!(apu.nr51, 0x52);
+        assert_eq!(seq.stereo_panning, 0x52);
+        let snapshot = seq.clone();
+        let mut rebuilt = powered_apu();
+        seq.rebuild_apu(&mut rebuilt);
+        assert_eq!(rebuilt.nr51, 0x52);
+        assert_eq!(seq, snapshot);
+    }
+
+    #[test]
+    fn later_command_preserves_earlier_note_routing_until_its_next_note() {
+        let mut seq = Sequencer::new();
+        seq.play_music(
+            1,
+            &[
+                vec![0x03, 0x00],
+                vec![0xee, 0x20, 0x03, 0x00],
+                vec![0x03, 0x00],
+            ],
+            0x100,
+        );
+        let mut apu = powered_apu();
+        // Pulse 1 was emitted before the command. Sustains keep that routing.
+        for _ in 0..4 {
+            seq.update_frame(&mut apu);
+            assert_eq!(apu.nr51, 0x31);
+        }
+        seq.update_frame(&mut apu);
+        assert_eq!(apu.nr51, 0x20);
+    }
+
+    #[test]
+    fn command_before_rest_changes_global_mask_without_rerouting_sustain() {
+        let mut seq = Sequencer::new();
+        seq.play_music(1, &[vec![0xee, 0, 0xc0, 0x00], vec![0x03]], 0x100);
+        let mut apu = powered_apu();
+        apu.write_register(0xff25, 0x11);
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.stereo_panning, 0);
+        // A pulse rest uses its envelope; it does not rewrite routing.
+        assert_eq!(apu.nr51, 0x11);
+        seq.update_frame(&mut apu);
+        assert_eq!(apu.nr51, 0);
+    }
+
+    #[test]
+    fn pulse_and_wave_sfx_bypass_global_mask_but_noise_obeys_it() {
+        let mut seq = Sequencer::new();
+        seq.play_music(1, &[vec![0xee, 0, 0x03]], 0x100);
+        seq.play_sfx(
+            2,
+            &[
+                vec![0x23, 0xf0, 0, 4],
+                vec![0x23, 0xf0, 0, 4],
+                vec![0x23, 0xf0, 0, 4],
+                vec![0x23, 0xf0, 0x35],
+            ],
+            0,
+            0x100,
+        );
+        let mut apu = powered_apu();
+        seq.update_frame(&mut apu);
+        assert_eq!(seq.stereo_panning, 0);
+        assert_eq!(apu.nr51, 0x77);
+    }
+
+    #[test]
+    fn logical_updates_keep_the_same_panning_state_as_ordinary_output() {
+        let mut ordinary = Sequencer::new();
+        ordinary.play_music(
+            1,
+            &[
+                vec![0x03, 0xee, 0x44, 0x03],
+                vec![0xee, 0x20, 0x03, 0x03],
+                vec![0x03, 0x03],
+            ],
+            0x100,
+        );
+        let mut logical = ordinary.clone();
+        let mut apu = powered_apu();
+        for _ in 0..12 {
+            ordinary.update_frame(&mut apu);
+            logical.advance_frame_without_output();
+            assert_eq!(logical, ordinary);
+        }
+    }
+
+    #[test]
+    fn music_resume_restores_global_mask_and_new_music_resets_it() {
+        let mut seq = Sequencer::new();
+        seq.play_music(1, &[vec![0xee, 0x10, 0x03, 0x03]], 0x100);
+        let mut apu = powered_apu();
+        seq.update_frame(&mut apu);
+        let saved = seq.clone();
+        seq.play_music(2, &[vec![0xee, 0x01, 0x03]], 0x100);
+        assert_eq!(seq.stereo_panning, 0xff);
+        seq.update_frame(&mut apu);
+        assert_eq!(apu.nr51, 0x01);
+        seq.restore_music_from(&saved);
+        assert_eq!(seq.stereo_panning, 0x10);
+        for _ in 0..4 {
+            seq.update_frame(&mut apu);
+        }
+        assert_eq!(apu.nr51, 0x10);
+        seq.stop_all();
+        assert_eq!(seq.stereo_panning, 0xff);
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Command Decoding Tests
 // ═══════════════════════════════════════════════════════════════════════════
