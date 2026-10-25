@@ -357,6 +357,8 @@ impl Sequencer {
         self.advance_channels_from(0)
     }
 
+    // Fold this small output loop into the frame update on bare-metal ARM.
+    #[cfg_attr(all(target_os = "none", target_arch = "arm"), inline(always))]
     fn advance_channels_from(&mut self, first_channel: usize) -> [ChannelOutput; NUM_CHANNELS] {
         let mut output = [ChannelOutput::None; NUM_CHANNELS];
         for (ch_idx, request) in output.iter_mut().enumerate().skip(first_channel) {
