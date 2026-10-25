@@ -1090,10 +1090,8 @@ impl Sequencer {
         if ch.trigger {
             apu.write_register(0xFF21, ch.volume_envelope);
 
-            let freq = ch.frequency;
-            let shift = ((freq >> 4) & 0x0F) as u8;
-            let divisor = (freq & 0x07) as u8;
-            apu.write_register(0xFF22, (shift << 4) | divisor);
+            // NR43 includes the LFSR width bit between the shift and divisor.
+            apu.write_register(0xFF22, ch.frequency as u8);
             apu.write_register(0xFF23, 0x80);
         }
     }

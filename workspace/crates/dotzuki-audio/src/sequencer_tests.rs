@@ -1423,6 +1423,37 @@ fn test_drum_note_triggers_noise_instrument_on_chan8() {
 }
 
 #[test]
+fn noise_notes_and_rebuilt_drums_preserve_short_lfsr_mode() {
+    for parameters in [0x00, 0x08, 0x22, 0x2a, 0xf7, 0xff] {
+        for drum in [false, true] {
+            let stream = vec![0x23, 0xf0, parameters, 0xff];
+            let mut seq = Sequencer::new();
+            if drum {
+                seq.register_noise_instruments(vec![stream]);
+                seq.play_music(1, &[vec![], vec![], vec![], vec![0xb3, 1, 0xff]], 0x100);
+            } else {
+                seq.play_sfx(2, &[stream], 3, 0x100);
+            }
+            let mut apu = Apu::new();
+            apu.write_register(0xff26, 0x80);
+            seq.update_frame(&mut apu);
+            assert_eq!(
+                apu.read_register(0xff22),
+                parameters,
+                "{parameters:02x}, drum={drum}"
+            );
+            assert_eq!(apu.ch4.width_mode, parameters & 8 != 0);
+            let before = seq.clone();
+            let mut restored = Apu::new();
+            restored.write_register(0xff26, 0x80);
+            seq.rebuild_apu(&mut restored);
+            assert_eq!(restored.read_register(0xff22), parameters);
+            assert_eq!(seq, before);
+        }
+    }
+}
+
+#[test]
 fn test_drum_note_dropped_when_chan8_busy() {
     // The classic sound-start routine: a noise-instrument SFX never interrupts a
     // busy CHAN8 — the drum hit is dropped.
