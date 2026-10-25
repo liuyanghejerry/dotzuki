@@ -79,7 +79,8 @@ pub struct Sequencer {
     /// SFX tempo.
     pub sfx_tempo: u16,
 
-    /// Global stereo panning (NR51 value).
+    /// Global routing mask for subsequent music/noise notes (NR51 bit layout).
+    /// A command changes this mask without rerouting already sounding notes.
     pub stereo_panning: u8,
 
     /// Whether music is currently playing.
@@ -159,6 +160,7 @@ impl Sequencer {
 
         self.current_music_id = sound_id;
         self.music_tempo = tempo;
+        self.stereo_panning = 0xFF;
         self.music_playing = true;
 
         for (i, data) in channel_data.into_iter().enumerate() {
@@ -292,6 +294,7 @@ impl Sequencer {
     pub fn stop_all(&mut self) {
         self.stop_music();
         self.stop_sfx();
+        self.stereo_panning = 0xFF;
     }
 
     /// Update one frame (~60 Hz). Call this once per VBlank.
@@ -367,6 +370,16 @@ impl Sequencer {
             }
 
             *request = self.update_channel(ch_idx);
+            if *request == ChannelOutput::Note {
+                // Capture routing in command order, before a later channel
+                // can change the global mask. Tonal SFX enable both outputs;
+                // music and noise SFX use the current global mask.
+                self.channels[ch_idx].stereo_panning = if ch_idx < CHAN5 || ch_idx == CHAN8 {
+                    self.stereo_panning
+                } else {
+                    0xFF
+                };
+            }
         }
 
         output
@@ -528,7 +541,7 @@ impl Sequencer {
                     }
                 }
                 Command::StereoPanning(pan) => {
-                    self.channels[ch_idx].stereo_panning = pan;
+                    self.stereo_panning = pan;
                 }
                 Command::UnknownEF(_) => {
                     // Mostly unused — ignore
@@ -1142,13 +1155,15 @@ impl Sequencer {
 
     /// Restore music channel state from a saved snapshot.
     ///
-    /// Copies music channel states (0-3), tempo, playing flag, and music ID
-    /// from `snapshot`. SFX channels (4-7) and fade state are left untouched.
+    /// Copies music channel states (0-3), tempo, global routing mask, playing
+    /// flag, and music ID from `snapshot`. SFX channels (4-7) and fade state
+    /// are left untouched.
     pub fn restore_music_from(&mut self, snapshot: &Sequencer) {
         for i in 0..NUM_MUSIC_CHANNELS {
             self.channels[i] = snapshot.channels[i].clone();
         }
         self.music_tempo = snapshot.music_tempo;
+        self.stereo_panning = snapshot.stereo_panning;
         self.music_playing = snapshot.music_playing;
         self.current_music_id = snapshot.current_music_id;
     }
