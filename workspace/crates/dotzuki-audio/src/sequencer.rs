@@ -646,11 +646,14 @@ impl Sequencer {
         ch.delay_counter = delay;
         ch.delay_frac = new_frac;
         if ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON) {
-            crate::effects::init_pitch_slide(ch);
+            ch.frequency = crate::effects::init_pitch_slide(ch);
         }
         // Perfect pitch affects the onset hardware write, not the slide base.
-        if ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
-            ch.frequency = ch.frequency.wrapping_add(1) & 0x07FF;
+        if !music_output_overridden && ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
+            // The legacy low-byte increment preserves the cleared carry flag.
+            // Wrapping $ff to $00 therefore does not increment the high byte.
+            ch.frequency =
+                (ch.frequency & 0xff00) | u16::from((ch.frequency as u8).wrapping_add(1));
         }
         // Modulation uses the emitted pitch, including perfect pitch. Slide
         // initialization above still uses the untuned note. A covered music
@@ -935,6 +938,17 @@ impl Sequencer {
 
     // ── APU Interface ────────────────────────────────────────────────────
 
+    fn note_frequency_high(ch: &ChannelState) -> u8 {
+        // Slide initialization leaves division temporaries in the onset
+        // registers, including the length-counter bit. Keep it for that note.
+        let mask = if ch.flags1.contains(ChannelFlags1::PITCH_SLIDE_ON) {
+            0x47
+        } else {
+            0x07
+        };
+        0x80 | ((ch.frequency >> 8) as u8 & mask)
+    }
+
     /// Rebuild hardware registers after restoring logical playback state.
     /// Uses the ordinary SFX-over-music priority without advancing commands,
     /// effects, delays, or trigger flags. Oscillator/envelope phase restarts.
@@ -1036,7 +1050,7 @@ impl Sequencer {
 
             let nrx1 = (duty & 0x03) << 6;
             let nrx2 = vol_env;
-            let nrx4 = 0x80 | ((freq >> 8) & 0x07) as u8;
+            let nrx4 = Self::note_frequency_high(ch);
 
             if is_ch1 {
                 apu.write_register(0xFF10, ch.pitch_sweep_value);
@@ -1078,7 +1092,7 @@ impl Sequencer {
             let volume_code = (ch.volume_envelope >> 4) & 0x03;
             apu.write_register(0xFF1C, volume_code << 5);
             apu.write_register(0xFF1D, (freq & 0xFF) as u8);
-            apu.write_register(0xFF1E, 0x80 | ((freq >> 8) & 0x07) as u8);
+            apu.write_register(0xFF1E, Self::note_frequency_high(ch));
         } else {
             let nrx3 = ch.vibrato_freq_lo.unwrap_or((freq & 0xFF) as u8);
             apu.write_register(0xFF1D, nrx3);

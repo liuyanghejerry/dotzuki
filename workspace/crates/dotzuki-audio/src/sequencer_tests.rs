@@ -7,6 +7,9 @@ use crate::effects;
 use crate::sequencer::*;
 use crate::NUM_MUSIC_CHANNELS;
 
+#[path = "pitch_slide_onset_tests.rs"]
+mod pitch_slide_onsets;
+
 mod global_panning {
     use super::*;
 
@@ -933,8 +936,11 @@ fn pitch_slide_uses_the_following_note_and_its_duration() {
     seq.channels[CHAN1].frequency = 0x777; // previous note must not seed the slide
     seq.update_frame(&mut apu);
     let ch = &seq.channels[CHAN1];
-    assert_eq!(ch.frequency, commands::calculate_frequency(0, 4));
-    assert_eq!(ch.pitch_slide.current_freq, ch.frequency);
+    assert_eq!(
+        ch.pitch_slide.current_freq,
+        commands::calculate_frequency(0, 4)
+    );
+    assert_ne!(ch.frequency, ch.pitch_slide.current_freq);
     assert_eq!(ch.pitch_slide.length_modifier, 6);
     assert_eq!(
         ch.pitch_slide.target_freq,
@@ -944,8 +950,11 @@ fn pitch_slide_uses_the_following_note_and_its_duration() {
         seq.update_frame(&mut apu);
     }
     let ch = &seq.channels[CHAN1];
-    assert_eq!(ch.frequency, commands::calculate_frequency(4, 4));
-    assert_eq!(ch.pitch_slide.current_freq, ch.frequency);
+    assert_eq!(
+        ch.pitch_slide.current_freq,
+        commands::calculate_frequency(4, 4)
+    );
+    assert_ne!(ch.frequency, ch.pitch_slide.current_freq);
     assert_eq!(
         ch.pitch_slide.target_freq,
         commands::calculate_frequency(9, 4)
@@ -961,7 +970,8 @@ fn pitch_slide_perfect_pitch_changes_only_note_onset() {
     seq.play_music(1, &[vec![0xE8, 0xE4, 0xEB, 1, 0x47, 0x07, 0xFF]], 0x0100);
     seq.update_frame(&mut apu);
     let base = commands::calculate_frequency(0, 4);
-    assert_eq!(seq.channels[CHAN1].frequency, base + 1);
+    // A low-byte $ff onset wraps without carrying into the high byte.
+    assert_eq!(seq.channels[CHAN1].frequency, 0x0c00);
     assert_eq!(seq.channels[CHAN1].pitch_slide.current_freq, base);
     let step = seq.channels[CHAN1].pitch_slide.freq_step;
     seq.update_frame(&mut apu);
@@ -2243,7 +2253,7 @@ mod perfect_pitch_cache_tests {
                     if paired {
                         previous
                     } else {
-                        (base as u8).wrapping_add(1)
+                        seq.channels[hw].frequency as u8
                     },
                     "voice{hw}, paired{paired}"
                 );
