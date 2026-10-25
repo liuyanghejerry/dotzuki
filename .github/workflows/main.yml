@@ -390,10 +390,11 @@ jobs:
         working-directory: workspace/tools/dotzuki-editor
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Build the in-editor WASM runner
-        uses: jetli/wasm-pack-action@v0.4.0
+      - name: Install wasm-pack
+        uses: taiki-e/install-action@v2
         with:
-          version: latest
+          tool: wasm-pack@0.15.0
+          fallback: none
 
       - name: Compile the in-editor WASM runner
         working-directory: workspace/tools/dotzuki-editor
