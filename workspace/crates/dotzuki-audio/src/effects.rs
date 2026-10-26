@@ -81,11 +81,12 @@ pub fn apply_vibrato(channel: &mut ChannelState) -> Option<u8> {
 
 // ── Pitch Slide ──────────────────────────────────────────────────────────
 
-/// Initialize a slide after decoding its following note.
+/// Initialize a slide after decoding its following note, returning the onset
+/// register value separately from the retained slide origin.
 ///
 /// The byte-stream format uses byte-sized quotient/remainder arithmetic,
 /// including its historical increasing-frequency borrow behavior.
-pub fn init_pitch_slide(channel: &mut ChannelState) {
+pub fn init_pitch_slide(channel: &mut ChannelState) -> u16 {
     let current = channel.frequency;
     let target = channel.pitch_slide.target_freq;
     let frames = channel
@@ -115,6 +116,10 @@ pub fn init_pitch_slide(channel: &mut ChannelState) {
     let remainder = (diff % u16::from(frames)) as u8;
     channel.pitch_slide.step_frac = remainder;
     channel.pitch_slide.freq_frac = remainder;
+    // The byte-stream routine returns its division temporaries: the high
+    // byte is quotient + 1, and the low byte is the final failed subtraction.
+    // The following note writes those bytes; subsequent ticks use current_freq.
+    (channel.pitch_slide.freq_step << 8) | u16::from(remainder.wrapping_sub(frames))
 }
 
 /// Apply one byte-stream pitch-slide tick. Crossing the target stops the
