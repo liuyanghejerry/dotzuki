@@ -38,7 +38,7 @@ fn snap(game: &mut RunnerGame, dir: &Option<PathBuf>, name: &str) {
     println!("  [shot] {}", path.display());
 }
 
-fn frame(game: &mut RunnerGame, mask: u8) {
+fn frame(game: &mut RunnerGame, mask: u16) {
     let mut input = InputState::new();
     input.set_from_bitmask(mask);
     game.update(&input);

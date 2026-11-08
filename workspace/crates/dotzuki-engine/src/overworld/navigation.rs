@@ -42,7 +42,19 @@ pub fn find_route(
     goal: NavNode,
     max_nodes: usize,
 ) -> Result<VecDeque<NavStep>, NavigationError> {
-    if start == goal {
+    find_route_matching(world, start, |node| node == goal, max_nodes)
+}
+
+/// Find a shortest route to any accepted destination, such as a reachable tile
+/// beside an NPC. Uses the same neighbor order and node limit as [`find_route`].
+/// The goal predicate and world are read-only; gameplay executes the returned steps.
+pub fn find_route_matching(
+    world: &impl NavigationWorld,
+    start: NavNode,
+    goal: impl Fn(NavNode) -> bool,
+    max_nodes: usize,
+) -> Result<VecDeque<NavStep>, NavigationError> {
+    if goal(start) {
         return Ok(VecDeque::new());
     }
     if max_nodes == 0 {
@@ -75,9 +87,9 @@ pub fn find_route(
                     direction,
                 }),
             );
-            if to == goal {
+            if goal(to) {
                 let mut route = VecDeque::new();
-                let mut node = goal;
+                let mut node = to;
                 while let Some(step) = previous[&node] {
                     route.push_front(step);
                     node = step.from;
@@ -202,6 +214,36 @@ mod tests {
         );
         assert_eq!(
             find_route(&world, node(1, 1), node(2, 1), 25),
+            Err(NavigationError::Unreachable)
+        );
+    }
+
+    #[test]
+    fn matching_goal_chooses_nearest_approach_in_fixed_neighbor_order() {
+        let world = Grid {
+            blocked: vec![(2, 1)],
+            stairs: false,
+        };
+        let route = find_route_matching(
+            &world,
+            node(2, 3),
+            |p| p == node(1, 1) || p == node(3, 1),
+            25,
+        )
+        .unwrap();
+        assert_eq!(route.len(), 3);
+        assert_eq!(route.front().unwrap().direction, Direction::Up);
+        assert_eq!(route.back().unwrap().to, node(1, 1));
+        assert_eq!(
+            find_route_matching(&world, node(2, 3), |_| true, 0),
+            Ok(VecDeque::new())
+        );
+        assert_eq!(
+            find_route_matching(&world, node(2, 3), |_| false, 0),
+            Err(NavigationError::SearchLimit)
+        );
+        assert_eq!(
+            find_route_matching(&world, node(2, 3), |_| false, 25),
             Err(NavigationError::Unreachable)
         );
     }

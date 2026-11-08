@@ -115,7 +115,7 @@ fn scripted(bytes: &[u8]) -> Box<dyn BattleRng> {
 
 // ── input drivers ───────────────────────────────────────────────────────────
 
-fn press(b: &mut Battle, mask: u8) {
+fn press(b: &mut Battle, mask: u16) {
     let mut input = InputState::new();
     input.set_from_bitmask(mask);
     b.update(&input);

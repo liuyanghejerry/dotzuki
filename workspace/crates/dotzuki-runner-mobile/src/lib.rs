@@ -59,7 +59,7 @@ impl MobileGame for RunnerAdapter {
         self.game.cancel_navigation();
     }
     fn tick(&mut self, bits: u8) {
-        self.input.set_from_bitmask(bits);
+        self.input.set_from_bitmask(u16::from(bits));
         self.game.update(&self.input);
         self.input.begin_frame();
         self.game.draw(&mut self.frame);

@@ -192,7 +192,7 @@ fn device_disallowed_stays_silent_with_known_tracks() {
 // ── scene audio commands resolve through the pump ───────────────────────────
 
 /// Update the game one frame with `mask` held.
-fn frame(game: &mut RunnerGame, mask: u8) {
+fn frame(game: &mut RunnerGame, mask: u16) {
     let mut input = InputState::new();
     input.set_from_bitmask(mask);
     game.update(&input);
