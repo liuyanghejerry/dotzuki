@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-511fb138.js";
+            window.path_to_searchindex_js = "../searchindex-553c8087.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22ddc87d.js"></script>
+        <script src="../toc-c7c2563c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -199,18 +199,27 @@ guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
 </ul>
-<h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<h2 id="v0120"><a class="header" href="#v0120">v0.12.0</a></h2>
+<h3 id="breaking-rust-api-change"><a class="header" href="#breaking-rust-api-change">Breaking Rust API change</a></h3>
 <ul>
-<li>Web exports and editor Play present accumulated changes with <code>advance</code> and <code>present</code>.
-Android and HarmonyOS export shells use the optional ABI v1 symbol
-<code>dotzuki_mobile_copy_frame_update</code>. Rebuild the Rust runtime archive when upgrading
-these shells. Existing hosts can continue using <code>dotzuki_mobile_copy_frame</code>.
-See <a href="../explanation/mobile-architecture.html">mobile frame handling</a>.</li>
-<li>Rust hosts that built a <code>HookState</code> struct literal now use <code>HookState::new</code>.
-Encounter definitions live in <code>HookState::rules</code>. See <a href="../reference/battle-rules.html#rules-ownership-in-the-zero-rust-runner">rules ownership</a>.</li>
-<li>The zero-Rust runner reuses map layers and updates changed areas of retained
-frames. Four-colour indexed games can capture a packed battle transition
-source. See <a href="../reference/game-shell.html#retained-frames-in-the-zero-rust-runner">rendering</a>.</li>
+<li>Custom battle hosts now construct <code>HookState</code> with <code>HookState::new</code> and share
+immutable encounter definitions through <code>HookState::rules</code>. See the
+<a href="migration/v0.12.0.html">migration guide</a> for field replacements and mobile host updates.</li>
+</ul>
+<h3 id="runtime-and-exports"><a class="header" href="#runtime-and-exports">Runtime and exports</a></h3>
+<ul>
+<li>The zero-Rust runner executes structured scenes with its native interpreter.
+Scenes that require JavaScript use Boa. Both backends share a snapshot of the
+game’s flags and commit changes when the scene ends. See <a href="../reference/dsl/scene.html">scene execution</a>.</li>
+<li>All export targets include <a href="../reference/glossary.html#compiled-scene-assets">compiled scene assets</a>
+in <code>game.dzpk</code> for valid projects with DSL files. The runner decodes native
+functions on first call. Packs retain the original sources for older players.</li>
+<li>The runner caches decoded maps within a byte budget and shares battle definitions
+across encounters. See <a href="../how-to/maps.html">maps</a> and <a href="../reference/battle-rules.html#rules-ownership-in-the-zero-rust-runner">battle rules</a>.</li>
+<li>Editor Play, Web exports, and mobile shells update the changed framebuffer region.
+Indexed text reuses glyph rows, and four-colour transitions can use packed
+snapshots. Web and mobile hosts reuse stereo PCM buffers. CI compares six
+workloads against their instruction-count baselines. See the <a href="../reference/game-shell.html#runner-audio-and-performance-budgets">game shell reference</a>.</li>
 </ul>
 <h2 id="v0110"><a class="header" href="#v0110">v0.11.0</a></h2>
 <h3 id="breaking-rust-api-changes"><a class="header" href="#breaking-rust-api-changes">Breaking Rust API changes</a></h3>
