@@ -1,6 +1,6 @@
 # 15 分钟做出你的第一款游戏
 
-> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
@@ -115,8 +115,8 @@ dotzuki check ~/dotzuki-projects/<your-game>
   `kind: Ability`/`Item`/`Weather`：Aria 预置的 `intimidate` 会在换入时降低对手的
   攻击，Bryn 的 `leftovers` 在他的行动结束后给他回血，场景还可以在 `startBattle`
   之前用 `setWeather("sandstorm")` 布置预置的 `sandstorm`）；持有的道具不会被消耗，
-  天气只属于单场战斗。战败后全队回复，并回到场景上次调用 `@command("heal")`
-  记录的回复点，默认使用入口出生点。你还可以配置敌方队伍（`encounters` 表 —— 排队
+  天气仅在当前战斗生效，且只能由场景预置。战败后全队回复，并回到场景上次调用
+  `@command("heal")` 记录的[回复点](../reference/glossary.md#battle-gameplay)，默认使用入口出生点。你还可以配置敌方队伍（`encounters` 表 —— 排队
   出场、EXP 累加）、trainer 战（Run 被禁用、胜利得钱）、仅野怪可用的 Run 动作（场景
   会看到第三种结果 `"run"`），以及半价出售的商店。规则格式见
   [战斗规则参考](../reference/battle-rules.md)。

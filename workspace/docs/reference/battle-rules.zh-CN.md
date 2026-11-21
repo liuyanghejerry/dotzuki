@@ -1,6 +1,6 @@
 # 战斗
 
-> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `battle` 项目清单区块：配置、rules.ron 钩子、回合循环与 `check` 校验。

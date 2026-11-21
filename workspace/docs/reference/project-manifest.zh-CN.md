@@ -1,6 +1,6 @@
 # 游戏项目规范 — 零 Rust dotzuki-engine 项目
 
-> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。
@@ -250,7 +250,7 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 ### 游戏结束
 
 在场景中调用 `@command("heal")` 可以回复全队 HP、MP，清除状态，并把当前地图、
-地块、朝向与高度层记为[回复点](glossary.md#battle-gameplay)。每次调用都会覆盖上一次记录。
+地块、朝向与海拔层记为[回复点](glossary.md#battle-gameplay)。每次调用都会覆盖上一次记录。
 
 战败场景播放完对白后，运行器短暂黑屏、显示倒下提示、回复全队，再把玩家送回回复点。
 尚未记录回复点或原地图已移除时，玩家回到入口地图的出生点。若原地块被挡住，
