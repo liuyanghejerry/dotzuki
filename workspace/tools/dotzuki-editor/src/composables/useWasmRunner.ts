@@ -10,7 +10,12 @@
 // WASM contract (see crates/dotzuki-runner-web):
 //   new WasmRunner(files_json, save_json?, language?)
 //       files_json: {"<posix path>": "<base64>"}
-//   tick(input_bitmask) → Uint8Array (320×240×4 RGBA)
+//   advance(input_bitmask) advances one simulation and audio tick.
+//   present(ctx, full) draws pending changes to the retained 2D canvas and returns
+//       whether it painted. Pass true after resizing or restoring the canvas.
+//       Play can advance several ticks before presenting once per animation frame.
+//   tick(input_bitmask) advances one tick and returns a full 320×240×4 RGBA
+//       snapshot. Play uses this path with older packages that lack advance/present.
 //   take_audio() → Float32Array — interleaved stereo f32 (LRLR…) @ 44100Hz,
 //                  drains the internal buffer (~738 frames/tick), empty while
 //                  silent. Optional at runtime: pkgs built before audio
