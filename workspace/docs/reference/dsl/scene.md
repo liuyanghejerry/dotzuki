@@ -7,7 +7,7 @@ and compiled by `dotzuki-engine-dsl`.
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 This page describes the [Game DSL](../glossary.md) `.scene` file as the code
 implements it; where code and older documents disagree, the code wins.
@@ -416,9 +416,17 @@ game_scene StartTown {
 }
 ```
 
-`@run` works on the Boa script path. The native AST interpreter rejects
-`@run` blocks with an error (interpreter.rs:524-528); port such logic to DSL
-statements or a native function module to run under the interpreter.
+The zero-Rust runner selects a backend for each scene when it compiles the
+project. Structured dialogue, choices, flags and battle results run on the
+native AST interpreter. A scene containing a raw `@run` block uses Boa for all
+its storylines and `@load` block, including when the block is inside an unselected
+choice. Scenes that use JavaScript objects, unknown host calls or core commands
+whose argument types need JavaScript evaluation also use Boa. Both backends share
+the runner's command handling, language, player position and saved flags.
+
+A successful script reload affects the next activation. A suspended conversation
+or battle resumes with the program that started it. A compile error leaves the
+previous scenes available.
 
 ## `@trigger` bindings
 

@@ -56,6 +56,8 @@ use alloc_prelude::*;
 pub mod command;
 pub mod config;
 pub mod cutscene;
+mod rng;
+pub use rng::ScriptRng;
 
 // Boa-backed runtime (hosted JS engine) — excluded from bare-metal builds.
 #[cfg(feature = "script-boa")]

@@ -240,3 +240,40 @@ fn broken_map_edit_keeps_old_map() {
     assert_eq!(game.current_map_id(), Some("Town"), "old map kept");
     assert!(!game.is_blocked(2, 1), "old collision still in effect");
 }
+
+#[test]
+fn suspended_dialogue_survives_switching_backends_on_reload() {
+    let (_tmp, root, mut game) = boot("suspended-backend");
+    dismiss_dialogue(&mut game);
+    let scene = root.join("data/maps/Town/script.scene");
+    for (first, old, latest) in [
+        ("", "old native", "new Boa"),
+        ("@run { }", "old Boa", "new native"),
+    ] {
+        let story = |backend: &str, last: &str| {
+            format!(
+                r#"game_scene Town {{
+    @storylines {{
+        {backend}
+        @speaker("Guide") {{ "First." }}
+        @speaker("Guide") {{ "{last}" }}
+    }}
+}}"#
+            )
+        };
+        fs::write(&scene, story(first, old)).unwrap();
+        assert!(game.reload_scenes());
+        talk_to_guide(&mut game);
+        assert!(game.dialogue_text().unwrap().contains("First."));
+        let replacement = if first.is_empty() { "@run { }" } else { "" };
+        fs::write(&scene, story(replacement, latest)).unwrap();
+        assert!(game.reload_scenes());
+        press_a(&mut game);
+        assert!(game.dialogue_text().unwrap().contains(old));
+        dismiss_dialogue(&mut game);
+        talk_to_guide(&mut game);
+        press_a(&mut game);
+        assert!(game.dialogue_text().unwrap().contains(latest));
+        dismiss_dialogue(&mut game);
+    }
+}

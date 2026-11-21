@@ -3,10 +3,8 @@
 //! [`RunnerGame`] boots a [`LoadedProject`] into a playable game with **zero
 //! game-specific code**: an overworld driven by the generic
 //! [`OverworldActor`], storyline dispatch from the DSL routing table
-//! (`@trigger` declarations), a scene-pumping VM on top of
-//! [`ScriptEngine`] (one short-lived engine per scene activation, the wuxia
-//! pattern), textbox/choice UI from `dotzuki-ui`, and placeholder sprites drawn
-//! procedurally (no embedded assets).
+//! (`@trigger` declarations), a fresh native or Boa VM per activation,
+//! textbox/choice UI from `dotzuki-ui`, and procedurally drawn placeholder sprites.
 //!
 //! # State machine
 //!
@@ -74,6 +72,7 @@ use std::collections::HashSet;
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 
+use crate::scene::SceneVm;
 use anyhow::{Context, Result};
 use dotzuki_engine::camera::{Camera, Rect, Vec2};
 use dotzuki_engine::menu::MenuConfig;
@@ -82,7 +81,6 @@ use dotzuki_engine::overworld::navigation::{NavNode, NavigationWorld, Navigator}
 use dotzuki_engine::overworld::types::Direction;
 use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_engine_script::command::{CommandResult, ScriptCommand};
-use dotzuki_engine_script::engine::ScriptEngine;
 use dotzuki_renderer::embedded_font;
 use dotzuki_renderer::input::{GbButton, InputState};
 use dotzuki_renderer::walk_sprite::WalkSprite;
@@ -172,14 +170,14 @@ pub struct RunnerOptions {
 /// scene-driven text (A on the last page resolves the `showText` promise);
 /// `None` for a one-off line (raw NPC `talk` text), which just closes.
 struct TextState {
-    engine: Option<ScriptEngine>,
+    engine: Option<SceneVm>,
     pages: VecDeque<String>,
 }
 
 /// Live choice state: the scene is paused on `await game.showChoice([...])`;
 /// A resumes it with `signal_done(Number(cursor))`.
 struct ChoiceState {
-    engine: ScriptEngine,
+    engine: SceneVm,
     options: Vec<String>,
     cursor: usize,
     /// The text page that preceded the choice (redrawn beneath the menu).
@@ -188,7 +186,7 @@ struct ChoiceState {
 
 /// Live delay state: the scene resumes after `frames_left` frames.
 struct DelayState {
-    engine: ScriptEngine,
+    engine: SceneVm,
     frames_left: u16,
 }
 
@@ -199,7 +197,7 @@ struct DelayState {
 /// so the scene's own JS branches on the result (the wuxia pattern); a
 /// sceneless battle returns straight to the overworld (or the whiteout).
 struct BattleState {
-    engine: Option<ScriptEngine>,
+    engine: Option<SceneVm>,
     battle: Battle,
 }
 
@@ -459,11 +457,12 @@ fn decode_walk_sheet(
     WalkSprite::from_rgba(pixels, w, h, frame_w, frame_h)
 }
 
-/// Cheap probe for "does this scene export this storyline/function name"
-/// without instantiating a [`ScriptEngine`] — matched on the DSL's generated
-/// export names (`storyline_<name>`, `<Scene>OnLoad`). [`RunnerGame::activate`]
-/// re-validates authoritatively with `has_function` before running.
+/// Resolve native exports directly. For Boa scenes, probe the generated source
+/// before the VM resolves the export during activation.
 fn scene_has_fn(project: &LoadedProject, scene: &str, fn_name: &str) -> bool {
+    if let Some(native) = project.native_scenes.get(scene) {
+        return native.function(fn_name).is_some();
+    }
     let Some(js) = project.scripts().get_script(scene) else {
         return false;
     };

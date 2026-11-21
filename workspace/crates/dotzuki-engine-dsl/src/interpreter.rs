@@ -53,9 +53,10 @@ impl Value {
     }
 
     /// JS `ToNumber` for the value kinds the DSL produces.
-    fn to_number(&self) -> f64 {
+    pub fn to_number(&self) -> f64 {
         match self {
-            Value::Undefined | Value::Array(_) => f64::NAN,
+            Value::Undefined => f64::NAN,
+            Value::Array(_) => Value::Text(self.to_text()).to_number(),
             Value::Bool(b) => {
                 if *b {
                     1.0
@@ -77,7 +78,7 @@ impl Value {
     }
 
     /// JS `String()` for the value kinds the DSL produces.
-    fn to_text(&self) -> String {
+    pub fn to_text(&self) -> String {
         match self {
             Value::Undefined => "undefined".to_string(),
             Value::Bool(b) => {
@@ -87,9 +88,23 @@ impl Value {
                     "false".to_string()
                 }
             }
+            Value::Number(n) if *n == 0.0 => "0".to_string(),
+            Value::Number(n) if n.is_infinite() => if n.is_sign_negative() {
+                "-Infinity"
+            } else {
+                "Infinity"
+            }
+            .to_string(),
             Value::Number(n) => format!("{}", n),
             Value::Text(s) => s.clone(),
-            Value::Array(_) => "[object Array]".to_string(),
+            Value::Array(items) => items
+                .iter()
+                .map(|item| match item {
+                    Value::Undefined => String::new(),
+                    other => other.to_text(),
+                })
+                .collect::<Vec<_>>()
+                .join(","),
         }
     }
 
@@ -296,13 +311,44 @@ impl<H: ScriptHost> Interpreter<H> {
             }
         }
 
+        let mut names = Vec::new();
+        crate::ast::collect_assign_names(stmts, &mut names);
         self.stack.push(Frame {
             stmts: body,
             index: 0,
-            locals: HashMap::default(),
+            locals: names
+                .into_iter()
+                .map(|name| (name, Value::Undefined))
+                .collect(),
             each: None,
         });
         self.state = InterpState::Running;
+    }
+
+    /// Start a fresh scene activation with its module variables initialized in source order.
+    pub fn load_scene_function(
+        &mut self,
+        stmts: &[StoryStmt],
+        variables: &[crate::ast::VariableDecl],
+    ) -> Result<(), String> {
+        if variables.is_empty() {
+            self.load_function(stmts);
+            return Ok(());
+        }
+        self.load_function(&[]);
+        for decl in variables {
+            let Eval::Value(value) = self.eval(&decl.value)? else {
+                return Err(format!(
+                    "async initializer for scene variable '{}'",
+                    decl.name
+                ));
+            };
+            self.stack[0].locals.insert(decl.name.clone(), value);
+        }
+        let module = core::mem::take(&mut self.stack[0].locals);
+        self.load_function(stmts);
+        self.stack[0].locals.extend(module);
+        Ok(())
     }
 
     /// Advance the interpreter: returns the next pending command, or `None`
@@ -350,9 +396,11 @@ impl<H: ScriptHost> Interpreter<H> {
                 Ok(())
             }
             Suspended::AwaitAssign { frame, name } => {
-                let f = self.stack.get_mut(frame).ok_or("resume: frame vanished")?;
-                f.locals.insert(name, value.clone());
-                f.index += 1;
+                self.bind_local(name, value.clone());
+                self.stack
+                    .get_mut(frame)
+                    .ok_or("resume: frame vanished")?
+                    .index += 1;
                 Ok(())
             }
             Suspended::AwaitChoice { frame } => {
@@ -542,7 +590,7 @@ impl<H: ScriptHost> Interpreter<H> {
                     Ok(StepOutcome::Command(cmd))
                 }
                 Eval::Value(v) => {
-                    self.bind_top(name, v);
+                    self.bind_local(name, v);
                     self.advance_top_index();
                     Ok(StepOutcome::Continue)
                 }
@@ -783,8 +831,14 @@ impl<H: ScriptHost> Interpreter<H> {
             .find_map(|f| f.locals.get(name).cloned())
     }
 
-    fn bind_top(&mut self, name: String, value: Value) {
-        if let Some(frame) = self.stack.last_mut() {
+    fn bind_local(&mut self, name: String, value: Value) {
+        // Function bindings outlive branches, but an @each item shadows them.
+        if let Some(frame) = self
+            .stack
+            .iter_mut()
+            .rev()
+            .find(|f| f.locals.contains_key(&name))
+        {
             frame.locals.insert(name, value);
         }
     }

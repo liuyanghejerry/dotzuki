@@ -453,73 +453,26 @@ impl RunnerGame {
             .cloned()
     }
 
-    /// Activate `storyline` from `scene` on a fresh [`ScriptEngine`] seeded
-    /// with the persistent flags, language and player position. Returns
-    /// `false` when the scene/function is missing or fails to start.
+    /// Activate a fresh scene with the current flags, language and player tile.
     fn activate(&mut self, scene: &str, storyline: &str) -> bool {
-        let Some(js) = self.project.scripts().get_script(scene) else {
-            log::warn!("scene '{scene}' not registered");
-            return false;
-        };
-        let js = js.to_string();
-        let mut engine = ScriptEngine::new();
-        // Battle commands are not part of the engine's core `game.*` set —
-        // register them locally (the wuxia pattern) so `@command("startBattle", …)`
-        // / `result = startBattle(…)` yield ScriptCommands the pump can arm.
-        engine.register_async_fn("startBattle", |args, ctx| {
-            let trainer_id = match args.first() {
-                Some(v) => v.to_string(ctx)?.to_std_string_lossy(),
-                None => String::new(),
-            };
-            Ok(ScriptCommand::StartBattle { trainer_id })
-        });
-        engine.register_async_fn("startWildBattle", |args, ctx| {
-            let species = match args.first() {
-                Some(v) => v.to_string(ctx)?.to_std_string_lossy(),
-                None => String::new(),
-            };
-            let level = match args.get(1) {
-                Some(v) => v.to_number(ctx)? as u8,
-                None => 1,
-            };
-            Ok(ScriptCommand::StartWildBattle { species, level })
-        });
-        // Weather is runner-local too (the wuxia pattern): `setWeather(id)`
-        // arms a `kind: Weather` rules.ron record for the NEXT battle,
-        // `clearWeather()` cancels a previously armed one.
-        engine.register_async_fn("setWeather", |args, ctx| {
-            let weather = match args.first() {
-                Some(v) => v.to_string(ctx)?.to_std_string_lossy(),
-                None => String::new(),
-            };
-            Ok(ScriptCommand::SetWeather {
-                weather: Some(weather),
-            })
-        });
-        engine.register_async_fn("clearWeather", |_args, _ctx| {
-            Ok(ScriptCommand::SetWeather { weather: None })
-        });
-        engine.seed_flags(&self.flags);
-        engine.set_lang(&self.lang);
-        let (px, py) = self.actor.tile();
-        engine.set_player_position(px.clamp(0, 255) as u8, py.clamp(0, 255) as u8);
-        if let Err(e) = engine.load_script(&js) {
-            log::warn!("load scene '{scene}': {e}");
-            return false;
-        }
-        if !engine.has_function(storyline) {
-            log::warn!("scene '{scene}' has no function '{storyline}'");
-            return false;
-        }
-        log::info!("activate {scene}::{storyline}");
-        match engine.call_function_no_args(storyline) {
-            Ok(cmd) => {
-                self.active_scene = Some(scene.to_string());
+        let (x, y) = self.actor.tile();
+        let position = (x.clamp(0, 255) as u8, y.clamp(0, 255) as u8);
+        match SceneVm::start(
+            &self.project,
+            scene,
+            storyline,
+            &self.flags,
+            &self.lang,
+            position,
+        ) {
+            Ok((engine, cmd)) => {
+                log::info!("activate {scene}::{storyline}");
+                self.active_scene = Some(scene.to_owned());
                 self.pump(engine, cmd, true);
                 true
             }
-            Err(e) => {
-                log::warn!("run {scene}::{storyline}: {e}");
+            Err(err) => {
+                log::warn!("run {scene}::{storyline}: {err}");
                 false
             }
         }
@@ -542,7 +495,7 @@ impl RunnerGame {
     /// scene on stream end or error. `first` marks the initial command of a
     /// fresh activation — an immediate `None` there means the scene produced
     /// nothing at all (typically an unregistered `game.*` call killed it).
-    fn pump(&mut self, mut engine: ScriptEngine, mut cmd: Option<ScriptCommand>, first: bool) {
+    fn pump(&mut self, mut engine: SceneVm, mut cmd: Option<ScriptCommand>, first: bool) {
         let scene = self.active_scene.clone().unwrap_or_default();
         let mut first = first;
         loop {
@@ -696,7 +649,7 @@ impl RunnerGame {
     /// `signal_done` wrapper translating errors into a stream end.
     fn signal(
         &mut self,
-        engine: &mut ScriptEngine,
+        engine: &mut SceneVm,
         result: CommandResult,
     ) -> Option<ScriptCommand> {
         match engine.signal_done(result) {
@@ -772,9 +725,8 @@ impl RunnerGame {
     /// storyline or a deferred opening dispatch (scene `WarpTo`). A lost
     /// battle's whiteout takes precedence over both — the queued scenes
     /// belong to a map the player is about to leave.
-    fn finish_scene(&mut self, engine: ScriptEngine) {
-        self.flags.extend(engine.get_all_flags());
-        drop(engine);
+    fn finish_scene(&mut self, engine: SceneVm) {
+        self.flags.extend(engine.into_flags());
         self.active_scene = None;
         self.mode = if self.map.is_some() {
             Mode::Overworld

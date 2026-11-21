@@ -92,12 +92,8 @@ pub struct SharedBridge {
     /// `Date.now`, so all randomness must originate on the Rust side: the game
     /// layer mixes real entropy in via [`ScriptEngine::mix_rng`], and tests can
     /// pin a deterministic stream via [`ScriptEngine::seed_rng`].
-    rng_state: u64,
+    rng: crate::ScriptRng,
 }
-
-/// Non-zero default seed (a common splitmix64/golden-ratio constant). Keeping the
-/// state non-zero matters because xorshift64 is stuck at 0.
-const DEFAULT_RNG_SEED: u64 = 0x9E37_79B9_7F4A_7C15;
 
 impl SharedBridge {
     fn new() -> Self {
@@ -111,21 +107,8 @@ impl SharedBridge {
             player_x: 0,
             player_y: 0,
             lang: "en".to_string(),
-            rng_state: DEFAULT_RNG_SEED,
+            rng: crate::ScriptRng::default(),
         }
-    }
-
-    /// Advance the internal xorshift64 RNG and return the next 64-bit value.
-    fn next_rand(&mut self) -> u64 {
-        let mut x = self.rng_state;
-        if x == 0 {
-            x = DEFAULT_RNG_SEED;
-        }
-        x ^= x << 13;
-        x ^= x >> 7;
-        x ^= x << 17;
-        self.rng_state = x;
-        x
     }
 }
 
@@ -238,7 +221,7 @@ impl ScriptEngine {
     /// Pin the script-side RNG to a deterministic starting state. Intended for
     /// tests; a value of `0` is treated as the default non-zero seed.
     pub fn seed_rng(&mut self, seed: u64) {
-        self.bridge.borrow_mut().rng_state = if seed == 0 { DEFAULT_RNG_SEED } else { seed };
+        self.bridge.borrow_mut().rng.seed(seed);
     }
 
     /// Mix externally-sourced entropy into the script-side RNG. The game layer
@@ -246,11 +229,7 @@ impl ScriptEngine {
     /// `game.showRandomText(...)` picks vary between playthroughs even though
     /// scripts themselves have no access to `Math.random`/`Date.now`.
     pub fn mix_rng(&mut self, entropy: u64) {
-        let mut b = self.bridge.borrow_mut();
-        b.rng_state ^= entropy.wrapping_mul(0x2545_F491_4F6C_DD1D);
-        if b.rng_state == 0 {
-            b.rng_state = DEFAULT_RNG_SEED;
-        }
+        self.bridge.borrow_mut().rng.mix(entropy);
     }
 
     /// Seed a numeric value read by synchronous query functions.
@@ -747,12 +726,11 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                 let (promise, resolvers) = JsPromise::new_pending(ctx);
 
                 let mut b = rand_text_bridge.borrow_mut();
-                let text = if options.is_empty() {
-                    String::new()
-                } else {
-                    let idx = (b.next_rand() % options.len() as u64) as usize;
-                    options.swap_remove(idx)
-                };
+                let text = b
+                    .rng
+                    .choose_index(options.len())
+                    .map(|idx| options.swap_remove(idx))
+                    .unwrap_or_default();
                 b.pending_command = Some(ScriptCommand::ShowText { text });
                 b.pending_resolve = Some(PendingResolve {
                     resolve_fn: resolvers.resolve,
