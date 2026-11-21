@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d1b73e41.js";
+            window.path_to_searchindex_js = "searchindex-0d1b39b5.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-22ddc87d.js"></script>
@@ -4384,7 +4384,7 @@ and compiled by <code>dotzuki-engine-dsl</code>.</p>
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>This page describes the <a href="#glossary">Game DSL</a> <code>.scene</code> file as the code
@@ -4722,9 +4722,16 @@ into the generated JS (js_storyline.rs:60-74):</p>
     }
 }
 </code></pre>
-<p><code>@run</code> works on the Boa script path. The native AST interpreter rejects
-<code>@run</code> blocks with an error (interpreter.rs:524-528); port such logic to DSL
-statements or a native function module to run under the interpreter.</p>
+<p>The zero-Rust runner selects a backend for each scene when it compiles the
+project. Structured dialogue, choices, flags and battle results run on the
+native AST interpreter. A scene containing a raw <code>@run</code> block uses Boa for all
+its storylines and <code>@load</code> block, including when the block is inside an unselected
+choice. Scenes that use JavaScript objects, unknown host calls or core commands
+whose argument types need JavaScript evaluation also use Boa. Both backends share
+the runner’s command handling, language, player position and saved flags.</p>
+<p>A successful script reload affects the next activation. A suspended conversation
+or battle resumes with the program that started it. A compile error leaves the
+previous scenes available.</p>
 <h2 id="trigger-bindings"><a class="header" href="#trigger-bindings"><code>@trigger</code> bindings</a></h2>
 <p><code>@trigger</code> declares how a named storyline binds to map objects. It must
 appear before statements in a <code>@storyline</code> block (parser.rs:815-833).
@@ -19596,7 +19603,7 @@ cargo doc --workspace --no-deps --open
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="scene-dsl-参考scene"><a class="header" href="#scene-dsl-参考scene">Scene DSL 参考（<code>.scene</code>）</a></h1>
 <blockquote>
-<p>本文是 <code>reference/dsl/scene.md</code> 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+<p>本文是 <code>reference/dsl/scene.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 0ad54c66b78f88c2971b2bc4be3915a37ef4ce3c）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>.scene</code> 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -19606,7 +19613,7 @@ cargo doc --workspace --no-deps --open
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>本页按代码实现来描述<a href="#glossary">游戏 DSL</a> 的 <code>.scene</code> 文件；当代码与旧文档不一致时，
@@ -19903,9 +19910,13 @@ codegen 会忽略（parser.rs:492-495；i18n.rs:10-18）。宿主的当前语言
     }
 }
 </code></pre>
-<p><code>@run</code> 在 Boa 脚本路径上可用。原生 AST 解释器会报错拒绝 <code>@run</code> 块
-（interpreter.rs:524-528）；要在解释器下运行，请把这类逻辑改写成 DSL 语句或原生函数
-模块。</p>
+<p>零 Rust 运行器在编译项目时为每个场景选择执行方式。结构化对话、选项、标记和战斗结果
+由原生 AST 解释器处理。只要场景内有原始 JavaScript 块 <code>@run</code>，整个场景的剧情线和
+<code>@load</code> 块就都使用 Boa，即使该代码位于玩家没有选择的分支中。用到 JavaScript 对象、
+未知宿主调用，或核心命令的参数类型需要 JavaScript 求值时，场景也使用 Boa。两种执行方式
+共用运行器的命令处理、语言、玩家位置和存档标记。</p>
+<p>成功重载脚本后，下次激活场景时会使用新版本。等待对话确认或战斗结果的场景会沿用启动时
+的程序继续执行。如果编译出错，运行器会保留上一次编译成功的场景。</p>
 <h2 id="trigger-绑定"><a class="header" href="#trigger-绑定"><code>@trigger</code> 绑定</a></h2>
 <p><code>@trigger</code> 声明具名剧情线如何绑定到地图对象。它必须出现在 <code>@storyline</code> 块的语句之前
 （parser.rs:815-833）。语法：<code>@trigger(key = value, ...)</code>；键值对之间的逗号可选

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-d1b73e41.js";
+            window.path_to_searchindex_js = "../../searchindex-0d1b39b5.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-22ddc87d.js"></script>
@@ -189,7 +189,7 @@ and compiled by <code>dotzuki-engine-dsl</code>.</p>
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>This page describes the <a href="../glossary.html">Game DSL</a> <code>.scene</code> file as the code
@@ -527,9 +527,16 @@ into the generated JS (js_storyline.rs:60-74):</p>
     }
 }
 </code></pre>
-<p><code>@run</code> works on the Boa script path. The native AST interpreter rejects
-<code>@run</code> blocks with an error (interpreter.rs:524-528); port such logic to DSL
-statements or a native function module to run under the interpreter.</p>
+<p>The zero-Rust runner selects a backend for each scene when it compiles the
+project. Structured dialogue, choices, flags and battle results run on the
+native AST interpreter. A scene containing a raw <code>@run</code> block uses Boa for all
+its storylines and <code>@load</code> block, including when the block is inside an unselected
+choice. Scenes that use JavaScript objects, unknown host calls or core commands
+whose argument types need JavaScript evaluation also use Boa. Both backends share
+the runner’s command handling, language, player position and saved flags.</p>
+<p>A successful script reload affects the next activation. A suspended conversation
+or battle resumes with the program that started it. A compile error leaves the
+previous scenes available.</p>
 <h2 id="trigger-bindings"><a class="header" href="#trigger-bindings"><code>@trigger</code> bindings</a></h2>
 <p><code>@trigger</code> declares how a named storyline binds to map objects. It must
 appear before statements in a <code>@storyline</code> block (parser.rs:815-833).
