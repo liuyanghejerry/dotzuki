@@ -67,7 +67,7 @@ impl ProjectFiles for CountFiles {
 }
 
 #[test]
-fn warm_map_draws_allocate_nothing_and_dropped_encounters_retain_nothing() {
+fn steady_state_allocation_budgets() {
     let disk = DiskFiles::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/demo"));
     let mut files: HashMap<_, _> = disk
         .list("")
@@ -128,4 +128,28 @@ fn warm_map_draws_allocate_nothing_and_dropped_encounters_retain_nothing() {
     }
     assert_eq!(LIVE_BYTES.load(Relaxed), before);
     assert_eq!((files.json_reads.get(), files.listings.get()), baseline);
+
+    let tracks = MemoryFiles::new(HashMap::from([(
+        "data/audio/theme.json".into(),
+        include_bytes!("fixtures/theme.json").to_vec(),
+    )]));
+    let mut audio = dotzuki_runner::RunnerAudio::from_files(&tracks, "data", false);
+    audio.set_pcm_render(true);
+    audio.play_music("theme");
+    audio.update_frame();
+    let mut pcm = [0.0; 2 * 739];
+    assert_eq!(audio.render_samples_into(&mut pcm), pcm.len());
+    assert!(pcm.iter().any(|s| *s != 0.0));
+    let mut queue = Vec::with_capacity(pcm.len());
+    let before = CALLS.load(Relaxed);
+    for i in 0..60 {
+        let len = (738 + i % 2) * 2;
+        assert_eq!(audio.render_samples_into(&mut pcm[..len]), len);
+        std::hint::black_box(&pcm[..len]);
+        queue.clear();
+        audio.append_samples(len / 2, &mut queue);
+        assert_eq!(queue.len(), len);
+        std::hint::black_box(&queue);
+    }
+    assert_eq!(CALLS.load(Relaxed), before, "steady-state PCM allocations");
 }

@@ -12,7 +12,8 @@
 //! (`data/maps/<id>/script.scene`), which is what the runtime's scene ↔ map
 //! matching keys on.
 
-use std::collections::HashMap;
+use std::cell::OnceCell;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -32,7 +33,7 @@ use crate::vfs::{join_path, DiskFiles, ProjectFiles};
 pub const DEFAULT_MAPS_DIR: &str = "maps";
 
 /// The manifest filename at the project root.
-const MANIFEST_FILE: &str = ".dotzuki-editor.json";
+pub(crate) const MANIFEST_FILE: &str = ".dotzuki-editor.json";
 
 /// A fully loaded zero-Rust game project.
 pub struct LoadedProject {
@@ -50,13 +51,14 @@ pub struct LoadedProject {
     gfx_root: Option<PathBuf>,
     /// `gfx_root` as a project-relative POSIX path, when configured.
     gfx_root_rel: Option<String>,
-    scripts: ScriptLoader,
+    scripts: OnceCell<ScriptLoader>,
     report: CompileReport,
     /// `.scene` file stem → compiled scene name (`game_scene X`).
     stem_to_name: HashMap<String, String>,
     /// Compiled scene name → `.scene` file stem.
     name_to_stem: HashMap<String, String>,
-    pub(crate) native_scenes: HashMap<String, crate::scene::NativeScene>,
+    pub(crate) native_scenes:
+        BTreeMap<String, crate::scene::NativeScene<crate::compiled_scenes::FunctionBody>>,
 }
 
 impl LoadedProject {
@@ -73,7 +75,8 @@ impl LoadedProject {
 
     /// Load the project from a [`ProjectFiles`] backend.
     ///
-    /// The DSL is compiled in memory; any compiler diagnostic (unreadable
+    /// Packs with compatible artifacts boot from their scene index. Other
+    /// projects compile the DSL in memory. Any compiler diagnostic (unreadable
     /// file, compile failure, route conflict) aborts the load with an error
     /// listing every diagnostic — the same bar `dotzuki check` enforces.
     ///
@@ -102,7 +105,7 @@ impl LoadedProject {
         let data_root = root.join(&data_root_rel);
         let gfx_root = gfx_root_rel.as_ref().map(|g| root.join(g));
 
-        let (report, native_scenes) = compile_project_dsl(files.as_ref(), &manifest);
+        let (report, native_scenes) = crate::compiled_scenes::load(files.as_ref(), &manifest)?;
         if !report.diagnostics.is_empty() {
             bail!(
                 "DSL compile failed with {} diagnostic(s):\n  {}",
@@ -110,9 +113,6 @@ impl LoadedProject {
                 report.diagnostics.join("\n  ")
             );
         }
-
-        let mut scripts = ScriptLoader::new();
-        register_compiled(&mut scripts, &report);
 
         let (stem_to_name, name_to_stem) = stem_indexes(&report);
 
@@ -136,7 +136,7 @@ impl LoadedProject {
             data_root_rel,
             gfx_root,
             gfx_root_rel,
-            scripts,
+            scripts: OnceCell::new(),
             report,
             stem_to_name,
             name_to_stem,
@@ -158,7 +158,8 @@ impl LoadedProject {
     ///
     /// [`load`]: Self::load
     pub fn recompile_scripts(&mut self) -> Result<()> {
-        let (report, native_scenes) = compile_project_dsl(self.files.as_ref(), &self.manifest);
+        let (report, native_scenes) =
+            crate::compiled_scenes::from_source(self.files.as_ref(), &self.manifest);
         if !report.diagnostics.is_empty() {
             bail!(
                 "DSL recompile failed with {} diagnostic(s):\n  {}",
@@ -167,11 +168,9 @@ impl LoadedProject {
             );
         }
 
-        let mut scripts = ScriptLoader::new();
-        register_compiled(&mut scripts, &report);
         let (stem_to_name, name_to_stem) = stem_indexes(&report);
 
-        self.scripts = scripts;
+        self.scripts.take();
         self.report = report;
         self.stem_to_name = stem_to_name;
         self.name_to_stem = name_to_stem;
@@ -227,7 +226,22 @@ impl LoadedProject {
     /// Registry of compiled scene JS, keyed by scene name.
     #[inline]
     pub fn scripts(&self) -> &ScriptLoader {
-        &self.scripts
+        self.scripts.get_or_init(|| {
+            let mut scripts = ScriptLoader::new();
+            register_compiled(&mut scripts, &self.report);
+            scripts
+        })
+    }
+
+    /// Borrow one generated script. A later definition of the same name wins,
+    /// matching registration order in the full public ScriptLoader.
+    pub(crate) fn scene_js(&self, name: &str) -> Option<&str> {
+        let scenes = &self.report.scenes;
+        let end = scenes.partition_point(|entry| entry.0.as_str() <= name);
+        scenes[..end]
+            .last()
+            .filter(|entry| entry.0 == name)
+            .map(|entry| entry.1.as_str())
     }
 
     /// The full DSL compile report.
@@ -406,10 +420,13 @@ impl LoadedProject {
 /// `compile_dirs` produces for a relative project root, and what the
 /// runtime's scene ↔ map matching expects. Unreadable/non-UTF-8 files
 /// become diagnostics (the same bar `dotzuki check` enforces).
-fn compile_project_dsl(
+pub(crate) fn compile_project_dsl(
     files: &dyn ProjectFiles,
     manifest: &Manifest,
-) -> (CompileReport, HashMap<String, crate::scene::NativeScene>) {
+) -> (
+    CompileReport,
+    BTreeMap<String, crate::scene::NativeScene<Vec<dotzuki_engine_dsl::ast::StoryStmt>>>,
+) {
     let mut dsl_files: Vec<(String, String, String)> = Vec::new();
     let mut read_errors: Vec<String> = Vec::new();
     for dir in manifest.dsl_dirs_rel() {
@@ -435,7 +452,7 @@ fn compile_project_dsl(
             }
         }
     }
-    let mut native_scenes = HashMap::new();
+    let mut native_scenes = BTreeMap::new();
     let mut report = compile_files_with_scene_asts(&dsl_files, None, |scene| {
         let name = scene.name.clone();
         if let Some(native) = crate::scene::NativeScene::from_ast(scene) {

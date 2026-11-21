@@ -57,23 +57,7 @@ fn copy_dir(src: &Path, dst: &Path) {
 }
 
 /// A minimal valid music track (dotzuki-audio `TrackDef` JSON).
-const THEME_JSON: &str = r#"{
-  "id": "theme",
-  "kind": "music",
-  "tempo": 256,
-  "channels": [
-    {
-      "hw": "pulse1",
-      "commands": [
-        { "type": "note_type", "speed": 12, "param": 197 },
-        { "type": "octave", "value": 5 },
-        { "type": "note", "pitch": 0, "length": 4 },
-        { "type": "rest", "length": 4 },
-        { "type": "sound_ret" }
-      ]
-    }
-  ]
-}"#;
+const THEME_JSON: &str = include_str!("fixtures/theme.json");
 
 /// A minimal valid SFX track.
 const BEEP_JSON: &str = r#"{

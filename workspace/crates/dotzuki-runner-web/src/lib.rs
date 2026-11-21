@@ -166,13 +166,10 @@ impl WasmRunner {
         self.audio_frac += SAMPLE_RATE / GB_FRAME_RATE;
         let frames = self.audio_frac.floor() as usize;
         self.audio_frac -= frames as f32;
-        let pcm = self.game.render_audio(frames);
-        if !pcm.is_empty() {
-            self.audio_buf.extend_from_slice(&pcm);
-            if self.audio_buf.len() > MAX_AUDIO_BUF {
-                let excess = self.audio_buf.len() - MAX_AUDIO_BUF;
-                self.audio_buf.drain(..excess);
-            }
+        self.game.append_audio(frames, &mut self.audio_buf);
+        if self.audio_buf.len() > MAX_AUDIO_BUF {
+            let excess = self.audio_buf.len() - MAX_AUDIO_BUF;
+            self.audio_buf.drain(..excess);
         }
     }
 
@@ -209,8 +206,12 @@ impl WasmRunner {
     /// Drain the audio PCM rendered since the last call: interleaved stereo
     /// f32 (LRLR…) at 44.1 kHz, ready for a WebAudio queue. Empty while the
     /// game is silent (no `data/audio/` tracks, or nothing playing yet).
-    pub fn take_audio(&mut self) -> Vec<f32> {
-        std::mem::take(&mut self.audio_buf)
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen(js_name = take_audio)]
+    pub fn take_audio_js(&mut self) -> js_sys::Float32Array {
+        let pcm = js_sys::Float32Array::from(self.audio_buf.as_slice());
+        self.audio_buf.clear();
+        pcm
     }
 
     /// Framebuffer width in pixels.
@@ -240,6 +241,11 @@ impl WasmRunner {
 }
 
 impl WasmRunner {
+    /// Take ownership of the pending stereo samples from Rust.
+    pub fn take_audio(&mut self) -> Vec<f32> {
+        std::mem::take(&mut self.audio_buf)
+    }
+
     /// Native/testable boot path (no `JsValue`): every failure is a plain
     /// `String` naming the file or step that failed.
     fn boot_with_files(

@@ -207,6 +207,25 @@ canvas. Passing `true` refreshes a replaced canvas. The Android and HarmonyOS
 export shells consume packed RGBA rectangles through the mobile ABI. A host that
 needs a full snapshot can use the Web `tick` or mobile `copy_frame` API.
 
+### Runner audio and performance budgets
+
+Mobile hosts pass their stereo f32 output slice to `RunnerGame::render_audio_into`.
+The return value counts samples across both channels. Before the first track
+starts, the runner fills the slice with silence and returns zero. Web hosts use
+`RunnerGame::append_audio` to accumulate multiple ticks in a reusable queue.
+
+The `runner-performance` CI job compares Callgrind instruction counts for idle
+maps, scrolling, bag navigation, battle navigation, PCM rendering, and scene
+activations with 2,048 saved flags. Each scenario has a reviewed baseline in
+`ci/runner-performance/baseline.json`. A count more than 10% above its baseline
+fails the job. Fixture setup and warmup run outside the measured interval.
+
+To reproduce the CI baseline, use x86-64 Ubuntu 24.04 with Valgrind 3.22.0 and
+Rust 1.89.0. From `workspace/` run
+`python3 scripts/runner-performance.py --output counts.json`. The saved counts
+and the CI artifact use the baseline format. Review changes to the workload
+or compiler alongside any baseline update.
+
 ### Indexed dialogue text
 
 `dotzuki_renderer::embedded_font::draw_text` and `draw_text_scaled` resolve

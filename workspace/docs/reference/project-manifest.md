@@ -5,7 +5,7 @@ The zero-Rust project contract: directory layout, manifest schema, and run/check
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 A **game project** is a plain directory of DSL, data, and asset files plus a
 single manifest, `.dotzuki-editor.json`. There is no Cargo workspace, no
@@ -235,6 +235,10 @@ The scene VM fully supports `showText` (paged textbox),
 (see [Shops](#shops)). Any other command logs a warning and auto-completes
 rather than deadlocking the scene.
 
+Native and JavaScript scenes read flags from a shared snapshot. Completing
+a scene applies its changed flags to the session. Calling `resetFlag` on a
+previously absent flag persists an explicit `false` in the save.
+
 ### Menus
 
 Pressing **Start** in the overworld opens a pause menu (B/Start
@@ -394,10 +398,9 @@ toolchain. The contract with the runner:
 - **Frames.** The page calls `tick(input_bitmask)` at ~59.7 Hz and blits the
   returned 320×240 RGBA frame. Input bitmask matches `GbButton` bit order
   (bit0=A … bit7=Down).
-- **Audio.** Instead of a cpal device, the runner renders APU PCM per tick
-  (`RunnerGame::render_audio`, 44.1 kHz stereo f32); the page drains it via
-  `take_audio()` into a WebAudio queue (`usePlayAudio`). Same sequencer/fade
-  path as native, just a pull model instead of the callback thread.
+- **Audio.** The runner appends 44.1 kHz interleaved stereo f32 samples to a
+  reusable buffer each tick. The page drains it with `take_audio()` and owns
+  the returned `Float32Array`, which stays valid across subsequent ticks.
 - **Saves.** `export_save()`/`import_save(json)` replace `.dotzuki-save.json`;
   the editor persists them to `localStorage`. `export_save` returns nothing
   while a scene/battle/shop/warp transition is suspended — the editor simply

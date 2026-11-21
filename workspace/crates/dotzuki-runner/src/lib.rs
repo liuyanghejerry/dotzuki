@@ -44,6 +44,7 @@
 pub mod audio;
 pub mod battle;
 pub mod bundle;
+mod compiled_scenes;
 pub mod game;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod headless;

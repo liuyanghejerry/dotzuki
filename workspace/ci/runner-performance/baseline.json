@@ -1,0 +1,16 @@
+{
+  "rust": "1.89.0",
+  "tolerance_percent": 10,
+  "os": "Ubuntu 24.04",
+  "architecture": "x86_64",
+  "valgrind": "valgrind-3.22.0",
+  "revision": "aec91b2c9f40a281562d91d959a3712f394ec344",
+  "instructions": {
+    "idle_map": 51333,
+    "scrolling": 43310772,
+    "bag": 131113,
+    "battle": 149717,
+    "pcm": 167162167,
+    "scene_flags": 6186813
+  }
+}

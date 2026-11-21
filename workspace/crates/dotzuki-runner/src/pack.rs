@@ -50,6 +50,8 @@ struct Index {
     #[serde(default)]
     #[allow(dead_code)]
     dotzuki: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    compiled_scenes: Option<u32>,
     files: BTreeMap<String, IndexEntry>,
 }
 
@@ -57,22 +59,56 @@ struct Index {
 /// `.dzpk` pack. `dotzuki_meta` rides along as the informational
 /// `"dotzuki"` index member (the CLI stamps tool/version/export time).
 pub fn encode_pack(files: &BTreeMap<String, Vec<u8>>, dotzuki_meta: serde_json::Value) -> Vec<u8> {
+    encode(
+        files.iter().map(|(k, v)| (k.as_str(), v.as_slice())),
+        dotzuki_meta,
+        None,
+    )
+}
+
+/// Encode a shipping project, compiling the DSL from the collected files.
+/// Sources are retained for players that predate this artifact schema.
+pub fn encode_project_pack(
+    files: &BTreeMap<String, Vec<u8>>,
+    metadata: serde_json::Value,
+) -> Result<Vec<u8>> {
+    use crate::{compiled_scenes, project::MANIFEST_FILE};
+    let bytes = files
+        .get(MANIFEST_FILE)
+        .with_context(|| format!("missing {MANIFEST_FILE}"))?;
+    let manifest =
+        serde_json::from_slice(bytes).with_context(|| format!("invalid {MANIFEST_FILE}"))?;
+    let Some(artifacts) = compiled_scenes::artifacts(files, &manifest)? else {
+        return Ok(encode_pack(files, metadata));
+    };
+    let entries = files
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_slice()))
+        .chain(artifacts.iter().map(|(k, v)| (*k, v.as_slice())));
+    Ok(encode(entries, metadata, Some(compiled_scenes::VERSION)))
+}
+
+fn encode<'a>(
+    files: impl Iterator<Item = (&'a str, &'a [u8])> + Clone,
+    metadata: serde_json::Value,
+    compiled_scenes: Option<u32>,
+) -> Vec<u8> {
     let mut index_files = BTreeMap::new();
-    let mut data_len: u64 = 0;
-    let mut offset: u64 = 0;
-    for (path, bytes) in files {
+    let mut data_len = 0;
+    for (path, bytes) in files.clone() {
+        let size = bytes.len() as u64;
         index_files.insert(
-            path.clone(),
+            path.to_owned(),
             IndexEntry {
-                offset,
-                size: bytes.len() as u64,
+                offset: data_len,
+                size,
             },
         );
-        offset += bytes.len() as u64;
-        data_len = offset;
+        data_len += size;
     }
     let index = Index {
-        dotzuki: dotzuki_meta,
+        dotzuki: metadata,
+        compiled_scenes,
         files: index_files,
     };
     // Serializing plain maps of integers/strings cannot fail.
@@ -83,7 +119,7 @@ pub fn encode_pack(files: &BTreeMap<String, Vec<u8>>, dotzuki_meta: serde_json::
     out.extend_from_slice(&FORMAT_VERSION.to_le_bytes());
     out.extend_from_slice(&(index_json.len() as u32).to_le_bytes());
     out.extend_from_slice(&index_json);
-    for bytes in files.values() {
+    for (_, bytes) in files {
         out.extend_from_slice(bytes);
     }
     out
@@ -94,6 +130,7 @@ pub fn encode_pack(files: &BTreeMap<String, Vec<u8>>, dotzuki_meta: serde_json::
 /// `read_bytes` borrows a file directly from the data section.
 pub struct PackFiles {
     bytes: Vec<u8>,
+    compiled_scenes: Option<u32>,
     /// Absolute offset of the data section within `bytes`.
     data_start: usize,
     /// `path → (offset, size)` within the data section.
@@ -148,6 +185,7 @@ impl PackFiles {
         Ok(Self {
             bytes,
             data_start,
+            compiled_scenes: index.compiled_scenes,
             entries,
         })
     }
@@ -165,6 +203,10 @@ impl std::fmt::Debug for PackFiles {
 impl ProjectFiles for PackFiles {
     fn read(&self, path: &str) -> Result<Vec<u8>> {
         Ok(self.read_bytes(path)?.into_owned())
+    }
+
+    fn compiled_scene_version(&self) -> Option<u32> {
+        self.compiled_scenes
     }
 
     fn is_immutable(&self) -> bool {

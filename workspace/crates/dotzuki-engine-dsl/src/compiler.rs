@@ -461,7 +461,7 @@ fn parse_component_prelude(content: &str, file_path: &str) -> Option<Vec<ast::Co
 /// This is the runtime-usable counterpart of the build script: the same
 /// discovery → compile → sort → conflict-detection pipeline, with warnings
 /// collected into `diagnostics` instead of being printed.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct CompileReport {
     /// `(name, js, source_path)` for each compiled `.scene`, sorted by name.
     pub scenes: Vec<(String, String, String)>,
