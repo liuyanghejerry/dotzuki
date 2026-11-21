@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
+            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -187,7 +187,7 @@
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>A <strong>game project</strong> is a plain directory of DSL, data, and asset files plus a
@@ -408,6 +408,9 @@ as raw text. A map’s scene is the compiled scene whose source is
 <code>startBattle</code>/<code>startWildBattle</code> (see <a href="battle-rules.html">the battle rules</a>) and <code>openShop</code>
 (see <a href="#shops">Shops</a>). Any other command logs a warning and auto-completes
 rather than deadlocking the scene.</p>
+<p>Native and JavaScript scenes read flags from a shared snapshot. Completing
+a scene applies its changed flags to the session. Calling <code>resetFlag</code> on a
+previously absent flag persists an explicit <code>false</code> in the save.</p>
 <h3 id="menus"><a class="header" href="#menus">Menus</a></h3>
 <p>Pressing <strong>Start</strong> in the overworld opens a pause menu (B/Start
 closes it; the overworld is frozen underneath) with four entries:</p>
@@ -545,10 +548,9 @@ device), <code>pcm_audio=true</code> and no disk saves.</li>
 <li><strong>Frames.</strong> The page calls <code>tick(input_bitmask)</code> at ~59.7 Hz and blits the
 returned 320×240 RGBA frame. Input bitmask matches <code>GbButton</code> bit order
 (bit0=A … bit7=Down).</li>
-<li><strong>Audio.</strong> Instead of a cpal device, the runner renders APU PCM per tick
-(<code>RunnerGame::render_audio</code>, 44.1 kHz stereo f32); the page drains it via
-<code>take_audio()</code> into a WebAudio queue (<code>usePlayAudio</code>). Same sequencer/fade
-path as native, just a pull model instead of the callback thread.</li>
+<li><strong>Audio.</strong> The runner appends 44.1 kHz interleaved stereo f32 samples to a
+reusable buffer each tick. The page drains it with <code>take_audio()</code> and owns
+the returned <code>Float32Array</code>, which stays valid across subsequent ticks.</li>
 <li><strong>Saves.</strong> <code>export_save()</code>/<code>import_save(json)</code> replace <code>.dotzuki-save.json</code>;
 the editor persists them to <code>localStorage</code>. <code>export_save</code> returns nothing
 while a scene/battle/shop/warp transition is suspended — the editor simply

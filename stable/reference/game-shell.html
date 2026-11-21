@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
+            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -373,6 +373,21 @@ and <code>runner.present(ctx, false)</code> to paint accumulated changes on a re
 canvas. Passing <code>true</code> refreshes a replaced canvas. The Android and HarmonyOS
 export shells consume packed RGBA rectangles through the mobile ABI. A host that
 needs a full snapshot can use the Web <code>tick</code> or mobile <code>copy_frame</code> API.</p>
+<h3 id="runner-audio-and-performance-budgets"><a class="header" href="#runner-audio-and-performance-budgets">Runner audio and performance budgets</a></h3>
+<p>Mobile hosts pass their stereo f32 output slice to <code>RunnerGame::render_audio_into</code>.
+The return value counts samples across both channels. Before the first track
+starts, the runner fills the slice with silence and returns zero. Web hosts use
+<code>RunnerGame::append_audio</code> to accumulate multiple ticks in a reusable queue.</p>
+<p>The <code>runner-performance</code> CI job compares Callgrind instruction counts for idle
+maps, scrolling, bag navigation, battle navigation, PCM rendering, and scene
+activations with 2,048 saved flags. Each scenario has a reviewed baseline in
+<code>ci/runner-performance/baseline.json</code>. A count more than 10% above its baseline
+fails the job. Fixture setup and warmup run outside the measured interval.</p>
+<p>To reproduce the CI baseline, use x86-64 Ubuntu 24.04 with Valgrind 3.22.0 and
+Rust 1.89.0. From <code>workspace/</code> run
+<code>python3 scripts/runner-performance.py --output counts.json</code>. The saved counts
+and the CI artifact use the baseline format. Review changes to the workload
+or compiler alongside any baseline update.</p>
 <h3 id="indexed-dialogue-text"><a class="header" href="#indexed-dialogue-text">Indexed dialogue text</a></h3>
 <p><code>dotzuki_renderer::embedded_font::draw_text</code> and <code>draw_text_scaled</code> resolve
 the ink color against the framebuffer’s base palette once per string. Both

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
+            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
 <blockquote>
-<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。</p>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>一个<strong>游戏项目</strong>就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
@@ -388,6 +388,8 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 会话期间跨场景保持）、<code>startBattle</code>/<code>startWildBattle</code>（见
 <a href="battle-rules.html">战斗规则</a>）和 <code>openShop</code>（见<a href="#商店">商店</a>）。任何其他命令
 都会记录一条警告并自动完成，而不是让场景死锁。</p>
+<p>原生场景和 JavaScript 场景从共享快照读取标记。场景结束时，运行器将有变化的标记写回
+当前会话。对原本不存在的标记调用 <code>resetFlag</code>，会在存档中保留显式的 <code>false</code>。</p>
 <h3 id="菜单"><a class="header" href="#菜单">菜单</a></h3>
 <p>在大地图上按 <strong>Start</strong> 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
 冻结），其中有四个条目：</p>
@@ -499,10 +501,8 @@ schema 中，<code>encounters</code> 块的表必须声明 <code>enemies</code> 
 <code>watch=false</code>、无头模式（无音频设备）、<code>pcm_audio=true</code> 且不写磁盘存档。</li>
 <li><strong>Frames。</strong> 页面以约 59.7 Hz 调用 <code>tick(input_bitmask)</code>，并把返回的 320×240
 RGBA 帧 blit 上屏。输入位掩码与 <code>GbButton</code> 位序一致（bit0=A … bit7=Down）。</li>
-<li><strong>Audio。</strong> 运行器不使用 cpal 设备，而是每 tick 渲染 APU PCM
-（<code>RunnerGame::render_audio</code>，44.1 kHz 立体声 f32）；页面通过 <code>take_audio()</code>
-把它排入 WebAudio 队列（<code>usePlayAudio</code>）。与原生相同的 sequencer/fade 路径，
-用拉取模型取代回调线程。</li>
+<li><strong>音频。</strong> 运行器每个游戏帧把 44.1 kHz 交错立体声 f32 采样追加到可复用的缓冲区。
+页面通过 <code>take_audio()</code> 取走音频并拥有返回的 <code>Float32Array</code>。后续游戏帧仍可读取这个数组。</li>
 <li><strong>Saves。</strong> <code>export_save()</code>/<code>import_save(json)</code> 取代 <code>.dotzuki-save.json</code>；
 编辑器把它们持久化到 <code>localStorage</code>。场景/战斗/商店/warp 过渡挂起期间，
 <code>export_save</code> 不返回任何内容——编辑器在自己的间隔里重试即可。</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
+            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -183,7 +183,7 @@
                         <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
+（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -366,6 +366,17 @@ GBA 分辨率为 240×160）。</li>
 <code>runner.present(ctx, false)</code> 将累计的变化绘到保留内容的 Canvas。传入 <code>true</code> 可以刷新替换后的
 画布。Android 和 HarmonyOS 导出外壳通过移动 ABI 读取按行紧密排列的 RGBA 矩形。
 需要完整快照的宿主可使用 Web 的 <code>tick</code> 或移动端的 <code>copy_frame</code>。</p>
+<h3 id="运行器音频与性能基线"><a class="header" href="#运行器音频与性能基线">运行器音频与性能基线</a></h3>
+<p>移动端将立体声 f32 输出缓冲传给 <code>RunnerGame::render_audio_into</code>。返回值是两个声道的
+采样值总数。首条音轨开始前，运行器向缓冲区写入静音并返回零。Web 宿主通过
+<code>RunnerGame::append_audio</code> 在可复用的队列中累计多个游戏帧的采样。</p>
+<p>CI 的 <code>runner-performance</code> 任务用 Callgrind 统计地图静止、地图滚动、背包导航、
+战斗菜单导航、PCM 渲染和携带 2,048 个存档标记的剧情激活所执行的指令数。
+每个场景在 <code>ci/runner-performance/baseline.json</code> 中有独立的基线。任何一项超过
+对应基线 10% 都会使任务失败。创建测试项目和预热期间的指令不计入结果。</p>
+<p>复现 CI 基线使用 x86-64 Ubuntu 24.04、Valgrind 3.22.0 和 Rust 1.89.0。从 <code>workspace/</code> 运行
+<code>python3 scripts/runner-performance.py --output counts.json</code>。输出文件和 CI 上传的
+产物使用相同的基线格式。更新基线时应同时审查相应的工作负载或编译器变更。</p>
 <h3 id="索引帧缓冲上的对话文字"><a class="header" href="#索引帧缓冲上的对话文字">索引帧缓冲上的对话文字</a></h3>
 <p><code>dotzuki_renderer::embedded_font::draw_text</code> 和 <code>draw_text_scaled</code> 绘制一个字符串时，
 只用基础调色板匹配一次文字颜色。平面打包和线性存储的索引帧缓冲都直接写入这个索引。

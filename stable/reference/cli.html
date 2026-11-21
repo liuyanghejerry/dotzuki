@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
+            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: game authors, CI</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Every <code>dotzuki</code> subcommand, flag and exit code for scaffolding, validating,
@@ -324,11 +324,19 @@ then every file’s raw bytes concatenated. Raw bytes avoid base64’s ~33% size
 inflation and its boot-time decode — worthwhile once a project ships real
 tilesets and audio. (Exports from older CLIs shipped a base64
 <code>game.bundle.json</code> instead; current players still boot it.)</p>
-<p>Pack rules (identical to the editor’s play bundle): everything except
-<code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories, dotfiles and <code>*.bak</code> —
-except <code>.dotzuki-editor.json</code>, which always ships. Caps: 16 MB per file, 64 MB
-total (uncompressed). The <code>dotzuki.version</code> field records the exporting CLI
-version; it is informational and nothing enforces it at runtime.</p>
+<p>A successful DSL compilation adds the optional <code>compiled_scenes: 1</code> index field.
+The pack retains the original sources and stores the compile report, routes and
+native function offsets under <code>.dotzuki/compiled-scenes/</code>. The player inflates
+a native scene on first use and decodes each requested function once. Scenes
+containing <code>@run</code> execute their generated JavaScript in Boa. Players reading
+a pack with no compatible artifact version compile the bundled sources.
+When the CLI exports a project with DSL errors using <code>--force</code>, the player
+reports those errors at startup.</p>
+<p>The CLI collects project inputs with the editor’s play-bundle rules. It skips
+<code>node_modules</code>, <code>.git</code>, <code>target</code>, <code>dist</code>, hidden files and directories, and
+<code>*.bak</code>. It includes <code>.dotzuki-editor.json</code>. The 16 MiB per-file and 64 MiB
+total limits apply to the collected inputs. Generated scene artifacts add to
+the pack size. The <code>dotzuki.version</code> field identifies the exporting CLI.</p>
 <p>The runner wasm package is resolved in this order: <code>--runner-pkg</code> → the
 prebuilt <code>workspace/crates/dotzuki-runner-web/pkg</code> → build it with
 <code>wasm-pack build --target web --release --features modern-audio</code>. The last two
