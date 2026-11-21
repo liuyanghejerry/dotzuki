@@ -1,0 +1,7 @@
+game_scene GlobalIntro {
+    @storylines {
+        @speaker("Guide") {
+            "A new journey begins."
+        }
+    }
+}

@@ -60,8 +60,10 @@ editor is started from its own repo without `DOTZUKI_PROJECT_ROOT`, that root
 defaults to `~/dotzuki-projects`, so new projects land in
 `~/dotzuki-projects/<name>` instead of inside the editor checkout. On success
 the panel summarizes what was scaffolded and you can jump straight into the
-editor or hand off to the AI assistant. Returning users also get recent
-projects and an open-by-path row on the welcome screen.
+editor or hand off to the AI assistant. To reopen a game in the browser, choose **Browse…** on the welcome
+screen, select a directory beneath the editor's launch project root, then
+choose **Open this project**. You can also type an absolute path or pick a
+recent project. The desktop app provides the system folder picker.
 
 ### ③ Write the manifest by hand
 

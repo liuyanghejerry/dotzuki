@@ -66,6 +66,37 @@ export function registerProject(server: any) {
       }
     })
 
+    // The browser navigates the editor's launch directory. Retain that root
+    // when opening a game so sibling projects stay available in one session.
+    const browseRoot = path.resolve(getProjectRoot())
+    server.middlewares.use('/api/project/folders', (req, res) => {
+      if (req.method !== 'GET') return nextMiddleware(req, res)
+      try {
+        const rel = parseUrl(req).searchParams.get('dir') ?? ''
+        const segments = rel.split('/').filter(Boolean)
+        if (segments.some(s => s === '.' || s === '..' || s.includes('\\') || s.includes(':'))) {
+          return sendError(res, 'Invalid folder', 400)
+        }
+        const dir = path.join(browseRoot, ...segments)
+        if (!fs.existsSync(dir)) {
+          if (segments.length === 0) return sendJson(res, { dir: '', project: null, folders: [] })
+          return sendError(res, 'Folder not found')
+        }
+        const canonical = path.relative(fs.realpathSync(browseRoot), fs.realpathSync(dir))
+        if (canonical === '..' || canonical.startsWith('..' + path.sep) || path.isAbsolute(canonical)) {
+          return sendError(res, 'Folder outside project directory', 403)
+        }
+        const folders = fs.readdirSync(dir, { withFileTypes: true })
+          .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
+          .map(entry => entry.name).sort()
+        const manifest = path.join(dir, '.dotzuki-editor.json')
+        const project = fs.statSync(manifest, { throwIfNoEntry: false })?.isFile() ? dir : null
+        sendJson(res, { dir: segments.join('/'), project, folders })
+      } catch (e) {
+        sendError(res, (e as Error).message, 400)
+      }
+    })
+
     // ── POST /api/project/open — switch to a different project ──
     server.middlewares.use('/api/project/open', async (req, res) => {
       if (req.method !== 'POST') return nextMiddleware(req, res)

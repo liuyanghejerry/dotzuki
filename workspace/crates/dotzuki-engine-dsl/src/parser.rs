@@ -2772,3 +2772,35 @@ pub fn parse_and_validate_with_components(
 #[cfg(test)]
 #[path = "parser_tests.rs"]
 mod tests;
+
+impl ParseError {
+    /// The source range reported by this diagnostic.
+    pub fn span(&self) -> &SourceSpan {
+        match self {
+            Self::UnexpectedToken { span, .. }
+            | Self::MissingBlock { span, .. }
+            | Self::InvalidComponentType { span, .. }
+            | Self::UnclosedBlock { span, .. }
+            | Self::IndentationError { span, .. }
+            | Self::UnterminatedString { span, .. }
+            | Self::UnexpectedEof { span, .. }
+            | Self::MissingRequiredProp { span, .. }
+            | Self::PropTypeMismatch { span, .. }
+            | Self::UnknownProp { span, .. }
+            | Self::DuplicateComponentDecl { span, .. } => span,
+        }
+    }
+}
+
+impl SemanticError {
+    /// The source range reported by this diagnostic.
+    pub fn span(&self) -> &SourceSpan {
+        match self {
+            Self::UndefinedVariable { span, .. }
+            | Self::CircularStyleInheritance { span, .. }
+            | Self::MissingStyleParent { span, .. }
+            | Self::EmptyChoice { span, .. }
+            | Self::DuplicateName { span, .. } => span,
+        }
+    }
+}

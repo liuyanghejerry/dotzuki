@@ -9,6 +9,7 @@ import type { ProjectContext } from './context/projectContext'
 
 export interface LintFinding {
   line: number
+  col?: number
   severity: 'warn' | 'info'
   message: string
   flag?: string

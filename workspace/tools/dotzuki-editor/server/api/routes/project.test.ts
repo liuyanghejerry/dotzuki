@@ -85,6 +85,23 @@ function assertRecordMatchesSchema(rec: any, table: any) {
   expect(typeof rec[table.idField]).toBe('string')
 }
 
+it('browses nested project folders and opens the chosen project', async () => {
+  const folder = path.join(ROOT, 'games', 'sample')
+  fs.mkdirSync(folder, { recursive: true })
+  fs.writeFileSync(path.join(folder, '.dotzuki-editor.json'), JSON.stringify({ name: 'Sample', dataRoot: 'data', activities: [] }))
+  const server = makeServer()
+  registerProject(server)
+  const list = (url: string) => call(server.routes, '/api/project/folders', mockReq('GET', undefined, url))
+  expect((await list('/')).json().folders).toEqual(['games'])
+  expect((await list('/?dir=games')).json().folders).toEqual(['sample'])
+  const selection = (await list('/?dir=games/sample')).json().project
+  expect(selection).toBe(folder)
+  const opened = await call(server.routes, '/api/project/open', mockReq('POST', { path: selection }))
+  expect(opened.json().config.name).toBe('Sample')
+  expect((await list('/')).json().folders).toEqual(['games'])
+  expect((await list('/?dir=..')).status).toBe(400)
+})
+
 describe('POST /api/project/create', () => {
   it.each(['empty', 'wuxia', 'dotzuki'])('scaffolds the %s template by id', async (id) => {
     const res = await createProject({ name: 'My Game', template: id, dir: `game-${id}` })

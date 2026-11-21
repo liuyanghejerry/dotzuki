@@ -142,6 +142,39 @@ describe('GET /api/scripts', () => {
   })
 })
 
+describe('project script roots', () => {
+  it('reads and writes equal filenames in the game, script and story directories independently', async () => {
+    writeProjectConfig(root(), {
+      game: { scenesDir: 'global scenes' },
+      activities: [
+        { id: 'scripts', type: 'script', config: { scriptsDir: 'scripts', extension: '.js' } },
+        { id: 'events', type: 'script', config: { scriptsDir: 'events', extension: '.scene' } },
+        { id: 'story', type: 'story', config: { scenesDir: 'events' } },
+      ],
+    })
+    writeScript('legacy.js', 'old')
+    const paths = ['global scenes/intro.scene', 'data/events/intro.scene']
+    for (const file of paths) {
+      const abs = path.join(root(), file)
+      fs.mkdirSync(path.dirname(abs), { recursive: true })
+      fs.writeFileSync(abs, file)
+    }
+    const server = makeServer()
+    registerContent(server)
+    const list = await call(server.routes, '/api/scripts', mockReq('GET', undefined, '/?scope=project'))
+    expect(list.json().map((f: any) => f.path).sort()).toEqual(['data/scripts/legacy.js', ...paths].sort())
+    for (const file of paths) {
+      const url = '/?' + new URLSearchParams({ scope: 'project', file })
+      const res = await call(server.routes, '/api/scripts', rawReq('PUT', 'edited ' + file, url))
+      expect(res.status).toBe(200)
+      expect((await call(server.routes, '/api/scripts', mockReq('GET', undefined, url))).body).toBe('edited ' + file)
+    }
+    expect(fs.readFileSync(path.join(root(), paths[0]), 'utf8')).toBe('edited ' + paths[0])
+    const outside = await call(server.routes, '/api/scripts', rawReq('PUT', 'text', '/?scope=project&file=.dotzuki-editor.json'))
+    expect(outside.status).toBe(403)
+  })
+})
+
 describe('PUT /api/scripts', () => {
   it('writes the raw body verbatim, creating parent dirs, and round-trips via GET', async () => {
     writeContentConfig()

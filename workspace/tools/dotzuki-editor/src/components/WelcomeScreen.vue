@@ -208,7 +208,6 @@
               @keyup.enter="handleOpenProject"
             />
             <button
-              v-if="canBrowse"
               :disabled="browsing"
               @click="handleBrowseProject"
               class="px-4 py-2 rounded-control text-sm font-medium border border-border-strong text-ink-body
@@ -236,6 +235,22 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
             </button>
+          </div>
+
+          <div v-if="folderList" class="space-y-2 rounded-control border border-border bg-raised p-3">
+            <div class="flex items-center gap-2">
+              <button v-if="folderList.dir" type="button" class="text-sm text-accent-ink"
+                @click="browseFolder(folderList.dir.split('/').slice(0, -1).join('/'))">{{ $t('welcome.parentFolder') }}</button>
+              <span class="truncate text-xs text-ink-muted">{{ folderList.dir || $t('welcome.projectFolders') }}</span>
+            </div>
+            <div class="max-h-48 overflow-y-auto">
+              <button v-for="folder in folderList.folders" :key="folder" type="button"
+                class="block w-full rounded-control px-2 py-1 text-left text-sm text-ink hover:bg-overlay"
+                @click="browseFolder([folderList.dir, folder].filter(Boolean).join('/'))">{{ folder }}</button>
+            </div>
+            <button v-if="folderList.project" type="button" :disabled="opening"
+              class="rounded-control bg-accent px-3 py-1 text-sm text-white" @click="openRecentProject(folderList.project)">{{ $t('welcome.openFolder') }}</button>
+            <p v-else-if="!folderList.folders.length" class="text-xs text-ink-muted">{{ $t('welcome.emptyFolder') }}</p>
           </div>
 
           <!-- Open error -->
@@ -335,6 +350,24 @@ const opening = ref(false)
 const openError = ref<string | null>(null)
 const showOpenRow = ref(false)
 const browsing = ref(false)
+const folderList = ref<{ dir: string; project: string | null; folders: string[] } | null>(null)
+let folderRequest = 0
+
+async function browseFolder(dir: string) {
+  const request = ++folderRequest
+  browsing.value = true
+  openError.value = null
+  try {
+    const res = await fetch('api/project/folders?' + new URLSearchParams({ dir }))
+    const listing = await res.json()
+    if (!res.ok) throw new Error(listing.error)
+    if (request === folderRequest) folderList.value = listing
+  } catch (error) {
+    if (request === folderRequest) openError.value = String(error)
+  } finally {
+    if (request === folderRequest) browsing.value = false
+  }
+}
 
 /** Whether the native folder picker is available (Electron only). */
 const canBrowse = computed(() => typeof window !== 'undefined' && !!window.jrpgDesktop?.openProject)
@@ -375,14 +408,15 @@ function openRecentProject(path: string) {
   handleOpenProject()
 }
 
-/**
- * Native folder picker via Electron IPC.
- * On success the Electron main process calls win.webContents.reload() itself,
- * so the page refreshes automatically with the opened project. We only handle
- * the error path here.
- */
+// Electron reloads the opened project through its native picker. In the
+// browser, show folders served by the editor and open the selected project.
 async function handleBrowseProject() {
   if (browsing.value) return
+  if (!canBrowse.value) {
+    if (folderList.value) folderList.value = null
+    else await browseFolder('')
+    return
+  }
   browsing.value = true
   openError.value = null
   try {

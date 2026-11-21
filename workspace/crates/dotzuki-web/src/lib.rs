@@ -172,8 +172,8 @@ const EDITOR_SCENE_PATH: &str = "editor/script.scene";
 
 /// Parse the leading `line:col:` prefix out of a compiler error string.
 ///
-/// The DSL compiler formats lexer errors as `"<line>:<col>: <message>; ..."`
-/// but parser/semantic errors carry no positional prefix. When no prefix is
+/// The scene compiler prefixes lexer, parser and semantic errors with their
+/// 1-based line and 0-based character column. When no prefix is
 /// present we fall back to line 1, col 1 so the diagnostic still anchors
 /// somewhere sensible.
 fn parse_error_location(err: &str) -> (u32, u32, String) {

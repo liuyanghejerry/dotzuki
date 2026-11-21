@@ -39,6 +39,7 @@ let projectRoot = defaultProjectRoot(process.env, process.cwd(), os.homedir())
 export interface ProjectConfig {
   name: string
   dataRoot: string
+  game?: { scenesDir?: string }
   gfxRoot?: string
   activities: ActivityDef[]
 }
