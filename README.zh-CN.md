@@ -21,7 +21,7 @@
 </div>
 
 > 本文是 [README.md](README.md) 的中文翻译，
-> 同步至引擎版本 v0.1.1（源文档 commit afab36d92a4aab566f3a1057639f3c8fcf8b2f09）。
+> 同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 dotzuki 是一个用来制作经典 Game Boy 风格 JRPG 的游戏引擎 ——
@@ -88,20 +88,21 @@ game_scene Main {
 
 ```toml
 [dependencies]
-dotzuki-engine = "0.1"
-dotzuki-engine-dsl = "0.1"
+dotzuki-engine = "0.12"
+dotzuki-engine-dsl = "0.12"
 ```
 
 也可以固定 git tag —— 所有 crate 都能从这同一个仓库解析：
 
 ```toml
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.1" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.12.0" }
 ```
 
+升级现有游戏时，请参阅[迁移指南](workspace/docs/release-notes/migration/v0.12.0.zh-CN.md)。
+
 引擎由 trait 驱动、与具体游戏无关：游戏数据通过 `GameData` trait 注入，
-引擎里不含任何游戏内容。参见 [`workspace/examples/`](workspace/examples/) —
-— 其中的 `minimon` 是一个完全基于 effect stack 构建的战斗演示，
+引擎里不含任何游戏内容。参见 [`workspace/examples/minimon`](workspace/examples/minimon/)，其中的战斗演示完全基于 effect stack 构建，
 `your-first-game` 是一个完整的示例项目。
 
 <details>

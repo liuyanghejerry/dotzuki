@@ -3,14 +3,16 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.12.0
 
 The crate map and where each crate's API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.
 
-All `dotzuki-*` crates share one version (currently `0.7.0`) and are published
-on crates.io, so their API docs live on docs.rs. Local copy:
+The `dotzuki-*` crates share a release version on crates.io. Use the docs.rs version selector
+to read the API for a library dependency. For the `dotzuki-cli` executable, consult the
+[CLI reference](cli.md) or run `dotzuki --help`. The [changelog](../release-notes/changelog.md)
+lists the releases and their migration guides. To build a local copy, run
 
 ```bash
 cd workspace
@@ -36,14 +38,14 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-runner-web` | WASM build of the runner (editor Play) | [docs.rs](https://docs.rs/dotzuki-runner-web) | [publishing guide](../how-to/publishing.md) |
 | `dotzuki-mobile` | Game-independent mobile runtime: `MobileGame` trait, opaque runtime handle, PCM queue, `export_mobile_abi!` | [docs.rs](https://docs.rs/dotzuki-mobile) | [mobile architecture](../explanation/mobile-architecture.md) |
 | `dotzuki-runner-mobile` | C ABI mobile host for the zero-Rust runner (`RunnerGame` + `.dzpk`) | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [mobile architecture](../explanation/mobile-architecture.md), [Android export](../how-to/export-android.md), [HarmonyOS export](../how-to/export-harmonyos.md) |
-| `dotzuki-cli` | The `dotzuki` binary: `new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI reference](cli.md) |
+| `dotzuki-cli` | The `dotzuki` binary: `new` / `check` / `run` / `export` | `dotzuki --help` | [CLI reference](cli.md) |
 | `dotzuki-web` | WASM bridges: editor layout preview, game shell (`game-shell` feature), BroadcastChannel link transport (`link` feature) | [docs.rs](https://docs.rs/dotzuki-web) | [game shell](game-shell.md), [link play](link-play.md) |
 
 Tools outside the crates.io set:
 
 | Tool | Purpose | Docs |
 |---|---|---|
-| `tools/dotzuki-editor` | Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play | [editor README](../../tools/dotzuki-editor/README.md) |
-| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` converter | [README](../../tools/asset-converter/README.md) |
+| `tools/dotzuki-editor` | Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play | [editor README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md) |
+| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` converter | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md) |
 | `tools/editor-extensions` | VSCode DSL syntax highlighting | `tools/editor-extensions` |
-| `dotzuki-template/` | cargo-generate starter template | [README](../../dotzuki-template/README.md) |
+| `dotzuki-template/` | cargo-generate starter template | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md) |

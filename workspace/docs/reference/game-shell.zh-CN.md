@@ -1,7 +1,7 @@
 # 游戏外壳参考
 
 > 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.12.0
->（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
+>（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
@@ -52,7 +52,7 @@ API 参考：feature 开关、`GameLoop` trait、`GameShellConfig` 与
 （`crates/dotzuki-web/Cargo.toml:45-63`），**默认关闭**，这样编辑器的
 布局预览桥就不会把 pixels / winit 拖进从不开窗口的消费方。在
 `Cargo.toml` 中启用：
-`dotzuki-web = { version = "0.10.1", features = ["game-shell"] }`。
+`dotzuki-web = { version = "0.12", features = ["game-shell"] }`。
 
 该 feature 会引入 `pixels =0.15.0`、`winit 0.30`、`error-iter`、
 `dotzuki-renderer/gpu`（供 `InputState::set_from_keycode` 使用），

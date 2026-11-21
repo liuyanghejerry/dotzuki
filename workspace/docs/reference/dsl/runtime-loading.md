@@ -3,7 +3,7 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.12.0
 
 The disk-backed [scene](../glossary.md) providers in
 `dotzuki_engine_dsl::disk_loader`
@@ -32,11 +32,13 @@ Two providers mirror the DSL's two execution targets
 | `SceneAstProvider` | native AST [interpreter](../glossary.md) | `GameScene` ASTs | yes | yes |
 | `SceneScriptProvider` | JavaScript engine | compiled JS source | no | no |
 
-Neither provider has an in-repo consumer yet; they are game-facing API.
-`dotzuki-runner` loads DSL scenes through `compiler::compile_files` +
-`loader::register_compiled`, not through these providers. Plain `.js` files
-have a separate loader, `dotzuki_engine_script::loader::ScriptLoader`, which
-does not read `.scene` sources.
+These providers are available to Rust game hosts. The zero-Rust runner reads project
+sources through its own file backend and compiles them with `compile_files_with_scene_asts`.
+It executes eligible scenes in the native interpreter and uses Boa for scenes that require
+JavaScript. In an exported pack with compatible [compiled scene assets](../glossary.md#compiled-scene-assets),
+it reads the stored report and routes and decodes each native function on first use.
+See the [scene reference](scene.md) for backend selection. Rust hosts can load standalone
+`.js` files with `dotzuki_engine_script::loader::ScriptLoader`.
 
 ## Directory layout contract
 

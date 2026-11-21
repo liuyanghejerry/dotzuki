@@ -1,7 +1,7 @@
 # dotzuki CLI 参考
 
 > 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.12.0
->（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
+>（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, CI
@@ -178,11 +178,13 @@ pack，并把存档写到 pack 旁的 `.dotzuki-save.json`。
 | `--player-bin <path>` | cargo build | 使用预构建的 `dotzuki-player`，不再执行构建 |
 | `--force` | off | 即使校验报告诊断信息也导出 |
 
-诊断门禁和 pack 规则与 `--web` 相同。输出目录包含：
+诊断和打包规则与 `--web` 相同。以 `.` 为项目参数时，可执行文件名为 `game`
+（Windows 上为 `game.exe`）。如果传入 `my-game` 等目录名，可执行文件使用该名称。
+导出后 CLI 会打印可执行文件路径。
 
 ```
 dist/native/
-├── <project-dir-name>[.exe]   # player 二进制文件，以项目目录名重命名
+├── game[.exe]                 # 以当前目录（.）为参数时导出的播放器
 └── game.dzpk                  # 二进制游戏 pack，与 web 导出的文件相同
 ```
 
@@ -194,7 +196,7 @@ Player 二进制文件按以下顺序解析：`--player-bin` → 在源码 works
 
 ```bash
 dotzuki export --native . --out dist/native
-dist/native/my-game            # 可双击启动的原生应用
+dist/native/game               # Windows 上为 game.exe
 ```
 
 随附的二进制文件也接受可选的 pack 路径（`.dzpk` 或旧版导出的
@@ -203,7 +205,7 @@ dist/native/my-game            # 可双击启动的原生应用
 冒烟测试：
 
 ```bash
-dist/native/my-game --headless --frames 120 --screenshot boot.png
+dist/native/game --headless --frames 120 --screenshot boot.png
 ```
 
 ## `dotzuki export --android <dir>`

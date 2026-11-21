@@ -1,19 +1,21 @@
 # Rust API 门户
 
-> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.7.0
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+> 本文是 `reference/rustdoc.md` 的中文翻译，同步至引擎版本 v0.12.0
+>（源文档 commit 84dd9906ae8f7533450f0cb93f69b61bd01cb342）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.12.0
 
 crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。
 
-所有 `dotzuki-*` crate 共享同一个版本（目前是 `0.7.0`）并发布在 crates.io
-上，因此它们的 API 文档位于 docs.rs。本地副本：
+各 `dotzuki-*` crate 在 crates.io 上共享同一个发行版本。请在 docs.rs 的版本选择器中
+选择项目所依赖的库版本，查阅相应 API。对于 `dotzuki-cli` 提供的可执行文件，
+请查阅 [CLI 参考](cli.zh-CN.md)或运行 `dotzuki --help`。
+[变更日志](../release-notes/changelog.zh-CN.md)列出了各版本及其迁移指南。运行下列命令可以在本地构建 API 文档。
 
 ```bash
 cd workspace
@@ -39,14 +41,14 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-runner-web` | 运行器的 WASM 构建（编辑器 Play） | [docs.rs](https://docs.rs/dotzuki-runner-web) | [发布指南](../how-to/publishing.md) |
 | `dotzuki-mobile` | 游戏无关的移动运行时：`MobileGame` trait、不透明运行时句柄、PCM 队列、`export_mobile_abi!` | [docs.rs](https://docs.rs/dotzuki-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md) |
 | `dotzuki-runner-mobile` | 零 Rust 运行器（`RunnerGame` + `.dzpk`）的 C ABI 移动宿主 | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [移动端架构](../explanation/mobile-architecture.zh-CN.md)、[Android 导出](../how-to/export-android.zh-CN.md)、[鸿蒙导出](../how-to/export-harmonyos.zh-CN.md) |
-| `dotzuki-cli` | `dotzuki` 二进制：`new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI 参考](cli.md) |
+| `dotzuki-cli` | `dotzuki` 二进制：`new` / `check` / `run` / `export` | `dotzuki --help` | [CLI 参考](cli.zh-CN.md) |
 | `dotzuki-web` | WASM 桥：编辑器布局预览、游戏外壳（`game-shell` feature）、BroadcastChannel 联机传输（`link` feature） | [docs.rs](https://docs.rs/dotzuki-web) | [游戏外壳](game-shell.md)、[联机](link-play.md) |
 
 crates.io 发布集之外的工具：
 
 | 工具 | 用途 | 文档 |
 |---|---|---|
-| `tools/dotzuki-editor` | 游戏无关的 Vue/Vite 编辑器、AI Story Designer、编辑器内 Play | [编辑器 README](../../tools/dotzuki-editor/README.md) |
-| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` 转换器 | [README](../../tools/asset-converter/README.md) |
+| `tools/dotzuki-editor` | 游戏无关的 Vue/Vite 编辑器、AI Story Designer、编辑器内 Play | [编辑器 README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md) |
+| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` 转换器 | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md) |
 | `tools/editor-extensions` | VSCode DSL 语法高亮 | `tools/editor-extensions` |
-| `dotzuki-template/` | cargo-generate 起始模板 | [README](../../dotzuki-template/README.md) |
+| `dotzuki-template/` | cargo-generate 起始模板 | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md) |
