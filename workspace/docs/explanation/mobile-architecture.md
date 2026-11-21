@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 Why dotzuki uses one Rust runtime contract and a native shell for each mobile
 platform, with Android and HarmonyOS using the same versioned C ABI.

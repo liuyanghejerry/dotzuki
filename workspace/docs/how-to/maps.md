@@ -5,7 +5,7 @@ How to define maps: Tiled JSON, tileset, `objects.json` sidecar, levels, and enc
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 Before you start, read [the project manifest](../reference/project-manifest.md),
 which defines the map directories and the runner contract these files plug

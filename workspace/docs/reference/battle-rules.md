@@ -5,7 +5,7 @@ The `battle` manifest section: config, rules.ron hooks, turn loop, and `check` v
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 A project opts into the generic, data-driven battle system (parties +
 battle-usable items) with a top-level `battle` section (all keys optional;

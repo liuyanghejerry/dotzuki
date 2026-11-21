@@ -5,7 +5,7 @@ The zero-Rust project contract: directory layout, manifest schema, and run/check
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 A **game project** is a plain directory of DSL, data, and asset files plus a
 single manifest, `.dotzuki-editor.json`. There is no Cargo workspace, no

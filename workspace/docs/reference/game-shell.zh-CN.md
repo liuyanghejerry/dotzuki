@@ -1,13 +1,13 @@
 # 游戏外壳参考
 
-> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
+> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.12.0
+>（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0（含未发布变更）
+> - **Last verified**: v0.12.0
 
 [游戏外壳](./glossary.md)（`dotzuki_web::game_shell`，源码见
 `crates/dotzuki-web/src/game_shell.rs`）以 Game Boy 帧节奏在浏览器

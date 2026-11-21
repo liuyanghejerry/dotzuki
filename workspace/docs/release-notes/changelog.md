@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -16,18 +16,28 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
-## Unreleased
+## v0.12.0
 
-- Web exports and editor Play present accumulated changes with `advance` and `present`.
-  Android and HarmonyOS export shells use the optional ABI v1 symbol
-  `dotzuki_mobile_copy_frame_update`. Rebuild the Rust runtime archive when upgrading
-  these shells. Existing hosts can continue using `dotzuki_mobile_copy_frame`.
-  See [mobile frame handling](../explanation/mobile-architecture.md).
-- Rust hosts that built a `HookState` struct literal now use `HookState::new`.
-  Encounter definitions live in `HookState::rules`. See [rules ownership](../reference/battle-rules.md#rules-ownership-in-the-zero-rust-runner).
-- The zero-Rust runner reuses map layers and updates changed areas of retained
-  frames. Four-colour indexed games can capture a packed battle transition
-  source. See [rendering](../reference/game-shell.md#retained-frames-in-the-zero-rust-runner).
+### Breaking Rust API change
+
+- Custom battle hosts now construct `HookState` with `HookState::new` and share
+  immutable encounter definitions through `HookState::rules`. See the
+  [migration guide](migration/v0.12.0.md) for field replacements and mobile host updates.
+
+### Runtime and exports
+
+- The zero-Rust runner executes structured scenes with its native interpreter.
+  Scenes that require JavaScript use Boa. Both backends share a snapshot of the
+  game's flags and commit changes when the scene ends. See [scene execution](../reference/dsl/scene.md).
+- All export targets include [compiled scene assets](../reference/glossary.md#compiled-scene-assets)
+  in `game.dzpk` for valid projects with DSL files. The runner decodes native
+  functions on first call. Packs retain the original sources for older players.
+- The runner caches decoded maps within a byte budget and shares battle definitions
+  across encounters. See [maps](../how-to/maps.md) and [battle rules](../reference/battle-rules.md#rules-ownership-in-the-zero-rust-runner).
+- Editor Play, Web exports, and mobile shells update the changed framebuffer region.
+  Indexed text reuses glyph rows, and four-colour transitions can use packed
+  snapshots. Web and mobile hosts reuse stereo PCM buffers. CI compares six
+  workloads against their instruction-count baselines. See the [game shell reference](../reference/game-shell.md#runner-audio-and-performance-budgets).
 
 ## v0.11.0
 

@@ -1,13 +1,13 @@
 # dotzuki CLI 参考
 
-> 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit 430eaad5321c6d4a71a8703fde05ee3ea08e6c3b）。
+> 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.12.0
+>（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0（含未发布变更）
+> - **Last verified**: v0.12.0
 
 用于生成骨架、校验和运行零 Rust 游戏项目的每个 `dotzuki` 子命令、flag 和退出
 码。

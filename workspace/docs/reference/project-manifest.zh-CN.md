@@ -1,6 +1,6 @@
 # 游戏项目规范 — 零 Rust dotzuki-engine 项目
 
-> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
+> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0（含未发布变更）
+> - **Last verified**: v0.12.0
 
 一个**游戏项目**就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
 项目清单 `.dotzuki-editor.json`。游戏项目里没有 Cargo workspace、没有
