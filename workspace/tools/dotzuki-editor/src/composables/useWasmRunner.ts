@@ -23,6 +23,8 @@
 
 export interface WasmRunner {
   tick(inputBitmask: number): Uint8Array
+  advance?(inputBitmask: number): void
+  present?(ctx: CanvasRenderingContext2D, full: boolean): boolean
   /** Optional for compatibility with previously built WASM packages. */
   click_to_move?(x: number, y: number): boolean
   cancel_navigation?(): void

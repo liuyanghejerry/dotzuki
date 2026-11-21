@@ -18,6 +18,11 @@ with a migration guide under `migration/` (created per release).
 
 ## Unreleased
 
+- Web exports and editor Play present accumulated changes with `advance` and `present`.
+  Android and HarmonyOS export shells use the optional ABI v1 symbol
+  `dotzuki_mobile_copy_frame_update`. Rebuild the Rust runtime archive when upgrading
+  these shells. Existing hosts can continue using `dotzuki_mobile_copy_frame`.
+  See [mobile frame handling](../explanation/mobile-architecture.md).
 - Rust hosts that built a `HookState` struct literal now use `HookState::new`.
   Encounter definitions live in `HookState::rules`. See [rules ownership](../reference/battle-rules.md#rules-ownership-in-the-zero-rust-runner).
 - The zero-Rust runner reuses map layers and updates changed areas of retained

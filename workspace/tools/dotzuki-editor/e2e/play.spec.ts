@@ -180,3 +180,55 @@ test('click navigation works at desktop and narrow canvas sizes', async ({ page,
   await page.waitForTimeout(2200)
   expect(await savedTile()).toEqual([10, 12])
 })
+
+test('retained canvas skips idle pixels and presents all accumulated changes', async ({ page, request }) => {
+  test.skip((await request.get(`${playBase}/wasm/dotzuki_runner_web.js`)).status() === 404,
+    'runner wasm not built')
+  await page.goto(playBase)
+  const result = await page.evaluate(async () => {
+    const mod = await import(new URL('wasm/dotzuki_runner_web.js', location.href).href)
+    await mod.default()
+    const { files } = await (await fetch('api/play/bundle')).json()
+    const input = JSON.stringify(files)
+    const game = new mod.WasmRunner(input, null, 'en')
+    const oracle = new mod.WasmRunner(input, null, 'en')
+    const canvas = document.createElement('canvas')
+    canvas.width = game.width()
+    canvas.height = game.height()
+    const ctx = canvas.getContext('2d')!
+    const sizes: number[] = []
+    const draw = ctx.putImageData.bind(ctx)
+    ctx.putImageData = (image: ImageData, x: number, y: number) => {
+      sizes.push(image.data.length)
+      draw(image, x, y)
+    }
+    let pixels: Uint8Array = new Uint8Array()
+    const tick = (mask: number) => { game.advance(mask); pixels = oracle.tick(mask) }
+    const matches = () => ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      .every((v, i) => v === pixels[i])
+    try {
+      tick(0)
+      game.present(ctx, false)
+      const initial = matches()
+      for (let i = 0; i < 60; i++) { tick(0); game.present(ctx, false) }
+      const afterIdle = sizes.length
+      for (let i = 0; i < 20; i++) { tick(1); tick(0) } // dismiss the intro
+      game.present(ctx, false)
+      tick(8); tick(0); game.present(ctx, false) // open the pause menu
+      tick(128); tick(0); game.present(ctx, false) // move its cursor, then idle
+      const cursorBytes = sizes.at(-1)!
+      const cursorMatches = matches()
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      game.present(ctx, true)
+      return { initial, afterIdle, cursorBytes, cursorMatches, restored: matches(), full: sizes[0] }
+    } finally {
+      game.free()
+      oracle.free()
+    }
+  })
+  expect(result.initial && result.cursorMatches && result.restored).toBe(true)
+  expect(result.afterIdle).toBe(1)
+  expect(result.full).toBe(320 * 240 * 4)
+  expect(result.cursorBytes).toBeGreaterThan(0)
+  expect(result.cursorBytes).toBeLessThan(1024)
+})

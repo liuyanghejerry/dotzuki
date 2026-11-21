@@ -1308,6 +1308,18 @@ impl Battle {
     /// (name, HP bar, MP) below, and the current menu or narration line at
     /// the bottom.
     pub fn draw(&self, fb: &mut FrameBuffer) {
+        self.draw_with_cursor(fb, false);
+    }
+
+    pub(crate) fn cursor(&self) -> usize {
+        self.cursor
+    }
+
+    pub(crate) fn draw_with_cursor(
+        &self,
+        fb: &mut FrameBuffer,
+        retain: bool,
+    ) -> Option<ListCursor> {
         // Field.
         fb.fill_rect(
             0,
@@ -1362,61 +1374,26 @@ impl Battle {
         );
 
         // Bottom: the current menu (+prompt) or the current narration line.
-        match &self.phase {
-            Phase::Root => {
-                draw_textbox(fb, "What will you do?");
-                self.draw_menu(fb);
-            }
-            Phase::Skills => {
-                draw_textbox(fb, "Choose a skill!");
-                self.draw_menu(fb);
-            }
-            Phase::Party => {
-                draw_textbox(fb, "Switch to whom?");
-                self.draw_menu(fb);
-            }
-            Phase::Items => {
-                draw_textbox(fb, "Use which item?");
-                self.draw_menu(fb);
-            }
-            Phase::ForcedSwitch => {
-                draw_textbox(fb, "Choose your next fighter!");
-                self.draw_menu(fb);
-            }
+        let prompt = match &self.phase {
+            Phase::Root => "What will you do?",
+            Phase::Skills => "Choose a skill!",
+            Phase::Party => "Switch to whom?",
+            Phase::Items => "Use which item?",
+            Phase::ForcedSwitch => "Choose your next fighter!",
             Phase::Narrate { lines, .. } => {
                 if let Some(line) = lines.front() {
                     draw_textbox(fb, line);
                 }
+                return None;
             }
-        }
-    }
-
-    /// The current menu above the dialogue area (the cursor marks the
-    /// selection; entries marked `×` cannot be confirmed).
-    fn draw_menu(&self, fb: &mut FrameBuffer) {
-        let items = self.menu_items();
-        let n = items.len() as u32;
-        if n == 0 {
-            return;
-        }
-        let max_len = items.iter().map(|o| o.chars().count()).max().unwrap_or(1) as u32;
-        // +4: left/right border, cursor column, one padding column.
-        let w = (max_len + 4).clamp(10, 24);
-        let h = n + 2;
-        let tx = (40 - w) as i32;
-        let ty = DIALOG_AREA.ty as i32 - h as i32;
-        let config = MenuConfig::new(
-            TileRect::new(tx.max(0) as u32, ty.max(0) as u32, w, h),
-            None,
-            TileRect::new(tx.max(0) as u32 + 1, ty.max(0) as u32 + 1, w - 2, n),
-            Default::default(),
-        );
-        let state = FlexMenuState {
-            cursor: self.cursor,
-            scroll_offset: 0,
         };
-        let mut painter = FrameBufferPainter::new(fb);
-        let mut ui = Ui::new(&mut painter);
-        draw_flex_menu(&items, &[config], &state, items.len(), &mut ui);
+        draw_textbox(fb, prompt);
+        draw_list(
+            fb,
+            &self.menu_items(),
+            self.cursor,
+            Placement::AboveDialogue,
+            retain,
+        )
     }
 }

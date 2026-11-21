@@ -8,6 +8,9 @@
 //! scripted battle rng ([`RunnerOptions::rng_script`]) — no winit, no pixels.
 //! Tilesets are generated in code (mirrors `runner_game.rs`).
 
+#[path = "support/frames.rs"]
+mod frames;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -1542,4 +1545,61 @@ fn rules_are_shared_per_revision_and_live_battles_keep_their_own_hooks() {
     assert!(current.upgrade().is_some());
     drop(second);
     assert!(current.upgrade().is_none());
+}
+
+#[test]
+fn retained_battle_menu_and_narration_match_full_draws() {
+    let (_tmp, mut game) = boot("battle-damage");
+    reach_boss(&mut game);
+    arm_boss_battle(&mut game);
+    assert!(game.battle().unwrap().in_menu());
+    let mut frames = frames::Frames::new();
+    frames.check(&mut game);
+    for mask in [
+        GbButton::Down,
+        GbButton::Up,
+        GbButton::A,
+        GbButton::Down,
+        GbButton::Up,
+        GbButton::A,
+    ] {
+        frame(&mut game, mask.bit_mask());
+        let damage = frames.check(&mut game);
+        if mask != GbButton::A {
+            assert!(damage.present && damage.width == 8);
+        }
+        frame(&mut game, 0);
+        assert!(!frames.check(&mut game).present);
+    }
+}
+
+#[test]
+fn edited_combatants_and_directory_entries_refresh_between_encounters() {
+    use dotzuki_runner::battle::ScriptedRng;
+    let (_tmp, root) = demo_project("record-reload");
+    let project = LoadedProject::load(&root).unwrap();
+    let setup = BattleSetup::from_project(&project).unwrap();
+    let start = || {
+        setup
+            .start("slime", Box::new(ScriptedRng::new(vec![])))
+            .unwrap()
+    };
+    let first = start();
+    let path = root.join("data/monsters/slime.json");
+    let original = first.enemy().name.clone();
+    let mut def: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    def["name"] = "Edited".into();
+    fs::write(&path, def.to_string()).unwrap();
+    assert_eq!(start().enemy().name, "Edited");
+    assert_eq!(first.enemy().name, original);
+    let party = root.join("data/heroes");
+    fs::copy(party.join("aria.json"), party.join("ally.json")).unwrap();
+    assert_eq!(start().party_state().len(), 2);
+    fs::remove_file(party.join("ally.json")).unwrap();
+    assert_eq!(start().party_state().len(), 1);
+    fs::write(path, "{").unwrap();
+    assert!(project.invalidate_record_file("data/monsters/slime.json"));
+    assert!(setup
+        .start("slime", Box::new(ScriptedRng::new(vec![])))
+        .is_err());
 }

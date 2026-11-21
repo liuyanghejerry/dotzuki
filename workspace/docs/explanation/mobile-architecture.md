@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 Why dotzuki uses one Rust runtime contract and a native shell for each mobile
 platform, with Android and HarmonyOS using the same versioned C ABI.
@@ -65,6 +65,13 @@ both symbols.
 The `tick` bitmask handles buttons.
 See the [unreleased compatibility notes](../release-notes/changelog.md#unreleased) before
 updating a shell and its runtime library.
+
+The Android and HarmonyOS shells request packed RGBA changes with
+`dotzuki_mobile_copy_frame_update`. It accumulates changes across simulation ticks.
+A zero byte count lets the shell skip presentation while audio continues. The
+shell requests a full rectangle after surface creation or resize. Shells using
+this extension link a runtime that exports the symbol. Existing hosts can
+continue taking full snapshots with `dotzuki_mobile_copy_frame`.
 
 The game thread is the sole caller for frame and save operations. One audio
 callback may call `audio_fill` concurrently. A lock-free single-producer,

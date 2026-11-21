@@ -200,6 +200,7 @@ napi_value DotzukiHost::Pause(napi_env env, napi_callback_info info) {
     host.input_.store(0, std::memory_order_relaxed);
     {
         std::lock_guard<std::mutex> lock(host.gameMutex_);
+        host.refreshTexture_ = true;
         if (host.runner_) dotzuki_mobile_cancel_pointer_input(host.runner_);
     }
     if (host.audioRenderer_ != nullptr) {
@@ -304,6 +305,7 @@ void DotzukiHost::ReplaceRunner(
     lastTimestamp_ = 0;
     accumulator_ = 0;
     frame_.resize(dotzuki_mobile_frame_len(runner_));
+    refreshTexture_ = true;
     InitializeAudio();
 }
 
@@ -379,6 +381,7 @@ bool DotzukiHost::InitializeProgram() {
         LogError("shader linking failed");
         return false;
     }
+    refreshTexture_ = true;
     glGenTextures(1, &texture_);
     glBindTexture(GL_TEXTURE_2D, texture_);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -411,7 +414,8 @@ void DotzukiHost::RenderFrame(uint64_t timestamp) {
         if (!dotzuki_mobile_tick(runner_, SampleTouchInput(input_.load(std::memory_order_relaxed)))) return;
         accumulator_ -= step;
     }
-    if (dotzuki_mobile_copy_frame(runner_, frame_.data(), frame_.size()) != frame_.size()) {
+    DotzukiFrameRect rect{};
+    if (!dotzuki_mobile_copy_frame_update(runner_, &rect, frame_.data(), frame_.size(), refreshTexture_)) {
         return;
     }
 
@@ -437,12 +441,17 @@ void DotzukiHost::RenderFrame(uint64_t timestamp) {
     glUseProgram(program_);
     glBindTexture(GL_TEXTURE_2D, texture_);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dotzuki_mobile_width(runner_), dotzuki_mobile_height(runner_), 0, GL_RGBA, GL_UNSIGNED_BYTE, frame_.data());
+    if (refreshTexture_) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rect.width, rect.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, frame_.data());
+    } else {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, GL_RGBA, GL_UNSIGNED_BYTE, frame_.data());
+    }
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    eglSwapBuffers(display_, surface_);
+    refreshTexture_ = !eglSwapBuffers(display_, surface_);
 }
 
 void DotzukiHost::Resize(uint64_t width, uint64_t height) {
+    refreshTexture_ = true;
     surfaceWidth_ = width;
     surfaceHeight_ = height;
 }

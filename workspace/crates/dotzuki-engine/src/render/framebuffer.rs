@@ -89,6 +89,23 @@ impl DirtyRegion {
         DirtyRegion::new(x1, y1, (x2 - x1).max(0) as u32, (y2 - y1).max(0) as u32)
     }
 
+    /// Intersect the region with a framebuffer, returning empty for disjoint bounds.
+    pub fn clipped(self, width: u32, height: u32) -> Self {
+        let x = self.x.max(0);
+        let y = self.y.max(0);
+        let right = (i64::from(self.x) + i64::from(self.width)).min(i64::from(width));
+        let bottom = (i64::from(self.y) + i64::from(self.height)).min(i64::from(height));
+        if !self.present || right <= i64::from(x) || bottom <= i64::from(y) {
+            return Self::empty();
+        }
+        Self::new(
+            x,
+            y,
+            (right - i64::from(x)) as u32,
+            (bottom - i64::from(y)) as u32,
+        )
+    }
+
     /// Check whether a pixel at (px, py) is within this dirty region.
     /// Returns `false` when the region is not present (nothing to redraw).
     #[inline]
@@ -168,6 +185,30 @@ impl FrameBuffer {
         };
         fb.clear(clear_color);
         fb
+    }
+
+    /// Copy the visible portion of a rectangle as tightly packed RGBA rows.
+    /// Returns the required byte count. A short output is left untouched.
+    pub fn copy_region(&self, region: DirtyRegion, output: &mut [u8]) -> usize {
+        let r = region.clipped(self.width, self.height);
+        let row_bytes = r.width as usize * BYTES_PER_PIXEL;
+        let size = row_bytes * r.height as usize;
+        if size == 0 || output.len() < size {
+            return size;
+        }
+        let stride = self.width as usize * BYTES_PER_PIXEL;
+        let start = r.y as usize * stride + r.x as usize * BYTES_PER_PIXEL;
+        if row_bytes == stride {
+            output[..size].copy_from_slice(&self.data[start..start + size]);
+        } else {
+            for (src, dst) in self.data[start..]
+                .chunks(stride)
+                .zip(output[..size].chunks_exact_mut(row_bytes))
+            {
+                dst.copy_from_slice(&src[..row_bytes]);
+            }
+        }
+        size
     }
 
     /// Mark the entire framebuffer as dirty (force full redraw).

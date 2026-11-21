@@ -14,6 +14,7 @@ find_library(ANDROID_LIB android)
 find_library(LOG_LIB log)
 target_link_libraries(dotzuki_android PRIVATE
     dotzuki_runner_mobile
+    jnigraphics
     ${ANDROID_LIB}
     ${LOG_LIB}
     dl

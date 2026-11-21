@@ -77,6 +77,7 @@ private:
     EGLContext context_ = EGL_NO_CONTEXT;
     GLuint program_ = 0;
     GLuint texture_ = 0;
+    bool refreshTexture_ = true;
     std::vector<uint8_t> frame_;
 
     OH_AudioStreamBuilder *audioBuilder_ = nullptr;

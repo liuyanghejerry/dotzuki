@@ -67,6 +67,9 @@ impl MobileGame for RunnerAdapter {
     fn copy_rgba(&self, out: &mut [u8]) {
         out.copy_from_slice(&self.frame.data);
     }
+    fn retained_frame(&self) -> Option<&FrameBuffer> {
+        Some(&self.frame)
+    }
     fn render_audio(&mut self, out: &mut [f32]) {
         let pcm = self.game.render_audio(out.len() / 2);
         out.fill(0.0);

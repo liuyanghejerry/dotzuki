@@ -1,4 +1,6 @@
 #include <jni.h>
+#include <android/bitmap.h>
+#include <cstring>
 
 #include <algorithm>
 #include <cstdint>
@@ -129,14 +131,40 @@ Java_com_dotzuki_player_NativeBridge_tick(JNIEnv *, jobject, jint input_bits) {
         runner, touch.sample(static_cast<uint8_t>(input_bits)));
 }
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_dotzuki_player_NativeBridge_copyFrame(JNIEnv *env, jobject, jobject output) {
-    auto *bytes = static_cast<uint8_t *>(env->GetDirectBufferAddress(output));
-    const jlong capacity = env->GetDirectBufferCapacity(output);
-    if (bytes == nullptr || capacity < 0) return 0;
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_dotzuki_player_NativeBridge_updateBitmap(
+    JNIEnv *env, jobject, jobject bitmap, jintArray bounds, jboolean full) {
     std::lock_guard<std::mutex> lock(game_mutex);
-    return runner == nullptr ? 0 : static_cast<jint>(
-        dotzuki_mobile_copy_frame(runner, bytes, static_cast<size_t>(capacity)));
+    if (!runner || !bitmap || !bounds || env->GetArrayLength(bounds) < 4) return false;
+    DotzukiFrameRect rect{};
+    const size_t needed = dotzuki_mobile_copy_frame_update(runner, &rect, nullptr, 0, full);
+    if (!needed) return false;
+    AndroidBitmapInfo info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &info) != ANDROID_BITMAP_RESULT_SUCCESS ||
+        info.format != ANDROID_BITMAP_FORMAT_RGBA_8888 ||
+        info.width != dotzuki_mobile_width(runner) || info.height != dotzuki_mobile_height(runner)) return false;
+    void *pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS) return false;
+    auto *dest = static_cast<uint8_t *>(pixels) + rect.y * info.stride + rect.x * 4;
+    const size_t rowBytes = rect.width * 4;
+    size_t copied;
+    if (rowBytes == info.stride) {
+        copied = dotzuki_mobile_copy_frame_update(runner, &rect, dest, needed, full);
+    } else {
+        static std::vector<uint8_t> patch;
+        patch.resize(needed);
+        copied = dotzuki_mobile_copy_frame_update(runner, &rect, patch.data(), needed, full);
+        if (copied == needed) {
+            for (uint32_t y = 0; y < rect.height; ++y)
+                std::memcpy(dest + y * info.stride, patch.data() + y * rowBytes, rowBytes);
+        }
+    }
+    AndroidBitmap_unlockPixels(env, bitmap);
+    if (copied != needed) return false;
+    const jint area[] = {static_cast<jint>(rect.x), static_cast<jint>(rect.y),
+        static_cast<jint>(rect.width), static_cast<jint>(rect.height)};
+    env->SetIntArrayRegion(bounds, 0, 4, area);
+    return true;
 }
 
 extern "C" JNIEXPORT jint JNICALL

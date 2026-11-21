@@ -43,21 +43,19 @@
 
 use std::collections::VecDeque;
 
+use super::list::{draw_list, ListCursor, Placement};
 use crate::scene::SceneVm;
-use dotzuki_engine::menu::MenuConfig;
 use dotzuki_engine::overworld::types::Direction;
-use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
+use dotzuki_engine::render::{FrameBuffer, Rgba};
 use dotzuki_engine_script::command::CommandResult;
 use dotzuki_renderer::input::{GbButton, InputState};
-use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
-use dotzuki_ui::FrameBufferPainter;
 
 use super::{
     draw_textbox, find_spawn, paginate, parse_facing, Mode, RunnerGame, SCREEN_H, SCREEN_W,
 };
 use crate::battle::{
-    draw_panel, exp_to_next, get_num, get_str, growth_stat, read_record, record_ids, text,
-    PartyMemberState, BASIC_ATTACK_NAME,
+    draw_panel, exp_to_next, get_num, get_str, growth_stat, text, PartyMemberState,
+    BASIC_ATTACK_NAME,
 };
 use crate::manifest::{DEFAULT_CURRENCY, DEFAULT_SKILLS_FIELD};
 use crate::project::LoadedProject;
@@ -307,7 +305,7 @@ pub fn item_info(project: &LoadedProject, id: &str) -> ItemInfo {
     let Some(dir) = project.table_dir_rel(&items.table) else {
         return fallback();
     };
-    match read_record(project.files().as_ref(), &dir, id) {
+    match project.records.read(&dir, id) {
         Ok(rec) => ItemInfo {
             name: get_str(&rec, "name").unwrap_or(id).to_string(),
             heal: get_num(&rec, &items.heal_field).unwrap_or(0),
@@ -373,11 +371,11 @@ pub fn party_info(project: &LoadedProject, state: Option<&[PartyMemberState]>) -
         .as_ref()
         .and_then(|s| project.table_dir_rel(&s.table));
     let mut out = Vec::new();
-    for id in record_ids(project.files().as_ref(), &dir) {
-        let Ok(rec) = read_record(project.files().as_ref(), &dir, &id) else {
+    for id in project.records.ids(&dir).iter() {
+        let Ok(rec) = project.records.read(&dir, id) else {
             continue;
         };
-        let cur = state.and_then(|s| s.iter().find(|m| m.id == id));
+        let cur = state.and_then(|s| s.iter().find(|m| &m.id == id));
         // v2-c: the persistent level wins; the record's levelField is the
         // fallback (default 1 ⇒ ×1, numerically identical to v1).
         let (level, exp, exp_to_next) = match &battle.levels {
@@ -419,13 +417,8 @@ pub fn party_info(project: &LoadedProject, state: Option<&[PartyMemberState]>) -
             defense: grown(get_num(&rec, &stats.defense).unwrap_or(1)),
             speed: grown(get_num(&rec, &stats.speed).unwrap_or(1)),
             element: get_str(&rec, "element").map(str::to_string),
-            skills: skill_names(
-                &rec,
-                &skills_field,
-                project.files().as_ref(),
-                skills_dir.as_deref(),
-            ),
-            id,
+            skills: skill_names(&rec, &skills_field, &project.records, skills_dir.as_deref()),
+            id: id.clone(),
         });
     }
     out
@@ -437,14 +430,14 @@ pub fn party_info(project: &LoadedProject, state: Option<&[PartyMemberState]>) -
 fn skill_names(
     rec: &serde_json::Value,
     field: &str,
-    files: &dyn crate::vfs::ProjectFiles,
+    records: &crate::records::Records,
     skills_dir: Option<&str>,
 ) -> Vec<String> {
     let mut names = Vec::new();
     if let Some(ids) = rec.get(field).and_then(|v| v.as_array()) {
         for id in ids.iter().filter_map(|v| v.as_str()) {
             let name = skills_dir
-                .and_then(|dir| read_record(files, dir, id).ok())
+                .and_then(|dir| records.read(dir, id).ok())
                 .and_then(|r| get_str(&r, "name").map(str::to_string))
                 .unwrap_or_else(|| id.to_string());
             names.push(name);
@@ -780,7 +773,12 @@ impl RunnerGame {
     }
 
     /// Draw the Start menu over the frozen overworld.
-    pub(crate) fn draw_menu(&self, fb: &mut FrameBuffer, state: &MenuState) {
+    pub(crate) fn draw_menu(
+        &self,
+        fb: &mut FrameBuffer,
+        state: &MenuState,
+        retain: bool,
+    ) -> Option<ListCursor> {
         let l = labels(&self.lang);
         match &state.view {
             MenuView::Root | MenuView::Bag | MenuView::BagTarget { .. } => {
@@ -795,10 +793,16 @@ impl RunnerGame {
                     );
                 }
                 let rows = self.menu_lines_for(state);
-                draw_corner_menu(fb, &rows, state.cursor);
+                let position = if matches!(state.view, MenuView::BagTarget { .. }) {
+                    Placement::CornerWithPrompt
+                } else {
+                    Placement::Corner
+                };
+                let cursor = draw_list(fb, &rows, state.cursor, position, retain);
                 if let MenuView::BagTarget { .. } = &state.view {
                     draw_textbox(fb, l.use_on_whom);
                 }
+                return cursor;
             }
             MenuView::Party => {
                 draw_panel(fb, 8, 8, (SCREEN_W - 16) as u32, (SCREEN_H - 16) as u32);
@@ -814,6 +818,7 @@ impl RunnerGame {
             }
             MenuView::Note { text, .. } => draw_textbox(fb, text),
         }
+        None
     }
 }
 
@@ -981,7 +986,12 @@ impl RunnerGame {
 
     /// Draw the shop over the frozen overworld: money header, the current
     /// view's list, prompt/note textbox.
-    pub(crate) fn draw_shop(&self, fb: &mut FrameBuffer, state: &ShopState) {
+    pub(crate) fn draw_shop(
+        &self,
+        fb: &mut FrameBuffer,
+        state: &ShopState,
+        retain: bool,
+    ) -> Option<ListCursor> {
         let l = labels(&self.lang);
         text(
             fb,
@@ -991,7 +1001,7 @@ impl RunnerGame {
             Rgba::rgb(0xF0, 0xF0, 0xF0),
         );
         let rows = self.shop_rows(state);
-        draw_corner_menu(fb, &rows, state.cursor);
+        let cursor = draw_list(fb, &rows, state.cursor, Placement::CornerWithPrompt, retain);
         match &state.note {
             Some(note) => draw_textbox(fb, note),
             None => match state.view {
@@ -999,6 +1009,7 @@ impl RunnerGame {
                 _ => draw_textbox(fb, l.buy_prompt),
             },
         }
+        cursor
     }
 }
 
@@ -1102,7 +1113,7 @@ impl RunnerGame {
             return;
         };
         for member in party.iter_mut() {
-            if let Ok(rec) = read_record(self.project.files().as_ref(), &dir, &member.id) {
+            if let Ok(rec) = self.project.records.read(&dir, &member.id) {
                 let grown = |raw: u32| match &levels {
                     Some(levels) => growth_stat(raw, member.level.max(1), levels.growth),
                     None => raw,
@@ -1121,33 +1132,6 @@ impl RunnerGame {
 }
 
 // ── drawing helpers ───────────────────────────────────────────────────────────
-
-/// A flex-menu box anchored top-right (the classic pause-menu corner),
-/// sized to its rows.
-fn draw_corner_menu(fb: &mut FrameBuffer, items: &[String], cursor: usize) {
-    let n = items.len() as u32;
-    if n == 0 {
-        return;
-    }
-    let max_len = items.iter().map(|o| o.chars().count()).max().unwrap_or(1) as u32;
-    // +4: left/right border, cursor column, one padding column.
-    let w = (max_len + 4).clamp(8, 24);
-    let h = n + 2;
-    let tx = (40 - w) as i32;
-    let config = MenuConfig::new(
-        TileRect::new(tx.max(0) as u32, 1, w, h),
-        None,
-        TileRect::new(tx.max(0) as u32 + 1, 2, w - 2, n),
-        Default::default(),
-    );
-    let state = FlexMenuState {
-        cursor,
-        scroll_offset: 0,
-    };
-    let mut painter = FrameBufferPainter::new(fb);
-    let mut ui = Ui::new(&mut painter);
-    draw_flex_menu(items, &[config], &state, items.len(), &mut ui);
-}
 
 /// Move a cursor over `n` entries with Up/Down.
 fn move_cursor(input: &InputState, cursor: &mut usize, n: usize) {

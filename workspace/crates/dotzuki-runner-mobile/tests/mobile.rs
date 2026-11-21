@@ -195,3 +195,76 @@ fn pointer_ffi_preserves_buttons_and_warp_events() {
         dotzuki_mobile_destroy(runner);
     }
 }
+
+#[test]
+fn packed_updates_accumulate_until_copied_and_can_restore_a_lost_surface() {
+    use dotzuki_mobile::FrameRect;
+    use dotzuki_runner_mobile::dotzuki_mobile_copy_frame_update;
+    let pack = fixture_pack();
+    let runner = unsafe { dotzuki_mobile_create(pack.as_ptr(), pack.len(), std::ptr::null(), 0) };
+    assert!(!runner.is_null());
+    let runtime = unsafe { &*runner };
+    let width = runtime.width() as usize;
+    let mut display = vec![0; runtime.frame_len()];
+    let mut reference = display.clone();
+    let mut patch = display.clone();
+    let mut rect = FrameRect::default();
+    for _ in 0..20 {
+        runtime.tick(1);
+        runtime.tick(0);
+    }
+    for (i, (input, force)) in [(0, false), (0, false), (8, false), (128, false), (0, true)]
+        .into_iter()
+        .enumerate()
+    {
+        runtime.tick(input);
+        runtime.tick(0); // The last tick is idle; preserve earlier changes.
+        let expected = unsafe {
+            dotzuki_mobile_copy_frame_update(runner, &mut rect, std::ptr::null_mut(), 0, force)
+        };
+        if expected > 1 {
+            let mut short = [0xAB];
+            assert_eq!(
+                unsafe {
+                    dotzuki_mobile_copy_frame_update(
+                        runner,
+                        &mut rect,
+                        short.as_mut_ptr(),
+                        1,
+                        force,
+                    )
+                },
+                expected
+            );
+            assert_eq!(short, [0xAB]);
+        }
+        let size = unsafe {
+            dotzuki_mobile_copy_frame_update(
+                runner,
+                &mut rect,
+                patch.as_mut_ptr(),
+                patch.len(),
+                force,
+            )
+        };
+        assert_eq!(size, expected);
+        match i {
+            0 | 4 => assert_eq!(size, display.len()),
+            1 => assert_eq!(size, 0),
+            2 | 3 => assert!(size > 0 && size < display.len()),
+            _ => unreachable!(),
+        }
+        if size > 0 {
+            let stride = rect.width as usize * 4;
+            for (y, row) in patch[..size].chunks_exact(stride).enumerate() {
+                let dest = ((rect.y as usize + y) * width + rect.x as usize) * 4;
+                display[dest..dest + stride].copy_from_slice(row);
+            }
+        }
+        runtime.copy_frame(&mut reference).unwrap();
+        assert!(display == reference);
+    }
+    unsafe {
+        dotzuki_mobile_destroy(runner);
+    }
+}

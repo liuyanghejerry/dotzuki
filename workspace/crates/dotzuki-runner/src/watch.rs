@@ -80,7 +80,7 @@ impl ProjectWatcher {
 
         while let Ok(Ok(event)) = self.rx.try_recv() {
             match event.kind {
-                EventKind::Modify(_) | EventKind::Create(_) => {
+                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_) => {
                     for path in event.paths {
                         if is_supported_file(&path) {
                             self.seen.insert(path);

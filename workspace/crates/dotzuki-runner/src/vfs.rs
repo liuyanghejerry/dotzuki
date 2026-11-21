@@ -16,6 +16,15 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
+/// Changes when a disk file's contents or a directory's direct entries change.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FileRevision {
+    pub modified: std::time::SystemTime,
+    pub len: u64,
+    /// Extra change timestamp when the backend distinguishes it from modification time.
+    pub changed: Option<(i64, i64)>,
+}
+
 /// Read/list access to a game project's files.
 pub trait ProjectFiles {
     /// Read the file at project-relative POSIX `path`.
@@ -33,6 +42,12 @@ pub trait ProjectFiles {
     /// Whether file contents and directory entries are fixed for this backend's lifetime.
     fn is_immutable(&self) -> bool {
         false
+    }
+
+    /// Optional revision for a file or directory. Backends without reliable
+    /// change tracking may leave this unset.
+    fn revision(&self, _path: &str) -> Option<FileRevision> {
+        None
     }
 
     /// Recursively list every file under `prefix` (a project-relative POSIX
@@ -70,6 +85,26 @@ impl ProjectFiles for DiskFiles {
     fn read(&self, path: &str) -> Result<Vec<u8>> {
         let full = self.root.join(path);
         std::fs::read(&full).with_context(|| format!("failed to read {}", full.display()))
+    }
+
+    fn revision(&self, path: &str) -> Option<FileRevision> {
+        let metadata = std::fs::metadata(self.root.join(path)).ok()?;
+        #[cfg(unix)]
+        use std::os::unix::fs::MetadataExt;
+        Some(FileRevision {
+            modified: metadata.modified().ok()?,
+            len: metadata.len(),
+            #[cfg(unix)]
+            changed: Some((metadata.ctime(), metadata.ctime_nsec())),
+            #[cfg(not(unix))]
+            changed: None,
+        })
+    }
+
+    fn exists(&self, path: &str) -> bool {
+        std::fs::File::open(self.root.join(path))
+            .and_then(|file| file.metadata())
+            .is_ok_and(|metadata| metadata.is_file())
     }
 
     fn list(&self, prefix: &str) -> Vec<String> {

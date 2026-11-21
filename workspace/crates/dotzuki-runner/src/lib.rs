@@ -51,6 +51,7 @@ pub mod manifest;
 pub mod map;
 pub mod pack;
 pub mod project;
+mod records;
 pub mod save;
 mod scene;
 pub mod tileset;
