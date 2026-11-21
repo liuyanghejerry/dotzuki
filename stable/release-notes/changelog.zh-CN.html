@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
+            window.path_to_searchindex_js = "../searchindex-49f21357.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -183,7 +183,7 @@
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
 <p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.1
-（源文档 commit 9bc4da66b7499e9ff9472913e005932ae7828fb7）。
+（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -205,11 +205,29 @@
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
 <ul>
-<li>为运行器及支持指针输入的宿主添加<a href="../how-to/maps.zh-CN.html#点击移动">点击移动</a>。</li>
-<li>为移动端 C ABI 添加 <code>dotzuki_mobile_pointer_click</code> 和
+<li>
+<p>新增 <code>overworld::navigation::find_route_matching</code>，用于寻找最近可达的交互位置，
+复用既有确定性 BFS、碰撞提供方和节点上限。</p>
+</li>
+<li>
+<p>将十键 <code>u16</code> 掩码、独立按下通道和原生短按缓冲收敛到共享 renderer。Q/E 对应 L/R。
+<strong>Rust API 不兼容变更：</strong> <code>set_from_bitmask</code> 参数及 <code>bit_mask</code>／<code>raw_current</code>／
+<code>raw_previous</code> 返回值改为 <code>u16</code>；既有 8 位桥使用 <code>u16::from(mask)</code>。
+位 0–7 和移动／Web ABI 保持不变。</p>
+</li>
+<li>
+<p>浏览器游戏外壳使用动画帧驱动固定模拟时钟，限制补帧，并按完成渲染统计 FPS。
+Escape 仅退出原生窗口。参见<a href="../reference/game-shell.zh-CN.html#运行时行为">游戏外壳</a>。</p>
+</li>
+<li>
+<p>为运行器及支持指针输入的宿主添加<a href="../how-to/maps.zh-CN.html#点击移动">点击移动</a>。</p>
+</li>
+<li>
+<p>为移动端 C ABI 添加 <code>dotzuki_mobile_pointer_click</code> 和
 <code>dotzuki_mobile_cancel_pointer_input</code>，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
 更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
-现有 <code>MobileGame</code> 实现保留默认指针回调，按键契约保持不变。</li>
+现有 <code>MobileGame</code> 实现保留默认指针回调，按键契约保持不变。</p>
+</li>
 </ul>
 <p>Rust API 破坏性变更：</p>
 <ul>

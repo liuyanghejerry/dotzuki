@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
+            window.path_to_searchindex_js = "../searchindex-49f21357.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.1</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased host changes)</li>
 </ul>
 </blockquote>
 <p>The <a href="./glossary.html">game shell</a> (<code>dotzuki_web::game_shell</code>, source
@@ -200,7 +200,7 @@ page is the API reference for its feature gate, <code>GameLoop</code> trait,
 GB-frame pacing (4194304 Hz / 70224 cycles ≈ 59.7275 Hz), plus the browser
 plumbing a wasm game needs — replacing a placeholder <code>&lt;canvas&gt;</code> in the host
 page, tracking the parent’s width on window resize, an optional FPS-counter
-element, and <code>requestAnimationFrame</code>-driven polling.</p>
+element, and <code>requestAnimationFrame</code>-driven presentation.</p>
 <p>Game-specific wiring stays in the game crate: it builds a
 <code>GameShellConfig</code>, implements <code>GameLoop</code>, and — when the host page needs
 runtime control over the live game — keeps its own clone of the
@@ -233,7 +233,7 @@ so <code>game-shell</code> has no in-repo consumer yet; it is game-facing API.</
 (<code>crates/dotzuki-web/Cargo.toml:45-63</code>), <strong>off by default</strong> so the editor
 layout-preview bridge does not drag pixels / winit into consumers that never
 open a window. Enable it in <code>Cargo.toml</code> with
-<code>dotzuki-web = { version = "0.5.4", features = ["game-shell"] }</code>.</p>
+<code>dotzuki-web = { version = "0.10.1", features = ["game-shell"] }</code>.</p>
 <p>The feature pulls in <code>pixels =0.15.0</code>, <code>winit 0.30</code>, <code>error-iter</code>,
 <code>dotzuki-renderer/gpu</code> (for <code>InputState::set_from_keycode</code>), and the
 <code>web-sys</code> DOM types (<code>Window</code>, <code>Document</code>, <code>Element</code>, <code>Node</code>, <code>Event</code>,
@@ -249,6 +249,8 @@ With the feature on, the crate root re-exports the flat API: <code>GameLoop</cod
     type Fb: FbSurface;
 
     fn update(&amp;mut self, input: &amp;InputState);
+    fn pointer_click(&amp;mut self, _x: f32, _y: f32) {}
+    fn cancel_pointer_input(&amp;mut self) {}
     fn draw(&amp;mut self, fb: &amp;mut Self::Fb);
     fn should_exit(&amp;self) -&gt; bool { false }
     fn on_user_gesture(&amp;self) {}
@@ -267,9 +269,11 @@ process input before returning.</li>
 current screen into the framebuffer.</li>
 <li><code>should_exit(&amp;self) -&gt; bool</code> — default <code>false</code>; the loop exits when it
 returns <code>true</code>.</li>
-<li><code>on_user_gesture(&amp;self)</code> — default no-op; called on every key press.
-Browsers count key presses as user gestures, so this is the hook to resume
-a suspended <code>AudioContext</code>.</li>
+<li><code>pointer_click</code> receives framebuffer coordinates for a primary click or tap.
+<code>cancel_pointer_input</code> discards pending actions on focus loss or touch cancellation.
+Both default to no-op; games decide whether to enable pointer navigation.</li>
+<li><code>on_user_gesture(&amp;self)</code> — default no-op; called on key, mouse, or touch presses.
+Use this hook to resume a suspended <code>AudioContext</code>.</li>
 </ul>
 <h2 id="gameshellconfig"><a class="header" href="#gameshellconfig"><code>GameShellConfig</code></a></h2>
 <p>Quoted from <code>game_shell.rs:70-89</code>:</p>
@@ -293,7 +297,7 @@ inner size is the unscaled framebuffer size.</li>
 <li><code>canvas_id</code> (wasm only) — DOM id of the placeholder <code>&lt;canvas&gt;</code> the shell
 replaces.</li>
 <li><code>fps_element_id</code> (wasm only) — DOM id of an element updated with
-<code>"NN FPS"</code> roughly every 30 frames; <code>None</code> disables the counter.</li>
+<code>"NN FPS"</code> every 30 completed renders; <code>None</code> disables the counter.</li>
 </ul>
 <p><code>GameShellConfig::new(title, width, height, scale)</code> fills the conventional
 defaults: <code>resizable: true</code>, <code>canvas_id: "game-canvas"</code>,
@@ -334,29 +338,34 @@ land inside <code>update</code> / <code>draw</code>.</li>
 <code>source()</code>, and <code>From&lt;pixels::Error&gt;</code> converts into it.</p>
 <h2 id="runtime-behavior"><a class="header" href="#runtime-behavior">Runtime behavior</a></h2>
 <h3 id="pacing"><a class="header" href="#pacing">Pacing</a></h3>
-<p>Both targets pace at one <code>update</code> per GB frame (≈16.7427 ms). Per frame the
-loop runs: <code>update</code> → <code>input.begin_frame()</code> → <code>should_exit</code> check →
-<code>request_redraw</code>.</p>
+<p>Simulation advances at ≈59.7275 updates per second, independently of display refresh.
+Each update consumes one <code>BufferedInput::next_frame()</code> snapshot and checks <code>should_exit</code>.</p>
 <ul>
-<li><strong>Native</strong>: <code>FRAME_DURATION = 16_742_706 ns</code>, driven in <code>AboutToWait</code> with
-<code>Instant</code> deadlines plus <code>thread::sleep</code> (game_shell.rs:39, 316-336).</li>
-<li><strong>wasm32</strong>: <code>FRAME_MS = 1000.0 * 70224.0 / 4194304.0</code> measured against
-<code>performance.now()</code> with a <code>next_frame_ms</code> accumulator and a
-spiral-of-death clamp — when the loop falls behind, the next deadline
-resets to <code>now + FRAME_MS</code> instead of bursting catch-up frames
-(game_shell.rs:42, 267-315).</li>
+<li><strong>Native</strong>: <code>AboutToWait</code> uses <code>Instant</code> deadlines and <code>ControlFlow::WaitUntil</code>.
+Waiting does not block queued input or redraw events.</li>
+<li><strong>wasm32</strong>: <code>ControlFlow::Wait</code> yields between browser paints. <code>AboutToWait</code> requests
+the next redraw; <code>RedrawRequested</code> samples <code>performance.now()</code> and advances the fixed clock.
+A short delay catches up at most five ticks. A longer pause discards the backlog and
+resumes with one tick, so a suspended tab does not replay seconds of held input.
+Paints with no due tick skip simulation and rendering.</li>
 </ul>
 <h3 id="rendering"><a class="header" href="#rendering">Rendering</a></h3>
-<p>Each <code>RedrawRequested</code> runs <code>draw</code> into the game’s framebuffer, then
-<code>frame_buffer.present_into(pixels.frame_mut())</code>, then <code>pixels.render()</code>.
-Render and surface-resize errors are logged and exit the loop
-(game_shell.rs:233-248). On wasm the pixels builder forces <code>Rgba8Unorm</code> and
-the WebGL backend (<code>Backends::GL</code>): some browsers expose partial WebGPU
-limits that panic wasm-bindgen (game_shell.rs:196-209).</p>
+<p>After due updates, the shell calls <code>draw</code>, <code>frame_buffer.present_into(pixels.frame_mut())</code>,
+and <code>pixels.render()</code>. Games must not advance gameplay in <code>draw</code>: a slow display can present
+several simulation ticks together. The optional FPS element counts completed renders, not ticks.
+Render and surface-resize errors are logged and exit the loop. On wasm the pixels builder forces
+<code>Rgba8Unorm</code> and WebGL (<code>Backends::GL</code>) because some browsers expose partial WebGPU limits.</p>
 <h3 id="input"><a class="header" href="#input">Input</a></h3>
-<p><code>KeyCode</code> events feed <code>InputState::set_from_keycode</code>. <code>Escape</code> exits on both
-targets, with no opt-out. Any key press calls <code>on_user_gesture</code> before input
-handling (game_shell.rs:249-263).</p>
+<p>Keyboard events feed <code>BufferedInput</code>; a press and release between ticks survives for one update.
+Focus loss discards held buttons and pending taps. <code>Escape</code> exits native windows; browsers leave
+it unmapped and continue running. Q/E map to L/R; arrows, WASD, Z/X, Enter/Space, and
+Backspace/Right Shift retain their existing mappings.</p>
+<p><code>GbButton::bit_mask</code>, <code>InputState::raw_current</code>, <code>raw_previous</code>, <code>pressed_mask</code>, and
+<code>set_from_bitmask</code> use <code>u16</code>. Bits 0–7 remain A, B, Select, Start, Right, Left, Up, Down;
+bits 8–9 are R and L. <code>from_explicit_channels(current, previous, pressed)</code> supplies an
+independent press-edge channel without changing held state. <code>begin_frame</code> or physical
+input mutations restore the usual <code>current &amp; !previous</code> derivation. The runner’s existing
+8-bit Web/mobile entry points zero-extend their input and keep their ABI.</p>
 <h3 id="canvas-plumbing-wasm32"><a class="header" href="#canvas-plumbing-wasm32">Canvas plumbing (wasm32)</a></h3>
 <p><code>install_canvas</code> sets the winit canvas id and <strong>replaces</strong> the host page’s
 placeholder element that has <code>config.canvas_id</code>; it panics with
@@ -404,20 +413,19 @@ fn main() -&gt; Result&lt;(), GameShellError&gt; {
 }</code></pre>
 <h2 id="gotchas"><a class="header" href="#gotchas">Gotchas</a></h2>
 <ul>
-<li><strong><code>Escape</code> always exits.</strong> Both targets terminate the loop on Escape; a
-game cannot remap or disable it.</li>
+<li><strong><code>Escape</code> exits native windows.</strong> In browsers it remains unmapped, so it cannot stop
+the loop and leave the last canvas frame frozen.</li>
 <li><strong>Missing placeholder canvas panics (wasm32).</strong> <code>install_canvas</code> expects
 an element with <code>canvas_id</code> in the host page and panics otherwise — ship
 <code>&lt;canvas id="game-canvas"&gt;</code> (or your configured id) in the page.</li>
-<li><strong><code>ControlFlow::Poll</code> is load-bearing.</strong> The loop sets
-<code>ControlFlow::Poll</code> + <code>EventLoop::spawn</code>; without <code>Poll</code>, winit 0.30’s
-web backend only ticks when an event arrives (~5 FPS)
-(game_shell.rs:159-160).</li>
+<li><strong>Keep redraw requests active.</strong> Browser pacing relies on the next redraw requested from
+<code>AboutToWait</code>, with <code>ControlFlow::Wait</code> between paints.</li>
 <li><strong>WebGL is forced on wasm.</strong> The shell pins <code>Backends::GL</code> and
 <code>Rgba8Unorm</code>; partial WebGPU limit objects in some browsers panic
 wasm-bindgen, so WebGPU is not an option here.</li>
-<li><strong>Windowing code has no unit tests.</strong> The module is verified through its
-consumers; the example above is a skeleton, not a tested program.</li>
+<li><strong>Test both clock and host integration.</strong> Unit tests cover 30–240 Hz displays, delayed
+paints, suspended tabs, buffered taps, and button channels. Consumers still need native
+and browser smoke tests; the example above remains an unverified skeleton.</li>
 </ul>
 
                     </main>

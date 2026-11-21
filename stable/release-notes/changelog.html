@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1dcba271.js";
+            window.path_to_searchindex_js = "../searchindex-49f21357.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -201,12 +201,31 @@ version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
 <ul>
-<li>Add <a href="../how-to/maps.html#click-to-move">click to move</a> to the runner and pointer-enabled hosts.</li>
-<li>Add <code>dotzuki_mobile_pointer_click</code> and <code>dotzuki_mobile_cancel_pointer_input</code> to the mobile
+<li>
+<p>Add <code>overworld::navigation::find_route_matching</code> for nearest reachable interaction
+positions. It shares the existing deterministic BFS, collision provider, and node limit.</p>
+</li>
+<li>
+<p>Move ten-button <code>u16</code> input masks, explicit press channels, and native tap buffering into
+the shared renderer. Q/E map to L/R. <strong>Breaking Rust API:</strong> widen masks passed to
+<code>set_from_bitmask</code> and stored from <code>bit_mask</code> / <code>raw_current</code> / <code>raw_previous</code> to <code>u16</code>;
+use <code>u16::from(mask)</code> at existing 8-bit bridges. Bits 0–7 and mobile/Web ABIs are unchanged.</p>
+</li>
+<li>
+<p>Drive the browser game shell from animation frames with fixed simulation ticks, bounded
+catch-up, and FPS based on completed renders. Escape only exits native windows.
+See <a href="../reference/game-shell.html#runtime-behavior">game shell</a>.</p>
+</li>
+<li>
+<p>Add <a href="../how-to/maps.html#click-to-move">click to move</a> to the runner and pointer-enabled hosts.</p>
+</li>
+<li>
+<p>Add <code>dotzuki_mobile_pointer_click</code> and <code>dotzuki_mobile_cancel_pointer_input</code> to the mobile
 C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
 Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
 does not establish symbol availability. Existing <code>MobileGame</code> implementations keep their
-default pointer callbacks, and the button contract remains unchanged.</li>
+default pointer callbacks, and the button contract remains unchanged.</p>
+</li>
 </ul>
 <p>Breaking Rust API change:</p>
 <ul>
