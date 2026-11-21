@@ -1,13 +1,13 @@
 # dotzuki CLI 参考
 
-> 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.7.0
->（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+> 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+>（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 用于生成骨架、校验和运行零 Rust 游戏项目的每个 `dotzuki` 子命令、flag 和退出
 码。
@@ -142,10 +142,16 @@ JSON index
 启动时解码，尤其适合包含实际 tileset 与音频的项目。旧版 CLI 导出的是 base64
 `game.bundle.json`，当前 player 仍可启动该格式。
 
-Pack 规则与编辑器的 play bundle 相同：排除 `node_modules`、`.git`、`target`、
-`dist`、点目录、点文件和 `*.bak`，但始终包含 `.dotzuki-editor.json`。单文件上限
-16 MB，未压缩总大小上限 64 MB。`dotzuki.version` 记录执行导出的 CLI 版本，仅供
-参考，运行时不会强制校验。
+DSL 编译成功后，包索引可以包含 `compiled_scenes: 1`。包内保留原始源码，
+并在 `.dotzuki/compiled-scenes/` 下保存编译报告、路由和原生函数的偏移量。
+播放器首次使用原生场景时将其解压，首次调用某个函数时才解码该函数。
+包含 `@run` 的场景由 Boa 执行生成的 JavaScript。包中缺少兼容版本的产物时，
+播放器会编译随包源码。使用 `--force` 导出含 DSL 错误的项目后，启动时仍会报告源码中的错误。
+
+CLI 按编辑器 Play 的规则收集项目文件。它会跳过 `node_modules`、`.git`、`target`、
+`dist`、隐藏目录和文件以及 `*.bak`，并包含 `.dotzuki-editor.json`。单文件 16 MiB、
+总计 64 MiB 的限制适用于收集的输入文件。生成的场景产物计入最终包体积。
+`dotzuki.version` 记录执行导出的 CLI 版本。
 
 Runner wasm package 按以下顺序解析：`--runner-pkg` → 预构建的
 `workspace/crates/dotzuki-runner-web/pkg` → 使用

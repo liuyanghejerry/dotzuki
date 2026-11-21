@@ -1,6 +1,6 @@
 # 游戏项目规范 — 零 Rust dotzuki-engine 项目
 
-> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 一个**游戏项目**就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
 项目清单 `.dotzuki-editor.json`。游戏项目里没有 Cargo workspace、没有
@@ -213,6 +213,9 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 [战斗规则](battle-rules.md)）和 `openShop`（见[商店](#商店)）。任何其他命令
 都会记录一条警告并自动完成，而不是让场景死锁。
 
+原生场景和 JavaScript 场景从共享快照读取标记。场景结束时，运行器将有变化的标记写回
+当前会话。对原本不存在的标记调用 `resetFlag`，会在存档中保留显式的 `false`。
+
 ### 菜单
 
 在大地图上按 **Start** 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
@@ -346,10 +349,8 @@ schema 中，`encounters` 块的表必须声明 `enemies` 字段，并且规则�
   `watch=false`、无头模式（无音频设备）、`pcm_audio=true` 且不写磁盘存档。
 - **Frames。** 页面以约 59.7 Hz 调用 `tick(input_bitmask)`，并把返回的 320×240
   RGBA 帧 blit 上屏。输入位掩码与 `GbButton` 位序一致（bit0=A … bit7=Down）。
-- **Audio。** 运行器不使用 cpal 设备，而是每 tick 渲染 APU PCM
-  （`RunnerGame::render_audio`，44.1 kHz 立体声 f32）；页面通过 `take_audio()`
-  把它排入 WebAudio 队列（`usePlayAudio`）。与原生相同的 sequencer/fade 路径，
-  用拉取模型取代回调线程。
+- **音频。** 运行器每个游戏帧把 44.1 kHz 交错立体声 f32 采样追加到可复用的缓冲区。
+  页面通过 `take_audio()` 取走音频并拥有返回的 `Float32Array`。后续游戏帧仍可读取这个数组。
 - **Saves。** `export_save()`/`import_save(json)` 取代 `.dotzuki-save.json`；
   编辑器把它们持久化到 `localStorage`。场景/战斗/商店/warp 过渡挂起期间，
   `export_save` 不返回任何内容——编辑器在自己的间隔里重试即可。
