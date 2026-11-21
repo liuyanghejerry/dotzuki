@@ -54,16 +54,13 @@
 //! consumes the player's turn. The runner owns the inventory between battles
 //! (initialized from `starting`). Free-text `effect` fields are display-only.
 //!
-//! # Turn loop (v1, kept for v2)
+//! # Turn loop
 //!
-//! The loop is intentionally **not** the engine's `StackDriver`: the stack
-//! engine has no Switch/Item/Run surface. The loop is a tiny phase machine
-//! instead: root menu → submenu → narration → won/lost. Per round the player
-//! picks a skill (unaffordable MP costs are unselectable), the enemy AI picks
-//! its highest-power affordable skill (fallback: its first affordable skill,
-//! else the built-in Attack); the faster side (eff speed) acts first, ties go
-//! to the player; each action re-checks the MP gate, rolls accuracy, resolves
-//! the skill and narrates. Switch/Item rounds act player-first.
+//! The runner owns menu selection and narration. [`StackDriver::drive_turn`]
+//! orders actions and residuals, interrupts a round on a faint, and returns
+//! an unspent enemy action for forced replacement. Fight resolves by effective
+//! speed with player-first ties. Switch and Item resolve before the enemy
+//! chooses its highest-power affordable skill. Run ends a wild battle.
 //!
 //! # RON effect hooks (v2-a)
 //!
@@ -71,8 +68,8 @@
 //! matches a skill id **takes over that skill**: its `power`/`type`/
 //! `accuracy`/`cost` fields override the table record (absent fields fall
 //! back), and the action runs through the stack interpreter instead of the
-//! built-in category behavior — MP gate → accuracy → damage precompute (the
-//! v1 formula → `ctx.mv.damage`) → `BeforeMove` gate (if subscribed) →
+//! built-in category behavior — MP gate → accuracy → `BeforeMove`
+//! gate (if subscribed) → damage precompute (the v1 formula → `ctx.mv.damage`) →
 //! `ModifyDamage` → `Effectiveness` → `Damage` → `DamagingHit` → `AfterMove`
 //! (the minimon/wuxia fire order). When the record subscribes to
 //! `Effectiveness`, the hooks own the scaling (author `ApplyTypeChart` for
@@ -131,11 +128,10 @@
 //! field names a `kind: Ability` record; its `SwitchIn` hooks fire at battle
 //! start and on every switch-in of the ACTIVE combatant (benched members'
 //! abilities are inert), narrated with an intro line (`"Aria's
-//! Intimidate!"`), and its hooks also join the acting combatant's per-action
-//! event sequence (an ability hooking `ModifyDamage` fires alongside the
-//! skill's hooks). A record's optional `heldItem` field names a `kind: Item`
-//! record: its hooks fire the same way, with `Residual` hooks running after
-//! each of the holder's actions (Leftovers-style heal). Held items are
+//! Intimidate!"`). Move hooks default to the attacker's ability and held
+//! item. A hook with `holder: Defender` participates in incoming moves.
+//! A combatant's `heldItem` names a `kind: Item` record whose `Residual`
+//! hooks run after the holder's skill actions. Held items are
 //! persistent flags — nothing consumes them (berries are out of scope). A
 //! `kind: Weather` record's `FieldResidual` hooks fire on each combatant's
 //! residual while the weather is active; a scene arms the weather with
@@ -145,24 +141,25 @@
 //!
 //! # Remaining limits (documented in the spec)
 //!
-//! Volatiles are basic (arena + `HasVolatile` only); HP/MP clamp into the
-//! engine's `u16` pools for RON skills; items only heal (no status cures /
-//! battle-only effects) and held items are never consumed; a defender's
-//! ability/held-item hooks do not join the ATTACKER's per-action sequence
-//! (they fire on their own switch-in/residual only); weather is armed from
-//! scenes, not by in-battle ops. A lost battle returns `"lose"` to the scene
-//! and then triggers the runner's game-over whiteout (see `game::menu`).
+//! RON actions clamp HP and MP to the engine's `u16` pools. Inventory items
+//! heal living members. Scenes arm battle-local weather. A lost battle returns
+//! `"lose"` to the scene and triggers the whiteout after its dialogue finishes.
 
 use std::collections::{HashMap, VecDeque};
+use std::ops::ControlFlow;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use dotzuki_engine::battle::stack::{collect_handlers, run_event, BattleCtx, Event, RelayVar};
+use dotzuki_engine::battle::stack::{
+    collect_handlers, run_event, BattleCtx, Effect, EffectId, Event, FirstMover, RelayVar,
+    StackDriver, TurnPhase,
+};
 use dotzuki_engine::battle::{BattleState, BattlerRef};
 use dotzuki_engine::menu::MenuConfig;
 use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_renderer::embedded_font;
 use dotzuki_renderer::input::{GbButton, InputState};
+use dotzuki_rules::{HookHolder, ResolverKind};
 use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
 use dotzuki_ui::FrameBufferPainter;
 
@@ -1328,6 +1325,15 @@ pub enum Side {
     Enemy,
 }
 
+enum RoundAction {
+    Skill(Skill),
+    /// Choose after the player has switched or used an item.
+    EnemyChoice,
+    Switch(usize),
+    Item(BattleItem),
+    Run,
+}
+
 /// What follows the current narration queue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum After {
@@ -1424,7 +1430,7 @@ pub struct Battle {
     /// combatant's residual while set.
     weather: Option<String>,
     /// The enemy's skill when its action was deferred by a forced switch.
-    pending_enemy: Option<Skill>,
+    pending_enemy: Option<RoundAction>,
     /// Every narration line produced so far (acceptance log, tests).
     log: Vec<String>,
 }

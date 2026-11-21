@@ -5,7 +5,7 @@ The `battle` manifest section: config, rules.ron hooks, turn loop, and `check` v
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 A project opts into the generic, data-driven battle system (parties +
 battle-usable items) with a top-level `battle` section (all keys optional;
@@ -141,8 +141,7 @@ rebuilt from the records at every battle start, but each member's **current
 HP/MP and status persist between battles** — the runner owns that party
 state, harvests it at the end of every battle (win, lose AND run), and
 carries it
-in the save file (`party`). A member at 0 HP stays fainted until healed
-(items are the only healing source so far). The first LIVING member leads;
+in the save file (`party`). A scene's `heal` command or a whiteout revives fainted members. The first LIVING member leads;
 a party with no living member loses on the spot. In battle the root menu
 offers **Fight** (the skill menu), **Party** (the member list with HP and
 status — switching to a living, non-active member consumes the player's
@@ -255,13 +254,10 @@ by record fields and a scene command — no manifest changes:
   encounter send-out) on the `SwitchIn` event — benched members' abilities
   are inert. A switch-in fire narrates an intro line (`"Aria's
   Intimidate!"` — the record id prettified, since records carry no display
-  name) before the usual diff lines (`"Slime's Attack fell!"`). Ability
-  hooks also join the acting combatant's per-action event sequence: an
-  ability hooking `ModifyDamage`/`DamagingHit`/… fires alongside the skill's
-  own hooks, with the same `Source` (the actor) and `Target` (the foe).
+  name) before the usual diff lines (`"Slime's Attack fell!"`). Ability hooks can also participate in move resolution.
 - **Held items** (`kind: Item` records, named by a combatant record's
-  optional `heldItem` field). They fire exactly like abilities, plus their
-  `Residual` hooks run after each of the holder's actions (a Leftovers-style
+  optional `heldItem` field). They participate in move resolution. Their
+  `Residual` hooks run after the holder's skill actions (a Leftovers-style
   `HealFraction`). Held items are **persistent flags — nothing consumes
   them** (berries/consumption are out of scope); a `heldItem` id whose
   `healField` is 0 never appears in the Item menu.
@@ -277,11 +273,18 @@ by record fields and a scene command — no manifest changes:
   supported — the `Op` vocabulary has no weather op; scenes are the only
   trigger.
 
-Limits of the wiring: only the ACTING combatant's ability/held-item hooks
-join its per-action sequence (a defender's ability fires on its own
-switch-in/residual, not in the attacker's fold), and residuals (status, held
-item, weather) fire after a combatant's own action — on switch/item rounds
-only the enemy's residual runs, as with statuses.
+On table skills and RON moves, an ability or held-item hook defaults to
+`holder: Attacker` and runs when its holder uses the skill. Set
+`holder: Defender` to run it when the holder receives a move. For example,
+`Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])`
+halves incoming damage. Both roles share the same ordered event fold.
+`Source` names the attacker and `Target` names the defender in either role.
+
+Status, held-item and weather residuals tick after the holder's skill action.
+Switching and using an item spend the player's turn. Only the enemy takes a
+skill action on those rounds. For `InflictVolatile`, a positive `amount`
+counts the affected holder's subsequent skill actions, including misses and
+blocked moves. An omitted or zero amount lasts until a switch or battle end.
 
 ## Turn loop
 
@@ -302,10 +305,9 @@ sends out the next queued enemy (encounters) or ends the battle in a win;
 the active member at 0 HP forces a replacement
 while the party has living members, else the battle is lost; a successful
 Run ends it on the spot: the scene
-resumes with `"win"`, `"lose"` or `"run"`. The loop is the runner's own phase
-machine, not the engine's `StackDriver`; RON hooks fire per event through
-the effect-stack interpreter (`collect_handlers` + `run_event`), the
-minimon/wuxia harness pattern.
+resumes with `"win"`, `"lose"` or `"run"`. The engine's `StackDriver` orders actions and their residuals. When a forced
+switch interrupts a round, an opponent that still has an action takes it
+against the replacement. RON handlers run together in event order.
 
 ## Scene integration
 
@@ -325,7 +327,7 @@ held items & weather** above). A project **without** a
 like any unimplemented command). A lost battle returns `"lose"` to the scene
 (its post-lose text plays), then triggers the **game-over whiteout** (see
 [Game-over](project-manifest.md#game-over)): the party is healed and the player
-returns to the entry spawn.
+returns to the most recent [heal point](glossary.md#battle-gameplay), or to the entry spawn.
 
 ## Sceneless battles (random encounters)
 
@@ -343,16 +345,9 @@ scene-triggered battle.
 
 ## Remaining limits
 
-Every RON `EffectKind` now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles never expire
-(`InflictVolatile` installs, `HasVolatile` reads — nothing removes them);
-HP/MP clamp into the engine's `u16` pools for RON skills; items only heal
-(no status cures / revives / battle-only effects) and held items are never
-consumed; a defender's ability/held-item hooks don't join the attacker's
-per-action fold; weather is scene-armed only (no in-battle op sets it).
-Later PRs:
-`StackDriver` migration, a heal-point system (the whiteout
-always respawns at the entry spawn).
+RON actions use 16-bit HP and MP pools. Consumable items restore HP to a
+living member and held items persist through battle. Scenes set or clear
+weather for the next battle.
 
 ## Validation by `dotzuki check`
 

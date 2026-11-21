@@ -5,17 +5,19 @@ Save versioning, forward/backward save rules, and the compatibility rules every 
 > - **Audience**: game authors, rust developers
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 The game saves to `<project>/.dotzuki-save.json` (override with
 `--save-file`) — versioned JSON: `{version, map, player: {x, y, facing, level?},
-flags, lang, party?, inventory?, money?}` (v3). The runner-side save/load
+flags, lang, party?, inventory?, money?, healPoint?}` (v3). The runner-side save/load
 contract lives in [Save/load](../reference/project-manifest.md#saveload).
 
 - `party`/`inventory` appear once a battle has completed.
 - Party members may carry optional `level`/`exp` fields when the battle
   has a `levels` block — absent ⇒ level 1 / 0 EXP.
 - `money` is always written.
+- `healPoint` stores the last on-map `heal` as `{map, x, y, facing, level?}`.
+  Older saves omit it and use the entry spawn after a whiteout.
 - `player.level` is the map elevation level, absent ⇒ 0.
 
 ## When saves are written

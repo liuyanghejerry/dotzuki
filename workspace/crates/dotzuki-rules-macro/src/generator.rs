@@ -30,7 +30,7 @@ fn generate_ruleset_with_imports(ruleset: &RulesetInput) -> TokenStream {
 
     quote! {
         {
-            use dotzuki_rules::{AmountSpec, Ruleset, TypeChartEntry, Rational, EffectRecord, EffectKind, HookRecord, ResourceCost, Op, Predicate, Selector, FractionOf, DamageValue, HitCount, FinalHitRider};
+            use dotzuki_rules::{AmountSpec, Ruleset, TypeChartEntry, Rational, EffectRecord, EffectKind, HookHolder, HookRecord, ResourceCost, Op, Predicate, Selector, FractionOf, DamageValue, HitCount, FinalHitRider};
 
             Ruleset {
                 stats: #stats,
@@ -148,6 +148,10 @@ fn generate_hooks(hooks: &[HookRecordInput]) -> TokenStream {
 
 /// Generate code for a single hook.
 fn generate_hook(hook: &HookRecordInput) -> TokenStream {
+    let holder = match hook.holder {
+        HookHolderInput::Attacker => quote! { HookHolder::Attacker },
+        HookHolderInput::Defender => quote! { HookHolder::Defender },
+    };
     let on = &hook.on;
     let order = hook.order;
     let priority = hook.priority;
@@ -156,6 +160,7 @@ fn generate_hook(hook: &HookRecordInput) -> TokenStream {
 
     quote! {
         HookRecord {
+            holder: #holder,
             on: #on.to_string(),
             order: #order,
             priority: #priority,

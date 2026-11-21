@@ -183,7 +183,7 @@ impl Battle {
         self.sync_to_mirrors();
         let who = HookState::battler_ref(side);
         let before = snap_mirrors(self.hooks.as_ref().unwrap());
-        self.fire(Event::SwitchIn, &[&ability], who, who, RelayVar::Unit);
+        self.fire_record(&ability, Event::SwitchIn, who);
         self.narrate_diffs(&before, lines, false);
         self.sync_from_mirrors();
     }
@@ -486,89 +486,100 @@ impl Battle {
     /// trainer battle REFUSES — the line narrates and the turn is NOT
     /// consumed (back to the root menu).
     fn try_run(&mut self) {
-        let mut lines = VecDeque::new();
-        if self.trainer {
-            narrate(&mut self.log, &mut lines, run_blocked_line(&self.lang));
-            self.phase = Phase::Narrate {
-                lines,
-                after: After::Menu,
-            };
-        } else {
-            narrate(&mut self.log, &mut lines, run_safe_line(&self.lang));
-            self.phase = Phase::Narrate {
-                lines,
-                after: After::End(BattleOutcome::Run),
-            };
-        }
+        self.play_round(FirstMover::Player, Some(RoundAction::Run), None);
     }
 
-    /// One full round: the player's pick vs the enemy AI's pick, faster side
-    /// first (eff speed; ties go to the player), resolving each action in
-    /// order and queueing the narration. After each action the acting side's
-    /// status residuals fire (RON hooks), then the faint checks run.
     fn execute_round(&mut self, player_pick: usize) {
-        let player_skill = self.player().skills[player_pick].clone();
-        let enemy_skill = ai_pick(&self.enemy);
-        let player_first = self.player().eff_speed() >= self.enemy.eff_speed();
-        let order = if player_first {
-            [Side::Player, Side::Enemy]
+        let first = if self.player().eff_speed() >= self.enemy.eff_speed() {
+            FirstMover::Player
         } else {
-            [Side::Enemy, Side::Player]
+            FirstMover::Opponent
         };
+        self.play_round(
+            first,
+            Some(RoundAction::Skill(
+                self.player().skills[player_pick].clone(),
+            )),
+            Some(RoundAction::Skill(ai_pick(&self.enemy))),
+        );
+    }
 
+    fn play_round(
+        &mut self,
+        first: FirstMover,
+        player: Option<RoundAction>,
+        enemy: Option<RoundAction>,
+    ) {
         let mut lines = VecDeque::new();
-        let mut after = After::Menu;
-        for (pos, side) in order.iter().enumerate() {
-            if self.player().hp == 0 || self.enemy.hp == 0 {
-                break; // a faint mid-round cancels the remaining action
-            }
-            let skill = match side {
-                Side::Player => player_skill.clone(),
-                Side::Enemy => enemy_skill.clone(),
+        let after = self.drive_round(first, player, enemy, &mut lines);
+        self.phase = Phase::Narrate { lines, after };
+    }
+
+    fn drive_round(
+        &mut self,
+        first: FirstMover,
+        player: Option<RoundAction>,
+        enemy: Option<RoundAction>,
+        lines: &mut VecDeque<String>,
+    ) -> After {
+        let mut last_existing_effect = None;
+        let result = StackDriver::drive_turn(first, [player, enemy], |actor, phase, action| {
+            let side = if actor == BattlerRef::PLAYER {
+                Side::Player
+            } else {
+                Side::Enemy
             };
-            self.perform(*side, &skill, &mut lines);
-            match self.faint_flow(&mut lines) {
-                FaintFlow::Continue => {}
-                FaintFlow::SentOut => {
-                    // The replacement never acts the turn it comes in.
-                    after = After::Menu;
-                    break;
-                }
-                FaintFlow::Switch => {
-                    // The enemy's action still resolves — against the
-                    // replacement, once picked.
-                    if order.get(pos + 1) == Some(&Side::Enemy) {
-                        self.pending_enemy = Some(enemy_skill);
-                    }
-                    after = After::ForcedSwitch;
-                    break;
-                }
-                FaintFlow::End(o) => {
-                    after = After::End(o);
-                    break;
-                }
+            if phase == TurnPhase::Action {
+                last_existing_effect = self
+                    .hooks
+                    .as_ref()
+                    .and_then(|h| h.effects.last().map(|e| e.id));
             }
-            self.residual(*side, &mut lines);
-            match self.faint_flow(&mut lines) {
-                FaintFlow::Continue => {}
-                FaintFlow::SentOut => {
-                    after = After::Menu;
-                    break;
+            match (phase, action) {
+                (TurnPhase::Action, RoundAction::Skill(skill)) => self.perform(side, skill, lines),
+                (TurnPhase::Action, RoundAction::EnemyChoice) => {
+                    self.perform(side, &ai_pick(&self.enemy), lines)
                 }
-                FaintFlow::Switch => {
-                    if order.get(pos + 1) == Some(&Side::Enemy) {
-                        self.pending_enemy = Some(enemy_skill);
+                (TurnPhase::Residual, RoundAction::Skill(_) | RoundAction::EnemyChoice) => {
+                    self.residual(side, last_existing_effect, lines)
+                }
+                (TurnPhase::Action, RoundAction::Switch(idx)) => {
+                    if self.player().hp > 0 {
+                        let name = self.player().name.clone();
+                        narrate(&mut self.log, lines, format!("Come back, {name}!"));
                     }
-                    after = After::ForcedSwitch;
-                    break;
+                    self.switch_to(*idx, lines);
                 }
-                FaintFlow::End(o) => {
-                    after = After::End(o);
-                    break;
+                (TurnPhase::Action, RoundAction::Item(item)) => self.use_item(item, lines),
+                (TurnPhase::Action, RoundAction::Run) => {
+                    let (line, after) = if self.trainer {
+                        (run_blocked_line(&self.lang), After::Menu)
+                    } else {
+                        (run_safe_line(&self.lang), After::End(BattleOutcome::Run))
+                    };
+                    narrate(&mut self.log, lines, line);
+                    return ControlFlow::Break(after);
                 }
+                (TurnPhase::Residual, _) => return ControlFlow::Continue(()),
+            }
+            match self.faint_flow(lines) {
+                FaintFlow::Continue => ControlFlow::Continue(()),
+                FaintFlow::SentOut => ControlFlow::Break(After::Menu),
+                FaintFlow::Switch => ControlFlow::Break(After::ForcedSwitch),
+                FaintFlow::End(outcome) => ControlFlow::Break(After::End(outcome)),
+            }
+        });
+        match result {
+            ControlFlow::Continue(()) => After::Menu,
+            ControlFlow::Break((after, pending)) => {
+                if let (After::ForcedSwitch, Some((BattlerRef::OPPONENT, action))) =
+                    (after, pending)
+                {
+                    self.pending_enemy = Some(action);
+                }
+                after
             }
         }
-        self.phase = Phase::Narrate { lines, after };
     }
 
     /// The faint check after an action or residual: narrates the faint and
@@ -676,12 +687,11 @@ impl Battle {
     /// A voluntary switch (the Party menu): costs the player's turn — the
     /// enemy acts after the new member comes in.
     fn execute_switch_round(&mut self, idx: usize) {
-        let mut lines = VecDeque::new();
-        let old_name = self.player().name.clone();
-        narrate(&mut self.log, &mut lines, format!("Come back, {old_name}!"));
-        self.switch_to(idx, &mut lines);
-        let after = self.enemy_turn(&mut lines);
-        self.phase = Phase::Narrate { lines, after };
+        self.play_round(
+            FirstMover::Player,
+            Some(RoundAction::Switch(idx)),
+            Some(RoundAction::EnemyChoice),
+        );
     }
 
     /// An item use (the Item menu): heals the active member (capped at max),
@@ -692,9 +702,16 @@ impl Battle {
             return;
         };
         let item = self.items[item_idx].clone();
-        let mut lines = VecDeque::new();
+        self.play_round(
+            FirstMover::Player,
+            Some(RoundAction::Item(item)),
+            Some(RoundAction::EnemyChoice),
+        );
+    }
+
+    fn use_item(&mut self, item: &BattleItem, lines: &mut VecDeque<String>) {
         let before = self.player().hp;
-        let healed = (before + item.heal).min(self.player().max_hp);
+        let healed = before.saturating_add(item.heal).min(self.player().max_hp);
         self.party[self.active].hp = healed;
         if let Some(count) = self.inventory.get_mut(&item.id) {
             *count = count.saturating_sub(1);
@@ -703,65 +720,19 @@ impl Battle {
             }
         }
         let name = self.player().name.clone();
+        narrate(&mut self.log, lines, format!("{name} used {}!", item.name));
         narrate(
             &mut self.log,
-            &mut lines,
-            format!("{name} used {}!", item.name),
-        );
-        narrate(
-            &mut self.log,
-            &mut lines,
+            lines,
             format!("{name} recovered {} HP!", healed - before),
         );
-        let after = self.enemy_turn(&mut lines);
-        self.phase = Phase::Narrate { lines, after };
-    }
-
-    /// The enemy's half of a switch/item round: its AI pick, then its
-    /// residuals, with the faint checks between.
-    fn enemy_turn(&mut self, lines: &mut VecDeque<String>) -> After {
-        let skill = ai_pick(&self.enemy);
-        self.perform(Side::Enemy, &skill, lines);
-        match self.faint_flow(lines) {
-            FaintFlow::SentOut => After::Menu,
-            FaintFlow::Switch => After::ForcedSwitch,
-            FaintFlow::End(o) => After::End(o),
-            FaintFlow::Continue => {
-                self.residual(Side::Enemy, lines);
-                match self.faint_flow(lines) {
-                    FaintFlow::SentOut => After::Menu,
-                    FaintFlow::Switch => After::ForcedSwitch,
-                    FaintFlow::End(o) => After::End(o),
-                    FaintFlow::Continue => After::Menu,
-                }
-            }
-        }
     }
 
     /// A forced replacement after a faint (a free action): the new member
     /// comes in, then the enemy's deferred action (if any) resolves.
     fn forced_switch_to(&mut self, idx: usize) {
-        let mut lines = VecDeque::new();
-        self.switch_to(idx, &mut lines);
-        let mut after = After::Menu;
-        if let Some(skill) = self.pending_enemy.take() {
-            self.perform(Side::Enemy, &skill, &mut lines);
-            match self.faint_flow(&mut lines) {
-                FaintFlow::SentOut => after = After::Menu,
-                FaintFlow::Switch => after = After::ForcedSwitch,
-                FaintFlow::End(o) => after = After::End(o),
-                FaintFlow::Continue => {
-                    self.residual(Side::Enemy, &mut lines);
-                    after = match self.faint_flow(&mut lines) {
-                        FaintFlow::SentOut => After::Menu,
-                        FaintFlow::Switch => After::ForcedSwitch,
-                        FaintFlow::End(o) => After::End(o),
-                        FaintFlow::Continue => After::Menu,
-                    };
-                }
-            }
-        }
-        self.phase = Phase::Narrate { lines, after };
+        let enemy = self.pending_enemy.take();
+        self.play_round(FirstMover::Player, Some(RoundAction::Switch(idx)), enemy);
     }
 
     /// Bring party member `idx` in: its stat stages reset (documented), the
@@ -791,13 +762,9 @@ impl Battle {
     /// A RON-taken-over skill runs through the stack interpreter instead
     /// ([`perform_ron`](Self::perform_ron)).
     fn perform(&mut self, side: Side, skill: &Skill, lines: &mut VecDeque<String>) {
-        if skill.ron && self.hooks.is_some() {
-            self.perform_ron(side, skill, lines);
-            return;
-        }
-        let (attacker, defender) = match side {
-            Side::Player => (&mut self.party[self.active], &mut self.enemy),
-            Side::Enemy => (&mut self.enemy, &mut self.party[self.active]),
+        let attacker = match side {
+            Side::Player => &mut self.party[self.active],
+            Side::Enemy => &mut self.enemy,
         };
 
         // The MP gate is re-checked at resolution time.
@@ -826,6 +793,47 @@ impl Battle {
             return;
         }
 
+        if let Some(hooks) = &self.hooks {
+            let (attacker, defender) = match side {
+                Side::Player => (self.player(), &self.enemy),
+                Side::Enemy => (&self.enemy, self.player()),
+            };
+            let effects = hooks.matching_effects(|hook| {
+                if !matches!(
+                    hook.event,
+                    Event::BeforeMove
+                        | Event::ModifyDamage
+                        | Event::Effectiveness
+                        | Event::Damage
+                        | Event::DamagingHit
+                        | Event::AfterMove
+                ) {
+                    return false;
+                }
+                let holder = match hook.holder {
+                    HookHolder::Attacker => attacker,
+                    HookHolder::Defender => defender,
+                };
+                match hook.resolver {
+                    ResolverKind::Move => skill.ron && hook.source_id == skill.id,
+                    ResolverKind::Ability => holder.ability.as_deref() == Some(&hook.source_id),
+                    ResolverKind::Item => holder.held_item.as_deref() == Some(&hook.source_id),
+                    _ => false,
+                }
+            });
+            if skill.ron || !effects.is_empty() {
+                self.perform_ron(side, skill, &effects, lines);
+                return;
+            }
+        }
+        self.apply_table_skill(side, skill, lines);
+    }
+
+    fn apply_table_skill(&mut self, side: Side, skill: &Skill, lines: &mut VecDeque<String>) {
+        let (attacker, defender) = match side {
+            Side::Player => (&mut self.party[self.active], &mut self.enemy),
+            Side::Enemy => (&mut self.enemy, &mut self.party[self.active]),
+        };
         match skill.category {
             SkillCategory::Damage => {
                 let mult = self
@@ -879,21 +887,26 @@ impl Battle {
 
     // ── RON effect hooks (v2-a) ─────────────────────────────────────────────
 
-    /// Fire one stack event for the hooks sourced from ANY of `source_ids`
-    /// (a skill id plus — v2-e — the acting combatant's ability / held-item
-    /// record ids, or a status / weather record id), threading `relay`
-    /// through the fold (the minimon/wuxia harness shape: per-record filter →
-    /// `collect_handlers` → `run_event`). Returns the fold's output relay.
+    /// Fire a status, weather, switch-in or held-item residual from a single record.
+    fn fire_record(&mut self, id: &str, event: Event, who: BattlerRef) {
+        let hooks = self
+            .hooks
+            .as_ref()
+            .expect("record events require hook state");
+        let effects = hooks.matching_effects(|hook| hook.source_id == id && hook.event == event);
+        self.fire(event, &effects, who, who, RelayVar::Unit);
+    }
+
+    /// Collect all participating handlers into one ordered relay fold.
     fn fire(
         &mut self,
         event: Event,
-        source_ids: &[&str],
+        effects: &[&'static Effect<GenericProvider>],
         target: BattlerRef,
         source: BattlerRef,
         relay: RelayVar,
     ) -> RelayVar {
         let hooks = self.hooks.as_mut().expect("fire requires hook state");
-        let host = GenericProvider::rules_host().expect("rules host installed");
         let provider = GenericProvider;
         let mut adapter = hooks::RngAdapter(self.rng.as_mut());
         let mut ctx = BattleCtx {
@@ -902,18 +915,19 @@ impl Battle {
             mv: &mut hooks.mv,
             rng: &mut adapter,
         };
-        let mut hs = Vec::new();
-        for eff in &hooks.registry {
-            let matches = host
-                .compiled
-                .hook(eff.id)
-                .map(|h| source_ids.contains(&h.source_id.as_str()))
-                .unwrap_or(false);
-            if matches {
-                collect_handlers(&ctx, &provider, Some(eff), event, target, source, &mut hs);
-            }
+        let mut handlers = Vec::new();
+        for effect in effects {
+            collect_handlers(
+                &ctx,
+                &provider,
+                Some(effect),
+                event,
+                target,
+                source,
+                &mut handlers,
+            );
         }
-        run_event(&mut ctx, hs, relay, false)
+        run_event(&mut ctx, handlers, relay, false)
     }
 
     /// Copy the live pools (HP/MP/stats/stages/status) into the engine mirrors.
@@ -975,59 +989,26 @@ impl Battle {
         }
     }
 
-    /// Resolve one RON-taken-over skill: the v1 MP gate + accuracy roll, then
-    /// the stack event sequence over the mirrored battlers — `BeforeMove`
-    /// gate (when subscribed) → damage precompute (the v1 formula into
-    /// `ctx.mv.damage`) → `ModifyDamage` → `Effectiveness` → `Damage` → apply
-    /// → `DamagingHit` → `AfterMove` (the minimon/wuxia fire order).
-    fn perform_ron(&mut self, side: Side, skill: &Skill, lines: &mut VecDeque<String>) {
+    /// Resolve a landed skill through the move, ability and held-item hooks.
+    fn perform_ron(
+        &mut self,
+        side: Side,
+        skill: &Skill,
+        effects: &[&'static Effect<GenericProvider>],
+        lines: &mut VecDeque<String>,
+    ) {
         let (attacker, defender) = match side {
-            Side::Player => (&mut self.party[self.active], &mut self.enemy),
-            Side::Enemy => (&mut self.enemy, &mut self.party[self.active]),
+            Side::Player => (self.player(), &self.enemy),
+            Side::Enemy => (&self.enemy, self.player()),
         };
-
-        // The MP gate is re-checked at resolution time (v1 parity); the RON
-        // record's `cost:` already fed `skill.cost` at load.
-        if skill.cost > attacker.mp {
-            narrate(
-                &mut self.log,
-                lines,
-                format!("{} tried to use {}!", attacker.name, skill.name),
-            );
-            narrate(
-                &mut self.log,
-                lines,
-                "But there wasn't enough MP!".to_string(),
-            );
-            return;
-        }
-        attacker.mp -= skill.cost;
-        narrate(
-            &mut self.log,
-            lines,
-            format!("{} used {}!", attacker.name, skill.name),
-        );
-
-        if !accuracy_roll(skill.accuracy, self.rng.as_mut()) {
-            narrate(&mut self.log, lines, "But it missed!".to_string());
-            return;
-        }
-
+        let subscribes = |event| {
+            effects
+                .iter()
+                .any(|effect| effect.hooks.iter().any(|hook| hook.event == event))
+        };
         let eff_atk = attacker.eff_attack();
         let eff_def = defender.eff_defense();
         let def_element = defender.element.clone();
-        // v2-e: the acting combatant's ability and held-item records join its
-        // per-action event sequence (an ability hooking `ModifyDamage` etc.
-        // fires alongside the skill's own hooks).
-        let ability = attacker.ability.clone();
-        let held_item = attacker.held_item.clone();
-        let mut ids: Vec<&str> = vec![skill.id.as_str()];
-        if let Some(a) = &ability {
-            ids.push(a);
-        }
-        if let Some(i) = &held_item {
-            ids.push(i);
-        }
         let source = HookState::battler_ref(side);
         let target = HookState::battler_ref(match side {
             Side::Player => Side::Enemy,
@@ -1036,14 +1017,16 @@ impl Battle {
 
         self.sync_to_mirrors();
 
+        self.hooks.as_mut().unwrap().mv = Default::default();
+
         // BeforeMove gate — only when the record subscribes. Relay starts
         // `Bool(true)`; a `Fail` (`VetoIf` / unaffordable `PayResource`)
         // yields `Bool(false)`, a silent veto `Unit`.
-        if self.subscribes_any(&ids, Event::BeforeMove) {
+        if subscribes(Event::BeforeMove) {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());
             let out = self.fire(
                 Event::BeforeMove,
-                &ids,
+                effects,
                 target,
                 source,
                 RelayVar::Bool(true),
@@ -1066,9 +1049,14 @@ impl Battle {
         // When the record subscribes to `Effectiveness` the hooks own the
         // scaling (author `ApplyTypeChart` for the chart); otherwise the v1
         // direct chart application applies in the precompute.
-        let has_effectiveness_hooks = self.subscribes_any(&ids, Event::Effectiveness);
+        let has_effectiveness_hooks = subscribes(Event::Effectiveness);
 
-        if skill.power > 0 {
+        let deals_damage = if skill.ron {
+            skill.power > 0
+        } else {
+            matches!(skill.category, SkillCategory::Damage)
+        };
+        if deals_damage {
             let mult = if has_effectiveness_hooks {
                 (1, 1)
             } else {
@@ -1093,7 +1081,7 @@ impl Battle {
             let in_damage = self.hooks.as_ref().unwrap().mv.damage;
             let out = self.fire(
                 Event::ModifyDamage,
-                &ids,
+                effects,
                 target,
                 source,
                 RelayVar::Damage(in_damage),
@@ -1120,7 +1108,7 @@ impl Battle {
                 let in_damage = self.hooks.as_ref().unwrap().mv.damage;
                 let out = self.fire(
                     Event::Effectiveness,
-                    &ids,
+                    effects,
                     target,
                     source,
                     RelayVar::Damage(in_damage),
@@ -1153,7 +1141,7 @@ impl Battle {
             let in_damage = self.hooks.as_ref().unwrap().mv.damage;
             let out = self.fire(
                 Event::Damage,
-                &ids,
+                effects,
                 target,
                 source,
                 RelayVar::Damage(in_damage),
@@ -1187,6 +1175,12 @@ impl Battle {
             self.sync_from_mirrors();
         }
 
+        if !skill.ron && !matches!(skill.category, SkillCategory::Damage) {
+            self.sync_from_mirrors();
+            self.apply_table_skill(side, skill, lines);
+            self.sync_to_mirrors();
+        }
+
         // DamagingHit (secondary effects: InflictStatus riders etc.) — fired
         // after any landed hit, damaging or not, so a power-0 status skill's
         // riders still run.
@@ -1194,7 +1188,7 @@ impl Battle {
         let last_damage = self.hooks.as_ref().unwrap().mv.last_damage;
         self.fire(
             Event::DamagingHit,
-            &ids,
+            effects,
             target,
             source,
             RelayVar::Damage(last_damage),
@@ -1203,7 +1197,7 @@ impl Battle {
 
         // AfterMove (per-action cleanup: self-chips, volatiles).
         let before = snap_mirrors(self.hooks.as_ref().unwrap());
-        self.fire(Event::AfterMove, &ids, target, source, RelayVar::Unit);
+        self.fire(Event::AfterMove, effects, target, source, RelayVar::Unit);
         self.narrate_diffs(&before, lines, false);
 
         self.sync_from_mirrors();
@@ -1216,18 +1210,17 @@ impl Battle {
             .is_some_and(|h| h.subscribes(skill_id, event))
     }
 
-    /// Whether ANY of `ids` (a skill plus the acting combatant's ability /
-    /// held-item records, v2-e) subscribes to `event`.
-    fn subscribes_any(&self, ids: &[&str], event: Event) -> bool {
-        ids.iter().any(|id| self.subscribes(id, event))
-    }
-
     /// The end-of-action residual: the acting combatant's status record's
     /// `Residual` hooks (poison chip etc., v2-a), its held-item record's
     /// `Residual` hooks (Leftovers-style heal, v2-e), and the active
     /// weather's `FieldResidual` hooks with this side as the target (v2-e —
     /// so on a full round each side ticks once). No-op without hooks.
-    fn residual(&mut self, side: Side, lines: &mut VecDeque<String>) {
+    fn residual(
+        &mut self,
+        side: Side,
+        last_existing_effect: Option<EffectId>,
+        lines: &mut VecDeque<String>,
+    ) {
         if self.hooks.is_none() {
             return;
         }
@@ -1247,7 +1240,7 @@ impl Battle {
         };
         if let Some(source_id) = status_id {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());
-            self.fire(Event::Residual, &[&source_id], who, who, RelayVar::Unit);
+            self.fire_record(&source_id, Event::Residual, who);
             self.narrate_diffs(&before, lines, true);
         }
 
@@ -1258,15 +1251,27 @@ impl Battle {
         };
         if let Some(item_id) = held_item {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());
-            self.fire(Event::Residual, &[&item_id], who, who, RelayVar::Unit);
+            self.fire_record(&item_id, Event::Residual, who);
             self.narrate_diffs(&before, lines, false);
         }
 
         // 3. The weather's field residual (v2-e).
         if let Some(weather) = self.weather.clone() {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());
-            self.fire(Event::FieldResidual, &[&weather], who, who, RelayVar::Unit);
+            self.fire_record(&weather, Event::FieldResidual, who);
             self.narrate_diffs(&before, lines, false);
+        }
+
+        // A positive amount counts the holder's completed actions. Zero denotes
+        // an untimed volatile, which still clears on switch or battle end.
+        if let (Some(hooks), Some(last)) = (&mut self.hooks, last_existing_effect) {
+            hooks.effects.retain_mut(|effect| {
+                if effect.host != who || effect.id.0 > last.0 || effect.kind.amount == 0 {
+                    return true;
+                }
+                effect.kind.amount -= 1;
+                effect.kind.amount != 0
+            });
         }
 
         self.sync_from_mirrors();

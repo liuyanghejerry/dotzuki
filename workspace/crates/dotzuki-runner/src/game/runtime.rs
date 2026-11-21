@@ -90,6 +90,7 @@ impl RunnerGame {
             inventory: None,
             money: start_money,
             pending_whiteout: false,
+            heal_point: None,
             pending_weather: None,
             overworld_rng: None,
             steps_taken: 0,
@@ -161,20 +162,22 @@ impl RunnerGame {
                 return false;
             }
         };
-        let spawn = if map.is_blocked(spawn.0, spawn.1)
+        self.place_on_map(map, spawn, facing, 0);
+        true
+    }
+
+    fn place_on_map(&mut self, map: RuntimeMap, spawn: (i32, i32), facing: Direction, level: u8) {
+        let (spawn, level) = if map.is_blocked_at(level, spawn.0, spawn.1)
             || map.objects().npcs.iter().any(|n| (n.x, n.y) == spawn)
         {
             let fallback = find_spawn(&map);
             log::warn!(
-                "spawn ({},{}) on {map_id} is occupied; using ({},{})",
-                spawn.0,
-                spawn.1,
-                fallback.0,
-                fallback.1
+                "map {}: tile {spawn:?} on level {level} is blocked, using {fallback:?}",
+                map.id()
             );
-            fallback
+            (fallback, 0)
         } else {
-            spawn
+            (spawn, level)
         };
         self.camera.clamp_to_bounds(Rect::new(
             0.0,
@@ -182,14 +185,12 @@ impl RunnerGame {
             map.pixel_width() as f32,
             map.pixel_height() as f32,
         ));
+        log::info!("loaded map {} @ {spawn:?} on level {level}", map.id());
         self.map = Some(map);
         self.actor.place(spawn.0, spawn.1, facing);
-        // Warps land on the ground level (stairs are the only way up).
-        self.actor.set_elevation(0);
+        self.actor.set_elevation(level);
         self.center_camera();
         self.camera.update(0.0);
-        log::info!("loaded map {map_id} @ ({},{})", spawn.0, spawn.1);
-        true
     }
 
     // ── save/load ───────────────────────────────────────────────────────────
@@ -204,8 +205,19 @@ impl RunnerGame {
     /// state of a dialogue-only project). Returns `false` — fresh boot —
     /// when the saved map can't be loaded.
     fn resume_from(&mut self, save: GameSave) -> bool {
+        let saved_map = match &save.map {
+            Some(id) => match self.project.load_map(id) {
+                Ok(map) => Some(map),
+                Err(e) => {
+                    log::warn!("save: saved map '{id}' failed to load ({e:#})");
+                    return false;
+                }
+            },
+            None => None,
+        };
         self.cancel_navigation();
         self.flags.extend(save.flags);
+        self.heal_point = save.heal_point;
         // v2 fields: a v1 save (or a v2 save that never battled) has neither —
         // the first battle then starts from the records / starting counts.
         if let Some(party) = save.party {
@@ -229,46 +241,15 @@ impl RunnerGame {
         if let Some(money) = save.money {
             self.money = money;
         }
-        let Some(map_id) = &save.map else {
+        let Some(map) = saved_map else {
             log::info!("save: restored flags (dialogue-only project)");
             return false;
         };
-        let map = match self.project.load_map(map_id) {
-            Ok(m) => m,
-            Err(e) => {
-                log::warn!("save: saved map '{map_id}' failed to load ({e:#}) — starting fresh");
-                return false;
-            }
-        };
         let (x, y) = (save.player.x, save.player.y);
         let facing = parse_facing(&save.player.facing);
-        let spawn =
-            if map.is_blocked(x, y) || map.objects().npcs.iter().any(|n| (n.x, n.y) == (x, y)) {
-                let fallback = find_spawn(&map);
-                log::warn!(
-                    "save: position ({x},{y}) on {map_id} is occupied; using ({},{})",
-                    fallback.0,
-                    fallback.1
-                );
-                fallback
-            } else {
-                (x, y)
-            };
-        self.camera.clamp_to_bounds(Rect::new(
-            0.0,
-            0.0,
-            map.pixel_width() as f32,
-            map.pixel_height() as f32,
-        ));
-        self.map = Some(map);
-        self.actor.place(spawn.0, spawn.1, facing);
-        // Multi-level maps: restore the saved elevation, clamped to the map.
-        let max_level = self.map.as_ref().map(|m| m.level_count() - 1).unwrap_or(0) as u8;
-        self.actor.set_elevation(save.player.level.min(max_level));
-        self.center_camera();
-        self.camera.update(0.0);
+        let level = save.player.level.min((map.level_count() - 1) as u8);
+        self.place_on_map(map, (x, y), facing, level);
         self.mode = Mode::Overworld;
-        log::info!("save: resumed {map_id} @ ({},{})", spawn.0, spawn.1);
         true
     }
 
@@ -311,19 +292,24 @@ impl RunnerGame {
         }
     }
 
+    fn player_location(&self) -> PlayerSave {
+        let (x, y) = self.actor.tile();
+        PlayerSave {
+            x,
+            y,
+            facing: facing_name(self.actor.facing()).to_string(),
+            level: self.actor.elevation(),
+        }
+    }
+
     /// The current state as a [`GameSave`] (map, player tile/facing, flags,
     /// language, party, inventory, money).
     fn current_save(&self) -> GameSave {
-        let (x, y) = self.actor.tile();
         GameSave {
             version: SAVE_VERSION,
             map: self.current_map_id().map(str::to_string),
-            player: PlayerSave {
-                x,
-                y,
-                facing: facing_name(self.actor.facing()).to_string(),
-                level: self.actor.elevation(),
-            },
+            player: self.player_location(),
+            heal_point: self.heal_point.clone(),
             flags: self.flags.clone(),
             lang: Some(self.lang.clone()),
             party: self.party_state.as_ref().map(|party| {
@@ -657,6 +643,16 @@ impl RunnerGame {
                             cmd = self.signal(&mut engine, CommandResult::Text("win".to_string()));
                         }
                     }
+                }
+                Some(ScriptCommand::Heal) => {
+                    self.heal_party_to_full();
+                    if let Some(map) = self.current_map_id() {
+                        self.heal_point = Some(HealPoint {
+                            map: map.to_owned(),
+                            player: self.player_location(),
+                        });
+                    }
+                    cmd = self.signal(&mut engine, CommandResult::Void);
                 }
                 Some(ScriptCommand::SetWeather { weather }) => {
                     log::info!("scene → weather: {weather:?} (applies to the next battle)");

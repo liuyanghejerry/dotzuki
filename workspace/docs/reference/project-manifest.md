@@ -5,7 +5,7 @@ The zero-Rust project contract: directory layout, manifest schema, and run/check
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 A **game project** is a plain directory of DSL, data, and asset files plus a
 single manifest, `.dotzuki-editor.json`. There is no Cargo workspace, no
@@ -279,15 +279,16 @@ the scene. Item records are read through the `battle.items` table.
 
 ### Game-over
 
-Losing a battle no longer strands the player with a 0-HP
-party: after the scene that received `"lose"` finishes (its own post-lose
-text plays first), the runner runs a **whiteout** — a brief blackout, a
-`<Name> collapsed…` line, then the whole party is healed to full HP/MP
-(status cleared) and the player returns to the **entry map's spawn point**
-(the current map if it is the entry map, otherwise the entry map loads).
-Flags, inventory and money are kept. Map-less (dialogue-only) projects just
-heal. There is no heal-point system yet: the respawn is always the entry
-spawn.
+Use `@command("heal")` in a scene to restore the party's HP and MP, clear
+status, and record the current map, tile, facing and elevation as a
+[heal point](glossary.md#battle-gameplay). Each call replaces the previous point.
+
+After a losing scene finishes its dialogue, the runner shows a brief blackout
+and a collapse message, heals the party, and returns the player to that point.
+Without a recorded point, or if its map is gone, the player returns to the
+entry map's spawn. If the recorded tile is blocked, the runner chooses a
+ground-level spawn on the same map. A map-less project heals the party in
+place. Flags, inventory and money carry over.
 
 ### Audio
 
@@ -311,11 +312,12 @@ is drawn. NPCs always render as id-colored placeholders in this version.
 
 The game saves to `<project>/.dotzuki-save.json` (override with
 `--save-file`) — versioned JSON: `{version, map, player: {x, y, facing, level?},
-flags, lang, party?, inventory?, money?}` (v3; `party`/`inventory` appear
+flags, lang, party?, inventory?, money?, healPoint?}` (v3; `party`/`inventory` appear
 once a battle has completed — see [the battle rules](battle-rules.md); party members may
 carry optional `level`/`exp` fields when the battle has a `levels` block —
 absent ⇒ level 1 / 0 EXP; `money` is always written; `player.level` is the
-map elevation level, absent ⇒ 0). Saves are written only from **stable** states — after a completed
+map elevation level, absent ⇒ 0). The optional `healPoint` contains
+`{map, x, y, facing, level?}`. Existing saves without it use the entry spawn. Saves are written only from **stable** states — after a completed
 warp transition and when a scene finishes into the overworld — never
 mid-scene or mid-warp (a suspended scene engine can't resume), so closing
 the window mid-dialogue keeps the last stable point. The Start menu's
@@ -343,11 +345,6 @@ scenes in place (a broken edit keeps the old scenes running; diagnostics are
 logged), and an edit to the *current* map's `map.tmx.json` / `tileset.png` /
 objects sidecar reloads that map in place, preserving the player position and
 flags. Other maps, data tables and gfx are picked up on next enter / boot.
-
-### Not yet implemented
-
-Scenes relying on these warn and continue: the
-`StackDriver` turn loop.
 
 ## What `dotzuki check` compiles
 

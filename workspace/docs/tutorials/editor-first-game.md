@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: tutorial
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 A guided tour from an empty machine to a JRPG project you can click around
 in — no Rust, no code required.
@@ -133,8 +133,9 @@ dotzuki check ~/dotzuki-projects/<your-game>
   actions, and a scene can arm the seeded `sandstorm` with
   `setWeather("sandstorm")` before `startBattle`); held items are never
   consumed, weather is battle-local (scene-armed only), and a lost battle
-  heals the party and returns you to the entry map's spawn (no heal-point
-  system yet). Everything else is in: enemy parties (the `encounters` table —
+  heals the party and returns you to the last heal point. A scene can set
+  one with `@command("heal")`. The entry spawn is the default. Other battle
+  options include enemy parties (the `encounters` table —
   queued send-outs, summed EXP), trainer battles (Run blocked, money on a
   win), a wild-only Run action (the scene sees a third outcome, `"run"`), and
   shop selling at half price. See [the battle rules reference](../reference/battle-rules.md)
