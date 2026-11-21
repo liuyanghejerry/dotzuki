@@ -36,6 +36,7 @@ const MANIFEST_FILE: &str = ".dotzuki-editor.json";
 
 /// A fully loaded zero-Rust game project.
 pub struct LoadedProject {
+    pub(crate) records: std::rc::Rc<crate::records::Records>,
     map_cache: std::sync::Mutex<MapCache>,
     pub(crate) battle_rules: std::sync::Mutex<Option<crate::battle::CachedRules>>,
     /// The file backend every project read goes through.
@@ -45,6 +46,7 @@ pub struct LoadedProject {
     data_root: PathBuf,
     /// `data_root` as a project-relative POSIX path (VFS key prefix).
     data_root_rel: String,
+    table_dirs: HashMap<String, String>,
     gfx_root: Option<PathBuf>,
     /// `gfx_root` as a project-relative POSIX path, when configured.
     gfx_root_rel: Option<String>,
@@ -114,7 +116,17 @@ impl LoadedProject {
 
         let (stem_to_name, name_to_stem) = stem_indexes(&report);
 
+        // Preserve the manifest's first-match semantics for duplicate table ids.
+        let mut table_dirs = HashMap::new();
+        for table in manifest.data_tables() {
+            table_dirs
+                .entry(table.id)
+                .or_insert_with(|| join_path(&data_root_rel, &table.dir));
+        }
+
         Ok(Self {
+            table_dirs,
+            records: std::rc::Rc::new(crate::records::Records::new(Arc::clone(&files))),
             map_cache: Default::default(),
             battle_rules: Default::default(),
             files,
@@ -359,6 +371,20 @@ impl LoadedProject {
             .invalidate(id);
     }
 
+    /// Invalidate a changed, created or deleted data-table JSON file.
+    /// The path is relative to the project root. Returns whether it belongs
+    /// to a declared table. Running battles keep their own live state.
+    pub fn invalidate_record_file(&self, path: &str) -> bool {
+        let Some((dir, name)) = path.rsplit_once('/') else {
+            return false;
+        };
+        if !name.ends_with(".json") || !self.table_dirs.values().any(|table| table == dir) {
+            return false;
+        }
+        self.records.invalidate(dir, path);
+        true
+    }
+
     /// Directory holding the records of data table `table_id` (a table id
     /// from the data activity's `config.tables[]`), resolved against the
     /// project root. `None` when the id names no declared table.
@@ -370,9 +396,7 @@ impl LoadedProject {
     /// POSIX path (the VFS form of [`table_dir`](Self::table_dir)). `None`
     /// when the id names no declared table.
     pub fn table_dir_rel(&self, table_id: &str) -> Option<String> {
-        self.manifest
-            .data_table(table_id)
-            .map(|t| join_path(&self.data_root_rel, &t.dir))
+        self.table_dirs.get(table_id).cloned()
     }
 }
 

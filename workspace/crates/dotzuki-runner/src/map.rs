@@ -482,6 +482,14 @@ impl RuntimeMap {
             .filter(|&gid| gid != 0)
     }
 
+    pub(crate) fn scrolls_with_camera(&self) -> bool {
+        self.data
+            .state
+            .layers
+            .iter()
+            .all(|layer| !layer.visible || layer.scroll_factor == (1.0, 1.0))
+    }
+
     /// RGBA pixel of the tile with 1-based Tiled `gid` at intra-tile
     /// `(px, py)` — matches the `tile_color` callback shape of
     /// `dotzuki_renderer::layer_renderer::render_layers_sized` (the palette-group

@@ -257,6 +257,13 @@ stages, volatile effects and move context. The shared definition is available
 through `HookState::rules`. Its `compiled()` method exposes the hook registry
 and interned stat names.
 
+Encounters, the pause menu and shops share a project's parsed character, enemy,
+skill and item definitions. Packed projects reuse each definition and its table
+index after the first access. Disk projects check for changed files and directory
+entries. A host can invalidate an edited record with
+`project.invalidate_record_file("data/heroes/aria.json")`. Running battles keep
+their current HP, MP and inventory until the normal battle result is applied.
+
 ## Abilities, held items & weather
 
 The remaining RON kinds are live, wired

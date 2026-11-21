@@ -7,6 +7,9 @@
 //! winit, no pixels. Tilesets are generated in code (see `fixture.rs`), so
 //! no binary assets are committed.
 
+#[path = "support/frames.rs"]
+mod frames;
+
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -568,7 +571,8 @@ fn retained_frames_match_complete_frames_and_bound_every_change() {
     frame(&mut game, 0);
     assert!(!check(&mut game).present);
     frame(&mut game, GbButton::Down.bit_mask());
-    assert_eq!(check(&mut game), opened);
+    let cursor = check(&mut game);
+    assert!(cursor.present && cursor.width == 8 && cursor.height <= 17);
     frame(&mut game, GbButton::B.bit_mask());
     assert_eq!(check(&mut game), opened);
     fs::write(
@@ -581,4 +585,38 @@ fn retained_frames_match_complete_frames_and_bound_every_change() {
     let mut fresh = FrameBuffer::new(RenderConfig::new(320, 240), Rgba::TRANSPARENT);
     assert_eq!(game.draw_retained(&mut fresh), full);
     assert_eq!(fresh.data, reference.data);
+}
+
+#[test]
+fn retained_scrolling_matches_full_frames_in_every_direction() {
+    let (tmp, mut game) = navigation_game("scroll-pixels");
+    let path = tmp.path().join("demo/data/maps/Town/map.tmx.json");
+    let mut map: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    map["width"] = 40.into();
+    map["height"] = 30.into();
+    for layer in map["layers"].as_array_mut().unwrap() {
+        layer["width"] = 40.into();
+        layer["height"] = 30.into();
+        let ground = layer["name"] == "ground";
+        layer["data"] = (0..1200)
+            .map(|i| if ground { 1 + (i + i / 40) % 4 } else { 0 })
+            .collect::<Vec<_>>()
+            .into();
+    }
+    fs::write(path, map.to_string()).unwrap();
+    assert!(game.reload_current_map());
+    game.debug_place(20, 15, Direction::Right);
+    let mut frames = frames::Frames::new();
+    frames.check(&mut game);
+    for (x, y) in [(208., 120.), (160., 168.), (112., 120.), (160., 72.)] {
+        assert!(game.click_to_move(x, y));
+        for _ in 0..40 {
+            frame(&mut game, 0);
+            frames.check(&mut game);
+        }
+    }
+    // Draws can be skipped through a corner in a route (both axes shifted).
+    assert!(game.click_to_move(208., 168.));
+    idle(&mut game, 48);
+    frames.check(&mut game);
 }

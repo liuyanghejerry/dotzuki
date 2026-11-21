@@ -190,16 +190,22 @@ Render and surface-resize errors are logged and exit the loop. On wasm the pixel
 The native player, editor Play and mobile runner retain their RGBA framebuffer
 between ticks. `RunnerGame::draw_retained` updates this buffer and returns a
 `DirtyRegion` in screen pixels. The first frame covers the full viewport.
-A stationary overworld, dialogue page, choice or root pause menu returns an
-empty region. With a fixed camera, walking, turning, changing the destination
-marker or moving the menu cursor redraws the affected bounds. This includes
-NPCs and higher map layers that intersect those bounds.
+A stationary overworld, dialogue page, pause menu, inventory, party, shop or
+battle menu returns an empty region. With a fixed camera, moving an actor or
+destination marker redraws its old and new bounds, including intersecting NPCs
+and upper map layers. List navigation restores the previous cursor pixels and
+paints the new cursor. A list covered by a prompt redraws the panel on movement.
 
-Camera movement, elevation changes, a map reload, fades and battles redraw the
-viewport. Inventory, party and shop screens also use the full draw path. A
-host that replaces or edits the output buffer calls `RunnerGame::draw` for a
-complete frame. The web `tick` and mobile RGBA copy interfaces still deliver
-a complete image to their callers.
+During ordinary scrolling the runner shifts retained pixels, paints the exposed
+map edges and repairs moving actors. The returned rectangle covers the viewport
+because the displayed map moved. Elevation changes, map reloads and fades also
+require a full update. Call `RunnerGame::draw` to populate a new output buffer.
+
+Editor Play and Web exports call `runner.advance(input)` for each simulation tick
+and `runner.present(ctx, false)` to paint accumulated changes on a retained 2D
+canvas. Passing `true` refreshes a replaced canvas. The Android and HarmonyOS
+export shells consume packed RGBA rectangles through the mobile ABI. A host that
+needs a full snapshot can use the Web `tick` or mobile `copy_frame` API.
 
 ### Indexed dialogue text
 

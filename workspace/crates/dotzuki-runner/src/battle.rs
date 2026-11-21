@@ -149,24 +149,22 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 
+use crate::game::list::{draw_list, ListCursor, Placement};
 use anyhow::{Context, Result};
 use dotzuki_engine::battle::stack::{
     run_event, BattleCtx, CollectedHandler, EffectId, Event, FirstMover, RelayVar, StackDriver,
     TurnPhase,
 };
 use dotzuki_engine::battle::BattlerRef;
-use dotzuki_engine::menu::MenuConfig;
-use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
+use dotzuki_engine::render::{FrameBuffer, Rgba};
 use dotzuki_renderer::embedded_font;
 use dotzuki_renderer::input::{GbButton, InputState};
 use dotzuki_rules::{HookHolder, ResolverKind};
-use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
-use dotzuki_ui::FrameBufferPainter;
 
-use crate::game::{draw_textbox, DIALOG_AREA, SCREEN_H, SCREEN_W};
+use crate::game::{draw_textbox, SCREEN_H, SCREEN_W};
 use crate::manifest::{BattleLevels, BattleStats, DEFAULT_RULES_FILE};
 use crate::project::LoadedProject;
-use crate::vfs::{join_path, ProjectFiles};
+use crate::vfs::join_path;
 
 use dotzuki_rules::CompiledHook;
 use hooks::{BattleRules, HookState};
@@ -627,7 +625,7 @@ pub struct BattleItem {
 /// fail on a broken section).
 pub struct BattleSetup {
     /// The project file backend every record read goes through.
-    files: Arc<dyn ProjectFiles>,
+    records: std::rc::Rc<crate::records::Records>,
     /// Record dirs are project-relative POSIX paths (VFS key prefixes).
     party_dir: String,
     enemies_dir: String,
@@ -852,7 +850,7 @@ impl BattleSetup {
         };
 
         Ok(Self {
-            files: Arc::clone(project.files()),
+            records: project.records.clone(),
             party_dir,
             enemies_dir,
             encounters_dir,
@@ -905,12 +903,12 @@ impl BattleSetup {
         party_state: Option<&[PartyMemberState]>,
         inventory: Option<&HashMap<String, u32>>,
     ) -> Result<Battle> {
-        let ids = record_ids(self.files.as_ref(), &self.party_dir);
+        let ids = self.records.ids(&self.party_dir);
         if ids.is_empty() {
             anyhow::bail!("party table {} has no records", self.party_dir);
         }
         let mut party = Vec::with_capacity(ids.len());
-        for id in &ids {
+        for id in ids.iter() {
             let mut c = self.load_combatant(&self.party_dir, id)?;
             if let Some(state) = party_state.and_then(|states| states.iter().find(|s| &s.id == id))
             {
@@ -954,13 +952,14 @@ impl BattleSetup {
                 (first, enemies.collect(), encounter.trainer, money)
             }
             None => {
-                let enemy_id = if self
-                    .files
-                    .exists(&format!("{}/{enemy_id}.json", self.enemies_dir))
-                {
+                let enemy_id = if self.records.contains(&self.enemies_dir, enemy_id) {
                     enemy_id.to_string()
                 } else {
-                    let fallback = first_record_id(self.files.as_ref(), &self.enemies_dir)
+                    let fallback = self
+                        .records
+                        .ids(&self.enemies_dir)
+                        .first()
+                        .cloned()
                         .with_context(|| {
                             format!("enemies table {} has no records", self.enemies_dir)
                         })?;
@@ -1024,10 +1023,10 @@ impl BattleSetup {
         let Some(dir) = &self.encounters_dir else {
             return Ok(None);
         };
-        if !self.files.exists(&format!("{dir}/{id}.json")) {
+        if !self.records.contains(dir, id) {
             return Ok(None);
         }
-        let record = read_record(self.files.as_ref(), dir, id)?;
+        let record = self.records.read(dir, id)?;
         let enemy_ids: Vec<String> = record
             .get("enemies")
             .and_then(|v| v.as_array())
@@ -1041,10 +1040,7 @@ impl BattleSetup {
             anyhow::bail!("encounter '{id}' has no 'enemies' list (or it is empty)");
         }
         for enemy_id in &enemy_ids {
-            if !self
-                .files
-                .exists(&format!("{}/{enemy_id}.json", self.enemies_dir))
-            {
+            if !self.records.contains(&self.enemies_dir, enemy_id) {
                 anyhow::bail!(
                     "encounter '{id}' references unknown enemy id '{enemy_id}' \
                      (no record in the enemies table)"
@@ -1070,8 +1066,8 @@ impl BattleSetup {
             return Vec::new();
         };
         let mut out = Vec::new();
-        for id in record_ids(self.files.as_ref(), &items.dir) {
-            let record = match read_record(self.files.as_ref(), &items.dir, &id) {
+        for id in self.records.ids(&items.dir).iter() {
+            let record = match self.records.read(&items.dir, id) {
                 Ok(record) => record,
                 Err(e) => {
                     log::warn!("item record '{id}' skipped: {e:#}");
@@ -1082,7 +1078,7 @@ impl BattleSetup {
             if heal > 0 {
                 out.push(BattleItem {
                     name: get_str(&record, "name").unwrap_or(&id).to_string(),
-                    id,
+                    id: id.clone(),
                     heal,
                 });
             }
@@ -1100,7 +1096,7 @@ impl BattleSetup {
     /// stats carry the level-growth multiplier (the record's `levelField`,
     /// default 1 ⇒ ×1) and the enemy side reads its `expField` reward.
     fn load_combatant(&self, dir: &str, id: &str) -> Result<Combatant> {
-        let record = read_record(self.files.as_ref(), dir, id)?;
+        let record = self.records.read(dir, id)?;
         let level_field = self
             .levels
             .as_ref()
@@ -1166,7 +1162,7 @@ impl BattleSetup {
                 let Some(id) = id.as_str() else {
                     continue;
                 };
-                match read_record(self.files.as_ref(), skills_dir, id) {
+                match self.records.read(skills_dir, id) {
                     Ok(rec) => skills.push(skill_from_record(id, &rec, self)),
                     Err(e) => log::warn!("unknown skill id '{id}' skipped: {e:#}"),
                 }
@@ -1177,45 +1173,6 @@ impl BattleSetup {
         }
         skills
     }
-}
-
-/// Every record id (sorted `.json` filename stems) directly in a table dir
-/// (a project-relative POSIX path read through the VFS).
-pub(crate) fn record_ids(files: &dyn ProjectFiles, dir: &str) -> Vec<String> {
-    let prefix = format!("{dir}/");
-    let mut ids: Vec<String> = files
-        .list(dir)
-        .into_iter()
-        .filter_map(|p| {
-            // Direct children only (records live flat in the table dir).
-            let rest = p.strip_prefix(&prefix)?;
-            if rest.contains('/') {
-                return None;
-            }
-            rest.strip_suffix(".json").map(str::to_string)
-        })
-        .collect();
-    ids.sort();
-    ids.dedup();
-    ids
-}
-
-/// The first record id (sorted `.json` filename stem) in a table dir.
-fn first_record_id(files: &dyn ProjectFiles, dir: &str) -> Option<String> {
-    record_ids(files, dir).into_iter().next()
-}
-
-/// Read and parse `<dir>/<id>.json`.
-pub(crate) fn read_record(
-    files: &dyn ProjectFiles,
-    dir: &str,
-    id: &str,
-) -> Result<serde_json::Value> {
-    let rel = format!("{dir}/{id}.json");
-    let bytes = files
-        .read_bytes(&rel)
-        .with_context(|| format!("failed to read {rel}"))?;
-    serde_json::from_slice(&bytes).with_context(|| format!("failed to parse {rel}"))
 }
 
 /// A record's numeric field (accepts ints and floats); `None` when missing

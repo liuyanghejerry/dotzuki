@@ -1,5 +1,7 @@
 //! Run each measurement in this single-test process after warming its caches.
 use std::alloc::{GlobalAlloc, Layout, System};
+use std::borrow::Cow;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::path::Path;
@@ -39,6 +41,31 @@ unsafe impl GlobalAlloc for CountAlloc {
     }
 }
 
+struct CountFiles {
+    files: MemoryFiles,
+    json_reads: Cell<usize>,
+    listings: Cell<usize>,
+}
+
+impl ProjectFiles for CountFiles {
+    fn read(&self, path: &str) -> anyhow::Result<Vec<u8>> {
+        self.read_bytes(path).map(Cow::into_owned)
+    }
+    fn read_bytes(&self, path: &str) -> anyhow::Result<Cow<'_, [u8]>> {
+        if path.ends_with(".json") {
+            self.json_reads.set(self.json_reads.get() + 1);
+        }
+        self.files.read_bytes(path)
+    }
+    fn list(&self, prefix: &str) -> Vec<String> {
+        self.listings.set(self.listings.get() + 1);
+        self.files.list(prefix)
+    }
+    fn is_immutable(&self) -> bool {
+        true
+    }
+}
+
 #[test]
 fn warm_map_draws_allocate_nothing_and_dropped_encounters_retain_nothing() {
     let disk = DiskFiles::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/demo"));
@@ -66,7 +93,12 @@ fn warm_map_draws_allocate_nothing_and_dropped_encounters_retain_nothing() {
     blended["properties"] = serde_json::json!([{"name":"level","type":"int","value":1}]);
     layers.push(blended);
     files.insert(path.into(), serde_json::to_vec(&map).unwrap());
-    let project = LoadedProject::load_with_files(Arc::new(MemoryFiles::new(files))).unwrap();
+    let files = Arc::new(CountFiles {
+        files: MemoryFiles::new(files),
+        json_reads: Cell::default(),
+        listings: Cell::default(),
+    });
+    let project = LoadedProject::load_with_files(files.clone()).unwrap();
     let map = project.load_map("Town").unwrap();
     let mut fb = FrameBuffer::new(RenderConfig::new(320, 240), Rgba::BLACK);
     let mut draw = || {
@@ -89,9 +121,11 @@ fn warm_map_draws_allocate_nothing_and_dropped_encounters_retain_nothing() {
         drop(std::hint::black_box(battle));
     };
     encounter();
+    let baseline = (files.json_reads.get(), files.listings.get());
     let before = LIVE_BYTES.load(Relaxed);
     for _ in 0..32 {
         encounter();
     }
     assert_eq!(LIVE_BYTES.load(Relaxed), before);
+    assert_eq!((files.json_reads.get(), files.listings.get()), baseline);
 }

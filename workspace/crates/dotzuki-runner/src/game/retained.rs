@@ -8,6 +8,7 @@ pub(super) struct RetainedDraw {
     pub(super) target: usize,
     previous: Option<VisualState<'static>>,
     scratch: Option<FrameBuffer>,
+    cursor: Option<list::ListCursor>,
 }
 
 impl RetainedDraw {
@@ -22,6 +23,17 @@ enum Overlay<'a> {
     Text(Cow<'a, str>),
     Choice(Cow<'a, str>, Cow<'a, [String]>, usize),
     RootMenu(usize),
+    Panel(Panel, usize),
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Panel {
+    Party,
+    Bag,
+    Target,
+    Note,
+    Shop,
+    Battle,
 }
 
 impl<'a> Overlay<'a> {
@@ -35,12 +47,14 @@ impl<'a> Overlay<'a> {
                 cursor,
             ),
             Self::RootMenu(cursor) => Overlay::RootMenu(cursor),
+            Self::Panel(panel, cursor) => Overlay::Panel(panel, cursor),
         }
     }
 
     fn bounds(&self) -> DirtyRegion {
         match self {
             Self::None => DirtyRegion::empty(),
+            Self::Panel(..) => DirtyRegion::full(SCREEN_W as u32, SCREEN_H as u32),
             Self::Text(_) => DirtyRegion::new(
                 0,
                 (DIALOG_AREA.ty * 8) as i32,
@@ -57,7 +71,7 @@ impl<'a> Overlay<'a> {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 struct SpriteImage {
     bounds: DirtyRegion,
     row: u32,
@@ -83,36 +97,57 @@ impl VisualState<'_> {
         }
     }
 
-    fn damage(&self, old: &VisualState<'_>) -> DirtyRegion {
+    fn cursor_change(&self, old: &Self) -> Option<usize> {
+        if self.camera != old.camera
+            || self.level != old.level
+            || self.player != old.player
+            || self.marker != old.marker
+        {
+            return None;
+        }
+        match (&self.overlay, &old.overlay) {
+            (Overlay::RootMenu(new), Overlay::RootMenu(old)) if new != old => Some(*new),
+            (Overlay::Panel(p, new), Overlay::Panel(q, old)) if p == q && new != old => Some(*new),
+            _ => None,
+        }
+    }
+
+    // Compare world-space actors after translating the retained pixels to the new camera.
+    fn actors(&self, old: &Self, dx: i32, dy: i32) -> [DirtyRegion; 2] {
+        let translate = |mut r: DirtyRegion| {
+            r.x += dx;
+            r.y += dy;
+            r
+        };
+        let mut player = old.player;
+        player.bounds = translate(player.bounds);
+        let player = if self.player == player {
+            DirtyRegion::empty()
+        } else {
+            self.player.bounds.union(&player.bounds)
+        };
+        let marker = old.marker.map(|(r, color)| (translate(r), color));
+        let mut changed = DirtyRegion::empty();
+        if self.marker != marker {
+            for (r, _) in [self.marker, marker].into_iter().flatten() {
+                changed = changed.union(&r);
+            }
+        }
+        [player, changed]
+    }
+
+    fn damage(&self, old: &Self) -> DirtyRegion {
         if self.camera != old.camera || self.level != old.level {
             return DirtyRegion::full(SCREEN_W as u32, SCREEN_H as u32);
         }
-        let mut area = DirtyRegion::empty();
-        if self.player != old.player {
-            area = self.player.bounds.union(&old.player.bounds);
-        }
-        if self.marker != old.marker {
-            for (bounds, _) in [old.marker, self.marker].into_iter().flatten() {
-                area = area.union(&bounds);
-            }
-        }
+        let [player, marker] = self.actors(old, 0, 0);
+        let mut area = player.union(&marker);
         if self.overlay != old.overlay {
             area = area
                 .union(&self.overlay.bounds())
                 .union(&old.overlay.bounds());
         }
-        if !area.present {
-            return area;
-        }
-        let x = area.x.clamp(0, SCREEN_W);
-        let y = area.y.clamp(0, SCREEN_H);
-        let right = (area.x + area.width as i32).clamp(x, SCREEN_W);
-        let bottom = (area.y + area.height as i32).clamp(y, SCREEN_H);
-        if right == x || bottom == y {
-            DirtyRegion::empty()
-        } else {
-            DirtyRegion::new(x, y, (right - x) as u32, (bottom - y) as u32)
-        }
+        area.clipped(SCREEN_W as u32, SCREEN_H as u32)
     }
 }
 
@@ -132,6 +167,18 @@ impl RunnerGame {
                 s.cursor,
             ),
             Mode::Menu(s) if matches!(s.view, menu::MenuView::Root) => Overlay::RootMenu(s.cursor),
+            Mode::Menu(s) => Overlay::Panel(
+                match s.view {
+                    menu::MenuView::Party => Panel::Party,
+                    menu::MenuView::Bag => Panel::Bag,
+                    menu::MenuView::BagTarget { .. } => Panel::Target,
+                    menu::MenuView::Note { .. } => Panel::Note,
+                    menu::MenuView::Root => unreachable!(),
+                },
+                s.cursor,
+            ),
+            Mode::Shop(s) => Overlay::Panel(Panel::Shop, s.cursor),
+            Mode::Battle(s) => Overlay::Panel(Panel::Battle, s.battle.cursor()),
             _ => return None,
         };
         let camera = self.camera_pixels();
@@ -176,55 +223,106 @@ impl RunnerGame {
 
     /// Update the same unmodified framebuffer across draws and return its changed bounds.
     /// Call [`Self::draw`] when replacing or modifying the output surface.
-    /// Camera, elevation, map and full-screen effects invalidate the whole viewport.
+    /// Scrolling reuses the overlapping pixels but still changes the complete display.
     pub fn draw_retained(&mut self, fb: &mut FrameBuffer) -> DirtyRegion {
         let full = DirtyRegion::full(fb.width, fb.height);
         let target = fb.data.as_ptr() as usize;
-        if (fb.width, fb.height) != (SCREEN_W as u32, SCREEN_H as u32) {
-            self.retained.previous = None;
-            self.draw_full(fb);
-            return full;
-        }
-        let Some(next) = self.visual_state() else {
-            self.retained.previous = None;
+        let next = self
+            .visual_state()
+            .filter(|_| (fb.width, fb.height) == (SCREEN_W as u32, SCREEN_H as u32));
+        let Some(next) = next else {
+            self.retained.invalidate();
             self.draw_full(fb);
             return full;
         };
-        let damage = self
+        let old = self
             .retained
             .previous
             .as_ref()
-            .filter(|_| self.retained.target == target)
-            .map_or(full, |old| next.damage(old));
+            .filter(|_| self.retained.target == target);
+        let damage = old.map_or(full, |old| next.damage(old));
         if !damage.present {
             fb.clear_dirty();
             return damage;
         }
-        let next = next.owned();
-        if damage == full {
-            self.draw_full(fb);
-        } else {
-            let mut scratch = self.retained.scratch.take().unwrap_or_else(|| {
-                FrameBuffer::new(
-                    dotzuki_engine::render_config::RenderConfig::new(damage.width, damage.height),
-                    Rgba::BLACK,
+        let cursor = old.and_then(|old| next.cursor_change(old));
+        let scroll = old.and_then(|old| {
+            let (dx, dy) = (old.camera.0 - next.camera.0, old.camera.1 - next.camera.1);
+            ((dx != 0 || dy != 0)
+                && dx.unsigned_abs() < fb.width
+                && dy.unsigned_abs() < fb.height
+                && old.level == next.level
+                && matches!(
+                    (&old.overlay, &next.overlay),
+                    (Overlay::None, Overlay::None)
                 )
-            });
-            scratch.width = damage.width;
-            scratch.height = damage.height;
-            let stride = damage.width as usize * 4;
-            scratch.data.resize(stride * damage.height as usize, 0);
-            self.draw_map_region(&mut scratch, (damage.x, damage.y));
-            for (y, row) in scratch.data.chunks_exact(stride).enumerate() {
-                let start = ((damage.y as usize + y) * fb.width as usize + damage.x as usize) * 4;
-                fb.data[start..start + stride].copy_from_slice(row);
+                && self
+                    .map
+                    .as_ref()
+                    .is_some_and(RuntimeMap::scrolls_with_camera))
+            .then(|| (dx, dy, next.actors(old, dx, dy)))
+        });
+        let next = next.owned();
+        let damage = if let (Some(row), Some(saved)) = (cursor, self.retained.cursor.as_mut()) {
+            saved.move_to(fb, row)
+        } else if let Some((dx, dy, actors)) = scroll {
+            self.scroll_map(fb, dx, dy, actors);
+            full
+        } else {
+            if damage == full {
+                if !matches!(self.mode, Mode::Battle(_)) {
+                    self.draw_map_region(fb, (0, 0));
+                }
+            } else {
+                self.repaint_map_region(fb, damage);
             }
-            self.retained.scratch = Some(scratch);
-            self.draw_overlay(fb);
-        }
+            self.retained.cursor = self.draw_overlay(fb, true);
+            damage
+        };
         self.retained.target = target;
         self.retained.previous = Some(next);
         fb.dirty_region = damage;
         damage
+    }
+
+    fn repaint_map_region(&mut self, fb: &mut FrameBuffer, area: DirtyRegion) {
+        let r = area.clipped(fb.width, fb.height);
+        if !r.present {
+            return;
+        }
+        let mut patch = self.retained.scratch.take().unwrap_or_else(|| {
+            FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(r.width, r.height),
+                Rgba::BLACK,
+            )
+        });
+        patch.width = r.width;
+        patch.height = r.height;
+        let stride = r.width as usize * 4;
+        patch.data.resize(stride * r.height as usize, 0);
+        self.draw_map_region(&mut patch, (r.x, r.y));
+        for (y, row) in patch.data.chunks_exact(stride).enumerate() {
+            fb.blit_row(r.x as u32, r.y as u32 + y as u32, row, r.width);
+        }
+        self.retained.scratch = Some(patch);
+    }
+
+    fn scroll_map(&mut self, fb: &mut FrameBuffer, dx: i32, dy: i32, actors: [DirtyRegion; 2]) {
+        // One overlapping move shifts every surviving row. Wrapped pixels lie
+        // in the newly exposed strips and are replaced below.
+        let offset = (dy * fb.width as i32 + dx) * 4;
+        let count = fb.data.len() - offset.unsigned_abs() as usize;
+        let src = (-offset).max(0) as usize;
+        fb.data
+            .copy_within(src..src + count, offset.max(0) as usize);
+        let w = dx.unsigned_abs();
+        let h = dy.unsigned_abs();
+        let x = if dx < 0 { (fb.width - w) as i32 } else { 0 };
+        let y = if dy < 0 { (fb.height - h) as i32 } else { 0 };
+        self.repaint_map_region(fb, DirtyRegion::new(0, y, fb.width, h));
+        self.repaint_map_region(fb, DirtyRegion::new(x, dy.max(0), w, fb.height - h));
+        for area in actors {
+            self.repaint_map_region(fb, area);
+        }
     }
 }

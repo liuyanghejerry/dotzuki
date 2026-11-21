@@ -101,6 +101,7 @@ use crate::vfs::join_path;
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
 use crate::watch::ProjectWatcher;
 
+pub(crate) mod list;
 mod menu;
 mod retained;
 use menu::{MenuState, ShopState, WhiteoutState};

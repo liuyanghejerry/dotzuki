@@ -158,7 +158,10 @@ try {
     if (document.hidden) { input = 0; cancelPointer() }
   })
   const ctx = canvas.getContext('2d')
-  const image = ctx.createImageData(runner.width(), runner.height())
+  const retained = typeof runner.present === 'function' && typeof runner.advance === 'function'
+  const image = retained ? null : ctx.createImageData(runner.width(), runner.height())
+  let refresh = true
+  canvas.addEventListener('contextrestored', () => { refresh = true })
   canvas.hidden = false
   statusEl.hidden = true
   initAudio()
@@ -166,8 +169,14 @@ try {
   addEventListener('pagehide', persist)
   let lastSave = 0
   const frame = (now) => {
-    image.data.set(runner.tick(input))
-    ctx.putImageData(image, 0, 0)
+    if (retained) {
+      runner.advance(input)
+      runner.present(ctx, refresh)
+      refresh = false
+    } else {
+      image.data.set(runner.tick(input))
+      ctx.putImageData(image, 0, 0)
+    }
     pushAudio(runner.take_audio())
     if (now - lastSave > 5000) { lastSave = now; persist() }
     requestAnimationFrame(frame)

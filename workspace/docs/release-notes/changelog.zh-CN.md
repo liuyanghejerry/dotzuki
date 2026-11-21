@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+>（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -21,6 +21,10 @@
 
 ## 未发布
 
+- Web 导出和编辑器 Play 使用 `advance` 和 `present` 显示累计的变化区域。
+  Android 和 HarmonyOS 导出外壳采用可选的 ABI v1 符号 `dotzuki_mobile_copy_frame_update`。
+  升级这些外壳时请重新构建 Rust 运行库。现有宿主可以继续使用 `dotzuki_mobile_copy_frame`。
+  见[移动端帧处理](../explanation/mobile-architecture.zh-CN.md)。
 - 原先通过结构体字面量构造 `HookState` 的 Rust 宿主改用 `HookState::new`。
   遭遇的共享定义通过 `HookState::rules` 访问。见[规则所有权](../reference/battle-rules.zh-CN.md#零-rust-运行器中的规则所有权)。
 - 零 Rust 运行器复用地图图层，按变化区域更新上一帧的画面。采用四色索引帧缓冲的游戏

@@ -789,7 +789,8 @@ impl RunnerGame {
     /// - any `.scene` → recompile every DSL dir and swap scenes in place;
     /// - a content file under the **current** map dir (`map.tmx.json`,
     ///   `tileset.png`, objects sidecar) → reload that [`RuntimeMap`];
-    /// - anything else (other maps, data tables, gfx) is ignored — it is
+    /// - a changed data-table record invalidates its definition and menu pixels;
+    /// - anything else (other maps, gfx) is ignored — it is
     ///   picked up on next map enter / next boot.
     #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
     fn apply_watch_batch(&mut self, paths: Vec<PathBuf>) {
@@ -801,6 +802,16 @@ impl RunnerGame {
         let mut map_changed = false;
         for path in &paths {
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            if ext == "json" {
+                if let Ok(relative) = path.strip_prefix(self.project.root()) {
+                    if self
+                        .project
+                        .invalidate_record_file(&relative.to_string_lossy().replace('\\', "/"))
+                    {
+                        self.retained.invalidate();
+                    }
+                }
+            }
             if ext == "scene" {
                 scenes_changed = true;
             } else if map_dir
@@ -892,6 +903,19 @@ impl RunnerGame {
         if self.transition.is_some() {
             self.update_transition();
             return;
+        }
+
+        // These input-driven panels are frozen between button edges. Actions
+        // can change data or replace a panel between two retained draws.
+        if matches!(self.mode, Mode::Menu(_) | Mode::Shop(_) | Mode::Battle(_)) {
+            let action = [GbButton::A, GbButton::B, GbButton::Start]
+                .into_iter()
+                .any(|key| input.is_just_pressed(key));
+            if action
+                && !matches!(&self.mode, Mode::Menu(s) if matches!(s.view, menu::MenuView::Root))
+            {
+                self.retained.invalidate();
+            }
         }
 
         match std::mem::replace(&mut self.mode, Mode::Overworld) {
@@ -1322,7 +1346,7 @@ impl RunnerGame {
 
     fn draw_full(&self, fb: &mut FrameBuffer) {
         self.draw_map_region(fb, (0, 0));
-        self.draw_overlay(fb);
+        self.draw_overlay(fb, false);
         fb.mark_all_dirty();
     }
 
@@ -1357,7 +1381,8 @@ impl RunnerGame {
         )
     }
 
-    fn draw_overlay(&self, fb: &mut FrameBuffer) {
+    fn draw_overlay(&self, fb: &mut FrameBuffer, retain: bool) -> Option<list::ListCursor> {
+        let mut cursor = None;
         match &self.mode {
             Mode::Text(state) => {
                 if let Some(page) = state.pages.front() {
@@ -1370,9 +1395,9 @@ impl RunnerGame {
                 }
                 draw_choice_menu(fb, &state.options, state.cursor);
             }
-            Mode::Battle(state) => state.battle.draw(fb),
-            Mode::Menu(state) => self.draw_menu(fb, state),
-            Mode::Shop(state) => self.draw_shop(fb, state),
+            Mode::Battle(state) => cursor = state.battle.draw_with_cursor(fb, retain),
+            Mode::Menu(state) => cursor = self.draw_menu(fb, state, retain),
+            Mode::Shop(state) => cursor = self.draw_shop(fb, state, retain),
             Mode::Whiteout(state) => {
                 if let Some(page) = state.pages.front() {
                     draw_textbox(fb, page);
@@ -1405,6 +1430,7 @@ impl RunnerGame {
                 fb.fill_rect(0, 0, SCREEN_W as u32, SCREEN_H as u32, Rgba::BLACK);
             }
         }
+        cursor
     }
 
     /// NPC placeholders: a two-tone person blob per NPC, palette derived from

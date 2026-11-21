@@ -75,6 +75,7 @@
       <canvas
         v-show="status === 'running'"
         ref="canvasEl"
+          @contextrestored="refreshCanvas = true"
         :width="WIDTH"
         :height="HEIGHT"
         tabindex="0"
@@ -145,6 +146,7 @@ const statusText = computed(() => {
 let unbindPointer: (() => void) | undefined
 let runner: WasmRunner | null = null
 let ctx: CanvasRenderingContext2D | null = null
+let refreshCanvas = true
 let bundleFiles: Record<string, string> | null = null
 /** localStorage key for the save — per project root (`dotzuki-play-save:<root>`). */
 let saveKey = ''
@@ -205,17 +207,22 @@ function frame(now: number) {
   if (!lastTime) lastTime = now
   acc += Math.min(now - lastTime, 250) // cap long tab-switch gaps
   lastTime = now
+  if (acc < STEP_MS) return
   const mask = inputMask()
   let bytes: Uint8Array | null = null
   while (acc >= STEP_MS) {
-    bytes = runner.tick(mask)
+    if (runner.present && runner.advance) runner.advance(mask)
+    else bytes = runner.tick(mask)
     if (audioSupported && audio) {
       const samples = runner.take_audio!()
       if (samples.length > 0) audio.push(samples)
     }
     acc -= STEP_MS
   }
-  if (bytes) {
+  if (runner.present && runner.advance) {
+    runner.present(ctx, refreshCanvas)
+    refreshCanvas = false
+  } else if (bytes) {
     ctx.putImageData(new ImageData(new Uint8ClampedArray(bytes), WIDTH, HEIGHT), 0, 0)
   }
 }
@@ -283,6 +290,7 @@ async function boot(refreshBundle: boolean, keepSave: boolean) {
     status.value = 'running'
     await nextTick()
     ctx = canvasEl.value?.getContext('2d') ?? null
+    refreshCanvas = true
     canvasEl.value?.focus()
     startLoop()
   } catch (e) {

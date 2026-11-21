@@ -17,6 +17,7 @@ dotzuki-runner = { path = "../dotzuki-runner", version = "0.11.0", default-featu
 dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.11.0", default-features = false, features = ["image-assets"] }
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.11.0" }
 wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["CanvasRenderingContext2d", "ImageData"] }
 serde_json = "1"
 # Same version as dotzuki-engine-dsl's base64 (features unify workspace-wide).
 base64 = "0.22"

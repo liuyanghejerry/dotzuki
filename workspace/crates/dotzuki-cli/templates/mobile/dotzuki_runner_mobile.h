@@ -44,6 +44,15 @@ size_t dotzuki_mobile_copy_frame(
     uint8_t *output,
     size_t capacity);
 
+/* Optional ABI v1 extension for a retained display. rect receives framebuffer
+ * coordinates. Pixels are packed (stride = rect.width * 4). Zero means idle.
+ * Changes accumulate across ticks; a null/short buffer queries size without
+ * consuming them. Request full after creating or losing the display surface. */
+typedef struct { uint32_t x, y, width, height; } DotzukiFrameRect;
+size_t dotzuki_mobile_copy_frame_update(
+    const DotzukiMobileRunner *runner, DotzukiFrameRect *rect,
+    uint8_t *output, size_t capacity, bool full);
+
 uint32_t dotzuki_mobile_audio_fill(
     const DotzukiMobileRunner *runner,
     float *output,

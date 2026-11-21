@@ -1,5 +1,6 @@
 //! Game-independent mobile runtime. Platforms own presentation and persistence.
 //! Games implement MobileGame; export_mobile_abi! supplies the common C boundary.
+use dotzuki_engine::render::{DirtyRegion, FrameBuffer};
 use std::cell::RefCell;
 use std::ffi::CString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -24,14 +25,29 @@ pub trait MobileGame {
     }
     fn cancel_pointer_input(&mut self) {}
     fn copy_rgba(&self, output: &mut [u8]);
+    /// A persistent frame with the damage from the last tick. Games that
+    /// implement only `copy_rgba` present the full frame on each tick.
+    fn retained_frame(&self) -> Option<&FrameBuffer> {
+        None
+    }
     /// Fill 44.1 kHz stereo interleaved PCM from the active game sound source.
     fn render_audio(&mut self, output: &mut [f32]);
     /// Export the game's committed save, not an arbitrary transient snapshot.
     fn export_save(&self) -> Option<String>;
     fn import_save(&mut self, json: &str) -> bool;
 }
+/// Pixel bounds of a packed RGBA update in the mobile C ABI.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct FrameRect {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
 struct MainState {
     game: Box<dyn MobileGame>,
+    pending: DirtyRegion,
     fraction: f64,
     pcm: Vec<f32>,
 }
@@ -52,6 +68,7 @@ impl MobileRuntime {
         Ok(Self {
             main: RefCell::new(MainState {
                 game: Box::new(game),
+                pending: DirtyRegion::full(width, height),
                 fraction: 0.0,
                 pcm: vec![0.0; 1480],
             }),
@@ -79,6 +96,11 @@ impl MobileRuntime {
     pub fn tick(&self, input: u8) {
         let mut main = self.main.borrow_mut();
         main.game.tick(input);
+        let damage = main.game.retained_frame().map_or_else(
+            || DirtyRegion::full(self.width, self.height),
+            |fb| fb.dirty_region.clipped(self.width, self.height),
+        );
+        main.pending = main.pending.union(&damage);
         main.fraction += AUDIO_SAMPLE_RATE as f64 / GAME_FRAME_RATE;
         let frames = main.fraction.floor() as usize;
         main.fraction -= frames as f64;
@@ -94,6 +116,33 @@ impl MobileRuntime {
         }
         self.main.borrow().game.copy_rgba(&mut output[..required]);
         Ok(required)
+    }
+    /// Copy all changes since the previous successful update into packed rows.
+    /// Pass `full` after replacing the presentation surface. A size query or
+    /// short buffer preserves pending damage for the retry.
+    pub fn copy_frame_update(&self, output: &mut [u8], full: bool) -> (FrameRect, usize) {
+        let mut main = self.main.borrow_mut();
+        let area = if full {
+            DirtyRegion::full(self.width, self.height)
+        } else {
+            main.pending
+        };
+        let rect = FrameRect {
+            x: area.x as u32,
+            y: area.y as u32,
+            width: area.width,
+            height: area.height,
+        };
+        let size = area.width as usize * area.height as usize * 4;
+        if size != 0 && output.len() >= size {
+            if let Some(fb) = main.game.retained_frame() {
+                fb.copy_region(area, output);
+            } else {
+                main.game.copy_rgba(&mut output[..size]);
+            }
+            main.pending = DirtyRegion::empty();
+        }
+        (rect, size)
     }
     pub fn fill_audio(&self, output: &mut [f32]) -> u32 {
         (self.audio.pop(output) / 2) as u32
@@ -296,6 +345,32 @@ macro_rules! export_mobile_abi {
                 // SAFETY: the caller promises a writable buffer of `capacity` bytes.
                 let output = unsafe { std::slice::from_raw_parts_mut(output, capacity) };
                 runner.copy_frame(output).unwrap_or(required)
+            })
+        }
+
+        /// Copy tightly packed changed rows. A null or short pixel buffer
+        /// queries the required size without consuming pending changes.
+        #[no_mangle]
+        pub unsafe extern "C" fn dotzuki_mobile_copy_frame_update(
+            runner: *const $crate::MobileRuntime,
+            rect: *mut $crate::FrameRect,
+            output: *mut u8,
+            capacity: usize,
+            full: bool,
+        ) -> usize {
+            let (Some(runner), Some(rect)) = (runner.as_ref(), rect.as_mut()) else {
+                return 0;
+            };
+            $crate::ffi_guard(0, || {
+                let output = if output.is_null() {
+                    &mut []
+                } else {
+                    // SAFETY: the caller supplies a writable region of at least capacity bytes.
+                    unsafe { std::slice::from_raw_parts_mut(output, capacity) }
+                };
+                let (bounds, size) = runner.copy_frame_update(output, full);
+                *rect = bounds;
+                size
             })
         }
 

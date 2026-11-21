@@ -1,6 +1,6 @@
 package com.dotzuki.player
 
-import java.nio.ByteBuffer
+import android.graphics.Bitmap
 
 object NativeBridge {
     init {
@@ -16,7 +16,7 @@ object NativeBridge {
     external fun tick(inputBits: Int): Boolean
     external fun pointerClick(x: Float, y: Float): Boolean
     external fun cancelPointer()
-    external fun copyFrame(output: ByteBuffer): Int
+    external fun updateBitmap(bitmap: Bitmap, bounds: IntArray, full: Boolean): Boolean
     external fun audioFill(output: FloatArray, frames: Int): Int
     external fun exportSave(): ByteArray?
     external fun lastError(): String

@@ -6,6 +6,9 @@
 //! [`RunnerGame::update`]/[`RunnerGame::draw`] API with synthetic input — no
 //! winit, no pixels. Tilesets are generated in code (mirrors `battle.rs`).
 
+#[path = "support/frames.rs"]
+mod frames;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -899,4 +902,38 @@ fn whiteout_heals_only_when_project_has_no_maps() {
     let party = game.party_state().expect("party state");
     assert_eq!((party[0].hp, party[0].mp), (60, 20), "healed to full");
     let _ = tmp;
+}
+
+#[test]
+fn retained_inventory_party_and_shop_match_full_draws() {
+    let (_tmp, mut game) = boot_from_hurt_save("menu-damage");
+    let mut frames = frames::Frames::new();
+    open_bag_at(&mut game, 0);
+    frames.check(&mut game);
+    for _ in 0..60 {
+        frame(&mut game, 0);
+        assert!(!frames.check(&mut game).present);
+    }
+    press(&mut game, GbButton::Down);
+    let cursor = frames.check(&mut game);
+    assert!(cursor.present && cursor.width == 8);
+    press(&mut game, GbButton::B);
+    press_a(&mut game); // Party
+    frames.check(&mut game);
+    assert!(!frames.check(&mut game).present);
+    press(&mut game, GbButton::B);
+    press(&mut game, GbButton::B);
+    let (_shop, mut game) = open_shop("shop-damage");
+    talk_to_guide(&mut game);
+    assert!(game.shop_lines().is_some());
+    frames.check(&mut game);
+    press_a(&mut game); // Buy
+    frames.check(&mut game);
+    assert!(!frames.check(&mut game).present);
+    press(&mut game, GbButton::Down);
+    let cursor = frames.check(&mut game);
+    assert!(cursor.present && cursor.width == 8);
+    press_a(&mut game); // unaffordable shelf item changes the prompt
+    assert!(frames.check(&mut game).present);
+    assert!(!frames.check(&mut game).present);
 }

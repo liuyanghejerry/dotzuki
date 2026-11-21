@@ -35,10 +35,9 @@
 //! ```js
 //! const runner = new WasmRunner(filesJson, localStorage.getItem("save"), "en");
 //! const ctx = canvas.getContext("2d");
-//! const image = ctx.createImageData(runner.width(), runner.height());
 //! function frame() {
-//!     image.data.set(runner.tick(inputBitmask()));
-//!     ctx.putImageData(image, 0, 0);
+//!     runner.advance(inputBitmask());
+//!     runner.present(ctx, false);
 //!     const pcm = runner.take_audio(); // stereo f32 @ 44.1 kHz (may be empty)
 //!     if (pcm.length) audioQueue.push(pcm);
 //!     const save = runner.export_save();
@@ -52,7 +51,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use dotzuki_engine::render::{FrameBuffer, Rgba};
+use dotzuki_engine::render::{DirtyRegion, FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 use dotzuki_renderer::input::InputState;
 use dotzuki_runner::pack::PackFiles;
@@ -81,6 +80,8 @@ pub struct WasmRunner {
     game: RunnerGame,
     input: InputState,
     fb: FrameBuffer,
+    pending: DirtyRegion,
+    patch: Vec<u8>,
     /// Interleaved stereo f32 @ 44.1 kHz produced since the last
     /// [`take_audio`](Self::take_audio) call.
     audio_buf: Vec<f32>,
@@ -149,10 +150,16 @@ impl WasmRunner {
     /// Also renders this frame's audio into the internal PCM buffer; drain it
     /// with [`take_audio`](Self::take_audio).
     pub fn tick(&mut self, input_bitmask: u8) -> Vec<u8> {
+        self.advance(input_bitmask);
+        self.fb.data.clone()
+    }
+
+    /// Advance input, simulation and audio. Changed pixels accumulate until presented.
+    pub fn advance(&mut self, input_bitmask: u8) {
         self.input.set_from_bitmask(u16::from(input_bitmask));
         self.game.update(&self.input);
         self.input.begin_frame();
-        self.game.draw_retained(&mut self.fb);
+        self.pending = self.pending.union(&self.game.draw_retained(&mut self.fb));
 
         // Render this video frame's worth of audio (fractional accumulator so
         // long runs don't drift), then cap the backlog.
@@ -167,8 +174,36 @@ impl WasmRunner {
                 self.audio_buf.drain(..excess);
             }
         }
+    }
 
-        self.fb.data.clone()
+    /// Paint accumulated changes to a retained canvas. Request a full refresh
+    /// after a canvas resize or context restoration.
+    pub fn present(
+        &mut self,
+        ctx: &web_sys::CanvasRenderingContext2d,
+        full: bool,
+    ) -> Result<bool, JsValue> {
+        let bounds = DirtyRegion::full(self.fb.width, self.fb.height);
+        let area = if full { bounds } else { self.pending };
+        if !area.present {
+            return Ok(false);
+        }
+        let pixels = if area == bounds {
+            &self.fb.data
+        } else {
+            self.patch
+                .resize(area.width as usize * area.height as usize * 4, 0);
+            self.fb.copy_region(area, &mut self.patch);
+            &self.patch
+        };
+        let image = web_sys::ImageData::new_with_u8_clamped_array_and_sh(
+            wasm_bindgen::Clamped(pixels.as_slice()),
+            area.width,
+            area.height,
+        )?;
+        ctx.put_image_data(&image, f64::from(area.x), f64::from(area.y))?;
+        self.pending = DirtyRegion::empty();
+        Ok(true)
     }
 
     /// Drain the audio PCM rendered since the last call: interleaved stereo
@@ -239,6 +274,8 @@ impl WasmRunner {
         Ok(Self {
             game,
             input: InputState::new(),
+            pending: DirtyRegion::full(fb.width, fb.height),
+            patch: Vec::new(),
             fb,
             audio_buf: Vec::new(),
             audio_frac: 0.0,

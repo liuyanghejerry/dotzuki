@@ -1,7 +1,7 @@
 # 战斗
 
 > 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+>（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `battle` 项目清单区块：配置、rules.ron 钩子、回合循环与 `check` 校验。
@@ -217,6 +217,11 @@ harness 的顺序）：MP 门槛 → accuracy → `BeforeMove` 门槛（仅当�
 用 `Arc` 持有，并将克隆的引用传给 `HookState::new(rules, &player, &enemy)`。
 每场战斗独立持有 HP、能力阶级、临时效果和招式上下文。通过 `HookState::rules` 可以
 访问共享定义，其 `compiled()` 方法提供钩子注册表和带索引的属性名。
+
+遭遇、暂停菜单和商店共享同一项目内已解析的角色、敌人、技能和道具定义。打包项目首次
+读取后会复用定义和表目录索引。磁盘项目会检查文件和目录项的变化。宿主可调用
+`project.invalidate_record_file("data/heroes/aria.json")` 使修改的记录失效。
+进行中的战斗保留自己的 HP、MP 和物品数量，并在战斗结束时按原有规则结算。
 
 ## 特性、携带道具与天气
 

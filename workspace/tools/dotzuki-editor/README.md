@@ -391,8 +391,8 @@ canvas: walk, talk to NPCs, battle, shop, save.
   `crates/dotzuki-runner-web/pkg`). Without it the activity shows a setup hint.
 - **How it loads**: the page fetches `GET /api/play/bundle` (the whole project
   as `{ path: base64 }`), hands it to the runner's in-memory VFS
-  (`MemoryFiles`), then drives one frame per ~59.7 Hz tick
-  (`tick(input_bitmask) → 320×240 RGBA` → `putImageData`).
+  (`MemoryFiles`), advances the game at ~59.7 Hz, and paints changed rectangles on the
+  320×240 canvas.
 - **Controls**: Arrows/WASD move, Z = A, X = B, Enter/Space = Start,
   Backspace/Right Shift = Select.
 - **Saves** persist to `localStorage` (`dotzuki-play-save:<projectRoot>`) and are

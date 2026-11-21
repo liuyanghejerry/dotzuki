@@ -5,12 +5,13 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
 import android.view.Choreographer
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
     Choreographer.FrameCallback {
@@ -21,8 +22,8 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     private var accumulator = 0.0
     private val frameWidth = NativeBridge.width()
     private val frameHeight = NativeBridge.height()
-    private val frameLength = NativeBridge.frameLength()
-    private val pixels = ByteBuffer.allocateDirect(frameLength).order(ByteOrder.nativeOrder())
+    private val bounds = IntArray(4)
+    private var refresh = true
     private val bitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888)
     private val paint = Paint().apply { isFilterBitmap = false }
 
@@ -33,6 +34,7 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     fun resumeFrames() {
         if (active) return
         active = true
+        refresh = true
         lastFrameNanos = 0L
         Choreographer.getInstance().postFrameCallback(this)
     }
@@ -62,16 +64,26 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     }
 
     private fun drawGameFrame() {
-        if (!surfaceReady || NativeBridge.copyFrame(pixels) != frameLength) return
-        pixels.rewind()
-        bitmap.copyPixelsFromBuffer(pixels)
-        val canvas = holder.lockCanvas() ?: return
+        if (!surfaceReady || !NativeBridge.updateBitmap(bitmap, bounds, refresh)) return
+        val dest = fitRect(width, height)
+        val sx = dest.width() / frameWidth
+        val sy = dest.height() / frameHeight
+        val dirty = if (refresh) null else Rect(
+            floor(dest.left + bounds[0] * sx).toInt(),
+            floor(dest.top + bounds[1] * sy).toInt(),
+            ceil(dest.left + (bounds[0] + bounds[2]) * sx).toInt(),
+            ceil(dest.top + (bounds[1] + bounds[3]) * sy).toInt(),
+        )
+        // SurfaceHolder can expand the requested damage for a different back buffer.
+        refresh = true
+        val canvas = holder.lockCanvas(dirty) ?: return
         try {
             canvas.drawColor(Color.BLACK)
             canvas.drawBitmap(bitmap, null, fitRect(canvas), paint)
         } finally {
             holder.unlockCanvasAndPost(canvas)
         }
+        refresh = false
     }
 
     fun clickToMove(x: Float, y: Float) {
@@ -94,10 +106,13 @@ class GameSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
+        refresh = true
         surfaceReady = true
     }
 
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        refresh = true
+    }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         surfaceReady = false

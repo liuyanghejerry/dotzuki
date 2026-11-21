@@ -6,3 +6,6 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Game-independent mobile host contract and PCM queue"
+
+[dependencies]
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.11.0", default-features = false }
