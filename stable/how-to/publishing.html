@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -180,134 +180,95 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="publishing--upgrading-guide"><a class="header" href="#publishing--upgrading-guide">Publishing &amp; Upgrading Guide</a></h1>
+                        <h1 id="publishing-and-upgrading-a-game"><a class="header" href="#publishing-and-upgrading-a-game">Publishing and upgrading a game</a></h1>
 <blockquote>
 <ul>
-<li><strong>Audience</strong>: game authors, CI</li>
+<li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.5</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
-<p>Package, ship and upgrade a zero-Rust game project.</p>
-<p>How to package, ship and upgrade a <strong>zero-Rust game project</strong> built with
-dotzuki. This complements <a href="../reference/project-manifest.html">the project manifest &amp; layout</a>
-(project contract) and <a href="../reference/cli.html">the CLI reference</a> (tooling).</p>
-<h2 id="what-a-game-project-is"><a class="header" href="#what-a-game-project-is">What a game project is</a></h2>
-<p>A game project is a <strong>plain directory</strong> — <code>.dotzuki-editor.json</code> + <code>data/</code> +
-<code>gfx/</code> + <code>assets/</code> (scenes). There is no build step: the <code>dotzuki</code> binary (or
-the editor) consumes the directory as-is. Shipping a game = shipping this
-directory plus a way to run it.</p>
-<h2 id="1-deliver-the-project-directory"><a class="header" href="#1-deliver-the-project-directory">1. Deliver the project directory</a></h2>
-<p>There is no compile/package phase. Copy the whole project directory (excluding
-<code>*.bak</code>, dotfiles and any editor state) to the target machine and run:</p>
-<pre><code class="language-bash">dotzuki run &lt;project-dir&gt;
+<p>Distribute a zero-Rust project as an editable directory or export it with a player.
+Before you start, check the <a href="../reference/project-manifest.html">project manifest</a> and
+run the examples from your project’s root directory.</p>
+<h2 id="deliver-the-editable-project"><a class="header" href="#deliver-the-editable-project">Deliver the editable project</a></h2>
+<p>Copy <code>.dotzuki-editor.json</code> and the data, graphics, and scene directories it names.
+Use the same version of the CLI or editor that you developed the game with.
+In the copied directory, validate the files and boot the game.</p>
+<pre><code class="language-bash">dotzuki check .
+dotzuki run .
 </code></pre>
-<p>Delivery checklist:</p>
-<ul>
-<li>Run <a href="../reference/cli.html"><code>dotzuki check</code></a> on the final tree — a clean exit is
-the only build check that exists.</li>
-<li>The project carries its own <code>dotzuki</code> version requirement implicitly: run it
-with a <code>dotzuki</code> binary whose engine version matches what the project was
-developed against. There is no per-project pin inside the manifest.</li>
-<li>Save files are written to <code>&lt;project&gt;/.dotzuki-save.json</code> by default — ship
-the directory writable, or point <code>--save-file</code> elsewhere for read-only
-installs.</li>
-</ul>
-<h2 id="2-automate-smoke-tests-ci"><a class="header" href="#2-automate-smoke-tests-ci">2. Automate smoke tests (CI)</a></h2>
-<pre><code class="language-bash">dotzuki run . --headless --frames 60          # boot, no window, no save
-dotzuki run . --headless --map StartTown --screenshot shot.png --save
+<p>The runner writes saves to <code>.dotzuki-save.json</code> in the project directory. For a read-only
+installation, use <code>dotzuki run . --save-file &lt;writable-path&gt;</code>.</p>
+<h2 id="smoke-test-the-project"><a class="header" href="#smoke-test-the-project">Smoke-test the project</a></h2>
+<pre><code class="language-bash">dotzuki run . --headless --frames 60
+dotzuki run . --headless --frames 120 --screenshot boot.png
 </code></pre>
-<p><code>--headless</code> never opens an audio device or window; <code>--screenshot</code> dumps the
-real rendered final frame. See <a href="../reference/cli.html">the CLI reference</a>.</p>
-<h2 id="3-playable-demo-in-a-web-page-wasm"><a class="header" href="#3-playable-demo-in-a-web-page-wasm">3. Playable demo in a web page (WASM)</a></h2>
-<p>The same runner compiles to WASM (<code>dotzuki-runner-web</code>) and boots against an
-<strong>in-memory filesystem</strong> — the editor’s Play activity uses exactly this path,
-so a project that plays in the editor plays identically in a page.</p>
-<p>The one-command route is <a href="../reference/cli.html"><code>dotzuki export --web</code></a>:</p>
+<p>Both commands run without a window or audio device. The second writes the last frame to a PNG.
+Add <code>--save</code> to exercise save writing when the game reaches a stable point.</p>
+<h2 id="export-for-the-web"><a class="header" href="#export-for-the-web">Export for the web</a></h2>
 <pre><code class="language-bash">dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web
 </code></pre>
-<p>It validates the project (same diagnostics as <code>dotzuki check</code>; <code>--force</code>
-overrides), then writes a self-contained static site: an <code>index.html</code> player
-page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
-<code>localStorage</code>), <code>game.dzpk</code> (the whole project as one binary pack — a JSON
-index plus every file’s raw bytes, with an informational <code>dotzuki.version</code>
-stamp), and the WASM runner under <code>wasm/</code>. Upload the
-directory to any static host — itch.io, GitHub Pages, S3 — and it plays.</p>
-<p>The dotzuki-editor does this without the terminal: the Play activity’s
-<strong>Export Web</strong> button calls <code>POST /api/export</code>, which shells out to the same
-CLI export and writes <code>dist/web/</code> in the open project (the packaged desktop
-app ships the <code>dotzuki</code> binary for exactly this).</p>
-<p>Pack limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
-dotfiles and <code>*.bak</code> are excluded; a single file over 16 MB or a total over
-64 MB (uncompressed) is refused.</p>
-<p>To build a <strong>custom player page</strong> instead, drive <code>WasmRunner</code> yourself — the
-generated <code>index.html</code> is the reference implementation:</p>
+<p>Open <code>http://localhost:8000</code> to play. Upload the contents of <code>dist/web/</code> to a static host
+to share the game. The directory contains <code>index.html</code>, the WebAssembly runner in <code>wasm/</code>,
+and <code>game.dzpk</code>. The page handles keyboard input, WebAudio, and saves in <code>localStorage</code>.
+In the desktop editor, <strong>Play &gt; Export Web</strong> runs the same export with its bundled runner.
+With a standalone CLI, pass the matching WebAssembly package using <code>--runner-pkg</code>.</p>
+<p>Every export target validates the project. Fix any diagnostics before shipping. The
+<code>--force</code> option can write a pack with DSL errors, which the player reports at startup.
+The pack includes the manifest and source files. For a valid project with DSL files, it also
+includes <a href="../reference/glossary.html#compiled-scene-assets">compiled scene assets</a>. A matching
+player loads native functions on demand. Older players can read the bundled sources.
+The CLI limits collected inputs to 16 MiB per file and 64 MiB in total. It skips build
+directories, hidden files other than the manifest, and <code>*.bak</code>. Generated scene assets add to
+the pack size. See the <a href="../reference/cli.html">CLI reference</a> for the full collection rules.</p>
+<p>For a custom player page, use the generated <code>index.html</code> as a working example.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th><code>WasmRunner</code> method</th><th>Purpose</th></tr>
 </thead>
 <tbody>
-<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>Boot from a <code>game.dzpk</code> pack (<code>Uint8Array</code>); optionally import a save</td></tr>
-<tr><td><code>new(filesJson, saveJson?)</code></td><td>Boot with a <code>{ path: base64 }</code> JSON files map (the editor’s Play path); optionally import a save</td></tr>
-<tr><td><code>tick(inputBitmask)</code></td><td>Advance one frame; returns the RGBA frame buffer</td></tr>
-<tr><td><code>take_audio()</code></td><td>Pull generated stereo samples (<code>f32</code>, interleaved)</td></tr>
-<tr><td><code>width()</code> / <code>height()</code></td><td>Frame size (320×240)</td></tr>
-<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>Save export/import (e.g. into <code>localStorage</code>)</td></tr>
+<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>Boot a <code>.dzpk</code> from a <code>Uint8Array</code> and optionally restore a save</td></tr>
+<tr><td><code>new WasmRunner(filesJson, saveJson?, language?)</code></td><td>Boot from the editor’s JSON string of base64-encoded files</td></tr>
+<tr><td><code>advance(inputBitmask)</code></td><td>Advance the simulation and audio by one frame</td></tr>
+<tr><td><code>present(ctx, full)</code></td><td>Paint accumulated changes to a 2D canvas. Pass <code>true</code> after a resize or context restoration</td></tr>
+<tr><td><code>tick(inputBitmask)</code></td><td>Advance one frame and return a complete RGBA snapshot</td></tr>
+<tr><td><code>take_audio()</code></td><td>Drain interleaved stereo <code>f32</code> samples at 44.1 kHz</td></tr>
+<tr><td><code>width()</code> / <code>height()</code></td><td>Read the framebuffer dimensions (320 × 240)</td></tr>
+<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>Export the current save when available or restore a saved game</td></tr>
 </tbody>
 </table>
 </div>
-<p>The input bitmask is the GB button mask used by <code>dotzuki_renderer::input</code>
-(Up/Down/Left/Right/A/B/Start/Select). The editor’s
-<code>src/composables/useWasmRunner.ts</code> shows the same wiring inside a larger app.</p>
-<h2 id="4-native-app-directory"><a class="header" href="#4-native-app-directory">4. Native app directory</a></h2>
-<p><a href="../reference/cli.html"><code>dotzuki export --native</code></a> packs the project into a
-distributable native app directory:</p>
+<p>Call <code>advance</code> for each simulation tick, then call <code>present</code> once on the retained canvas.
+For a host that needs a full pixel buffer, <code>tick</code> performs the simulation step itself.
+The input mask uses bits 0–7 for A, B, Select, Start, Right, Left, Up, and Down.</p>
+<h2 id="export-for-native-desktops-or-mobile"><a class="header" href="#export-for-native-desktops-or-mobile">Export for native desktops or mobile</a></h2>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # double-clickable native app
+dist/native/game --headless --frames 120 --screenshot native.png
 </code></pre>
-<p>The output is the game-agnostic <code>dotzuki-player</code> binary (renamed after the
-project directory) plus the same <code>game.dzpk</code> pack the web export writes.
-The player boots the pack sitting next to the executable through the same
-runtime as <code>dotzuki run</code> — window, audio, and saves (<code>&lt;exe dir&gt;/.dotzuki-save.json</code>) all behave like a local playtest. Zip the directory
-to distribute it; the pack carries an informational <code>dotzuki.version</code>
-stamp recording which CLI produced it. (Packs from older CLIs —
-<code>game.bundle.json</code>, base64 JSON — still boot; the player sniffs the format
-from the magic bytes.)</p>
-<p>The export builds the player with <code>cargo build --release</code> from a dotzuki
-source checkout (pass <code>--player-bin</code> to reuse a prebuilt binary instead).
-Builds are <strong>host-platform only</strong> — ship Windows/Linux builds by running the
-export on those OSes (or on per-OS CI runners). The same <code>dotzuki check</code>
-diagnostic gate as the web export applies (<code>--force</code> overrides).</p>
-<p>Ship the directory <strong>writable</strong>, or players on read-only installs lose saves
-— the save file lives next to the pack.</p>
-<p>The editor’s Play activity has an <strong>Export Native</strong> button too — same
-<code>POST /api/export</code> route, writing <code>dist/native/</code> in the open project. In a
-dev checkout the CLI cargo-builds the player; packaged desktop apps ship a
-prebuilt one (<code>Resources/cli/dotzuki-player</code>).</p>
-<h2 id="5-upgrading-the-engine"><a class="header" href="#5-upgrading-the-engine">5. Upgrading the engine</a></h2>
-<p><strong>Zero-Rust projects</strong> — there is no dependency manifest; “upgrade” means using
-a newer <code>dotzuki</code> binary / editor. Before upgrading:</p>
+<p>The CLI prints the executable path. With <code>.</code> as the project argument, it writes <code>game</code>
+(<code>game.exe</code> on Windows). A named directory such as <code>my-game</code> produces <code>my-game</code>.
+Distribute the executable together with <code>game.dzpk</code>. The player opens the adjacent pack and
+writes saves next to it, so choose a writable installation directory. It can also load the
+legacy <code>game.bundle.json</code> format.</p>
+<p>Build on each desktop OS you ship for. A source checkout can build its host player with Cargo.
+For a standalone CLI, pass a matching executable with <code>--player-bin</code>. <strong>Play &gt; Export Native</strong>
+in the desktop editor uses the bundled player. For mobile exports, follow the
+<a href="export-android.html">Android</a> or <a href="export-harmonyos.html">HarmonyOS</a> guide for the target runtime.</p>
+<h2 id="upgrade-an-existing-game"><a class="header" href="#upgrade-an-existing-game">Upgrade an existing game</a></h2>
 <ol>
-<li>Run <code>dotzuki check .</code> on the old toolchain — a clean tree is the safest
-starting point.</li>
-<li>Re-check with the new binary, then boot once and verify the game state.</li>
-<li>Save compatibility: saves are versioned (<code>.dotzuki-save.json</code>,
-<code>SAVE_VERSION</code> = 3). A save with <code>version &lt;= SAVE_VERSION</code> loads; a save
-<strong>newer</strong> than the running engine is refused and the game starts fresh
-(the file is not deleted). Downgrading the engine after saving with a newer
-version is the one way to lose a save — keep a backup of
-<code>.dotzuki-save.json</code> around upgrades.</li>
+<li>Back up <code>.dotzuki-save.json</code> and run <code>dotzuki check .</code> with the current toolchain.</li>
+<li>Upgrade the CLI or editor. Check the project again, load the save, and play a scene and a
+battle. The runner accepts save formats 1–3. It rejects a newer format.</li>
+<li>Re-export each target with the matching player or runtime to ship updated compiled assets.</li>
 </ol>
-<p><strong>Rust game repositories</strong> (consume the engine as Cargo git dependencies):</p>
-<pre><code class="language-bash"># bump the tag in Cargo.toml, then
-cargo update        # re-resolve the git dependency to the new tag
-cargo build
-</code></pre>
-<p>Upgrade = bump tag + <code>cargo update</code>. See the engine README “Using the engine
-from a game repo”. The same save-version rules apply: a newer engine reads
-older saves (v1/v2/v3 load fine); an older engine refuses newer ones.</p>
+<p>For Rust games, update the <code>dotzuki-*</code> dependency versions or git tags together in
+<code>Cargo.toml</code>, then run <code>cargo update</code> and <code>cargo build</code> in your game repository.
+Consult the <a href="../release-notes/migration/v0.12.0.html">migration guide</a> when upgrading a
+custom battle or mobile host.</p>
 
                     </main>
 

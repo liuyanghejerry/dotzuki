@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-553c8087.js";
+            window.path_to_searchindex_js = "searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-c7c2563c.js"></script>
@@ -200,7 +200,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td>Authoring <strong>audio</strong> (<code>data/audio/*.json</code> tracks)</td><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a> for the format, <a href="#audio-command-reference"><code>reference/audio-commands.md</code></a> for the 22 commands</td></tr>
 <tr><td>Writing <strong>bilingual text</strong></td><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a> — <code>game.lang()</code> / <code>game.t()</code> / <code>@t</code></td></tr>
 <tr><td>Running / automating projects from the terminal</td><td><a href="#dotzuki-cli-reference"><code>reference/cli.md</code></a> — <code>dotzuki new</code> / <code>check</code> / <code>run</code> and every flag</td></tr>
-<tr><td>Shipping / deploying / upgrading</td><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a> — project delivery, headless CI, WASM web play, engine upgrades, save compatibility</td></tr>
+<tr><td>Shipping / deploying / upgrading</td><td><a href="#publishing-and-upgrading-a-game"><code>how-to/publishing.md</code></a> — project delivery, headless CI, WASM web play, engine upgrades, save compatibility</td></tr>
 <tr><td><strong>Rust developer</strong> extending the engine</td><td><a href="#architecture-overview"><code>explanation/architecture.md</code></a> for the current architecture, <a href="#rust-api-portal"><code>reference/rustdoc.md</code></a> for the crate map + docs.rs links, <a href="#gamedata-the-provider-pattern"><code>explanation/game-data.md</code></a> for the <code>GameData</code> trait; engine systems (shops, link play, debug server, audio runtime, resource manager, game shell) have their own pages under <code>reference/</code></td></tr>
 <tr><td>Looking up a term</td><td><a href="#glossary"><code>reference/glossary.md</code></a> — the authoritative term list</td></tr>
 </tbody>
@@ -236,7 +236,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON tracks, channels, scene playback, authoring notes</td></tr>
 <tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>Asset pipeline: tilesets, the shared tile library, 2bpp conversion, fonts</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>Bilingual text: the <code>game</code> i18n API and <code>@t</code> syntax</td></tr>
-<tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>Shipping a project, headless smoke tests, WASM web play, engine upgrades</td></tr>
+<tr><td><a href="#publishing-and-upgrading-a-game"><code>how-to/publishing.md</code></a></td><td>Shipping a project, headless smoke tests, WASM web play, engine upgrades</td></tr>
 <tr><td><a href="#export-a-game-for-android"><code>how-to/export-android.md</code></a></td><td>Building the mobile runtime and exporting an Android Studio project</td></tr>
 <tr><td><a href="#export-a-game-for-harmonyos"><code>how-to/export-harmonyos.md</code></a></td><td>Building the mobile runtime and exporting a DevEco Studio project</td></tr>
 </tbody>
@@ -3073,134 +3073,95 @@ files it works in <code>text(...)</code> / <code>button(...)</code> and compiles
 ASCII chars per line for the best display.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="publishing--upgrading-guide"><a class="header" href="#publishing--upgrading-guide">Publishing &amp; Upgrading Guide</a></h1>
+<h1 id="publishing-and-upgrading-a-game"><a class="header" href="#publishing-and-upgrading-a-game">Publishing and upgrading a game</a></h1>
 <blockquote>
 <ul>
-<li><strong>Audience</strong>: game authors, CI</li>
+<li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.5</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
-<p>Package, ship and upgrade a zero-Rust game project.</p>
-<p>How to package, ship and upgrade a <strong>zero-Rust game project</strong> built with
-dotzuki. This complements <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest &amp; layout</a>
-(project contract) and <a href="#dotzuki-cli-reference">the CLI reference</a> (tooling).</p>
-<h2 id="what-a-game-project-is"><a class="header" href="#what-a-game-project-is">What a game project is</a></h2>
-<p>A game project is a <strong>plain directory</strong> — <code>.dotzuki-editor.json</code> + <code>data/</code> +
-<code>gfx/</code> + <code>assets/</code> (scenes). There is no build step: the <code>dotzuki</code> binary (or
-the editor) consumes the directory as-is. Shipping a game = shipping this
-directory plus a way to run it.</p>
-<h2 id="1-deliver-the-project-directory"><a class="header" href="#1-deliver-the-project-directory">1. Deliver the project directory</a></h2>
-<p>There is no compile/package phase. Copy the whole project directory (excluding
-<code>*.bak</code>, dotfiles and any editor state) to the target machine and run:</p>
-<pre><code class="language-bash">dotzuki run &lt;project-dir&gt;
+<p>Distribute a zero-Rust project as an editable directory or export it with a player.
+Before you start, check the <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a> and
+run the examples from your project’s root directory.</p>
+<h2 id="deliver-the-editable-project"><a class="header" href="#deliver-the-editable-project">Deliver the editable project</a></h2>
+<p>Copy <code>.dotzuki-editor.json</code> and the data, graphics, and scene directories it names.
+Use the same version of the CLI or editor that you developed the game with.
+In the copied directory, validate the files and boot the game.</p>
+<pre><code class="language-bash">dotzuki check .
+dotzuki run .
 </code></pre>
-<p>Delivery checklist:</p>
-<ul>
-<li>Run <a href="#dotzuki-cli-reference"><code>dotzuki check</code></a> on the final tree — a clean exit is
-the only build check that exists.</li>
-<li>The project carries its own <code>dotzuki</code> version requirement implicitly: run it
-with a <code>dotzuki</code> binary whose engine version matches what the project was
-developed against. There is no per-project pin inside the manifest.</li>
-<li>Save files are written to <code>&lt;project&gt;/.dotzuki-save.json</code> by default — ship
-the directory writable, or point <code>--save-file</code> elsewhere for read-only
-installs.</li>
-</ul>
-<h2 id="2-automate-smoke-tests-ci"><a class="header" href="#2-automate-smoke-tests-ci">2. Automate smoke tests (CI)</a></h2>
-<pre><code class="language-bash">dotzuki run . --headless --frames 60          # boot, no window, no save
-dotzuki run . --headless --map StartTown --screenshot shot.png --save
+<p>The runner writes saves to <code>.dotzuki-save.json</code> in the project directory. For a read-only
+installation, use <code>dotzuki run . --save-file &lt;writable-path&gt;</code>.</p>
+<h2 id="smoke-test-the-project"><a class="header" href="#smoke-test-the-project">Smoke-test the project</a></h2>
+<pre><code class="language-bash">dotzuki run . --headless --frames 60
+dotzuki run . --headless --frames 120 --screenshot boot.png
 </code></pre>
-<p><code>--headless</code> never opens an audio device or window; <code>--screenshot</code> dumps the
-real rendered final frame. See <a href="#dotzuki-cli-reference">the CLI reference</a>.</p>
-<h2 id="3-playable-demo-in-a-web-page-wasm"><a class="header" href="#3-playable-demo-in-a-web-page-wasm">3. Playable demo in a web page (WASM)</a></h2>
-<p>The same runner compiles to WASM (<code>dotzuki-runner-web</code>) and boots against an
-<strong>in-memory filesystem</strong> — the editor’s Play activity uses exactly this path,
-so a project that plays in the editor plays identically in a page.</p>
-<p>The one-command route is <a href="#dotzuki-cli-reference"><code>dotzuki export --web</code></a>:</p>
+<p>Both commands run without a window or audio device. The second writes the last frame to a PNG.
+Add <code>--save</code> to exercise save writing when the game reaches a stable point.</p>
+<h2 id="export-for-the-web"><a class="header" href="#export-for-the-web">Export for the web</a></h2>
 <pre><code class="language-bash">dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web
 </code></pre>
-<p>It validates the project (same diagnostics as <code>dotzuki check</code>; <code>--force</code>
-overrides), then writes a self-contained static site: an <code>index.html</code> player
-page (pixel-scaled canvas, keyboard input, WebAudio sound, saves in
-<code>localStorage</code>), <code>game.dzpk</code> (the whole project as one binary pack — a JSON
-index plus every file’s raw bytes, with an informational <code>dotzuki.version</code>
-stamp), and the WASM runner under <code>wasm/</code>. Upload the
-directory to any static host — itch.io, GitHub Pages, S3 — and it plays.</p>
-<p>The dotzuki-editor does this without the terminal: the Play activity’s
-<strong>Export Web</strong> button calls <code>POST /api/export</code>, which shells out to the same
-CLI export and writes <code>dist/web/</code> in the open project (the packaged desktop
-app ships the <code>dotzuki</code> binary for exactly this).</p>
-<p>Pack limits: <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>, dot-directories,
-dotfiles and <code>*.bak</code> are excluded; a single file over 16 MB or a total over
-64 MB (uncompressed) is refused.</p>
-<p>To build a <strong>custom player page</strong> instead, drive <code>WasmRunner</code> yourself — the
-generated <code>index.html</code> is the reference implementation:</p>
+<p>Open <code>http://localhost:8000</code> to play. Upload the contents of <code>dist/web/</code> to a static host
+to share the game. The directory contains <code>index.html</code>, the WebAssembly runner in <code>wasm/</code>,
+and <code>game.dzpk</code>. The page handles keyboard input, WebAudio, and saves in <code>localStorage</code>.
+In the desktop editor, <strong>Play &gt; Export Web</strong> runs the same export with its bundled runner.
+With a standalone CLI, pass the matching WebAssembly package using <code>--runner-pkg</code>.</p>
+<p>Every export target validates the project. Fix any diagnostics before shipping. The
+<code>--force</code> option can write a pack with DSL errors, which the player reports at startup.
+The pack includes the manifest and source files. For a valid project with DSL files, it also
+includes <a href="#compiled-scene-assets">compiled scene assets</a>. A matching
+player loads native functions on demand. Older players can read the bundled sources.
+The CLI limits collected inputs to 16 MiB per file and 64 MiB in total. It skips build
+directories, hidden files other than the manifest, and <code>*.bak</code>. Generated scene assets add to
+the pack size. See the <a href="#dotzuki-cli-reference">CLI reference</a> for the full collection rules.</p>
+<p>For a custom player page, use the generated <code>index.html</code> as a working example.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th><code>WasmRunner</code> method</th><th>Purpose</th></tr>
 </thead>
 <tbody>
-<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>Boot from a <code>game.dzpk</code> pack (<code>Uint8Array</code>); optionally import a save</td></tr>
-<tr><td><code>new(filesJson, saveJson?)</code></td><td>Boot with a <code>{ path: base64 }</code> JSON files map (the editor’s Play path); optionally import a save</td></tr>
-<tr><td><code>tick(inputBitmask)</code></td><td>Advance one frame; returns the RGBA frame buffer</td></tr>
-<tr><td><code>take_audio()</code></td><td>Pull generated stereo samples (<code>f32</code>, interleaved)</td></tr>
-<tr><td><code>width()</code> / <code>height()</code></td><td>Frame size (320×240)</td></tr>
-<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>Save export/import (e.g. into <code>localStorage</code>)</td></tr>
+<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>Boot a <code>.dzpk</code> from a <code>Uint8Array</code> and optionally restore a save</td></tr>
+<tr><td><code>new WasmRunner(filesJson, saveJson?, language?)</code></td><td>Boot from the editor’s JSON string of base64-encoded files</td></tr>
+<tr><td><code>advance(inputBitmask)</code></td><td>Advance the simulation and audio by one frame</td></tr>
+<tr><td><code>present(ctx, full)</code></td><td>Paint accumulated changes to a 2D canvas. Pass <code>true</code> after a resize or context restoration</td></tr>
+<tr><td><code>tick(inputBitmask)</code></td><td>Advance one frame and return a complete RGBA snapshot</td></tr>
+<tr><td><code>take_audio()</code></td><td>Drain interleaved stereo <code>f32</code> samples at 44.1 kHz</td></tr>
+<tr><td><code>width()</code> / <code>height()</code></td><td>Read the framebuffer dimensions (320 × 240)</td></tr>
+<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>Export the current save when available or restore a saved game</td></tr>
 </tbody>
 </table>
 </div>
-<p>The input bitmask is the GB button mask used by <code>dotzuki_renderer::input</code>
-(Up/Down/Left/Right/A/B/Start/Select). The editor’s
-<code>src/composables/useWasmRunner.ts</code> shows the same wiring inside a larger app.</p>
-<h2 id="4-native-app-directory"><a class="header" href="#4-native-app-directory">4. Native app directory</a></h2>
-<p><a href="#dotzuki-cli-reference"><code>dotzuki export --native</code></a> packs the project into a
-distributable native app directory:</p>
+<p>Call <code>advance</code> for each simulation tick, then call <code>present</code> once on the retained canvas.
+For a host that needs a full pixel buffer, <code>tick</code> performs the simulation step itself.
+The input mask uses bits 0–7 for A, B, Select, Start, Right, Left, Up, and Down.</p>
+<h2 id="export-for-native-desktops-or-mobile"><a class="header" href="#export-for-native-desktops-or-mobile">Export for native desktops or mobile</a></h2>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # double-clickable native app
+dist/native/game --headless --frames 120 --screenshot native.png
 </code></pre>
-<p>The output is the game-agnostic <code>dotzuki-player</code> binary (renamed after the
-project directory) plus the same <code>game.dzpk</code> pack the web export writes.
-The player boots the pack sitting next to the executable through the same
-runtime as <code>dotzuki run</code> — window, audio, and saves (<code>&lt;exe dir&gt;/.dotzuki-save.json</code>) all behave like a local playtest. Zip the directory
-to distribute it; the pack carries an informational <code>dotzuki.version</code>
-stamp recording which CLI produced it. (Packs from older CLIs —
-<code>game.bundle.json</code>, base64 JSON — still boot; the player sniffs the format
-from the magic bytes.)</p>
-<p>The export builds the player with <code>cargo build --release</code> from a dotzuki
-source checkout (pass <code>--player-bin</code> to reuse a prebuilt binary instead).
-Builds are <strong>host-platform only</strong> — ship Windows/Linux builds by running the
-export on those OSes (or on per-OS CI runners). The same <code>dotzuki check</code>
-diagnostic gate as the web export applies (<code>--force</code> overrides).</p>
-<p>Ship the directory <strong>writable</strong>, or players on read-only installs lose saves
-— the save file lives next to the pack.</p>
-<p>The editor’s Play activity has an <strong>Export Native</strong> button too — same
-<code>POST /api/export</code> route, writing <code>dist/native/</code> in the open project. In a
-dev checkout the CLI cargo-builds the player; packaged desktop apps ship a
-prebuilt one (<code>Resources/cli/dotzuki-player</code>).</p>
-<h2 id="5-upgrading-the-engine"><a class="header" href="#5-upgrading-the-engine">5. Upgrading the engine</a></h2>
-<p><strong>Zero-Rust projects</strong> — there is no dependency manifest; “upgrade” means using
-a newer <code>dotzuki</code> binary / editor. Before upgrading:</p>
+<p>The CLI prints the executable path. With <code>.</code> as the project argument, it writes <code>game</code>
+(<code>game.exe</code> on Windows). A named directory such as <code>my-game</code> produces <code>my-game</code>.
+Distribute the executable together with <code>game.dzpk</code>. The player opens the adjacent pack and
+writes saves next to it, so choose a writable installation directory. It can also load the
+legacy <code>game.bundle.json</code> format.</p>
+<p>Build on each desktop OS you ship for. A source checkout can build its host player with Cargo.
+For a standalone CLI, pass a matching executable with <code>--player-bin</code>. <strong>Play &gt; Export Native</strong>
+in the desktop editor uses the bundled player. For mobile exports, follow the
+<a href="#export-a-game-for-android">Android</a> or <a href="#export-a-game-for-harmonyos">HarmonyOS</a> guide for the target runtime.</p>
+<h2 id="upgrade-an-existing-game"><a class="header" href="#upgrade-an-existing-game">Upgrade an existing game</a></h2>
 <ol>
-<li>Run <code>dotzuki check .</code> on the old toolchain — a clean tree is the safest
-starting point.</li>
-<li>Re-check with the new binary, then boot once and verify the game state.</li>
-<li>Save compatibility: saves are versioned (<code>.dotzuki-save.json</code>,
-<code>SAVE_VERSION</code> = 3). A save with <code>version &lt;= SAVE_VERSION</code> loads; a save
-<strong>newer</strong> than the running engine is refused and the game starts fresh
-(the file is not deleted). Downgrading the engine after saving with a newer
-version is the one way to lose a save — keep a backup of
-<code>.dotzuki-save.json</code> around upgrades.</li>
+<li>Back up <code>.dotzuki-save.json</code> and run <code>dotzuki check .</code> with the current toolchain.</li>
+<li>Upgrade the CLI or editor. Check the project again, load the save, and play a scene and a
+battle. The runner accepts save formats 1–3. It rejects a newer format.</li>
+<li>Re-export each target with the matching player or runtime to ship updated compiled assets.</li>
 </ol>
-<p><strong>Rust game repositories</strong> (consume the engine as Cargo git dependencies):</p>
-<pre><code class="language-bash"># bump the tag in Cargo.toml, then
-cargo update        # re-resolve the git dependency to the new tag
-cargo build
-</code></pre>
-<p>Upgrade = bump tag + <code>cargo update</code>. See the engine README “Using the engine
-from a game repo”. The same save-version rules apply: a newer engine reads
-older saves (v1/v2/v3 load fine); an older engine refuses newer ones.</p>
+<p>For Rust games, update the <code>dotzuki-*</code> dependency versions or git tags together in
+<code>Cargo.toml</code>, then run <code>cargo update</code> and <code>cargo build</code> in your game repository.
+Consult the <a href="#migrating-to-v0120">migration guide</a> when upgrading a
+custom battle or mobile host.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="export-a-game-for-android"><a class="header" href="#export-a-game-for-android">Export a Game for Android</a></h1>
 <blockquote>
@@ -3213,7 +3174,7 @@ older saves (v1/v2/v3 load fine); an older engine refuses newer ones.</p>
 </blockquote>
 <p>Build the shared mobile runtime and export a zero-Rust game as an Android
 Studio project for arm64 phones and tablets.</p>
-<p>Before you start, read <a href="#publishing--upgrading-guide">Publishing &amp; Upgrading</a> and install
+<p>Before you start, read <a href="#publishing-and-upgrading-a-game">Publishing &amp; Upgrading</a> and install
 Android Studio with Android SDK 35, CMake 3.22.1, NDK 27, and JDK 17. The
 generated app supports Android 8.0 (API 26) and later.</p>
 <h2 id="1-build-the-rust-mobile-runtime"><a class="header" href="#1-build-the-rust-mobile-runtime">1. Build the Rust mobile runtime</a></h2>
@@ -3298,7 +3259,7 @@ and iOS integration contract.</p>
 </blockquote>
 <p>Build the common mobile runtime and export a zero-Rust game as a DevEco
 Studio HarmonyOS project.</p>
-<p>Before you start, read <a href="#publishing--upgrading-guide">Publishing &amp; Upgrading</a> and install
+<p>Before you start, read <a href="#publishing-and-upgrading-a-game">Publishing &amp; Upgrading</a> and install
 DevEco Studio with HarmonyOS SDK 5.0.5 (API 17) or a compatible newer SDK.</p>
 <h2 id="1-build-the-rust-mobile-runtime-1"><a class="header" href="#1-build-the-rust-mobile-runtime-1">1. Build the Rust mobile runtime</a></h2>
 <p>Install Rust’s HarmonyOS target:</p>
@@ -5980,7 +5941,7 @@ the consumer is unsettled.</li>
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>The disk-backed <a href="#glossary">scene</a> providers in
@@ -6011,11 +5972,13 @@ those compilations from disk and keeping them current.</p>
 </tbody>
 </table>
 </div>
-<p>Neither provider has an in-repo consumer yet; they are game-facing API.
-<code>dotzuki-runner</code> loads DSL scenes through <code>compiler::compile_files</code> +
-<code>loader::register_compiled</code>, not through these providers. Plain <code>.js</code> files
-have a separate loader, <code>dotzuki_engine_script::loader::ScriptLoader</code>, which
-does not read <code>.scene</code> sources.</p>
+<p>These providers are available to Rust game hosts. The zero-Rust runner reads project
+sources through its own file backend and compiles them with <code>compile_files_with_scene_asts</code>.
+It executes eligible scenes in the native interpreter and uses Boa for scenes that require
+JavaScript. In an exported pack with compatible <a href="#compiled-scene-assets">compiled scene assets</a>,
+it reads the stored report and routes and decodes each native function on first use.
+See the <a href="#scene-dsl-reference-scene">scene reference</a> for backend selection. Rust hosts can load standalone
+<code>.js</code> files with <code>dotzuki_engine_script::loader::ScriptLoader</code>.</p>
 <h2 id="directory-layout-contract"><a class="header" href="#directory-layout-contract">Directory layout contract</a></h2>
 <p>The caller injects the root directory; the providers discover scenes under
 it:</p>
@@ -7713,7 +7676,7 @@ so <code>game-shell</code> has no in-repo consumer yet; it is game-facing API.</
 (<code>crates/dotzuki-web/Cargo.toml:45-63</code>), <strong>off by default</strong> so the editor
 layout-preview bridge does not drag pixels / winit into consumers that never
 open a window. Enable it in <code>Cargo.toml</code> with
-<code>dotzuki-web = { version = "0.10.1", features = ["game-shell"] }</code>.</p>
+<code>dotzuki-web = { version = "0.12", features = ["game-shell"] }</code>.</p>
 <p>The feature pulls in <code>pixels =0.15.0</code>, <code>winit 0.30</code>, <code>error-iter</code>,
 <code>dotzuki-renderer/gpu</code> (for <code>InputState::set_from_keycode</code>), and the
 <code>web-sys</code> DOM types (<code>Window</code>, <code>Document</code>, <code>Element</code>, <code>Node</code>, <code>Event</code>,
@@ -8140,10 +8103,11 @@ and writes its save next to the pack as <code>.dotzuki-save.json</code>.</p>
 </tbody>
 </table>
 </div>
-<p>The diagnostic gate and pack rules are identical to <code>--web</code>. The output
-directory contains:</p>
+<p>The diagnostic gate and pack rules match <code>--web</code>. When the project argument is <code>.</code>,
+the executable is named <code>game</code> (<code>game.exe</code> on Windows). A directory argument such as
+<code>my-game</code> gives the executable that name. The CLI prints the path after export.</p>
 <pre><code>dist/native/
-├── &lt;project-dir-name&gt;[.exe]   # the player binary, renamed after the project directory
+├── game[.exe]                 # player exported from the current directory (.)
 └── game.dzpk                  # binary game pack (same file the web export writes)
 </code></pre>
 <p>The player binary is resolved in this order: <code>--player-bin</code> →
@@ -8153,13 +8117,13 @@ dotzuki source checkout; a <code>cargo install</code>ed CLI outside the repo mus
 <code>--player-bin</code>. The build targets the <strong>host platform only</strong> — to ship other
 OSes, run the export on that OS (or on a per-OS CI runner).</p>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # double-clickable native app
+dist/native/game               # game.exe on Windows
 </code></pre>
 <p>The shipped binary also accepts an optional pack path argument (a <code>.dzpk</code>
 pack, or a legacy <code>game.bundle.json</code> from an older export) plus
 <code>--lang en|zh</code>, <code>--scale &lt;n&gt;</code>, <code>--fresh</code>, and <code>--headless</code> (with <code>--frames</code> /
 <code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
-<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+<pre><code class="language-bash">dist/native/game --headless --frames 120 --screenshot boot.png
 </code></pre>
 <h2 id="dotzuki-export---android-dir"><a class="header" href="#dotzuki-export---android-dir"><code>dotzuki export --android &lt;dir&gt;</code></a></h2>
 <p>Packs the project into an Android Studio application. The app uses
@@ -8592,14 +8556,16 @@ text.</li>
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>The crate map and where each crate’s API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.</p>
-<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.7.0</code>) and are published
-on crates.io, so their API docs live on docs.rs. Local copy:</p>
+<p>The <code>dotzuki-*</code> crates share a release version on crates.io. Use the docs.rs version selector
+to read the API for a library dependency. For the <code>dotzuki-cli</code> executable, consult the
+<a href="#dotzuki-cli-reference">CLI reference</a> or run <code>dotzuki --help</code>. The <a href="#changelog">changelog</a>
+lists the releases and their migration guides. To build a local copy, run</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
 </code></pre>
@@ -8622,10 +8588,10 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-app</code></td><td>Native app shell (window/loop/hot-reload) + native link transports &amp; session router + TCP debug server</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td><a href="#link-play">link play</a>, <a href="#debug-server">debug server</a></td></tr>
 <tr><td><code>dotzuki-tui</code></td><td>Terminal shell (ratatui)</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>Zero-Rust project runtime + headless driver</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a></td></tr>
-<tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing--upgrading-guide">publishing guide</a></td></tr>
+<tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing-and-upgrading-a-game">publishing guide</a></td></tr>
 <tr><td><code>dotzuki-mobile</code></td><td>Game-independent mobile runtime: <code>MobileGame</code> trait, opaque runtime handle, PCM queue, <code>export_mobile_abi!</code></td><td><a href="https://docs.rs/dotzuki-mobile">docs.rs</a></td><td><a href="#mobile-architecture">mobile architecture</a></td></tr>
 <tr><td><code>dotzuki-runner-mobile</code></td><td>C ABI mobile host for the zero-Rust runner (<code>RunnerGame</code> + <code>.dzpk</code>)</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="#mobile-architecture">mobile architecture</a>, <a href="#export-a-game-for-android">Android export</a>, <a href="#export-a-game-for-harmonyos">HarmonyOS export</a></td></tr>
-<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI reference</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><code>dotzuki --help</code></td><td><a href="#dotzuki-cli-reference">CLI reference</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM bridges: editor layout preview, game shell (<code>game-shell</code> feature), BroadcastChannel link transport (<code>link</code> feature)</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="#game-shell-reference">game shell</a>, <a href="#link-play">link play</a></td></tr>
 </tbody>
 </table>
@@ -8637,10 +8603,10 @@ cargo doc --workspace --no-deps --open
 <tr><th>Tool</th><th>Purpose</th><th>Docs</th></tr>
 </thead>
 <tbody>
-<tr><td><code>tools/dotzuki-editor</code></td><td>Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play</td><td><a href="../tools/dotzuki-editor/README.html">editor README</a></td></tr>
-<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> converter</td><td><a href="../tools/asset-converter/README.html">README</a></td></tr>
+<tr><td><code>tools/dotzuki-editor</code></td><td>Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">editor README</a></td></tr>
+<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> converter</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md">README</a></td></tr>
 <tr><td><code>tools/editor-extensions</code></td><td>VSCode DSL syntax highlighting</td><td><code>tools/editor-extensions</code></td></tr>
-<tr><td><code>dotzuki-template/</code></td><td>cargo-generate starter template</td><td><a href="../dotzuki-template/README.html">README</a></td></tr>
+<tr><td><code>dotzuki-template/</code></td><td>cargo-generate starter template</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md">README</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -8651,7 +8617,7 @@ cargo doc --workspace --no-deps --open
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>How the engine crates, the runner, the CLI and the editor fit together, and
@@ -8684,17 +8650,16 @@ deps (see the repo <code>README.md</code>).</li>
 <p><code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code> files compile through
 <code>dotzuki-engine-dsl</code>:</p>
 <ul>
-<li><code>.scene</code> → JavaScript that <code>dotzuki-engine-script</code> (Boa-based) consumes;
-<code>dotzuki-engine-dsl</code> also ships a native AST interpreter
-(<code>crates/dotzuki-engine-dsl/src/interpreter.rs</code>) that executes scenes with
-no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
-scene semantics (see <code>AGENTS.md</code> for the interpreter-vs-Boa policy).</li>
+<li>The zero-Rust runner executes eligible <code>.scene</code> files with the native AST interpreter.
+When a scene needs JavaScript, for example in a raw <code>@run</code> block, Boa executes the
+generated script for the whole scene. See the <a href="#scene-dsl-reference-scene">scene reference</a>.</li>
 <li><code>.gui</code> → JSON the renderer layout engine consumes.</li>
 <li><code>.theme</code> / <code>.style</code> → JSON token/stylesheet files (see
 <a href="#theme--style-dsl-reference-theme--style">the theme &amp; style reference</a>).</li>
 </ul>
-<p><code>dotzuki check</code> compiles everything in memory; <code>dotzuki run</code> boots the runner
-with the compiled project.</p>
+<p><code>dotzuki check</code> compiles project DSL in memory. <code>dotzuki run</code> loads the project directory.
+Exports also retain the source files and, for valid projects with DSL files, package
+<a href="#compiled-scene-assets">compiled scene assets</a> in <code>game.dzpk</code>.</p>
 <h2 id="battle--effect-stack"><a class="header" href="#battle--effect-stack">Battle = effect stack</a></h2>
 <p>Live battle turns run through <code>dotzuki_engine::battle::stack::StackDriver</code>:
 events, effects and handlers form a stack, and <code>dotzuki-rules</code> compiles
@@ -8722,7 +8687,7 @@ the engine crates contain no concrete game data and no platform calls
 <tr><td>Audio</td><td><code>dotzuki-audio</code></td><td><a href="#audio-authoring-guide">audio guide</a></td></tr>
 <tr><td>Zero-Rust runtime</td><td><code>dotzuki-runner</code></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">project manifest</a></td></tr>
 <tr><td>CLI</td><td><code>dotzuki-cli</code></td><td><a href="#dotzuki-cli-reference">CLI reference</a></td></tr>
-<tr><td>Editor</td><td><code>tools/dotzuki-editor</code></td><td><a href="../tools/dotzuki-editor/README.html">editor README</a></td></tr>
+<tr><td>Editor</td><td><code>tools/dotzuki-editor</code></td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">editor README</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -14216,7 +14181,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tr><td>制作<strong>音频</strong>（<code>data/audio/*.json</code> 音轨）</td><td>格式见 <a href="#audio-authoring-guide"><code>how-to/audio.md</code></a>，22 个命令见 <a href="#audio-command-reference"><code>reference/audio-commands.md</code></a></td></tr>
 <tr><td>编写<strong>双语文本</strong></td><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a> —— <code>game.lang()</code> / <code>game.t()</code> / <code>@t</code></td></tr>
 <tr><td>在终端中运行 / 自动化项目</td><td><a href="#dotzuki-cli-reference"><code>reference/cli.md</code></a> —— <code>dotzuki new</code> / <code>check</code> / <code>run</code> 及所有 flag</td></tr>
-<tr><td>发布 / 部署 / 升级</td><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a> —— 项目交付、无头模式 CI、WASM 网页试玩、引擎升级、存档兼容</td></tr>
+<tr><td>发布 / 部署 / 升级</td><td><a href="#publishing-and-upgrading-a-game"><code>how-to/publishing.md</code></a> —— 项目交付、无头模式 CI、WASM 网页试玩、引擎升级、存档兼容</td></tr>
 <tr><td>扩展引擎的 <strong>Rust 开发者</strong></td><td>当前架构见 <a href="#architecture-overview"><code>explanation/architecture.md</code></a>，crate map 与 docs.rs 链接见 <a href="#rust-api-portal"><code>reference/rustdoc.md</code></a>，<code>GameData</code> trait 见 <a href="#gamedata-the-provider-pattern"><code>explanation/game-data.md</code></a>；引擎各系统（商店、联机、调试服务器、音频运行时、资源管理器、游戏外壳）在 <code>reference/</code> 下各有专页</td></tr>
 <tr><td>查询术语</td><td><a href="#glossary"><code>reference/glossary.md</code></a> —— 权威术语表</td></tr>
 </tbody>
@@ -14252,7 +14217,7 @@ DSL_MAPPING.md），已从下表中移除；<code>@t</code> 内联双语已实�
 <tr><td><a href="#audio-authoring-guide"><code>how-to/audio.md</code></a></td><td><code>TrackDef</code> JSON 音轨、通道、场景播放、编写要点</td></tr>
 <tr><td><a href="#assets"><code>how-to/assets.md</code></a></td><td>素材管线：tileset、共享 tile 库、2bpp 转换、字体</td></tr>
 <tr><td><a href="#i18n-guide"><code>how-to/i18n.md</code></a></td><td>双语文本：<code>game</code> i18n API 与 <code>@t</code> 语法</td></tr>
-<tr><td><a href="#publishing--upgrading-guide"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
+<tr><td><a href="#publishing-and-upgrading-a-game"><code>how-to/publishing.md</code></a></td><td>发布项目、无头模式冒烟测试、WASM 网页试玩、引擎升级</td></tr>
 <tr><td><a href="#导出-android-游戏"><code>how-to/export-android.zh-CN.md</code></a></td><td>构建移动运行时并导出 Android Studio 工程</td></tr>
 <tr><td><a href="#导出鸿蒙游戏"><code>how-to/export-harmonyos.zh-CN.md</code></a></td><td>构建移动运行时并导出 DevEco Studio 工程</td></tr>
 </tbody>
@@ -16813,91 +16778,93 @@ cargo run -- --all --input-dir gfx/tilesets --output-dir assets/converted \
 字符换一次行。</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="发布与升级指南"><a class="header" href="#发布与升级指南">发布与升级指南</a></h1>
+<h1 id="发布与升级游戏"><a class="header" href="#发布与升级游戏">发布与升级游戏</a></h1>
 <blockquote>
-<p>本文是 <code>how-to/publishing.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
-内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
+<p>本文是 <code>how-to/publishing.md</code> 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
+内容以英文源为准。</p>
 </blockquote>
 <blockquote>
 <ul>
-<li><strong>Audience</strong>: game authors, CI</li>
+<li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
-<p>打包、发布并升级一个零 Rust 项目。</p>
-<p>如何打包、发布并升级用 dotzuki 构建的<strong>零 Rust 项目</strong>。本文与
-<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单与项目结构</a>（项目契约）和
-<a href="#dotzuki-cli-reference">CLI 参考</a>（工具链）互补。</p>
-<h2 id="游戏项目是什么"><a class="header" href="#游戏项目是什么">游戏项目是什么</a></h2>
-<p>游戏项目就是一个<strong>普通目录</strong>——<code>.dotzuki-editor.json</code> + <code>data/</code> + <code>gfx/</code> + <code>assets/</code>
-（场景）。没有构建步骤：<code>dotzuki</code> 可执行文件（或编辑器）原样消费这个目录。发布一个
-游戏 = 发布这个目录加上一种运行它的方式。</p>
-<h2 id="1-交付项目目录"><a class="header" href="#1-交付项目目录">1. 交付项目目录</a></h2>
-<p>没有编译/打包阶段。把整个项目目录（排除 <code>*.bak</code>、点文件与任何编辑器状态）复制到目
-标机器上，然后运行：</p>
-<pre><code class="language-bash">dotzuki run &lt;project-dir&gt;
+<p>零 Rust 项目既可以作为可编辑的目录交付，也可以连同播放器一起导出。
+开始前请核对<a href="#游戏项目规范--零-rust-dotzuki-engine-项目">项目清单</a>，并在项目根目录运行下文示例。</p>
+<h2 id="交付可编辑的项目"><a class="header" href="#交付可编辑的项目">交付可编辑的项目</a></h2>
+<p>复制 <code>.dotzuki-editor.json</code> 及其指定的数据、图像和场景目录。使用开发游戏时相同版本的
+CLI 或编辑器。在复制出来的目录中，校验文件并启动游戏。</p>
+<pre><code class="language-bash">dotzuki check .
+dotzuki run .
 </code></pre>
-<p>交付检查清单：</p>
-<ul>
-<li>在最终目录树上运行 <a href="#dotzuki-cli-reference"><code>dotzuki check</code></a>——干净退出是唯一存在的构
-建检查。</li>
-<li>项目隐式携带自身的 <code>dotzuki</code> 版本要求：用引擎版本与项目开发时所用版本一致的
-<code>dotzuki</code> 可执行文件来运行它。项目清单里没有按项目固定的版本。</li>
-<li>存档文件默认写入 <code>&lt;project&gt;/.dotzuki-save.json</code>——交付可写的目录，或者对只读安装
-用 <code>--save-file</code> 指向别处。</li>
-</ul>
-<h2 id="2-自动化冒烟测试ci"><a class="header" href="#2-自动化冒烟测试ci">2. 自动化冒烟测试（CI）</a></h2>
-<pre><code class="language-bash">dotzuki run . --headless --frames 60          # boot, no window, no save
-dotzuki run . --headless --map StartTown --screenshot shot.png --save
+<p>运行器把存档写入项目目录下的 <code>.dotzuki-save.json</code>。如果安装目录只读，
+用 <code>dotzuki run . --save-file &lt;writable-path&gt;</code> 指定可写路径。</p>
+<h2 id="对项目做冒烟测试"><a class="header" href="#对项目做冒烟测试">对项目做冒烟测试</a></h2>
+<pre><code class="language-bash">dotzuki run . --headless --frames 60
+dotzuki run . --headless --frames 120 --screenshot boot.png
 </code></pre>
-<p><code>--headless</code> 从不打开音频设备或窗口；<code>--screenshot</code> 输出真实渲染的最后一帧。见
-<a href="#dotzuki-cli-reference"><code>CLI_REFERENCE.md</code></a>。</p>
-<h2 id="3-网页中的可玩演示wasm"><a class="header" href="#3-网页中的可玩演示wasm">3. 网页中的可玩演示（WASM）</a></h2>
-<p>同一个运行器编译为 WASM（<code>dotzuki-runner-web</code>），并基于<strong>内存文件系统</strong>启动——编辑器
-的 Play 活动走的正是这条路径，所以在编辑器里能玩的项目在网页里也能一模一样地玩。</p>
-<p>编辑器把项目打包为</p>
-<pre><code>{ "&lt;posix rel path&gt;": "&lt;base64&gt;" }   // whole project, incl. .dotzuki-editor.json
+<p>这两条命令都以无头模式运行，无需打开窗口或音频设备。第二条将最后一帧写入 PNG。
+加上 <code>--save</code> 可以测试游戏到达可存档状态时的写入行为。</p>
+<h2 id="导出网页版"><a class="header" href="#导出网页版">导出网页版</a></h2>
+<pre><code class="language-bash">dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web
 </code></pre>
-<p>（排除 <code>node_modules</code>/<code>.git</code>/<code>target</code>/<code>dist</code>、点文件与 <code>*.bak</code>；单文件上限 16 MB，总
-量 64 MB）。随后页面驱动：</p>
+<p>打开 <code>http://localhost:8000</code> 即可游玩。将 <code>dist/web/</code> 中的文件上传到静态网站即可分享游戏。
+该目录包含 <code>index.html</code>、<code>wasm/</code> 下的 WebAssembly 运行器和 <code>game.dzpk</code>。
+页面处理键盘输入和 WebAudio，并将存档写入 <code>localStorage</code>。在桌面编辑器中，
+<strong>试玩 &gt; 导出 Web</strong> 会使用随附的运行器执行同一导出操作。
+如果单独安装了 CLI，请用 <code>--runner-pkg</code> 指定配套的 WebAssembly 包。</p>
+<p>各导出目标都会校验项目。分发前请先修复诊断报告中的问题。用 <code>--force</code> 可以导出含有
+DSL 错误的包，播放器会在启动时报告这些错误。包中保留项目清单和源文件。通过校验且含有
+DSL 文件的项目还会打入<a href="#compiled-scene-assets">预编译场景数据</a>。
+配套播放器按需加载原生函数，旧版播放器可以读取随包源码。
+CLI 收集的输入文件每个最多 16 MiB，合计最多 64 MiB。它会跳过构建目录、清单以外的隐藏文件
+以及 <code>*.bak</code>。生成的场景数据额外占用包空间。完整收集规则见 <a href="#dotzuki-cli-参考">CLI 参考</a>。</p>
+<p>如果要编写自己的播放器页面，可以参考导出生成的 <code>index.html</code>。</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th><code>WasmRunner</code> 方法</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td><code>new(filesJson, saveJson?)</code></td><td>用打包的文件启动；可选地导入一份存档</td></tr>
-<tr><td><code>tick(inputBitmask)</code></td><td>推进一帧；返回 RGBA 帧缓冲</td></tr>
-<tr><td><code>take_audio()</code></td><td>拉取生成的立体声采样（<code>f32</code>，交错排列）</td></tr>
-<tr><td><code>width()</code> / <code>height()</code></td><td>帧尺寸（320×240）</td></tr>
-<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>存档导出/导入（例如写入 <code>localStorage</code>）</td></tr>
+<tr><td><code>WasmRunner.fromPack(bytes, saveJson?)</code></td><td>从 <code>Uint8Array</code> 形式的 <code>.dzpk</code> 启动游戏，可同时恢复存档</td></tr>
+<tr><td><code>new WasmRunner(filesJson, saveJson?, language?)</code></td><td>从编辑器提供的 JSON 字符串启动，其中各文件的内容以 base64 编码</td></tr>
+<tr><td><code>advance(inputBitmask)</code></td><td>将游戏模拟和音频推进一帧</td></tr>
+<tr><td><code>present(ctx, full)</code></td><td>将累计变化绘制到 2D 画布。画布尺寸改变或上下文恢复后传入 <code>true</code></td></tr>
+<tr><td><code>tick(inputBitmask)</code></td><td>推进一帧并返回完整的 RGBA 快照</td></tr>
+<tr><td><code>take_audio()</code></td><td>取出交错排列的 44.1 kHz 立体声 <code>f32</code> 采样</td></tr>
+<tr><td><code>width()</code> / <code>height()</code></td><td>读取帧缓冲尺寸（320 × 240）</td></tr>
+<tr><td><code>export_save()</code> / <code>import_save(json)</code></td><td>在可存档时导出当前状态，或恢复已有存档</td></tr>
 </tbody>
 </table>
 </div>
-<p>输入位掩码是 <code>dotzuki_renderer::input</code> 使用的 GB 按键掩码
-（Up/Down/Left/Right/A/B/Start/Select）。编辑器的 <code>src/composables/useWasmRunner.ts</code>
-是接线输入、音频与存档持久化的可用参考。</p>
-<h2 id="4-升级引擎"><a class="header" href="#4-升级引擎">4. 升级引擎</a></h2>
-<p><strong>零 Rust 项目</strong>——没有依赖清单；“升级”意味着使用更新的 <code>dotzuki</code> 可执行文件 / 编辑
-器。升级之前：</p>
-<ol>
-<li>在旧工具链上运行 <code>dotzuki check .</code>——一棵干净的目录树是最安全的起点。</li>
-<li>用新可执行文件重新检查，然后启动一次并核对游戏状态。</li>
-<li>存档兼容性：存档带版本号（<code>.dotzuki-save.json</code>，<code>SAVE_VERSION</code> = 3）。
-<code>version &lt;= SAVE_VERSION</code> 的存档可以加载；比运行中引擎<strong>更新</strong>的存档会被拒绝，游
-戏从头开始（文件不会被删除）。用新版本保存后再降级引擎是唯一会丢失存档的情形——
-升级期间请保留 <code>.dotzuki-save.json</code> 的备份。</li>
-</ol>
-<p><strong>Rust 游戏仓库</strong>（以 Cargo git 依赖方式消费引擎）：</p>
-<pre><code class="language-bash"># bump the tag in Cargo.toml, then
-cargo update        # re-resolve the git dependency to the new tag
-cargo build
+<p>每个模拟步调用一次 <code>advance</code>，之后在保留上次绘制内容的画布上调用一次 <code>present</code>。
+需要整帧像素的宿主可以使用 <code>tick</code>，该方法自身会推进模拟。
+输入掩码的第 0 至 7 位依次对应 A、B、Select、Start、右、左、上、下。</p>
+<h2 id="导出桌面版或移动版"><a class="header" href="#导出桌面版或移动版">导出桌面版或移动版</a></h2>
+<pre><code class="language-bash">dotzuki export --native . --out dist/native
+dist/native/game --headless --frames 120 --screenshot native.png
 </code></pre>
-<p>升级 = bump tag + <code>cargo update</code>。见引擎 README 的 “Using the engine from a game
-repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v3 都能正常加载）；旧引擎拒
-绝新存档。</p>
+<p>CLI 会打印可执行文件路径。以 <code>.</code> 为项目参数时，文件名是 <code>game</code>（Windows 上为
+<code>game.exe</code>）。以 <code>my-game</code> 等目录名为参数时，可执行文件使用该名称。
+将可执行文件和 <code>game.dzpk</code> 一起分发。播放器打开同目录下的游戏包，并将存档写入该目录，
+因此请选择可写的安装目录。播放器也支持旧的 <code>game.bundle.json</code> 格式。</p>
+<p>请在每个待分发的桌面操作系统上构建对应版本。在引擎源码目录中，可以用 Cargo 构建本机播放器。
+如果单独安装了 CLI，用 <code>--player-bin</code> 指定配套的可执行文件。桌面编辑器的
+<strong>试玩 &gt; 导出原生</strong> 会使用随附的播放器。移动端所需的运行库和导出步骤见
+<a href="#导出-android-游戏">Android 导出指南</a>或<a href="#导出鸿蒙游戏">鸿蒙导出指南</a>。</p>
+<h2 id="升级现有游戏"><a class="header" href="#升级现有游戏">升级现有游戏</a></h2>
+<ol>
+<li>备份 <code>.dotzuki-save.json</code>，用当前工具链运行 <code>dotzuki check .</code>。</li>
+<li>升级 CLI 或编辑器。再次校验项目，载入存档，运行一个场景并完成一场战斗。
+运行器支持格式版本 1 至 3 的存档，会拒绝更新格式的存档。</li>
+<li>使用各目标配套的播放器或运行库重新导出，分发更新后的预编译场景数据。</li>
+</ol>
+<p>Rust 游戏应在 <code>Cargo.toml</code> 中一并更新各 <code>dotzuki-*</code> 依赖版本或 git 标签，然后在
+游戏仓库中运行 <code>cargo update</code> 和 <code>cargo build</code>。升级自定义战斗或移动端宿主时，
+请参阅<a href="#迁移至-v0120">迁移指南</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="导出-android-游戏"><a class="header" href="#导出-android-游戏">导出 Android 游戏</a></h1>
 <blockquote>
@@ -16915,7 +16882,7 @@ repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v
 </blockquote>
 <p>构建共用移动运行时，并把零 Rust 游戏导出为面向 arm64 手机和平板的
 Android Studio 工程。</p>
-<p>开始前，请阅读<a href="#发布与升级指南">发布与升级</a>，并安装 Android Studio、
+<p>开始前，请阅读<a href="#发布与升级游戏">发布与升级</a>，并安装 Android Studio、
 Android SDK 35、CMake 3.22.1、NDK 27 和 JDK 17。生成的应用支持 Android
 8.0（API 26）及更高版本。</p>
 <h2 id="1-构建-rust-移动运行时"><a class="header" href="#1-构建-rust-移动运行时">1. 构建 Rust 移动运行时</a></h2>
@@ -16998,7 +16965,7 @@ Start/Select 位于右上，所有控件避让窗口安全区。
 </ul>
 </blockquote>
 <p>构建公共移动运行时，并把零 Rust 游戏导出为 DevEco Studio 鸿蒙工程。</p>
-<p>开始前，请阅读<a href="#发布与升级指南">发布与升级</a>，并安装带 HarmonyOS SDK 5.0.5
+<p>开始前，请阅读<a href="#发布与升级游戏">发布与升级</a>，并安装带 HarmonyOS SDK 5.0.5
 （API 17）或兼容新版本 SDK 的 DevEco Studio。</p>
 <h2 id="1-构建-rust-移动运行时-1"><a class="header" href="#1-构建-rust-移动运行时-1">1. 构建 Rust 移动运行时</a></h2>
 <p>安装 Rust 的鸿蒙 target：</p>
@@ -19134,7 +19101,7 @@ assert_eq!(mgr.cache_size(), 0);
 <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.12.0
-（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
+（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19187,7 +19154,7 @@ API 参考：feature 开关、<code>GameLoop</code> trait、<code>GameShellConfi
 （<code>crates/dotzuki-web/Cargo.toml:45-63</code>），<strong>默认关闭</strong>，这样编辑器的
 布局预览桥就不会把 pixels / winit 拖进从不开窗口的消费方。在
 <code>Cargo.toml</code> 中启用：
-<code>dotzuki-web = { version = "0.10.1", features = ["game-shell"] }</code>。</p>
+<code>dotzuki-web = { version = "0.12", features = ["game-shell"] }</code>。</p>
 <p>该 feature 会引入 <code>pixels =0.15.0</code>、<code>winit 0.30</code>、<code>error-iter</code>、
 <code>dotzuki-renderer/gpu</code>（供 <code>InputState::set_from_keycode</code> 使用），
 以及若干 <code>web-sys</code> DOM 类型（<code>Window</code>、<code>Document</code>、<code>Element</code>、
@@ -19410,7 +19377,7 @@ fn main() -&gt; Result&lt;(), GameShellError&gt; {
 <h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.12.0
-（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
+（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19587,9 +19554,11 @@ pack，并把存档写到 pack 旁的 <code>.dotzuki-save.json</code>。</p>
 </tbody>
 </table>
 </div>
-<p>诊断门禁和 pack 规则与 <code>--web</code> 相同。输出目录包含：</p>
+<p>诊断和打包规则与 <code>--web</code> 相同。以 <code>.</code> 为项目参数时，可执行文件名为 <code>game</code>
+（Windows 上为 <code>game.exe</code>）。如果传入 <code>my-game</code> 等目录名，可执行文件使用该名称。
+导出后 CLI 会打印可执行文件路径。</p>
 <pre><code>dist/native/
-├── &lt;project-dir-name&gt;[.exe]   # player 二进制文件，以项目目录名重命名
+├── game[.exe]                 # 以当前目录（.）为参数时导出的播放器
 └── game.dzpk                  # 二进制游戏 pack，与 web 导出的文件相同
 </code></pre>
 <p>Player 二进制文件按以下顺序解析：<code>--player-bin</code> → 在源码 workspace 中执行
@@ -19598,13 +19567,13 @@ pack，并把存档写到 pack 旁的 <code>.dotzuki-save.json</code>。</p>
 <code>cargo install</code> 安装的 CLI 必须传入 <code>--player-bin</code>。构建只面向<strong>宿主平台</strong>；要
 发布到其他操作系统，请在该操作系统或对应的 CI runner 上导出。</p>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # 可双击启动的原生应用
+dist/native/game               # Windows 上为 game.exe
 </code></pre>
 <p>随附的二进制文件也接受可选的 pack 路径（<code>.dzpk</code> 或旧版导出的
 <code>game.bundle.json</code>），以及 <code>--lang en|zh</code>、<code>--scale &lt;n&gt;</code>、<code>--fresh</code> 和
 <code>--headless</code>。无头模式还可使用 <code>--frames</code> 与 <code>--screenshot</code>，对导出产物执行 CI
 冒烟测试：</p>
-<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+<pre><code class="language-bash">dist/native/game --headless --frames 120 --screenshot boot.png
 </code></pre>
 <h2 id="dotzuki-export---android-dir-1"><a class="header" href="#dotzuki-export---android-dir-1"><code>dotzuki export --android &lt;dir&gt;</code></a></h2>
 <p>把项目打包为 Android Studio 应用。应用通过 ABI 版本 1 使用
@@ -19672,8 +19641,8 @@ Preferences 存档、C ABI header、静态库和 <code>game.dzpk</code>。参见
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="rust-api-门户"><a class="header" href="#rust-api-门户">Rust API 门户</a></h1>
 <blockquote>
-<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.7.0
-（源文档 commit 287c3a1d360c6611473781aad2494ee92f44fc80）。
+<p>本文是 <code>reference/rustdoc.md</code> 的中文翻译，同步至引擎版本 v0.12.0
+（源文档 commit 84dd9906ae8f7533450f0cb93f69b61bd01cb342）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19681,13 +19650,15 @@ Preferences 存档、C ABI header、静态库和 <code>game.dzpk</code>。参见
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>crate 一览以及每个 crate 的 API 文档所在位置；rustdoc 是权威的 API 参考，下面
 的页面是相应的文字说明。</p>
-<p>所有 <code>dotzuki-*</code> crate 共享同一个版本（目前是 <code>0.7.0</code>）并发布在 crates.io
-上，因此它们的 API 文档位于 docs.rs。本地副本：</p>
+<p>各 <code>dotzuki-*</code> crate 在 crates.io 上共享同一个发行版本。请在 docs.rs 的版本选择器中
+选择项目所依赖的库版本，查阅相应 API。对于 <code>dotzuki-cli</code> 提供的可执行文件，
+请查阅 <a href="#dotzuki-cli-参考">CLI 参考</a>或运行 <code>dotzuki --help</code>。
+<a href="#变更日志">变更日志</a>列出了各版本及其迁移指南。运行下列命令可以在本地构建 API 文档。</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
 </code></pre>
@@ -19710,10 +19681,10 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-app</code></td><td>原生应用外壳（窗口/循环/热重载）+ 原生联机传输与会话路由 + TCP 调试服务器</td><td><a href="https://docs.rs/dotzuki-app">docs.rs</a></td><td><a href="#link-play">联机</a>、<a href="#debug-server">调试服务器</a></td></tr>
 <tr><td><code>dotzuki-tui</code></td><td>终端外壳（ratatui）</td><td><a href="https://docs.rs/dotzuki-tui">docs.rs</a></td><td>—</td></tr>
 <tr><td><code>dotzuki-runner</code></td><td>零 Rust 项目运行时 + 无头模式驱动</td><td><a href="https://docs.rs/dotzuki-runner">docs.rs</a></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a></td></tr>
-<tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing--upgrading-guide">发布指南</a></td></tr>
+<tr><td><code>dotzuki-runner-web</code></td><td>运行器的 WASM 构建（编辑器 Play）</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="#publishing-and-upgrading-a-game">发布指南</a></td></tr>
 <tr><td><code>dotzuki-mobile</code></td><td>游戏无关的移动运行时：<code>MobileGame</code> trait、不透明运行时句柄、PCM 队列、<code>export_mobile_abi!</code></td><td><a href="https://docs.rs/dotzuki-mobile">docs.rs</a></td><td><a href="#移动端架构">移动端架构</a></td></tr>
 <tr><td><code>dotzuki-runner-mobile</code></td><td>零 Rust 运行器（<code>RunnerGame</code> + <code>.dzpk</code>）的 C ABI 移动宿主</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="#移动端架构">移动端架构</a>、<a href="#导出-android-游戏">Android 导出</a>、<a href="#导出鸿蒙游戏">鸿蒙导出</a></td></tr>
-<tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="#dotzuki-cli-reference">CLI 参考</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td><code>dotzuki</code> 二进制：<code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><code>dotzuki --help</code></td><td><a href="#dotzuki-cli-参考">CLI 参考</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM 桥：编辑器布局预览、游戏外壳（<code>game-shell</code> feature）、BroadcastChannel 联机传输（<code>link</code> feature）</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="#game-shell-reference">游戏外壳</a>、<a href="#link-play">联机</a></td></tr>
 </tbody>
 </table>
@@ -19725,10 +19696,10 @@ cargo doc --workspace --no-deps --open
 <tr><th>工具</th><th>用途</th><th>文档</th></tr>
 </thead>
 <tbody>
-<tr><td><code>tools/dotzuki-editor</code></td><td>游戏无关的 Vue/Vite 编辑器、AI Story Designer、编辑器内 Play</td><td><a href="../tools/dotzuki-editor/README.html">编辑器 README</a></td></tr>
-<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> 转换器</td><td><a href="../tools/asset-converter/README.html">README</a></td></tr>
+<tr><td><code>tools/dotzuki-editor</code></td><td>游戏无关的 Vue/Vite 编辑器、AI Story Designer、编辑器内 Play</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">编辑器 README</a></td></tr>
+<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> 转换器</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md">README</a></td></tr>
 <tr><td><code>tools/editor-extensions</code></td><td>VSCode DSL 语法高亮</td><td><code>tools/editor-extensions</code></td></tr>
-<tr><td><code>dotzuki-template/</code></td><td>cargo-generate 起始模板</td><td><a href="../dotzuki-template/README.html">README</a></td></tr>
+<tr><td><code>dotzuki-template/</code></td><td>cargo-generate 起始模板</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md">README</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -21176,7 +21147,7 @@ crate 内的冲突检测器在内存中的路由上工作，不读取它（confl
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="dsl-运行时加载参考"><a class="header" href="#dsl-运行时加载参考">DSL 运行时加载参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/dsl/runtime-loading.md</code> 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/dsl/runtime-loading.md</code> 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21184,7 +21155,7 @@ crate 内的冲突检测器在内存中的路由上工作，不读取它（confl
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p><code>dotzuki_engine_dsl::disk_loader</code>
@@ -21213,12 +21184,12 @@ crate 内的冲突检测器在内存中的路由上工作，不读取它（confl
 </tbody>
 </table>
 </div>
-<p>两个 provider 目前在仓库内都没有消费方；它们是面向游戏的 API。
-<code>dotzuki-runner</code> 通过 <code>compiler::compile_files</code> +
-<code>loader::register_compiled</code> 加载 DSL 场景，不经过这些 provider。
-纯 <code>.js</code> 文件另有独立的加载器
-<code>dotzuki_engine_script::loader::ScriptLoader</code>，它不读取 <code>.scene</code>
-源文件。</p>
+<p>Rust 游戏宿主可以使用这两个 provider。零 Rust 运行器通过自己的文件后端读取项目源码，
+用 <code>compile_files_with_scene_asts</code> 编译。符合条件的场景由原生解释器执行，需要
+JavaScript 的场景由 Boa 执行。对于含有兼容<a href="#compiled-scene-assets">预编译场景数据</a>的导出包，
+运行器读取包中的编译报告和路由表，并在首次使用时解码相应的原生函数。
+后端选择规则见<a href="#scene-dsl-参考scene">场景参考</a>。Rust 宿主可用
+<code>dotzuki_engine_script::loader::ScriptLoader</code> 加载独立的 <code>.js</code> 文件。</p>
 <h2 id="目录布局约定"><a class="header" href="#目录布局约定">目录布局约定</a></h2>
 <p>根目录由调用方注入；provider 在其下发现场景：</p>
 <pre><code>&lt;dir&gt;/
@@ -21361,7 +21332,7 @@ provider；JS provider 只编译地图场景。</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="架构概览"><a class="header" href="#架构概览">架构概览</a></h1>
 <blockquote>
-<p>本文是 <code>explanation/architecture.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>explanation/architecture.md</code> 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21369,7 +21340,7 @@ provider；JS provider 只编译地图场景。</li>
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>引擎各 crate、运行器、CLI 与编辑器如何组合在一起，以及一个零 Rust 项目如何从 DSL
@@ -21399,16 +21370,16 @@ provider；JS provider 只编译地图场景。</li>
 <h2 id="从-dsl-到可运行的游戏"><a class="header" href="#从-dsl-到可运行的游戏">从 DSL 到可运行的游戏</a></h2>
 <p><code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code> 文件经 <code>dotzuki-engine-dsl</code> 编译：</p>
 <ul>
-<li><code>.scene</code> → 由 <code>dotzuki-engine-script</code>（基于 Boa）消费的 JavaScript；
-<code>dotzuki-engine-dsl</code> 还自带一个原生 AST 解释器
-（<code>crates/dotzuki-engine-dsl/src/interpreter.rs</code>），无需 JS 引擎即可执行场景，
-与 Boa 运行时协议 1:1 对应——它是场景语义的权威标准（解释器与 Boa 的取舍策略
-见 <code>AGENTS.md</code>）。</li>
+<li>零 Rust 运行器用原生 AST 解释器执行符合条件的 <code>.scene</code> 文件。
+如果场景需要 JavaScript，例如包含原始 <code>@run</code> 块，Boa 会执行整个场景生成的脚本。
+具体条件见<a href="#scene-dsl-参考scene">场景参考</a>。</li>
 <li><code>.gui</code> → 由渲染器布局引擎消费的 JSON。</li>
 <li><code>.theme</code> / <code>.style</code> → JSON token/样式表文件（见
 <a href="#theme--style-dsl-reference-theme--style">theme 与 style 参考</a>）。</li>
 </ul>
-<p><code>dotzuki check</code> 在内存中编译所有内容；<code>dotzuki run</code> 用编译好的项目启动运行器。</p>
+<p><code>dotzuki check</code> 在内存中编译项目 DSL，<code>dotzuki run</code> 加载项目目录。导出包保留源文件。
+通过校验且含有 DSL 文件的项目还会将<a href="#compiled-scene-assets">预编译场景数据</a>
+写入 <code>game.dzpk</code>。</p>
 <h2 id="战斗--效果栈"><a class="header" href="#战斗--效果栈">战斗 = 效果栈</a></h2>
 <p>实时战斗回合经由 <code>dotzuki_engine::battle::stack::StackDriver</code> 运行：事件、效果与
 处理器构成一个栈，<code>dotzuki-rules</code> 把声明式的 <code>rules.ron</code> 编译成这些运行时栈。该
@@ -21433,7 +21404,7 @@ provider；JS provider 只编译地图场景。</li>
 <tr><td>音频</td><td><code>dotzuki-audio</code></td><td><a href="#audio-authoring-guide">音频指南</a></td></tr>
 <tr><td>零 Rust 运行时</td><td><code>dotzuki-runner</code></td><td><a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a></td></tr>
 <tr><td>CLI</td><td><code>dotzuki-cli</code></td><td><a href="#dotzuki-cli-reference">CLI 参考</a></td></tr>
-<tr><td>编辑器</td><td><code>tools/dotzuki-editor</code></td><td><a href="../tools/dotzuki-editor/README.html">编辑器 README</a></td></tr>
+<tr><td>编辑器</td><td><code>tools/dotzuki-editor</code></td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">编辑器 README</a></td></tr>
 </tbody>
 </table>
 </div>

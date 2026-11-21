@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-c7c2563c.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.5.4</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>The disk-backed <a href="../glossary.html">scene</a> providers in
@@ -217,11 +217,13 @@ those compilations from disk and keeping them current.</p>
 </tbody>
 </table>
 </div>
-<p>Neither provider has an in-repo consumer yet; they are game-facing API.
-<code>dotzuki-runner</code> loads DSL scenes through <code>compiler::compile_files</code> +
-<code>loader::register_compiled</code>, not through these providers. Plain <code>.js</code> files
-have a separate loader, <code>dotzuki_engine_script::loader::ScriptLoader</code>, which
-does not read <code>.scene</code> sources.</p>
+<p>These providers are available to Rust game hosts. The zero-Rust runner reads project
+sources through its own file backend and compiles them with <code>compile_files_with_scene_asts</code>.
+It executes eligible scenes in the native interpreter and uses Boa for scenes that require
+JavaScript. In an exported pack with compatible <a href="../glossary.html#compiled-scene-assets">compiled scene assets</a>,
+it reads the stored report and routes and decodes each native function on first use.
+See the <a href="scene.html">scene reference</a> for backend selection. Rust hosts can load standalone
+<code>.js</code> files with <code>dotzuki_engine_script::loader::ScriptLoader</code>.</p>
 <h2 id="directory-layout-contract"><a class="header" href="#directory-layout-contract">Directory layout contract</a></h2>
 <p>The caller injects the root directory; the providers discover scenes under
 it:</p>

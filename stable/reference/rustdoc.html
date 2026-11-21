@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -186,14 +186,16 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.7.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>The crate map and where each crate’s API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.</p>
-<p>All <code>dotzuki-*</code> crates share one version (currently <code>0.7.0</code>) and are published
-on crates.io, so their API docs live on docs.rs. Local copy:</p>
+<p>The <code>dotzuki-*</code> crates share a release version on crates.io. Use the docs.rs version selector
+to read the API for a library dependency. For the <code>dotzuki-cli</code> executable, consult the
+<a href="cli.html">CLI reference</a> or run <code>dotzuki --help</code>. The <a href="../release-notes/changelog.html">changelog</a>
+lists the releases and their migration guides. To build a local copy, run</p>
 <pre><code class="language-bash">cd workspace
 cargo doc --workspace --no-deps --open
 </code></pre>
@@ -219,7 +221,7 @@ cargo doc --workspace --no-deps --open
 <tr><td><code>dotzuki-runner-web</code></td><td>WASM build of the runner (editor Play)</td><td><a href="https://docs.rs/dotzuki-runner-web">docs.rs</a></td><td><a href="../how-to/publishing.html">publishing guide</a></td></tr>
 <tr><td><code>dotzuki-mobile</code></td><td>Game-independent mobile runtime: <code>MobileGame</code> trait, opaque runtime handle, PCM queue, <code>export_mobile_abi!</code></td><td><a href="https://docs.rs/dotzuki-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.html">mobile architecture</a></td></tr>
 <tr><td><code>dotzuki-runner-mobile</code></td><td>C ABI mobile host for the zero-Rust runner (<code>RunnerGame</code> + <code>.dzpk</code>)</td><td><a href="https://docs.rs/dotzuki-runner-mobile">docs.rs</a></td><td><a href="../explanation/mobile-architecture.html">mobile architecture</a>, <a href="../how-to/export-android.html">Android export</a>, <a href="../how-to/export-harmonyos.html">HarmonyOS export</a></td></tr>
-<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><a href="https://docs.rs/dotzuki-cli">docs.rs</a></td><td><a href="cli.html">CLI reference</a></td></tr>
+<tr><td><code>dotzuki-cli</code></td><td>The <code>dotzuki</code> binary: <code>new</code> / <code>check</code> / <code>run</code> / <code>export</code></td><td><code>dotzuki --help</code></td><td><a href="cli.html">CLI reference</a></td></tr>
 <tr><td><code>dotzuki-web</code></td><td>WASM bridges: editor layout preview, game shell (<code>game-shell</code> feature), BroadcastChannel link transport (<code>link</code> feature)</td><td><a href="https://docs.rs/dotzuki-web">docs.rs</a></td><td><a href="game-shell.html">game shell</a>, <a href="link-play.html">link play</a></td></tr>
 </tbody>
 </table>
@@ -231,10 +233,10 @@ cargo doc --workspace --no-deps --open
 <tr><th>Tool</th><th>Purpose</th><th>Docs</th></tr>
 </thead>
 <tbody>
-<tr><td><code>tools/dotzuki-editor</code></td><td>Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play</td><td><a href="../../tools/dotzuki-editor/README.html">editor README</a></td></tr>
-<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> converter</td><td><a href="../../tools/asset-converter/README.html">README</a></td></tr>
+<tr><td><code>tools/dotzuki-editor</code></td><td>Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">editor README</a></td></tr>
+<tr><td><code>tools/asset-converter</code></td><td>2bpp → RGBA tileset + Tiled <code>.tsx</code> converter</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md">README</a></td></tr>
 <tr><td><code>tools/editor-extensions</code></td><td>VSCode DSL syntax highlighting</td><td><code>tools/editor-extensions</code></td></tr>
-<tr><td><code>dotzuki-template/</code></td><td>cargo-generate starter template</td><td><a href="../../dotzuki-template/README.html">README</a></td></tr>
+<tr><td><code>dotzuki-template/</code></td><td>cargo-generate starter template</td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md">README</a></td></tr>
 </tbody>
 </table>
 </div>

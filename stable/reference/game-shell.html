@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -233,7 +233,7 @@ so <code>game-shell</code> has no in-repo consumer yet; it is game-facing API.</
 (<code>crates/dotzuki-web/Cargo.toml:45-63</code>), <strong>off by default</strong> so the editor
 layout-preview bridge does not drag pixels / winit into consumers that never
 open a window. Enable it in <code>Cargo.toml</code> with
-<code>dotzuki-web = { version = "0.10.1", features = ["game-shell"] }</code>.</p>
+<code>dotzuki-web = { version = "0.12", features = ["game-shell"] }</code>.</p>
 <p>The feature pulls in <code>pixels =0.15.0</code>, <code>winit 0.30</code>, <code>error-iter</code>,
 <code>dotzuki-renderer/gpu</code> (for <code>InputState::set_from_keycode</code>), and the
 <code>web-sys</code> DOM types (<code>Window</code>, <code>Document</code>, <code>Element</code>, <code>Node</code>, <code>Event</code>,

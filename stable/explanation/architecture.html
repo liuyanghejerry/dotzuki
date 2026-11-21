@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.12.0</li>
 </ul>
 </blockquote>
 <p>How the engine crates, the runner, the CLI and the editor fit together, and
@@ -219,17 +219,16 @@ deps (see the repo <code>README.md</code>).</li>
 <p><code>.scene</code> / <code>.gui</code> / <code>.theme</code> / <code>.style</code> files compile through
 <code>dotzuki-engine-dsl</code>:</p>
 <ul>
-<li><code>.scene</code> → JavaScript that <code>dotzuki-engine-script</code> (Boa-based) consumes;
-<code>dotzuki-engine-dsl</code> also ships a native AST interpreter
-(<code>crates/dotzuki-engine-dsl/src/interpreter.rs</code>) that executes scenes with
-no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
-scene semantics (see <code>AGENTS.md</code> for the interpreter-vs-Boa policy).</li>
+<li>The zero-Rust runner executes eligible <code>.scene</code> files with the native AST interpreter.
+When a scene needs JavaScript, for example in a raw <code>@run</code> block, Boa executes the
+generated script for the whole scene. See the <a href="../reference/dsl/scene.html">scene reference</a>.</li>
 <li><code>.gui</code> → JSON the renderer layout engine consumes.</li>
 <li><code>.theme</code> / <code>.style</code> → JSON token/stylesheet files (see
 <a href="../reference/dsl/theme-style.html">the theme &amp; style reference</a>).</li>
 </ul>
-<p><code>dotzuki check</code> compiles everything in memory; <code>dotzuki run</code> boots the runner
-with the compiled project.</p>
+<p><code>dotzuki check</code> compiles project DSL in memory. <code>dotzuki run</code> loads the project directory.
+Exports also retain the source files and, for valid projects with DSL files, package
+<a href="../reference/glossary.html#compiled-scene-assets">compiled scene assets</a> in <code>game.dzpk</code>.</p>
 <h2 id="battle--effect-stack"><a class="header" href="#battle--effect-stack">Battle = effect stack</a></h2>
 <p>Live battle turns run through <code>dotzuki_engine::battle::stack::StackDriver</code>:
 events, effects and handlers form a stack, and <code>dotzuki-rules</code> compiles
@@ -257,7 +256,7 @@ the engine crates contain no concrete game data and no platform calls
 <tr><td>Audio</td><td><code>dotzuki-audio</code></td><td><a href="../how-to/audio.html">audio guide</a></td></tr>
 <tr><td>Zero-Rust runtime</td><td><code>dotzuki-runner</code></td><td><a href="../reference/project-manifest.html">project manifest</a></td></tr>
 <tr><td>CLI</td><td><code>dotzuki-cli</code></td><td><a href="../reference/cli.html">CLI reference</a></td></tr>
-<tr><td>Editor</td><td><code>tools/dotzuki-editor</code></td><td><a href="../../tools/dotzuki-editor/README.html">editor README</a></td></tr>
+<tr><td>Editor</td><td><code>tools/dotzuki-editor</code></td><td><a href="https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md">editor README</a></td></tr>
 </tbody>
 </table>
 </div>

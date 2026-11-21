@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -364,10 +364,11 @@ and writes its save next to the pack as <code>.dotzuki-save.json</code>.</p>
 </tbody>
 </table>
 </div>
-<p>The diagnostic gate and pack rules are identical to <code>--web</code>. The output
-directory contains:</p>
+<p>The diagnostic gate and pack rules match <code>--web</code>. When the project argument is <code>.</code>,
+the executable is named <code>game</code> (<code>game.exe</code> on Windows). A directory argument such as
+<code>my-game</code> gives the executable that name. The CLI prints the path after export.</p>
 <pre><code>dist/native/
-├── &lt;project-dir-name&gt;[.exe]   # the player binary, renamed after the project directory
+├── game[.exe]                 # player exported from the current directory (.)
 └── game.dzpk                  # binary game pack (same file the web export writes)
 </code></pre>
 <p>The player binary is resolved in this order: <code>--player-bin</code> →
@@ -377,13 +378,13 @@ dotzuki source checkout; a <code>cargo install</code>ed CLI outside the repo mus
 <code>--player-bin</code>. The build targets the <strong>host platform only</strong> — to ship other
 OSes, run the export on that OS (or on a per-OS CI runner).</p>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # double-clickable native app
+dist/native/game               # game.exe on Windows
 </code></pre>
 <p>The shipped binary also accepts an optional pack path argument (a <code>.dzpk</code>
 pack, or a legacy <code>game.bundle.json</code> from an older export) plus
 <code>--lang en|zh</code>, <code>--scale &lt;n&gt;</code>, <code>--fresh</code>, and <code>--headless</code> (with <code>--frames</code> /
 <code>--screenshot</code>) for CI smoke tests of the exported artifact:</p>
-<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+<pre><code class="language-bash">dist/native/game --headless --frames 120 --screenshot boot.png
 </code></pre>
 <h2 id="dotzuki-export---android-dir"><a class="header" href="#dotzuki-export---android-dir"><code>dotzuki export --android &lt;dir&gt;</code></a></h2>
 <p>Packs the project into an Android Studio application. The app uses

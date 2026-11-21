@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-553c8087.js";
+            window.path_to_searchindex_js = "../searchindex-c6c6d599.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7c2563c.js"></script>
@@ -183,7 +183,7 @@
                         <h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.12.0
-（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
+（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -360,9 +360,11 @@ pack，并把存档写到 pack 旁的 <code>.dotzuki-save.json</code>。</p>
 </tbody>
 </table>
 </div>
-<p>诊断门禁和 pack 规则与 <code>--web</code> 相同。输出目录包含：</p>
+<p>诊断和打包规则与 <code>--web</code> 相同。以 <code>.</code> 为项目参数时，可执行文件名为 <code>game</code>
+（Windows 上为 <code>game.exe</code>）。如果传入 <code>my-game</code> 等目录名，可执行文件使用该名称。
+导出后 CLI 会打印可执行文件路径。</p>
 <pre><code>dist/native/
-├── &lt;project-dir-name&gt;[.exe]   # player 二进制文件，以项目目录名重命名
+├── game[.exe]                 # 以当前目录（.）为参数时导出的播放器
 └── game.dzpk                  # 二进制游戏 pack，与 web 导出的文件相同
 </code></pre>
 <p>Player 二进制文件按以下顺序解析：<code>--player-bin</code> → 在源码 workspace 中执行
@@ -371,13 +373,13 @@ pack，并把存档写到 pack 旁的 <code>.dotzuki-save.json</code>。</p>
 <code>cargo install</code> 安装的 CLI 必须传入 <code>--player-bin</code>。构建只面向<strong>宿主平台</strong>；要
 发布到其他操作系统，请在该操作系统或对应的 CI runner 上导出。</p>
 <pre><code class="language-bash">dotzuki export --native . --out dist/native
-dist/native/my-game            # 可双击启动的原生应用
+dist/native/game               # Windows 上为 game.exe
 </code></pre>
 <p>随附的二进制文件也接受可选的 pack 路径（<code>.dzpk</code> 或旧版导出的
 <code>game.bundle.json</code>），以及 <code>--lang en|zh</code>、<code>--scale &lt;n&gt;</code>、<code>--fresh</code> 和
 <code>--headless</code>。无头模式还可使用 <code>--frames</code> 与 <code>--screenshot</code>，对导出产物执行 CI
 冒烟测试：</p>
-<pre><code class="language-bash">dist/native/my-game --headless --frames 120 --screenshot boot.png
+<pre><code class="language-bash">dist/native/game --headless --frames 120 --screenshot boot.png
 </code></pre>
 <h2 id="dotzuki-export---android-dir"><a class="header" href="#dotzuki-export---android-dir"><code>dotzuki export --android &lt;dir&gt;</code></a></h2>
 <p>把项目打包为 Android Studio 应用。应用通过 ABI 版本 1 使用
