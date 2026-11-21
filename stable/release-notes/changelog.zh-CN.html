@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -183,7 +183,7 @@
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
 <p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -205,6 +205,10 @@
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
 <ul>
+<li>Web 导出和编辑器 Play 使用 <code>advance</code> 和 <code>present</code> 显示累计的变化区域。
+Android 和 HarmonyOS 导出外壳采用可选的 ABI v1 符号 <code>dotzuki_mobile_copy_frame_update</code>。
+升级这些外壳时请重新构建 Rust 运行库。现有宿主可以继续使用 <code>dotzuki_mobile_copy_frame</code>。
+见<a href="../explanation/mobile-architecture.zh-CN.html">移动端帧处理</a>。</li>
 <li>原先通过结构体字面量构造 <code>HookState</code> 的 Rust 宿主改用 <code>HookState::new</code>。
 遭遇的共享定义通过 <code>HookState::rules</code> 访问。见<a href="../reference/battle-rules.zh-CN.html#零-rust-运行器中的规则所有权">规则所有权</a>。</li>
 <li>零 Rust 运行器复用地图图层，按变化区域更新上一帧的画面。采用四色索引帧缓冲的游戏

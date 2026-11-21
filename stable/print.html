@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-22ddc87d.js"></script>
@@ -4271,6 +4271,12 @@ a clone to <code>HookState::new(rules, &amp;player, &amp;enemy)</code>. Each bat
 stages, volatile effects and move context. The shared definition is available
 through <code>HookState::rules</code>. Its <code>compiled()</code> method exposes the hook registry
 and interned stat names.</p>
+<p>Encounters, the pause menu and shops share a project’s parsed character, enemy,
+skill and item definitions. Packed projects reuse each definition and its table
+index after the first access. Disk projects check for changed files and directory
+entries. A host can invalidate an edited record with
+<code>project.invalidate_record_file("data/heroes/aria.json")</code>. Running battles keep
+their current HP, MP and inventory until the normal battle result is applied.</p>
 <h2 id="abilities-held-items--weather"><a class="header" href="#abilities-held-items--weather">Abilities, held items &amp; weather</a></h2>
 <p>The remaining RON kinds are live, wired
 by record fields and a scene command — no manifest changes:</p>
@@ -7830,15 +7836,20 @@ Render and surface-resize errors are logged and exit the loop. On wasm the pixel
 <p>The native player, editor Play and mobile runner retain their RGBA framebuffer
 between ticks. <code>RunnerGame::draw_retained</code> updates this buffer and returns a
 <code>DirtyRegion</code> in screen pixels. The first frame covers the full viewport.
-A stationary overworld, dialogue page, choice or root pause menu returns an
-empty region. With a fixed camera, walking, turning, changing the destination
-marker or moving the menu cursor redraws the affected bounds. This includes
-NPCs and higher map layers that intersect those bounds.</p>
-<p>Camera movement, elevation changes, a map reload, fades and battles redraw the
-viewport. Inventory, party and shop screens also use the full draw path. A
-host that replaces or edits the output buffer calls <code>RunnerGame::draw</code> for a
-complete frame. The web <code>tick</code> and mobile RGBA copy interfaces still deliver
-a complete image to their callers.</p>
+A stationary overworld, dialogue page, pause menu, inventory, party, shop or
+battle menu returns an empty region. With a fixed camera, moving an actor or
+destination marker redraws its old and new bounds, including intersecting NPCs
+and upper map layers. List navigation restores the previous cursor pixels and
+paints the new cursor. A list covered by a prompt redraws the panel on movement.</p>
+<p>During ordinary scrolling the runner shifts retained pixels, paints the exposed
+map edges and repairs moving actors. The returned rectangle covers the viewport
+because the displayed map moved. Elevation changes, map reloads and fades also
+require a full update. Call <code>RunnerGame::draw</code> to populate a new output buffer.</p>
+<p>Editor Play and Web exports call <code>runner.advance(input)</code> for each simulation tick
+and <code>runner.present(ctx, false)</code> to paint accumulated changes on a retained 2D
+canvas. Passing <code>true</code> refreshes a replaced canvas. The Android and HarmonyOS
+export shells consume packed RGBA rectangles through the mobile ABI. A host that
+needs a full snapshot can use the Web <code>tick</code> or mobile <code>copy_frame</code> API.</p>
 <h3 id="indexed-dialogue-text"><a class="header" href="#indexed-dialogue-text">Indexed dialogue text</a></h3>
 <p><code>dotzuki_renderer::embedded_font::draw_text</code> and <code>draw_text_scaled</code> resolve
 the ink color against the framebuffer’s base palette once per string. Both
@@ -8691,7 +8702,7 @@ the engine crates contain no concrete game data and no platform calls
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
@@ -8749,6 +8760,12 @@ both symbols.
 The <code>tick</code> bitmask handles buttons.
 See the <a href="#unreleased">unreleased compatibility notes</a> before
 updating a shell and its runtime library.</p>
+<p>The Android and HarmonyOS shells request packed RGBA changes with
+<code>dotzuki_mobile_copy_frame_update</code>. It accumulates changes across simulation ticks.
+A zero byte count lets the shell skip presentation while audio continues. The
+shell requests a full rectangle after surface creation or resize. Shells using
+this extension link a runtime that exports the symbol. Existing hosts can
+continue taking full snapshots with <code>dotzuki_mobile_copy_frame</code>.</p>
 <p>The game thread is the sole caller for frame and save operations. One audio
 callback may call <code>audio_fill</code> concurrently. A lock-free single-producer,
 single-consumer ring separates the game loop from the audio callback.</p>
@@ -9592,6 +9609,11 @@ version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
 <ul>
+<li>Web exports and editor Play present accumulated changes with <code>advance</code> and <code>present</code>.
+Android and HarmonyOS export shells use the optional ABI v1 symbol
+<code>dotzuki_mobile_copy_frame_update</code>. Rebuild the Rust runtime archive when upgrading
+these shells. Existing hosts can continue using <code>dotzuki_mobile_copy_frame</code>.
+See <a href="#mobile-architecture">mobile frame handling</a>.</li>
 <li>Rust hosts that built a <code>HookState</code> struct literal now use <code>HookState::new</code>.
 Encounter definitions live in <code>HookState::rules</code>. See <a href="#rules-ownership-in-the-zero-rust-runner">rules ownership</a>.</li>
 <li>The zero-Rust runner reuses map layers and updates changed areas of retained
@@ -17291,7 +17313,7 @@ bundle 并重启，同时恢复存档），音频输出经由浏览器的 <code>
 <h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
 <blockquote>
 <p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
@@ -17484,6 +17506,10 @@ harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛
 用 <code>Arc</code> 持有，并将克隆的引用传给 <code>HookState::new(rules, &amp;player, &amp;enemy)</code>。
 每场战斗独立持有 HP、能力阶级、临时效果和招式上下文。通过 <code>HookState::rules</code> 可以
 访问共享定义，其 <code>compiled()</code> 方法提供钩子注册表和带索引的属性名。</p>
+<p>遭遇、暂停菜单和商店共享同一项目内已解析的角色、敌人、技能和道具定义。打包项目首次
+读取后会复用定义和表目录索引。磁盘项目会检查文件和目录项的变化。宿主可调用
+<code>project.invalidate_record_file("data/heroes/aria.json")</code> 使修改的记录失效。
+进行中的战斗保留自己的 HP、MP 和物品数量，并在战斗结束时按原有规则结算。</p>
 <h2 id="特性携带道具与天气"><a class="header" href="#特性携带道具与天气">特性、携带道具与天气</a></h2>
 <p>其余 RON 种类均已生效，由记录字段和一条场景命令接入——无需改动项目清单：</p>
 <ul>
@@ -19023,7 +19049,7 @@ assert_eq!(mgr.cache_size(), 0);
 <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
+（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19196,12 +19222,16 @@ GBA 分辨率为 240×160）。</li>
 <h3 id="零-rust-运行器的帧缓冲复用"><a class="header" href="#零-rust-运行器的帧缓冲复用">零 Rust 运行器的帧缓冲复用</a></h3>
 <p>原生播放器、编辑器 Play 和移动端运行器会保留上一帧的 RGBA 帧缓冲。
 <code>RunnerGame::draw_retained</code> 更新该缓冲，并返回以屏幕像素为单位的变化区域
-<code>DirtyRegion</code>。首帧覆盖整个视口。大地图、对话页、选项或暂停主菜单保持静止时，
-返回空区域。镜头固定时，行走、转身、改变目的地标记或移动菜单光标只会重绘受影响的
-区域，其中包括与该区域相交的 NPC 和上层地图图层。</p>
-<p>镜头移动、海拔变化、地图重新加载、淡入淡出和战斗都会重绘整个视口。物品栏、队伍和商店
-界面也使用全量绘制。宿主在替换或改写输出缓冲后调用 <code>RunnerGame::draw</code> 绘制完整帧。
-Web 的 <code>tick</code> 和移动端的 RGBA 复制接口仍向调用方提供完整画面。</p>
+<code>DirtyRegion</code>。首帧覆盖整个视口。大地图、对话、暂停菜单、背包、队伍、商店或战斗菜单静止时，
+变化区域为空。镜头固定时，角色和目的地标记只重绘新旧位置，包含与之相交的 NPC 和上层图块。
+移动列表光标会恢复原位置的像素并绘制新光标。提示框遮住长列表时，移动光标会重绘面板。</p>
+<p>普通滚屏会平移已有像素，补画露出的地图边缘，再更新移动的角色和标记。地图在屏幕上的位置
+发生了变化，因此返回整个视口作为显示区域。海拔变化、地图重新加载和淡入淡出也会触发完整更新。
+宿主可以调用 <code>RunnerGame::draw</code> 填充替换后的输出缓冲。</p>
+<p>编辑器 Play 和 Web 导出每推进一个游戏帧就调用 <code>runner.advance(input)</code>，再用
+<code>runner.present(ctx, false)</code> 将累计的变化绘到保留内容的 Canvas。传入 <code>true</code> 可以刷新替换后的
+画布。Android 和 HarmonyOS 导出外壳通过移动 ABI 读取按行紧密排列的 RGBA 矩形。
+需要完整快照的宿主可使用 Web 的 <code>tick</code> 或移动端的 <code>copy_frame</code>。</p>
 <h3 id="索引帧缓冲上的对话文字"><a class="header" href="#索引帧缓冲上的对话文字">索引帧缓冲上的对话文字</a></h3>
 <p><code>dotzuki_renderer::embedded_font::draw_text</code> 和 <code>draw_text_scaled</code> 绘制一个字符串时，
 只用基础调色板匹配一次文字颜色。平面打包和线性存储的索引帧缓冲都直接写入这个索引。
@@ -21314,8 +21344,8 @@ provider；JS provider 只编译地图场景。</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="移动端架构"><a class="header" href="#移动端架构">移动端架构</a></h1>
 <blockquote>
-<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.10.0
-（源文档 commit 42bd07c7689ea7d9fbef4d49ea613f7efdd36238）。
+<p>本文是 <code>mobile-architecture.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -21323,7 +21353,7 @@ provider；JS provider 只编译地图场景。</li>
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
@@ -21374,6 +21404,10 @@ Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共�
 使用指针的外壳要求 Rust 库导出这两个符号。
 <a href="#engine"><code>MobileGame</code></a> 实现默认忽略指针，<code>tick</code> 的 bitmask 处理按键。
 更新外壳及运行时库前，请阅读<a href="#未发布">未发布兼容性说明</a>。</p>
+<p>Android 和 HarmonyOS 外壳调用 <code>dotzuki_mobile_copy_frame_update</code> 读取按行紧密排列的
+RGBA 矩形。该接口累计多个游戏帧的变化，返回零字节时外壳跳过显示，音频继续推进。
+创建或调整显示表面大小后，外壳请求完整矩形。使用此接口的外壳需链接导出该符号的运行库。
+现有宿主仍可用 <code>dotzuki_mobile_copy_frame</code> 获取完整快照。</p>
 <p>游戏线程独占帧和存档操作。一个音频回调可同时调用 <code>audio_fill</code>。
 无锁的单生产者、单消费者 ring buffer 隔离游戏循环和音频回调。</p>
 <p>移动宿主设置 <code>RunnerOptions::external_saves</code>。这会禁止磁盘加载与写入，
@@ -22406,7 +22440,7 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
 <p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -22428,6 +22462,10 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 </ul>
 <h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
 <ul>
+<li>Web 导出和编辑器 Play 使用 <code>advance</code> 和 <code>present</code> 显示累计的变化区域。
+Android 和 HarmonyOS 导出外壳采用可选的 ABI v1 符号 <code>dotzuki_mobile_copy_frame_update</code>。
+升级这些外壳时请重新构建 Rust 运行库。现有宿主可以继续使用 <code>dotzuki_mobile_copy_frame</code>。
+见<a href="#移动端架构">移动端帧处理</a>。</li>
 <li>原先通过结构体字面量构造 <code>HookState</code> 的 Rust 宿主改用 <code>HookState::new</code>。
 遭遇的共享定义通过 <code>HookState::rules</code> 访问。见<a href="#零-rust-运行器中的规则所有权">规则所有权</a>。</li>
 <li>零 Rust 运行器复用地图图层，按变化区域更新上一帧的画面。采用四色索引帧缓冲的游戏

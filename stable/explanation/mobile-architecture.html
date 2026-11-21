@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Why dotzuki uses one Rust runtime contract and a native shell for each mobile
@@ -244,6 +244,12 @@ both symbols.
 The <code>tick</code> bitmask handles buttons.
 See the <a href="../release-notes/changelog.html#unreleased">unreleased compatibility notes</a> before
 updating a shell and its runtime library.</p>
+<p>The Android and HarmonyOS shells request packed RGBA changes with
+<code>dotzuki_mobile_copy_frame_update</code>. It accumulates changes across simulation ticks.
+A zero byte count lets the shell skip presentation while audio continues. The
+shell requests a full rectangle after surface creation or resize. Shells using
+this extension link a runtime that exports the symbol. Existing hosts can
+continue taking full snapshots with <code>dotzuki_mobile_copy_frame</code>.</p>
 <p>The game thread is the sole caller for frame and save operations. One audio
 callback may call <code>audio_fill</code> concurrently. A lock-free single-producer,
 single-consumer ring separates the game loop from the audio callback.</p>

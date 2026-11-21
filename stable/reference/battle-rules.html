@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -412,6 +412,12 @@ a clone to <code>HookState::new(rules, &amp;player, &amp;enemy)</code>. Each bat
 stages, volatile effects and move context. The shared definition is available
 through <code>HookState::rules</code>. Its <code>compiled()</code> method exposes the hook registry
 and interned stat names.</p>
+<p>Encounters, the pause menu and shops share a project’s parsed character, enemy,
+skill and item definitions. Packed projects reuse each definition and its table
+index after the first access. Disk projects check for changed files and directory
+entries. A host can invalidate an edited record with
+<code>project.invalidate_record_file("data/heroes/aria.json")</code>. Running battles keep
+their current HP, MP and inventory until the normal battle result is applied.</p>
 <h2 id="abilities-held-items--weather"><a class="header" href="#abilities-held-items--weather">Abilities, held items &amp; weather</a></h2>
 <p>The remaining RON kinds are live, wired
 by record fields and a scene command — no manifest changes:</p>

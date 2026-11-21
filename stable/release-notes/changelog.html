@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -201,6 +201,11 @@ version history (doc-standard §10).</li>
 </ul>
 <h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
 <ul>
+<li>Web exports and editor Play present accumulated changes with <code>advance</code> and <code>present</code>.
+Android and HarmonyOS export shells use the optional ABI v1 symbol
+<code>dotzuki_mobile_copy_frame_update</code>. Rebuild the Rust runtime archive when upgrading
+these shells. Existing hosts can continue using <code>dotzuki_mobile_copy_frame</code>.
+See <a href="../explanation/mobile-architecture.html">mobile frame handling</a>.</li>
 <li>Rust hosts that built a <code>HookState</code> struct literal now use <code>HookState::new</code>.
 Encounter definitions live in <code>HookState::rules</code>. See <a href="../reference/battle-rules.html#rules-ownership-in-the-zero-rust-runner">rules ownership</a>.</li>
 <li>The zero-Rust runner reuses map layers and updates changed areas of retained

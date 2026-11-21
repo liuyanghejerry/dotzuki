@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0d1b39b5.js";
+            window.path_to_searchindex_js = "../searchindex-6db8d7ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -359,15 +359,20 @@ Render and surface-resize errors are logged and exit the loop. On wasm the pixel
 <p>The native player, editor Play and mobile runner retain their RGBA framebuffer
 between ticks. <code>RunnerGame::draw_retained</code> updates this buffer and returns a
 <code>DirtyRegion</code> in screen pixels. The first frame covers the full viewport.
-A stationary overworld, dialogue page, choice or root pause menu returns an
-empty region. With a fixed camera, walking, turning, changing the destination
-marker or moving the menu cursor redraws the affected bounds. This includes
-NPCs and higher map layers that intersect those bounds.</p>
-<p>Camera movement, elevation changes, a map reload, fades and battles redraw the
-viewport. Inventory, party and shop screens also use the full draw path. A
-host that replaces or edits the output buffer calls <code>RunnerGame::draw</code> for a
-complete frame. The web <code>tick</code> and mobile RGBA copy interfaces still deliver
-a complete image to their callers.</p>
+A stationary overworld, dialogue page, pause menu, inventory, party, shop or
+battle menu returns an empty region. With a fixed camera, moving an actor or
+destination marker redraws its old and new bounds, including intersecting NPCs
+and upper map layers. List navigation restores the previous cursor pixels and
+paints the new cursor. A list covered by a prompt redraws the panel on movement.</p>
+<p>During ordinary scrolling the runner shifts retained pixels, paints the exposed
+map edges and repairs moving actors. The returned rectangle covers the viewport
+because the displayed map moved. Elevation changes, map reloads and fades also
+require a full update. Call <code>RunnerGame::draw</code> to populate a new output buffer.</p>
+<p>Editor Play and Web exports call <code>runner.advance(input)</code> for each simulation tick
+and <code>runner.present(ctx, false)</code> to paint accumulated changes on a retained 2D
+canvas. Passing <code>true</code> refreshes a replaced canvas. The Android and HarmonyOS
+export shells consume packed RGBA rectangles through the mobile ABI. A host that
+needs a full snapshot can use the Web <code>tick</code> or mobile <code>copy_frame</code> API.</p>
 <h3 id="indexed-dialogue-text"><a class="header" href="#indexed-dialogue-text">Indexed dialogue text</a></h3>
 <p><code>dotzuki_renderer::embedded_font::draw_text</code> and <code>draw_text_scaled</code> resolve
 the ink color against the framebuffer’s base palette once per string. Both
