@@ -1,7 +1,7 @@
 # 游戏外壳参考
 
 > 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit c8540e0bfc8e750bd6b7ee7793691d2c7e33093b）。
+>（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers

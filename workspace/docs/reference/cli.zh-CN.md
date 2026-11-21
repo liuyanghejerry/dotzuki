@@ -1,7 +1,7 @@
 # dotzuki CLI 参考
 
 > 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
+>（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, CI
@@ -145,8 +145,8 @@ JSON index
 DSL 编译成功后，包索引可以包含 `compiled_scenes: 1`。包内保留原始源码，
 并在 `.dotzuki/compiled-scenes/` 下保存编译报告、路由和原生函数的偏移量。
 播放器首次使用原生场景时将其解压，首次调用某个函数时才解码该函数。
-包含 `@run` 的场景由 Boa 执行生成的 JavaScript。包中缺少兼容版本的产物时，
-播放器会编译随包源码。使用 `--force` 导出含 DSL 错误的项目后，启动时仍会报告源码中的错误。
+包含 `@run` 的场景在 Boa 中执行生成的 JavaScript。包中缺少兼容版本的产物时，
+播放器会编译随包源码。当 CLI 使用 `--force` 导出含 DSL 错误的项目时，播放器会在启动时报告这些错误。
 
 CLI 按编辑器 Play 的规则收集项目文件。它会跳过 `node_modules`、`.git`、`target`、
 `dist`、隐藏目录和文件以及 `*.bak`，并包含 `.dotzuki-editor.json`。单文件 16 MiB、
