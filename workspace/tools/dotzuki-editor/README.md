@@ -402,17 +402,16 @@ canvas: walk, talk to NPCs, battle, shop, save.
   GB-APU PCM per tick (`take_audio()`), the page queues it into an
   `AudioContext` (starts on your first click/keypress per browser autoplay
   policy; 🔊/🔇 toggles mute).
-- **Limits**: no file watching (use Restart), and very short
-  key taps shorter than one frame can be missed (same as the native shell).
-- **Export**: the toolbar's **Export Web** / **Export Native** buttons call
-  `POST /api/export`, which shells out to the dotzuki CLI
-  (`dotzuki export --web|--native`) — the artifacts are identical to the
-  command-line export and land in `<project>/dist/{web,native}`. The CLI is
-  found via `DOTZUKI_CLI`, else the workspace's `target/{release,debug}/dotzuki`;
-  web exports reuse the Play activity's runner pkg (`--runner-pkg`), so
-  wasm-pack never runs. Packaged desktop apps ship the CLI + player binaries
-  as `Resources/cli/` (staged by `electron/stage-resources.mjs`; macOS release
-  builds lipo them universal — see `.github/workflows/release-editor.yml`).
+- **Restart** reloads edited files. Play samples held keys on each simulation tick, so a tap
+  that starts and ends between ticks can be missed.
+- **Export Web**, **Export Native**, **Export Android**, and **Export HarmonyOS** call
+  `POST /api/export`. Each runs the corresponding `dotzuki export` command and writes to
+  `<project>/dist/<target>/`. All four targets bundle the project sources in `game.dzpk`
+  and include compiled scene assets for valid projects with DSL files.
+  The desktop editor ships the CLI, the native player, the web runner, and the Android
+  runtime. Supply the HarmonyOS runtime separately. See the
+  [publishing guide](../../docs/how-to/publishing.md) and its
+  [Chinese translation](../../docs/how-to/publishing.zh-CN.md).
 
 New projects scaffolded by the wizard include the Play activity by default.
 For existing projects, add it to `.dotzuki-editor.json` manually:

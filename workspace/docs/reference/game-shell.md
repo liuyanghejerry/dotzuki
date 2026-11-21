@@ -50,7 +50,7 @@ The module is gated behind the `game-shell` Cargo feature of `dotzuki-web`
 (`crates/dotzuki-web/Cargo.toml:45-63`), **off by default** so the editor
 layout-preview bridge does not drag pixels / winit into consumers that never
 open a window. Enable it in `Cargo.toml` with
-`dotzuki-web = { version = "0.10.1", features = ["game-shell"] }`.
+`dotzuki-web = { version = "0.12", features = ["game-shell"] }`.
 
 The feature pulls in `pixels =0.15.0`, `winit 0.30`, `error-iter`,
 `dotzuki-renderer/gpu` (for `InputState::set_from_keycode`), and the

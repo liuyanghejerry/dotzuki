@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.12.0
 
 How the engine crates, the runner, the CLI and the editor fit together, and
 how a zero-Rust project flows from DSL files to a running game.
@@ -40,17 +40,16 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 `.scene` / `.gui` / `.theme` / `.style` files compile through
 `dotzuki-engine-dsl`:
 
-- `.scene` → JavaScript that `dotzuki-engine-script` (Boa-based) consumes;
-  `dotzuki-engine-dsl` also ships a native AST interpreter
-  (`crates/dotzuki-engine-dsl/src/interpreter.rs`) that executes scenes with
-  no JS engine, mirroring the Boa runtime protocol 1:1 — it is the canonical
-  scene semantics (see `AGENTS.md` for the interpreter-vs-Boa policy).
+- The zero-Rust runner executes eligible `.scene` files with the native AST interpreter.
+  When a scene needs JavaScript, for example in a raw `@run` block, Boa executes the
+  generated script for the whole scene. See the [scene reference](../reference/dsl/scene.md).
 - `.gui` → JSON the renderer layout engine consumes.
 - `.theme` / `.style` → JSON token/stylesheet files (see
   [the theme & style reference](../reference/dsl/theme-style.md)).
 
-`dotzuki check` compiles everything in memory; `dotzuki run` boots the runner
-with the compiled project.
+`dotzuki check` compiles project DSL in memory. `dotzuki run` loads the project directory.
+Exports also retain the source files and, for valid projects with DSL files, package
+[compiled scene assets](../reference/glossary.md#compiled-scene-assets) in `game.dzpk`.
 
 ## Battle = effect stack
 
@@ -80,7 +79,7 @@ the engine crates contain no concrete game data and no platform calls
 | Audio | `dotzuki-audio` | [audio guide](../how-to/audio.md) |
 | Zero-Rust runtime | `dotzuki-runner` | [project manifest](../reference/project-manifest.md) |
 | CLI | `dotzuki-cli` | [CLI reference](../reference/cli.md) |
-| Editor | `tools/dotzuki-editor` | [editor README](../../tools/dotzuki-editor/README.md) |
+| Editor | `tools/dotzuki-editor` | [editor README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md) |
 
 ## Related pages
 

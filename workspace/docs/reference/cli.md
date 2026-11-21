@@ -183,12 +183,13 @@ and writes its save next to the pack as `.dotzuki-save.json`.
 | `--player-bin <path>` | cargo build | Use this prebuilt `dotzuki-player` binary instead of building it |
 | `--force` | off | Export even when validation reports diagnostics |
 
-The diagnostic gate and pack rules are identical to `--web`. The output
-directory contains:
+The diagnostic gate and pack rules match `--web`. When the project argument is `.`,
+the executable is named `game` (`game.exe` on Windows). A directory argument such as
+`my-game` gives the executable that name. The CLI prints the path after export.
 
 ```
 dist/native/
-├── <project-dir-name>[.exe]   # the player binary, renamed after the project directory
+├── game[.exe]                 # player exported from the current directory (.)
 └── game.dzpk                  # binary game pack (same file the web export writes)
 ```
 
@@ -201,7 +202,7 @@ OSes, run the export on that OS (or on a per-OS CI runner).
 
 ```bash
 dotzuki export --native . --out dist/native
-dist/native/my-game            # double-clickable native app
+dist/native/game               # game.exe on Windows
 ```
 
 The shipped binary also accepts an optional pack path argument (a `.dzpk`
@@ -210,7 +211,7 @@ pack, or a legacy `game.bundle.json` from an older export) plus
 `--screenshot`) for CI smoke tests of the exported artifact:
 
 ```bash
-dist/native/my-game --headless --frames 120 --screenshot boot.png
+dist/native/game --headless --frames 120 --screenshot boot.png
 ```
 
 ## `dotzuki export --android <dir>`

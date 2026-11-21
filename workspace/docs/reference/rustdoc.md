@@ -3,14 +3,15 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.12.0
 
 The crate map and where each crate's API documentation lives; rustdoc is
 the authoritative API reference, the pages below are the prose
 counterpart.
 
-All `dotzuki-*` crates share one version (currently `0.7.0`) and are published
-on crates.io, so their API docs live on docs.rs. Local copy:
+The `dotzuki-*` crates share a release version on crates.io. Use the docs.rs version selector
+to read the API for your dependency. The [changelog](../release-notes/changelog.md) lists
+the releases and their migration guides. To build a local copy, run
 
 ```bash
 cd workspace
@@ -43,7 +44,7 @@ Tools outside the crates.io set:
 
 | Tool | Purpose | Docs |
 |---|---|---|
-| `tools/dotzuki-editor` | Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play | [editor README](../../tools/dotzuki-editor/README.md) |
-| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` converter | [README](../../tools/asset-converter/README.md) |
+| `tools/dotzuki-editor` | Game-agnostic Vue/Vite editor, AI Story Designer, in-editor Play | [editor README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md) |
+| `tools/asset-converter` | 2bpp → RGBA tileset + Tiled `.tsx` converter | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/asset-converter/README.md) |
 | `tools/editor-extensions` | VSCode DSL syntax highlighting | `tools/editor-extensions` |
-| `dotzuki-template/` | cargo-generate starter template | [README](../../dotzuki-template/README.md) |
+| `dotzuki-template/` | cargo-generate starter template | [README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/dotzuki-template/README.md) |

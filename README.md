@@ -90,20 +90,23 @@ All `dotzuki-*` crates are on crates.io:
 
 ```toml
 [dependencies]
-dotzuki-engine = "0.1"
-dotzuki-engine-dsl = "0.1"
+dotzuki-engine = "0.12"
+dotzuki-engine-dsl = "0.12"
 ```
 
 Or pin a git tag — every crate is resolvable from this one repository:
 
 ```toml
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.1.1" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.12.0" }
 ```
+
+When updating an existing game, follow the
+[migration guide](workspace/docs/release-notes/migration/v0.12.0.md).
 
 The engine is trait-driven and game-agnostic: game data arrives through the
 `GameData` trait, so no game content lives in the engine. See
-[`workspace/examples/minimon`](workspace/examples/) for a battle demo built
+[`workspace/examples/minimon`](workspace/examples/minimon/) for a battle demo built
 entirely on the effect stack, plus the `your-first-game` example project.
 
 <details>
