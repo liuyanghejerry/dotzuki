@@ -17,7 +17,7 @@ impl RunnerGame {
         let gfx_rel = project.gfx_root_rel();
         let player_sprite = {
             let rel = join_path(&gfx_rel, "overworld/player/sheet.png");
-            match project.files().read(&rel) {
+            match project.files().read_bytes(&rel) {
                 Ok(bytes) => decode_walk_sheet(&bytes, &rel, 24, 32)
                     .map_err(|e| log::warn!("player sprite {rel}: {e}"))
                     .ok(),
@@ -892,6 +892,7 @@ impl RunnerGame {
             return false;
         };
         let map_id = map.id().to_string();
+        self.project.invalidate_map(&map_id);
         match self.project.load_map(&map_id) {
             Ok(new_map) => {
                 self.camera.clamp_to_bounds(Rect::new(

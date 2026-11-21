@@ -168,6 +168,30 @@ fn renderer_frame_shapes_fit_gba_frame_budget(gba: &mut agb::Gba) {
     });
     assert_frame_budget("compact shrink", compact_cycles);
 
+    // A mixed dialogue panel in a non-grayscale base palette exercises glyph
+    // lookup and ink conversion, including both fallback cursors.
+    let palette = dotzuki_renderer::palette::Palette::new(&[
+        Rgba::rgb(255, 241, 210),
+        Rgba::rgb(170, 184, 140),
+        Rgba::rgb(89, 104, 99),
+        Rgba::rgb(35, 39, 50),
+    ]);
+    let mut panel =
+        LinearRgbaIndexedFrameBuffer::<GbColor>::with_palette(config, Rgba::WHITE, palette);
+    let text_cycles = measure_cycles(gba, || {
+        for y in [0, 12, 24, 36] {
+            dotzuki_renderer::embedded_font::draw_text(
+                "Fight 战斗 ▶ Lv12 ▼ 道具",
+                4,
+                y,
+                Rgba::rgb(42, 36, 58),
+                &mut panel,
+            );
+        }
+        core::hint::black_box(panel.indices());
+    });
+    assert_frame_budget("mixed indexed dialogue", text_cycles);
+
     let checksum = frame
         .indexed()
         .indices()

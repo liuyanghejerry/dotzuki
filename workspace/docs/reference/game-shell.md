@@ -201,6 +201,15 @@ host that replaces or edits the output buffer calls `RunnerGame::draw` for a
 complete frame. The web `tick` and mobile RGBA copy interfaces still deliver
 a complete image to their callers.
 
+### Indexed dialogue text
+
+`dotzuki_renderer::embedded_font::draw_text` and `draw_text_scaled` resolve
+the ink color against the framebuffer's base palette once per string. Both
+packed and linear indexed surfaces write those indices through the full Fusion
+Pixel font, including Latin, CJK and the two cursor arrows (▶ and ▼). A palette
+fade or remap therefore applies to newly drawn dialogue in the same way it
+applies to text already on screen.
+
 ### Four-colour battle transition snapshots
 
 `dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture`
