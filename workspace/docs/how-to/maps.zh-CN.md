@@ -1,6 +1,6 @@
 # 地图
 
-> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.10.0（源文档 commit db361944364d45440dd6997bb268859cbcd85a7c）。
+> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 如何定义地图：Tiled JSON、tileset、`objects.json` 伴生文件、海拔与 encounters。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 开始前，请先阅读[项目清单](../reference/project-manifest.md)——它定义了地图目录以及
 这些文件所接入的运行器契约。
@@ -22,6 +22,17 @@
 `signs: [{x,y,text}]`（面向告示牌 tile 并按 A，以分页对话的形式读出其文本），以及一
 个可选的 `encounters` 块（见下文）（旧版 `map.json` 作为后备读取）。走上 warp tile
 （传送点）会淡出切换到目标地图。
+
+### 再次进入地图与编辑地图
+
+传送回刚去过的地图时，运行器会复用解码结果。每个项目默认最多缓存 8 MiB 的地图数据，
+空间不足时先淘汰最久未使用的地图。单张地图超过预算仍可加载。Rust 宿主可通过
+`LoadedProject::set_map_cache_budget(bytes)` 调整预算，传入零可关闭缓存。
+预算计入图层、图集、碰撞网格和对象，以及可写文件后端为检查变化而保留的源文件字节。
+
+Web 和移动端打包游戏直接借用 `.dzpk` 中的地图数据，命中缓存时无需再次读取资源包。
+在磁盘项目中，修改 Tiled JSON、图集 PNG 或对象伴生文件后，下次进入地图即可看到变化。
+在编辑器或启用了文件监听的播放器中重载当前地图，也会刷新正在显示的地图。
 
 ## 海拔层级
 

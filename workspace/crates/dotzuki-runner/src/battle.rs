@@ -800,13 +800,16 @@ impl BattleSetup {
         // error at battle start (and a `dotzuki check` diagnostic).
         let rules_rel = section.rules.as_deref().unwrap_or(DEFAULT_RULES_FILE);
         let rules_rel = join_path("", rules_rel);
-        let (chart, ron) = match project.files().read(&rules_rel) {
+        let (chart, ron) = match project.files().read_bytes(&rules_rel) {
             Ok(bytes) => {
                 let mut cache = project
                     .battle_rules
                     .lock()
                     .unwrap_or_else(|e| e.into_inner());
-                if !cache.as_ref().is_some_and(|old| old.bytes == bytes) {
+                if !cache
+                    .as_ref()
+                    .is_some_and(|old| old.bytes.as_slice() == bytes.as_ref())
+                {
                     let text = std::str::from_utf8(&bytes)
                         .with_context(|| format!("{rules_rel} is not UTF-8"))?;
                     let ruleset = dotzuki_rules::Ruleset::from_ron(text)
@@ -821,7 +824,7 @@ impl BattleSetup {
                         ))
                     };
                     *cache = Some(CachedRules {
-                        bytes,
+                        bytes: bytes.into_owned(),
                         chart: TypeChart::from_ruleset(&ruleset),
                         ron,
                     });
@@ -1210,7 +1213,7 @@ pub(crate) fn read_record(
 ) -> Result<serde_json::Value> {
     let rel = format!("{dir}/{id}.json");
     let bytes = files
-        .read(&rel)
+        .read_bytes(&rel)
         .with_context(|| format!("failed to read {rel}"))?;
     serde_json::from_slice(&bytes).with_context(|| format!("failed to parse {rel}"))
 }

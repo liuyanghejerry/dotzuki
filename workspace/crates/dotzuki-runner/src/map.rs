@@ -17,8 +17,11 @@
 //!   present yields an empty sidecar, not an error.
 
 use dotzuki_renderer::layer_renderer::LayerCompositor;
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+mod cache;
+pub(crate) use cache::MapCache;
 
 use anyhow::{bail, Context, Result};
 use dotzuki_engine::overworld::actor::OverworldCollision;
@@ -188,25 +191,62 @@ impl MapObjects {
     ///
     /// Fails only when a sidecar file exists but cannot be read or parsed.
     pub fn load_with_files(files: &dyn ProjectFiles, map_dir_rel: &str) -> Result<Self> {
-        for name in [OBJECTS_SIDECAR, LEGACY_SIDECAR] {
-            let rel = join_path(map_dir_rel, name);
-            match files.read(&rel) {
-                Ok(bytes) => {
-                    let text =
-                        String::from_utf8(bytes).with_context(|| format!("{rel} is not UTF-8"))?;
-                    return serde_json::from_str(&text)
-                        .with_context(|| format!("failed to parse {rel}"));
-                }
-                Err(_) => continue,
-            }
-        }
-        Ok(Self::default())
+        decode_sidecar(map_dir_rel, sidecar(files, map_dir_rel).as_ref())
+    }
+}
+
+type Sidecar<'a> = (&'static str, Cow<'a, [u8]>);
+
+fn sidecar<'a>(files: &'a dyn ProjectFiles, dir: &str) -> Option<Sidecar<'a>> {
+    [OBJECTS_SIDECAR, LEGACY_SIDECAR]
+        .into_iter()
+        .find_map(|name| {
+            files
+                .read_bytes(&join_path(dir, name))
+                .ok()
+                .map(|bytes| (name, bytes))
+        })
+}
+
+fn decode_sidecar(dir: &str, data: Option<&Sidecar<'_>>) -> Result<MapObjects> {
+    let Some((name, bytes)) = data else {
+        return Ok(MapObjects::default());
+    };
+    let text = std::str::from_utf8(bytes).with_context(|| format!("{dir}/{name} is not UTF-8"))?;
+    serde_json::from_str(text).with_context(|| format!("failed to parse {dir}/{name}"))
+}
+
+#[derive(PartialEq)]
+struct MapSources<'a> {
+    tmx: Cow<'a, [u8]>,
+    png: Cow<'a, [u8]>,
+    sidecar: Option<Sidecar<'a>>,
+}
+
+impl<'a> MapSources<'a> {
+    fn read(files: &'a dyn ProjectFiles, dir: &str) -> Result<Self> {
+        let tmx = join_path(dir, "map.tmx.json");
+        let png = join_path(dir, "tileset.png");
+        Ok(Self {
+            tmx: files
+                .read_bytes(&tmx)
+                .with_context(|| format!("failed to read {tmx}"))?,
+            png: files
+                .read_bytes(&png)
+                .with_context(|| format!("failed to read tileset {png}"))?,
+            sidecar: sidecar(files, dir),
+        })
     }
 }
 
 /// A loaded runtime map: visual layers, per-level collision grids, the
 /// stairs grid, tileset pixels and the entity sidecar.
 pub struct RuntimeMap {
+    data: Arc<MapData>,
+    compositor: Mutex<LayerCompositor>,
+}
+
+struct MapData {
     id: String,
     /// Map size in tiles.
     width: u16,
@@ -217,7 +257,6 @@ pub struct RuntimeMap {
     /// Visual render state (the `collision*`/`stairs` data layers are excluded).
     state: MapRenderState,
     draw_order: Vec<usize>,
-    compositor: Mutex<LayerCompositor>,
     /// Collision cells per elevation level (`collision_levels[level][cell]`,
     /// `true` = solid); index 0 always exists (the `collision` layer, or an
     /// all-passable grid when the map has none).
@@ -265,12 +304,22 @@ impl RuntimeMap {
         map_id: &str,
     ) -> Result<Self> {
         let map_dir = join_path(maps_dir_rel, map_id);
-        let tmx_rel = join_path(&map_dir, "map.tmx.json");
-        let bytes = files
-            .read(&tmx_rel)
-            .with_context(|| format!("failed to read {tmx_rel}"))?;
-        let json = String::from_utf8(bytes).with_context(|| format!("{tmx_rel} is not UTF-8"))?;
-        let mut tmx = parse_tmx(&json).map_err(|e| anyhow::anyhow!("parse {tmx_rel}: {e}"))?;
+        let sources = MapSources::read(files, &map_dir)?;
+        Self::decode(map_id, &map_dir, &sources)
+    }
+
+    fn from_data(data: Arc<MapData>) -> Self {
+        Self {
+            data,
+            compositor: Mutex::default(),
+        }
+    }
+
+    fn decode(map_id: &str, map_dir: &str, sources: &MapSources<'_>) -> Result<Self> {
+        let tmx_rel = join_path(map_dir, "map.tmx.json");
+        let json =
+            std::str::from_utf8(&sources.tmx).with_context(|| format!("{tmx_rel} is not UTF-8"))?;
+        let mut tmx = parse_tmx(json).map_err(|e| anyhow::anyhow!("parse {tmx_rel}: {e}"))?;
 
         let width = tmx.width.max(1) as u16;
         let height = tmx.height.max(1) as u16;
@@ -314,16 +363,10 @@ impl RuntimeMap {
         let mut draw_order: Vec<_> = (0..state.layers.len()).collect();
         draw_order.sort_by_key(|&i| state.layers[i].z_index);
 
-        let tileset_rel = join_path(&map_dir, "tileset.png");
-        let png = files
-            .read(&tileset_rel)
-            .with_context(|| format!("failed to read tileset {tileset_rel}"))?;
-        let tileset = PngTileset::from_png_bytes(&png, tmx.tile_width, tmx.tile_height)
-            .with_context(|| format!("invalid tileset {tileset_rel}"))?;
-
-        let objects = MapObjects::load_with_files(files, &map_dir)?;
-
-        Ok(Self {
+        let tileset = PngTileset::from_png_bytes(&sources.png, tmx.tile_width, tmx.tile_height)
+            .with_context(|| format!("invalid tileset {map_dir}/tileset.png"))?;
+        let objects = decode_sidecar(map_dir, sources.sidecar.as_ref())?;
+        Ok(Self::from_data(Arc::new(MapData {
             id: map_id.to_string(),
             width,
             height,
@@ -331,67 +374,66 @@ impl RuntimeMap {
             tile_h: tmx.tile_height,
             state,
             draw_order,
-            compositor: Mutex::default(),
             collision_levels,
             stairs,
             tileset,
             objects,
-        })
+        })))
     }
 
     /// Map id (the directory name under `maps/`).
     #[inline]
     pub fn id(&self) -> &str {
-        &self.id
+        &self.data.id
     }
 
     /// Map width in tiles.
     #[inline]
     pub fn width(&self) -> u16 {
-        self.width
+        self.data.width
     }
 
     /// Map height in tiles.
     #[inline]
     pub fn height(&self) -> u16 {
-        self.height
+        self.data.height
     }
 
     /// Tile size in pixels `(width, height)`.
     #[inline]
     pub fn tile_size(&self) -> (u32, u32) {
-        (self.tile_w, self.tile_h)
+        (self.data.tile_w, self.data.tile_h)
     }
 
     /// Map size in pixels (for camera bounds).
     #[inline]
     pub fn pixel_width(&self) -> i32 {
-        self.width as i32 * self.tile_w as i32
+        self.data.width as i32 * self.data.tile_w as i32
     }
 
     /// Map size in pixels (for camera bounds).
     #[inline]
     pub fn pixel_height(&self) -> i32 {
-        self.height as i32 * self.tile_h as i32
+        self.data.height as i32 * self.data.tile_h as i32
     }
 
     /// Visual layers (collision/stairs data layers excluded) with the map
     /// background.
     #[inline]
     pub fn render_state(&self) -> &MapRenderState {
-        &self.state
+        &self.data.state
     }
 
     /// The sliced tileset.
     #[inline]
     pub fn tileset(&self) -> &PngTileset {
-        &self.tileset
+        &self.data.tileset
     }
 
     /// The entity sidecar (NPCs, warps, signs).
     #[inline]
     pub fn objects(&self) -> &MapObjects {
-        &self.objects
+        &self.data.objects
     }
 
     /// `true` if walking onto tile `(x, y)` is blocked at ground level.
@@ -405,11 +447,12 @@ impl RuntimeMap {
     /// Out-of-bounds and levels the map doesn't define are solid; never panics.
     #[inline]
     pub fn is_blocked_at(&self, level: u8, x: i32, y: i32) -> bool {
-        if x < 0 || y < 0 || x >= self.width as i32 || y >= self.height as i32 {
+        if x < 0 || y < 0 || x >= self.data.width as i32 || y >= self.data.height as i32 {
             return true;
         }
-        let idx = y as usize * self.width as usize + x as usize;
-        self.collision_levels
+        let idx = y as usize * self.data.width as usize + x as usize;
+        self.data
+            .collision_levels
             .get(level as usize)
             .and_then(|grid| grid.get(idx))
             .copied()
@@ -419,7 +462,7 @@ impl RuntimeMap {
     /// The number of elevation levels (1 for a single-level map).
     #[inline]
     pub fn level_count(&self) -> usize {
-        self.collision_levels.len()
+        self.data.collision_levels.len()
     }
 
     /// The stair GID on tile `(x, y)` (1 = ascend, 2 = descend), `None`
@@ -427,11 +470,12 @@ impl RuntimeMap {
     /// the cell is empty.
     #[inline]
     pub fn stair_at(&self, x: i32, y: i32) -> Option<u32> {
-        if x < 0 || y < 0 || x >= self.width as i32 || y >= self.height as i32 {
+        if x < 0 || y < 0 || x >= self.data.width as i32 || y >= self.data.height as i32 {
             return None;
         }
-        let idx = y as usize * self.width as usize + x as usize;
-        self.stairs
+        let idx = y as usize * self.data.width as usize + x as usize;
+        self.data
+            .stairs
             .as_ref()
             .and_then(|grid| grid.get(idx))
             .copied()
@@ -444,7 +488,7 @@ impl RuntimeMap {
     /// argument is unused: PNG tiles carry their own colours).
     #[inline]
     pub fn gid_pixel(&self, gid: u16, px: u8, py: u8) -> Rgba {
-        self.tileset.gid_pixel(gid, px, py)
+        self.data.tileset.gid_pixel(gid, px, py)
     }
 
     /// Render the map's visual layers into `fb` at camera offset
@@ -461,7 +505,11 @@ impl RuntimeMap {
         height: u32,
     ) -> Result<()> {
         self.check_square_tiles()?;
-        let layers = self.draw_order.iter().map(|&i| &self.state.layers[i]);
+        let layers = self
+            .data
+            .draw_order
+            .iter()
+            .map(|&i| &self.data.state.layers[i]);
         self.compositor
             .lock()
             .unwrap_or_else(|err| err.into_inner())
@@ -470,7 +518,7 @@ impl RuntimeMap {
                 layers,
                 (camera_x, camera_y),
                 (width, height),
-                self.tile_w,
+                self.data.tile_w,
                 |gid, _pal, px, py| self.gid_pixel(gid, px, py),
             );
         Ok(())
@@ -521,9 +569,10 @@ impl RuntimeMap {
     ) -> Result<()> {
         self.check_square_tiles()?;
         let layers = self
+            .data
             .draw_order
             .iter()
-            .map(|&i| &self.state.layers[i])
+            .map(|&i| &self.data.state.layers[i])
             .filter(|l| keep(l.level));
         self.compositor
             .lock()
@@ -534,7 +583,7 @@ impl RuntimeMap {
                 camera,
                 origin,
                 size,
-                self.tile_w,
+                self.data.tile_w,
                 |gid, _pal, px, py| self.gid_pixel(gid, px, py),
             );
         Ok(())
@@ -543,12 +592,12 @@ impl RuntimeMap {
     /// Guard shared by the render methods: the layer renderer's grid step is
     /// a single `tile_size`, so tiles must be square.
     fn check_square_tiles(&self) -> Result<()> {
-        if self.tile_w != self.tile_h {
+        if self.data.tile_w != self.data.tile_h {
             bail!(
                 "map '{}': render_layers_sized needs square tiles, got {}x{}",
-                self.id,
-                self.tile_w,
-                self.tile_h
+                self.data.id,
+                self.data.tile_w,
+                self.data.tile_h
             );
         }
         Ok(())
@@ -577,7 +626,7 @@ mod tests {
     use std::collections::HashMap;
 
     /// A 64×16 `tileset.png` (four 16×16 flat-colour tiles, row-major).
-    fn tileset_png() -> Vec<u8> {
+    pub(super) fn tileset_png() -> Vec<u8> {
         let tile = 16u32;
         let mut img = image::RgbaImage::new(tile * 4, tile);
         for px in img.pixels_mut() {
@@ -606,7 +655,7 @@ mod tests {
     /// A 3×2 two-level map: ground + wall-top visual layers, `collision`
     /// (level 0), `collision1`, and a `stairs` layer (ascend at (1, 0) with
     /// a flipped GID, descend at (2, 1)).
-    const TWO_LEVEL_TMX: &str = r#"{
+    pub(super) const TWO_LEVEL_TMX: &str = r#"{
   "width": 3, "height": 2, "tilewidth": 16, "tileheight": 16,
   "layers": [
     { "name": "ground", "width": 3, "height": 2, "data": [1,1,1,1,1,1] },

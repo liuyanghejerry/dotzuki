@@ -1345,6 +1345,18 @@ pub trait FbSurface: Sized {
     fn height(&self) -> u32;
     /// Set a single pixel. Returns false if out of bounds.
     fn set_pixel(&mut self, x: u32, y: u32, color: Rgba) -> bool;
+    /// Prepare a writer for up to 16 monochrome pixels per row. The high bit
+    /// of the low `width` bits is the leftmost pixel. Clear bits are transparent.
+    fn glyph_row_writer(&mut self, color: Rgba) -> impl FnMut(u32, u32, u16, u32) + '_ {
+        move |x, y, bits, width| {
+            let width = width.min(16);
+            for dx in 0..width.min(self.width().saturating_sub(x)) {
+                if bits & (1 << (width - 1 - dx)) != 0 {
+                    self.set_pixel(x + dx, y, color);
+                }
+            }
+        }
+    }
     /// Get the current color of a single pixel. Returns None if out of bounds.
     fn get_pixel(&self, x: u32, y: u32) -> Option<Rgba>;
     /// Clear the entire surface to a single color.
@@ -2117,6 +2129,37 @@ impl<C: ColorIndex + DefaultPalette, const LINEAR: bool> FbSurface
     }
     fn set_pixel(&mut self, x: u32, y: u32, color: Rgba) -> bool {
         self.set_pixel(x, y, color)
+    }
+    fn glyph_row_writer(&mut self, color: Rgba) -> impl FnMut(u32, u32, u16, u32) + '_ {
+        let index = self.quantize_color(color);
+        let byte = index.to_index() as u8;
+        let stride = self.buffer.width;
+        let height = self.buffer.height as u32;
+        move |x, y, bits, width| {
+            let width = width.min(16);
+            let count = width.min((stride as u32).saturating_sub(x));
+            if count == 0 || y >= height {
+                return;
+            }
+            // Put the leftmost ink bit in the sign position for the inner loop.
+            let mut ink = i32::from(bits) << (32 - width);
+            if LINEAR {
+                let start = y as usize * stride + x as usize;
+                for pixel in &mut self.buffer.data[start..start + count as usize] {
+                    if ink < 0 {
+                        *pixel = byte;
+                    }
+                    ink <<= 1;
+                }
+            } else {
+                for dx in 0..count {
+                    if ink < 0 {
+                        self.buffer.set_pixel(x + dx, y, index);
+                    }
+                    ink <<= 1;
+                }
+            }
+        }
     }
     fn get_pixel(&self, x: u32, y: u32) -> Option<Rgba> {
         self.get_pixel(x, y)

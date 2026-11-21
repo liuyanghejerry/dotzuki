@@ -10,6 +10,7 @@
 //! Paths are **project-relative POSIX strings** (`'/'`-separated, no leading
 //! slash, `"./"` prefixes tolerated and stripped): `"data/maps/Town/map.tmx.json"`.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -24,6 +25,16 @@ pub trait ProjectFiles {
     /// Fails when the file does not exist or cannot be read.
     fn read(&self, path: &str) -> Result<Vec<u8>>;
 
+    /// Borrow a resident file when possible. Disk and third-party backends may return owned bytes.
+    fn read_bytes(&self, path: &str) -> Result<Cow<'_, [u8]>> {
+        self.read(path).map(Cow::Owned)
+    }
+
+    /// Whether file contents and directory entries are fixed for this backend's lifetime.
+    fn is_immutable(&self) -> bool {
+        false
+    }
+
     /// Recursively list every file under `prefix` (a project-relative POSIX
     /// directory; `""` lists the whole project), as project-relative POSIX
     /// paths, sorted lexicographically (stable). An absent `prefix` yields an
@@ -32,7 +43,7 @@ pub trait ProjectFiles {
 
     /// Whether a readable file exists at `path`.
     fn exists(&self, path: &str) -> bool {
-        self.read(path).is_ok()
+        self.read_bytes(path).is_ok()
     }
 
     /// The on-disk project root, when backed by a real directory. Native
@@ -100,10 +111,18 @@ impl From<HashMap<String, Vec<u8>>> for MemoryFiles {
 
 impl ProjectFiles for MemoryFiles {
     fn read(&self, path: &str) -> Result<Vec<u8>> {
+        Ok(self.read_bytes(path)?.into_owned())
+    }
+
+    fn read_bytes(&self, path: &str) -> Result<Cow<'_, [u8]>> {
         self.map
             .get(path)
-            .cloned()
+            .map(|v| Cow::Borrowed(v.as_slice()))
             .with_context(|| format!("no such file '{path}'"))
+    }
+
+    fn is_immutable(&self) -> bool {
+        true
     }
 
     fn list(&self, prefix: &str) -> Vec<String> {
@@ -195,6 +214,10 @@ mod tests {
     fn memory_read_and_exists() {
         let files = mem();
         assert_eq!(files.read("data/rules.ron").unwrap(), b"()".to_vec());
+        assert!(matches!(
+            files.read_bytes("data/rules.ron").unwrap(),
+            Cow::Borrowed(b"()")
+        ));
         assert!(files.read("nope.json").is_err());
         assert!(files.exists("data/rules.ron"));
         assert!(!files.exists("nope.json"));
