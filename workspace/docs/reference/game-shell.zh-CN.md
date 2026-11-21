@@ -1,7 +1,7 @@
 # 游戏外壳参考
 
 > 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit 8eb7bb82555deaabb1f85f4f79c48334a6bbfa86）。
+>（源文档 commit c8540e0bfc8e750bd6b7ee7793691d2c7e33093b）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
@@ -210,7 +210,7 @@ CI 的 `runner-performance` 任务用 Callgrind 统计地图静止、地图滚�
 每个场景在 `ci/runner-performance/baseline.json` 中有独立的基线。任何一项超过
 对应基线 10% 都会使任务失败。创建测试项目和预热期间的指令不计入结果。
 
-在装有 Valgrind 和 Rust 1.89.0 的 x86-64 Linux 上，从 `workspace/` 运行
+复现 CI 基线使用 x86-64 Ubuntu 24.04、Valgrind 3.22.0 和 Rust 1.89.0。从 `workspace/` 运行
 `python3 scripts/runner-performance.py --output counts.json`。输出文件和 CI 上传的
 产物使用相同的基线格式。更新基线时应同时审查相应的工作负载或编译器变更。
 
