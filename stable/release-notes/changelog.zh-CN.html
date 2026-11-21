@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
+            window.path_to_searchindex_js = "../searchindex-a367b028.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-7b7e3677.js"></script>
+        <script src="../toc-22ddc87d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,8 +182,8 @@
                     <main>
                         <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）
-（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.11.0
+（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.1</li>
+<li><strong>Last verified</strong>: v0.11.0</li>
 </ul>
 </blockquote>
 <p>引擎版本历史。版本号跟随 workspace 版本（<code>workspace/Cargo.toml</code>，所有
@@ -203,61 +203,38 @@
 的新增与修复。</li>
 <li>文档正文不提及 “since vX.Y”——本页是版本历史的唯一所在（doc-standard §10）。</li>
 </ul>
-<h2 id="未发布"><a class="header" href="#未发布">未发布</a></h2>
+<h2 id="v0110"><a class="header" href="#v0110">v0.11.0</a></h2>
+<h3 id="rust-api-不兼容变更"><a class="header" href="#rust-api-不兼容变更">Rust API 不兼容变更</a></h3>
 <ul>
-<li>
-<p>新增 <code>overworld::navigation::find_route_matching</code>，用于寻找最近可达的交互位置，
-复用既有确定性 BFS、碰撞提供方和节点上限。</p>
-</li>
-<li>
-<p>将十键 <code>u16</code> 掩码、独立按下通道和原生短按缓冲收敛到共享 renderer。Q/E 对应 L/R。
-<strong>Rust API 不兼容变更：</strong> <code>set_from_bitmask</code> 参数及 <code>bit_mask</code>／<code>raw_current</code>／
-<code>raw_previous</code> 返回值改为 <code>u16</code>；既有 8 位桥使用 <code>u16::from(mask)</code>。
-位 0–7 和移动／Web ABI 保持不变。</p>
-</li>
-<li>
-<p>浏览器游戏外壳使用动画帧驱动固定模拟时钟，限制补帧，并按完成渲染统计 FPS。
-Escape 仅退出原生窗口。参见<a href="../reference/game-shell.zh-CN.html#运行时行为">游戏外壳</a>。</p>
-</li>
-<li>
-<p>零 Rust 战斗接入共享回合驱动器。特性和携带道具可响应来袭技能，易变状态可按行动
-次数到期。场景调用 <code>heal</code> 会将玩家的重生点写入 v3 存档的可选字段。<a href="../reference/battle-rules.zh-CN.html">战斗规则</a></p>
-</li>
-<li>
-<p>编辑器的<strong>脚本</strong>活动会列出全局场景及所有已配置的脚本和故事目录。编辑草稿时会自动
-编译场景，点击诊断可跳到对应位置。浏览器欢迎页支持选择文件夹打开项目。</p>
-</li>
-<li>
-<p>为运行器及支持指针输入的宿主添加<a href="../how-to/maps.zh-CN.html#点击移动">点击移动</a>。</p>
-</li>
-<li>
-<p>为移动端 C ABI 添加 <code>dotzuki_mobile_pointer_click</code> 和
-<code>dotzuki_mobile_cancel_pointer_input</code>，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
-更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
-现有 <code>MobileGame</code> 实现保留默认指针回调，按键契约保持不变。</p>
-</li>
+<li>输入掩码改用 <code>u16</code>，<code>GbButton::ALL</code> 包含十个按键。Q 和 E 分别映射到 L 和 R。</li>
+<li><code>NpcRuntimeState</code> 保存当前步子的移动方向。<code>HookRecord</code> 和 <code>CompiledHook</code> 指定钩子持有者。
+<code>GameSave</code> 可以保存<a href="../reference/glossary.html#battle-gameplay">回复点</a>。</li>
+<li><code>init_pitch_slide</code> 返回起音时写入寄存器的值。<code>ChannelState</code> 记录定时休止状态。</li>
 </ul>
-<p>Rust API 破坏性变更：</p>
+<p>Rust 适配器和移动外壳的更新步骤见<a href="migration/v0.11.0.zh-CN.html">迁移指南</a>。</p>
+<h3 id="游戏机制与编辑器"><a class="header" href="#游戏机制与编辑器">游戏机制与编辑器</a></h3>
 <ul>
-<li>
-<p>用 Rust 结构体字面量构造 <code>HookRecord</code> 或 <code>CompiledHook</code> 时，填入
-<code>holder: HookHolder::Attacker</code> 可保持原有行为。构造 <code>GameSave</code> 可填
-<code>heal_point: None</code>。已有 RON 文件和存档可直接加载。</p>
-</li>
-<li>
-<p><code>NpcRuntimeState</code> 新增 <code>step_direction: Option&lt;Direction&gt;</code>。空闲 NPC 结构体字面量
-需补上 <code>step_direction: None</code>。手工构造行走状态的测试需在此字段保存移动方向。
-二进制存档适配器需处理新增字段。</p>
-</li>
+<li>零 Rust 战斗使用共享回合驱动器。强制换人后，对手剩余的行动会作用于新上场的成员。
+特性和携带道具钩子可以响应来袭技能，<a href="../reference/glossary.html#battle-stack">易变状态</a>
+可以在持有者执行指定次数的技能行动后到期。多段攻击在目标倒下时停止，<code>TwoToFive</code>
+使用修正后的随机数抽取顺序。参见<a href="../reference/battle-rules.zh-CN.html">战斗规则</a>。</li>
+<li>场景调用 <code>heal()</code> 时记录玩家的地图、格子、朝向和海拔层，供重生使用。
+加载缺少该字段的 v3 存档时，入口出生点是默认回复点。</li>
+<li>编辑器的<strong>脚本</strong>活动列出全局场景以及所有已配置脚本目录、故事目录中的场景。
+它会编译未保存的草稿，点击诊断可跳转至源码位置。浏览器欢迎页支持通过文件夹选择器打开项目。</li>
 </ul>
-<p>NPC 移动修复：</p>
+<h3 id="输入移动与播放"><a class="header" href="#输入移动与播放">输入、移动与播放</a></h3>
 <ul>
-<li>自动行走和脚本行走的每一步均在开始时保存方向。步子进行中修改 <code>facing</code>，
-不再改变剩余移动或其占用的目的格。</li>
-<li>移动偏移和碰撞预测使用 <code>NpcRuntimeState::walking_direction()</code>；
-角色图像朝向继续使用 <code>facing</code>。</li>
-<li>JSON 快照保留已保存的移动方向。缺少 <code>step_direction</code> 的旧 JSON 会加载为 <code>None</code>，
-并使用其保存的朝向。步子完成后移除已保存方向；连续脚本步子独立保存下一步方向。</li>
+<li>支持指针输入的宿主可以使用<a href="../how-to/maps.zh-CN.html#点击移动">点击移动</a>。
+<code>find_route_matching</code> 按现有碰撞规则和搜索上限寻找最近可达的交互位置。
+移动端 ABI 1 新增指针点击和取消回调。</li>
+<li>原生宿主缓冲短按。浏览器外壳按动画帧驱动固定模拟时钟、限制补帧，并按已渲染帧数计算 FPS。
+Escape 仅退出原生窗口。参见<a href="../reference/game-shell.zh-CN.html#运行时行为">游戏外壳参考</a>。</li>
+<li>NPC 在迈步途中转身时保留该步的移动方向，JSON 快照也会保存这个方向。
+游戏可观察和自定义单个 NPC 的移动决策。</li>
+<li>音频播放可恢复<a href="../reference/glossary.html#audio">音序器</a>和 APU 的状态，在音乐暂停时推进音效，
+也可在不输出音频时推进逻辑帧。滑音、噪声位宽和立体声声道分配按音轨指令工作。</li>
+<li>渲染器向消费方提供共用的图块调色板转换，并修正图块动画计数器。</li>
 </ul>
 <h2 id="v0101"><a class="header" href="#v0101">v0.10.1</a></h2>
 <p>本补丁版本恢复 DSL 在裸机目标上的编译，并纳入 <code>fix/gba-psg-audio</code> 消费者使用的 NPC 钩子。
