@@ -1,6 +1,6 @@
 # Scene DSL 参考（`.scene`）
 
-> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 0ad54c66b78f88c2971b2bc4be3915a37ef4ce3c）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `.scene` 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -9,7 +9,7 @@
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 本页按代码实现来描述[游戏 DSL](../glossary.md) 的 `.scene` 文件；当代码与旧文档不一致时，
 以代码为准。`文件:行号` 引用均相对于仓库中的 `crates/dotzuki-engine-dsl/src/`。各构造
@@ -374,9 +374,14 @@ game_scene StartTown {
 }
 ```
 
-`@run` 在 Boa 脚本路径上可用。原生 AST 解释器会报错拒绝 `@run` 块
-（interpreter.rs:524-528）；要在解释器下运行，请把这类逻辑改写成 DSL 语句或原生函数
-模块。
+零 Rust 运行器在编译项目时为每个场景选择执行方式。结构化对话、选项、标记和战斗结果
+由原生 AST 解释器处理。只要场景内有原始 JavaScript 块 `@run`，整个场景的剧情线和
+`@load` 块就都使用 Boa，即使该代码位于玩家没有选择的分支中。用到 JavaScript 对象、
+未知宿主调用，或核心命令的参数类型需要 JavaScript 求值时，场景也使用 Boa。两种执行方式
+共用运行器的命令处理、语言、玩家位置和存档标记。
+
+成功重载脚本后，下次激活场景时会使用新版本。等待对话确认或战斗结果的场景会沿用启动时
+的程序继续执行。如果编译出错，运行器会保留上一次编译成功的场景。
 
 ## `@trigger` 绑定
 
