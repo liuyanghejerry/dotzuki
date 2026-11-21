@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
+            window.path_to_searchindex_js = "../searchindex-511fb138.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -506,6 +506,16 @@ the <code>GameData</code> trait.</li>
 data-driven battle system.</li>
 <li><strong>story bible</strong>（叙事圣经）— the seeded <code>data/stories/</code> narrative content.</li>
 <li><strong>recipe</strong>（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.</li>
+</ul>
+<h2 id="compiled-scene-assets"><a class="header" href="#compiled-scene-assets">Compiled scene assets</a></h2>
+<ul>
+<li><strong>compiled scene assets</strong>（预编译场景数据）— the compile report and native
+function data that <code>dotzuki export</code> stores in a game pack.</li>
+<li><strong><code>compiled_scenes</code></strong> — the optional DZPK index field that identifies the
+format of the compiled scene assets. The value <code>1</code> selects the first format.</li>
+<li><strong>native scene</strong>（原生场景）— a scene whose storylines the runner can execute
+with its AST interpreter. A scene containing <code>@run</code> uses Boa to execute
+its generated JavaScript. See the <a href="./cli.html">CLI export reference</a>.</li>
 </ul>
 <h2 id="native-map-scenery"><a class="header" href="#native-map-scenery">Native map scenery</a></h2>
 <ul>

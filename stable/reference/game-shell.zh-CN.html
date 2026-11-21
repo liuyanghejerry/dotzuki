@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
+            window.path_to_searchindex_js = "../searchindex-511fb138.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -371,7 +371,7 @@ GBA 分辨率为 240×160）。</li>
 采样值总数。首条音轨开始前，运行器向缓冲区写入静音并返回零。Web 宿主通过
 <code>RunnerGame::append_audio</code> 在可复用的队列中累计多个游戏帧的采样。</p>
 <p>CI 的 <code>runner-performance</code> 任务用 Callgrind 统计地图静止、地图滚动、背包导航、
-战斗菜单导航、PCM 渲染和携带 2,048 个存档标记的剧情激活所执行的指令数。
+战斗菜单导航、PCM 渲染和携带 2,048 个存档 flag 的剧情激活所执行的指令数。
 每个场景在 <code>ci/runner-performance/baseline.json</code> 中有独立的基线。任何一项超过
 对应基线 10% 都会使任务失败。创建测试项目和预热期间的指令不计入结果。</p>
 <p>复现 CI 基线使用 x86-64 Ubuntu 24.04、Valgrind 3.22.0 和 Rust 1.89.0。从 <code>workspace/</code> 运行

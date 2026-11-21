@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bdcb507e.js";
+            window.path_to_searchindex_js = "../searchindex-511fb138.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -388,8 +388,8 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 会话期间跨场景保持）、<code>startBattle</code>/<code>startWildBattle</code>（见
 <a href="battle-rules.html">战斗规则</a>）和 <code>openShop</code>（见<a href="#商店">商店</a>）。任何其他命令
 都会记录一条警告并自动完成，而不是让场景死锁。</p>
-<p>原生场景和 JavaScript 场景从共享快照读取标记。场景结束时，运行器将有变化的标记写回
-当前会话。对原本不存在的标记调用 <code>resetFlag</code>，会在存档中保留显式的 <code>false</code>。</p>
+<p>原生场景和 JavaScript 场景从共享快照读取 flag。场景结束时，运行器将有变化的 flag 写回
+当前会话。对原本不存在的 flag 调用 <code>resetFlag</code>，会在存档中保留显式的 <code>false</code>。</p>
 <h3 id="菜单"><a class="header" href="#菜单">菜单</a></h3>
 <p>在大地图上按 <strong>Start</strong> 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
 冻结），其中有四个条目：</p>

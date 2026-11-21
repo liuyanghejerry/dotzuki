@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bdcb507e.js";
+            window.path_to_searchindex_js = "searchindex-511fb138.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-22ddc87d.js"></script>
@@ -8099,7 +8099,8 @@ then every file’s raw bytes concatenated. Raw bytes avoid base64’s ~33% size
 inflation and its boot-time decode — worthwhile once a project ships real
 tilesets and audio. (Exports from older CLIs shipped a base64
 <code>game.bundle.json</code> instead; current players still boot it.)</p>
-<p>A successful DSL compilation adds the optional <code>compiled_scenes: 1</code> index field.
+<p>When the CLI includes <a href="#compiled-scene-assets">compiled scene assets</a>
+in a pack, it sets the optional <code>compiled_scenes</code> index field to <code>1</code>.
 The pack retains the original sources and stores the compile report, routes and
 native function offsets under <code>.dotzuki/compiled-scenes/</code>. The player inflates
 a native scene on first use and decodes each requested function once. Scenes
@@ -8237,7 +8238,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -8557,6 +8558,16 @@ the <code>GameData</code> trait.</li>
 data-driven battle system.</li>
 <li><strong>story bible</strong>（叙事圣经）— the seeded <code>data/stories/</code> narrative content.</li>
 <li><strong>recipe</strong>（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.</li>
+</ul>
+<h2 id="compiled-scene-assets"><a class="header" href="#compiled-scene-assets">Compiled scene assets</a></h2>
+<ul>
+<li><strong>compiled scene assets</strong>（预编译场景数据）— the compile report and native
+function data that <code>dotzuki export</code> stores in a game pack.</li>
+<li><strong><code>compiled_scenes</code></strong> — the optional DZPK index field that identifies the
+format of the compiled scene assets. The value <code>1</code> selects the first format.</li>
+<li><strong>native scene</strong>（原生场景）— a scene whose storylines the runner can execute
+with its AST interpreter. A scene containing <code>@run</code> uses Boa to execute
+its generated JavaScript. See the <a href="#dotzuki-cli-reference">CLI export reference</a>.</li>
 </ul>
 <h2 id="native-map-scenery"><a class="header" href="#native-map-scenery">Native map scenery</a></h2>
 <ul>
@@ -17211,8 +17222,8 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 会话期间跨场景保持）、<code>startBattle</code>/<code>startWildBattle</code>（见
 <a href="#battles">战斗规则</a>）和 <code>openShop</code>（见<a href="#商店">商店</a>）。任何其他命令
 都会记录一条警告并自动完成，而不是让场景死锁。</p>
-<p>原生场景和 JavaScript 场景从共享快照读取标记。场景结束时，运行器将有变化的标记写回
-当前会话。对原本不存在的标记调用 <code>resetFlag</code>，会在存档中保留显式的 <code>false</code>。</p>
+<p>原生场景和 JavaScript 场景从共享快照读取 flag。场景结束时，运行器将有变化的 flag 写回
+当前会话。对原本不存在的 flag 调用 <code>resetFlag</code>，会在存档中保留显式的 <code>false</code>。</p>
 <h3 id="菜单"><a class="header" href="#菜单">菜单</a></h3>
 <p>在大地图上按 <strong>Start</strong> 会打开一个暂停菜单（按 B/Start 关闭；底下的大地图被
 冻结），其中有四个条目：</p>
@@ -19262,7 +19273,7 @@ GBA 分辨率为 240×160）。</li>
 采样值总数。首条音轨开始前，运行器向缓冲区写入静音并返回零。Web 宿主通过
 <code>RunnerGame::append_audio</code> 在可复用的队列中累计多个游戏帧的采样。</p>
 <p>CI 的 <code>runner-performance</code> 任务用 Callgrind 统计地图静止、地图滚动、背包导航、
-战斗菜单导航、PCM 渲染和携带 2,048 个存档标记的剧情激活所执行的指令数。
+战斗菜单导航、PCM 渲染和携带 2,048 个存档 flag 的剧情激活所执行的指令数。
 每个场景在 <code>ci/runner-performance/baseline.json</code> 中有独立的基线。任何一项超过
 对应基线 10% 都会使任务失败。创建测试项目和预热期间的指令不计入结果。</p>
 <p>复现 CI 基线使用 x86-64 Ubuntu 24.04、Valgrind 3.22.0 和 Rust 1.89.0。从 <code>workspace/</code> 运行
@@ -19350,7 +19361,7 @@ fn main() -&gt; Result&lt;(), GameShellError&gt; {
 <h1 id="dotzuki-cli-参考"><a class="header" href="#dotzuki-cli-参考">dotzuki CLI 参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/cli.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
+（源文档 commit 430eaad5321c6d4a71a8703fde05ee3ea08e6c3b）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19492,7 +19503,8 @@ JSON index
 然后依次拼接每个文件的原始字节。原始字节避免了 base64 约 33% 的体积膨胀和
 启动时解码，尤其适合包含实际 tileset 与音频的项目。旧版 CLI 导出的是 base64
 <code>game.bundle.json</code>，当前 player 仍可启动该格式。</p>
-<p>DSL 编译成功后，包索引可以包含 <code>compiled_scenes: 1</code>。包内保留原始源码，
+<p>当 CLI 将<a href="#compiled-scene-assets">预编译场景数据</a>写入包时，会将可选的
+索引字段 <code>compiled_scenes</code> 设为 <code>1</code>。包内保留原始源码，
 并在 <code>.dotzuki/compiled-scenes/</code> 下保存编译报告、路由和原生函数的偏移量。
 播放器首次使用原生场景时将其解压，首次调用某个函数时才解码该函数。
 包含 <code>@run</code> 的场景在 Boa 中执行生成的 JavaScript。包中缺少兼容版本的产物时，
