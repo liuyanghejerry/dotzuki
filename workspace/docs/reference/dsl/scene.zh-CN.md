@@ -1,6 +1,6 @@
 # Scene DSL 参考（`.scene`）
 
-> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit c38b2fe1aee9602cc8fc1f164fcb152dbdd42818）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `.scene` 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -338,7 +338,7 @@ game_scene StartTown {
 }
 ```
 
-在零 Rust 项目中，`heal()` 会回复全队，并记录玩家的[回复点](../project-manifest.zh-CN.md#游戏结束)。
+在零 Rust 项目中，`heal()` 会回复全队，并记录玩家的[回复点](../glossary.md#battle-gameplay)。
 
 同步查询的返回值出现在裸命令位置时会被丢弃（interpreter.rs:543-566）；结果有用时请
 给调用赋值。无法识别的 `@name(...)` 形式（例如旧式的 `@goto(...)`）也会落到这里，成为
