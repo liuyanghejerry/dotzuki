@@ -148,7 +148,8 @@ native function offsets under `.dotzuki/compiled-scenes/`. The player inflates
 a native scene on first use and decodes each requested function once. Scenes
 containing `@run` execute their generated JavaScript in Boa. Players reading
 a pack with no compatible artifact version compile the bundled sources.
-An export forced past DSL errors retains those source diagnostics at boot.
+When the CLI exports a project with DSL errors using `--force`, the player
+reports those errors at startup.
 
 The CLI collects project inputs with the editor's play-bundle rules. It skips
 `node_modules`, `.git`, `target`, `dist`, hidden files and directories, and

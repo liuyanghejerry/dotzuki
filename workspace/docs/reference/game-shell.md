@@ -215,7 +215,7 @@ starts, the runner fills the slice with silence and returns zero. Web hosts use
 `RunnerGame::append_audio` to accumulate multiple ticks in a reusable queue.
 
 The `runner-performance` CI job compares Callgrind instruction counts for idle
-maps, scrolling, bag navigation, battle navigation, PCM rendering and scene
+maps, scrolling, bag navigation, battle navigation, PCM rendering, and scene
 activations with 2,048 saved flags. Each scenario has a reviewed baseline in
 `ci/runner-performance/baseline.json`. A count more than 10% above its baseline
 fails the job. Fixture setup and warmup run outside the measured interval.
