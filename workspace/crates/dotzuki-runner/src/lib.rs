@@ -52,6 +52,7 @@ pub mod map;
 pub mod pack;
 pub mod project;
 pub mod save;
+mod scene;
 pub mod tileset;
 pub mod vfs;
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]

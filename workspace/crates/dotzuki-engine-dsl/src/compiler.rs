@@ -183,7 +183,7 @@ fn compile_dsl_file_opt(
     file_path: &str,
     out_dir: Option<&Path>,
 ) -> Result<CompileOutput, String> {
-    compile_dsl_file_opt_with_components(ext, content, file_path, out_dir, &[])
+    compile_dsl_file_opt_with_components(ext, content, file_path, out_dir, &[], &mut |_| {})
 }
 
 /// `compile_dsl_file_opt` with a shared component prelude: `.gui` files are
@@ -195,6 +195,7 @@ fn compile_dsl_file_opt_with_components(
     file_path: &str,
     out_dir: Option<&Path>,
     component_decls: &[ast::ComponentDecl],
+    on_scene: &mut impl FnMut(ast::GameScene),
 ) -> Result<CompileOutput, String> {
     let (src, effective_ext) = match ext {
         "theme" | "style" => {
@@ -341,6 +342,9 @@ fn compile_dsl_file_opt_with_components(
                 }
             }
 
+            if let ast::Document::Scene(scene) = doc {
+                on_scene(scene);
+            }
             Ok(CompileOutput::Scene {
                 name,
                 js,
@@ -517,6 +521,16 @@ pub fn compile_files(
     files: &[(String, String, String)],
     dsl_out_dir: Option<&Path>,
 ) -> CompileReport {
+    compile_files_with_scene_asts(files, dsl_out_dir, |_| {})
+}
+
+/// Compile each file once and deliver the validated scene ASTs to a native
+/// runtime. The report, route order and generated assets match [`compile_files`].
+pub fn compile_files_with_scene_asts(
+    files: &[(String, String, String)],
+    dsl_out_dir: Option<&Path>,
+    mut on_scene: impl FnMut(ast::GameScene),
+) -> CompileReport {
     let mut report = CompileReport::default();
 
     let mut files: Vec<(String, String, String)> = files.to_vec();
@@ -555,7 +569,14 @@ pub fn compile_files(
         } else {
             &component_prelude
         };
-        match compile_dsl_file_opt_with_components(ext, content, path_str, dsl_out_dir, seed) {
+        match compile_dsl_file_opt_with_components(
+            ext,
+            content,
+            path_str,
+            dsl_out_dir,
+            seed,
+            &mut on_scene,
+        ) {
             Ok(CompileOutput::Scene {
                 name,
                 js,

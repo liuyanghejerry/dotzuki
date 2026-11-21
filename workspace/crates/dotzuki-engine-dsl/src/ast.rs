@@ -567,3 +567,33 @@ impl SourceSpan {
         }
     }
 }
+
+/// Collect every Assign variable name in a statement list, recursing into
+/// @if/@each/@choice bodies (they can hold call-valued assignments like
+/// `result = startBattle(...)` that later statements reference).
+pub(crate) fn collect_assign_names(stmts: &[StoryStmt], out: &mut Vec<String>) {
+    for stmt in stmts {
+        match stmt {
+            StoryStmt::Assign { name, .. } => {
+                if !out.contains(name) {
+                    out.push(name.clone());
+                }
+            }
+            StoryStmt::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                collect_assign_names(then_branch, out);
+                collect_assign_names(else_branch, out);
+            }
+            StoryStmt::Each { body, .. } => collect_assign_names(body, out),
+            StoryStmt::Choice { options, .. } => {
+                for opt in options {
+                    collect_assign_names(&opt.body, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}

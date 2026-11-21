@@ -43,11 +43,11 @@
 
 use std::collections::VecDeque;
 
+use crate::scene::SceneVm;
 use dotzuki_engine::menu::MenuConfig;
 use dotzuki_engine::overworld::types::Direction;
 use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_engine_script::command::CommandResult;
-use dotzuki_engine_script::engine::ScriptEngine;
 use dotzuki_renderer::input::{GbButton, InputState};
 use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
 use dotzuki_ui::FrameBufferPainter;
@@ -128,7 +128,7 @@ pub enum ShopView {
 
 /// Live shop state: the suspended scene engine plus the shelf.
 pub struct ShopState {
-    pub engine: ScriptEngine,
+    pub engine: SceneVm,
     pub items: Vec<ShopItem>,
     pub cursor: usize,
     /// Transient message line ("Bought a Potion!" / "Not enough money…").
@@ -138,7 +138,7 @@ pub struct ShopState {
 }
 
 impl ShopState {
-    pub fn new(engine: ScriptEngine, items: Vec<ShopItem>) -> Self {
+    pub fn new(engine: SceneVm, items: Vec<ShopItem>) -> Self {
         Self {
             engine,
             items,

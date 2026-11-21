@@ -17,7 +17,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
-use dotzuki_engine_dsl::compiler::{compile_files, CompileReport, RouteEntry, DSL_EXTENSIONS};
+use dotzuki_engine_dsl::compiler::{
+    compile_files_with_scene_asts, CompileReport, RouteEntry, DSL_EXTENSIONS,
+};
 use dotzuki_engine_dsl::loader::register_compiled;
 use dotzuki_engine_script::loader::ScriptLoader;
 
@@ -51,6 +53,7 @@ pub struct LoadedProject {
     stem_to_name: HashMap<String, String>,
     /// Compiled scene name → `.scene` file stem.
     name_to_stem: HashMap<String, String>,
+    pub(crate) native_scenes: HashMap<String, crate::scene::NativeScene>,
 }
 
 impl LoadedProject {
@@ -96,7 +99,7 @@ impl LoadedProject {
         let data_root = root.join(&data_root_rel);
         let gfx_root = gfx_root_rel.as_ref().map(|g| root.join(g));
 
-        let report = compile_project_dsl(files.as_ref(), &manifest);
+        let (report, native_scenes) = compile_project_dsl(files.as_ref(), &manifest);
         if !report.diagnostics.is_empty() {
             bail!(
                 "DSL compile failed with {} diagnostic(s):\n  {}",
@@ -123,6 +126,7 @@ impl LoadedProject {
             report,
             stem_to_name,
             name_to_stem,
+            native_scenes,
         })
     }
 
@@ -130,7 +134,7 @@ impl LoadedProject {
     ///
     /// On success the script registry, routing table and stem indexes are
     /// replaced wholesale — a scene currently mid-activation keeps running
-    /// the JS it was started with; the next activation picks up the new
+    /// the program it was started with; the next activation picks up the new
     /// source. On any compiler diagnostic the old scenes are kept and an
     /// error listing every diagnostic is returned (same bar as [`load`]).
     ///
@@ -140,7 +144,7 @@ impl LoadedProject {
     ///
     /// [`load`]: Self::load
     pub fn recompile_scripts(&mut self) -> Result<()> {
-        let report = compile_project_dsl(self.files.as_ref(), &self.manifest);
+        let (report, native_scenes) = compile_project_dsl(self.files.as_ref(), &self.manifest);
         if !report.diagnostics.is_empty() {
             bail!(
                 "DSL recompile failed with {} diagnostic(s):\n  {}",
@@ -157,6 +161,7 @@ impl LoadedProject {
         self.report = report;
         self.stem_to_name = stem_to_name;
         self.name_to_stem = name_to_stem;
+        self.native_scenes = native_scenes;
         Ok(())
     }
 
@@ -355,7 +360,10 @@ impl LoadedProject {
 /// `compile_dirs` produces for a relative project root, and what the
 /// runtime's scene ↔ map matching expects. Unreadable/non-UTF-8 files
 /// become diagnostics (the same bar `dotzuki check` enforces).
-fn compile_project_dsl(files: &dyn ProjectFiles, manifest: &Manifest) -> CompileReport {
+fn compile_project_dsl(
+    files: &dyn ProjectFiles,
+    manifest: &Manifest,
+) -> (CompileReport, HashMap<String, crate::scene::NativeScene>) {
     let mut dsl_files: Vec<(String, String, String)> = Vec::new();
     let mut read_errors: Vec<String> = Vec::new();
     for dir in manifest.dsl_dirs_rel() {
@@ -381,9 +389,18 @@ fn compile_project_dsl(files: &dyn ProjectFiles, manifest: &Manifest) -> Compile
             }
         }
     }
-    let mut report = compile_files(&dsl_files, None);
+    let mut native_scenes = HashMap::new();
+    let mut report = compile_files_with_scene_asts(&dsl_files, None, |scene| {
+        let name = scene.name.clone();
+        if let Some(native) = crate::scene::NativeScene::from_ast(scene) {
+            native_scenes.insert(name, native);
+        } else {
+            // The script registry also gives a later duplicate name precedence.
+            native_scenes.remove(&name);
+        }
+    });
     report.diagnostics.extend(read_errors);
-    report
+    (report, native_scenes)
 }
 
 /// `.scene` file stem ↔ compiled scene name indexes for a compile report.
