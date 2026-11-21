@@ -220,7 +220,8 @@ activations with 2,048 saved flags. Each scenario has a reviewed baseline in
 `ci/runner-performance/baseline.json`. A count more than 10% above its baseline
 fails the job. Fixture setup and warmup run outside the measured interval.
 
-From `workspace/` on x86-64 Linux with Valgrind and Rust 1.89.0 installed, run
+To reproduce the CI baseline, use x86-64 Ubuntu 24.04 with Valgrind 3.22.0 and
+Rust 1.89.0. From `workspace/` run
 `python3 scripts/runner-performance.py --output counts.json`. The saved counts
 and the CI artifact use the baseline format. Review changes to the workload
 or compiler alongside any baseline update.

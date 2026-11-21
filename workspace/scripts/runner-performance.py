@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -58,11 +59,20 @@ def main():
     parser.add_argument("--output", type=Path, help="write a candidate snapshot for review")
     args = parser.parse_args()
     baseline = json.loads(BASELINE.read_text())
+    release = platform.freedesktop_os_release()
+    environment = {
+        "os": f"{release['NAME']} {release['VERSION_ID']}",
+        "architecture": platform.machine(),
+        "valgrind": subprocess.check_output(["valgrind", "--version"], text=True).strip(),
+        "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=WORKSPACE, text=True).strip(),
+    }
+    print(f"Reference: {baseline['os']}, {baseline['architecture']}, {baseline['valgrind']}", flush=True)
+    print(f"Current:   {environment['os']}, {environment['architecture']}, {environment['valgrind']}", flush=True)
     executable = build(baseline["rust"])
     with tempfile.TemporaryDirectory() as directory:
         values = {s: measure(executable, s, Path(directory) / s) for s in SCENARIOS}
     if args.output:
-        args.output.write_text(json.dumps({**baseline, "instructions": values}, indent=2) + "\n")
+        args.output.write_text(json.dumps({**baseline, **environment, "instructions": values}, indent=2) + "\n")
     return 0 if compare(values, baseline) else 1
 
 
