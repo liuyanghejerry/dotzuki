@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -15,6 +15,14 @@ with a migration guide under `migration/` (created per release).
   guide), then notable additions and fixes.
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
+
+## Unreleased
+
+- Rust hosts that built a `HookState` struct literal now use `HookState::new`.
+  Encounter definitions live in `HookState::rules`. See [rules ownership](../reference/battle-rules.md#rules-ownership-in-the-zero-rust-runner).
+- The zero-Rust runner reuses map layers and updates changed areas of retained
+  frames. Four-colour indexed games can capture a packed battle transition
+  source. See [rendering](../reference/game-shell.md#retained-frames-in-the-zero-rust-runner).
 
 ## v0.11.0
 

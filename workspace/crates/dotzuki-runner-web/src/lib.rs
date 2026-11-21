@@ -152,7 +152,7 @@ impl WasmRunner {
         self.input.set_from_bitmask(u16::from(input_bitmask));
         self.game.update(&self.input);
         self.input.begin_frame();
-        self.game.draw(&mut self.fb);
+        self.game.draw_retained(&mut self.fb);
 
         // Render this video frame's worth of audio (fractional accumulator so
         // long runs don't drift), then cap the backlog.

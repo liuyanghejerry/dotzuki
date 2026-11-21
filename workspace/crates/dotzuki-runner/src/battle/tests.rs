@@ -903,24 +903,8 @@ const POISON_RULES: &str = r#"Ruleset(
 /// Both combatants get an MP pool (`has_resource`).
 fn ron_battle(player: Combatant, enemy: Combatant, rules: &str, bytes: &[u8]) -> Battle {
     let ruleset = dotzuki_rules::Ruleset::from_ron(rules).expect("parse ruleset");
-    let compiled = hooks::compile_ruleset(&ruleset).expect("compile ruleset");
-    hooks::install_compiled(compiled.clone());
-    let registry = compiled.build_effects::<GenericProvider>();
-    let stat_names = ruleset.stats.clone();
-    let status_names = hooks::status_names(&ruleset);
-    let state = HookState {
-        state: BattleState::new(
-            vec![hooks::mirror_of(&player, &stat_names, &status_names, true)],
-            vec![hooks::mirror_of(&enemy, &stat_names, &status_names, true)],
-        ),
-        effects: Vec::new(),
-        mv: dotzuki_engine::battle::stack::MoveContext::default(),
-        registry,
-        move_records: hooks::ron_moves(&ruleset, Some("mp")),
-        status_names,
-        stat_names,
-        has_resource: true,
-    };
+    let rules = Arc::new(BattleRules::compile(&ruleset, Some("mp")).unwrap());
+    let state = HookState::new(rules, &player, &enemy);
     let chart = TypeChart::from_ruleset(&ruleset);
     Battle::with_hooks(player, enemy, chart, scripted(bytes), Some(state))
 }
@@ -1171,28 +1155,8 @@ fn ron_poison_switch_keeps_status_and_resolves_the_deferred_enemy_action() {
     let slime = tackle_slime(900);
     let player = vec![aria, bryn()];
     let ruleset = dotzuki_rules::Ruleset::from_ron(POISON_RULES).expect("parse ruleset");
-    let compiled = hooks::compile_ruleset(&ruleset).expect("compile ruleset");
-    hooks::install_compiled(compiled.clone());
-    let stat_names = ruleset.stats.clone();
-    let status_names = hooks::status_names(&ruleset);
-    let state = HookState {
-        state: BattleState::new(
-            vec![hooks::mirror_of(
-                &player[0],
-                &stat_names,
-                &status_names,
-                true,
-            )],
-            vec![hooks::mirror_of(&slime, &stat_names, &status_names, true)],
-        ),
-        effects: Vec::new(),
-        mv: dotzuki_engine::battle::stack::MoveContext::default(),
-        registry: compiled.build_effects::<GenericProvider>(),
-        move_records: hooks::ron_moves(&ruleset, Some("mp")),
-        status_names,
-        stat_names,
-        has_resource: true,
-    };
+    let rules = Arc::new(BattleRules::compile(&ruleset, Some("mp")).unwrap());
+    let state = HookState::new(rules, &player[0], &slime);
     let mut b = Battle::full(
         player,
         0,
@@ -1260,28 +1224,8 @@ fn validate_ruleset_reports_unknown_names() {
 /// A party battle with the hook machinery installed from a ruleset text.
 fn ron_party_battle(party: Vec<Combatant>, enemy: Combatant, rules: &str, bytes: &[u8]) -> Battle {
     let ruleset = dotzuki_rules::Ruleset::from_ron(rules).expect("parse ruleset");
-    let compiled = hooks::compile_ruleset(&ruleset).expect("compile ruleset");
-    hooks::install_compiled(compiled.clone());
-    let stat_names = ruleset.stats.clone();
-    let status_names = hooks::status_names(&ruleset);
-    let state = HookState {
-        state: BattleState::new(
-            vec![hooks::mirror_of(
-                &party[0],
-                &stat_names,
-                &status_names,
-                true,
-            )],
-            vec![hooks::mirror_of(&enemy, &stat_names, &status_names, true)],
-        ),
-        effects: Vec::new(),
-        mv: dotzuki_engine::battle::stack::MoveContext::default(),
-        registry: compiled.build_effects::<GenericProvider>(),
-        move_records: hooks::ron_moves(&ruleset, Some("mp")),
-        status_names,
-        stat_names,
-        has_resource: true,
-    };
+    let rules = Arc::new(BattleRules::compile(&ruleset, Some("mp")).unwrap());
+    let state = HookState::new(rules, &party[0], &enemy);
     let chart = TypeChart::from_ruleset(&ruleset);
     Battle::full(
         party,

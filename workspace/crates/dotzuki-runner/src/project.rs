@@ -34,6 +34,7 @@ const MANIFEST_FILE: &str = ".dotzuki-editor.json";
 
 /// A fully loaded zero-Rust game project.
 pub struct LoadedProject {
+    pub(crate) battle_rules: std::sync::Mutex<Option<crate::battle::CachedRules>>,
     /// The file backend every project read goes through.
     files: Arc<dyn ProjectFiles>,
     root: PathBuf,
@@ -110,6 +111,7 @@ impl LoadedProject {
         let (stem_to_name, name_to_stem) = stem_indexes(&report);
 
         Ok(Self {
+            battle_rules: Default::default(),
             files,
             root,
             manifest,

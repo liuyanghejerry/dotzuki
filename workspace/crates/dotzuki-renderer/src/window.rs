@@ -42,6 +42,11 @@ pub trait GameLoop {
     /// Focus loss or canceled touch; discard pending pointer-driven actions.
     fn cancel_pointer_input(&mut self) {}
     fn draw(&mut self, frame_buffer: &mut Self::Fb);
+    /// Draw into the unmodified previous frame. Return true when presentation pixels changed.
+    fn draw_retained(&mut self, frame_buffer: &mut Self::Fb) -> bool {
+        self.draw(frame_buffer);
+        true
+    }
     fn should_exit(&self) -> bool {
         false
     }
@@ -112,8 +117,9 @@ pub fn run<G: GameLoop + 'static>(
                 game.cancel_pointer_input();
             }
             WindowEvent::RedrawRequested => {
-                game.draw(&mut frame_buffer);
-                frame_buffer.present_into(pixels.frame_mut());
+                if game.draw_retained(&mut frame_buffer) {
+                    frame_buffer.present_into(pixels.frame_mut());
+                }
                 if let Err(err) = pixels.render() {
                     log_error("pixels.render", err);
                     elwt.exit();

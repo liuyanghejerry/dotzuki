@@ -7,7 +7,9 @@ use crate::battle::rng::BattleRng;
 use crate::battle::BattlerRef;
 
 use super::ctx::{BattleCtx, EffectHost, EffectProvider};
-use super::event::{Effect, EffectId, Event, HandlerFn, HandlerResult, HookScope, RelayVar};
+use super::event::{
+    Effect, EffectId, EffectType, Event, EventHook, HandlerFn, HandlerResult, HookScope, RelayVar,
+};
 
 /// One collected, sortable handler invocation (design §1.3). The comparator
 /// orders these by the exact Showdown lexical order.
@@ -30,6 +32,37 @@ pub struct CollectedHandler<P: EffectProvider + ?Sized> {
     pub source_effect: EffectId,
     /// The native handler.
     pub call: HandlerFn<P>,
+}
+
+impl<P: EffectProvider> CollectedHandler<P> {
+    /// Bind a borrowed hook to its live holder and event participants.
+    /// The returned invocation owns its metadata and can outlive those borrows.
+    pub fn from_hook(
+        ctx: &BattleCtx<'_, P>,
+        id: EffectId,
+        kind: EffectType,
+        hook: &EventHook<P>,
+        host: EffectHost,
+        target: BattlerRef,
+        source: BattlerRef,
+    ) -> Self {
+        Self {
+            order: hook.order,
+            priority: hook.priority,
+            speed: match host {
+                EffectHost::Battler(who) => P::handler_speed(ctx.state, who),
+                EffectHost::Side(_) | EffectHost::Field => 0,
+            },
+            sub_order: hook.sub_order.unwrap_or_else(|| kind.sub_order()),
+            effect_order: ctx
+                .effect(id)
+                .map_or(u64::from(id.0), |entry| entry.effect_order),
+            target,
+            source,
+            source_effect: id,
+            call: hook.call,
+        }
+    }
 }
 
 impl<P: EffectProvider + ?Sized> Clone for CollectedHandler<P> {
@@ -107,18 +140,6 @@ fn push_matching<P: EffectProvider>(
     force_direct: bool,
     out: &mut Vec<CollectedHandler<P>>,
 ) {
-    let speed = match host {
-        EffectHost::Battler(who) => P::handler_speed(ctx.state, who),
-        EffectHost::Side(_) | EffectHost::Field => 0,
-    };
-    // effect_order: prefer the live arena entry; fall back to the effect id so
-    // moves/abilities/items (no arena entry) still get a deterministic,
-    // RNG-free tiebreak.
-    let effect_order = ctx
-        .effect(eff.id)
-        .map(|s| s.effect_order)
-        .unwrap_or(eff.id.0 as u64);
-
     for hook in eff.hooks {
         if hook.event != ev {
             continue;
@@ -132,17 +153,15 @@ fn push_matching<P: EffectProvider>(
         } else {
             event_target
         };
-        out.push(CollectedHandler {
-            order: hook.order,
-            priority: hook.priority,
-            speed,
-            sub_order: hook.sub_order.unwrap_or_else(|| eff.kind.sub_order()),
-            effect_order,
+        out.push(CollectedHandler::from_hook(
+            ctx,
+            eff.id,
+            eff.kind,
+            hook,
+            host,
             target,
-            source: event_source,
-            source_effect: eff.id,
-            call: hook.call,
-        });
+            event_source,
+        ));
     }
 }
 

@@ -6,7 +6,7 @@
 //! single output framebuffer.
 
 use crate::tile::RgbaTile;
-use crate::{DirtyRegion, FbSurface, FrameBuffer, TILE_SIZE};
+use crate::{FbSurface, FrameBuffer, TILE_SIZE};
 use dotzuki_engine::hash::HashMap;
 use dotzuki_engine::render::Rgba;
 use dotzuki_engine::render::{BlendMode, MapLayer};
@@ -165,7 +165,7 @@ pub fn render_layers_with_cache_sized<F>(
     height: u32,
     tile_size: u32,
     tile_color: F,
-    mut cache: Option<&mut LayerTileCache>,
+    cache: Option<&mut LayerTileCache>,
 ) where
     F: Fn(u16, u8, u8, u8) -> Rgba,
 {
@@ -173,11 +173,152 @@ pub fn render_layers_with_cache_sized<F>(
     let mut visible: Vec<&MapLayer> = layers.iter().filter(|l| l.visible).collect();
     visible.sort_by_key(|l| l.z_index);
 
-    if visible.is_empty() {
+    render_visible(
+        fb,
+        visible.into_iter(),
+        camera_x,
+        camera_y,
+        width,
+        height,
+        (0, 0),
+        tile_size,
+        tile_color,
+        cache,
+        &mut None,
+    );
+}
+
+/// Workspace for compositing borrowed map layers over an existing RGBA frame.
+#[derive(Default)]
+pub struct LayerCompositor {
+    group: Option<FrameBuffer>,
+    blend: Option<FrameBuffer>,
+}
+
+fn scratch_buffer(slot: &mut Option<FrameBuffer>, width: u32, height: u32) -> &mut FrameBuffer {
+    let fb = slot.get_or_insert_with(|| {
+        FrameBuffer::new(crate::RenderConfig::new(width, height), Rgba::TRANSPARENT)
+    });
+    fb.width = width;
+    fb.height = height;
+    fb.data.resize(width as usize * height as usize * 4, 0);
+    fb
+}
+
+impl LayerCompositor {
+    /// Draw a complete stack in the supplied bottom-to-top order, using the same
+    /// empty, single- and multi-layer semantics as [`render_layers_sized`].
+    pub fn render<'a>(
+        &mut self,
+        fb: &mut FrameBuffer,
+        layers: impl Iterator<Item = &'a MapLayer> + Clone,
+        camera: (i32, i32),
+        size: (u32, u32),
+        tile_size: u32,
+        tile_color: impl Fn(u16, u8, u8, u8) -> Rgba,
+    ) {
+        let (width, height) = (size.0.min(fb.width), size.1.min(fb.height));
+        render_visible(
+            fb,
+            layers.filter(|l| l.visible),
+            camera.0,
+            camera.1,
+            width,
+            height,
+            (0, 0),
+            tile_size,
+            tile_color,
+            None,
+            &mut self.blend,
+        );
+    }
+
+    /// Stamp visible layers in the supplied bottom-to-top order. `origin` locates the
+    /// first output pixel in screen space, after each layer's camera parallax.
+    #[allow(clippy::too_many_arguments)]
+    pub fn draw<'a>(
+        &mut self,
+        fb: &mut FrameBuffer,
+        layers: impl Iterator<Item = &'a MapLayer> + Clone,
+        camera: (i32, i32),
+        origin: (i32, i32),
+        size: (u32, u32),
+        tile_size: u32,
+        tile_color: impl Fn(u16, u8, u8, u8) -> Rgba,
+    ) {
+        let (width, height) = (size.0.min(fb.width), size.1.min(fb.height));
+        if width == 0 || height == 0 {
+            return;
+        }
+        let visible = layers.filter(|l| l.visible);
+        let mut probe = visible.clone();
+        let Some(first) = probe.next() else {
+            return;
+        };
+        if probe.next().is_none() {
+            render_single_layer(
+                fb,
+                first,
+                camera.0,
+                camera.1,
+                width,
+                height,
+                origin,
+                tile_size,
+                &tile_color,
+                &mut None,
+                false,
+            );
+            return;
+        }
+        let group = scratch_buffer(&mut self.group, width, height);
+        render_visible(
+            group,
+            visible,
+            camera.0,
+            camera.1,
+            width,
+            height,
+            origin,
+            tile_size,
+            tile_color,
+            None,
+            &mut self.blend,
+        );
+        for (dst, src) in fb
+            .data
+            .chunks_exact_mut(fb.width as usize * 4)
+            .zip(group.data.chunks_exact(width as usize * 4))
+        {
+            for (d, s) in dst.chunks_exact_mut(4).zip(src.chunks_exact(4)) {
+                if s[3] != 0 {
+                    d.copy_from_slice(s);
+                }
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_visible<'a>(
+    fb: &mut impl FbSurface,
+    visible: impl Iterator<Item = &'a MapLayer> + Clone,
+    camera_x: i32,
+    camera_y: i32,
+    width: u32,
+    height: u32,
+    origin: (i32, i32),
+    tile_size: u32,
+    tile_color: impl Fn(u16, u8, u8, u8) -> Rgba,
+    mut cache: Option<&mut LayerTileCache>,
+    scratch: &mut Option<FrameBuffer>,
+) {
+    let mut probe = visible.clone();
+    let Some(first) = probe.next() else {
         // No layers to draw — blank the framebuffer (full-redraw contract).
         fb.clear(Rgba::TRANSPARENT);
         return;
-    }
+    };
 
     // Fast path: exactly one visible layer — composite it directly onto `fb`,
     // PRESERVING whatever the caller already drew. `render_single_layer` skips
@@ -186,14 +327,15 @@ pub fn render_layers_with_cache_sized<F>(
     // instead of stamping transparent-black over it. (Deliberately no
     // `fb.clear()` here — that is what makes single-layer transparency show
     // through; the >=2-layer path below clears + composites self-contained.)
-    if visible.len() == 1 {
+    if probe.next().is_none() {
         render_single_layer(
             fb,
-            visible[0],
+            first,
             camera_x,
             camera_y,
             width,
             height,
+            origin,
             tile_size,
             &tile_color,
             &mut cache,
@@ -208,7 +350,7 @@ pub fn render_layers_with_cache_sized<F>(
     // Partially transparent tile pixels are still alpha-composited below, so
     // this remains pixel-equivalent to the general path.
     if visible
-        .iter()
+        .clone()
         .all(|layer| layer.opacity == 1.0 && matches!(layer.blend_mode, BlendMode::Normal))
     {
         fb.clear(Rgba::TRANSPARENT);
@@ -220,6 +362,7 @@ pub fn render_layers_with_cache_sized<F>(
                 camera_y,
                 width,
                 height,
+                origin,
                 tile_size,
                 &tile_color,
                 &mut cache,
@@ -231,28 +374,24 @@ pub fn render_layers_with_cache_sized<F>(
 
     // General path: clear, render each layer to a temp buffer, then composite.
     fb.clear(Rgba::TRANSPARENT);
-    let mut temp = FrameBuffer {
-        data: vec![0; (width * height * 4) as usize],
-        width,
-        height,
-        dirty_region: DirtyRegion::full(width, height),
-    };
+    let temp = scratch_buffer(scratch, width, height);
 
-    for layer in &visible {
+    for layer in visible {
         temp.clear(Rgba::TRANSPARENT);
         render_single_layer(
-            &mut temp,
+            temp,
             layer,
             camera_x,
             camera_y,
             width,
             height,
+            origin,
             tile_size,
             &tile_color,
             &mut cache,
             false,
         );
-        composite_onto(fb, &temp, layer.opacity, layer.blend_mode);
+        composite_onto(fb, temp, layer.opacity, layer.blend_mode);
     }
 }
 
@@ -267,6 +406,7 @@ fn render_single_layer<F>(
     camera_y: i32,
     width: u32,
     height: u32,
+    origin: (i32, i32),
     tile_size: u32,
     tile_color: &F,
     cache: &mut Option<&mut LayerTileCache>,
@@ -274,8 +414,8 @@ fn render_single_layer<F>(
 ) where
     F: Fn(u16, u8, u8, u8) -> Rgba,
 {
-    let scroll_x = (camera_x as f32 * layer.scroll_factor.0) as i32;
-    let scroll_y = (camera_y as f32 * layer.scroll_factor.1) as i32;
+    let scroll_x = (camera_x as f32 * layer.scroll_factor.0) as i32 + origin.0;
+    let scroll_y = (camera_y as f32 * layer.scroll_factor.1) as i32 + origin.1;
 
     // The cache stores fixed 8×8 tiles, so it's only valid at the default size.
     let use_cache = layer.no_animation && cache.is_some() && tile_size == TILE_PIXELS;
@@ -370,13 +510,11 @@ fn composite_onto(
     opacity: f32,
     blend_mode: BlendMode,
 ) {
-    let (w, h) = (dst.width(), dst.height());
-    assert_eq!(w, src.width);
-    assert_eq!(h, src.height);
+    let (w, h) = (dst.width().min(src.width), dst.height().min(src.height));
 
     for y in 0..h {
         for x in 0..w {
-            let off = ((y * w + x) * 4) as usize;
+            let off = ((y * src.width + x) * 4) as usize;
             let sr = src.data[off] as f32;
             let sg = src.data[off + 1] as f32;
             let sb = src.data[off + 2] as f32;
@@ -471,6 +609,50 @@ mod tests {
     // ------------------------------------------------------------------
     // effective_pixel
     // ------------------------------------------------------------------
+
+    #[test]
+    fn borrowed_layer_window_matches_a_crop_of_full_compositing() {
+        let bottom = MapLayer::new(uniform_tilemap(5, 4, 1), 0);
+        let mut top = MapLayer::new(uniform_tilemap(5, 4, 2), 1);
+        top.scroll_factor = (0.5, 0.25);
+        let color = |id: u16, _pal: u8, x: u8, y: u8| {
+            if (x + y) % 4 == 0 {
+                Rgba::TRANSPARENT
+            } else {
+                Rgba::new(x * 11, y * 13, id as u8 * 50, 140)
+            }
+        };
+        let clear = Rgba::rgb(6, 21, 38);
+        let mut compositor = LayerCompositor::default();
+        for mode in [BlendMode::Normal, BlendMode::Additive, BlendMode::Multiply] {
+            top.blend_mode = mode;
+            for opacity in [0.5, 1.0] {
+                top.opacity = opacity;
+                let layers = [bottom.clone(), top.clone()];
+                let mut reference = make_fb(32, 24, Rgba::TRANSPARENT);
+                render_layers_sized(&mut reference, &layers, 5, -3, 32, 24, 8, color);
+                let mut region = make_fb(13, 9, clear);
+                compositor.draw(
+                    &mut region,
+                    layers.iter(),
+                    (5, -3),
+                    (7, 4),
+                    (13, 9),
+                    8,
+                    color,
+                );
+                for y in 0..9 {
+                    for x in 0..13 {
+                        let pixel = reference.get_pixel(x + 7, y + 4).unwrap();
+                        assert_eq!(
+                            region.get_pixel(x, y),
+                            Some(if pixel.a == 0 { clear } else { pixel })
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn effective_pixel_no_flip() {

@@ -27,6 +27,7 @@ modern-audio = ["dotzuki-audio/modern-audio"]
 device-audio = ["dotzuki-audio/cpal"]
 
 [dependencies]
+scoped-tls = "1"
 dotzuki-engine = { path = "../dotzuki-engine", version = "0.11.0" }
 dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.11.0" }
 dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.11.0" }

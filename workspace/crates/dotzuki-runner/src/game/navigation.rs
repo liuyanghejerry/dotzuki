@@ -96,18 +96,18 @@ impl RunnerGame {
         }
     }
 
-    fn draw_navigation_marker(&self, fb: &mut FrameBuffer, cam_x: i32, cam_y: i32) {
-        let Some(map) = &self.map else {
-            return;
-        };
-        let marker = self
-            .navigation_failure
+    fn navigation_marker(&self) -> Option<((i32, i32), Rgba)> {
+        self.navigation_failure
             .map(|(x, y, _)| ((x, y), Rgba::rgb(255, 80, 80)))
             .or_else(|| {
                 self.navigation_target()
                     .map(|p| (p, Rgba::rgb(255, 230, 100)))
-            });
-        let Some(((x, y), color)) = marker else {
+            })
+    }
+
+    fn draw_navigation_marker(&self, fb: &mut FrameBuffer, cam_x: i32, cam_y: i32) {
+        let Some(map) = &self.map else { return };
+        let Some(((x, y), color)) = self.navigation_marker() else {
             return;
         };
         let (tw, th) = map.tile_size();

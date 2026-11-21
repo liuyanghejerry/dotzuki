@@ -12,12 +12,11 @@
 //!   dynamic id types ([`StatId`]/[`StatusId`]/[`TypeId`], interned from the
 //!   RON vocabularies) and the pure name↔index bindings (boosts, statuses,
 //!   the type chart, volatiles, levels, the MP resource pool).
-//! * A **thread-local** [`RulesHost`] (re-installed per battle — the parallel
-//!   test harness stays isolated) the zero-capture `interpret` bridge reads.
+//! * A project-owned [`RulesHost`] borrowed for the duration of each event fold.
 //! * [`HookState`] — the per-battle mirror: both combatants as engine
 //!   [`BattlerState`]s (1v1: side 0 = player, side 1 = enemy), the effect
 //!   arena, and per-action scratch. The engine turn driver sequences actions
-//!   and residuals. RON hooks resolve through `collect_handlers` and `run_event`.
+//!   and residuals. RON hooks bind their compiled records to `CollectedHandler` and run through `run_event`.
 //!
 //! Naming conventions (documented in `docs/reference/project-manifest.md`):
 //!
@@ -35,6 +34,7 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use dotzuki_engine::battle::rng::BattleRng as EngineRng;
 use dotzuki_engine::battle::stack::{
@@ -100,15 +100,13 @@ pub struct GenericProvider;
 /// One battler's effective stat (raw × stage multiplier) by canonical stat key
 /// (`"attack"` etc.), resolved through the installed registry's stat names.
 fn eff_stat(b: &BattlerState<GenericProvider>, key: &str) -> u32 {
-    let Some(host) = GenericProvider::rules_host() else {
-        return 1;
-    };
-    let Some(idx) = host
-        .compiled
-        .stats
-        .iter()
-        .position(|s| normalize_stat_key(s) == key)
-    else {
+    let Some(idx) = GenericProvider::with_rules_host(|host| {
+        host?
+            .compiled
+            .stats
+            .iter()
+            .position(|s| normalize_stat_key(s) == key)
+    }) else {
         return 1;
     };
     let id = StatId(idx as u16);
@@ -198,19 +196,18 @@ impl EffectProvider for GenericProvider {
     }
 }
 
-// ── the RulesProvider bridge — a thread-local `&'static RulesHost` ──────────
-//
-// Mirrors minimon/wuxia exactly: install (or re-install) the compiled registry
-// per battle by leaking a fresh host; the previous leak is abandoned (a
-// bounded, deliberate cost). Thread-local so the parallel test harness stays
-// isolated — each test re-installs on its own thread first.
+// The interpreter's fn pointer borrows the calling battle's registry. The scoped
+// key restores an outer dispatch on return or unwind, including nested games.
+scoped_tls::scoped_thread_local!(pub(super) static BATTLE_RULES: RulesHost<GenericProvider>);
 
+// Compatibility for consumers that explicitly install process-lifetime effects.
 thread_local! {
     static HOST: RefCell<Option<&'static RulesHost<GenericProvider>>> =
         const { RefCell::new(None) };
 }
 
-/// Install (or hot-swap) the compiled registry the interpreter reads.
+/// Install a process-lifetime host for callers using static engine effects.
+/// Owned encounters use [`BattleRules::compile`] and [`HookState::new`].
 pub fn install_compiled(compiled: CompiledRuleset) {
     let host = RulesHost::new(compiled, GenericBindings);
     let leaked: &'static RulesHost<GenericProvider> = Box::leak(Box::new(host));
@@ -226,6 +223,14 @@ impl RulesProvider for GenericProvider {
     fn bindings(&self) -> &Self::Bindings {
         &Self::rules_host().expect("rules host installed").bindings
     }
+    fn with_rules_host<R>(read: impl FnOnce(Option<&RulesHost<Self>>) -> R) -> R {
+        if BATTLE_RULES.is_set() {
+            BATTLE_RULES.with(|host| read(Some(host)))
+        } else {
+            read(Self::rules_host())
+        }
+    }
+
     fn rules_host() -> Option<&'static RulesHost<GenericProvider>> {
         HOST.with(|h| *h.borrow())
     }
@@ -242,15 +247,14 @@ pub struct GenericBindings;
 impl GenericBindings {
     /// The canonical stat key (`"attack"` …) for an interned stat index.
     fn stat_key(stat_index: usize) -> Option<String> {
-        let host = GenericProvider::rules_host()?;
-        let name = host.compiled.stats.get(stat_index)?;
-        Some(normalize_stat_key(name))
+        GenericProvider::with_rules_host(|host| {
+            Some(normalize_stat_key(host?.compiled.stats.get(stat_index)?))
+        })
     }
 
     /// The ruleset's type name for an interned chart index.
     fn type_name(type_index: usize) -> Option<String> {
-        let host = GenericProvider::rules_host()?;
-        host.compiled.types.get(type_index).cloned()
+        GenericProvider::with_rules_host(|host| host?.compiled.types.get(type_index).cloned())
     }
 }
 
@@ -292,21 +296,19 @@ impl RuleBindings<GenericProvider> for GenericBindings {
         move_type_index: usize,
         defender: BattlerRef,
     ) -> (u32, u32) {
-        let Some(host) = GenericProvider::rules_host() else {
-            return (1, 1);
-        };
         let Some(element) = &ctx.battler(defender).species.element else {
             return (1, 1);
         };
-        let Some(def_index) = host
-            .compiled
-            .types
-            .iter()
-            .position(|t| t.eq_ignore_ascii_case(element))
-        else {
-            return (1, 1);
-        };
-        host.compiled.chart_mult(move_type_index, def_index)
+        GenericProvider::with_rules_host(|host| {
+            let host = host?;
+            let def = host
+                .compiled
+                .types
+                .iter()
+                .position(|t| t.eq_ignore_ascii_case(element))?;
+            Some(host.compiled.chart_mult(move_type_index, def))
+        })
+        .unwrap_or((1, 1))
     }
 
     fn make_volatile(&self, name: &str, amount: u16) -> Option<VolatileKind> {
@@ -443,31 +445,81 @@ pub struct RonMove {
     pub cost: Option<u32>,
 }
 
-/// The per-battle hook machinery: both combatants mirrored as engine
-/// [`BattlerState`]s (side 0 = player, side 1 = enemy), the effect arena, the
-/// per-action scratch, and the built effect registry (one leaked `Effect` per
-/// compiled hook — the deliberate one-time leak, minimon/wuxia precedent).
+/// Rules shared by all battles using this revision of a project.
+pub struct BattleRules {
+    pub(super) host: RulesHost<GenericProvider>,
+    // IDs assigned by declaration order. Lookup borrows op-lists in the host.
+    by_record: HashMap<String, Vec<dotzuki_engine::battle::stack::EffectId>>,
+    pub move_records: HashMap<String, RonMove>,
+    pub status_names: Vec<String>,
+    pub has_resource: bool,
+}
+
+impl BattleRules {
+    /// Compile the immutable definitions once. Mutable HP, stages and volatiles belong to each battle.
+    pub fn compile(ruleset: &Ruleset, resource: Option<&str>) -> Result<Self, LoadError> {
+        let compiled = compile_ruleset(ruleset)?;
+        let mut by_record = HashMap::<_, Vec<_>>::new();
+        for hook in compiled.hooks.values() {
+            by_record
+                .entry(hook.source_id.clone())
+                .or_default()
+                .push(hook.id);
+        }
+        for ids in by_record.values_mut() {
+            ids.sort_by_key(|id| id.0);
+        }
+        Ok(Self {
+            host: RulesHost::new(compiled, GenericBindings),
+            by_record,
+            move_records: ron_moves(ruleset, resource),
+            status_names: status_names(ruleset),
+            has_resource: resource.is_some(),
+        })
+    }
+
+    pub fn compiled(&self) -> &CompiledRuleset {
+        &self.host.compiled
+    }
+
+    pub(super) fn record(&self, id: &str) -> impl Iterator<Item = &dotzuki_rules::CompiledHook> {
+        self.by_record
+            .get(id)
+            .into_iter()
+            .flatten()
+            .map(|&id| &self.host.compiled.hooks[&id])
+    }
+}
+
+/// Per-battle mirrors and scratch, bound to one immutable project revision.
 pub struct HookState {
+    pub rules: Arc<BattleRules>,
     /// The engine-side battle state (the interpreter's mutation target).
     pub state: BattleState<GenericProvider>,
     /// The live volatile arena.
     pub effects: Vec<EffectState<GenericProvider>>,
     /// Per-action scratch (`damage`, `last_damage`).
     pub mv: MoveContext,
-    /// Every synthesized per-hook effect (filtered by source record id at
-    /// fire time).
-    pub registry: Vec<&'static Effect<GenericProvider>>,
-    /// Skill id → its `kind: Move` RON record's overrides.
-    pub move_records: HashMap<String, RonMove>,
-    /// `StatusId(idx)` → the status record id (residual source + narration).
-    pub status_names: Vec<String>,
-    /// The interned stat names (the ruleset's `stats:` list, in order).
-    pub stat_names: Vec<String>,
-    /// Whether the manifest maps a resource field (the MP pool mirror).
-    pub has_resource: bool,
 }
 
 impl HookState {
+    pub fn new(rules: Arc<BattleRules>, player: &Combatant, enemy: &Combatant) -> Self {
+        let mirror = |c| {
+            mirror_of(
+                c,
+                &rules.compiled().stats,
+                &rules.status_names,
+                rules.has_resource,
+            )
+        };
+        Self {
+            state: BattleState::new(vec![mirror(player)], vec![mirror(enemy)]),
+            effects: Vec::new(),
+            mv: MoveContext::default(),
+            rules,
+        }
+    }
+
     /// The battler ref of one side (1v1: slot 0).
     pub fn battler_ref(side: super::Side) -> BattlerRef {
         match side {
@@ -486,29 +538,9 @@ impl HookState {
         }
     }
 
-    /// Select compiled effects in registry order before mutating the battle.
-    pub(super) fn matching_effects(
-        &self,
-        matches: impl Fn(&dotzuki_rules::CompiledHook) -> bool,
-    ) -> Vec<&'static Effect<GenericProvider>> {
-        let host = GenericProvider::rules_host().expect("hook state requires a rules host");
-        self.registry
-            .iter()
-            .copied()
-            .filter(|effect| host.compiled.hook(effect.id).is_some_and(&matches))
-            .collect()
-    }
-
-    /// Whether the skill's RON record subscribes to `event` (used to decide
-    /// gate/fold firing and the no-hooks chart fallback).
-    pub fn subscribes(&self, skill_id: &str, event: Event) -> bool {
-        let Some(host) = GenericProvider::rules_host() else {
-            return false;
-        };
-        host.compiled
-            .hooks
-            .values()
-            .any(|h| h.source_id == skill_id && h.event == event)
+    /// Whether this record subscribes to the event in this battle's ruleset.
+    pub fn subscribes(&self, id: &str, event: Event) -> bool {
+        self.rules.record(id).any(|h| h.event == event)
     }
 }
 
