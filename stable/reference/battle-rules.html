@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a367b028.js";
+            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -187,7 +187,7 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>A project opts into the generic, data-driven battle system (parties +
@@ -400,6 +400,18 @@ skill’s riders live here) → <code>AfterMove</code>. When the record subscrib
 <code>Effectiveness</code> hook to get the type chart; when it does NOT subscribe, the
 v1 direct chart application applies in the precompute (so a record that only
 overrides <code>power</code>/<code>type</code> keeps the chart behavior you expect).</p>
+<h3 id="rules-ownership-in-the-zero-rust-runner"><a class="header" href="#rules-ownership-in-the-zero-rust-runner">Rules ownership in the zero-Rust runner</a></h3>
+<p><code>BattleSetup::from_project</code> reads the rules file at encounter setup. Encounters
+from the same <code>LoadedProject</code> share the compiled hooks and type chart while the
+file contents match. A changed file is compiled for the next setup. A malformed
+edit returns an error. Battles already in progress keep their original rules,
+including stat and status indices, until they finish.</p>
+<p>Rust hosts that construct hook state directly can compile
+<code>dotzuki_runner::battle::hooks::BattleRules</code> once, wrap it in <code>Arc</code>, and pass
+a clone to <code>HookState::new(rules, &amp;player, &amp;enemy)</code>. Each battle owns its HP,
+stages, volatile effects and move context. The shared definition is available
+through <code>HookState::rules</code>. Its <code>compiled()</code> method exposes the hook registry
+and interned stat names.</p>
 <h2 id="abilities-held-items--weather"><a class="header" href="#abilities-held-items--weather">Abilities, held items &amp; weather</a></h2>
 <p>The remaining RON kinds are live, wired
 by record fields and a scene command — no manifest changes:</p>

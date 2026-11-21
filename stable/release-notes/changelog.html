@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a367b028.js";
+            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers, game authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Engine version history. Version numbers follow the workspace version
@@ -198,6 +198,14 @@ with a migration guide under <code>migration/</code> (created per release).</p>
 guide), then notable additions and fixes.</li>
 <li>Doc bodies do not mention “since vX.Y” — this page is the single place for
 version history (doc-standard §10).</li>
+</ul>
+<h2 id="unreleased"><a class="header" href="#unreleased">Unreleased</a></h2>
+<ul>
+<li>Rust hosts that built a <code>HookState</code> struct literal now use <code>HookState::new</code>.
+Encounter definitions live in <code>HookState::rules</code>. See <a href="../reference/battle-rules.html#rules-ownership-in-the-zero-rust-runner">rules ownership</a>.</li>
+<li>The zero-Rust runner reuses map layers and updates changed areas of retained
+frames. Four-colour indexed games can capture a packed battle transition
+source. See <a href="../reference/game-shell.html#retained-frames-in-the-zero-rust-runner">rendering</a>.</li>
 </ul>
 <h2 id="v0110"><a class="header" href="#v0110">v0.11.0</a></h2>
 <h3 id="breaking-rust-api-changes"><a class="header" href="#breaking-rust-api-changes">Breaking Rust API changes</a></h3>

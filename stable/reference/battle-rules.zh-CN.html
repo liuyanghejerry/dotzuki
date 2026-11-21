@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a367b028.js";
+            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -182,7 +182,8 @@
                     <main>
                         <h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
 <blockquote>
-<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
@@ -191,7 +192,7 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.11.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>项目通过顶层 <code>battle</code> 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
@@ -366,6 +367,15 @@ harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛
 负责倍率——在 <code>Effectiveness</code> hook 里编写 <code>ApplyTypeChart</code> 来获得 type chart；
 当它<strong>不</strong>订阅时，v1 的直接 chart 应用发生在预计算中（因此只覆盖
 <code>power</code>/<code>type</code> 的记录保留你期望的 chart 行为）。</p>
+<h3 id="零-rust-运行器中的规则所有权"><a class="header" href="#零-rust-运行器中的规则所有权">零 Rust 运行器中的规则所有权</a></h3>
+<p><code>BattleSetup::from_project</code> 在准备遭遇时读取规则文件。同一个 <code>LoadedProject</code>
+创建的遭遇在文件内容相同时共享编译后的钩子和属性相克表。文件有改动时，下一次准备遭遇
+会编译新规则。文件格式有误时返回错误。进行中的战斗会一直使用原来的规则和属性、状态索引，
+直到该场战斗结束。</p>
+<p>直接构造钩子状态的 Rust 宿主可以编译一次 <code>dotzuki_runner::battle::hooks::BattleRules</code>，
+用 <code>Arc</code> 持有，并将克隆的引用传给 <code>HookState::new(rules, &amp;player, &amp;enemy)</code>。
+每场战斗独立持有 HP、能力阶级、临时效果和招式上下文。通过 <code>HookState::rules</code> 可以
+访问共享定义，其 <code>compiled()</code> 方法提供钩子注册表和带索引的属性名。</p>
 <h2 id="特性携带道具与天气"><a class="header" href="#特性携带道具与天气">特性、携带道具与天气</a></h2>
 <p>其余 RON 种类均已生效，由记录字段和一条场景命令接入——无需改动项目清单：</p>
 <ul>

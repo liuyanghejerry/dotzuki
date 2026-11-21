@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a367b028.js";
+            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.1 (unreleased host changes)</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>The <a href="./glossary.html">game shell</a> (<code>dotzuki_web::game_shell</code>, source
@@ -355,6 +355,27 @@ and <code>pixels.render()</code>. Games must not advance gameplay in <code>draw<
 several simulation ticks together. The optional FPS element counts completed renders, not ticks.
 Render and surface-resize errors are logged and exit the loop. On wasm the pixels builder forces
 <code>Rgba8Unorm</code> and WebGL (<code>Backends::GL</code>) because some browsers expose partial WebGPU limits.</p>
+<h3 id="retained-frames-in-the-zero-rust-runner"><a class="header" href="#retained-frames-in-the-zero-rust-runner">Retained frames in the zero-Rust runner</a></h3>
+<p>The native player, editor Play and mobile runner retain their RGBA framebuffer
+between ticks. <code>RunnerGame::draw_retained</code> updates this buffer and returns a
+<code>DirtyRegion</code> in screen pixels. The first frame covers the full viewport.
+A stationary overworld, dialogue page, choice or root pause menu returns an
+empty region. With a fixed camera, walking, turning, changing the destination
+marker or moving the menu cursor redraws the affected bounds. This includes
+NPCs and higher map layers that intersect those bounds.</p>
+<p>Camera movement, elevation changes, a map reload, fades and battles redraw the
+viewport. Inventory, party and shop screens also use the full draw path. A
+host that replaces or edits the output buffer calls <code>RunnerGame::draw</code> for a
+complete frame. The web <code>tick</code> and mobile RGBA copy interfaces still deliver
+a complete image to their callers.</p>
+<h3 id="four-colour-battle-transition-snapshots"><a class="header" href="#four-colour-battle-transition-snapshots">Four-colour battle transition snapshots</a></h3>
+<p><code>dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture</code>
+captures a <code>LinearRgbaIndexedFrameBuffer&lt;GbColor&gt;</code>. It stores four pixel
+indices per byte and the current display palette. A 160 × 144 image occupies
+5,760 bytes of pixel storage. <code>render</code> applies a <code>BattleTransitionState</code>
+to a linear destination with its active palette. <code>restore</code> also restores the
+captured palette. Both methods accept different source and destination
+dimensions and clip to their common area when restoring source pixels.</p>
 <h3 id="input"><a class="header" href="#input">Input</a></h3>
 <p>Keyboard events feed <code>BufferedInput</code>; a press and release between ticks survives for one update.
 Focus loss discards held buttons and pending taps. <code>Escape</code> exits native windows; browsers leave

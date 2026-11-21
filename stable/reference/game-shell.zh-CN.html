@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a367b028.js";
+            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -182,8 +182,8 @@
                     <main>
                         <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
-<p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.10.1
-（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
+<p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.1（含未发布宿主变更）</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p><a href="./glossary.html">游戏外壳</a>（<code>dotzuki_web::game_shell</code>，源码见
@@ -353,6 +353,21 @@ GBA 分辨率为 240×160）。</li>
 模拟帧。可选 FPS 元素统计完成的渲染次数，不统计模拟帧数。
 渲染和 surface 缩放错误会记录日志并退出循环。在 wasm 上，pixels 构建器强制
 <code>Rgba8Unorm</code> 和 WebGL（<code>Backends::GL</code>），因为部分浏览器暴露的 WebGPU limits 不完整。</p>
+<h3 id="零-rust-运行器的帧缓冲复用"><a class="header" href="#零-rust-运行器的帧缓冲复用">零 Rust 运行器的帧缓冲复用</a></h3>
+<p>原生播放器、编辑器 Play 和移动端运行器会保留上一帧的 RGBA 帧缓冲。
+<code>RunnerGame::draw_retained</code> 更新该缓冲，并返回以屏幕像素为单位的变化区域
+<code>DirtyRegion</code>。首帧覆盖整个视口。大地图、对话页、选项或暂停主菜单保持静止时，
+返回空区域。镜头固定时，行走、转身、改变目的地标记或移动菜单光标只会重绘受影响的
+区域，其中包括与该区域相交的 NPC 和上层地图图层。</p>
+<p>镜头移动、海拔变化、地图重新加载、淡入淡出和战斗都会重绘整个视口。物品栏、队伍和商店
+界面也使用全量绘制。宿主在替换或改写输出缓冲后调用 <code>RunnerGame::draw</code> 绘制完整帧。
+Web 的 <code>tick</code> 和移动端的 RGBA 复制接口仍向调用方提供完整画面。</p>
+<h3 id="四色战斗转场快照"><a class="header" href="#四色战斗转场快照">四色战斗转场快照</a></h3>
+<p><code>dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture</code> 从
+<code>LinearRgbaIndexedFrameBuffer&lt;GbColor&gt;</code> 捕获当前显示调色板和像素索引，每字节保存四个
+索引。160 × 144 画面的像素占用 5,760 字节。<code>render</code> 把 <code>BattleTransitionState</code>
+绘制到线性帧缓冲，并使用目标当前的调色板。<code>restore</code> 同时还原捕获的调色板。两者都
+支持尺寸不同的源和目标，还原源像素时会裁剪到两者共有的区域。</p>
 <h3 id="输入"><a class="header" href="#输入">输入</a></h3>
 <p>键盘事件进入 <code>BufferedInput</code>；两个更新之间的快速按下／松开仍保留到一次更新。
 失焦丢弃按住状态和待处理短按。<code>Escape</code> 退出原生窗口；浏览器不映射该键，循环继续运行。
