@@ -2,13 +2,13 @@
 
 如何编写 `.scene` 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。
 
-> 本文是 `how-to/scenes.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
+> 本文是 `how-to/scenes.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 [语法参考](../reference/dsl/scene.md)是每个语法构造的权威——本页是任务视角：编写时随手查阅的配方，外加把它们接到地图上的 runner 契约。如果还没有接好地图与其场景，先从[你的第一个游戏](../tutorials/your-first-game.md)开始。
 

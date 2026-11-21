@@ -1,6 +1,6 @@
 # 存档兼容性
 
-> 本文是 `explanation/save-compatibility.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `explanation/save-compatibility.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 存档版本机制、向前/向后兼容规则，以及每个工具都必须遵守的兼容性规则。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, rust developers
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 游戏保存到 `<project>/.dotzuki-save.json`（可用 `--save-file` 覆盖）——带存档版本
 的 JSON：`{version, map, player: {x, y, facing, level?}, flags, lang, party?,

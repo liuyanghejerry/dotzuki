@@ -1,12 +1,12 @@
 # 15 分钟做出你的第一款游戏
 
-> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
+> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
 > - **Type**: tutorial
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 一次带你从头到尾走一遍的导览：从一台空机器，到一个可以点击游玩的 JRPG 项目 ——
 不需要 Rust，不需要写代码。

@@ -1,6 +1,6 @@
 # 效果栈战斗引擎
 
-> 本文是 `explanation/effect-stack.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
+> 本文是 `explanation/effect-stack.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本页解释 `dotzuki_engine::battle::stack` 的设计——这个 Showdown 风格的效果栈战斗
@@ -9,7 +9,7 @@
 > - **Audience**: battle authors, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 > **范围。** 本页介绍 **`dotzuki_engine::battle::stack`** 的设计——这个 Showdown 风格
 > 的**效果栈**战斗引擎——以及它为什么是这个形态。编写的那一半——声明事件、效果与
