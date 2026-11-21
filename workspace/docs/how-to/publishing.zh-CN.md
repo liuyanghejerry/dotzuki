@@ -1,99 +1,100 @@
-# 发布与升级指南
+# 发布与升级游戏
 
-> 本文是 `how-to/publishing.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
-> 内容以英文源为准；发现不一致请更新英文源再同步翻译。
+> 本文是 `how-to/publishing.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
+> 内容以英文源为准。
 
-> - **Audience**: game authors, CI
+> - **Audience**: game authors, rust developers
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.12.0
 
-打包、发布并升级一个零 Rust 项目。
+零 Rust 项目既可以作为可编辑的目录交付，也可以连同播放器一起导出。
+开始前请核对[项目清单](../reference/project-manifest.zh-CN.md)，并在项目根目录运行下文示例。
 
-如何打包、发布并升级用 dotzuki 构建的**零 Rust 项目**。本文与
-[项目清单与项目结构](../reference/project-manifest.md)（项目契约）和
-[CLI 参考](../reference/cli.md)（工具链）互补。
+## 交付可编辑的项目
 
-## 游戏项目是什么
-
-游戏项目就是一个**普通目录**——`.dotzuki-editor.json` + `data/` + `gfx/` + `assets/`
-（场景）。没有构建步骤：`dotzuki` 可执行文件（或编辑器）原样消费这个目录。发布一个
-游戏 = 发布这个目录加上一种运行它的方式。
-
-## 1. 交付项目目录
-
-没有编译/打包阶段。把整个项目目录（排除 `*.bak`、点文件与任何编辑器状态）复制到目
-标机器上，然后运行：
+复制 `.dotzuki-editor.json` 及其指定的数据、图像和场景目录。使用开发游戏时相同版本的
+CLI 或编辑器。在复制出来的目录中，校验文件并启动游戏。
 
 ```bash
-dotzuki run <project-dir>
+dotzuki check .
+dotzuki run .
 ```
 
-交付检查清单：
+运行器把存档写入项目目录下的 `.dotzuki-save.json`。如果安装目录只读，
+用 `dotzuki run . --save-file <writable-path>` 指定可写路径。
 
-- 在最终目录树上运行 [`dotzuki check`](../reference/cli.md)——干净退出是唯一存在的构
-  建检查。
-- 项目隐式携带自身的 `dotzuki` 版本要求：用引擎版本与项目开发时所用版本一致的
-  `dotzuki` 可执行文件来运行它。项目清单里没有按项目固定的版本。
-- 存档文件默认写入 `<project>/.dotzuki-save.json`——交付可写的目录，或者对只读安装
-  用 `--save-file` 指向别处。
-
-## 2. 自动化冒烟测试（CI）
+## 对项目做冒烟测试
 
 ```bash
-dotzuki run . --headless --frames 60          # boot, no window, no save
-dotzuki run . --headless --map StartTown --screenshot shot.png --save
+dotzuki run . --headless --frames 60
+dotzuki run . --headless --frames 120 --screenshot boot.png
 ```
 
-`--headless` 从不打开音频设备或窗口；`--screenshot` 输出真实渲染的最后一帧。见
-[`CLI_REFERENCE.md`](../reference/cli.md)。
+这两条命令都以无头模式运行，无需打开窗口或音频设备。第二条将最后一帧写入 PNG。
+加上 `--save` 可以测试游戏到达可存档状态时的写入行为。
 
-## 3. 网页中的可玩演示（WASM）
+## 导出网页版
 
-同一个运行器编译为 WASM（`dotzuki-runner-web`），并基于**内存文件系统**启动——编辑器
-的 Play 活动走的正是这条路径，所以在编辑器里能玩的项目在网页里也能一模一样地玩。
-
-编辑器把项目打包为
-
-```
-{ "<posix rel path>": "<base64>" }   // whole project, incl. .dotzuki-editor.json
+```bash
+dotzuki export --web . --out dist/web
+python3 -m http.server --directory dist/web
 ```
 
-（排除 `node_modules`/`.git`/`target`/`dist`、点文件与 `*.bak`；单文件上限 16 MB，总
-量 64 MB）。随后页面驱动：
+打开 `http://localhost:8000` 即可游玩。将 `dist/web/` 中的文件上传到静态网站即可分享游戏。
+该目录包含 `index.html`、`wasm/` 下的 WebAssembly 运行器和 `game.dzpk`。
+页面处理键盘输入和 WebAudio，并将存档写入 `localStorage`。在桌面编辑器中，
+**试玩 > 导出 Web** 会使用随附的运行器执行同一导出操作。
+如果单独安装了 CLI，请用 `--runner-pkg` 指定配套的 WebAssembly 包。
+
+各导出目标都会校验项目。分发前请先修复诊断报告中的问题。用 `--force` 可以导出含有
+DSL 错误的包，播放器会在启动时报告这些错误。包中保留项目清单和源文件。通过校验且含有
+DSL 文件的项目还会打入[预编译场景数据](../reference/glossary.md#compiled-scene-assets)。
+配套播放器按需加载原生函数，旧版播放器可以读取随包源码。
+CLI 收集的输入文件每个最多 16 MiB，合计最多 64 MiB。它会跳过构建目录、清单以外的隐藏文件
+以及 `*.bak`。生成的场景数据额外占用包空间。完整收集规则见 [CLI 参考](../reference/cli.zh-CN.md)。
+
+如果要编写自己的播放器页面，可以参考导出生成的 `index.html`。
 
 | `WasmRunner` 方法 | 用途 |
 |---|---|
-| `new(filesJson, saveJson?)` | 用打包的文件启动；可选地导入一份存档 |
-| `tick(inputBitmask)` | 推进一帧；返回 RGBA 帧缓冲 |
-| `take_audio()` | 拉取生成的立体声采样（`f32`，交错排列） |
-| `width()` / `height()` | 帧尺寸（320×240） |
-| `export_save()` / `import_save(json)` | 存档导出/导入（例如写入 `localStorage`） |
+| `WasmRunner.fromPack(bytes, saveJson?)` | 从 `Uint8Array` 形式的 `.dzpk` 启动游戏，可同时恢复存档 |
+| `new WasmRunner(filesJson, saveJson?, language?)` | 从编辑器提供的 JSON 字符串启动，其中各文件的内容以 base64 编码 |
+| `advance(inputBitmask)` | 将游戏模拟和音频推进一帧 |
+| `present(ctx, full)` | 将累计变化绘制到 2D 画布。画布尺寸改变或上下文恢复后传入 `true` |
+| `tick(inputBitmask)` | 推进一帧并返回完整的 RGBA 快照 |
+| `take_audio()` | 取出交错排列的 44.1 kHz 立体声 `f32` 采样 |
+| `width()` / `height()` | 读取帧缓冲尺寸（320 × 240） |
+| `export_save()` / `import_save(json)` | 在可存档时导出当前状态，或恢复已有存档 |
 
-输入位掩码是 `dotzuki_renderer::input` 使用的 GB 按键掩码
-（Up/Down/Left/Right/A/B/Start/Select）。编辑器的 `src/composables/useWasmRunner.ts`
-是接线输入、音频与存档持久化的可用参考。
+每个模拟步调用一次 `advance`，之后在保留上次绘制内容的画布上调用一次 `present`。
+需要整帧像素的宿主可以使用 `tick`，该方法自身会推进模拟。
+输入掩码的第 0 至 7 位依次对应 A、B、Select、Start、右、左、上、下。
 
-## 4. 升级引擎
-
-**零 Rust 项目**——没有依赖清单；“升级”意味着使用更新的 `dotzuki` 可执行文件 / 编辑
-器。升级之前：
-
-1. 在旧工具链上运行 `dotzuki check .`——一棵干净的目录树是最安全的起点。
-2. 用新可执行文件重新检查，然后启动一次并核对游戏状态。
-3. 存档兼容性：存档带版本号（`.dotzuki-save.json`，`SAVE_VERSION` = 3）。
-   `version <= SAVE_VERSION` 的存档可以加载；比运行中引擎**更新**的存档会被拒绝，游
-   戏从头开始（文件不会被删除）。用新版本保存后再降级引擎是唯一会丢失存档的情形——
-   升级期间请保留 `.dotzuki-save.json` 的备份。
-
-**Rust 游戏仓库**（以 Cargo git 依赖方式消费引擎）：
+## 导出桌面版或移动版
 
 ```bash
-# bump the tag in Cargo.toml, then
-cargo update        # re-resolve the git dependency to the new tag
-cargo build
+dotzuki export --native . --out dist/native
+dist/native/game --headless --frames 120 --screenshot native.png
 ```
 
-升级 = bump tag + `cargo update`。见引擎 README 的 “Using the engine from a game
-repo”。同样的存档版本规则适用：新引擎读取旧存档（v1/v2/v3 都能正常加载）；旧引擎拒
-绝新存档。
+CLI 会打印可执行文件路径。以 `.` 为项目参数时，文件名是 `game`（Windows 上为
+`game.exe`）。以 `my-game` 等目录名为参数时，可执行文件使用该名称。
+将可执行文件和 `game.dzpk` 一起分发。播放器打开同目录下的游戏包，并将存档写入该目录，
+因此请选择可写的安装目录。播放器也支持旧的 `game.bundle.json` 格式。
+
+请在每个待分发的桌面操作系统上构建对应版本。在引擎源码目录中，可以用 Cargo 构建本机播放器。
+如果单独安装了 CLI，用 `--player-bin` 指定配套的可执行文件。桌面编辑器的
+**试玩 > 导出原生** 会使用随附的播放器。移动端所需的运行库和导出步骤见
+[Android 导出指南](export-android.zh-CN.md)或[鸿蒙导出指南](export-harmonyos.zh-CN.md)。
+
+## 升级现有游戏
+
+1. 备份 `.dotzuki-save.json`，用当前工具链运行 `dotzuki check .`。
+2. 升级 CLI 或编辑器。再次校验项目，载入存档，运行一个场景并完成一场战斗。
+   运行器支持格式版本 1 至 3 的存档，会拒绝更新格式的存档。
+3. 使用各目标配套的播放器或运行库重新导出，分发更新后的预编译场景数据。
+
+Rust 游戏应在 `Cargo.toml` 中一并更新各 `dotzuki-*` 依赖版本或 git 标签，然后在
+游戏仓库中运行 `cargo update` 和 `cargo build`。升级自定义战斗或移动端宿主时，
+请参阅[迁移指南](../release-notes/migration/v0.12.0.zh-CN.md)。

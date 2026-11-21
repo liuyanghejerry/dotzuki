@@ -1,12 +1,12 @@
 # 架构概览
 
-> 本文是 `explanation/architecture.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `explanation/architecture.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.12.0
 
 引擎各 crate、运行器、CLI 与编辑器如何组合在一起，以及一个零 Rust 项目如何从 DSL
 文件走到可运行的游戏。
@@ -40,16 +40,16 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 
 `.scene` / `.gui` / `.theme` / `.style` 文件经 `dotzuki-engine-dsl` 编译：
 
-- `.scene` → 由 `dotzuki-engine-script`（基于 Boa）消费的 JavaScript；
-  `dotzuki-engine-dsl` 还自带一个原生 AST 解释器
-  （`crates/dotzuki-engine-dsl/src/interpreter.rs`），无需 JS 引擎即可执行场景，
-  与 Boa 运行时协议 1:1 对应——它是场景语义的权威标准（解释器与 Boa 的取舍策略
-  见 `AGENTS.md`）。
+- 零 Rust 运行器用原生 AST 解释器执行符合条件的 `.scene` 文件。
+  如果场景需要 JavaScript，例如包含原始 `@run` 块，Boa 会执行整个场景生成的脚本。
+  具体条件见[场景参考](../reference/dsl/scene.zh-CN.md)。
 - `.gui` → 由渲染器布局引擎消费的 JSON。
 - `.theme` / `.style` → JSON token/样式表文件（见
   [theme 与 style 参考](../reference/dsl/theme-style.md)）。
 
-`dotzuki check` 在内存中编译所有内容；`dotzuki run` 用编译好的项目启动运行器。
+`dotzuki check` 在内存中编译项目 DSL，`dotzuki run` 加载项目目录。导出包保留源文件。
+通过校验且含有 DSL 文件的项目还会将[预编译场景数据](../reference/glossary.md#compiled-scene-assets)
+写入 `game.dzpk`。
 
 ## 战斗 = 效果栈
 
@@ -76,7 +76,7 @@ game project (zero-Rust)          editor (Vue/Vite + Play via WASM runner)
 | 音频 | `dotzuki-audio` | [音频指南](../how-to/audio.md) |
 | 零 Rust 运行时 | `dotzuki-runner` | [项目清单](../reference/project-manifest.md) |
 | CLI | `dotzuki-cli` | [CLI 参考](../reference/cli.md) |
-| 编辑器 | `tools/dotzuki-editor` | [编辑器 README](../../tools/dotzuki-editor/README.md) |
+| 编辑器 | `tools/dotzuki-editor` | [编辑器 README](https://github.com/liuyanghejerry/dotzuki/blob/master/workspace/tools/dotzuki-editor/README.md) |
 
 ## 相关页面
 

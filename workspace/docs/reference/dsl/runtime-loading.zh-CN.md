@@ -1,12 +1,12 @@
 # DSL 运行时加载参考
 
-> 本文是 `reference/dsl/runtime-loading.md` 的中文翻译，同步至引擎版本 v0.5.4（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/dsl/runtime-loading.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 38e455a39c8453a2c18a4283af7b343c5b586c6f）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.5.4
+> - **Last verified**: v0.12.0
 
 `dotzuki_engine_dsl::disk_loader`
 （`crates/dotzuki-engine-dsl/src/disk_loader.rs`）中以磁盘为后端的
@@ -33,12 +33,12 @@
 | `SceneAstProvider` | 原生 AST [解释器](../glossary.md) | `GameScene` AST | 是 | 是 |
 | `SceneScriptProvider` | JavaScript 引擎 | 编译后的 JS 源码 | 否 | 否 |
 
-两个 provider 目前在仓库内都没有消费方；它们是面向游戏的 API。
-`dotzuki-runner` 通过 `compiler::compile_files` +
-`loader::register_compiled` 加载 DSL 场景，不经过这些 provider。
-纯 `.js` 文件另有独立的加载器
-`dotzuki_engine_script::loader::ScriptLoader`，它不读取 `.scene`
-源文件。
+Rust 游戏宿主可以使用这两个 provider。零 Rust 运行器通过自己的文件后端读取项目源码，
+用 `compile_files_with_scene_asts` 编译。符合条件的场景由原生解释器执行，需要
+JavaScript 的场景由 Boa 执行。对于含有兼容[预编译场景数据](../glossary.md#compiled-scene-assets)的导出包，
+运行器读取包中的编译报告和路由表，并在首次使用时解码相应的原生函数。
+后端选择规则见[场景参考](scene.zh-CN.md)。Rust 宿主可用
+`dotzuki_engine_script::loader::ScriptLoader` 加载独立的 `.js` 文件。
 
 ## 目录布局约定
 
