@@ -1,6 +1,6 @@
 # 地图
 
-> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
+> 本文是 `how-to/maps.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 如何定义地图：Tiled JSON、tileset、`objects.json` 伴生文件、海拔与 encounters。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.11.0（含未发布变更）
+> - **Last verified**: v0.12.0
 
 开始前，请先阅读[项目清单](../reference/project-manifest.md)——它定义了地图目录以及
 这些文件所接入的运行器契约。

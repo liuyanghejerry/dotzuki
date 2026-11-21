@@ -1,6 +1,6 @@
 # Scene DSL 参考（`.scene`）
 
-> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit 0ad54c66b78f88c2971b2bc4be3915a37ef4ce3c）。
+> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.12.0（源文档 commit 3030dd484e28cfd7c128e8451e72b73d36913006）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `.scene` 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -9,7 +9,7 @@
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0（含未发布变更）
+> - **Last verified**: v0.12.0
 
 本页按代码实现来描述[游戏 DSL](../glossary.md) 的 `.scene` 文件；当代码与旧文档不一致时，
 以代码为准。`文件:行号` 引用均相对于仓库中的 `crates/dotzuki-engine-dsl/src/`。各构造
