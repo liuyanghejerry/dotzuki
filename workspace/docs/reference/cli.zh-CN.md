@@ -1,7 +1,7 @@
 # dotzuki CLI 参考
 
 > 本文是 `reference/cli.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
->（源文档 commit ecc68b0f2696daa3ae9386f00665a4f92425a6a6）。
+>（源文档 commit 430eaad5321c6d4a71a8703fde05ee3ea08e6c3b）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors, CI
@@ -142,7 +142,8 @@ JSON index
 启动时解码，尤其适合包含实际 tileset 与音频的项目。旧版 CLI 导出的是 base64
 `game.bundle.json`，当前 player 仍可启动该格式。
 
-DSL 编译成功后，包索引可以包含 `compiled_scenes: 1`。包内保留原始源码，
+当 CLI 将[预编译场景数据](./glossary.md#compiled-scene-assets)写入包时，会将可选的
+索引字段 `compiled_scenes` 设为 `1`。包内保留原始源码，
 并在 `.dotzuki/compiled-scenes/` 下保存编译报告、路由和原生函数的偏移量。
 播放器首次使用原生场景时将其解压，首次调用某个函数时才解码该函数。
 包含 `@run` 的场景在 Boa 中执行生成的 JavaScript。包中缺少兼容版本的产物时，

@@ -206,7 +206,7 @@ pub enum GameShellError {
 `RunnerGame::append_audio` 在可复用的队列中累计多个游戏帧的采样。
 
 CI 的 `runner-performance` 任务用 Callgrind 统计地图静止、地图滚动、背包导航、
-战斗菜单导航、PCM 渲染和携带 2,048 个存档标记的剧情激活所执行的指令数。
+战斗菜单导航、PCM 渲染和携带 2,048 个存档 flag 的剧情激活所执行的指令数。
 每个场景在 `ci/runner-performance/baseline.json` 中有独立的基线。任何一项超过
 对应基线 10% 都会使任务失败。创建测试项目和预热期间的指令不计入结果。
 

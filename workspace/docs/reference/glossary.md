@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -294,6 +294,16 @@ original form in Chinese text.
   data-driven battle system.
 - **story bible**（叙事圣经）— the seeded `data/stories/` narrative content.
 - **recipe**（配方）— a cookbook row: host X, subscribe Y, do Z, at order N.
+
+## Compiled scene assets
+
+- **compiled scene assets**（预编译场景数据）— the compile report and native
+  function data that `dotzuki export` stores in a game pack.
+- **`compiled_scenes`** — the optional DZPK index field that identifies the
+  format of the compiled scene assets. The value `1` selects the first format.
+- **native scene**（原生场景）— a scene whose storylines the runner can execute
+  with its AST interpreter. A scene containing `@run` uses Boa to execute
+  its generated JavaScript. See the [CLI export reference](./cli.md).
 
 ## Native map scenery
 

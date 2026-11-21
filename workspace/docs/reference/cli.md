@@ -142,7 +142,8 @@ inflation and its boot-time decode — worthwhile once a project ships real
 tilesets and audio. (Exports from older CLIs shipped a base64
 `game.bundle.json` instead; current players still boot it.)
 
-A successful DSL compilation adds the optional `compiled_scenes: 1` index field.
+When the CLI includes [compiled scene assets](./glossary.md#compiled-scene-assets)
+in a pack, it sets the optional `compiled_scenes` index field to `1`.
 The pack retains the original sources and stores the compile report, routes and
 native function offsets under `.dotzuki/compiled-scenes/`. The player inflates
 a native scene on first use and decodes each requested function once. Scenes

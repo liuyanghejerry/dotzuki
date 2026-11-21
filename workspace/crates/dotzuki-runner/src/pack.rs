@@ -16,7 +16,10 @@
 //! The index JSON is
 //! `{ "dotzuki": {…export metadata…}, "files": { "<path>": { "offset", "size" } } }`
 //! with `offset` relative to the start of the data section. The `dotzuki`
-//! metadata is informational only — nothing enforces it at runtime.
+//! metadata is informational only. [`encode_project_pack`] also writes the
+//! optional top-level `compiled_scenes` integer when it includes compiled
+//! scene assets. A player that recognizes this schema reads the scene index
+//! at startup. Other players can compile the original sources in the pack.
 //!
 //! [`PackFiles`] reads a pack through the [`ProjectFiles`] trait, so a packed
 //! project boots through the exact same `LoadedProject::load_with_files` path
