@@ -1,13 +1,13 @@
 # 移动端架构
 
-> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.10.0
->（源文档 commit 42bd07c7689ea7d9fbef4d49ea613f7efdd36238）。
+> 本文是 `mobile-architecture.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+>（源文档 commit 69bd910e7e4e63f5b89e7a3e737c5975456e5632）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 本文解释 dotzuki 为何采用一套 Rust 运行时契约，并为每个移动平台提供原生
 外壳；Android 和鸿蒙使用同一套带版本号的 C ABI。
@@ -62,6 +62,11 @@ Rust 内部，平台能力则从独立的 Kotlin overlay 和回调进入。共�
 使用指针的外壳要求 Rust 库导出这两个符号。
 [`MobileGame`](../reference/glossary.md#engine) 实现默认忽略指针，`tick` 的 bitmask 处理按键。
 更新外壳及运行时库前，请阅读[未发布兼容性说明](../release-notes/changelog.zh-CN.md#未发布)。
+
+Android 和 HarmonyOS 外壳调用 `dotzuki_mobile_copy_frame_update` 读取按行紧密排列的
+RGBA 矩形。该接口累计多个游戏帧的变化，返回零字节时外壳跳过显示，音频继续推进。
+创建或调整显示表面大小后，外壳请求完整矩形。使用此接口的外壳需链接导出该符号的运行库。
+现有宿主仍可用 `dotzuki_mobile_copy_frame` 获取完整快照。
 
 游戏线程独占帧和存档操作。一个音频回调可同时调用 `audio_fill`。
 无锁的单生产者、单消费者 ring buffer 隔离游戏循环和音频回调。
