@@ -105,7 +105,7 @@ pub fn run(args: &HarmonyExportArgs) -> Result<PathBuf> {
         &out,
         &diagnostics.manifest.name,
         &format!("com.dotzuki.{slug}"),
-        &bundle::serialize_pack(&files),
+        &bundle::serialize_pack(&files)?,
         &mobile_lib,
     )?;
     println!(

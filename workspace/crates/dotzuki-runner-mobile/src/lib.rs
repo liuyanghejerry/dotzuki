@@ -71,10 +71,7 @@ impl MobileGame for RunnerAdapter {
         Some(&self.frame)
     }
     fn render_audio(&mut self, out: &mut [f32]) {
-        let pcm = self.game.render_audio(out.len() / 2);
-        out.fill(0.0);
-        let n = out.len().min(pcm.len());
-        out[..n].copy_from_slice(&pcm[..n]);
+        self.game.render_audio_into(out);
     }
     fn export_save(&self) -> Option<String> {
         self.game.export_save()

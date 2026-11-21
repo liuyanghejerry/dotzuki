@@ -44,6 +44,11 @@ pub trait ProjectFiles {
         false
     }
 
+    /// Scene artifact schema advertised by a packed export. Loose projects compile their sources.
+    fn compiled_scene_version(&self) -> Option<u32> {
+        None
+    }
+
     /// Optional revision for a file or directory. Backends without reliable
     /// change tracking may leave this unset.
     fn revision(&self, _path: &str) -> Option<FileRevision> {

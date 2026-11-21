@@ -3,7 +3,7 @@
 > - **Audience**: game authors, CI
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 Every `dotzuki` subcommand, flag and exit code for scaffolding, validating,
 running and exporting zero-Rust game projects.
@@ -142,11 +142,19 @@ inflation and its boot-time decode — worthwhile once a project ships real
 tilesets and audio. (Exports from older CLIs shipped a base64
 `game.bundle.json` instead; current players still boot it.)
 
-Pack rules (identical to the editor's play bundle): everything except
-`node_modules`/`.git`/`target`/`dist`, dot-directories, dotfiles and `*.bak` —
-except `.dotzuki-editor.json`, which always ships. Caps: 16 MB per file, 64 MB
-total (uncompressed). The `dotzuki.version` field records the exporting CLI
-version; it is informational and nothing enforces it at runtime.
+A successful DSL compilation adds the optional `compiled_scenes: 1` index field.
+The pack retains the original sources and stores the compile report, routes and
+native function offsets under `.dotzuki/compiled-scenes/`. The player inflates
+a native scene on first use and decodes each requested function once. Scenes
+containing `@run` execute their generated JavaScript in Boa. Players reading
+a pack with no compatible artifact version compile the bundled sources.
+An export forced past DSL errors retains those source diagnostics at boot.
+
+The CLI collects project inputs with the editor's play-bundle rules. It skips
+`node_modules`, `.git`, `target`, `dist`, hidden files and directories, and
+`*.bak`. It includes `.dotzuki-editor.json`. The 16 MiB per-file and 64 MiB
+total limits apply to the collected inputs. Generated scene artifacts add to
+the pack size. The `dotzuki.version` field identifies the exporting CLI.
 
 The runner wasm package is resolved in this order: `--runner-pkg` → the
 prebuilt `workspace/crates/dotzuki-runner-web/pkg` → build it with

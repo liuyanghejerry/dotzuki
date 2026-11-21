@@ -1,0 +1,12 @@
+{
+  "rust": "1.89.0",
+  "tolerance_percent": 10,
+  "instructions": {
+    "idle_map": 51333,
+    "scrolling": 43310727,
+    "bag": 116533,
+    "battle": 156084,
+    "pcm": 167162167,
+    "scene_flags": 5470683
+  }
+}

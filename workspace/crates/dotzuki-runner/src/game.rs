@@ -71,6 +71,7 @@
 use std::collections::HashSet;
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use crate::scene::SceneVm;
 use anyhow::{Context, Result};
@@ -341,7 +342,7 @@ pub struct RunnerGame {
     /// `gfx/overworld/player/sheet.png` when the project ships one.
     player_sprite: Option<WalkSprite>,
     /// Persistent story flags (cross-scene truth).
-    flags: HashMap<String, bool>,
+    flags: Rc<HashMap<String, bool>>,
     lang: String,
     mode: Mode,
     /// In-progress overworld warp fade (owns input while active).
@@ -464,7 +465,7 @@ fn scene_has_fn(project: &LoadedProject, scene: &str, fn_name: &str) -> bool {
     if let Some(native) = project.native_scenes.get(scene) {
         return native.function(fn_name).is_some();
     }
-    let Some(js) = project.scripts().get_script(scene) else {
+    let Some(js) = project.scene_js(scene) else {
         return false;
     };
     js.contains(&format!("storyline_{fn_name}")) || js.contains(&format!("function {fn_name}"))

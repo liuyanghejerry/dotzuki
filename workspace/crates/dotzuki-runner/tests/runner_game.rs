@@ -9,6 +9,8 @@
 
 #[path = "support/frames.rs"]
 mod frames;
+#[path = "support/performance.rs"]
+mod performance;
 
 use std::collections::HashSet;
 use std::fs;
@@ -587,9 +589,7 @@ fn retained_frames_match_complete_frames_and_bound_every_change() {
     assert_eq!(fresh.data, reference.data);
 }
 
-#[test]
-fn retained_scrolling_matches_full_frames_in_every_direction() {
-    let (tmp, mut game) = navigation_game("scroll-pixels");
+fn set_up_scrolling_map(tmp: &TestDir, game: &mut RunnerGame) {
     let path = tmp.path().join("demo/data/maps/Town/map.tmx.json");
     let mut map: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
     map["width"] = 40.into();
@@ -606,6 +606,12 @@ fn retained_scrolling_matches_full_frames_in_every_direction() {
     fs::write(path, map.to_string()).unwrap();
     assert!(game.reload_current_map());
     game.debug_place(20, 15, Direction::Right);
+}
+
+#[test]
+fn retained_scrolling_matches_full_frames_in_every_direction() {
+    let (tmp, mut game) = navigation_game("scroll-pixels");
+    set_up_scrolling_map(&tmp, &mut game);
     let mut frames = frames::Frames::new();
     frames.check(&mut game);
     for (x, y) in [(208., 120.), (160., 168.), (112., 120.), (160., 72.)] {

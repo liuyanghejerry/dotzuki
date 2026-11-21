@@ -367,13 +367,30 @@ impl RunnerAudio {
     /// to) a live output stream, and advance the sequencer with
     /// [`update_frame`](Self::update_frame) once per video frame as usual.
     pub fn render_samples(&mut self, frames: usize) -> Vec<f32> {
+        let mut samples = Vec::new();
+        self.append_samples(frames, &mut samples);
+        samples
+    }
+
+    /// Append frames to a reusable host queue. Audio startup determines when the first samples are appended.
+    pub fn append_samples(&mut self, frames: usize, samples: &mut Vec<f32>) {
+        let Some(engine) = &self.engine else { return };
+        let start = samples.len();
+        samples.resize(start + 2 * frames, 0.0);
+        render_into(&mut engine.lock().unwrap(), &mut samples[start..]);
+    }
+
+    /// Fill caller-owned interleaved stereo PCM and return the number of samples
+    /// rendered. Silence before engine startup and an unpaired tail are zeroed.
+    pub fn render_samples_into(&mut self, out: &mut [f32]) -> usize {
         let Some(engine) = &self.engine else {
-            return Vec::new();
+            out.fill(0.0);
+            return 0;
         };
-        let mut e = engine.lock().unwrap();
-        let mut data = vec![0.0; frames * 2];
-        render_into(&mut e, &mut data);
-        data
+        let len = out.len() / 2 * 2;
+        render_into(&mut engine.lock().unwrap(), &mut out[..len]);
+        out[len..].fill(0.0);
+        len
     }
 
     /// The shared engine, lazily initialised on first use. Returns `None`
@@ -654,23 +671,7 @@ mod tests {
     use crate::vfs::MemoryFiles;
 
     /// A minimal valid music track (dotzuki-audio `TrackDef` JSON).
-    const THEME_JSON: &str = r#"{
-      "id": "theme",
-      "kind": "music",
-      "tempo": 256,
-      "channels": [
-        {
-          "hw": "pulse1",
-          "commands": [
-            { "type": "note_type", "speed": 12, "param": 197 },
-            { "type": "octave", "value": 5 },
-            { "type": "note", "pitch": 0, "length": 4 },
-            { "type": "rest", "length": 4 },
-            { "type": "sound_ret" }
-          ]
-        }
-      ]
-    }"#;
+    const THEME_JSON: &str = include_str!("../tests/fixtures/theme.json");
 
     /// A `RunnerAudio` in PCM render mode with a one-track library and no
     /// device access — the WASM shell setup.
@@ -801,6 +802,26 @@ mod tests {
             pcm.iter().any(|s| *s != 0.0),
             "playing music must render non-silent samples"
         );
+    }
+
+    #[test]
+    fn caller_buffer_matches_owned_stereo_and_zeroes_an_unpaired_sample() {
+        let (mut a, mut b) = (pcm_audio(), pcm_audio());
+        let mut buf = [f32::NAN; 1479];
+        assert_eq!(a.render_samples_into(&mut buf), 0);
+        assert!(buf.iter().all(|s| *s == 0.0));
+        for audio in [&mut a, &mut b] {
+            audio.play_music("theme");
+            audio.update_frame();
+        }
+        for frames in [0, 738, 739, 3] {
+            let n = 2 * frames;
+            let expected = a.render_samples(frames);
+            buf[n] = f32::NAN;
+            assert_eq!(b.render_samples_into(&mut buf[..=n]), n);
+            assert_eq!(expected, &buf[..n]);
+            assert_eq!(buf[n], 0.0);
+        }
     }
 
     #[test]

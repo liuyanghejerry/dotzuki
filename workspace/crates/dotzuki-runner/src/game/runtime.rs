@@ -66,7 +66,7 @@ impl RunnerGame {
             pending_destination: None,
             navigation_failure: None,
             player_sprite,
-            flags: HashMap::new(),
+            flags: Rc::default(),
             lang,
             mode: Mode::Idle,
             transition: None,
@@ -219,7 +219,7 @@ impl RunnerGame {
             None => None,
         };
         self.cancel_navigation();
-        self.flags.extend(save.flags);
+        Rc::make_mut(&mut self.flags).extend(save.flags);
         self.heal_point = save.heal_point;
         // v2 fields: a v1 save (or a v2 save that never battled) has neither —
         // the first battle then starts from the records / starting counts.
@@ -313,7 +313,7 @@ impl RunnerGame {
             map: self.current_map_id().map(str::to_string),
             player: self.player_location(),
             heal_point: self.heal_point.clone(),
-            flags: self.flags.clone(),
+            flags: self.flags.as_ref().clone(),
             lang: Some(self.lang.clone()),
             party: self.party_state.as_ref().map(|party| {
                 party
@@ -411,7 +411,7 @@ impl RunnerGame {
             && scene_has_fn(&self.project, &scene, "main")
         {
             // Set before playing so a failing scene can't retrigger every entry.
-            self.flags.insert(played_flag, true);
+            Rc::make_mut(&mut self.flags).insert(played_flag, true);
             self.activate(&scene, "main");
         }
     }
@@ -430,7 +430,7 @@ impl RunnerGame {
                 return Some(name.clone());
             }
         }
-        if self.project.scripts().has_script(map_id) {
+        if self.project.stem_for_scene_name(map_id).is_some() {
             return Some(map_id.to_string());
         }
         None
@@ -540,12 +540,12 @@ impl RunnerGame {
                 }
                 Some(ScriptCommand::SetFlag { flag }) => {
                     engine.set_flag(&flag, true);
-                    self.flags.insert(flag, true);
+                    Rc::make_mut(&mut self.flags).insert(flag, true);
                     cmd = self.signal(&mut engine, CommandResult::Void);
                 }
                 Some(ScriptCommand::ResetFlag { flag }) => {
                     engine.set_flag(&flag, false);
-                    self.flags.insert(flag, false);
+                    Rc::make_mut(&mut self.flags).insert(flag, false);
                     cmd = self.signal(&mut engine, CommandResult::Void);
                 }
                 Some(ScriptCommand::CheckFlag { flag }) => {
@@ -726,7 +726,10 @@ impl RunnerGame {
     /// battle's whiteout takes precedence over both — the queued scenes
     /// belong to a map the player is about to leave.
     fn finish_scene(&mut self, engine: SceneVm) {
-        self.flags.extend(engine.into_flags());
+        let changes = engine.into_flag_changes();
+        if !changes.is_empty() {
+            Rc::make_mut(&mut self.flags).extend(changes);
+        }
         self.active_scene = None;
         self.mode = if self.map.is_some() {
             Mode::Overworld
@@ -1608,6 +1611,16 @@ impl RunnerGame {
     /// command has arrived.
     pub fn render_audio(&mut self, frames: usize) -> Vec<f32> {
         self.audio.render_samples(frames)
+    }
+
+    /// Append interleaved stereo PCM to a host queue when audio has started.
+    pub fn append_audio(&mut self, frames: usize, samples: &mut Vec<f32>) {
+        self.audio.append_samples(frames, samples);
+    }
+
+    /// Fill caller-owned stereo PCM; returns the number of rendered samples.
+    pub fn render_audio_into(&mut self, out: &mut [f32]) -> usize {
+        self.audio.render_samples_into(out)
     }
 
     /// Teleport the player (test/debug helper; no scene side effects).

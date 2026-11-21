@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -70,13 +71,56 @@ struct PendingResolve {
     resolve_fn: JsFunction,
 }
 
+/// Scene-local flag writes over a shared snapshot of a game's persistent flags.
+#[derive(Default)]
+pub struct SceneFlags {
+    base: Option<Rc<HashMap<String, bool>>>,
+    changes: HashMap<String, bool>,
+}
+
+impl SceneFlags {
+    pub fn from_snapshot(base: Rc<HashMap<String, bool>>) -> Self {
+        Self {
+            base: Some(base),
+            changes: HashMap::new(),
+        }
+    }
+
+    pub fn get(&self, flag: &str) -> bool {
+        self.changes
+            .get(flag)
+            .or_else(|| self.base.as_ref()?.get(flag))
+            .copied()
+            .unwrap_or(false)
+    }
+
+    pub fn set(&mut self, flag: String, value: bool) {
+        if self.base.as_ref().and_then(|base| base.get(&flag)) == Some(&value) {
+            self.changes.remove(&flag);
+        } else {
+            self.changes.insert(flag, value);
+        }
+    }
+
+    /// Includes an explicitly reset flag even when it was absent at scene start.
+    pub fn into_changes(self) -> HashMap<String, bool> {
+        self.changes
+    }
+
+    fn snapshot(&self) -> HashMap<String, bool> {
+        let mut flags = self.base.as_deref().cloned().unwrap_or_default();
+        flags.extend(self.changes.clone());
+        flags
+    }
+}
+
 /// Shared state between the JS runtime and the Rust game loop.
 /// Commands issued by JS `await game.showText(...)` are placed here;
 /// the game loop reads them, executes the operation, then calls `signal_done`.
 pub struct SharedBridge {
     pending_command: Option<ScriptCommand>,
     pending_resolve: Option<PendingResolve>,
-    flags: std::collections::HashMap<String, bool>,
+    flags: SceneFlags,
     /// Generic, game-agnostic seeded query state read by synchronous JS
     /// query functions (registered via `register_sync_fn`). The core engine
     /// does not know what these keys mean — the game layer seeds them and
@@ -100,7 +144,7 @@ impl SharedBridge {
         Self {
             pending_command: None,
             pending_resolve: None,
-            flags: std::collections::HashMap::new(),
+            flags: SceneFlags::default(),
             numbers: std::collections::HashMap::new(),
             texts: std::collections::HashMap::new(),
             sets: std::collections::HashMap::new(),
@@ -136,7 +180,7 @@ impl<'a> BridgeView<'a> {
     }
     /// Boolean flag value (defaults to `false`).
     pub fn flag(&self, k: &str) -> bool {
-        self.inner.flags.get(k).copied().unwrap_or(false)
+        self.inner.flags.get(k)
     }
 }
 
@@ -188,25 +232,27 @@ impl ScriptEngine {
     }
 
     pub fn set_flag(&mut self, flag: &str, value: bool) {
-        self.bridge
-            .borrow_mut()
-            .flags
-            .insert(flag.to_string(), value);
+        self.bridge.borrow_mut().flags.set(flag.to_string(), value);
     }
 
     pub fn get_flag(&self, flag: &str) -> bool {
-        self.bridge
-            .borrow()
-            .flags
-            .get(flag)
-            .copied()
-            .unwrap_or(false)
+        self.bridge.borrow().flags.get(flag)
     }
 
     /// Return a snapshot of all flags currently held in the bridge.
     /// Used by the overworld to persist flags across map transitions.
     pub fn get_all_flags(&self) -> std::collections::HashMap<String, bool> {
-        self.bridge.borrow().flags.clone()
+        self.bridge.borrow().flags.snapshot()
+    }
+
+    /// Start a fresh flag transaction over this snapshot.
+    pub fn set_flag_snapshot(&mut self, flags: Rc<HashMap<String, bool>>) {
+        self.bridge.borrow_mut().flags = SceneFlags::from_snapshot(flags);
+    }
+
+    /// Finish the transaction and release the snapshot held by JS bridge closures.
+    pub fn into_flag_changes(self) -> HashMap<String, bool> {
+        std::mem::take(&mut self.bridge.borrow_mut().flags).into_changes()
     }
 
     /// Bulk-insert flags into the bridge (additive — does not clear existing).
@@ -214,7 +260,7 @@ impl ScriptEngine {
     pub fn seed_flags(&mut self, flags: &std::collections::HashMap<String, bool>) {
         let mut b = self.bridge.borrow_mut();
         for (k, v) in flags {
-            b.flags.insert(k.clone(), *v);
+            b.flags.set(k.clone(), *v);
         }
     }
 
@@ -558,6 +604,13 @@ impl ScriptEngine {
         let mut engine = Self::new();
         registrar.register_api(&mut engine);
         engine
+    }
+}
+
+impl Drop for ScriptEngine {
+    fn drop(&mut self) {
+        // JS closures can outlive an abandoned scene until Boa's next GC.
+        self.bridge.borrow_mut().flags.base.take();
     }
 }
 
@@ -1374,7 +1427,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                     .get_or_undefined(0)
                     .to_string(ctx)?
                     .to_std_string_lossy();
-                let val = bridge.borrow().flags.get(&flag).copied().unwrap_or(false);
+                let val = bridge.borrow().flags.get(&flag);
                 Ok(JsValue::from(val))
             })
         };
@@ -1398,7 +1451,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                     .get_or_undefined(0)
                     .to_string(ctx)?
                     .to_std_string_lossy();
-                bridge.borrow_mut().flags.insert(flag, true);
+                bridge.borrow_mut().flags.set(flag, true);
                 Ok(JsValue::undefined())
             })
         };
@@ -1422,7 +1475,7 @@ fn register_core_game_api(context: &mut Context, bridge: Rc<RefCell<SharedBridge
                     .get_or_undefined(0)
                     .to_string(ctx)?
                     .to_std_string_lossy();
-                bridge.borrow_mut().flags.insert(flag, false);
+                bridge.borrow_mut().flags.set(flag, false);
                 Ok(JsValue::undefined())
             })
         };

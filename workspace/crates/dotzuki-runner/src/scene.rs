@@ -5,21 +5,26 @@ use dotzuki_engine_dsl::core_host::{
     dispatch_core_async, is_core_function, CORE_ASYNC_FUNCTIONS, CORE_STATEFUL_FUNCTIONS,
 };
 use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, ScriptHost, Value};
-use dotzuki_engine_script::{engine::ScriptEngine, CommandResult, ScriptCommand};
-use std::collections::HashMap;
+use dotzuki_engine_script::{
+    engine::{SceneFlags, ScriptEngine},
+    CommandResult, ScriptCommand,
+};
+use std::collections::{BTreeMap, HashMap};
+use std::rc::Rc;
 
-pub(crate) struct NativeScene {
-    functions: HashMap<String, Vec<StoryStmt>>,
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct NativeScene<F> {
+    functions: BTreeMap<String, F>,
     variables: Vec<VariableDecl>,
 }
 
-impl NativeScene {
+impl NativeScene<Vec<StoryStmt>> {
     pub(crate) fn from_ast(scene: GameScene) -> Option<Self> {
         let variables = scene.variables.map(|v| v.decls).unwrap_or_default();
         if !variables.iter().all(|d| native_expression(&d.value, true)) {
             return None;
         }
-        let mut functions = HashMap::new();
+        let mut functions = BTreeMap::new();
         for story in scene.storylines {
             if !native_block(&story.statements) {
                 return None;
@@ -37,12 +42,33 @@ impl NativeScene {
             variables,
         })
     }
+}
 
-    pub(crate) fn function(&self, name: &str) -> Option<&[StoryStmt]> {
+impl<F> NativeScene<F> {
+    pub(crate) fn map_functions<T, E>(
+        self,
+        mut convert: impl FnMut(F) -> Result<T, E>,
+    ) -> Result<NativeScene<T>, E> {
+        let functions = self
+            .functions
+            .into_iter()
+            .map(|(name, body)| Ok((name, convert(body)?)))
+            .collect::<Result<_, E>>()?;
+        Ok(NativeScene {
+            variables: self.variables,
+            functions,
+        })
+    }
+
+    pub(crate) fn map<T>(self, convert: impl Fn(F) -> T) -> NativeScene<T> {
+        let Ok(scene) = self.map_functions(|body| Ok::<_, std::convert::Infallible>(convert(body)));
+        scene
+    }
+
+    pub(crate) fn function(&self, name: &str) -> Option<&F> {
         self.functions
             .get(name)
             .or_else(|| self.functions.get(&format!("storyline_{name}")))
-            .map(Vec::as_slice)
     }
 }
 
@@ -132,7 +158,7 @@ fn native_block(body: &[StoryStmt]) -> bool {
 }
 
 pub(crate) struct RunnerHost {
-    flags: HashMap<String, bool>,
+    flags: SceneFlags,
     lang: String,
     position: (u8, u8),
     rng: dotzuki_engine_script::ScriptRng,
@@ -175,9 +201,9 @@ impl ScriptHost for RunnerHost {
             "getFlag" | "setFlag" | "resetFlag" => {
                 let flag = args.first().unwrap_or(&Value::Undefined).to_text();
                 if name == "getFlag" {
-                    Value::Bool(self.flags.get(&flag).copied().unwrap_or(false))
+                    Value::Bool(self.flags.get(&flag))
                 } else {
-                    self.flags.insert(flag, name == "setFlag");
+                    self.flags.set(flag, name == "setFlag");
                     Value::Undefined
                 }
             }
@@ -213,7 +239,7 @@ impl SceneVm {
         project: &LoadedProject,
         scene: &str,
         function: &str,
-        flags: &HashMap<String, bool>,
+        flags: &Rc<HashMap<String, bool>>,
         lang: &str,
         position: (u8, u8),
     ) -> Result<(Self, Option<ScriptCommand>), String> {
@@ -221,8 +247,11 @@ impl SceneVm {
             let body = native
                 .function(function)
                 .ok_or_else(|| format!("missing function {function}"))?;
+            let body = body
+                .statements(project.files().as_ref())
+                .map_err(|e| format!("{scene}::{function}: {e}"))?;
             let host = RunnerHost {
-                flags: flags.clone(),
+                flags: SceneFlags::from_snapshot(Rc::clone(flags)),
                 lang: lang.to_owned(),
                 position,
                 rng: Default::default(),
@@ -233,11 +262,10 @@ impl SceneVm {
             Ok((Self::Native(vm), cmd))
         } else {
             let js = project
-                .scripts()
-                .get_script(scene)
+                .scene_js(scene)
                 .ok_or_else(|| format!("missing scene {scene}"))?;
             let mut vm = boa_engine();
-            vm.seed_flags(flags);
+            vm.set_flag_snapshot(Rc::clone(flags));
             vm.set_lang(lang);
             vm.set_player_position(position.0, position.1);
             vm.load_script(js).map_err(|e| e.to_string())?;
@@ -264,16 +292,16 @@ impl SceneVm {
     pub(crate) fn set_flag(&mut self, flag: &str, value: bool) {
         match self {
             Self::Native(vm) => {
-                vm.host_mut().flags.insert(flag.to_owned(), value);
+                vm.host_mut().flags.set(flag.to_owned(), value);
             }
             Self::Boa(vm) => vm.set_flag(flag, value),
         }
     }
 
-    pub(crate) fn into_flags(self) -> HashMap<String, bool> {
+    pub(crate) fn into_flag_changes(self) -> HashMap<String, bool> {
         match self {
-            Self::Native(mut vm) => std::mem::take(&mut vm.host_mut().flags),
-            Self::Boa(vm) => vm.get_all_flags(),
+            Self::Native(mut vm) => std::mem::take(&mut vm.host_mut().flags).into_changes(),
+            Self::Boa(vm) => vm.into_flag_changes(),
         }
     }
 }
@@ -364,7 +392,7 @@ mod tests {
             "return",
             r#"@if (true) { @run { game.setFlag("raw"); } } return"#,
         );
-        let flags = HashMap::from([("joined".into(), true)]);
+        let flags = Rc::new(HashMap::from([("joined".into(), true)]));
         for (source, is_native) in [(STORY, true), (raw.as_str(), false)] {
             let project = project(source);
             let (mut vm, command) =
@@ -413,8 +441,8 @@ mod tests {
             );
             assert_eq!(vm.signal_done(CommandResult::Void).unwrap(), None);
             assert_eq!(
-                vm.into_flags(),
-                HashMap::from([("joined".into(), true), ("won".into(), true)])
+                vm.into_flag_changes(),
+                HashMap::from([("won".into(), true)])
             );
             // Execute the other nested choice in the JavaScript scene as well.
             if !is_native {
@@ -423,7 +451,7 @@ mod tests {
                         .unwrap();
                 vm.signal_done(CommandResult::Void).unwrap();
                 assert_eq!(vm.signal_done(CommandResult::Number(1.0)).unwrap(), None);
-                assert_eq!(vm.into_flags().get("raw"), Some(&true));
+                assert_eq!(vm.into_flag_changes().get("raw"), Some(&true));
             }
         }
     }
@@ -440,7 +468,7 @@ mod tests {
         ] {
             let project = project(story);
             let (vm, cmd) =
-                SceneVm::start(&project, "Test", name, &HashMap::new(), "en", (0, 0)).unwrap();
+                SceneVm::start(&project, "Test", name, &Rc::default(), "en", (0, 0)).unwrap();
             assert!(matches!(vm, SceneVm::Native(_)));
             assert_eq!(
                 cmd,
@@ -465,7 +493,7 @@ mod tests {
         let run = |source: &str, is_native: bool| {
             let project = project(source);
             let (mut vm, first) =
-                SceneVm::start(&project, "Test", "main", &HashMap::new(), "en", (0, 0)).unwrap();
+                SceneVm::start(&project, "Test", "main", &Rc::default(), "en", (0, 0)).unwrap();
             assert_eq!(matches!(vm, SceneVm::Native(_)), is_native);
             let mut commands = vec![first.unwrap()];
             while let Some(cmd) = vm.signal_done(CommandResult::Void).unwrap() {
@@ -488,9 +516,53 @@ mod tests {
     fn inputs_that_require_javascript_coercion_keep_their_behavior() {
         let project = project(r#"game_scene Test { @storylines { @command("delay","2") } }"#);
         let (vm, cmd) =
-            SceneVm::start(&project, "Test", "main", &HashMap::new(), "en", (0, 0)).unwrap();
+            SceneVm::start(&project, "Test", "main", &Rc::default(), "en", (0, 0)).unwrap();
         assert!(matches!(vm, SceneVm::Boa(_)));
         assert_eq!(cmd, Some(ScriptCommand::Delay { frames: 2 }));
+    }
+
+    #[test]
+    fn both_vms_drop_the_snapshot_and_return_only_final_changes() {
+        let story = r#"game_scene Test { @storylines { @speaker("") { "Wait" } } }"#;
+        for source in [
+            story.to_string(),
+            story.replace("@speaker", "@run { } @speaker"),
+        ] {
+            let project = project(&source);
+            let flags = Rc::new(HashMap::from([
+                ("initial".into(), true),
+                ("old".into(), true),
+            ]));
+            let (mut vm, _) =
+                SceneVm::start(&project, "Test", "main", &flags, "en", (0, 0)).unwrap();
+            vm.set_flag("initial", false);
+            vm.set_flag("initial", true);
+            vm.set_flag("old", false);
+            vm.set_flag("explicit_false", false);
+            assert_eq!(vm.signal_done(CommandResult::Void).unwrap(), None);
+            let delta = vm.into_flag_changes();
+            assert_eq!(
+                delta,
+                HashMap::from([("old".into(), false), ("explicit_false".into(), false)])
+            );
+            assert_eq!(Rc::strong_count(&flags), 1);
+        }
+    }
+
+    #[test]
+    fn boa_flag_snapshot_is_released_when_a_scene_is_abandoned() {
+        let mut vm = ScriptEngine::new();
+        let flags = Rc::new(HashMap::from([("known".into(), true)]));
+        vm.set_flag_snapshot(Rc::clone(&flags));
+        vm.seed_flags(&HashMap::from([("more".into(), true)]));
+        vm.set_flag("known", false);
+        assert!(vm.get_flag("more"));
+        assert_eq!(
+            vm.get_all_flags(),
+            HashMap::from([("known".into(), false), ("more".into(), true)])
+        );
+        drop(vm);
+        assert_eq!(Rc::strong_count(&flags), 1);
     }
 
     #[test]
@@ -499,19 +571,30 @@ mod tests {
         let source = r#"game_scene Test { @storylines { @speaker("Guide") { "Welcome." } } }"#;
         let raw = source.replace("@speaker", "@run { } @speaker");
         for (label, project) in [("native", project(source)), ("Boa", project(&raw))] {
-            let flags = HashMap::new();
-            let activate = || {
-                let (vm, command) =
-                    SceneVm::start(&project, "Test", "main", &flags, "en", (0, 0)).unwrap();
-                assert!(matches!(command, Some(ScriptCommand::ShowText { .. })));
-                std::hint::black_box(vm);
-            };
-            activate();
-            let start = std::time::Instant::now();
-            for _ in 0..200 {
+            for size in [0, 2048] {
+                let flags = Rc::new((0..size).map(|n| (format!("flag{n}"), true)).collect());
+                let activate = || {
+                    let (mut vm, command) =
+                        SceneVm::start(&project, "Test", "main", &flags, "en", (0, 0)).unwrap();
+                    assert!(matches!(command, Some(ScriptCommand::ShowText { .. })));
+                    assert_eq!(vm.signal_done(CommandResult::Void).unwrap(), None);
+                    std::hint::black_box(vm.into_flag_changes());
+                };
                 activate();
+                let mut times = Vec::new();
+                for _ in 0..7 {
+                    let start = std::time::Instant::now();
+                    for _ in 0..200 {
+                        activate();
+                    }
+                    times.push(start.elapsed());
+                }
+                times.sort();
+                eprintln!(
+                    "{label}, {size} flags, 200 complete conversations: {:?}",
+                    times[3]
+                );
             }
-            eprintln!("{label}, 200 activations: {:?}", start.elapsed());
         }
     }
 }

@@ -83,6 +83,33 @@ jobs:
           ./target/debug/dotzuki check examples/your-first-game
           ./target/debug/dotzuki run examples/your-first-game --headless --frames 180
 
+  runner-performance:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: workspace
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: workspace
+          shared-key: runner-performance-1.89
+      - name: Install Callgrind
+        run: sudo apt-get update && sudo apt-get install -y valgrind
+      - name: Check historical scenario budgets
+        run: python3 scripts/runner-performance.py --output runner-counts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runner-instruction-counts
+          path: workspace/runner-counts.json
+          if-no-files-found: ignore
+
   gba-frame-budget:
     runs-on: ubuntu-latest
     permissions:

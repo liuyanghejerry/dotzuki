@@ -127,7 +127,7 @@ fn write_site(
             .with_context(|| format!("failed to copy {file} from {}", pkg.display()))?;
     }
 
-    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(files))
+    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(files)?)
         .context("failed to write game.dzpk")?;
 
     let key = save_key

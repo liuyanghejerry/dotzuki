@@ -43,12 +43,12 @@ pub fn collect_project_files(root: &Path) -> Result<BTreeMap<String, Vec<u8>>> {
 /// Serialize collected files into the `game.dzpk` bytes every export target
 /// ships. The stamped metadata is informational only — nothing enforces it at
 /// runtime.
-pub fn serialize_pack(files: &BTreeMap<String, Vec<u8>>) -> Vec<u8> {
+pub fn serialize_pack(files: &BTreeMap<String, Vec<u8>>) -> Result<Vec<u8>> {
     let exported_at = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    pack::encode_pack(
+    pack::encode_project_pack(
         files,
         serde_json::json!({
             "tool": "dotzuki-cli",
@@ -193,10 +193,14 @@ mod tests {
     #[test]
     fn serialize_pack_round_trips_through_pack_files() {
         let files = BTreeMap::from([
+            (
+                MANIFEST_FILE.into(),
+                br#"{"name":"demo","dataRoot":"data","activities":[]}"#.to_vec(),
+            ),
             ("a/b.txt".to_string(), b"hello".to_vec()),
             ("c.bin".to_string(), vec![0, 1, 2, 255]),
         ]);
-        let pack = pack::PackFiles::from_bytes(serialize_pack(&files)).unwrap();
+        let pack = pack::PackFiles::from_bytes(serialize_pack(&files).unwrap()).unwrap();
         assert_eq!(pack.read("a/b.txt").unwrap(), b"hello");
         assert_eq!(pack.read("c.bin").unwrap(), vec![0, 1, 2, 255]);
     }

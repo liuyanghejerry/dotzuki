@@ -63,7 +63,7 @@ pub fn run(args: &NativeExportArgs) -> Result<PathBuf> {
             player_bin.display()
         )
     })?;
-    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(&files))
+    fs::write(out.join(bundle::PACK_FILE), bundle::serialize_pack(&files)?)
         .context("failed to write game.dzpk")?;
 
     let bundle_bytes = fs::metadata(out.join(bundle::PACK_FILE))
