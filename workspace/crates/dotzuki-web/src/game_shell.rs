@@ -6,9 +6,8 @@
 //! (4194304 Hz / 70224 cycles ≈ 59.7275 Hz), plus the browser plumbing a wasm
 //! game needs — replacing a placeholder `<canvas>` in the host page, tracking
 //! its parent's width on window resize, an optional FPS-counter element, and
-//! deadline-driven simulation (`ControlFlow::WaitUntil` + `EventLoop::spawn`).
-//! Redraw requests are presented by the browser. Explicit deadlines keep the
-//! game advancing without input while yielding the main thread between frames.
+//! continuous `requestAnimationFrame` redraws. The browser event loop waits
+//! between paints; simulation keeps its fixed hardware rate on any display.
 //!
 //! Button events are buffered until the next simulation update, so short taps
 //! survive frame pacing. Losing focus clears held and pending buttons.
@@ -28,7 +27,9 @@ use pixels::{PixelsBuilder, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{ElementState, Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
-use winit::keyboard::{KeyCode, PhysicalKey};
+#[cfg(not(target_arch = "wasm32"))]
+use winit::keyboard::KeyCode;
+use winit::keyboard::PhysicalKey;
 use winit::window::Window;
 
 use dotzuki_renderer::input::{BufferedInput, InputState};
@@ -40,9 +41,8 @@ use std::time::{Duration, Instant};
 /// GB VBlank: 4194304 Hz / 70224 cycles ≈ 59.7275 Hz (≈16.7427 ms per frame).
 #[cfg(not(target_arch = "wasm32"))]
 const FRAME_DURATION: Duration = Duration::from_nanos(16_742_706);
-/// Milliseconds per GB frame (≈16.7427 ms).
-#[cfg(target_arch = "wasm32")]
-const FRAME_MS: f64 = 1_000.0 * 70_224.0 / 4_194_304.0;
+#[cfg(any(target_arch = "wasm32", test))]
+mod frame_clock;
 
 /// A game driven by [`run_game`]. Mirrors
 /// `dotzuki_renderer::window::GameLoop` (native-only); kept as a separate
@@ -92,8 +92,8 @@ pub struct GameShellConfig {
     /// shell replaces it with the winit canvas and tracks its parent's width
     /// when sizing the surface.
     pub canvas_id: String,
-    /// (wasm only) DOM id of an element updated with `"NN FPS"` roughly every
-    /// 30 frames; `None` disables the FPS counter.
+    /// (wasm only) DOM id updated with `"NN FPS"` every 30 rendered frames.
+    /// This counts completed renders, not simulation ticks; `None` disables it.
     pub fps_element_id: Option<String>,
 }
 
@@ -165,6 +165,9 @@ pub async fn run_game<G: GameLoop + 'static>(
     game: Rc<RefCell<G>>,
 ) -> Result<(), GameShellError> {
     let event_loop = EventLoop::new().map_err(|e| GameShellError::EventLoop(e.to_string()))?;
+    // requestAnimationFrame wakes the browser without idle polling. Native
+    // deadlines below yield through WaitUntil instead.
+    event_loop.set_control_flow(ControlFlow::Wait);
 
     let (fb_width, fb_height) = (config.width, config.height);
     let window = {
@@ -228,13 +231,12 @@ pub async fn run_game<G: GameLoop + 'static>(
     #[cfg(not(target_arch = "wasm32"))]
     let mut next_frame_time = Instant::now();
 
-    // Negative sentinel means "not yet initialized".
     #[cfg(target_arch = "wasm32")]
-    let mut next_frame_ms: f64 = -1.0;
+    let mut frame_clock = frame_clock::FrameClock::default();
     #[cfg(target_arch = "wasm32")]
     let mut fps_frame_count: u32 = 0;
     #[cfg(target_arch = "wasm32")]
-    let mut fps_last_time: f64 = 0.0;
+    let mut fps_last_time: f64 = -1.0;
     #[cfg(target_arch = "wasm32")]
     let fps_element_id = config.fps_element_id.clone();
 
@@ -250,11 +252,60 @@ pub async fn run_game<G: GameLoop + 'static>(
                 game.borrow_mut().cancel_pointer_input();
             }
             WindowEvent::RedrawRequested => {
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let now = web_sys::window()
+                        .and_then(|w| w.performance())
+                        .map(|p| p.now())
+                        .unwrap_or(0.0);
+                    let steps = frame_clock.steps_at(now);
+                    if steps == 0 {
+                        return;
+                    }
+                    for _ in 0..steps {
+                        game.borrow_mut().update(&input.next_frame());
+                        if game.borrow().should_exit() {
+                            elwt.exit();
+                            return;
+                        }
+                    }
+                }
                 game.borrow_mut().draw(&mut frame_buffer);
                 frame_buffer.present_into(pixels.frame_mut());
                 if let Err(err) = pixels.render() {
                     log_error("pixels.render", err);
                     elwt.exit();
+                    return;
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let now = web_sys::window()
+                        .and_then(|w| w.performance())
+                        .map(|p| p.now())
+                        .unwrap_or(0.0);
+                    if fps_last_time < 0.0 {
+                        fps_last_time = now;
+                    } else {
+                        fps_frame_count += 1;
+                        if fps_frame_count >= 30 {
+                            let elapsed = now - fps_last_time;
+                            if elapsed > 0.0 {
+                                if let Some(ref fps_id) = fps_element_id {
+                                    if let Some(el) = web_sys::window()
+                                        .and_then(|w| w.document())
+                                        .and_then(|d| d.get_element_by_id(fps_id))
+                                    {
+                                        let fps = f64::from(fps_frame_count) * 1_000.0 / elapsed;
+                                        el.set_text_content(Some(&format!("{:.0} FPS", fps)));
+                                        let _ =
+                                            el.set_attribute("title", "Rendered frames per second");
+                                    }
+                                }
+                            }
+                            fps_frame_count = 0;
+                            fps_last_time = now;
+                        }
+                    }
                 }
             }
             WindowEvent::Resized(size) => {
@@ -346,6 +397,8 @@ pub async fn run_game<G: GameLoop + 'static>(
             } => {
                 if let PhysicalKey::Code(keycode) = key_event.physical_key {
                     let pressed = key_event.state == ElementState::Pressed;
+                    // Escape must not leave a frozen canvas in the browser.
+                    #[cfg(not(target_arch = "wasm32"))]
                     if pressed && keycode == KeyCode::Escape {
                         elwt.exit();
                         return;
@@ -360,65 +413,7 @@ pub async fn run_game<G: GameLoop + 'static>(
         },
         Event::AboutToWait => {
             #[cfg(target_arch = "wasm32")]
-            {
-                let now = web_sys::window()
-                    .and_then(|w| w.performance())
-                    .map(|p| p.now())
-                    .unwrap_or(0.0);
-
-                // First call: initialise timing references
-                if next_frame_ms < 0.0 {
-                    next_frame_ms = now;
-                    fps_last_time = now;
-                }
-
-                if now >= next_frame_ms {
-                    game.borrow_mut().update(&input.next_frame());
-                    if game.borrow().should_exit() {
-                        elwt.exit();
-                        return;
-                    }
-                    window.request_redraw();
-
-                    fps_frame_count += 1;
-
-                    // Refresh the FPS overlay roughly every 30 frames
-                    if fps_frame_count >= 30 {
-                        let elapsed = now - fps_last_time;
-                        if elapsed > 0.0 {
-                            if let Some(ref fps_id) = fps_element_id {
-                                let fps = fps_frame_count as f64 * 1_000.0 / elapsed;
-                                if let Some(el) = web_sys::window()
-                                    .and_then(|w| w.document())
-                                    .and_then(|d| d.get_element_by_id(fps_id))
-                                {
-                                    el.set_text_content(Some(&format!("{:.0} FPS", fps)));
-                                }
-                            }
-                        }
-                        fps_frame_count = 0;
-                        fps_last_time = now;
-                    }
-
-                    next_frame_ms += FRAME_MS;
-                    // Prevent spiral of death if we fall too far behind
-                    if next_frame_ms < now {
-                        next_frame_ms = now + FRAME_MS;
-                    }
-                }
-                // Yield between simulation deadlines. Poll otherwise queues
-                // thousands of scheduler tasks per second even when no frame
-                // is due, competing with rendering, input, and Web Audio.
-                let after_update = web_sys::window()
-                    .and_then(|w| w.performance())
-                    .map(|p| p.now())
-                    .unwrap_or(now);
-                elwt.set_control_flow(ControlFlow::wait_duration(
-                    std::time::Duration::from_secs_f64(
-                        (next_frame_ms - after_update).max(0.0) / 1_000.0,
-                    ),
-                ));
-            }
+            window.request_redraw();
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let now = Instant::now();

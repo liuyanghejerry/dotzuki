@@ -1,13 +1,13 @@
 # 游戏外壳参考
 
-> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.7.1
->（源文档 commit 21f509e109fad71c17166a486660ec3bc2807d65）。
+> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.10.1
+>（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.7.1
+> - **Last verified**: v0.10.1（含未发布宿主变更）
 
 [游戏外壳](./glossary.md)（`dotzuki_web::game_shell`，源码见
 `crates/dotzuki-web/src/game_shell.rs`）以 Game Boy 帧节奏在浏览器
@@ -21,7 +21,7 @@ API 参考：feature 开关、`GameLoop` trait、`GameShellConfig` 与
 同一套 pixels + winit 技术栈、同一个 GB 帧节奏
 （4194304 Hz / 70224 cycles ≈ 59.7275 Hz），外加 wasm 游戏所需的浏览器
 管线——替换宿主页面中的占位 `<canvas>`、在窗口缩放时跟随父元素宽度、
-可选的 FPS 计数元素，以及由 `requestAnimationFrame` 驱动的轮询。
+可选的 FPS 计数元素，以及由 `requestAnimationFrame` 驱动的呈现。
 
 游戏相关的接线留在游戏 crate 中：由游戏构建 `GameShellConfig`、实现
 `GameLoop`，并在宿主页面需要对运行中的游戏做运行时控制时，自己保留
@@ -52,7 +52,7 @@ API 参考：feature 开关、`GameLoop` trait、`GameShellConfig` 与
 （`crates/dotzuki-web/Cargo.toml:45-63`），**默认关闭**，这样编辑器的
 布局预览桥就不会把 pixels / winit 拖进从不开窗口的消费方。在
 `Cargo.toml` 中启用：
-`dotzuki-web = { version = "0.5.4", features = ["game-shell"] }`。
+`dotzuki-web = { version = "0.10.1", features = ["game-shell"] }`。
 
 该 feature 会引入 `pixels =0.15.0`、`winit 0.30`、`error-iter`、
 `dotzuki-renderer/gpu`（供 `InputState::set_from_keycode` 使用），
@@ -71,6 +71,8 @@ pub trait GameLoop {
     type Fb: FbSurface;
 
     fn update(&mut self, input: &InputState);
+    fn pointer_click(&mut self, _x: f32, _y: f32) {}
+    fn cancel_pointer_input(&mut self) {}
     fn draw(&mut self, fb: &mut Self::Fb);
     fn should_exit(&self) -> bool { false }
     fn on_user_gesture(&self) {}
@@ -89,8 +91,10 @@ pub trait GameLoop {
   画进帧缓冲。
 - `should_exit(&self) -> bool`——默认 `false`；返回 `true` 时循环
   退出。
-- `on_user_gesture(&self)`——默认空操作；每次按键都会调用。浏览器把
-  按键算作用户手势，所以这是恢复挂起状态 `AudioContext` 的钩子。
+- `pointer_click` 接收鼠标主键或触摸的帧缓冲坐标；`cancel_pointer_input` 在失焦或
+  触摸取消时丢弃待处理操作。两者默认空操作，游戏决定是否开启点击导航。
+- `on_user_gesture(&self)`——默认空操作；键盘、鼠标或触摸按下时调用，
+  用于恢复挂起的 `AudioContext`。
 
 ## `GameShellConfig`
 
@@ -113,7 +117,7 @@ pub struct GameShellConfig {
 - `scale`——初始窗口尺寸的整数倍率；窗口的最小内部尺寸是未缩放的
   帧缓冲尺寸。
 - `canvas_id`（仅 wasm）——外壳要替换的占位 `<canvas>` 的 DOM id。
-- `fps_element_id`（仅 wasm）——大约每 30 帧更新为 `"NN FPS"` 的元素
+- `fps_element_id`（仅 wasm）——每完成 30 次渲染更新为 `"NN FPS"` 的元素
   的 DOM id；`None` 关闭计数器。
 
 `GameShellConfig::new(title, width, height, scale)` 填入惯用默认值：
@@ -160,33 +164,35 @@ pub enum GameShellError {
 
 ### 帧节奏
 
-两个目标平台都按每个 GB 帧一次 `update` 的节奏运行（≈16.7427 ms）。
-每帧循环依次执行：`update` → `input.begin_frame()` → `should_exit`
-检查 → `request_redraw`。
+模拟以每秒约 59.7275 次更新推进，与显示器刷新率无关。
+每次更新消费一个 `BufferedInput::next_frame()` 快照，并检查 `should_exit`。
 
-- **原生**：`FRAME_DURATION = 16_742_706 ns`，在 `AboutToWait` 中用
-  `Instant` 截止时间加 `thread::sleep` 驱动
-  （game_shell.rs:39、316-336）。
-- **wasm32**：`FRAME_MS = 1000.0 * 70224.0 / 4194304.0`，对照
-  `performance.now()` 计量，使用 `next_frame_ms` 累加器，并带死亡螺旋
-  钳制——循环落后时，下一个截止点重置为 `now + FRAME_MS`，而不是连发
-  补帧（game_shell.rs:42、267-315）。
+- **原生**：`AboutToWait` 使用 `Instant` 截止时间和 `ControlFlow::WaitUntil`；
+  等待不会阻塞已排队的输入或重绘事件。
+- **wasm32**：`ControlFlow::Wait` 在浏览器绘制之间让出执行。
+  `AboutToWait` 请求下一次重绘，`RedrawRequested` 读取 `performance.now()` 并推进固定时钟。
+  短延迟最多补五帧；更长暂停丢弃积压并从一帧恢复，避免后台标签重放数秒的按键。
+  尚未到更新时刻的绘制请求跳过模拟与渲染。
 
 ### 渲染
 
-每次 `RedrawRequested` 先向游戏的帧缓冲执行 `draw`，然后
-`frame_buffer.present_into(pixels.frame_mut())`，再
-`pixels.render()`。渲染与 surface 缩放错误会记录日志并退出循环
-（game_shell.rs:233-248）。在 wasm 上，pixels 构建器强制
-`Rgba8Unorm` 与 WebGL 后端（`Backends::GL`）：一些浏览器暴露的
-WebGPU limits 不完整，会让 wasm-bindgen panic
-（game_shell.rs:196-209）。
+完成到期更新后，外壳依次调用 `draw`、`frame_buffer.present_into(pixels.frame_mut())`
+和 `pixels.render()`。游戏不得在 `draw` 中推进玩法，低刷新率显示器可能一次呈现多个
+模拟帧。可选 FPS 元素统计完成的渲染次数，不统计模拟帧数。
+渲染和 surface 缩放错误会记录日志并退出循环。在 wasm 上，pixels 构建器强制
+`Rgba8Unorm` 和 WebGL（`Backends::GL`），因为部分浏览器暴露的 WebGPU limits 不完整。
 
 ### 输入
 
-`KeyCode` 事件喂给 `InputState::set_from_keycode`。`Escape` 在两个
-目标平台上都会退出，没有关闭选项。任何按键都会先触发
-`on_user_gesture`，再进入输入处理（game_shell.rs:249-263）。
+键盘事件进入 `BufferedInput`；两个更新之间的快速按下／松开仍保留到一次更新。
+失焦丢弃按住状态和待处理短按。`Escape` 退出原生窗口；浏览器不映射该键，循环继续运行。
+Q/E 对应 L/R；方向键、WASD、Z/X、Enter/Space、Backspace/Right Shift 保留既有映射。
+
+`GbButton::bit_mask`、`InputState::raw_current`、`raw_previous`、`pressed_mask` 和
+`set_from_bitmask` 使用 `u16`。位 0–7 仍为 A、B、Select、Start、Right、Left、Up、Down；
+位 8–9 为 R、L。`from_explicit_channels(current, previous, pressed)` 提供独立按下边沿，
+不改变按住状态。`begin_frame` 或物理输入修改恢复 `current & !previous` 的边沿推导。
+运行器既有 8 位 Web／移动入口对输入补零扩展，保持 ABI。
 
 ### canvas 管线（wasm32）
 
@@ -241,16 +247,14 @@ fn main() -> Result<(), GameShellError> {
 
 ## 注意事项
 
-- **`Escape` 总是退出。** 两个目标平台都会在 Escape 上终止循环；游戏
-  无法重映射或禁用它。
+- **`Escape` 退出原生窗口。** 浏览器不映射该键，不会因该键停掉循环并冻结最后一帧。
 - **占位 canvas 缺失会 panic（wasm32）。** `install_canvas` 要求宿主
   页面存在 id 为 `canvas_id` 的元素，否则 panic——页面里请放上
   `<canvas id="game-canvas">`（或你配置的 id）。
-- **`ControlFlow::Poll` 必不可少。** 循环设置 `ControlFlow::Poll` +
-  `EventLoop::spawn`；没有 `Poll`，winit 0.30 的 Web 后端只在事件到达
-  时运转（约 5 FPS）（game_shell.rs:159-160）。
+- **保持重绘请求。** 浏览器节奏依赖 `AboutToWait` 请求下一次重绘，绘制之间使用
+  `ControlFlow::Wait`。
 - **wasm 上强制 WebGL。** 外壳固定 `Backends::GL` 与 `Rgba8Unorm`；
   一些浏览器返回不完整的 WebGPU limits 对象会让 wasm-bindgen panic，
   因此 WebGPU 在这里不可选。
-- **窗口代码没有单元测试。** 该模块通过消费方验证；上面的示例是骨架，
-  不是经过测试的程序。
+- **同时验证时钟与宿主集成。** 单元测试覆盖 30–240 Hz 显示、延迟绘制、后台暂停、
+  短按缓冲和按键通道。消费方仍需原生与浏览器冒烟测试；上方示例仍是未验证骨架。

@@ -10,7 +10,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
-use crate::input::InputState;
+use crate::input::{BufferedInput, InputState};
 use crate::FbSurface;
 
 /// Original Game Boy VBlank frequency: 4194304 Hz / 70224 cycles ≈ 59.7275 Hz
@@ -90,7 +90,7 @@ pub fn run<G: GameLoop + 'static>(
     };
 
     let mut frame_buffer = G::Fb::new_screen(fb_width, fb_height);
-    let mut input = InputState::new();
+    let mut input = BufferedInput::default();
     let mut cursor = None;
     let mut click_start: Option<(f64, f64)> = None;
     let mut touch_id = None;
@@ -218,8 +218,7 @@ pub fn run<G: GameLoop + 'static>(
         Event::AboutToWait => {
             let now = Instant::now();
             if now >= next_frame_time {
-                game.update(&input);
-                input.begin_frame();
+                game.update(&input.next_frame());
                 if game.should_exit() {
                     elwt.exit();
                     return;

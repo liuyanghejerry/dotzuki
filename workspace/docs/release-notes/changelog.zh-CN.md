@@ -1,7 +1,7 @@
 # 变更日志
 
 > 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1
->（源文档 commit 9bc4da66b7499e9ff9472913e005932ae7828fb7）。
+>（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -20,6 +20,17 @@
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
 ## 未发布
+
+- 新增 `overworld::navigation::find_route_matching`，用于寻找最近可达的交互位置，
+  复用既有确定性 BFS、碰撞提供方和节点上限。
+
+- 将十键 `u16` 掩码、独立按下通道和原生短按缓冲收敛到共享 renderer。Q/E 对应 L/R。
+  **Rust API 不兼容变更：** `set_from_bitmask` 参数及 `bit_mask`／`raw_current`／
+  `raw_previous` 返回值改为 `u16`；既有 8 位桥使用 `u16::from(mask)`。
+  位 0–7 和移动／Web ABI 保持不变。
+- 浏览器游戏外壳使用动画帧驱动固定模拟时钟，限制补帧，并按完成渲染统计 FPS。
+  Escape 仅退出原生窗口。参见[游戏外壳](../reference/game-shell.zh-CN.md#运行时行为)。
+
 
 - 为运行器及支持指针输入的宿主添加[点击移动](../how-to/maps.zh-CN.md#点击移动)。
 - 为移动端 C ABI 添加 `dotzuki_mobile_pointer_click` 和

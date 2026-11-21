@@ -96,7 +96,7 @@ fn boot(test: &str) -> (TestDir, RunnerGame) {
 
 /// Update the game one frame with `mask` held (fresh InputState ⇒ every
 /// non-zero frame also reads as a just-press).
-fn frame(game: &mut RunnerGame, mask: u8) {
+fn frame(game: &mut RunnerGame, mask: u16) {
     let mut input = InputState::new();
     input.set_from_bitmask(mask);
     game.update(&input);

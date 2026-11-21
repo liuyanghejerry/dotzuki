@@ -149,7 +149,7 @@ impl WasmRunner {
     /// Also renders this frame's audio into the internal PCM buffer; drain it
     /// with [`take_audio`](Self::take_audio).
     pub fn tick(&mut self, input_bitmask: u8) -> Vec<u8> {
-        self.input.set_from_bitmask(input_bitmask);
+        self.input.set_from_bitmask(u16::from(input_bitmask));
         self.game.update(&self.input);
         self.input.begin_frame();
         self.game.draw(&mut self.fb);

@@ -18,6 +18,18 @@ with a migration guide under `migration/` (created per release).
 
 ## Unreleased
 
+- Add `overworld::navigation::find_route_matching` for nearest reachable interaction
+  positions. It shares the existing deterministic BFS, collision provider, and node limit.
+
+- Move ten-button `u16` input masks, explicit press channels, and native tap buffering into
+  the shared renderer. Q/E map to L/R. **Breaking Rust API:** widen masks passed to
+  `set_from_bitmask` and stored from `bit_mask` / `raw_current` / `raw_previous` to `u16`;
+  use `u16::from(mask)` at existing 8-bit bridges. Bits 0–7 and mobile/Web ABIs are unchanged.
+- Drive the browser game shell from animation frames with fixed simulation ticks, bounded
+  catch-up, and FPS based on completed renders. Escape only exits native windows.
+  See [game shell](../reference/game-shell.md#runtime-behavior).
+
+
 - Add [click to move](../how-to/maps.md#click-to-move) to the runner and pointer-enabled hosts.
 - Add `dotzuki_mobile_pointer_click` and `dotzuki_mobile_cancel_pointer_input` to the mobile
   C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
