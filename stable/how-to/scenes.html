@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -188,7 +188,7 @@ choices, flags, battles from scenes, and the edit-check loop.</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>The <a href="../reference/dsl/scene.html">syntax reference</a> is the authority on every
@@ -316,7 +316,13 @@ falling back to <code>en</code>:</p>
 <p>The recipe and runtime rules are in <a href="./i18n.html">Bilingual Text (i18n)</a>.</p>
 <h2 id="the-edit-check-loop"><a class="header" href="#the-edit-check-loop">The edit-check loop</a></h2>
 <ol>
-<li>Write or edit the <code>.scene</code> file.</li>
+<li>Open <strong>Scripts</strong> and select the scene. The sidebar lists files from every
+configured script and story activity, plus <code>game.scenesDir</code> (default
+<code>assets/scenes</code>). Paths distinguish files with the same name.</li>
+<li>Edit the draft. <strong>Diagnostics</strong> compiles the current <code>.scene</code> buffer as
+you type. Select a finding to move the cursor to its location. If the
+editor reports that its WASM compiler is unavailable, lint findings still
+appear. Save the scene before checking the whole project.</li>
 <li>Run <code>dotzuki check</code> — it compiles every scene (plus layouts, themes, and
 styles) and prints diagnostics; exit code 0 means the scenes compile.</li>
 <li>Run <code>dotzuki run</code> and walk through the storyline. Branches that walking

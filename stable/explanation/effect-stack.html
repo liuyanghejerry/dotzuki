@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -190,7 +190,7 @@ current design.</p>
 <li><strong>Audience</strong>: battle authors, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <blockquote>
@@ -762,11 +762,6 @@ sketch is optimistic on this point; see the “one nit” in §10.</p>
 <li><strong>Doubles / multi-target.</strong> A <code>redirect_target</code> seam exists but is <strong>defaulted,
 inert, and unproven</strong>; minimon is 1v1. Follow Me / Lightning Rod redirection
 (<code>TryHit</code> + redirect) is expressible-in-principle, not exercised.</li>
-<li><strong>Full content tables / multi-hit / accuracy / crit RNG.</strong> minimon authors <strong>2
-moves</strong> with a deterministic <code>power*atk/def</code> formula (no rolls) so outcomes are
-hand-checkable. <code>Accuracy</code>, <code>ModifyCritRatio</code>, <code>ModifyMove</code> (multi-hit), and
-many Group D/E/F events are present as <strong>subscription seams</strong> but not yet fired
-by a shipped driver.</li>
 <li><strong>Wiring into pokered’s production loop is staged, not done.</strong> Gen-1 fidelity
 remains a <strong>regression credential</strong> (the 88 slices via the legacy
 <code>battle::driver</code>), not a production swap on the new stack. AI, switching policy,

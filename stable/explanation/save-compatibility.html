@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -187,17 +187,19 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>The game saves to <code>&lt;project&gt;/.dotzuki-save.json</code> (override with
-<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code> (v3). The runner-side save/load
+<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code> (v3). The runner-side save/load
 contract lives in <a href="../reference/project-manifest.html#saveload">Save/load</a>.</p>
 <ul>
 <li><code>party</code>/<code>inventory</code> appear once a battle has completed.</li>
 <li>Party members may carry optional <code>level</code>/<code>exp</code> fields when the battle
 has a <code>levels</code> block — absent ⇒ level 1 / 0 EXP.</li>
 <li><code>money</code> is always written.</li>
+<li><code>healPoint</code> stores the last on-map <code>heal</code> as <code>{map, x, y, facing, level?}</code>.
+Older saves omit it and use the entry spawn after a whiteout.</li>
 <li><code>player.level</code> is the map elevation level, absent ⇒ 0.</li>
 </ul>
 <h2 id="when-saves-are-written"><a class="header" href="#when-saves-are-written">When saves are written</a></h2>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -187,7 +187,7 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A project opts into the generic, data-driven battle system (parties +
@@ -313,11 +313,9 @@ remaining.</p>
 rebuilt from the records at every battle start, but each member’s <strong>current
 HP/MP and status persist between battles</strong> — the runner owns that party
 state, harvests it at the end of every battle (win, lose AND run), and
-carries it
-in the save file (<code>party</code>). A member at 0 HP stays fainted until healed
-(items are the only healing source so far). The first LIVING member leads;
-a party with no living member loses on the spot. In battle the root menu
-offers <strong>Fight</strong> (the skill menu), <strong>Party</strong> (the member list with HP and
+carries it in the save file (<code>party</code>). A scene’s <code>heal</code> command or a whiteout revives
+fainted members. The first living member leads. A party with no living member loses on the spot.
+In battle the root menu offers <strong>Fight</strong> (the skill menu), <strong>Party</strong> (the member list with HP and
 status — switching to a living, non-active member consumes the player’s
 turn, and the enemy’s action then resolves against the NEW member),
 <strong>Item</strong> (when configured), and <strong>Run</strong> — in a WILD battle Run always
@@ -411,13 +409,11 @@ optional <code>ability</code> field). The ACTIVE combatants’ ability hooks fir
 battle start and on every switch-in (a voluntary/forced player switch, an
 encounter send-out) on the <code>SwitchIn</code> event — benched members’ abilities
 are inert. A switch-in fire narrates an intro line (<code>"Aria's Intimidate!"</code> — the record id prettified, since records carry no display
-name) before the usual diff lines (<code>"Slime's Attack fell!"</code>). Ability
-hooks also join the acting combatant’s per-action event sequence: an
-ability hooking <code>ModifyDamage</code>/<code>DamagingHit</code>/… fires alongside the skill’s
-own hooks, with the same <code>Source</code> (the actor) and <code>Target</code> (the foe).</li>
+name) before the usual diff lines (<code>"Slime's Attack fell!"</code>). Ability hooks also participate
+in move resolution.</li>
 <li><strong>Held items</strong> (<code>kind: Item</code> records, named by a combatant record’s
-optional <code>heldItem</code> field). They fire exactly like abilities, plus their
-<code>Residual</code> hooks run after each of the holder’s actions (a Leftovers-style
+optional <code>heldItem</code> field). They participate in move resolution. Their
+<code>Residual</code> hooks run after the holder’s skill actions (a Leftovers-style
 <code>HealFraction</code>). Held items are <strong>persistent flags — nothing consumes
 them</strong> (berries/consumption are out of scope); a <code>heldItem</code> id whose
 <code>healField</code> is 0 never appears in the Item menu.</li>
@@ -432,11 +428,17 @@ warns and is ignored. In-battle weather-setting (a move op) is NOT
 supported — the <code>Op</code> vocabulary has no weather op; scenes are the only
 trigger.</li>
 </ul>
-<p>Limits of the wiring: only the ACTING combatant’s ability/held-item hooks
-join its per-action sequence (a defender’s ability fires on its own
-switch-in/residual, not in the attacker’s fold), and residuals (status, held
-item, weather) fire after a combatant’s own action — on switch/item rounds
-only the enemy’s residual runs, as with statuses.</p>
+<p>On table skills and RON moves, an ability or held-item hook defaults to
+<code>holder: Attacker</code> and runs when its holder uses the skill. Set
+<code>holder: Defender</code> to run it when the holder receives a move. For example,
+<code>Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])</code>
+halves incoming damage. Both roles share the same ordered event fold.
+<code>Source</code> names the attacker and <code>Target</code> names the defender in either role.</p>
+<p>Status, held-item, and weather residuals tick after the holder’s skill action.
+Switching and using an item spend the player’s turn. Only the enemy takes a
+skill action on those rounds. For <code>InflictVolatile</code>, a positive <code>amount</code>
+counts the affected holder’s subsequent skill actions, including misses and
+blocked moves. An omitted or zero amount lasts until a switch or battle end.</p>
 <h2 id="turn-loop"><a class="header" href="#turn-loop">Turn loop</a></h2>
 <p>Each round: the player picks a root-menu action — <strong>Fight</strong>
 opens the skill menu (name + cost; unaffordable skills are marked and
@@ -453,10 +455,9 @@ sends out the next queued enemy (encounters) or ends the battle in a win;
 the active member at 0 HP forces a replacement
 while the party has living members, else the battle is lost; a successful
 Run ends it on the spot: the scene
-resumes with <code>"win"</code>, <code>"lose"</code> or <code>"run"</code>. The loop is the runner’s own phase
-machine, not the engine’s <code>StackDriver</code>; RON hooks fire per event through
-the effect-stack interpreter (<code>collect_handlers</code> + <code>run_event</code>), the
-minimon/wuxia harness pattern.</p>
+resumes with <code>"win"</code>, <code>"lose"</code>, or <code>"run"</code>. The engine’s <code>StackDriver</code> orders actions and their
+residuals. When a forced switch interrupts a round, an opponent that still has an action takes it
+against the replacement. RON handlers run together in event order.</p>
 <h2 id="scene-integration"><a class="header" href="#scene-integration">Scene integration</a></h2>
 <p><code>result = startBattle("slime")</code> (or
 <code>@command("startBattle", "slime")</code>) suspends the scene, runs the battle, and
@@ -473,7 +474,7 @@ held items &amp; weather</strong> above). A project <strong>without</strong> a
 like any unimplemented command). A lost battle returns <code>"lose"</code> to the scene
 (its post-lose text plays), then triggers the <strong>game-over whiteout</strong> (see
 <a href="project-manifest.html#game-over">Game-over</a>): the party is healed and the player
-returns to the entry spawn.</p>
+returns to the most recent <a href="glossary.html#battle-gameplay">heal point</a>, or to the entry spawn.</p>
 <h2 id="sceneless-battles-random-encounters"><a class="header" href="#sceneless-battles-random-encounters">Sceneless battles (random encounters)</a></h2>
 <p>A battle armed by walking (the
 objects sidecar’s <code>encounters</code> block — see <a href="../how-to/maps.html">Maps</a>) has no scene
@@ -487,16 +488,9 @@ order of the drawn id (encounter record → single enemy record), trainer
 battles blocking Run, EXP sums, abilities/weather — are identical to a
 scene-triggered battle.</p>
 <h2 id="remaining-limits"><a class="header" href="#remaining-limits">Remaining limits</a></h2>
-<p>Every RON <code>EffectKind</code> now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles never expire
-(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing removes them);
-HP/MP clamp into the engine’s <code>u16</code> pools for RON skills; items only heal
-(no status cures / revives / battle-only effects) and held items are never
-consumed; a defender’s ability/held-item hooks don’t join the attacker’s
-per-action fold; weather is scene-armed only (no in-battle op sets it).
-Later PRs:
-<code>StackDriver</code> migration, a heal-point system (the whiteout
-always respawns at the entry spawn).</p>
+<p>RON actions use 16-bit HP and MP pools. Consumable items restore HP to a
+living member and held items persist through battle. Scenes set or clear
+weather for the next battle.</p>
 <h2 id="validation-by-dotzuki-check"><a class="header" href="#validation-by-dotzuki-check">Validation by <code>dotzuki check</code></a></h2>
 <p>When the manifest has a <code>battle</code> section, <code>check</code> also validates it: the
 referenced table ids (party/enemies/encounters/skills/items) must exist in the data

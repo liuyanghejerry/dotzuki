@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
 <blockquote>
-<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>项目通过顶层 <code>battle</code> 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
@@ -293,8 +293,7 @@ MP 同理）。</li>
 <p>玩家的队伍是 <strong>party 表的每一条记录</strong>（按记录 id 排序；单记录队伍与 v1 表现
 一致）。每场战斗开始时，基准属性都从记录重建，但每名成员的<strong>当前 HP/MP 和
 状态在战斗之间保持</strong>——运行器持有这份队伍状态，在每场战斗结束时（胜、负和
-逃跑）收割，并随存档文件（<code>party</code>）保存。0 HP 的成员保持濒死直到被治疗（目前
-物品是唯一的治疗来源）。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
+逃跑）收割，并随存档文件（<code>party</code>）保存。场景的 <code>heal</code> 命令或 whiteout 可复活濒死成员。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
 中根菜单提供 <strong>Fight</strong>（技能菜单）、<strong>Party</strong>（成员列表，含 HP 和状态——切换
 到一名存活且非当前成员会消耗玩家回合，敌人的行动随后对新成员结算）、<strong>Item</strong>
 （配置了才出现）和 <strong>Run</strong>——野怪战斗中逃跑总是成功：旁白
@@ -374,12 +373,9 @@ harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛
 当前战斗者的特性 钩子 在战斗开始和每次换人上场（玩家主动/被迫换人、
 encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员的特性不生效。换人上场
 触发时，在常规的增减文本（<code>"Slime's Attack fell!"</code>）之前先叙述一行介绍
-（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性
-钩子 也会加入行动战斗者的每次行动事件序列：挂接
-<code>ModifyDamage</code>/<code>DamagingHit</code>/… 的特性与技能自身的 钩子 一起触发，<code>Source</code>
-（行动者）和 <code>Target</code>（对手）相同。</li>
+（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性钩子也可参与技能结算。</li>
 <li><strong>携带道具</strong>（<code>kind: Item</code> 记录，由战斗者记录上可选的 <code>heldItem</code> 字段指定）。
-它们的触发与特性完全一样，另外其 <code>Residual</code> 钩子 会在持有者每次行动之后
+携带道具可参与技能结算，其 <code>Residual</code> 钩子会在持有者的技能行动后
 运行（Leftovers 风格的 <code>HealFraction</code>）。携带道具是<strong>持久性标志——没有东西
 会消耗它们</strong>（树果/消耗品不在范围内）；<code>healField</code> 为 0 的 <code>heldItem</code> id
 绝不会出现在 Item 菜单中。</li>
@@ -392,10 +388,13 @@ encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员�
 若没有对应的已编译记录则警告并忽略。<strong>不</strong>支持在战斗中途设置天气（通过移动
 op）——<code>Op</code> 词汇表中没有天气 op；场景是唯一的触发途径。</li>
 </ul>
-<p>接入的限制：只有行动战斗者的特性/携带道具 钩子 加入它的每次行动序列（防守方
-的特性在它自己的换人/残留效果上触发，不会进入攻击方的那一轮），并且残留效果
-（状态、携带道具、天气）在战斗者自己的行动之后触发——在换人/物品回合中只有
-敌人的残留效果运行，与状态相同。</p>
+<p>对于数据表技能和 RON 招式，特性或携带道具的钩子默认使用 <code>holder: Attacker</code>，
+在持有者使用技能时触发。设为 <code>holder: Defender</code> 后，钩子会在持有者受到招式时触发。
+例如，<code>Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])</code>
+会将受到的伤害减半。双方的钩子按同一事件顺序结算，其中 <code>Source</code> 指攻击者，<code>Target</code> 指防守者。</p>
+<p>状态、携带道具和天气在持有者的技能行动后结算。玩家换人或使用物品会消耗回合，
+该回合只有敌人执行技能行动。<code>InflictVolatile</code> 的正数 <code>amount</code> 按持有者随后
+执行的技能行动计数，未命中或被阻止的行动也计数。省略该值或设为零时，效果持续到换人或战斗结束。</p>
 <h2 id="回合循环"><a class="header" href="#回合循环">回合循环</a></h2>
 <p>每回合：玩家选择一个根菜单操作——<strong>Fight</strong> 打开技能菜单（名称 + 消耗；付不起
 的技能会被标记且不可选），<strong>Party</strong> 换人（消耗回合），<strong>Item</strong> 使用一个物品
@@ -408,9 +407,8 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 <code>"Aria used Potion!"</code>）；随后行动方的状态残留效果触发。敌人 0 HP 时派出队列中
 的下一个敌人（encounters）或战斗以胜利结束；当前成员 0 HP 时，只要队伍还有
 存活成员就强制换人，否则战斗判负；成功逃跑立刻结束战斗：场景以 <code>"win"</code>、
-<code>"lose"</code> 或 <code>"run"</code> 恢复。这个循环是运行器自己的阶段机，不是引擎的
-<code>StackDriver</code>；RON 钩子 按事件经由效果栈解释器触发（<code>collect_handlers</code> +
-<code>run_event</code>），即 minimon/wuxia harness 模式。</p>
+<code>"lose"</code> 或 <code>"run"</code> 恢复。引擎的 <code>StackDriver</code> 调度行动和残留效果。若强制换人打断回合，
+尚未行动的敌人会对替补成员执行原定行动。同一事件中的 RON 钩子按顺序共同结算。</p>
 <h2 id="场景集成"><a class="header" href="#场景集成">场景集成</a></h2>
 <p><code>result = startBattle("slime")</code>（或 <code>@command("startBattle", "slime")</code>）挂起
 场景，运行战斗，并以 <code>result == "win" | "lose" | "run"</code> 恢复——照常用 <code>@if</code>
@@ -422,7 +420,7 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 （见上方 <strong>Abilities, held items &amp; weather</strong>）。<strong>没有</strong> <code>battle</code> 区块的项目会
 警告并以 <code>"win"</code> 自动完成（保持不败继续，与任何未实现的命令一样）。战败把
 <code>"lose"</code> 返回给场景（播放它的战败文本），然后触发 <strong>game-over whiteout</strong>（见
-<a href="project-manifest.html#game-over">游戏结束</a>）：队伍回复，玩家回到入口出生点。</p>
+<a href="project-manifest.html#game-over">游戏结束</a>）：队伍回复，玩家回到最近的<a href="glossary.html#battle-gameplay">回复点</a>，没有记录时回到入口出生点。</p>
 <h2 id="无场景战斗随机-encounters"><a class="header" href="#无场景战斗随机-encounters">无场景战斗（随机 encounters）</a></h2>
 <p>走路触发的战斗（objects 伴生文件的 <code>encounters</code> 块——见
 <a href="../how-to/maps.html">地图</a>）没有场景可恢复，因此它的结果直接回到大地图：<strong>胜利</strong>
@@ -432,13 +430,8 @@ EXP/升级/trainer 金钱和队伍状态/背包的收割与场景战斗结束后
 语义——抽中 id 的解析顺序（encounter 记录 → 单个敌人记录）、trainer 战斗禁止
 逃跑、EXP 求和、特性/天气——都与场景触发的战斗相同。</p>
 <h2 id="剩余限制"><a class="header" href="#剩余限制">剩余限制</a></h2>
-<p>现在每种 RON <code>EffectKind</code> 都会触发（Move / Status / Ability / Item / Weather）；
-剩余的部分：volatiles 仅支持安装与读取（<code>InflictVolatile</code> 安装、<code>HasVolatile</code>
-读取——没有东西会清除它们）；RON 技能的 HP/MP 被限制在引擎的 <code>u16</code> 池中；
-物品只能治疗（没有解状态/复活/战斗专属效果），携带道具从不消耗；防守方的
-特性/携带道具 钩子 不加入攻击方的每次行动；天气只能由场景预置（没有战斗中
-的 op 可以设置）。后续 PR：迁移到 <code>StackDriver</code>、回复点系统（whiteout 总是在
-入口出生点重生）。</p>
+<p>RON 行动的 HP 和 MP 池使用 16 位整数。消耗品可为存活成员回复 HP，携带道具
+会在战斗后保留。场景可为下一场战斗设置或清除天气。</p>
 <h2 id="dotzuki-check-的校验"><a class="header" href="#dotzuki-check-的校验"><code>dotzuki check</code> 的校验</a></h2>
 <p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
 （party/enemies/encounters/skills/items）必须存在于 data 活动的

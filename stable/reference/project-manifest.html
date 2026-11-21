@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -187,7 +187,7 @@
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A <strong>game project</strong> is a plain directory of DSL, data, and asset files plus a
@@ -447,15 +447,15 @@ sell for 0 — allowed). A sells one (money += , count −= 1). Unknown item ids
 on the shelf open as name=id, price 0 — a misconfigured shop never deadlocks
 the scene. Item records are read through the <code>battle.items</code> table.</p>
 <h3 id="game-over"><a class="header" href="#game-over">Game-over</a></h3>
-<p>Losing a battle no longer strands the player with a 0-HP
-party: after the scene that received <code>"lose"</code> finishes (its own post-lose
-text plays first), the runner runs a <strong>whiteout</strong> — a brief blackout, a
-<code>&lt;Name&gt; collapsed…</code> line, then the whole party is healed to full HP/MP
-(status cleared) and the player returns to the <strong>entry map’s spawn point</strong>
-(the current map if it is the entry map, otherwise the entry map loads).
-Flags, inventory and money are kept. Map-less (dialogue-only) projects just
-heal. There is no heal-point system yet: the respawn is always the entry
-spawn.</p>
+<p>Use <code>@command("heal")</code> in a scene to restore the party’s HP and MP, remove status
+conditions, and record the current map, tile, facing, and elevation as a
+<a href="glossary.html#battle-gameplay">heal point</a>. Each call replaces the previous point.</p>
+<p>After a losing scene finishes its dialogue, the runner shows a brief blackout
+and a collapse message, heals the party, and returns the player to that point.
+Without a recorded point, or if its map is gone, the player returns to the
+entry map’s spawn. If the recorded tile is blocked, the runner chooses a
+ground-level spawn on the same map. A map-less project heals the party in
+place. Flags, inventory, and money carry over.</p>
 <h3 id="audio"><a class="header" href="#audio">Audio</a></h3>
 <p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> play tracks
 from <code>data/audio/**/*.json</code> (dotzuki-audio <code>TrackDef</code> format; <code>music/</code> + <code>sfx/</code>
@@ -472,14 +472,15 @@ load at boot).</p>
 is drawn. NPCs always render as id-colored placeholders in this version.</p>
 <h3 id="saveload"><a class="header" href="#saveload">Save/load</a></h3>
 <p>The game saves to <code>&lt;project&gt;/.dotzuki-save.json</code> (override with
-<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code> (v3; <code>party</code>/<code>inventory</code> appear
+<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code> (v3; <code>party</code>/<code>inventory</code> appear
 once a battle has completed — see <a href="battle-rules.html">the battle rules</a>; party members may
 carry optional <code>level</code>/<code>exp</code> fields when the battle has a <code>levels</code> block —
 absent ⇒ level 1 / 0 EXP; <code>money</code> is always written; <code>player.level</code> is the
-map elevation level, absent ⇒ 0). Saves are written only from <strong>stable</strong> states — after a completed
-warp transition and when a scene finishes into the overworld — never
-mid-scene or mid-warp (a suspended scene engine can’t resume), so closing
-the window mid-dialogue keeps the last stable point. The Start menu’s
+map elevation level, absent ⇒ 0). The optional <code>healPoint</code> contains
+<code>{map, x, y, facing, level?}</code>. Existing saves without it use the entry spawn.</p>
+<p>The runner saves from <strong>stable</strong> states, after a completed warp transition and when a scene
+finishes into the overworld — never mid-scene or mid-warp (a suspended scene engine can’t resume),
+so closing the window mid-dialogue keeps the last stable point. The Start menu’s
 <strong>Save</strong> entry writes the same file on demand (always allowed, even in
 headless runs). On boot a valid save resumes: flags are restored, the saved
 map loads, the player is placed at the saved tile (spawn-scan fallback if it
@@ -501,9 +502,6 @@ scenes in place (a broken edit keeps the old scenes running; diagnostics are
 logged), and an edit to the <em>current</em> map’s <code>map.tmx.json</code> / <code>tileset.png</code> /
 objects sidecar reloads that map in place, preserving the player position and
 flags. Other maps, data tables and gfx are picked up on next enter / boot.</p>
-<h3 id="not-yet-implemented"><a class="header" href="#not-yet-implemented">Not yet implemented</a></h3>
-<p>Scenes relying on these warn and continue: the
-<code>StackDriver</code> turn loop.</p>
 <h2 id="what-dotzuki-check-compiles"><a class="header" href="#what-dotzuki-check-compiles">What <code>dotzuki check</code> compiles</a></h2>
 <p><code>dotzuki check &lt;dir&gt;</code> loads the manifest, collects every directory that may hold
 DSL files, and runs <code>dotzuki_engine_dsl::compiler::compile_dirs</code> over them (in

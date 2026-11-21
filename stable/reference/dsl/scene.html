@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-7b7e3677.js"></script>
@@ -189,7 +189,7 @@ and compiled by <code>dotzuki-engine-dsl</code>.</p>
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>This page describes the <a href="../glossary.html">Game DSL</a> <code>.scene</code> file as the code
@@ -492,10 +492,12 @@ Any identifier statement that is not <code>name = ...</code> parses as a command
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         giveItem("POTION", 3)
-        healParty()
+        heal()
     }
 }
 </code></pre>
+<p>In a zero-Rust project, <code>heal()</code> restores the party and records the player’s
+<a href="../glossary.html#battle-gameplay">heal point</a>.</p>
 <p>A sync query’s return value in bare-command position is discarded
 (interpreter.rs:543-566); assign the call when the result matters.
 Unrecognized <code>@name(...)</code> forms (for example legacy <code>@goto(...)</code>) also land
@@ -520,7 +522,7 @@ into the generated JS (js_storyline.rs:60-74):</p>
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         @run {
-            game.healParty();
+            game.heal();
         }
     }
 }

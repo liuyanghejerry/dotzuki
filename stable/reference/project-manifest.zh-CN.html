@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
 <blockquote>
-<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。</p>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>一个<strong>游戏项目</strong>就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
@@ -419,12 +419,12 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 物品 id 以 name=id、价格 0 的形式打开——配置错误的商店永远不会让场景死锁。
 物品记录通过 <code>battle.items</code> 表读取。</p>
 <h3 id="游戏结束"><a class="header" href="#游戏结束">游戏结束</a></h3>
-<p>输掉战斗不会再让玩家带着 0 HP 的队伍卡死：收到 <code>"lose"</code> 的场景结束（先播放它
-自己的战败文本）后，运行器执行一次 <strong>whiteout</strong>——短暂黑屏，一行
-<code>&lt;Name&gt; collapsed…</code>，然后整支队伍回复到满 HP/MP（状态清除），玩家回到<strong>入口
-地图的出生点</strong>（若当前地图就是入口地图则留在原地，否则加载入口地图）。flags、
-背包和金钱保留。无地图（纯对话）项目只做回复。目前还没有回复点系统：重生位置
-总是入口出生点。</p>
+<p>在场景中调用 <code>@command("heal")</code> 可以回复全队 HP、MP，清除状态，并把当前地图、
+地块、朝向与海拔层记为<a href="glossary.html#battle-gameplay">回复点</a>。每次调用都会覆盖上一次记录。</p>
+<p>战败场景播放完对白后，运行器短暂黑屏、显示倒下提示、回复全队，再把玩家送回回复点。
+尚未记录回复点或原地图已移除时，玩家回到入口地图的出生点。若原地块被挡住，
+运行器会在同一地图的地面层选择可用的出生点。无地图的项目会原地回复全队。
+标志、背包和金钱均会保留。</p>
 <h3 id="音频"><a class="header" href="#音频">音频</a></h3>
 <p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> 播放
 <code>data/audio/**/*.json</code> 中的音轨（dotzuki-audio <code>TrackDef</code> 格式；<code>music/</code> +
@@ -439,10 +439,11 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 的占位图形。</p>
 <h3 id="存档读档"><a class="header" href="#存档读档">存档/读档</a></h3>
 <p>游戏存档写入 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带
-版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
+版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
 <a href="battle-rules.html">战斗规则</a>；当战斗有 <code>levels</code> 块时，队伍成员可携带可选的
 <code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级 1 / 0 EXP；<code>money</code> 总是写入；<code>player.level</code>
-是地图海拔层，缺失 ⇒ 0）。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
+是地图海拔层，缺失 ⇒ 0）。可选的 <code>healPoint</code> 保存 <code>{map, x, y, facing, level?}</code>。
+缺少该字段的旧存档使用入口出生点。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
 以及场景结束回到大地图时——绝不在场景中途或 warp 中途写入（挂起的场景引擎
 无法恢复），因此在对话中途关掉窗口会保留最后一个稳定点。Start 菜单的
 <strong>Save</strong> 条目按需写入同一个文件（总是允许，即使在无头模式运行中）。启动时若
@@ -461,8 +462,6 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 记录到日志），编辑<em>当前</em>地图的 <code>map.tmx.json</code> / <code>tileset.png</code> / objects 伴生
 文件会原地重载该地图，保留玩家位置和 flags。其他地图、数据表和 gfx 在下次
 进入 / 启动时生效。</p>
-<h3 id="尚未实现"><a class="header" href="#尚未实现">尚未实现</a></h3>
-<p>依赖以下内容的场景会警告并继续：<code>StackDriver</code> 回合循环。</p>
 <h2 id="dotzuki-check-编译什么"><a class="header" href="#dotzuki-check-编译什么"><code>dotzuki check</code> 编译什么</a></h2>
 <p><code>dotzuki check &lt;dir&gt;</code> 加载项目清单，收集所有可能存放 DSL 文件的目录，并对它们
 运行 <code>dotzuki_engine_dsl::compiler::compile_dirs</code>（在内存中运行，不写出任何

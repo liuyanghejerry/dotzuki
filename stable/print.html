@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-49f21357.js";
+            window.path_to_searchindex_js = "searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7b7e3677.js"></script>
@@ -1129,7 +1129,7 @@ through the dotzuki-editor and the AI Story Designer.</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: tutorial</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A guided tour from an empty machine to a JRPG project you can click around
@@ -1248,8 +1248,9 @@ drops the foe’s attack on switch-in, Bryn’s <code>leftovers</code> heal him 
 actions, and a scene can arm the seeded <code>sandstorm</code> with
 <code>setWeather("sandstorm")</code> before <code>startBattle</code>); held items are never
 consumed, weather is battle-local (scene-armed only), and a lost battle
-heals the party and returns you to the entry map’s spawn (no heal-point
-system yet). Everything else is in: enemy parties (the <code>encounters</code> table —
+heals the party and returns you to the last <a href="#battle-gameplay">heal point</a>.
+A scene records one with <code>@command("heal")</code>. The entry spawn is the default. Other battle
+options include enemy parties (the <code>encounters</code> table —
 queued send-outs, summed EXP), trainer battles (Run blocked, money on a
 win), a wild-only Run action (the scene sees a third outcome, <code>"run"</code>), and
 shop selling at half price. See <a href="#battles">the battle rules reference</a>
@@ -1508,7 +1509,7 @@ choices, flags, battles from scenes, and the edit-check loop.</p>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>The <a href="#scene-dsl-reference-scene">syntax reference</a> is the authority on every
@@ -1636,7 +1637,13 @@ falling back to <code>en</code>:</p>
 <p>The recipe and runtime rules are in <a href="#i18n-guide">Bilingual Text (i18n)</a>.</p>
 <h2 id="the-edit-check-loop"><a class="header" href="#the-edit-check-loop">The edit-check loop</a></h2>
 <ol>
-<li>Write or edit the <code>.scene</code> file.</li>
+<li>Open <strong>Scripts</strong> and select the scene. The sidebar lists files from every
+configured script and story activity, plus <code>game.scenesDir</code> (default
+<code>assets/scenes</code>). Paths distinguish files with the same name.</li>
+<li>Edit the draft. <strong>Diagnostics</strong> compiles the current <code>.scene</code> buffer as
+you type. Select a finding to move the cursor to its location. If the
+editor reports that its WASM compiler is unavailable, lint findings still
+appear. Save the scene before checking the whole project.</li>
 <li>Run <code>dotzuki check</code> — it compiles every scene (plus layouts, themes, and
 styles) and prints diagnostics; exit code 0 means the scenes compile.</li>
 <li>Run <code>dotzuki run</code> and walk through the storyline. Branches that walking
@@ -3349,7 +3356,7 @@ and iOS integration contract.</p>
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A <strong>game project</strong> is a plain directory of DSL, data, and asset files plus a
@@ -3609,15 +3616,15 @@ sell for 0 — allowed). A sells one (money += , count −= 1). Unknown item ids
 on the shelf open as name=id, price 0 — a misconfigured shop never deadlocks
 the scene. Item records are read through the <code>battle.items</code> table.</p>
 <h3 id="game-over"><a class="header" href="#game-over">Game-over</a></h3>
-<p>Losing a battle no longer strands the player with a 0-HP
-party: after the scene that received <code>"lose"</code> finishes (its own post-lose
-text plays first), the runner runs a <strong>whiteout</strong> — a brief blackout, a
-<code>&lt;Name&gt; collapsed…</code> line, then the whole party is healed to full HP/MP
-(status cleared) and the player returns to the <strong>entry map’s spawn point</strong>
-(the current map if it is the entry map, otherwise the entry map loads).
-Flags, inventory and money are kept. Map-less (dialogue-only) projects just
-heal. There is no heal-point system yet: the respawn is always the entry
-spawn.</p>
+<p>Use <code>@command("heal")</code> in a scene to restore the party’s HP and MP, remove status
+conditions, and record the current map, tile, facing, and elevation as a
+<a href="#battle-gameplay">heal point</a>. Each call replaces the previous point.</p>
+<p>After a losing scene finishes its dialogue, the runner shows a brief blackout
+and a collapse message, heals the party, and returns the player to that point.
+Without a recorded point, or if its map is gone, the player returns to the
+entry map’s spawn. If the recorded tile is blocked, the runner chooses a
+ground-level spawn on the same map. A map-less project heals the party in
+place. Flags, inventory, and money carry over.</p>
 <h3 id="audio"><a class="header" href="#audio">Audio</a></h3>
 <p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> play tracks
 from <code>data/audio/**/*.json</code> (dotzuki-audio <code>TrackDef</code> format; <code>music/</code> + <code>sfx/</code>
@@ -3634,14 +3641,15 @@ load at boot).</p>
 is drawn. NPCs always render as id-colored placeholders in this version.</p>
 <h3 id="saveload"><a class="header" href="#saveload">Save/load</a></h3>
 <p>The game saves to <code>&lt;project&gt;/.dotzuki-save.json</code> (override with
-<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code> (v3; <code>party</code>/<code>inventory</code> appear
+<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code> (v3; <code>party</code>/<code>inventory</code> appear
 once a battle has completed — see <a href="#battles">the battle rules</a>; party members may
 carry optional <code>level</code>/<code>exp</code> fields when the battle has a <code>levels</code> block —
 absent ⇒ level 1 / 0 EXP; <code>money</code> is always written; <code>player.level</code> is the
-map elevation level, absent ⇒ 0). Saves are written only from <strong>stable</strong> states — after a completed
-warp transition and when a scene finishes into the overworld — never
-mid-scene or mid-warp (a suspended scene engine can’t resume), so closing
-the window mid-dialogue keeps the last stable point. The Start menu’s
+map elevation level, absent ⇒ 0). The optional <code>healPoint</code> contains
+<code>{map, x, y, facing, level?}</code>. Existing saves without it use the entry spawn.</p>
+<p>The runner saves from <strong>stable</strong> states, after a completed warp transition and when a scene
+finishes into the overworld — never mid-scene or mid-warp (a suspended scene engine can’t resume),
+so closing the window mid-dialogue keeps the last stable point. The Start menu’s
 <strong>Save</strong> entry writes the same file on demand (always allowed, even in
 headless runs). On boot a valid save resumes: flags are restored, the saved
 map loads, the player is placed at the saved tile (spawn-scan fallback if it
@@ -3663,9 +3671,6 @@ scenes in place (a broken edit keeps the old scenes running; diagnostics are
 logged), and an edit to the <em>current</em> map’s <code>map.tmx.json</code> / <code>tileset.png</code> /
 objects sidecar reloads that map in place, preserving the player position and
 flags. Other maps, data tables and gfx are picked up on next enter / boot.</p>
-<h3 id="not-yet-implemented"><a class="header" href="#not-yet-implemented">Not yet implemented</a></h3>
-<p>Scenes relying on these warn and continue: the
-<code>StackDriver</code> turn loop.</p>
 <h2 id="what-dotzuki-check-compiles"><a class="header" href="#what-dotzuki-check-compiles">What <code>dotzuki check</code> compiles</a></h2>
 <p><code>dotzuki check &lt;dir&gt;</code> loads the manifest, collects every directory that may hold
 DSL files, and runs <code>dotzuki_engine_dsl::compiler::compile_dirs</code> over them (in
@@ -4019,7 +4024,7 @@ versioning lives in
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A project opts into the generic, data-driven battle system (parties +
@@ -4145,11 +4150,9 @@ remaining.</p>
 rebuilt from the records at every battle start, but each member’s <strong>current
 HP/MP and status persist between battles</strong> — the runner owns that party
 state, harvests it at the end of every battle (win, lose AND run), and
-carries it
-in the save file (<code>party</code>). A member at 0 HP stays fainted until healed
-(items are the only healing source so far). The first LIVING member leads;
-a party with no living member loses on the spot. In battle the root menu
-offers <strong>Fight</strong> (the skill menu), <strong>Party</strong> (the member list with HP and
+carries it in the save file (<code>party</code>). A scene’s <code>heal</code> command or a whiteout revives
+fainted members. The first living member leads. A party with no living member loses on the spot.
+In battle the root menu offers <strong>Fight</strong> (the skill menu), <strong>Party</strong> (the member list with HP and
 status — switching to a living, non-active member consumes the player’s
 turn, and the enemy’s action then resolves against the NEW member),
 <strong>Item</strong> (when configured), and <strong>Run</strong> — in a WILD battle Run always
@@ -4243,13 +4246,11 @@ optional <code>ability</code> field). The ACTIVE combatants’ ability hooks fir
 battle start and on every switch-in (a voluntary/forced player switch, an
 encounter send-out) on the <code>SwitchIn</code> event — benched members’ abilities
 are inert. A switch-in fire narrates an intro line (<code>"Aria's Intimidate!"</code> — the record id prettified, since records carry no display
-name) before the usual diff lines (<code>"Slime's Attack fell!"</code>). Ability
-hooks also join the acting combatant’s per-action event sequence: an
-ability hooking <code>ModifyDamage</code>/<code>DamagingHit</code>/… fires alongside the skill’s
-own hooks, with the same <code>Source</code> (the actor) and <code>Target</code> (the foe).</li>
+name) before the usual diff lines (<code>"Slime's Attack fell!"</code>). Ability hooks also participate
+in move resolution.</li>
 <li><strong>Held items</strong> (<code>kind: Item</code> records, named by a combatant record’s
-optional <code>heldItem</code> field). They fire exactly like abilities, plus their
-<code>Residual</code> hooks run after each of the holder’s actions (a Leftovers-style
+optional <code>heldItem</code> field). They participate in move resolution. Their
+<code>Residual</code> hooks run after the holder’s skill actions (a Leftovers-style
 <code>HealFraction</code>). Held items are <strong>persistent flags — nothing consumes
 them</strong> (berries/consumption are out of scope); a <code>heldItem</code> id whose
 <code>healField</code> is 0 never appears in the Item menu.</li>
@@ -4264,11 +4265,17 @@ warns and is ignored. In-battle weather-setting (a move op) is NOT
 supported — the <code>Op</code> vocabulary has no weather op; scenes are the only
 trigger.</li>
 </ul>
-<p>Limits of the wiring: only the ACTING combatant’s ability/held-item hooks
-join its per-action sequence (a defender’s ability fires on its own
-switch-in/residual, not in the attacker’s fold), and residuals (status, held
-item, weather) fire after a combatant’s own action — on switch/item rounds
-only the enemy’s residual runs, as with statuses.</p>
+<p>On table skills and RON moves, an ability or held-item hook defaults to
+<code>holder: Attacker</code> and runs when its holder uses the skill. Set
+<code>holder: Defender</code> to run it when the holder receives a move. For example,
+<code>Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])</code>
+halves incoming damage. Both roles share the same ordered event fold.
+<code>Source</code> names the attacker and <code>Target</code> names the defender in either role.</p>
+<p>Status, held-item, and weather residuals tick after the holder’s skill action.
+Switching and using an item spend the player’s turn. Only the enemy takes a
+skill action on those rounds. For <code>InflictVolatile</code>, a positive <code>amount</code>
+counts the affected holder’s subsequent skill actions, including misses and
+blocked moves. An omitted or zero amount lasts until a switch or battle end.</p>
 <h2 id="turn-loop"><a class="header" href="#turn-loop">Turn loop</a></h2>
 <p>Each round: the player picks a root-menu action — <strong>Fight</strong>
 opens the skill menu (name + cost; unaffordable skills are marked and
@@ -4285,10 +4292,9 @@ sends out the next queued enemy (encounters) or ends the battle in a win;
 the active member at 0 HP forces a replacement
 while the party has living members, else the battle is lost; a successful
 Run ends it on the spot: the scene
-resumes with <code>"win"</code>, <code>"lose"</code> or <code>"run"</code>. The loop is the runner’s own phase
-machine, not the engine’s <code>StackDriver</code>; RON hooks fire per event through
-the effect-stack interpreter (<code>collect_handlers</code> + <code>run_event</code>), the
-minimon/wuxia harness pattern.</p>
+resumes with <code>"win"</code>, <code>"lose"</code>, or <code>"run"</code>. The engine’s <code>StackDriver</code> orders actions and their
+residuals. When a forced switch interrupts a round, an opponent that still has an action takes it
+against the replacement. RON handlers run together in event order.</p>
 <h2 id="scene-integration"><a class="header" href="#scene-integration">Scene integration</a></h2>
 <p><code>result = startBattle("slime")</code> (or
 <code>@command("startBattle", "slime")</code>) suspends the scene, runs the battle, and
@@ -4305,7 +4311,7 @@ held items &amp; weather</strong> above). A project <strong>without</strong> a
 like any unimplemented command). A lost battle returns <code>"lose"</code> to the scene
 (its post-lose text plays), then triggers the <strong>game-over whiteout</strong> (see
 <a href="#game-over">Game-over</a>): the party is healed and the player
-returns to the entry spawn.</p>
+returns to the most recent <a href="#battle-gameplay">heal point</a>, or to the entry spawn.</p>
 <h2 id="sceneless-battles-random-encounters"><a class="header" href="#sceneless-battles-random-encounters">Sceneless battles (random encounters)</a></h2>
 <p>A battle armed by walking (the
 objects sidecar’s <code>encounters</code> block — see <a href="#maps">Maps</a>) has no scene
@@ -4319,16 +4325,9 @@ order of the drawn id (encounter record → single enemy record), trainer
 battles blocking Run, EXP sums, abilities/weather — are identical to a
 scene-triggered battle.</p>
 <h2 id="remaining-limits"><a class="header" href="#remaining-limits">Remaining limits</a></h2>
-<p>Every RON <code>EffectKind</code> now fires (Move / Status /
-Ability / Item / Weather); what remains: volatiles never expire
-(<code>InflictVolatile</code> installs, <code>HasVolatile</code> reads — nothing removes them);
-HP/MP clamp into the engine’s <code>u16</code> pools for RON skills; items only heal
-(no status cures / revives / battle-only effects) and held items are never
-consumed; a defender’s ability/held-item hooks don’t join the attacker’s
-per-action fold; weather is scene-armed only (no in-battle op sets it).
-Later PRs:
-<code>StackDriver</code> migration, a heal-point system (the whiteout
-always respawns at the entry spawn).</p>
+<p>RON actions use 16-bit HP and MP pools. Consumable items restore HP to a
+living member and held items persist through battle. Scenes set or clear
+weather for the next battle.</p>
 <h2 id="validation-by-dotzuki-check"><a class="header" href="#validation-by-dotzuki-check">Validation by <code>dotzuki check</code></a></h2>
 <p>When the manifest has a <code>battle</code> section, <code>check</code> also validates it: the
 referenced table ids (party/enemies/encounters/skills/items) must exist in the data
@@ -4351,7 +4350,7 @@ and compiled by <code>dotzuki-engine-dsl</code>.</p>
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>This page describes the <a href="#glossary">Game DSL</a> <code>.scene</code> file as the code
@@ -4654,10 +4653,12 @@ Any identifier statement that is not <code>name = ...</code> parses as a command
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         giveItem("POTION", 3)
-        healParty()
+        heal()
     }
 }
 </code></pre>
+<p>In a zero-Rust project, <code>heal()</code> restores the party and records the player’s
+<a href="#battle-gameplay">heal point</a>.</p>
 <p>A sync query’s return value in bare-command position is discarded
 (interpreter.rs:543-566); assign the call when the result matters.
 Unrecognized <code>@name(...)</code> forms (for example legacy <code>@goto(...)</code>) also land
@@ -4682,7 +4683,7 @@ into the generated JS (js_storyline.rs:60-74):</p>
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         @run {
-            game.healParty();
+            game.heal();
         }
     }
 }
@@ -8131,7 +8132,7 @@ dispatch, so <code>--screenshot</code> output reflects real rendered state.</li>
 <li><strong>Audience</strong>: all readers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>Canonical definitions of dotzuki terms. Link to an entry here the first time
@@ -8327,12 +8328,12 @@ scene to resume.</li>
 <li><strong>switch</strong>（换人）— replacing the active battler; fires <code>SwitchIn</code>.</li>
 <li><strong>residual</strong>（残留效果）— the end-of-action / end-of-turn tick (status
 chip, held-item recovery, weather).</li>
-<li><strong>whiteout</strong> — the post-loss flow: party healed, player respawns at the
-entry spawn; kept in English in Chinese text.</li>
+<li><strong>whiteout</strong> — the post-loss sequence that heals the party and returns the player to
+their last heal point, falling back to the entry spawn.</li>
 <li><strong>turn loop</strong>（回合循环）— the per-round phase machine (Fight / Party /
 Item / Run → resolution → residuals).</li>
-<li><strong>heal point</strong>（回复点）— the planned whiteout-respawn alternative on
-maps.</li>
+<li><strong>heal point</strong>（回复点）— the map, tile, facing, and elevation recorded when a scene calls
+<code>heal</code>. The player returns here after a whiteout.</li>
 </ul>
 <h2 id="maps-2"><a class="header" href="#maps-2">Maps</a></h2>
 <ul>
@@ -8762,7 +8763,7 @@ current design.</p>
 <li><strong>Audience</strong>: battle authors, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <blockquote>
@@ -9334,11 +9335,6 @@ sketch is optimistic on this point; see the “one nit” in §10.</p>
 <li><strong>Doubles / multi-target.</strong> A <code>redirect_target</code> seam exists but is <strong>defaulted,
 inert, and unproven</strong>; minimon is 1v1. Follow Me / Lightning Rod redirection
 (<code>TryHit</code> + redirect) is expressible-in-principle, not exercised.</li>
-<li><strong>Full content tables / multi-hit / accuracy / crit RNG.</strong> minimon authors <strong>2
-moves</strong> with a deterministic <code>power*atk/def</code> formula (no rolls) so outcomes are
-hand-checkable. <code>Accuracy</code>, <code>ModifyCritRatio</code>, <code>ModifyMove</code> (multi-hit), and
-many Group D/E/F events are present as <strong>subscription seams</strong> but not yet fired
-by a shipped driver.</li>
 <li><strong>Wiring into pokered’s production loop is staged, not done.</strong> Gen-1 fidelity
 remains a <strong>regression credential</strong> (the 88 slices via the legacy
 <code>battle::driver</code>), not a production swap on the new stack. AI, switching policy,
@@ -9439,17 +9435,19 @@ implementation. See <a href="#game-project-spec--zero-rust-dotzuki-engine-projec
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>The game saves to <code>&lt;project&gt;/.dotzuki-save.json</code> (override with
-<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code> (v3). The runner-side save/load
+<code>--save-file</code>) — versioned JSON: <code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code> (v3). The runner-side save/load
 contract lives in <a href="#saveload">Save/load</a>.</p>
 <ul>
 <li><code>party</code>/<code>inventory</code> appear once a battle has completed.</li>
 <li>Party members may carry optional <code>level</code>/<code>exp</code> fields when the battle
 has a <code>levels</code> block — absent ⇒ level 1 / 0 EXP.</li>
 <li><code>money</code> is always written.</li>
+<li><code>healPoint</code> stores the last on-map <code>heal</code> as <code>{map, x, y, facing, level?}</code>.
+Older saves omit it and use the entry spawn after a whiteout.</li>
 <li><code>player.level</code> is the map elevation level, absent ⇒ 0.</li>
 </ul>
 <h2 id="when-saves-are-written"><a class="header" href="#when-saves-are-written">When saves are written</a></h2>
@@ -9541,6 +9539,18 @@ catch-up, and FPS based on completed renders. Escape only exits native windows.
 See <a href="#runtime-behavior">game shell</a>.</p>
 </li>
 <li>
+<p>Zero-Rust battles run through the shared turn driver. Ability and held-item
+hooks can react to incoming skills and volatiles can expire after a set
+number of actions. A scene’s <code>heal</code> records the player’s respawn point in
+an optional v3 save field. <a href="#battles">Battle rules</a></p>
+</li>
+<li>
+<p>The editor’s <strong>Scripts</strong> activity lists global scenes and every configured
+script and story directory. It compiles unsaved scene edits and links
+diagnostics to their source locations. The browser welcome screen can open
+projects using a folder picker.</p>
+</li>
+<li>
 <p>Add <a href="#click-to-move">click to move</a> to the runner and pointer-enabled hosts.</p>
 </li>
 <li>
@@ -9553,9 +9563,16 @@ default pointer callbacks, and the button contract remains unchanged.</p>
 </ul>
 <p>Breaking Rust API change:</p>
 <ul>
-<li>Add <code>NpcRuntimeState::step_direction: Option&lt;Direction&gt;</code>. Add <code>step_direction: None</code> to
+<li>
+<p>When constructing <code>HookRecord</code> or <code>CompiledHook</code> with a Rust struct literal,
+supply <code>holder: HookHolder::Attacker</code> for the existing behavior. A <code>GameSave</code>
+literal can use <code>heal_point: None</code>. Existing RON and save files load as written.</p>
+</li>
+<li>
+<p>Add <code>NpcRuntimeState::step_direction: Option&lt;Direction&gt;</code>. Add <code>step_direction: None</code> to
 idle NPC struct literals. Manual walking-state fixtures must retain their movement direction
-in this field. Binary save adapters must account for the additional field.</li>
+in this field. Binary save adapters must account for the additional field.</p>
+</li>
 </ul>
 <p>NPC movement fixes:</p>
 <ul>
@@ -14894,7 +14911,7 @@ dotzuki-editor 和 AI Story Designer 做同一个游戏。</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="15-分钟做出你的第一款游戏"><a class="header" href="#15-分钟做出你的第一款游戏">15 分钟做出你的第一款游戏</a></h1>
 <blockquote>
-<p>本文是 <code>tutorials/editor-first-game.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>tutorials/editor-first-game.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -14902,7 +14919,7 @@ dotzuki-editor 和 AI Story Designer 做同一个游戏。</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: tutorial</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>一次带你从头到尾走一遍的导览：从一台空机器，到一个可以点击游玩的 JRPG 项目 ——
@@ -15001,8 +15018,8 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <code>kind: Ability</code>/<code>Item</code>/<code>Weather</code>：Aria 预置的 <code>intimidate</code> 会在换入时降低对手的
 攻击，Bryn 的 <code>leftovers</code> 在他的行动结束后给他回血，场景还可以在 <code>startBattle</code>
 之前用 <code>setWeather("sandstorm")</code> 布置预置的 <code>sandstorm</code>）；持有的道具不会被消耗，
-天气只属于单场战斗（只能由场景布置），战斗失败会治疗全队并把你送回入口地图的
-出生点（还没有回复点系统）。其余内容都已就位：敌方队伍（<code>encounters</code> 表 —— 排队
+天气仅在当前战斗生效，且只能由场景预置。战败后全队回复，并回到场景上次调用
+<code>@command("heal")</code> 记录的<a href="#battle-gameplay">回复点</a>，默认使用入口出生点。你还可以配置敌方队伍（<code>encounters</code> 表 —— 排队
 出场、EXP 累加）、trainer 战（Run 被禁用、胜利得钱）、仅野怪可用的 Run 动作（场景
 会看到第三种结果 <code>"run"</code>），以及半价出售的商店。规则格式见
 <a href="#battles">战斗规则参考</a>。</li>
@@ -15207,7 +15224,7 @@ cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255�
 <h1 id="场景"><a class="header" href="#场景">场景</a></h1>
 <p>如何编写 <code>.scene</code> 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。</p>
 <blockquote>
-<p>本文是 <code>how-to/scenes.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>how-to/scenes.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -15215,7 +15232,7 @@ cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255�
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p><a href="#scene-dsl-reference-scene">语法参考</a>是每个语法构造的权威——本页是任务视角：编写时随手查阅的配方，外加把它们接到地图上的 runner 契约。如果还没有接好地图与其场景，先从<a href="#your-first-game--town-battle-story-and-save">你的第一个游戏</a>开始。</p>
@@ -15309,7 +15326,10 @@ cardinal 墙体使用变体 10；四周完全填满的 blob 格使用变体 255�
 <p>配方与运行时规则见<a href="#i18n-guide">i18n 指南</a>。</p>
 <h2 id="编写-检查循环"><a class="header" href="#编写-检查循环">编写-检查循环</a></h2>
 <ol>
-<li>编写或修改 <code>.scene</code> 文件。</li>
+<li>打开<strong>脚本</strong>并选择场景。侧栏列出各脚本活动、故事活动所配置目录中的文件，以及
+<code>game.scenesDir</code>（默认 <code>assets/scenes</code>）中的文件。同名文件可用路径区分。</li>
+<li>编辑草稿时，<strong>诊断</strong>面板会编译当前 <code>.scene</code> 内容。点击诊断可跳到对应位置。
+编辑器提示 WASM 编译器不可用时仍会显示 lint 结果。先保存场景，再检查整个项目。</li>
 <li>运行 <code>dotzuki check</code> —— 它编译所有场景（以及布局、主题、样式）并输出诊断；退出码 0 表示场景全部通过编译。</li>
 <li>运行 <code>dotzuki run</code> 走一遍剧情线；走路走不到的分支（胜负路径）用临时 flag 或 trigger 验证最方便。</li>
 </ol>
@@ -16814,7 +16834,7 @@ Start/Select 位于右上，所有控件避让窗口安全区。
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="游戏项目规范--零-rust-dotzuki-engine-项目"><a class="header" href="#游戏项目规范--零-rust-dotzuki-engine-项目">游戏项目规范 — 零 Rust dotzuki-engine 项目</a></h1>
 <blockquote>
-<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/project-manifest.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。</p>
@@ -16823,7 +16843,7 @@ Start/Select 位于右上，所有控件避让窗口安全区。
 <li><strong>Audience</strong>: game authors, tool developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>一个<strong>游戏项目</strong>就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
@@ -17051,12 +17071,12 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 物品 id 以 name=id、价格 0 的形式打开——配置错误的商店永远不会让场景死锁。
 物品记录通过 <code>battle.items</code> 表读取。</p>
 <h3 id="游戏结束"><a class="header" href="#游戏结束">游戏结束</a></h3>
-<p>输掉战斗不会再让玩家带着 0 HP 的队伍卡死：收到 <code>"lose"</code> 的场景结束（先播放它
-自己的战败文本）后，运行器执行一次 <strong>whiteout</strong>——短暂黑屏，一行
-<code>&lt;Name&gt; collapsed…</code>，然后整支队伍回复到满 HP/MP（状态清除），玩家回到<strong>入口
-地图的出生点</strong>（若当前地图就是入口地图则留在原地，否则加载入口地图）。flags、
-背包和金钱保留。无地图（纯对话）项目只做回复。目前还没有回复点系统：重生位置
-总是入口出生点。</p>
+<p>在场景中调用 <code>@command("heal")</code> 可以回复全队 HP、MP，清除状态，并把当前地图、
+地块、朝向与海拔层记为<a href="#battle-gameplay">回复点</a>。每次调用都会覆盖上一次记录。</p>
+<p>战败场景播放完对白后，运行器短暂黑屏、显示倒下提示、回复全队，再把玩家送回回复点。
+尚未记录回复点或原地图已移除时，玩家回到入口地图的出生点。若原地块被挡住，
+运行器会在同一地图的地面层选择可用的出生点。无地图的项目会原地回复全队。
+标志、背包和金钱均会保留。</p>
 <h3 id="音频"><a class="header" href="#音频">音频</a></h3>
 <p><code>playMusic</code>/<code>playSound</code>/<code>stopMusic</code>/<code>fadeOutMusic</code> 播放
 <code>data/audio/**/*.json</code> 中的音轨（dotzuki-audio <code>TrackDef</code> 格式；<code>music/</code> +
@@ -17071,10 +17091,11 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 的占位图形。</p>
 <h3 id="存档读档"><a class="header" href="#存档读档">存档/读档</a></h3>
 <p>游戏存档写入 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带
-版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
+版本号的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code>（v3；<code>party</code>/<code>inventory</code> 在战斗完成后才出现——见
 <a href="#battles">战斗规则</a>；当战斗有 <code>levels</code> 块时，队伍成员可携带可选的
 <code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级 1 / 0 EXP；<code>money</code> 总是写入；<code>player.level</code>
-是地图海拔层，缺失 ⇒ 0）。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
+是地图海拔层，缺失 ⇒ 0）。可选的 <code>healPoint</code> 保存 <code>{map, x, y, facing, level?}</code>。
+缺少该字段的旧存档使用入口出生点。存档只从<strong>稳定</strong>状态写入——完成一次 warp 过渡之后，
 以及场景结束回到大地图时——绝不在场景中途或 warp 中途写入（挂起的场景引擎
 无法恢复），因此在对话中途关掉窗口会保留最后一个稳定点。Start 菜单的
 <strong>Save</strong> 条目按需写入同一个文件（总是允许，即使在无头模式运行中）。启动时若
@@ -17093,8 +17114,6 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 记录到日志），编辑<em>当前</em>地图的 <code>map.tmx.json</code> / <code>tileset.png</code> / objects 伴生
 文件会原地重载该地图，保留玩家位置和 flags。其他地图、数据表和 gfx 在下次
 进入 / 启动时生效。</p>
-<h3 id="尚未实现"><a class="header" href="#尚未实现">尚未实现</a></h3>
-<p>依赖以下内容的场景会警告并继续：<code>StackDriver</code> 回合循环。</p>
 <h2 id="dotzuki-check-编译什么"><a class="header" href="#dotzuki-check-编译什么"><code>dotzuki check</code> 编译什么</a></h2>
 <p><code>dotzuki check &lt;dir&gt;</code> 加载项目清单，收集所有可能存放 DSL 文件的目录，并对它们
 运行 <code>dotzuki_engine_dsl::compiler::compile_dirs</code>（在内存中运行，不写出任何
@@ -17147,7 +17166,7 @@ bundle 并重启，同时恢复存档），音频输出经由浏览器的 <code>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="战斗"><a class="header" href="#战斗">战斗</a></h1>
 <blockquote>
-<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/battle-rules.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>battle</code> 项目清单区块：配置、rules.ron 钩子、回合循环与 <code>check</code> 校验。</p>
@@ -17156,7 +17175,7 @@ bundle 并重启，同时恢复存档），音频输出经由浏览器的 <code>
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>项目通过顶层 <code>battle</code> 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
@@ -17258,8 +17277,7 @@ MP 同理）。</li>
 <p>玩家的队伍是 <strong>party 表的每一条记录</strong>（按记录 id 排序；单记录队伍与 v1 表现
 一致）。每场战斗开始时，基准属性都从记录重建，但每名成员的<strong>当前 HP/MP 和
 状态在战斗之间保持</strong>——运行器持有这份队伍状态，在每场战斗结束时（胜、负和
-逃跑）收割，并随存档文件（<code>party</code>）保存。0 HP 的成员保持濒死直到被治疗（目前
-物品是唯一的治疗来源）。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
+逃跑）收割，并随存档文件（<code>party</code>）保存。场景的 <code>heal</code> 命令或 whiteout 可复活濒死成员。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
 中根菜单提供 <strong>Fight</strong>（技能菜单）、<strong>Party</strong>（成员列表，含 HP 和状态——切换
 到一名存活且非当前成员会消耗玩家回合，敌人的行动随后对新成员结算）、<strong>Item</strong>
 （配置了才出现）和 <strong>Run</strong>——野怪战斗中逃跑总是成功：旁白
@@ -17339,12 +17357,9 @@ harness 的顺序）：MP 门槛 → accuracy → <code>BeforeMove</code> 门槛
 当前战斗者的特性 钩子 在战斗开始和每次换人上场（玩家主动/被迫换人、
 encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员的特性不生效。换人上场
 触发时，在常规的增减文本（<code>"Slime's Attack fell!"</code>）之前先叙述一行介绍
-（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性
-钩子 也会加入行动战斗者的每次行动事件序列：挂接
-<code>ModifyDamage</code>/<code>DamagingHit</code>/… 的特性与技能自身的 钩子 一起触发，<code>Source</code>
-（行动者）和 <code>Target</code>（对手）相同。</li>
+（<code>"Aria's Intimidate!"</code>——对记录 id 做了美化，因为记录没有显示名）。特性钩子也可参与技能结算。</li>
 <li><strong>携带道具</strong>（<code>kind: Item</code> 记录，由战斗者记录上可选的 <code>heldItem</code> 字段指定）。
-它们的触发与特性完全一样，另外其 <code>Residual</code> 钩子 会在持有者每次行动之后
+携带道具可参与技能结算，其 <code>Residual</code> 钩子会在持有者的技能行动后
 运行（Leftovers 风格的 <code>HealFraction</code>）。携带道具是<strong>持久性标志——没有东西
 会消耗它们</strong>（树果/消耗品不在范围内）；<code>healField</code> 为 0 的 <code>heldItem</code> id
 绝不会出现在 Item 菜单中。</li>
@@ -17357,10 +17372,13 @@ encounter 派出）时于 <code>SwitchIn</code> 事件触发——后备成员�
 若没有对应的已编译记录则警告并忽略。<strong>不</strong>支持在战斗中途设置天气（通过移动
 op）——<code>Op</code> 词汇表中没有天气 op；场景是唯一的触发途径。</li>
 </ul>
-<p>接入的限制：只有行动战斗者的特性/携带道具 钩子 加入它的每次行动序列（防守方
-的特性在它自己的换人/残留效果上触发，不会进入攻击方的那一轮），并且残留效果
-（状态、携带道具、天气）在战斗者自己的行动之后触发——在换人/物品回合中只有
-敌人的残留效果运行，与状态相同。</p>
+<p>对于数据表技能和 RON 招式，特性或携带道具的钩子默认使用 <code>holder: Attacker</code>，
+在持有者使用技能时触发。设为 <code>holder: Defender</code> 后，钩子会在持有者受到招式时触发。
+例如，<code>Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])</code>
+会将受到的伤害减半。双方的钩子按同一事件顺序结算，其中 <code>Source</code> 指攻击者，<code>Target</code> 指防守者。</p>
+<p>状态、携带道具和天气在持有者的技能行动后结算。玩家换人或使用物品会消耗回合，
+该回合只有敌人执行技能行动。<code>InflictVolatile</code> 的正数 <code>amount</code> 按持有者随后
+执行的技能行动计数，未命中或被阻止的行动也计数。省略该值或设为零时，效果持续到换人或战斗结束。</p>
 <h2 id="回合循环"><a class="header" href="#回合循环">回合循环</a></h2>
 <p>每回合：玩家选择一个根菜单操作——<strong>Fight</strong> 打开技能菜单（名称 + 消耗；付不起
 的技能会被标记且不可选），<strong>Party</strong> 换人（消耗回合），<strong>Item</strong> 使用一个物品
@@ -17373,9 +17391,8 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 <code>"Aria used Potion!"</code>）；随后行动方的状态残留效果触发。敌人 0 HP 时派出队列中
 的下一个敌人（encounters）或战斗以胜利结束；当前成员 0 HP 时，只要队伍还有
 存活成员就强制换人，否则战斗判负；成功逃跑立刻结束战斗：场景以 <code>"win"</code>、
-<code>"lose"</code> 或 <code>"run"</code> 恢复。这个循环是运行器自己的阶段机，不是引擎的
-<code>StackDriver</code>；RON 钩子 按事件经由效果栈解释器触发（<code>collect_handlers</code> +
-<code>run_event</code>），即 minimon/wuxia harness 模式。</p>
+<code>"lose"</code> 或 <code>"run"</code> 恢复。引擎的 <code>StackDriver</code> 调度行动和残留效果。若强制换人打断回合，
+尚未行动的敌人会对替补成员执行原定行动。同一事件中的 RON 钩子按顺序共同结算。</p>
 <h2 id="场景集成"><a class="header" href="#场景集成">场景集成</a></h2>
 <p><code>result = startBattle("slime")</code>（或 <code>@command("startBattle", "slime")</code>）挂起
 场景，运行战斗，并以 <code>result == "win" | "lose" | "run"</code> 恢复——照常用 <code>@if</code>
@@ -17387,7 +17404,7 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 （见上方 <strong>Abilities, held items &amp; weather</strong>）。<strong>没有</strong> <code>battle</code> 区块的项目会
 警告并以 <code>"win"</code> 自动完成（保持不败继续，与任何未实现的命令一样）。战败把
 <code>"lose"</code> 返回给场景（播放它的战败文本），然后触发 <strong>game-over whiteout</strong>（见
-<a href="#game-over">游戏结束</a>）：队伍回复，玩家回到入口出生点。</p>
+<a href="#game-over">游戏结束</a>）：队伍回复，玩家回到最近的<a href="#battle-gameplay">回复点</a>，没有记录时回到入口出生点。</p>
 <h2 id="无场景战斗随机-encounters"><a class="header" href="#无场景战斗随机-encounters">无场景战斗（随机 encounters）</a></h2>
 <p>走路触发的战斗（objects 伴生文件的 <code>encounters</code> 块——见
 <a href="#maps">地图</a>）没有场景可恢复，因此它的结果直接回到大地图：<strong>胜利</strong>
@@ -17397,13 +17414,8 @@ EXP/升级/trainer 金钱和队伍状态/背包的收割与场景战斗结束后
 语义——抽中 id 的解析顺序（encounter 记录 → 单个敌人记录）、trainer 战斗禁止
 逃跑、EXP 求和、特性/天气——都与场景触发的战斗相同。</p>
 <h2 id="剩余限制"><a class="header" href="#剩余限制">剩余限制</a></h2>
-<p>现在每种 RON <code>EffectKind</code> 都会触发（Move / Status / Ability / Item / Weather）；
-剩余的部分：volatiles 仅支持安装与读取（<code>InflictVolatile</code> 安装、<code>HasVolatile</code>
-读取——没有东西会清除它们）；RON 技能的 HP/MP 被限制在引擎的 <code>u16</code> 池中；
-物品只能治疗（没有解状态/复活/战斗专属效果），携带道具从不消耗；防守方的
-特性/携带道具 钩子 不加入攻击方的每次行动；天气只能由场景预置（没有战斗中
-的 op 可以设置）。后续 PR：迁移到 <code>StackDriver</code>、回复点系统（whiteout 总是在
-入口出生点重生）。</p>
+<p>RON 行动的 HP 和 MP 池使用 16 位整数。消耗品可为存活成员回复 HP，携带道具
+会在战斗后保留。场景可为下一场战斗设置或清除天气。</p>
 <h2 id="dotzuki-check-的校验"><a class="header" href="#dotzuki-check-的校验"><code>dotzuki check</code> 的校验</a></h2>
 <p>当项目清单带 <code>battle</code> 区块时，<code>check</code> 还会校验它：引用的表 id
 （party/enemies/encounters/skills/items）必须存在于 data 活动的
@@ -19437,7 +19449,7 @@ cargo doc --workspace --no-deps --open
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="scene-dsl-参考scene"><a class="header" href="#scene-dsl-参考scene">Scene DSL 参考（<code>.scene</code>）</a></h1>
 <blockquote>
-<p>本文是 <code>reference/dsl/scene.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>reference/dsl/scene.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit c38b2fe1aee9602cc8fc1f164fcb152dbdd42818）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p><code>.scene</code> 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -19447,7 +19459,7 @@ cargo doc --workspace --no-deps --open
 <li><strong>Audience</strong>: DSL authors</li>
 <li><strong>Type</strong>: reference</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>本页按代码实现来描述<a href="#glossary">游戏 DSL</a> 的 <code>.scene</code> 文件；当代码与旧文档不一致时，
@@ -19715,10 +19727,11 @@ codegen 会忽略（parser.rs:492-495；i18n.rs:10-18）。宿主的当前语言
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         giveItem("POTION", 3)
-        healParty()
+        heal()
     }
 }
 </code></pre>
+<p>在零 Rust 项目中，<code>heal()</code> 会回复全队，并记录玩家的<a href="#battle-gameplay">回复点</a>。</p>
 <p>同步查询的返回值出现在裸命令位置时会被丢弃（interpreter.rs:543-566）；结果有用时请
 给调用赋值。无法识别的 <code>@name(...)</code> 形式（例如旧式的 <code>@goto(...)</code>）也会落到这里，成为
 名字包含 <code>@</code> 的命令（lexer.rs:487），而 game API 并没有注册这些名字。</p>
@@ -19738,7 +19751,7 @@ codegen 会忽略（parser.rs:492-495；i18n.rs:10-18）。宿主的当前语言
 <pre><code class="language-dsl">game_scene StartTown {
     @storylines {
         @run {
-            game.healParty();
+            game.heal();
         }
     }
 }
@@ -21265,7 +21278,7 @@ A/B/Select/Start 和四方向仍使用原来的输入位。
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="效果栈战斗引擎"><a class="header" href="#效果栈战斗引擎">效果栈战斗引擎</a></h1>
 <blockquote>
-<p>本文是 <code>explanation/effect-stack.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>explanation/effect-stack.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本页解释 <code>dotzuki_engine::battle::stack</code> 的设计——这个 Showdown 风格的效果栈战斗
@@ -21275,7 +21288,7 @@ A/B/Select/Start 和四方向仍使用原来的输入位。
 <li><strong>Audience</strong>: battle authors, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <blockquote>
@@ -21801,10 +21814,6 @@ release）/ 从磁盘热重载（<code>hot-reload</code> cargo feature，dev）*
 <li><strong>双打 / 多目标。</strong> <code>redirect_target</code> 接缝存在，但<strong>带默认值、惰性且未经验证</strong>；
 minimon 是 1v1。Follow Me / Lightning Rod 的重定向（<code>TryHit</code> + 重定向）原则上可
 表达，但尚未演练。</li>
-<li><strong>完整内容表 / 多段攻击 / 命中率 / 暴击 RNG。</strong> minimon 用确定性的
-<code>power*atk/def</code> 公式编写了 <strong>2 个招式</strong>（无掷骰），因此结果可以手工核对。
-<code>Accuracy</code>、<code>ModifyCritRatio</code>、<code>ModifyMove</code>（多段攻击）以及许多 D/E/F 组事件以
-<strong>订阅接缝</strong>的形式存在，但尚无发布的驱动器触发它们。</li>
 <li><strong>接入 pokered 生产循环是分阶段的，尚未完成。</strong> Gen-1 忠实度仍是<strong>回归凭证</strong>
 （经由旧版 <code>battle::driver</code> 的 88 个切片），而不是新栈上的生产替换。AI、换人策略
 与 RNG 驱动的追加效果尚未在栈上演练。</li>
@@ -21899,7 +21908,7 @@ provider 经由一个泛型 <code>BattleProvider</code>/<code>EffectProvider</co
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="存档兼容性"><a class="header" href="#存档兼容性">存档兼容性</a></h1>
 <blockquote>
-<p>本文是 <code>explanation/save-compatibility.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>explanation/save-compatibility.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>存档版本机制、向前/向后兼容规则，以及每个工具都必须遵守的兼容性规则。</p>
@@ -21908,17 +21917,19 @@ provider 经由一个泛型 <code>BattleProvider</code>/<code>EffectProvider</co
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>游戏保存到 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带存档版本
-的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3）。运行器侧的存档/读取契约见
+的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code>（v3）。运行器侧的存档/读取契约见
 <a href="#saveload">Save/load</a>。</p>
 <ul>
 <li>战斗完成后，<code>party</code>/<code>inventory</code> 才会出现。</li>
 <li>当战斗带有 <code>levels</code> 块时，队伍成员可携带可选的 <code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级
 1 / 0 经验。</li>
 <li><code>money</code> 总是被写入。</li>
+<li><code>healPoint</code> 以 <code>{map, x, y, facing, level?}</code> 记录场景上一次调用 <code>heal</code> 的位置。
+旧存档缺少此字段时，whiteout 会将玩家送回入口出生点。</li>
 <li><code>player.level</code> 是地图海拔层，缺失 ⇒ 0。</li>
 </ul>
 <h2 id="何时写入存档"><a class="header" href="#何时写入存档">何时写入存档</a></h2>
@@ -22236,8 +22247,8 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变更日志"><a class="header" href="#变更日志">变更日志</a></h1>
 <blockquote>
-<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.1
-（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
+<p>本文是 <code>release-notes/changelog.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）
+（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -22274,6 +22285,14 @@ EXP，因此存档版本保持为 3，旧存档仍能加载）。菜单的 Party
 Escape 仅退出原生窗口。参见<a href="#运行时行为">游戏外壳</a>。</p>
 </li>
 <li>
+<p>零 Rust 战斗接入共享回合驱动器。特性和携带道具可响应来袭技能，易变状态可按行动
+次数到期。场景调用 <code>heal</code> 会将玩家的重生点写入 v3 存档的可选字段。<a href="#战斗">战斗规则</a></p>
+</li>
+<li>
+<p>编辑器的<strong>脚本</strong>活动会列出全局场景及所有已配置的脚本和故事目录。编辑草稿时会自动
+编译场景，点击诊断可跳到对应位置。浏览器欢迎页支持选择文件夹打开项目。</p>
+</li>
+<li>
 <p>为运行器及支持指针输入的宿主添加<a href="#点击移动">点击移动</a>。</p>
 </li>
 <li>
@@ -22285,9 +22304,16 @@ Escape 仅退出原生窗口。参见<a href="#运行时行为">游戏外壳</a>
 </ul>
 <p>Rust API 破坏性变更：</p>
 <ul>
-<li><code>NpcRuntimeState</code> 新增 <code>step_direction: Option&lt;Direction&gt;</code>。空闲 NPC 结构体字面量
+<li>
+<p>用 Rust 结构体字面量构造 <code>HookRecord</code> 或 <code>CompiledHook</code> 时，填入
+<code>holder: HookHolder::Attacker</code> 可保持原有行为。构造 <code>GameSave</code> 可填
+<code>heal_point: None</code>。已有 RON 文件和存档可直接加载。</p>
+</li>
+<li>
+<p><code>NpcRuntimeState</code> 新增 <code>step_direction: Option&lt;Direction&gt;</code>。空闲 NPC 结构体字面量
 需补上 <code>step_direction: None</code>。手工构造行走状态的测试需在此字段保存移动方向。
-二进制存档适配器需处理新增字段。</li>
+二进制存档适配器需处理新增字段。</p>
+</li>
 </ul>
 <p>NPC 移动修复：</p>
 <ul>

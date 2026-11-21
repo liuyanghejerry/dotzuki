@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="存档兼容性"><a class="header" href="#存档兼容性">存档兼容性</a></h1>
 <blockquote>
-<p>本文是 <code>explanation/save-compatibility.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>explanation/save-compatibility.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>存档版本机制、向前/向后兼容规则，以及每个工具都必须遵守的兼容性规则。</p>
@@ -191,17 +191,19 @@
 <li><strong>Audience</strong>: game authors, rust developers</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>游戏保存到 <code>&lt;project&gt;/.dotzuki-save.json</code>（可用 <code>--save-file</code> 覆盖）——带存档版本
-的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?}</code>（v3）。运行器侧的存档/读取契约见
+的 JSON：<code>{version, map, player: {x, y, facing, level?}, flags, lang, party?, inventory?, money?, healPoint?}</code>（v3）。运行器侧的存档/读取契约见
 <a href="../reference/project-manifest.html#saveload">Save/load</a>。</p>
 <ul>
 <li>战斗完成后，<code>party</code>/<code>inventory</code> 才会出现。</li>
 <li>当战斗带有 <code>levels</code> 块时，队伍成员可携带可选的 <code>level</code>/<code>exp</code> 字段——缺失 ⇒ 等级
 1 / 0 经验。</li>
 <li><code>money</code> 总是被写入。</li>
+<li><code>healPoint</code> 以 <code>{map, x, y, facing, level?}</code> 记录场景上一次调用 <code>heal</code> 的位置。
+旧存档缺少此字段时，whiteout 会将玩家送回入口出生点。</li>
 <li><code>player.level</code> 是地图海拔层，缺失 ⇒ 0。</li>
 </ul>
 <h2 id="何时写入存档"><a class="header" href="#何时写入存档">何时写入存档</a></h2>

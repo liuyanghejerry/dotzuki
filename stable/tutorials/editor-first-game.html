@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -186,7 +186,7 @@
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: tutorial</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <p>A guided tour from an empty machine to a JRPG project you can click around
@@ -305,8 +305,9 @@ drops the foe’s attack on switch-in, Bryn’s <code>leftovers</code> heal him 
 actions, and a scene can arm the seeded <code>sandstorm</code> with
 <code>setWeather("sandstorm")</code> before <code>startBattle</code>); held items are never
 consumed, weather is battle-local (scene-armed only), and a lost battle
-heals the party and returns you to the entry map’s spawn (no heal-point
-system yet). Everything else is in: enemy parties (the <code>encounters</code> table —
+heals the party and returns you to the last <a href="../reference/glossary.html#battle-gameplay">heal point</a>.
+A scene records one with <code>@command("heal")</code>. The entry spawn is the default. Other battle
+options include enemy parties (the <code>encounters</code> table —
 queued send-outs, summed EXP), trainer battles (Run blocked, money on a
 win), a wild-only Run action (the scene sees a third outcome, <code>"run"</code>), and
 shop selling at half price. See <a href="../reference/battle-rules.html">the battle rules reference</a>

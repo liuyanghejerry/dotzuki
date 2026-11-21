@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-49f21357.js";
+            window.path_to_searchindex_js = "../searchindex-22a4aff1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-7b7e3677.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="效果栈战斗引擎"><a class="header" href="#效果栈战斗引擎">效果栈战斗引擎</a></h1>
 <blockquote>
-<p>本文是 <code>explanation/effect-stack.md</code> 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+<p>本文是 <code>explanation/effect-stack.md</code> 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>本页解释 <code>dotzuki_engine::battle::stack</code> 的设计——这个 Showdown 风格的效果栈战斗
@@ -192,7 +192,7 @@
 <li><strong>Audience</strong>: battle authors, engine contributors</li>
 <li><strong>Type</strong>: explanation</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.1.0</li>
+<li><strong>Last verified</strong>: v0.10.1 (unreleased)</li>
 </ul>
 </blockquote>
 <blockquote>
@@ -718,10 +718,6 @@ release）/ 从磁盘热重载（<code>hot-reload</code> cargo feature，dev）*
 <li><strong>双打 / 多目标。</strong> <code>redirect_target</code> 接缝存在，但<strong>带默认值、惰性且未经验证</strong>；
 minimon 是 1v1。Follow Me / Lightning Rod 的重定向（<code>TryHit</code> + 重定向）原则上可
 表达，但尚未演练。</li>
-<li><strong>完整内容表 / 多段攻击 / 命中率 / 暴击 RNG。</strong> minimon 用确定性的
-<code>power*atk/def</code> 公式编写了 <strong>2 个招式</strong>（无掷骰），因此结果可以手工核对。
-<code>Accuracy</code>、<code>ModifyCritRatio</code>、<code>ModifyMove</code>（多段攻击）以及许多 D/E/F 组事件以
-<strong>订阅接缝</strong>的形式存在，但尚无发布的驱动器触发它们。</li>
 <li><strong>接入 pokered 生产循环是分阶段的，尚未完成。</strong> Gen-1 忠实度仍是<strong>回归凭证</strong>
 （经由旧版 <code>battle::driver</code> 的 88 个切片），而不是新栈上的生产替换。AI、换人策略
 与 RNG 驱动的追加效果尚未在栈上演练。</li>
