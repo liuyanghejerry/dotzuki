@@ -104,7 +104,9 @@ use crate::vfs::join_path;
 use crate::watch::ProjectWatcher;
 
 mod menu;
+mod retained;
 use menu::{MenuState, ShopState, WhiteoutState};
+use retained::RetainedDraw;
 
 /// Logical framebuffer width (window mode and headless rendering).
 pub const SCREEN_W: i32 = 320;
@@ -330,6 +332,7 @@ pub struct RunnerGame {
     project: LoadedProject,
     /// The current map; `None` in dialogue-only mode (project without maps).
     map: Option<RuntimeMap>,
+    retained: RetainedDraw,
     camera: Camera,
     actor: OverworldActor,
     navigation: Navigator,
@@ -428,6 +431,10 @@ impl dotzuki_app::GameLoop for RunnerGame {
 
     fn draw(&mut self, frame_buffer: &mut FrameBuffer) {
         RunnerGame::draw(self, frame_buffer);
+    }
+
+    fn draw_retained(&mut self, fb: &mut FrameBuffer) -> bool {
+        RunnerGame::draw_retained(self, fb).present
     }
 }
 

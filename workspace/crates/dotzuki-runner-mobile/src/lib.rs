@@ -62,7 +62,7 @@ impl MobileGame for RunnerAdapter {
         self.input.set_from_bitmask(u16::from(bits));
         self.game.update(&self.input);
         self.input.begin_frame();
-        self.game.draw(&mut self.frame);
+        self.game.draw_retained(&mut self.frame);
     }
     fn copy_rgba(&self, out: &mut [u8]) {
         out.copy_from_slice(&self.frame.data);

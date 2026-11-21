@@ -16,7 +16,9 @@
 //!   tries `objects.json` first and falls back to `map.json`; neither being
 //!   present yields an empty sidecar, not an error.
 
+use dotzuki_renderer::layer_renderer::LayerCompositor;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use anyhow::{bail, Context, Result};
 use dotzuki_engine::overworld::actor::OverworldCollision;
@@ -214,6 +216,8 @@ pub struct RuntimeMap {
     tile_h: u32,
     /// Visual render state (the `collision*`/`stairs` data layers are excluded).
     state: MapRenderState,
+    draw_order: Vec<usize>,
+    compositor: Mutex<LayerCompositor>,
     /// Collision cells per elevation level (`collision_levels[level][cell]`,
     /// `true` = solid); index 0 always exists (the `collision` layer, or an
     /// all-passable grid when the map has none).
@@ -266,7 +270,7 @@ impl RuntimeMap {
             .read(&tmx_rel)
             .with_context(|| format!("failed to read {tmx_rel}"))?;
         let json = String::from_utf8(bytes).with_context(|| format!("{tmx_rel} is not UTF-8"))?;
-        let tmx = parse_tmx(&json).map_err(|e| anyhow::anyhow!("parse {tmx_rel}: {e}"))?;
+        let mut tmx = parse_tmx(&json).map_err(|e| anyhow::anyhow!("parse {tmx_rel}: {e}"))?;
 
         let width = tmx.width.max(1) as u16;
         let height = tmx.height.max(1) as u16;
@@ -304,11 +308,11 @@ impl RuntimeMap {
         }
 
         // Visual layers = everything except the collision*/stairs data layers.
-        let mut visual = tmx.clone();
-        visual
-            .layers
+        tmx.layers
             .retain(|l| collision_layer_level(&l.name).is_none() && l.name != "stairs");
-        let state = tmx_to_map_state(&visual);
+        let state = tmx_to_map_state(&tmx);
+        let mut draw_order: Vec<_> = (0..state.layers.len()).collect();
+        draw_order.sort_by_key(|&i| state.layers[i].z_index);
 
         let tileset_rel = join_path(&map_dir, "tileset.png");
         let png = files
@@ -326,6 +330,8 @@ impl RuntimeMap {
             tile_w: tmx.tile_width,
             tile_h: tmx.tile_height,
             state,
+            draw_order,
+            compositor: Mutex::default(),
             collision_levels,
             stairs,
             tileset,
@@ -455,16 +461,18 @@ impl RuntimeMap {
         height: u32,
     ) -> Result<()> {
         self.check_square_tiles()?;
-        dotzuki_renderer::layer_renderer::render_layers_sized(
-            fb,
-            &self.state.layers,
-            camera_x,
-            camera_y,
-            width,
-            height,
-            self.tile_w,
-            |gid, _pal, px, py| self.gid_pixel(gid, px, py),
-        );
+        let layers = self.draw_order.iter().map(|&i| &self.state.layers[i]);
+        self.compositor
+            .lock()
+            .unwrap_or_else(|err| err.into_inner())
+            .render(
+                fb,
+                layers,
+                (camera_x, camera_y),
+                (width, height),
+                self.tile_w,
+                |gid, _pal, px, py| self.gid_pixel(gid, px, py),
+            );
         Ok(())
     }
 
@@ -480,7 +488,7 @@ impl RuntimeMap {
         height: u32,
         player_level: i32,
     ) -> Result<()> {
-        self.render_filtered(fb, camera_x, camera_y, width, height, |level| {
+        self.render_filtered(fb, (camera_x, camera_y), (0, 0), (width, height), |level| {
             level <= player_level
         })
     }
@@ -497,59 +505,38 @@ impl RuntimeMap {
         height: u32,
         player_level: i32,
     ) -> Result<()> {
-        self.render_filtered(fb, camera_x, camera_y, width, height, |level| {
+        self.render_filtered(fb, (camera_x, camera_y), (0, 0), (width, height), |level| {
             level > player_level
         })
     }
 
-    /// Render the layers whose elevation `level` passes `keep`, preserving
-    /// what is already in `fb`. Each kept group composites in `z_index`
-    /// order (the renderer sorts the slice it is given), so the two halves
-    /// of a split draw each preserve the original stack order.
-    ///
-    /// `render_layers_sized` has a full-redraw contract (it clears the
-    /// framebuffer), so a partial stack renders into a temp buffer first
-    /// and is then stamped over the existing frame — transparent pixels
-    /// reveal what was drawn before (e.g. the sprites under an above-group).
-    fn render_filtered(
+    /// Stamp an elevation group into a viewport-sized or damage-sized framebuffer.
+    pub(crate) fn render_filtered(
         &self,
         fb: &mut FrameBuffer,
-        camera_x: i32,
-        camera_y: i32,
-        width: u32,
-        height: u32,
+        camera: (i32, i32),
+        origin: (i32, i32),
+        size: (u32, u32),
         keep: impl Fn(i32) -> bool,
     ) -> Result<()> {
         self.check_square_tiles()?;
-        let layers: Vec<_> = self
-            .state
-            .layers
+        let layers = self
+            .draw_order
             .iter()
-            .filter(|l| keep(l.level))
-            .cloned()
-            .collect();
-        if layers.is_empty() {
-            return Ok(());
-        }
-        let mut temp = FrameBuffer::new(
-            dotzuki_engine::render_config::RenderConfig::new(width, height),
-            Rgba::TRANSPARENT,
-        );
-        dotzuki_renderer::layer_renderer::render_layers_sized(
-            &mut temp,
-            &layers,
-            camera_x,
-            camera_y,
-            width,
-            height,
-            self.tile_w,
-            |gid, _pal, px, py| self.gid_pixel(gid, px, py),
-        );
-        for (dst, src) in fb.data.chunks_exact_mut(4).zip(temp.data.chunks_exact(4)) {
-            if src[3] != 0 {
-                dst.copy_from_slice(src);
-            }
-        }
+            .map(|&i| &self.state.layers[i])
+            .filter(|l| keep(l.level));
+        self.compositor
+            .lock()
+            .unwrap_or_else(|err| err.into_inner())
+            .draw(
+                fb,
+                layers,
+                camera,
+                origin,
+                size,
+                self.tile_w,
+                |gid, _pal, px, py| self.gid_pixel(gid, px, py),
+            );
         Ok(())
     }
 

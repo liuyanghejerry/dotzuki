@@ -88,6 +88,19 @@ pub struct CompiledHook {
     pub resolver: ResolverKind,
 }
 
+impl CompiledHook {
+    /// Interpreter entry point and ordering metadata for borrowed or static dispatch.
+    pub fn event_hook<P: RulesProvider>(&self) -> EventHook<P> {
+        EventHook {
+            event: self.event,
+            call: interpret::<P>,
+            order: self.order,
+            priority: self.priority,
+            sub_order: None,
+        }
+    }
+}
+
 /// A compiled ruleset: the synthesized-id → [`CompiledHook`] map plus the
 /// interned `types`/`stats` vocabularies (doc 11 §2 side registry). Built once at
 /// load, addressed by `EffectId`, so a hot-reload swaps the map between turns
@@ -312,13 +325,7 @@ impl CompiledRuleset {
     {
         let mut out = Vec::with_capacity(self.hooks.len());
         for h in self.hooks.values() {
-            let hook: EventHook<P> = EventHook {
-                event: h.event,
-                call: interpret::<P>,
-                order: h.order,
-                priority: h.priority,
-                sub_order: None,
-            };
+            let hook = h.event_hook::<P>();
             let leaked_hooks: &'static [EventHook<P>] = Box::leak(vec![hook].into_boxed_slice());
             let eff: &'static Effect<P> = Box::leak(Box::new(Effect {
                 id: h.id,
@@ -488,17 +495,23 @@ pub trait RulesProvider: EffectProvider {
     /// The game binding instance.
     fn bindings(&self) -> &Self::Bindings;
 
-    /// Read the provider from `ctx` for the interpreter. The interpreter only has
-    /// `&mut BattleCtx`, which does NOT carry `&P` (the engine's borrow
-    /// discipline). A game whose chart/registry is a `&'static` (the common case)
-    /// returns it here without touching `ctx`; the default points at that static.
-    /// Returns `None` if no static is installed.
+    /// Borrow the active registry and bindings for one interpreter call. A provider
+    /// with project-owned rules can supply a scoped borrow here. Static providers
+    /// use [`Self::rules_host`] through the default implementation.
+    fn with_rules_host<R>(read: impl FnOnce(Option<&RulesHost<Self>>) -> R) -> R
+    where
+        Self: Sized,
+    {
+        read(Self::rules_host())
+    }
+
+    /// The process-lifetime host, for providers that install a static ruleset.
     fn rules_host() -> Option<&'static RulesHost<Self>>
     where
         Self: Sized;
 }
 
-/// A `&'static` bundle of the compiled registry + binding the zero-capture
+/// The compiled registry and binding that the zero-capture
 /// [`interpret`](crate::interpret) `fn` reaches without capturing (doc 11 §2.2).
 /// A game installs one once (e.g. in a `OnceLock`) and returns it from
 /// [`RulesProvider::rules_host`].

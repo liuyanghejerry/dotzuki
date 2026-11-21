@@ -59,6 +59,7 @@ impl RunnerGame {
         let mut game = Self {
             project,
             map: None,
+            retained: RetainedDraw::default(),
             camera,
             actor: OverworldActor::new(0, 0, 16),
             navigation: Navigator::default(),
@@ -142,6 +143,7 @@ impl RunnerGame {
             map.pixel_height() as f32,
         ));
         self.actor = OverworldActor::new(spawn.0, spawn.1, tile);
+        self.retained.invalidate();
         self.map = Some(map);
         self.center_camera();
         self.camera.update(0.0);
@@ -186,6 +188,7 @@ impl RunnerGame {
             map.pixel_height() as f32,
         ));
         log::info!("loaded map {} @ {spawn:?} on level {level}", map.id());
+        self.retained.invalidate();
         self.map = Some(map);
         self.actor.place(spawn.0, spawn.1, facing);
         self.actor.set_elevation(level);
@@ -897,6 +900,7 @@ impl RunnerGame {
                     new_map.pixel_width() as f32,
                     new_map.pixel_height() as f32,
                 ));
+                self.retained.invalidate();
                 self.map = Some(new_map);
                 self.center_camera();
                 self.camera.update(0.0);
@@ -1355,34 +1359,52 @@ impl RunnerGame {
 
     // ── rendering ───────────────────────────────────────────────────────────
 
-    /// Render the current frame. Callable without any window; the `GameLoop`
-    /// impl forwards here.
+    /// Render a complete frame onto any output surface, including a fresh buffer.
     pub fn draw(&mut self, fb: &mut FrameBuffer) {
-        if let Some(map) = &self.map {
-            fb.clear(Rgba::BLACK);
-            let cam_x = self.camera.position.x.round() as i32;
-            let cam_y = self.camera.position.y.round() as i32;
-            let level = self.actor.elevation() as i32;
-            // Layers at/below the player's elevation draw under the sprites;
-            // higher layers (e.g. wall tops seen from the ground) over them.
-            if let Err(e) =
-                map.render_below(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
-            {
-                log::warn!("map render: {e:#}");
-            }
-            self.draw_npcs(fb, cam_x, cam_y);
-            self.draw_player(fb, cam_x, cam_y);
-            if let Err(e) =
-                map.render_above(fb, cam_x, cam_y, SCREEN_W as u32, SCREEN_H as u32, level)
-            {
-                log::warn!("map render: {e:#}");
-            }
-            self.draw_navigation_marker(fb, cam_x, cam_y);
-        } else {
-            // Dialogue-only backdrop.
-            fb.clear(Rgba::rgb(0x10, 0x10, 0x18));
+        if self.retained.target == fb.data.as_ptr() as usize {
+            self.retained.invalidate();
         }
+        self.draw_full(fb);
+    }
 
+    fn draw_full(&self, fb: &mut FrameBuffer) {
+        self.draw_map_region(fb, (0, 0));
+        self.draw_overlay(fb);
+        fb.mark_all_dirty();
+    }
+
+    fn draw_map_region(&self, fb: &mut FrameBuffer, origin: (i32, i32)) {
+        let Some(map) = &self.map else {
+            fb.clear(Rgba::rgb(0x10, 0x10, 0x18));
+            return;
+        };
+        fb.clear(Rgba::BLACK);
+        let camera = self.camera_pixels();
+        let level = self.actor.elevation() as i32;
+        let size = (
+            fb.width.min(SCREEN_W as u32),
+            fb.height.min(SCREEN_H as u32),
+        );
+        let (cx, cy) = (camera.0 + origin.0, camera.1 + origin.1);
+        if let Err(e) = map.render_filtered(fb, camera, origin, size, |l| l <= level) {
+            log::warn!("map render: {e:#}");
+        }
+        self.draw_npcs(fb, cx, cy);
+        self.draw_player(fb, cx, cy);
+        if let Err(e) = map.render_filtered(fb, camera, origin, size, |l| l > level) {
+            log::warn!("map render: {e:#}");
+        }
+        self.draw_navigation_marker(fb, cx, cy);
+    }
+
+    fn camera_pixels(&self) -> (i32, i32) {
+        (
+            self.camera.position.x.round() as i32,
+            self.camera.position.y.round() as i32,
+        )
+    }
+
+    fn draw_overlay(&self, fb: &mut FrameBuffer) {
         match &self.mode {
             Mode::Text(state) => {
                 if let Some(page) = state.pages.front() {

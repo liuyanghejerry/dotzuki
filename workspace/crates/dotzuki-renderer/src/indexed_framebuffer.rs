@@ -557,6 +557,45 @@ impl<C: ColorIndex, const LINEAR: bool> IndexedFrameBuffer<C, LINEAR> {
         }
     }
 
+    /// Transfer an already clipped, tile-aligned span between independent surfaces.
+    pub(crate) fn copy_tile_rows(
+        &mut self,
+        src: &Self,
+        x: usize,
+        y: usize,
+        sx: usize,
+        sy: usize,
+        w: usize,
+        h: usize,
+    ) {
+        if LINEAR {
+            for row in 0..h {
+                let to = (y + row) * self.width + x;
+                let from = (sy + row) * src.width + sx;
+                self.data[to..to + w].copy_from_slice(&src.data[from..from + w]);
+            }
+        } else {
+            let planes = index_bits::<C>();
+            let stride = groups_per_row(self.width);
+            let src_stride = groups_per_row(src.width);
+            let full_bytes = w / 8 * planes;
+            let tail = w % 8;
+            for row in 0..h {
+                let to = ((y + row) * stride + x / 8) * planes;
+                let from = ((sy + row) * src_stride + sx / 8) * planes;
+                self.data[to..to + full_bytes].copy_from_slice(&src.data[from..from + full_bytes]);
+                if tail != 0 {
+                    let mask = u8::MAX << (8 - tail);
+                    for plane in 0..planes {
+                        let source = src.data[from + full_bytes + plane];
+                        let dest = &mut self.data[to + full_bytes + plane];
+                        *dest = (*dest & !mask) | (source & mask);
+                    }
+                }
+            }
+        }
+    }
+
     /// Copy a clipped pixel rectangle from `other` at the same coordinates.
     /// Pixels outside the rectangle are preserved. Both buffers must have the
     /// same dimensions.

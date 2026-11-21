@@ -499,3 +499,86 @@ fn click_snapshot_survives_camera_scroll_and_cancel_does_not_teleport() {
         "finish only the already started step"
     );
 }
+
+#[test]
+fn retained_frames_match_complete_frames_and_bound_every_change() {
+    use dotzuki_engine::render::DirtyRegion;
+    let (tmp, mut game) = navigation_game("retained");
+    let map_path = tmp.path().join("demo/data/maps/Town/map.tmx.json");
+    let mut map: serde_json::Value = serde_json::from_slice(&fs::read(&map_path).unwrap()).unwrap();
+    let mut tiles = vec![0; 300];
+    tiles[3 * 20 + 4] = 3;
+    map["layers"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({
+            "name":"overhang","width":20,"height":15,"data":tiles,
+            "properties":[{"name":"level","type":"int","value":1}]
+        }));
+    fs::write(&map_path, map.to_string()).unwrap();
+    assert!(game.reload_current_map());
+    let mut retained = FrameBuffer::new(RenderConfig::new(320, 240), Rgba::BLACK);
+    let mut reference = retained.clone();
+    let full = DirtyRegion::full(320, 240);
+    let mut check = |g: &mut RunnerGame| {
+        let before = retained.data.clone();
+        let damage = g.draw_retained(&mut retained);
+        g.draw(&mut reference);
+        assert_eq!(
+            retained
+                .data
+                .iter()
+                .zip(&reference.data)
+                .position(|(a, b)| a != b),
+            None,
+            "damage {damage:?}"
+        );
+        assert_eq!(retained.dirty_region, damage);
+        for (i, (a, b)) in before
+            .chunks_exact(4)
+            .zip(retained.data.chunks_exact(4))
+            .enumerate()
+        {
+            if a != b {
+                assert!(
+                    damage.contains_pixel((i % 320) as u32, (i / 320) as u32),
+                    "pixel {i} outside {damage:?}"
+                );
+            }
+        }
+        damage
+    };
+    assert_eq!(check(&mut game), full);
+    frame(&mut game, 0);
+    assert!(!check(&mut game).present);
+    assert!(game.click_to_move(4.5 * 16.0, 3.5 * 16.0));
+    let mut local = false;
+    for _ in 0..18 {
+        frame(&mut game, 0);
+        let damage = check(&mut game);
+        local |= damage.present && damage.width < 80 && damage.height < 48;
+    }
+    assert!(
+        local,
+        "walking and the destination marker must produce local damage"
+    );
+    frame(&mut game, GbButton::Start.bit_mask());
+    let opened = check(&mut game);
+    assert!(opened.present && opened.height < 100);
+    frame(&mut game, 0);
+    assert!(!check(&mut game).present);
+    frame(&mut game, GbButton::Down.bit_mask());
+    assert_eq!(check(&mut game), opened);
+    frame(&mut game, GbButton::B.bit_mask());
+    assert_eq!(check(&mut game), opened);
+    fs::write(
+        map_path.with_file_name("objects.json"),
+        r#"{"npcs":[{"id":3,"x":12,"y":9}]}"#,
+    )
+    .unwrap();
+    assert!(game.reload_current_map());
+    assert_eq!(check(&mut game), full);
+    let mut fresh = FrameBuffer::new(RenderConfig::new(320, 240), Rgba::TRANSPARENT);
+    assert_eq!(game.draw_retained(&mut fresh), full);
+    assert_eq!(fresh.data, reference.data);
+}

@@ -5,7 +5,7 @@ The `battle` manifest section: config, rules.ron hooks, turn loop, and `check` v
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 A project opts into the generic, data-driven battle system (parties +
 battle-usable items) with a top-level `battle` section (all keys optional;
@@ -241,6 +241,21 @@ skill's riders live here) → `AfterMove`. When the record subscribes to
 `Effectiveness` hook to get the type chart; when it does NOT subscribe, the
 v1 direct chart application applies in the precompute (so a record that only
 overrides `power`/`type` keeps the chart behavior you expect).
+
+### Rules ownership in the zero-Rust runner
+
+`BattleSetup::from_project` reads the rules file at encounter setup. Encounters
+from the same `LoadedProject` share the compiled hooks and type chart while the
+file contents match. A changed file is compiled for the next setup. A malformed
+edit returns an error. Battles already in progress keep their original rules,
+including stat and status indices, until they finish.
+
+Rust hosts that construct hook state directly can compile
+`dotzuki_runner::battle::hooks::BattleRules` once, wrap it in `Arc`, and pass
+a clone to `HookState::new(rules, &player, &enemy)`. Each battle owns its HP,
+stages, volatile effects and move context. The shared definition is available
+through `HookState::rules`. Its `compiled()` method exposes the hook registry
+and interned stat names.
 
 ## Abilities, held items & weather
 

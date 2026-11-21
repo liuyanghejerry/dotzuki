@@ -1,13 +1,13 @@
 # 游戏外壳参考
 
-> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.10.1
->（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
+> 本文是 `reference/game-shell.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+>（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1（含未发布宿主变更）
+> - **Last verified**: v0.11.0（含未发布变更）
 
 [游戏外壳](./glossary.md)（`dotzuki_web::game_shell`，源码见
 `crates/dotzuki-web/src/game_shell.rs`）以 Game Boy 帧节奏在浏览器
@@ -181,6 +181,26 @@ pub enum GameShellError {
 模拟帧。可选 FPS 元素统计完成的渲染次数，不统计模拟帧数。
 渲染和 surface 缩放错误会记录日志并退出循环。在 wasm 上，pixels 构建器强制
 `Rgba8Unorm` 和 WebGL（`Backends::GL`），因为部分浏览器暴露的 WebGPU limits 不完整。
+
+### 零 Rust 运行器的帧缓冲复用
+
+原生播放器、编辑器 Play 和移动端运行器会保留上一帧的 RGBA 帧缓冲。
+`RunnerGame::draw_retained` 更新该缓冲，并返回以屏幕像素为单位的变化区域
+`DirtyRegion`。首帧覆盖整个视口。大地图、对话页、选项或暂停主菜单保持静止时，
+返回空区域。镜头固定时，行走、转身、改变目的地标记或移动菜单光标只会重绘受影响的
+区域，其中包括与该区域相交的 NPC 和上层地图图层。
+
+镜头移动、海拔变化、地图重新加载、淡入淡出和战斗都会重绘整个视口。物品栏、队伍和商店
+界面也使用全量绘制。宿主在替换或改写输出缓冲后调用 `RunnerGame::draw` 绘制完整帧。
+Web 的 `tick` 和移动端的 RGBA 复制接口仍向调用方提供完整画面。
+
+### 四色战斗转场快照
+
+`dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture` 从
+`LinearRgbaIndexedFrameBuffer<GbColor>` 捕获当前显示调色板和像素索引，每字节保存四个
+索引。160 × 144 画面的像素占用 5,760 字节。`render` 把 `BattleTransitionState`
+绘制到线性帧缓冲，并使用目标当前的调色板。`restore` 同时还原捕获的调色板。两者都
+支持尺寸不同的源和目标，还原源像素时会裁剪到两者共有的区域。
 
 ### 输入
 

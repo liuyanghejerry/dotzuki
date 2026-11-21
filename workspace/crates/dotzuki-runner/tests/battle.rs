@@ -1494,3 +1494,52 @@ fn scene_wild_run_reaches_the_scene_as_run() {
     // The party state still harvested (untouched here).
     assert_eq!(game.party_state().unwrap()[0].hp, 60);
 }
+
+#[test]
+fn rules_are_shared_per_revision_and_live_battles_keep_their_own_hooks() {
+    use dotzuki_runner::battle::ScriptedRng;
+    use std::sync::Arc;
+    let (_dir, root) = demo_project("rules-revisions");
+    let rules = |factor| {
+        format!(
+            r#"Ruleset(stats:["attack","defense","speed"], effects:[
+        Effect(id:"slash",kind:Move,power:4,hooks:[Hook(on:"ModifyDamage",do:[ScaleRelay(num:{factor},den:1)])])])"#
+        )
+    };
+    write_rules(&root, &rules(1));
+    let project = LoadedProject::load(&root).unwrap();
+    let start = || {
+        BattleSetup::from_project(&project)
+            .unwrap()
+            .start("slime", Box::new(ScriptedRng::new(vec![50; 80])))
+            .unwrap()
+    };
+    let mut first = start();
+    let other = start();
+    let first_rules = &first.hooks().unwrap().rules;
+    assert!(Arc::ptr_eq(first_rules, &other.hooks().unwrap().rules));
+    let old = Arc::downgrade(first_rules);
+    drop(other);
+    write_rules(&root, "malformed");
+    assert!(BattleSetup::from_project(&project).is_err());
+    write_rules(&root, &rules(2));
+    let mut second = start();
+    assert!(!Arc::ptr_eq(first_rules, &second.hooks().unwrap().rules));
+    let mut confirm = InputState::new();
+    confirm.set_from_bitmask(GbButton::A.bit_mask());
+    for _ in 0..2 {
+        second.update(&confirm);
+        first.update(&confirm);
+    }
+    let old_damage = first.enemy().max_hp - first.enemy().hp;
+    let new_damage = second.enemy().max_hp - second.enemy().hp;
+    assert!(old_damage > 0);
+    assert_eq!(new_damage, 2 * old_damage);
+    drop(first);
+    assert!(old.upgrade().is_none());
+    let current = Arc::downgrade(&second.hooks().unwrap().rules);
+    drop(project);
+    assert!(current.upgrade().is_some());
+    drop(second);
+    assert!(current.upgrade().is_none());
+}

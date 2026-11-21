@@ -151,8 +151,9 @@ impl Battle {
 
     /// Whether any compiled hook is sourced from record `id` (any kind).
     fn record_has_hooks(&self, id: &str) -> bool {
-        GenericProvider::rules_host()
-            .is_some_and(|host| host.compiled.hooks.values().any(|h| h.source_id == id))
+        self.hooks
+            .as_ref()
+            .is_some_and(|hooks| hooks.rules.record(id).next().is_some())
     }
 
     /// Fire one side's ability `SwitchIn` hooks (v2-e): at battle start, on a
@@ -627,9 +628,9 @@ impl Battle {
         if let Some(hooks) = &mut self.hooks {
             hooks.state.opponent_battlers[0] = hooks::mirror_of(
                 &self.enemy,
-                &hooks.stat_names,
-                &hooks.status_names,
-                hooks.has_resource,
+                &hooks.rules.compiled().stats,
+                &hooks.rules.status_names,
+                hooks.rules.has_resource,
             );
             let enemy_ref = HookState::battler_ref(Side::Enemy);
             hooks.effects.retain(|e| e.host != enemy_ref);
@@ -744,9 +745,9 @@ impl Battle {
         if let Some(hooks) = &mut self.hooks {
             hooks.state.player_battlers[0] = hooks::mirror_of(
                 &self.party[idx],
-                &hooks.stat_names,
-                &hooks.status_names,
-                hooks.has_resource,
+                &hooks.rules.compiled().stats,
+                &hooks.rules.status_names,
+                hooks.rules.has_resource,
             );
             let player_ref = HookState::battler_ref(Side::Player);
             hooks.effects.retain(|e| e.host != player_ref);
@@ -798,29 +799,40 @@ impl Battle {
                 Side::Player => (self.player(), &self.enemy),
                 Side::Enemy => (&self.enemy, self.player()),
             };
-            let effects = hooks.matching_effects(|hook| {
-                if !matches!(
-                    hook.event,
-                    Event::BeforeMove
-                        | Event::ModifyDamage
-                        | Event::Effectiveness
-                        | Event::Damage
-                        | Event::DamagingHit
-                        | Event::AfterMove
-                ) {
-                    return false;
+            let rules = Arc::clone(&hooks.rules);
+            let mut effects = Vec::new();
+            if skill.ron {
+                effects.extend(
+                    rules
+                        .record(&skill.id)
+                        .filter(|h| h.resolver == ResolverKind::Move),
+                );
+            }
+            for (owner, holder) in [
+                (attacker, HookHolder::Attacker),
+                (defender, HookHolder::Defender),
+            ] {
+                for (id, kind) in [
+                    (owner.ability.as_deref(), ResolverKind::Ability),
+                    (owner.held_item.as_deref(), ResolverKind::Item),
+                ] {
+                    if let Some(id) = id {
+                        effects.extend(rules.record(id).filter(|h| {
+                            h.resolver == kind
+                                && h.holder == holder
+                                && matches!(
+                                    h.event,
+                                    Event::BeforeMove
+                                        | Event::ModifyDamage
+                                        | Event::Effectiveness
+                                        | Event::Damage
+                                        | Event::DamagingHit
+                                        | Event::AfterMove
+                                )
+                        }));
+                    }
                 }
-                let holder = match hook.holder {
-                    HookHolder::Attacker => attacker,
-                    HookHolder::Defender => defender,
-                };
-                match hook.resolver {
-                    ResolverKind::Move => skill.ron && hook.source_id == skill.id,
-                    ResolverKind::Ability => holder.ability.as_deref() == Some(&hook.source_id),
-                    ResolverKind::Item => holder.held_item.as_deref() == Some(&hook.source_id),
-                    _ => false,
-                }
-            });
+            }
             if skill.ron || !effects.is_empty() {
                 self.perform_ron(side, skill, &effects, lines);
                 return;
@@ -893,7 +905,11 @@ impl Battle {
             .hooks
             .as_ref()
             .expect("record events require hook state");
-        let effects = hooks.matching_effects(|hook| hook.source_id == id && hook.event == event);
+        let rules = Arc::clone(&hooks.rules);
+        let effects: Vec<_> = rules
+            .record(id)
+            .filter(|hook| hook.event == event)
+            .collect();
         self.fire(event, &effects, who, who, RelayVar::Unit);
     }
 
@@ -901,13 +917,12 @@ impl Battle {
     fn fire(
         &mut self,
         event: Event,
-        effects: &[&'static Effect<GenericProvider>],
+        effects: &[&CompiledHook],
         target: BattlerRef,
         source: BattlerRef,
         relay: RelayVar,
     ) -> RelayVar {
         let hooks = self.hooks.as_mut().expect("fire requires hook state");
-        let provider = GenericProvider;
         let mut adapter = hooks::RngAdapter(self.rng.as_mut());
         let mut ctx = BattleCtx {
             state: &mut hooks.state,
@@ -915,26 +930,34 @@ impl Battle {
             mv: &mut hooks.mv,
             rng: &mut adapter,
         };
-        let mut handlers = Vec::new();
-        for effect in effects {
-            collect_handlers(
-                &ctx,
-                &provider,
-                Some(effect),
-                event,
-                target,
-                source,
-                &mut handlers,
-            );
-        }
-        run_event(&mut ctx, handlers, relay, false)
+        hooks::BATTLE_RULES.set(&hooks.rules.host, || {
+            let handlers = effects
+                .iter()
+                .filter(|h| h.event == event)
+                .map(|h| {
+                    CollectedHandler::from_hook(
+                        &ctx,
+                        h.id,
+                        h.effect_type,
+                        &h.event_hook(),
+                        dotzuki_engine::battle::stack::EffectHost::Battler(source),
+                        target,
+                        source,
+                    )
+                })
+                .collect();
+            run_event(&mut ctx, handlers, relay, false)
+        })
     }
 
     /// Copy the live pools (HP/MP/stats/stages/status) into the engine mirrors.
     fn sync_to_mirrors(&mut self) {
         let Some(hooks) = &mut self.hooks else { return };
-        let (stat_names, status_names, has_resource) =
-            (&hooks.stat_names, &hooks.status_names, hooks.has_resource);
+        let (stat_names, status_names, has_resource) = (
+            &hooks.rules.compiled().stats,
+            &hooks.rules.status_names,
+            hooks.rules.has_resource,
+        );
         hooks::sync_to_mirror(
             &self.party[self.active],
             &mut hooks.state.player_battlers[0],
@@ -954,8 +977,11 @@ impl Battle {
     /// Copy the pools back from the engine mirrors after a fire.
     fn sync_from_mirrors(&mut self) {
         let Some(hooks) = &mut self.hooks else { return };
-        let (stat_names, status_names, has_resource) =
-            (&hooks.stat_names, &hooks.status_names, hooks.has_resource);
+        let (stat_names, status_names, has_resource) = (
+            &hooks.rules.compiled().stats,
+            &hooks.rules.status_names,
+            hooks.rules.has_resource,
+        );
         hooks::sync_from_mirror(
             &hooks.state.player_battlers[0],
             &mut self.party[self.active],
@@ -994,18 +1020,14 @@ impl Battle {
         &mut self,
         side: Side,
         skill: &Skill,
-        effects: &[&'static Effect<GenericProvider>],
+        effects: &[&CompiledHook],
         lines: &mut VecDeque<String>,
     ) {
         let (attacker, defender) = match side {
             Side::Player => (self.player(), &self.enemy),
             Side::Enemy => (&self.enemy, self.player()),
         };
-        let subscribes = |event| {
-            effects
-                .iter()
-                .any(|effect| effect.hooks.iter().any(|hook| hook.event == event))
-        };
+        let subscribes = |event| effects.iter().any(|effect| effect.event == event);
         let eff_atk = attacker.eff_attack();
         let eff_def = defender.eff_defense();
         let def_element = defender.element.clone();
@@ -1236,7 +1258,9 @@ impl Battle {
                 .battler(side)
                 .status
                 .clone()
-                .and_then(|hooks::StatusId(idx)| hooks.status_names.get(idx as usize).cloned())
+                .and_then(|hooks::StatusId(idx)| {
+                    hooks.rules.status_names.get(idx as usize).cloned()
+                })
         };
         if let Some(source_id) = status_id {
             let before = snap_mirrors(self.hooks.as_ref().unwrap());

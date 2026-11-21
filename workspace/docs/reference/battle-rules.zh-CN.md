@@ -1,6 +1,7 @@
 # 战斗
 
-> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+>（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `battle` 项目清单区块：配置、rules.ron 钩子、回合循环与 `check` 校验。
@@ -8,7 +9,7 @@
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 项目通过顶层 `battle` 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
 （所有键均可选；默认值如下）：
@@ -204,6 +205,18 @@ harness 的顺序）：MP 门槛 → accuracy → `BeforeMove` 门槛（仅当�
 负责倍率——在 `Effectiveness` hook 里编写 `ApplyTypeChart` 来获得 type chart；
 当它**不**订阅时，v1 的直接 chart 应用发生在预计算中（因此只覆盖
 `power`/`type` 的记录保留你期望的 chart 行为）。
+
+### 零 Rust 运行器中的规则所有权
+
+`BattleSetup::from_project` 在准备遭遇时读取规则文件。同一个 `LoadedProject`
+创建的遭遇在文件内容相同时共享编译后的钩子和属性相克表。文件有改动时，下一次准备遭遇
+会编译新规则。文件格式有误时返回错误。进行中的战斗会一直使用原来的规则和属性、状态索引，
+直到该场战斗结束。
+
+直接构造钩子状态的 Rust 宿主可以编译一次 `dotzuki_runner::battle::hooks::BattleRules`，
+用 `Arc` 持有，并将克隆的引用传给 `HookState::new(rules, &player, &enemy)`。
+每场战斗独立持有 HP、能力阶级、临时效果和招式上下文。通过 `HookState::rules` 可以
+访问共享定义，其 `compiled()` 方法提供钩子注册表和带索引的属性名。
 
 ## 特性、携带道具与天气
 

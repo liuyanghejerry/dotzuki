@@ -3,7 +3,7 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased host changes)
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 The [game shell](./glossary.md) (`dotzuki_web::game_shell`, source
 `crates/dotzuki-web/src/game_shell.rs`) runs a `GameLoop` game in a browser
@@ -184,6 +184,32 @@ and `pixels.render()`. Games must not advance gameplay in `draw`: a slow display
 several simulation ticks together. The optional FPS element counts completed renders, not ticks.
 Render and surface-resize errors are logged and exit the loop. On wasm the pixels builder forces
 `Rgba8Unorm` and WebGL (`Backends::GL`) because some browsers expose partial WebGPU limits.
+
+### Retained frames in the zero-Rust runner
+
+The native player, editor Play and mobile runner retain their RGBA framebuffer
+between ticks. `RunnerGame::draw_retained` updates this buffer and returns a
+`DirtyRegion` in screen pixels. The first frame covers the full viewport.
+A stationary overworld, dialogue page, choice or root pause menu returns an
+empty region. With a fixed camera, walking, turning, changing the destination
+marker or moving the menu cursor redraws the affected bounds. This includes
+NPCs and higher map layers that intersect those bounds.
+
+Camera movement, elevation changes, a map reload, fades and battles redraw the
+viewport. Inventory, party and shop screens also use the full draw path. A
+host that replaces or edits the output buffer calls `RunnerGame::draw` for a
+complete frame. The web `tick` and mobile RGBA copy interfaces still deliver
+a complete image to their callers.
+
+### Four-colour battle transition snapshots
+
+`dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture`
+captures a `LinearRgbaIndexedFrameBuffer<GbColor>`. It stores four pixel
+indices per byte and the current display palette. A 160 × 144 image occupies
+5,760 bytes of pixel storage. `render` applies a `BattleTransitionState`
+to a linear destination with its active palette. `restore` also restores the
+captured palette. Both methods accept different source and destination
+dimensions and clip to their common area when restoring source pixels.
 
 ### Input
 

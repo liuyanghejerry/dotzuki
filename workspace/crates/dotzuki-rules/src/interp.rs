@@ -23,7 +23,7 @@ use crate::trace;
 /// **THE bridge** (doc 11 §2): the single zero-capture `fn` every data hook's
 /// `call` points at. Keyed entirely off `source_effect` — the engine already
 /// threads it to every handler (`dispatch.rs:128`). Looks the compiled hook up in
-/// the game's `&'static` [`RulesHost`](crate::registry::RulesHost), applies the
+/// the active [`RulesHost`](crate::registry::RulesHost), applies the
 /// `chance` gate (the only RNG), then folds the op-list.
 ///
 /// Signature matches [`HandlerFn<P>`](dotzuki_engine::battle::stack::HandlerFn)
@@ -35,25 +35,27 @@ pub fn interpret<P: RulesProvider>(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
-    let Some(host) = P::rules_host() else {
-        // No registry installed ⇒ inert (relay passes through), identical to a
-        // game with no data hooks. (Defensive; a wired game always installs one.)
-        return HandlerResult::Unchanged;
-    };
-    let Some(hook) = host.hook(source_effect) else {
-        return HandlerResult::Unchanged;
-    };
-
-    // The chance gate — the SOLE entropy (doc 11 §4.1). Drawn UNCONDITIONALLY so
-    // draw count/order is a pure function of the op-list, not of the outcome.
-    if let Some((num, den)) = hook.chance {
-        let pass = ctx.rng.chance(num, den);
-        if !pass {
+    P::with_rules_host(|host| {
+        let Some(host) = host else {
+            // No registry installed ⇒ inert (relay passes through), identical to a
+            // game with no data hooks. (Defensive; a wired game always installs one.)
             return HandlerResult::Unchanged;
-        }
-    }
+        };
+        let Some(hook) = host.hook(source_effect) else {
+            return HandlerResult::Unchanged;
+        };
 
-    run_ops(ctx, relay, target, source, &host.bindings, hook)
+        // The chance gate — the SOLE entropy (doc 11 §4.1). Drawn UNCONDITIONALLY so
+        // draw count/order is a pure function of the op-list, not of the outcome.
+        if let Some((num, den)) = hook.chance {
+            let pass = ctx.rng.chance(num, den);
+            if !pass {
+                return HandlerResult::Unchanged;
+            }
+        }
+
+        run_ops(ctx, relay, target, source, &host.bindings, hook)
+    })
 }
 
 /// The closed primitive interpreter (doc 11 §1.1). Folds the hook's op-list over
@@ -577,17 +579,19 @@ fn pred_holds<P: RulesProvider>(
 // All pure, no RNG.
 
 fn host_type_index<P: RulesProvider>(name: &str) -> Option<usize> {
-    P::rules_host().and_then(|h| h.compiled.types.iter().position(|t| t == name))
+    P::with_rules_host(|host| host.and_then(|h| h.compiled.types.iter().position(|t| t == name)))
 }
 
 fn host_stat_index<P: RulesProvider>(name: &str) -> Option<usize> {
-    P::rules_host().and_then(|h| h.compiled.stats.iter().position(|s| s == name))
+    P::with_rules_host(|host| host.and_then(|h| h.compiled.stats.iter().position(|s| s == name)))
 }
 
 /// Resource index against the installed registry's interned `resources:` list
 /// (the MP/SP/mana cost gate, doc 13 §4). Pure, no RNG.
 fn host_resource_index<P: RulesProvider>(name: &str) -> Option<usize> {
-    P::rules_host().and_then(|h| h.compiled.resources.iter().position(|r| r == name))
+    P::with_rules_host(|host| {
+        host.and_then(|h| h.compiled.resources.iter().position(|r| r == name))
+    })
 }
 
 /// Status index: the game's status vocabulary is NOT part of the RON `stats:`
@@ -597,5 +601,5 @@ fn host_resource_index<P: RulesProvider>(name: &str) -> Option<usize> {
 /// interpreter recovers it here, then hands the index to `bindings.set_status`.
 /// Pure, no RNG.
 fn status_index<P: RulesProvider>(name: &str) -> Option<usize> {
-    P::rules_host().and_then(|h| h.compiled.status_index(name))
+    P::with_rules_host(|host| host.and_then(|h| h.compiled.status_index(name)))
 }

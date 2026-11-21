@@ -5,6 +5,9 @@
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
 use agb::timer::Divider;
+use dotzuki_renderer::battle_transition::{
+    BattleTransitionKind, BattleTransitionState, CompactTransitionSnapshot,
+};
 use dotzuki_renderer::palette::GbColor;
 use dotzuki_renderer::tile::Tile;
 use dotzuki_renderer::{LinearRgbaIndexedFrameBuffer, RenderConfig, Rgba};
@@ -125,13 +128,9 @@ fn draw_complete_frame(frame: &mut LinearRgbaIndexedFrameBuffer) {
     frame.fill_rect(8, 120, 104, 8, Rgba::BLACK);
 }
 
-/// Gate the two expensive frame shapes used by a GBA consumer:
-///
-/// - a complete background, sprite, and HUD redraw;
-/// - a battle-effect frame restored from a stable image and smooth-scrolled.
-///
-/// Allocations, setup, and validation stay outside the timed regions. Both
-/// results remain observable after timing so LTO cannot discard the work.
+/// Gate a complete redraw, a smooth scroll, and representative indexed wipes.
+/// Setup and allocation happen outside each timed section. Keep each image
+/// observable before the next workload overwrites it.
 #[test_case]
 fn renderer_frame_shapes_fit_gba_frame_budget(gba: &mut agb::Gba) {
     let config = RenderConfig::new(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -144,8 +143,30 @@ fn renderer_frame_shapes_fit_gba_frame_budget(gba: &mut agb::Gba) {
     let effect_cycles = measure_cycles(gba, || {
         frame.copy_from(&stable);
         frame.scroll_indices(2, 0, GbColor::White);
+        core::hint::black_box(frame.indices());
     });
     assert_frame_budget("stable-frame scroll effect", effect_cycles);
+
+    let snapshot = CompactTransitionSnapshot::capture(&stable);
+    let mut wipe = BattleTransitionState::new(BattleTransitionKind::HorizontalStripes, 20, 18);
+    wipe.tick();
+    let wipe_cycles = measure_cycles(gba, || {
+        core::hint::black_box(snapshot.render(&wipe, &mut frame));
+        core::hint::black_box(frame.indices());
+    });
+    assert_frame_budget("four-colour transition", wipe_cycles);
+
+    let mut shrink = BattleTransitionState::new(BattleTransitionKind::Shrink, 20, 18);
+    shrink.tick();
+    let blit_cycles = measure_cycles(gba, || {
+        core::hint::black_box(shrink.render(&stable, &mut frame));
+        core::hint::black_box(frame.indices());
+    });
+    assert_frame_budget("indexed shrink", blit_cycles);
+    let compact_cycles = measure_cycles(gba, || {
+        core::hint::black_box(snapshot.render(&shrink, &mut frame));
+    });
+    assert_frame_budget("compact shrink", compact_cycles);
 
     let checksum = frame
         .indexed()

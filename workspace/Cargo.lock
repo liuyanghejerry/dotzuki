@@ -1221,6 +1221,7 @@ dependencies = [
  "image",
  "log",
  "notify",
+ "scoped-tls",
  "serde",
  "serde_json",
 ]

@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.11.0
->（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
+>（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0
+> - **Last verified**: v0.11.0（含未发布变更）
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -18,6 +18,13 @@
 - 每个版本先列出 **breaking changes**（附其迁移指南的链接），然后是值得注意
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
+
+## 未发布
+
+- 原先通过结构体字面量构造 `HookState` 的 Rust 宿主改用 `HookState::new`。
+  遭遇的共享定义通过 `HookState::rules` 访问。见[规则所有权](../reference/battle-rules.zh-CN.md#零-rust-运行器中的规则所有权)。
+- 零 Rust 运行器复用地图图层，按变化区域更新上一帧的画面。采用四色索引帧缓冲的游戏
+  可以捕获打包的战斗转场快照。见[渲染参考](../reference/game-shell.zh-CN.md#零-rust-运行器的帧缓冲复用)。
 
 ## v0.11.0
 

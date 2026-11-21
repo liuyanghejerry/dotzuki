@@ -208,8 +208,7 @@ pub struct BattleTransitionState {
 /// Minimal tile-level framebuffer view used by transition wipes.
 ///
 /// Implemented for the engine's RGBA [`FrameBuffer`] and for the packed
-/// indexed [`crate::IndexedFrameBuffer`]; both layouts store an 8×8 tile
-/// contiguously, so a tile copy is a small memcpy.
+/// indexed [`crate::IndexedFrameBuffer`]. Copies are clipped to both surfaces.
 pub trait TransitionFb {
     /// (width, height) in pixels.
     fn size(&self) -> (usize, usize);
@@ -219,6 +218,18 @@ pub trait TransitionFb {
     /// Copy the 8×8 tile at tile coordinates (`stx`, `sty`) of `src` into
     /// tile (`tx`, `ty`) of `self`. Out-of-bounds areas are clamped.
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize);
+    /// Paint a contiguous horizontal run. The default preserves tile-level callbacks.
+    fn black_run(&mut self, tx: usize, ty: usize, count: usize) {
+        for dx in 0..count {
+            self.tile_black(tx + dx, ty);
+        }
+    }
+    /// Copy adjacent tiles from one source row into one destination row.
+    fn copy_run(&mut self, tx: usize, ty: usize, src: &Self, sx: usize, sy: usize, count: usize) {
+        for dx in 0..count {
+            self.tile_copy(tx + dx, ty, src, sx + dx, sy);
+        }
+    }
 }
 
 impl TransitionFb for FrameBuffer {
@@ -227,8 +238,11 @@ impl TransitionFb for FrameBuffer {
     }
     fn tile_black(&mut self, tx: usize, ty: usize) {
         let (w, h) = self.size();
-        let px = tx * TILE_SIZE as usize;
-        let py = ty * TILE_SIZE as usize;
+        let px = tx.saturating_mul(TILE_SIZE as usize);
+        let py = ty.saturating_mul(TILE_SIZE as usize);
+        if px >= w || py >= h {
+            return;
+        }
         for dy in 0..TILE_SIZE as usize {
             let y = py + dy;
             if y >= h {
@@ -247,27 +261,16 @@ impl TransitionFb for FrameBuffer {
         }
     }
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
-        let (w, h) = self.size();
-        let px = tx * TILE_SIZE as usize;
-        let py = ty * TILE_SIZE as usize;
-        let spx = stx * TILE_SIZE as usize;
-        let spy = sty * TILE_SIZE as usize;
-        for dy in 0..TILE_SIZE as usize {
-            let y = py + dy;
-            let sy = spy + dy;
-            if y >= h || sy >= h {
-                break;
-            }
-            for dx in 0..TILE_SIZE as usize {
-                let x = px + dx;
-                let sx = spx + dx;
-                if x >= w || sx >= w {
-                    break;
-                }
-                let off = (y * w + x) * 4;
-                let soff = (sy * w + sx) * 4;
-                self.data[off..off + 4].copy_from_slice(&src.data[soff..soff + 4]);
-            }
+        self.copy_run(tx, ty, src, stx, sty, 1);
+    }
+    fn copy_run(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize, count: usize) {
+        let Some(rect) = TileBlit::clipped(self.size(), src.size(), (tx, ty), (stx, sty), count)
+        else {
+            return;
+        };
+        for (to, from) in rect.rows(self.width as usize, src.width as usize) {
+            self.data[4 * to..4 * (to + rect.w)]
+                .copy_from_slice(&src.data[4 * from..4 * (from + rect.w)]);
         }
     }
 }
@@ -279,33 +282,30 @@ impl<C: crate::palette::ColorIndex, const LINEAR: bool> TransitionFb
         (self.width(), self.height())
     }
     fn tile_black(&mut self, tx: usize, ty: usize) {
+        self.black_run(tx, ty, 1);
+    }
+    fn black_run(&mut self, tx: usize, ty: usize, count: usize) {
         // Index 3 is black (GbColor::Black); the palette maps it to the
         // darkest shade at present time.
-        self.fill_rect(
-            (tx * TILE_SIZE as usize) as u32,
-            (ty * TILE_SIZE as usize) as u32,
-            TILE_SIZE,
-            TILE_SIZE,
-            C::from_u8(3),
-        );
+        let px = tx.saturating_mul(TILE_SIZE as usize);
+        let py = ty.saturating_mul(TILE_SIZE as usize);
+        if px >= self.width() || py >= self.height() {
+            return;
+        }
+        let width = count
+            .saturating_mul(TILE_SIZE as usize)
+            .min(self.width() - px);
+        self.fill_rect(px as u32, py as u32, width as u32, TILE_SIZE, C::from_u8(3));
     }
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
-        let (w, h) = self.size();
-        let px = tx * TILE_SIZE as usize;
-        let py = ty * TILE_SIZE as usize;
-        let spx = stx * TILE_SIZE as usize;
-        let spy = sty * TILE_SIZE as usize;
-        for dy in 0..TILE_SIZE as usize {
-            for dx in 0..TILE_SIZE as usize {
-                let (x, y) = (px + dx, py + dy);
-                let (sx, sy) = (spx + dx, spy + dy);
-                if x < w && y < h && sx < w && sy < h {
-                    if let Some(index) = src.get_pixel(sx as u32, sy as u32) {
-                        self.set_pixel(x as u32, y as u32, index);
-                    }
-                }
-            }
-        }
+        self.copy_run(tx, ty, src, stx, sty, 1);
+    }
+    fn copy_run(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize, count: usize) {
+        let Some(rect) = TileBlit::clipped(self.size(), src.size(), (tx, ty), (stx, sty), count)
+        else {
+            return;
+        };
+        self.copy_tile_rows(src, rect.x, rect.y, rect.sx, rect.sy, rect.w, rect.h);
     }
 }
 
@@ -316,11 +316,183 @@ impl<C: crate::palette::ColorIndex, const LINEAR: bool> TransitionFb
         (self.width() as usize, self.height() as usize)
     }
     fn tile_black(&mut self, tx: usize, ty: usize) {
-        self.indexed_mut().tile_black(tx, ty);
+        self.black_run(tx, ty, 1);
+    }
+    fn black_run(&mut self, tx: usize, ty: usize, count: usize) {
+        self.indexed_mut().black_run(tx, ty, count);
     }
     fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        self.copy_run(tx, ty, src, stx, sty, 1);
+    }
+    fn copy_run(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize, count: usize) {
         self.indexed_mut()
-            .tile_copy(tx, ty, src.indexed(), stx, sty);
+            .copy_run(tx, ty, src.indexed(), stx, sty, count);
+    }
+}
+
+#[derive(Clone, Copy)]
+struct TileBlit {
+    x: usize,
+    y: usize,
+    sx: usize,
+    sy: usize,
+    w: usize,
+    h: usize,
+}
+
+impl TileBlit {
+    fn clipped(
+        dst: (usize, usize),
+        src: (usize, usize),
+        to: (usize, usize),
+        from: (usize, usize),
+        count: usize,
+    ) -> Option<Self> {
+        let tile = TILE_SIZE as usize;
+        let (x, y) = (to.0.saturating_mul(tile), to.1.saturating_mul(tile));
+        let (sx, sy) = (from.0.saturating_mul(tile), from.1.saturating_mul(tile));
+        let w = count
+            .saturating_mul(tile)
+            .min(dst.0.saturating_sub(x))
+            .min(src.0.saturating_sub(sx));
+        let h = tile
+            .min(dst.1.saturating_sub(y))
+            .min(src.1.saturating_sub(sy));
+        (w > 0 && h > 0).then_some(Self { x, y, sx, sy, w, h })
+    }
+
+    fn rows(self, dst_stride: usize, src_stride: usize) -> impl Iterator<Item = (usize, usize)> {
+        (0..self.h).map(move |row| {
+            (
+                (self.y + row) * dst_stride + self.x,
+                (self.sy + row) * src_stride + self.sx,
+            )
+        })
+    }
+}
+
+/// Immutable four-colour wipe source, four row-major indices per byte, plus the display palette.
+pub struct CompactTransitionSnapshot {
+    width: usize,
+    height: usize,
+    pixels: Box<[u8]>,
+    palette: crate::palette::Palette<crate::palette::GbColor>,
+}
+
+const UNPACK: [u32; 256] = {
+    let mut table = [0; 256];
+    let mut i = 0;
+    while i < 256 {
+        let b = i as u8;
+        table[i] = u32::from_ne_bytes([b & 3, (b >> 2) & 3, (b >> 4) & 3, b >> 6]);
+        i += 1;
+    }
+    table
+};
+
+impl CompactTransitionSnapshot {
+    /// Capture the current linear framebuffer, including any active palette fade.
+    pub fn capture(source: &crate::LinearRgbaIndexedFrameBuffer) -> Self {
+        let pixels = source
+            .indices()
+            .chunks(4)
+            .map(|group| {
+                group
+                    .iter()
+                    .enumerate()
+                    .fold(0, |byte, (i, &index)| byte | ((index & 3) << (2 * i)))
+            })
+            .collect();
+        Self {
+            width: source.width() as usize,
+            height: source.height() as usize,
+            pixels,
+            palette: *source.display_palette(),
+        }
+    }
+
+    /// Storage used by the pixel data, excluding the palette.
+    pub fn packed_len(&self) -> usize {
+        self.pixels.len()
+    }
+
+    fn expand(&self, mut start: usize, mut dst: &mut [u8]) {
+        while start % 4 != 0 && !dst.is_empty() {
+            dst[0] = UNPACK[self.pixels[start / 4] as usize].to_ne_bytes()[start % 4];
+            start += 1;
+            dst = &mut dst[1..];
+        }
+        let src = &self.pixels[start / 4..];
+        let count = dst.len() / 4;
+        let (whole, tail) = dst.split_at_mut(count * 4);
+        if whole.as_ptr().cast::<u32>().is_aligned() {
+            // SAFETY: the address is word-aligned, the length is a multiple of four,
+            // and all u32 bit patterns are valid. The index framebuffer owns this memory.
+            let words =
+                unsafe { core::slice::from_raw_parts_mut(whole.as_mut_ptr().cast::<u32>(), count) };
+            for (word, &byte) in words.iter_mut().zip(src) {
+                *word = UNPACK[byte as usize];
+            }
+        } else {
+            for (group, &byte) in whole.chunks_exact_mut(4).zip(src) {
+                group.copy_from_slice(&UNPACK[byte as usize].to_ne_bytes());
+            }
+        }
+        if !tail.is_empty() {
+            tail.copy_from_slice(&UNPACK[src[count] as usize].to_ne_bytes()[..tail.len()]);
+        }
+    }
+
+    fn restore_indices(&self, dst: &mut crate::LinearRgbaIndexedFrameBuffer) {
+        let stride = dst.width() as usize;
+        let rows = self.height.min(dst.height() as usize);
+        let width = self.width.min(stride);
+        if stride == self.width {
+            self.expand(0, &mut dst.indices_mut()[..width * rows]);
+        } else if width > 0 {
+            for (y, row) in dst.indices_mut().chunks_mut(stride).take(rows).enumerate() {
+                self.expand(y * self.width, &mut row[..width]);
+            }
+        }
+    }
+
+    /// Restore the common pixel rectangle and reinstate the captured display palette.
+    pub fn restore(&self, dst: &mut crate::LinearRgbaIndexedFrameBuffer) {
+        self.restore_indices(dst);
+        dst.set_palette(self.palette);
+    }
+
+    /// Draw a wipe using the destination's current display palette.
+    pub fn render(
+        &self,
+        transition: &BattleTransitionState,
+        dst: &mut crate::LinearRgbaIndexedFrameBuffer,
+    ) -> bool {
+        let size = dst.size();
+        let grid = (
+            transition.width_tiles.saturating_mul(TILE_SIZE as usize),
+            transition.height_tiles.saturating_mul(TILE_SIZE as usize),
+        );
+        // Fully covered, whole-tile sources can decode each destination pixel once.
+        // With clipped source tiles the uncovered part retains its identity pixel.
+        let direct =
+            size.0 <= grid.0 && size.1 <= grid.1 && self.width >= grid.0 && self.height >= grid.1;
+        if !direct {
+            self.restore_indices(dst);
+        }
+        transition.visit_runs(|tx, ty, count, source| match source {
+            None => dst.black_run(tx, ty, count),
+            Some((sx, sy)) if direct || (sx, sy) != (tx, ty) => {
+                if let Some(rect) =
+                    TileBlit::clipped(size, (self.width, self.height), (tx, ty), (sx, sy), count)
+                {
+                    for (to, from) in rect.rows(size.0, self.width) {
+                        self.expand(from, &mut dst.indices_mut()[to..to + rect.w]);
+                    }
+                }
+            }
+            _ => {}
+        })
     }
 }
 
@@ -388,23 +560,49 @@ impl BattleTransitionState {
     /// 2bpp indexed buffer both implement it (tile-granular copies, so the
     /// indexed variant moves 16 bytes per tile instead of 256).
     pub fn render<F: TransitionFb>(&self, source_fb: &F, dest_fb: &mut F) -> bool {
-        for ty in 0..self.height_tiles {
-            for tx in 0..self.width_tiles {
-                let idx = ty * self.width_tiles + tx;
-                let black = self.tiles[idx] != 0;
-                // Copy-based transitions (Shrink/Split) redirect this tile to
-                // a shifted source tile; wipe transitions use the identity.
-                let (stx, sty) = self.src[idx];
-                if black {
-                    dest_fb.tile_black(tx, ty);
-                } else {
-                    dest_fb.tile_copy(tx, ty, source_fb, stx as usize, sty as usize);
-                }
-            }
-        }
-        self.all_black()
+        self.visit_runs(|tx, ty, count, source| match source {
+            Some((sx, sy)) => dest_fb.copy_run(tx, ty, source_fb, sx, sy, count),
+            None => dest_fb.black_run(tx, ty, count),
+        })
     }
 
+    /// Shrink and Split shift adjacent tiles together. Combine each contiguous
+    /// source span so clipping, row addressing and unpacking run once per span.
+    fn visit_runs(
+        &self,
+        mut paint: impl FnMut(usize, usize, usize, Option<(usize, usize)>),
+    ) -> bool {
+        let mut all_black = true;
+        for ty in 0..self.height_tiles {
+            let row = ty * self.width_tiles;
+            let mut tx = 0;
+            while tx < self.width_tiles {
+                let black = self.tiles[row + tx] != 0;
+                let (sx, sy) = self.src[row + tx];
+                let mut end = tx + 1;
+                while end < self.width_tiles && (self.tiles[row + end] != 0) == black {
+                    if !black {
+                        let (next_x, next_y) = self.src[row + end];
+                        if next_y != sy || next_x as usize != sx as usize + (end - tx) {
+                            break;
+                        }
+                    }
+                    end += 1;
+                }
+                all_black &= black;
+                paint(
+                    tx,
+                    ty,
+                    end - tx,
+                    (!black).then_some((sx as usize, sy as usize)),
+                );
+                tx = end;
+            }
+        }
+        all_black
+    }
+
+    #[cfg(test)]
     fn all_black(&self) -> bool {
         for &t in &self.tiles {
             if t == 0 {
@@ -821,6 +1019,136 @@ mod tests {
     use super::*;
     use crate::Rgba;
     use dotzuki_engine::render_config::RenderConfig;
+
+    #[test]
+    fn compact_snapshots_restore_palette_and_match_every_wipe_step() {
+        use BattleTransitionKind::*;
+        for (width, height) in [(157u32, 141u32), (160, 144)] {
+            let config = RenderConfig::new(width, height);
+            let mut source = crate::LinearRgbaIndexedFrameBuffer::new(config, Rgba::WHITE);
+            for (i, pixel) in source.indices_mut().iter_mut().enumerate() {
+                *pixel = ((i.wrapping_mul(17) ^ (i >> 3) ^ (i >> 7)) & 3) as u8;
+            }
+            source.apply_bgp(0x1b);
+            let snapshot = CompactTransitionSnapshot::capture(&source);
+            assert_eq!(
+                snapshot.packed_len(),
+                (width as usize * height as usize).div_ceil(4)
+            );
+            let standard =
+                crate::LinearRgbaIndexedFrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
+            assert_eq!(
+                CompactTransitionSnapshot::capture(&standard).packed_len(),
+                5760
+            );
+            let mut actual = crate::LinearRgbaIndexedFrameBuffer::new(config, Rgba::BLACK);
+            snapshot.restore(&mut actual);
+            assert_eq!(source.indices(), actual.indices());
+            assert_eq!(source.display_palette(), actual.display_palette());
+            actual.reset_palette();
+            let dest_palette = *actual.display_palette();
+            let mut indexed = crate::LinearRgbaIndexedFrameBuffer::new(config, Rgba::BLACK);
+            let mut expected = crate::LinearRgbaIndexedFrameBuffer::new(config, Rgba::BLACK);
+            for kind in [
+                DoubleCircle,
+                Spiral { outward: false },
+                Spiral { outward: true },
+                Circle,
+                SpiralTrainerStronger,
+                HorizontalStripes,
+                Shrink,
+                VerticalStripes,
+                Split,
+            ] {
+                let mut wipe = BattleTransitionState::new(kind, 20, 18);
+                for _ in 0..600 {
+                    expected.indices_mut().copy_from_slice(source.indices());
+                    indexed.indices_mut().copy_from_slice(source.indices());
+                    for (i, &tile) in wipe.tiles.iter().enumerate() {
+                        let (tx, ty) = (i % 20, i / 20);
+                        if tile != 0 {
+                            expected.tile_black(tx, ty);
+                        } else {
+                            let (sx, sy) = wipe.src[i];
+                            expected.tile_copy(tx, ty, &source, sx as usize, sy as usize);
+                        }
+                    }
+                    let black = wipe.all_black();
+                    assert_eq!(wipe.render(&source, &mut indexed), black);
+                    assert_eq!(indexed.indices(), expected.indices(), "{kind:?}");
+                    assert_eq!(snapshot.render(&wipe, &mut actual), black);
+                    assert_eq!(actual.indices(), expected.indices(), "{kind:?}");
+                    assert_eq!(*actual.display_palette(), dest_palette);
+                    if wipe.is_done() {
+                        break;
+                    }
+                    wipe.tick();
+                }
+                assert!(wipe.is_done(), "{kind:?}");
+            }
+            // Different row strides and an odd output tail exercise clipped expansion.
+            for (w, h) in [(8, 5), (163, 146)] {
+                let mut clipped =
+                    crate::LinearRgbaIndexedFrameBuffer::new(RenderConfig::new(w, h), Rgba::BLACK);
+                snapshot.restore(&mut clipped);
+                for y in 0..h as usize {
+                    for x in 0..w as usize {
+                        let expected = if x < width as usize && y < height as usize {
+                            source.indices()[y * width as usize + x]
+                        } else {
+                            3
+                        };
+                        assert_eq!(clipped.indices()[y * w as usize + x], expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn indexed_tile_rows_clip_both_origins_and_preserve_the_other_bits() {
+        use crate::palette::{ColorIndex, GbaColor};
+        fn check<const LINEAR: bool>() {
+            let mut src =
+                crate::IndexedFrameBuffer::<GbaColor, LINEAR>::new(13, 11, GbaColor::from_u8(0));
+            for y in 0..11 {
+                for x in 0..13 {
+                    src.set_pixel(x, y, GbaColor::from_u8((x + y * 3) as u8));
+                }
+            }
+            for (tx, ty, sx, sy, count) in [
+                (0, 0, 1, 1, 1),
+                (1, 1, 0, 0, 1),
+                (0, 0, 0, 0, 1),
+                (0, 0, 0, 0, 3),
+                (99, 99, 0, 0, 1),
+                (0, 0, usize::MAX, 0, 1),
+            ] {
+                let clear = GbaColor::from_u8(15);
+                let mut dst = crate::IndexedFrameBuffer::<GbaColor, LINEAR>::new(11, 13, clear);
+                let mut expected = dst.clone();
+                // Reference each source pixel independently, including clipped spans.
+                for dy in 0..8 {
+                    for dx in 0..(8 * count) {
+                        let x = sx.saturating_mul(8usize).saturating_add(dx);
+                        let y = sy * 8 + dy;
+                        if x < src.width() && y < src.height() {
+                            let pixel = src.get_pixel(x as u32, y as u32).unwrap();
+                            expected.set_pixel((tx * 8 + dx) as u32, (ty * 8 + dy) as u32, pixel);
+                        }
+                    }
+                }
+                dst.copy_run(tx, ty, &src, sx, sy, count);
+                for y in 0..13 {
+                    for x in 0..11 {
+                        assert_eq!(dst.get_pixel(x, y), expected.get_pixel(x, y));
+                    }
+                }
+            }
+        }
+        check::<true>();
+        check::<false>();
+    }
 
     fn tile_is_black(state: &BattleTransitionState, x: usize, y: usize) -> bool {
         state.tiles[y * state.width_tiles + x] != 0

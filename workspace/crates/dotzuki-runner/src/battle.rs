@@ -151,10 +151,10 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use dotzuki_engine::battle::stack::{
-    collect_handlers, run_event, BattleCtx, Effect, EffectId, Event, FirstMover, RelayVar,
-    StackDriver, TurnPhase,
+    run_event, BattleCtx, CollectedHandler, EffectId, Event, FirstMover, RelayVar, StackDriver,
+    TurnPhase,
 };
-use dotzuki_engine::battle::{BattleState, BattlerRef};
+use dotzuki_engine::battle::BattlerRef;
 use dotzuki_engine::menu::MenuConfig;
 use dotzuki_engine::render::{FrameBuffer, Rgba, TileRect, Ui};
 use dotzuki_renderer::embedded_font;
@@ -168,8 +168,8 @@ use crate::manifest::{BattleLevels, BattleStats, DEFAULT_RULES_FILE};
 use crate::project::LoadedProject;
 use crate::vfs::{join_path, ProjectFiles};
 
-use dotzuki_rules::RulesProvider;
-use hooks::{GenericProvider, HookState};
+use dotzuki_rules::CompiledHook;
+use hooks::{BattleRules, HookState};
 
 pub mod hooks;
 
@@ -250,7 +250,7 @@ impl BattleRng for ScriptedRng {
 /// missing pairs are neutral (1×).
 #[derive(Debug, Default, Clone)]
 pub struct TypeChart {
-    edges: HashMap<(String, String), (u32, u32)>,
+    edges: Arc<HashMap<(String, String), (u32, u32)>>,
 }
 
 impl TypeChart {
@@ -263,7 +263,9 @@ impl TypeChart {
                 (entry.mult.num, entry.mult.den.max(1)),
             );
         }
-        Self { edges }
+        Self {
+            edges: Arc::new(edges),
+        }
     }
 
     /// The `[num, den]` multiplier for an attack of element `atk` against a
@@ -639,7 +641,7 @@ pub struct BattleSetup {
     stats: BattleStats,
     resource: Option<String>,
     chart: TypeChart,
-    ron: Option<RonSetup>,
+    ron: Option<Arc<BattleRules>>,
     /// Battle-usable items (v2-b): `None` when the manifest has no `items`
     /// block (no Item menu).
     items: Option<ItemsSetup>,
@@ -712,23 +714,11 @@ struct Encounter {
     money: u32,
 }
 
-/// The compiled RON-hooks half of a [`BattleSetup`] (v2-a): present when the
-/// rules file declares `effects`. Built once per setup; the thread-local
-/// `RulesHost` is (re-)installed from it on every battle start.
-struct RonSetup {
-    /// The compiled registry (hooks + interned vocabularies + chart).
-    compiled: dotzuki_rules::CompiledRuleset,
-    /// One leaked `Effect` per compiled hook (the deliberate one-time leak,
-    /// minimon/wuxia precedent).
-    registry: Vec<&'static dotzuki_engine::battle::stack::Effect<GenericProvider>>,
-    /// Skill id → its `kind: Move` RON record's overrides.
-    move_records: HashMap<String, hooks::RonMove>,
-    /// `StatusId(idx)` → status record id (declaration order).
-    status_names: Vec<String>,
-    /// The ruleset's interned stat names, in order.
-    stat_names: Vec<String>,
-    /// Whether the manifest maps a resource field (the MP pool mirror).
-    has_resource: bool,
+/// Content comparison also detects disk edits made without a file watcher.
+pub(crate) struct CachedRules {
+    bytes: Vec<u8>,
+    chart: TypeChart,
+    ron: Option<Arc<BattleRules>>,
 }
 
 impl BattleSetup {
@@ -810,41 +800,51 @@ impl BattleSetup {
         // error at battle start (and a `dotzuki check` diagnostic).
         let rules_rel = section.rules.as_deref().unwrap_or(DEFAULT_RULES_FILE);
         let rules_rel = join_path("", rules_rel);
-        let mut ron = None;
-        let chart = match project.files().read(&rules_rel) {
+        let (chart, ron) = match project.files().read(&rules_rel) {
             Ok(bytes) => {
-                let text = String::from_utf8(bytes)
-                    .with_context(|| format!("{rules_rel} is not UTF-8"))?;
-                let ruleset = dotzuki_rules::Ruleset::from_ron(&text)
-                    .map_err(|e| anyhow::anyhow!("failed to parse {rules_rel}: {e}"))?;
-                let chart = TypeChart::from_ruleset(&ruleset);
-                if !ruleset.effects.is_empty() {
-                    let compiled = hooks::compile_ruleset(&ruleset)
-                        .map_err(|e| anyhow::anyhow!("failed to compile {rules_rel}: {e}"))?;
-                    let registry = compiled.build_effects::<GenericProvider>();
-                    let move_records = hooks::ron_moves(&ruleset, section.resource.as_deref());
-                    ron = Some(RonSetup {
-                        compiled,
-                        registry,
-                        move_records,
-                        status_names: hooks::status_names(&ruleset),
-                        stat_names: ruleset.stats.clone(),
-                        has_resource: section.resource.is_some(),
+                let mut cache = project
+                    .battle_rules
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner());
+                if !cache.as_ref().is_some_and(|old| old.bytes == bytes) {
+                    let text = std::str::from_utf8(&bytes)
+                        .with_context(|| format!("{rules_rel} is not UTF-8"))?;
+                    let ruleset = dotzuki_rules::Ruleset::from_ron(text)
+                        .map_err(|e| anyhow::anyhow!("failed to parse {rules_rel}: {e}"))?;
+                    let ron = if ruleset.effects.is_empty() {
+                        None
+                    } else {
+                        Some(Arc::new(
+                            BattleRules::compile(&ruleset, section.resource.as_deref()).map_err(
+                                |e| anyhow::anyhow!("failed to compile {rules_rel}: {e}"),
+                            )?,
+                        ))
+                    };
+                    *cache = Some(CachedRules {
+                        bytes,
+                        chart: TypeChart::from_ruleset(&ruleset),
+                        ron,
                     });
                 }
-                chart
+                let cached = cache.as_ref().expect("initialized rule cache");
+                (cached.chart.clone(), cached.ron.clone())
             }
             Err(e) => {
                 // An absent default file (battle.rules unset) is a legal
                 // project — no type chart. A manifest-named file that can't
                 // be read is a configuration slip: warn loudly so the chart's
                 // silent absence is visible (`dotzuki check` errors on it).
+                project
+                    .battle_rules
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .take();
                 if section.rules.is_some() {
                     log::warn!(
                         "battle.rules '{rules_rel}' could not be read ({e:#}); battles run with an empty type chart"
                     );
                 }
-                TypeChart::default()
+                (TypeChart::default(), None)
             }
         };
 
@@ -991,35 +991,10 @@ impl BattleSetup {
             enemy.name,
             enemy.max_hp
         );
-        // RON hooks: (re-)install the thread-local rules host (the parallel
-        // test harness runs battles on many threads) and mirror the ACTIVE
-        // member + the enemy into the engine battle state.
-        let hook_state = self.ron.as_ref().map(|ron| {
-            hooks::install_compiled(ron.compiled.clone());
-            HookState {
-                state: BattleState::new(
-                    vec![hooks::mirror_of(
-                        &party[active],
-                        &ron.stat_names,
-                        &ron.status_names,
-                        ron.has_resource,
-                    )],
-                    vec![hooks::mirror_of(
-                        &enemy,
-                        &ron.stat_names,
-                        &ron.status_names,
-                        ron.has_resource,
-                    )],
-                ),
-                effects: Vec::new(),
-                mv: dotzuki_engine::battle::stack::MoveContext::default(),
-                registry: ron.registry.clone(),
-                move_records: ron.move_records.clone(),
-                status_names: ron.status_names.clone(),
-                stat_names: ron.stat_names.clone(),
-                has_resource: ron.has_resource,
-            }
-        });
+        let hook_state = self
+            .ron
+            .as_ref()
+            .map(|rules| HookState::new(Arc::clone(rules), &party[active], &enemy));
         let mut battle = Battle::full(
             party,
             active,
@@ -1564,7 +1539,7 @@ fn snap_mirrors(hooks: &HookState) -> [MirrorSnap; 2] {
         MirrorSnap {
             hp: b.hp,
             status: b.status.clone(),
-            stages: (0..hooks.stat_names.len())
+            stages: (0..hooks.rules.compiled().stats.len())
                 .map(|i| {
                     b.stat_stages
                         .get(hooks::StatId(i as u16))
@@ -1591,6 +1566,7 @@ fn diff_lines(
         let (b, a, name) = (&before[i], &after[i], names[i]);
         let status_name = |id: &hooks::StatusId| {
             hooks
+                .rules
                 .status_names
                 .get(id.0 as usize)
                 .map(String::as_str)
@@ -1601,7 +1577,7 @@ fn diff_lines(
             (Some(id), None) => out.push(format!("{name} is no longer {}!", status_name(id))),
             _ => {}
         }
-        for (s, stat) in hooks.stat_names.iter().enumerate() {
+        for (s, stat) in hooks.rules.compiled().stats.iter().enumerate() {
             let (bv, av) = (b.stages[s], a.stages[s]);
             if av > bv {
                 out.push(format!(
