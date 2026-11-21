@@ -151,7 +151,7 @@ docs/                              # mdBook src
   「中文（zh-CN）」分组列全部翻译版（doc-standard §6）。
 - 编辑器扩展开发文档（`AI_AGENT_FRAMEWORK.md` 等）暂留在
   `tools/dotzuki-editor/docs/`，待编辑器文档量增长后再并入站点。
-- 内部过程文档（`NEW-PROJECT-UX-ANALYSIS.md` 等）永不进站点。
+- 内部过程文档不纳入站点。
 
 ## 4. 迁移里程碑
 

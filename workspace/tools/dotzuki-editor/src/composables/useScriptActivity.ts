@@ -6,6 +6,7 @@ export interface ScriptFile {
   isDir: boolean
   size: number
   path: string
+  displayPath: string
 }
 
 export const useScriptActivity = defineStore('scriptActivity', () => {
@@ -19,7 +20,7 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
 
-  let _extension = '.js'
+  let loadId = 0
 
   const dirty = computed(() => content.value !== originalContent.value)
 
@@ -29,30 +30,23 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
     return lastSlash >= 0 ? activeFile.value.slice(lastSlash + 1) : activeFile.value
   })
 
-  function configure(_scriptsDir: string, extension: string) {
-    // scriptsDir is applied server-side (see apiUrl); only the extension is
-    // needed client-side, to filter the listing.
-    _extension = extension
-  }
-
-  function apiUrl(subPath: string): string {
-    // The dev server prepends the activity's scriptsDir, so the URL carries only
-    // the path RELATIVE to it (mirrors /api/maps). Including scriptsDir here too
-    // double-prefixes it on the server → resolves to a missing dir → "File not found".
-    return `api/scripts/${subPath}`.replace(/\/+/g, '/')
+  function apiUrl(file?: string): string {
+    const params = new URLSearchParams({ scope: 'project' })
+    if (file) params.set('file', file)
+    return 'api/scripts?' + params
   }
 
   async function fetchFiles(): Promise<void> {
     loading.value = true
     error.value = null
     try {
-      const resp = await fetch(apiUrl(''))
+      const resp = await fetch(apiUrl())
       if (!resp.ok) {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)
       }
       const raw = await resp.json() as ScriptFile[]
-      files.value = raw.filter(f => !f.isDir && f.name.endsWith(_extension))
+      files.value = raw.filter(f => !f.isDir)
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to list scripts'
       files.value = []
@@ -62,6 +56,7 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
   }
 
   async function loadFile(path: string): Promise<void> {
+    const request = ++loadId
     loading.value = true
     error.value = null
     try {
@@ -71,17 +66,19 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
         throw new Error(msg)
       }
       const text = await resp.text()
+      if (request !== loadId) return
       activeFile.value = path
       originalContent.value = text
       content.value = text
     } catch (e) {
+      if (request !== loadId) return
       error.value = e instanceof Error ? e.message : 'Failed to load script'
     } finally {
-      loading.value = false
+      if (request === loadId) loading.value = false
     }
   }
 
-  async function saveFile(path: string, body: string): Promise<void> {
+  async function saveFile(path: string, body: string): Promise<boolean> {
     saving.value = true
     error.value = null
     try {
@@ -94,9 +91,11 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
         const msg = await resp.json().then(j => j.error).catch(() => 'Unknown error')
         throw new Error(msg)
       }
-      originalContent.value = body
+      if (activeFile.value === path) originalContent.value = body
+      return true
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to save script'
+      return false
     } finally {
       saving.value = false
     }
@@ -113,7 +112,7 @@ export const useScriptActivity = defineStore('scriptActivity', () => {
     loading,
     saving,
     error,
-    configure,
+    apiUrl,
     fetchFiles,
     loadFile,
     saveFile,

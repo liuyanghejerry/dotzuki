@@ -762,14 +762,14 @@ fn parse_scene_document(source: &str, file_path: &str) -> Result<ast::Document, 
     if !parse_errors.is_empty() {
         return Err(parse_errors
             .iter()
-            .map(|e| e.to_string())
+            .map(|e| format!("{}:{}: {e}", e.span().line_start, e.span().col_start))
             .collect::<Vec<_>>()
             .join("; "));
     }
     if !semantic_errors.is_empty() {
         return Err(semantic_errors
             .iter()
-            .map(|e| e.to_string())
+            .map(|e| format!("{}:{}: {e}", e.span().line_start, e.span().col_start))
             .collect::<Vec<_>>()
             .join("; "));
     }

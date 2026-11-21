@@ -38,9 +38,8 @@
 //! A lost battle arms the whiteout ([`RunnerGame::start_whiteout`]), which
 //! fires when the scene that received `"lose"` finishes: a brief blackout, a
 //! "<Name> collapsed…" line, then the whole party is healed to full (status
-//! cleared) and the player returns to the entry map's spawn — flags,
-//! inventory and money kept. Map-less projects only heal. There is no
-//! heal-point system yet: the respawn is always the entry spawn.
+//! cleared). The last on-map `heal` sets the respawn point, with the entry
+//! map's spawn as the fallback. Flags, inventory and money carry over.
 
 use std::collections::VecDeque;
 
@@ -53,7 +52,9 @@ use dotzuki_renderer::input::{GbButton, InputState};
 use dotzuki_ui::widgets::{draw_flex_menu, FlexMenuState};
 use dotzuki_ui::FrameBufferPainter;
 
-use super::{draw_textbox, find_spawn, paginate, Mode, RunnerGame, SCREEN_H, SCREEN_W};
+use super::{
+    draw_textbox, find_spawn, paginate, parse_facing, Mode, RunnerGame, SCREEN_H, SCREEN_W,
+};
 use crate::battle::{
     draw_panel, exp_to_next, get_num, get_str, growth_stat, read_record, record_ids, text,
     PartyMemberState, BASIC_ATTACK_NAME,
@@ -1050,23 +1051,24 @@ impl RunnerGame {
     }
 
     /// Land the whiteout: heal the whole party to full (status cleared) and
-    /// return to the entry map's spawn — flags, inventory and money kept.
+    /// return to the last heal point, falling back to the entry map's spawn.
     /// Map-less projects only heal.
     fn apply_whiteout(&mut self) {
         self.heal_party_to_full();
-        if let Ok(entry) = self.project.entry_map() {
-            let on_entry = self.map.as_ref().is_some_and(|m| m.id() == entry);
-            if on_entry {
-                let map = self.map.as_ref().expect("checked above");
-                let spawn = find_spawn(map);
-                self.actor.place(spawn.0, spawn.1, Direction::Down);
-                self.center_camera();
-                self.camera.update(0.0);
-            } else if let Ok(map) = self.project.load_map(&entry) {
+        let checkpoint = self.heal_point.as_ref().and_then(|point| {
+            if !self.project.map_ids().contains(&point.map) {
+                return None;
+            }
+            let map = self.project.load_map(&point.map).ok()?;
+            let loc = &point.player;
+            Some((map, (loc.x, loc.y), parse_facing(&loc.facing), loc.level))
+        });
+        if let Some((map, tile, facing, level)) = checkpoint {
+            self.place_on_map(map, tile, facing, level);
+        } else if let Ok(entry) = self.project.entry_map() {
+            if let Ok(map) = self.project.load_map(&entry) {
                 let spawn = find_spawn(&map);
-                if !self.enter_map(&entry, spawn, Direction::Down) {
-                    log::warn!("whiteout: entry map '{entry}' failed to load — staying put");
-                }
+                self.place_on_map(map, spawn, Direction::Down, 0);
             }
         }
         self.mode = if self.map.is_some() {
@@ -1077,14 +1079,13 @@ impl RunnerGame {
         // A stable state again (the losing scene long finished): persist the
         // healed party/position when automatic saves are on.
         self.write_save();
-        log::info!("whiteout: party healed, player returned to the entry spawn");
+        log::info!("whiteout: party healed");
     }
 
     /// Set every party member to full HP/MP from the records and clear
     /// status. With a `levels` block the pools heal to the GROWN maxima at
-    /// the member's current level. No-op without a battle section/party
-    /// state (a whiteout only follows a lost battle, which needs both).
-    fn heal_party_to_full(&mut self) {
+    /// the member's current level. The first battle starts an uninitialized party at full health.
+    pub(super) fn heal_party_to_full(&mut self) {
         let Some(battle) = self.project.manifest().battle.as_ref() else {
             return;
         };

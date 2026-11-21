@@ -1,12 +1,12 @@
 # 15 分钟做出你的第一款游戏
 
-> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `tutorials/editor-first-game.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
 > - **Type**: tutorial
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 一次带你从头到尾走一遍的导览：从一台空机器，到一个可以点击游玩的 JRPG 项目 ——
 不需要 Rust，不需要写代码。
@@ -115,8 +115,8 @@ dotzuki check ~/dotzuki-projects/<your-game>
   `kind: Ability`/`Item`/`Weather`：Aria 预置的 `intimidate` 会在换入时降低对手的
   攻击，Bryn 的 `leftovers` 在他的行动结束后给他回血，场景还可以在 `startBattle`
   之前用 `setWeather("sandstorm")` 布置预置的 `sandstorm`）；持有的道具不会被消耗，
-  天气只属于单场战斗（只能由场景布置），战斗失败会治疗全队并把你送回入口地图的
-  出生点（还没有回复点系统）。其余内容都已就位：敌方队伍（`encounters` 表 —— 排队
+  天气仅在当前战斗生效，且只能由场景预置。战败后全队回复，并回到场景上次调用
+  `@command("heal")` 记录的[回复点](../reference/glossary.md#battle-gameplay)，默认使用入口出生点。你还可以配置敌方队伍（`encounters` 表 —— 排队
   出场、EXP 累加）、trainer 战（Run 被禁用、胜利得钱）、仅野怪可用的 Run 动作（场景
   会看到第三种结果 `"run"`），以及半价出售的商店。规则格式见
   [战斗规则参考](../reference/battle-rules.md)。

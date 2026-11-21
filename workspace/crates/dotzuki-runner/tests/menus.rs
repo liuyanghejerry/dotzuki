@@ -691,8 +691,68 @@ fn shop_section_seeds_start_money() {
 // ── game-over whiteout ────────────────────────────────────────────────────────
 
 #[test]
+fn scene_heal_revives_saved_party_members_before_the_next_battle() {
+    let (_tmp, root) = demo_project("scene-heal");
+    let script = root.join("data/maps/Cave/script.scene");
+    let scene = fs::read_to_string(&script).unwrap().replace(
+        "@storyline(\"boss_fight\") {",
+        "@storyline(\"boss_fight\") {\n        @command(\"heal\")",
+    );
+    fs::write(script, scene).unwrap();
+    let project = LoadedProject::load(&root).unwrap();
+    let mut game = RunnerGame::new(project, RunnerOptions::default()).unwrap();
+    reach_boss(&mut game);
+    let mut saved: serde_json::Value = serde_json::from_str(&game.export_save().unwrap()).unwrap();
+    saved["party"] = serde_json::json!([{"id":"aria", "hp":0, "mp":0, "status":"poison"}]);
+    assert!(game.import_save(&saved.to_string()));
+
+    press_a(&mut game);
+    let aria = &game.party_state().unwrap()[0];
+    assert_eq!((aria.hp, aria.mp, &aria.status), (60, 20, &None));
+    let page = game
+        .dialogue_text()
+        .expect("the scene continues after healing");
+    assert!(page.contains("A wild Slime"), "{page}");
+}
+
+#[test]
 fn lost_battle_triggers_whiteout_and_respawns_at_entry() {
+    check_whiteout(None, "Town", (1, 1));
+}
+
+#[test]
+fn scene_heal_point_survives_save_reload_and_whiteout() {
+    check_whiteout(Some(|_| {}), "Cave", (3, 4));
+}
+
+#[test]
+fn removed_heal_point_map_falls_back_to_the_entry_spawn() {
+    check_whiteout(
+        Some(|point| point["map"] = "OldCave".into()),
+        "Town",
+        (1, 1),
+    );
+}
+
+#[test]
+fn blocked_heal_point_falls_back_on_its_own_map() {
+    check_whiteout(Some(|point| point["x"] = 99.into()), "Cave", (2, 3));
+}
+
+fn check_whiteout(
+    edit_point: Option<fn(&mut serde_json::Value)>,
+    expected_map: &str,
+    expected_tile: (i32, i32),
+) {
     let (_tmp, root) = demo_project("whiteout");
+    if edit_point.is_some() {
+        let script = root.join("data/maps/Cave/script.scene");
+        let scene = fs::read_to_string(&script).unwrap().replace(
+            "@trigger(map = \"Cave\", on_enter = true)",
+            "@trigger(map = \"Cave\", on_enter = true)\n        @command(\"heal\")",
+        );
+        fs::write(script, scene).unwrap();
+    }
     // An overwhelming Slime: faster, and its built-in Attack one-shots Aria.
     fs::write(
         root.join("data/monsters/slime.json"),
@@ -716,6 +776,29 @@ fn lost_battle_triggers_whiteout_and_respawns_at_entry() {
     };
     let mut game = RunnerGame::new(project, opts).expect("boot");
     reach_boss(&mut game);
+    if let Some(edit) = edit_point {
+        let save = game.export_save().unwrap();
+        let mut doc: serde_json::Value = serde_json::from_str(&save).unwrap();
+        assert_eq!(doc["healPoint"]["map"], "Cave");
+        assert_eq!(
+            (
+                doc["healPoint"]["x"].as_i64(),
+                doc["healPoint"]["y"].as_i64()
+            ),
+            (Some(3), Some(4))
+        );
+        edit(&mut doc["healPoint"]);
+        let project = LoadedProject::load(&root).unwrap();
+        game = RunnerGame::new(
+            project,
+            RunnerOptions {
+                rng_script: Some(vec![50, 100, 1]),
+                ..RunnerOptions::default()
+            },
+        )
+        .unwrap();
+        assert!(game.import_save(&doc.to_string()));
+    }
 
     press_a(&mut game); // boss intro
     press_a(&mut game); // → battle
@@ -746,15 +829,11 @@ fn lost_battle_triggers_whiteout_and_respawns_at_entry() {
     assert!(page.contains("Aria collapsed"), "page: {page:?}");
 
     // Dismissing the message lands the whiteout: party healed to full
-    // (status cleared), player back on the entry map's spawn, flags kept.
+    // (status cleared), player respawned, flags kept.
     press_a(&mut game);
     assert!(!game.whiteout_active());
-    assert_eq!(
-        game.current_map_id(),
-        Some("Town"),
-        "returned to the entry map"
-    );
-    assert_eq!(game.player_tile(), (1, 1), "the entry spawn");
+    assert_eq!(game.current_map_id(), Some(expected_map));
+    assert_eq!(game.player_tile(), expected_tile);
     let party = game.party_state().expect("party state");
     assert_eq!(party.len(), 1);
     assert_eq!((party[0].hp, party[0].mp), (60, 20), "healed to full");

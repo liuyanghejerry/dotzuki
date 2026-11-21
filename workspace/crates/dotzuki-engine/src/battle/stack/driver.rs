@@ -9,6 +9,8 @@
 //! the byte-stream draw order is auditable and pinnable to a legacy oracle
 //! (design §4).
 
+use core::ops::ControlFlow;
+
 use crate::battle::rng::BattleRng;
 use crate::battle::{BattleAction, BattleProvider, BattleState, BattlerRef, EnumMap};
 
@@ -26,6 +28,13 @@ pub enum FirstMover {
     Opponent,
 }
 
+/// An actor executes its action and then applies its end-of-action effects.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TurnPhase {
+    Action,
+    Residual,
+}
+
 /// The outcome of one stack-driven turn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StackTurnResult {
@@ -40,6 +49,32 @@ pub struct StackTurnResult {
 pub struct StackDriver;
 
 impl StackDriver {
+    /// Drive player and opponent actions in initiative order. The host resolves
+    /// each phase with its own rules. A break skips the rest of that actor's
+    /// phases and returns the unspent action, if any, for a forced replacement.
+    /// A missing action lets the host resume a partially resolved round.
+    pub fn drive_turn<A, B>(
+        first: FirstMover,
+        [player, opponent]: [Option<A>; 2],
+        mut resolve: impl FnMut(BattlerRef, TurnPhase, &mut A) -> ControlFlow<B>,
+    ) -> ControlFlow<(B, Option<(BattlerRef, A)>)> {
+        let player = player.map(|action| (BattlerRef::PLAYER, action));
+        let opponent = opponent.map(|action| (BattlerRef::OPPONENT, action));
+        let ordered = match first {
+            FirstMover::Player => [player, opponent],
+            FirstMover::Opponent => [opponent, player],
+        };
+        let mut remaining = ordered.into_iter().flatten();
+        while let Some((actor, mut action)) = remaining.next() {
+            for phase in [TurnPhase::Action, TurnPhase::Residual] {
+                if let ControlFlow::Break(reason) = resolve(actor, phase, &mut action) {
+                    return ControlFlow::Break((reason, remaining.next()));
+                }
+            }
+        }
+        ControlFlow::Continue(())
+    }
+
     /// Execute exactly one full battle turn.
     ///
     /// `actions[0]` is the player's chosen action, `actions[1]` the opponent's.
@@ -143,104 +178,51 @@ impl StackDriver {
         // ── 1. Turn order (draws the order/speed-tie byte first, like pokered
         //       turn_order.rs:41 / move_execution draw order §4). ──
         let first = Self::resolve_first_mover(provider, state, &actions, rng);
-        let (first_ref, second_ref) = match first {
-            FirstMover::Player => (BattlerRef::PLAYER, BattlerRef::OPPONENT),
-            FirstMover::Opponent => (BattlerRef::OPPONENT, BattlerRef::PLAYER),
-        };
-        let (mut first_action, mut second_action) = match first {
-            FirstMover::Player => (actions[0].clone(), actions[1].clone()),
-            FirstMover::Opponent => (actions[1].clone(), actions[0].clone()),
-        };
-
-        // ── 2. First mover acts, then per-mover residual + faint check. ──
-        //
-        // CROSS-TURN LOCK-IN (design §3/§9): before reading the per-turn chosen
-        // action, ask the game whether a live volatile (recorded on a PRIOR turn)
-        // forces a different action — Thrash re-issues the lock, Fly strikes on
-        // turn 2, Hyper Beam recharge forces `Nothing`. This is the seam that
-        // proves a per-turn `[Action; 2]` input is insufficient; it is defaulted
-        // to `None` (inert) for every game that registers no forcing volatile.
-        if let Some(callback) = before_action.as_deref_mut() {
-            callback(state, effects, first_ref, &mut first_action, rng);
-        }
-        let first_effective = provider
-            .forced_action(effects, first_ref, &first_action)
-            .unwrap_or_else(|| first_action.clone());
-        // Snapshot before the action (target first, then actor → natural log order:
-        // the hit precedes self-effects like recoil). Only when logging.
-        let act_pre = Self::snap_pair(state, Self::opposing(first_ref), first_ref, &log);
         let mut mv = MoveContext::default();
-        Self::resolve_action(
-            provider,
-            state,
-            effects,
-            &mut mv,
-            first_ref,
-            &first_effective,
-            rng,
-            log.as_deref_mut(),
-        );
-        if let Some(l) = log.as_deref_mut() {
-            Self::diff_pair(l, state, [Self::opposing(first_ref), first_ref], act_pre);
-        }
-        // Residual: `residual_and_faint` snapshot-diffs EACH source itself (so each HP
-        // change is cause-tagged for narration — status tick precedes a cross-battler
-        // drain heal in its per-source order).
-        let first_residual_faint = Self::residual_and_faint(
-            provider,
-            state,
-            effects,
-            &mut mv,
-            first_ref,
-            rng,
-            log.as_deref_mut(),
-        );
-
-        // Step 2d: short-circuit. If this actor's residual KO'd it OR the move
-        // KO'd the defender, cancel the second move (design §2 / turn.rs:48-60).
-        let defender_dead = Self::is_fainted(state, second_ref);
-        if first_residual_faint || defender_dead {
-            return StackTurnResult {
-                first,
-                second_cancelled: true,
-            };
-        }
-
-        // ── Second mover acts, then its own per-mover residual. ──
-        if let Some(callback) = before_action.as_deref_mut() {
-            callback(state, effects, second_ref, &mut second_action, rng);
-        }
-        let second_effective = provider
-            .forced_action(effects, second_ref, &second_action)
-            .unwrap_or_else(|| second_action.clone());
-        let act_pre2 = Self::snap_pair(state, Self::opposing(second_ref), second_ref, &log);
-        let mut mv2 = MoveContext::default();
-        Self::resolve_action(
-            provider,
-            state,
-            effects,
-            &mut mv2,
-            second_ref,
-            &second_effective,
-            rng,
-            log.as_deref_mut(),
-        );
-        if let Some(l) = log.as_deref_mut() {
-            Self::diff_pair(l, state, [Self::opposing(second_ref), second_ref], act_pre2);
-        }
-        Self::residual_and_faint(
-            provider,
-            state,
-            effects,
-            &mut mv2,
-            second_ref,
-            rng,
-            log.as_deref_mut(),
-        );
-
+        let result = Self::drive_turn(first, actions.map(Some), |actor, phase, selected| {
+            let target = Self::opposing(actor);
+            match phase {
+                TurnPhase::Action => {
+                    if let Some(callback) = before_action.as_deref_mut() {
+                        callback(state, effects, actor, selected, rng);
+                    }
+                    let forced = provider.forced_action(effects, actor, selected);
+                    let pre = Self::snap_pair(state, target, actor, &log);
+                    mv = MoveContext::default();
+                    Self::resolve_action(
+                        provider,
+                        state,
+                        effects,
+                        &mut mv,
+                        actor,
+                        forced.as_ref().unwrap_or(selected),
+                        rng,
+                        log.as_deref_mut(),
+                    );
+                    if let Some(log) = log.as_deref_mut() {
+                        Self::diff_pair(log, state, [target, actor], pre);
+                    }
+                }
+                TurnPhase::Residual => {
+                    let fainted = Self::residual_and_faint(
+                        provider,
+                        state,
+                        effects,
+                        &mut mv,
+                        actor,
+                        rng,
+                        log.as_deref_mut(),
+                    );
+                    if fainted || Self::is_fainted(state, target) {
+                        return ControlFlow::Break(());
+                    }
+                }
+            }
+            ControlFlow::Continue(())
+        });
         StackTurnResult {
             first,
-            second_cancelled: false,
+            second_cancelled: matches!(result, ControlFlow::Break(((), Some(_)))),
         }
     }
 

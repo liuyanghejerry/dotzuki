@@ -16,53 +16,108 @@ const __dirname = process.env.DOTZUKI_EDITOR_ROOT
   ? path.resolve(process.env.DOTZUKI_EDITOR_ROOT)
   : path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..')
 
+interface ScriptRoot { dir: string; extension: string }
+
+function scriptRoots(cfg: ReturnType<typeof loadConfig>): ScriptRoot[] {
+  const roots: ScriptRoot[] = []
+  for (const activity of cfg.activities) {
+    const sc = activity.config
+    if (activity.type === 'script') {
+      roots.push({ dir: resolveDataPath(sc.scriptsDir ?? 'scripts'), extension: sc.extension ?? '.js' })
+    } else if (activity.type === 'story') {
+      roots.push({ dir: resolveDataPath(sc.scenesDir ?? 'maps'), extension: '.scene' })
+    }
+  }
+  roots.push({ dir: path.resolve(getProjectRoot(), cfg.game?.scenesDir ?? 'assets/scenes'), extension: '.scene' })
+  return roots
+}
+
+function inside(dir: string, file: string): boolean {
+  const rel = path.relative(dir, file)
+  return rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel)
+}
+
+// Resolve through existing ancestors as PUT may create a directory. The
+// configured root itself may be a symlink in a game author's workspace.
+function physicalPath(file: string): string {
+  if (fs.existsSync(file)) return fs.realpathSync(file)
+  if (fs.lstatSync(file, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error('Broken symbolic link')
+  return path.join(physicalPath(path.dirname(file)), path.basename(file))
+}
+
+function listScripts(dir: string, extension: string, relativeTo: string) {
+  const entries: { name: string; isDir: false; size: number; path: string }[] = []
+  function walk(folder: string) {
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = path.join(folder, entry.name)
+      if (entry.isDirectory()) walk(full)
+      else if (entry.isFile() && entry.name.endsWith(extension)) {
+        entries.push({ name: entry.name, isDir: false, size: fs.statSync(full).size,
+          path: path.relative(relativeTo, full).split(path.sep).join('/') })
+      }
+    }
+  }
+  walk(dir)
+  return entries
+}
+
 export function registerContent(server: any) {
   function nextMiddleware(_req: IncomingMessage, res: ServerResponse) {
     res.writeHead(405); res.end('Method Not Allowed')
   }
 
   // ── GET/PUT /api/scripts/* — script file read/write ──
-  server.middlewares.use('/api/scripts', (req, res) => {
+  server.middlewares.use('/api/scripts', async (req, res) => {
     try {
-      const cfg = loadConfig()
-      const scriptActivity = cfg.activities.find(a => a.type === 'script')
-      if (!scriptActivity) return sendError(res, 'No script activity configured', 500)
-      const sc = scriptActivity.config as { scriptsDir: string; extension?: string }
-
-      const urlPath = parseUrl(req).pathname.replace('/api/scripts', '')
-      const resolved = resolveDataPath(path.join(sc.scriptsDir, urlPath))
-
-      if (req.method === 'GET') {
-        // Directory listing: recurse under scriptsDir, returning each script
-        // file's path RELATIVE to scriptsDir (the frontend GETs
-        // /api/scripts/<path> to load it; scriptsDir is prepended back here).
-        if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
-          const ext = sc.extension ?? '.js'
-          const out: { name: string; isDir: boolean; size: number; path: string }[] = []
-          const walk = (dir: string, rel: string) => {
-            for (const name of fs.readdirSync(dir).sort()) {
-              const full = path.join(dir, name)
-              const st = fs.statSync(full)
-              const childRel = rel ? `${rel}/${name}` : name
-              if (st.isDirectory()) walk(full, childRel)
-              else if (name.endsWith(ext)) out.push({ name, isDir: false, size: st.size, path: childRel })
+      if (req.method !== 'GET' && req.method !== 'PUT') return nextMiddleware(req, res)
+      const url = parseUrl(req)
+      const base = getProjectRoot()
+      const projectScope = url.searchParams.get('scope') === 'project'
+      let resolved: string
+      let root: ScriptRoot | undefined
+      if (projectScope) {
+        const cfg = loadConfig()
+        const roots = scriptRoots(cfg)
+        const file = url.searchParams.get('file')
+        if (file === null && req.method === 'GET') {
+          const files = new Map()
+          const primary = cfg.activities.find(a => a.type === 'script')
+          const primaryDir = primary && resolveDataPath(primary.config.scriptsDir ?? 'scripts')
+          for (const { dir, extension } of roots) {
+            if (!fs.statSync(dir, { throwIfNoEntry: false })?.isDirectory()) continue
+            for (const entry of listScripts(dir, extension, base)) {
+              if (files.has(entry.path)) continue
+              const displayPath = dir === primaryDir
+                ? path.relative(dir, path.resolve(base, entry.path)).split(path.sep).join('/')
+                : entry.path
+              files.set(entry.path, { ...entry, displayPath })
             }
           }
-          walk(resolved, '')
-          return sendJson(res, out)
+          return sendJson(res, [...files.values()])
         }
-        if (!fs.existsSync(resolved)) return sendError(res, 'File not found')
-        res.writeHead(200, { 'Content-Type': 'text/plain' })
-        res.end(fs.readFileSync(resolved, 'utf-8'))
-      } else if (req.method === 'PUT') {
-        readBody(req).then(body => {
-          fs.mkdirSync(path.dirname(resolved), { recursive: true })
-          fs.writeFileSync(resolved, body, 'utf-8')
-          sendJson(res, { ok: true })
-        }).catch(e => sendError(res, (e as Error).message, 500))
+        if (!file || path.isAbsolute(file)) return sendError(res, 'Invalid script path', 400)
+        resolved = path.resolve(base, file)
+        root = roots.find(r => inside(r.dir, resolved) && file.endsWith(r.extension))
       } else {
-        return nextMiddleware(req, res)
+        const activity = loadConfig().activities.find(a => a.type === 'script')
+        if (!activity) return sendError(res, 'No script activity configured', 500)
+        root = { dir: resolveDataPath(activity.config.scriptsDir ?? 'scripts'), extension: activity.config.extension ?? '.js' }
+        const subpath = decodeURIComponent(url.pathname.replace(/^\/api\/scripts(?=\/|$)/, ''))
+        resolved = path.resolve(root.dir, '.' + (subpath || '/'))
       }
+      if (!root || !inside(root.dir, resolved) || !inside(physicalPath(root.dir), physicalPath(resolved))) {
+        return sendError(res, 'Access denied', 403)
+      }
+      if (req.method === 'GET') {
+        if (!fs.existsSync(resolved)) return sendError(res, 'File not found')
+        if (fs.statSync(resolved).isDirectory()) return sendJson(res, listScripts(resolved, root.extension, root.dir))
+        res.writeHead(200, { 'Content-Type': 'text/plain' })
+        return res.end(fs.readFileSync(resolved, 'utf-8'))
+      }
+      const body = await readBody(req)
+      fs.mkdirSync(path.dirname(resolved), { recursive: true })
+      fs.writeFileSync(resolved, body, 'utf-8')
+      sendJson(res, { ok: true })
     } catch (e) {
       sendError(res, (e as Error).message, 500)
     }

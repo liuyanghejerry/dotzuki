@@ -155,10 +155,21 @@ pub struct ResourceCost {
     pub amount: u16,
 }
 
+/// Which participant owns an ability or held-item hook during a move.
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+pub enum HookHolder {
+    #[default]
+    Attacker,
+    Defender,
+}
+
 /// One hook = one `(event, ordering, gate, op-list)` (doc 11 §1).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename = "Hook")]
 pub struct HookRecord {
+    /// During a move, run this hook when the indicated participant holds the record.
+    #[serde(default)]
+    pub holder: HookHolder,
     /// The event name; parsed to the closed [`Event`] at load.
     pub on: String,
     /// `on<Event>Order`; LOW first. Default `u32::MAX` (fires last).

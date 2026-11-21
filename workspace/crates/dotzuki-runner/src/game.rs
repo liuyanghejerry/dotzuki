@@ -56,7 +56,7 @@
 //!
 //! Start in the overworld opens the pause menu (party view / bag / save);
 //! the scene `openShop` command opens a buy-only shop; losing a battle
-//! triggers the whiteout (heal + return to the entry spawn). All three live
+//! triggers a whiteout (heal and return to the last heal point or entry spawn). All three live
 //! in the [`menu`] child module; money is runner-owned, seeded from the
 //! manifest's `shop` section and carried in the v3 save.
 //!
@@ -96,7 +96,9 @@ use crate::battle::{
 use crate::manifest::DEFAULT_START_MONEY;
 use crate::map::RuntimeMap;
 use crate::project::LoadedProject;
-use crate::save::{GameSave, PartyMemberSave, PlayerSave, DEFAULT_SAVE_FILE, SAVE_VERSION};
+use crate::save::{
+    GameSave, HealPoint, PartyMemberSave, PlayerSave, DEFAULT_SAVE_FILE, SAVE_VERSION,
+};
 use crate::vfs::join_path;
 #[cfg(all(feature = "watch", not(target_arch = "wasm32")))]
 use crate::watch::ProjectWatcher;
@@ -218,7 +220,7 @@ enum Mode {
     /// A scene-opened shop (`openShop`) is open; the scene is suspended.
     Shop(Box<ShopState>),
     /// The game-over whiteout after a lost battle: blackout + message, then
-    /// the party heals and the player returns to the entry map's spawn.
+    /// the party heals and the player returns to the last heal point or entry spawn.
     Whiteout(WhiteoutState),
     /// Map-less project whose entry scene has finished; nothing to do.
     Idle,
@@ -391,6 +393,7 @@ pub struct RunnerGame {
     /// that received `"lose"` finishes into the overworld/idle (its post-lose
     /// text plays first). Cleared when a battle is won instead.
     pending_whiteout: bool,
+    heal_point: Option<HealPoint>,
     /// The weather a scene armed with `setWeather` (v2-e): a `kind: Weather`
     /// RON record id handed to the NEXT battle (battle-local — cleared when
     /// that battle ends, never saved). `clearWeather` resets it to `None`.

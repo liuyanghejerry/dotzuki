@@ -1,6 +1,6 @@
 # Scene DSL 参考（`.scene`）
 
-> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/dsl/scene.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit c38b2fe1aee9602cc8fc1f164fcb152dbdd42818）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `.scene` 剧情文件的权威语法——场景结构、变量、剧情线、对话、选项、控制流与 trigger
@@ -9,7 +9,7 @@
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 本页按代码实现来描述[游戏 DSL](../glossary.md) 的 `.scene` 文件；当代码与旧文档不一致时，
 以代码为准。`文件:行号` 引用均相对于仓库中的 `crates/dotzuki-engine-dsl/src/`。各构造
@@ -333,10 +333,12 @@ game_scene StartTown {
 game_scene StartTown {
     @storylines {
         giveItem("POTION", 3)
-        healParty()
+        heal()
     }
 }
 ```
+
+在零 Rust 项目中，`heal()` 会回复全队，并记录玩家的[回复点](../glossary.md#battle-gameplay)。
 
 同步查询的返回值出现在裸命令位置时会被丢弃（interpreter.rs:543-566）；结果有用时请
 给调用赋值。无法识别的 `@name(...)` 形式（例如旧式的 `@goto(...)`）也会落到这里，成为
@@ -366,7 +368,7 @@ game_scene StartTown {
 game_scene StartTown {
     @storylines {
         @run {
-            game.healParty();
+            game.heal();
         }
     }
 }

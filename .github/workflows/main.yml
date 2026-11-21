@@ -396,6 +396,10 @@ jobs:
           tool: wasm-pack@0.15.0
           fallback: none
 
+      - name: Compile the scene diagnostics used by the script editor
+        working-directory: workspace/crates/dotzuki-web
+        run: wasm-pack build --target nodejs --out-dir pkg-node --dev
+
       - name: Compile the in-editor WASM runner
         working-directory: workspace/tools/dotzuki-editor
         run: pnpm run build:wasm-runner

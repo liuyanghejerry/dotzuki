@@ -1469,6 +1469,58 @@ fn ability_modify_damage_hook_joins_the_action_sequence() {
 }
 
 #[test]
+fn incoming_ability_and_item_hooks_only_modify_attacks_against_the_holder() {
+    let rules = r#"Ruleset(
+        stats: ["hp", "attack", "defense", "speed"],
+        effects: [
+            Effect(id: "armor", kind: Ability, hooks: [
+                Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)]),
+            ]),
+            Effect(id: "shield", kind: Item, hooks: [
+                Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)]),
+            ]),
+        ],
+    )"#;
+    let mut player = tackle_slime(150);
+    player.speed = 15;
+    player.ability = Some("armor".into());
+    let mut enemy = tackle_slime(150);
+    enemy.ability = Some("armor".into());
+    enemy.held_item = Some("shield".into());
+    let mut battle = ron_battle(player, enemy, rules, &[50, 100, 1]);
+    fight(&mut battle, 0);
+    settle(&mut battle);
+    // A table-only Tackle deals 35 before either defender's folds.
+    assert_eq!(battle.enemy().hp, 150 - 8);
+    assert_eq!(battle.player().hp, 150 - 17);
+}
+
+#[test]
+fn timed_volatiles_survive_installation_and_expire_after_the_holders_next_action() {
+    let rules = r#"Ruleset(
+        stats: ["hp", "attack", "defense", "speed"],
+        effects: [Effect(id: "ward", kind: Move, hooks: [
+            Hook(on: "AfterMove", do: [
+                InflictVolatile(kind: "barrier", amount: Const(1), target: Source),
+                InflictVolatile(kind: "mark", target: Source),
+            ]),
+        ])],
+    )"#;
+    let mut player = tackle_slime(250);
+    player.speed = 20;
+    player.skills.push(ron_skill("ward", 0, 0));
+    let mut battle = ron_battle(player, tackle_slime(250), rules, &[50, 100, 1]);
+    fight(&mut battle, 1);
+    settle(&mut battle);
+    assert_eq!(battle.hooks().unwrap().effects.len(), 2);
+    fight(&mut battle, 0);
+    settle(&mut battle);
+    let effects = &battle.hooks().unwrap().effects;
+    assert_eq!(effects.len(), 1);
+    assert_eq!(effects[0].kind.name, "mark");
+}
+
+#[test]
 fn held_item_leftovers_heals_after_the_holders_action_only() {
     let rules = r#"Ruleset(
         stats: ["hp", "attack", "defense", "speed"],

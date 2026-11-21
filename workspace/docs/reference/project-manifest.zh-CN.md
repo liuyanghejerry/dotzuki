@@ -1,6 +1,6 @@
 # 游戏项目规范 — 零 Rust dotzuki-engine 项目
 
-> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/project-manifest.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 零 Rust 项目契约：目录布局、项目清单 schema，以及 run/check/playtest 行为。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, tool developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 一个**游戏项目**就是一个普通目录，里面放着 DSL、数据和资产文件，外加唯一一份
 项目清单 `.dotzuki-editor.json`。游戏项目里没有 Cargo workspace、没有
@@ -249,12 +249,13 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 
 ### 游戏结束
 
-输掉战斗不会再让玩家带着 0 HP 的队伍卡死：收到 `"lose"` 的场景结束（先播放它
-自己的战败文本）后，运行器执行一次 **whiteout**——短暂黑屏，一行
-`<Name> collapsed…`，然后整支队伍回复到满 HP/MP（状态清除），玩家回到**入口
-地图的出生点**（若当前地图就是入口地图则留在原地，否则加载入口地图）。flags、
-背包和金钱保留。无地图（纯对话）项目只做回复。目前还没有回复点系统：重生位置
-总是入口出生点。
+在场景中调用 `@command("heal")` 可以回复全队 HP、MP，清除状态，并把当前地图、
+地块、朝向与海拔层记为[回复点](glossary.md#battle-gameplay)。每次调用都会覆盖上一次记录。
+
+战败场景播放完对白后，运行器短暂黑屏、显示倒下提示、回复全队，再把玩家送回回复点。
+尚未记录回复点或原地图已移除时，玩家回到入口地图的出生点。若原地块被挡住，
+运行器会在同一地图的地面层选择可用的出生点。无地图的项目会原地回复全队。
+标志、背包和金钱均会保留。
 
 ### 音频
 
@@ -276,10 +277,11 @@ GID 即为实心；这些图层从不渲染。缺失的中间层视作全部实�
 
 游戏存档写入 `<project>/.dotzuki-save.json`（可用 `--save-file` 覆盖）——带
 版本号的 JSON：`{version, map, player: {x, y, facing, level?}, flags, lang,
-party?, inventory?, money?}`（v3；`party`/`inventory` 在战斗完成后才出现——见
+party?, inventory?, money?, healPoint?}`（v3；`party`/`inventory` 在战斗完成后才出现——见
 [战斗规则](battle-rules.md)；当战斗有 `levels` 块时，队伍成员可携带可选的
 `level`/`exp` 字段——缺失 ⇒ 等级 1 / 0 EXP；`money` 总是写入；`player.level`
-是地图海拔层，缺失 ⇒ 0）。存档只从**稳定**状态写入——完成一次 warp 过渡之后，
+是地图海拔层，缺失 ⇒ 0）。可选的 `healPoint` 保存 `{map, x, y, facing, level?}`。
+缺少该字段的旧存档使用入口出生点。存档只从**稳定**状态写入——完成一次 warp 过渡之后，
 以及场景结束回到大地图时——绝不在场景中途或 warp 中途写入（挂起的场景引擎
 无法恢复），因此在对话中途关掉窗口会保留最后一个稳定点。Start 菜单的
 **Save** 条目按需写入同一个文件（总是允许，即使在无头模式运行中）。启动时若
@@ -301,10 +303,6 @@ party?, inventory?, money?}`（v3；`party`/`inventory` 在战斗完成后才出
 记录到日志），编辑*当前*地图的 `map.tmx.json` / `tileset.png` / objects 伴生
 文件会原地重载该地图，保留玩家位置和 flags。其他地图、数据表和 gfx 在下次
 进入 / 启动时生效。
-
-### 尚未实现
-
-依赖以下内容的场景会警告并继续：`StackDriver` 回合循环。
 
 ## `dotzuki check` 编译什么
 

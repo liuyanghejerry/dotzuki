@@ -60,6 +60,8 @@ impl ResolverKind {
 /// the optional RNG gate. The driver / interpreter reads this by `EffectId`.
 #[derive(Debug, Clone)]
 pub struct CompiledHook {
+    /// Participant owning this ability or held-item hook during move resolution.
+    pub holder: crate::HookHolder,
     /// The synthesized id keying this hook (the engine threads it as
     /// `source_effect`).
     pub id: EffectId,
@@ -263,6 +265,7 @@ impl CompiledRuleset {
                         ops: hook.ops.clone(),
                         move_type_index,
                         effect_type,
+                        holder: hook.holder,
                         source_id: rec.id.clone(),
                         resolver,
                     },

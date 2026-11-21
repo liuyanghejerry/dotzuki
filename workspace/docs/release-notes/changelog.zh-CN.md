@@ -1,7 +1,7 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1
->（源文档 commit 2f9eafb9b3f7be4fed9ef8e1b189fd71863cc4c9）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）
+>（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
@@ -31,6 +31,10 @@
 - 浏览器游戏外壳使用动画帧驱动固定模拟时钟，限制补帧，并按完成渲染统计 FPS。
   Escape 仅退出原生窗口。参见[游戏外壳](../reference/game-shell.zh-CN.md#运行时行为)。
 
+- 零 Rust 战斗接入共享回合驱动器。特性和携带道具可响应来袭技能，易变状态可按行动
+  次数到期。场景调用 `heal` 会将玩家的重生点写入 v3 存档的可选字段。[战斗规则](../reference/battle-rules.zh-CN.md)
+- 编辑器的**脚本**活动会列出全局场景及所有已配置的脚本和故事目录。编辑草稿时会自动
+  编译场景，点击诊断可跳到对应位置。浏览器欢迎页支持选择文件夹打开项目。
 
 - 为运行器及支持指针输入的宿主添加[点击移动](../how-to/maps.zh-CN.md#点击移动)。
 - 为移动端 C ABI 添加 `dotzuki_mobile_pointer_click` 和
@@ -39,6 +43,10 @@
   现有 `MobileGame` 实现保留默认指针回调，按键契约保持不变。
 
 Rust API 破坏性变更：
+
+- 用 Rust 结构体字面量构造 `HookRecord` 或 `CompiledHook` 时，填入
+  `holder: HookHolder::Attacker` 可保持原有行为。构造 `GameSave` 可填
+  `heal_point: None`。已有 RON 文件和存档可直接加载。
 
 - `NpcRuntimeState` 新增 `step_direction: Option<Direction>`。空闲 NPC 结构体字面量
   需补上 `step_direction: None`。手工构造行走状态的测试需在此字段保存移动方向。

@@ -7,7 +7,7 @@ and compiled by `dotzuki-engine-dsl`.
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 This page describes the [Game DSL](../glossary.md) `.scene` file as the code
 implements it; where code and older documents disagree, the code wins.
@@ -369,10 +369,13 @@ Any identifier statement that is not `name = ...` parses as a command
 game_scene StartTown {
     @storylines {
         giveItem("POTION", 3)
-        healParty()
+        heal()
     }
 }
 ```
+
+In a zero-Rust project, `heal()` restores the party and records the player's
+[heal point](../glossary.md#battle-gameplay).
 
 A sync query's return value in bare-command position is discarded
 (interpreter.rs:543-566); assign the call when the result matters.
@@ -407,7 +410,7 @@ into the generated JS (js_storyline.rs:60-74):
 game_scene StartTown {
     @storylines {
         @run {
-            game.healParty();
+            game.heal();
         }
     }
 }

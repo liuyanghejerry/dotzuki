@@ -1,6 +1,6 @@
 # 战斗
 
-> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `battle` 项目清单区块：配置、rules.ron 钩子、回合循环与 `check` 校验。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 项目通过顶层 `battle` 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
 （所有键均可选；默认值如下）：
@@ -118,8 +118,7 @@ encounter 记录 schema 见[Encounter 记录](data-tables/encounters.md)。
 玩家的队伍是 **party 表的每一条记录**（按记录 id 排序；单记录队伍与 v1 表现
 一致）。每场战斗开始时，基准属性都从记录重建，但每名成员的**当前 HP/MP 和
 状态在战斗之间保持**——运行器持有这份队伍状态，在每场战斗结束时（胜、负和
-逃跑）收割，并随存档文件（`party`）保存。0 HP 的成员保持濒死直到被治疗（目前
-物品是唯一的治疗来源）。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
+逃跑）收割，并随存档文件（`party`）保存。场景的 `heal` 命令或 whiteout 可复活濒死成员。第一个存活成员带队；没有存活成员的队伍当场判负。战斗
 中根菜单提供 **Fight**（技能菜单）、**Party**（成员列表，含 HP 和状态——切换
 到一名存活且非当前成员会消耗玩家回合，敌人的行动随后对新成员结算）、**Item**
 （配置了才出现）和 **Run**——野怪战斗中逃跑总是成功：旁白
@@ -214,12 +213,9 @@ harness 的顺序）：MP 门槛 → accuracy → `BeforeMove` 门槛（仅当�
   当前战斗者的特性 钩子 在战斗开始和每次换人上场（玩家主动/被迫换人、
   encounter 派出）时于 `SwitchIn` 事件触发——后备成员的特性不生效。换人上场
   触发时，在常规的增减文本（`"Slime's Attack fell!"`）之前先叙述一行介绍
-  （`"Aria's Intimidate!"`——对记录 id 做了美化，因为记录没有显示名）。特性
-  钩子 也会加入行动战斗者的每次行动事件序列：挂接
-  `ModifyDamage`/`DamagingHit`/… 的特性与技能自身的 钩子 一起触发，`Source`
-  （行动者）和 `Target`（对手）相同。
+  （`"Aria's Intimidate!"`——对记录 id 做了美化，因为记录没有显示名）。特性钩子也可参与技能结算。
 - **携带道具**（`kind: Item` 记录，由战斗者记录上可选的 `heldItem` 字段指定）。
-  它们的触发与特性完全一样，另外其 `Residual` 钩子 会在持有者每次行动之后
+  携带道具可参与技能结算，其 `Residual` 钩子会在持有者的技能行动后
   运行（Leftovers 风格的 `HealFraction`）。携带道具是**持久性标志——没有东西
   会消耗它们**（树果/消耗品不在范围内）；`healField` 为 0 的 `heldItem` id
   绝不会出现在 Item 菜单中。
@@ -232,10 +228,14 @@ harness 的顺序）：MP 门槛 → accuracy → `BeforeMove` 门槛（仅当�
   若没有对应的已编译记录则警告并忽略。**不**支持在战斗中途设置天气（通过移动
   op）——`Op` 词汇表中没有天气 op；场景是唯一的触发途径。
 
-接入的限制：只有行动战斗者的特性/携带道具 钩子 加入它的每次行动序列（防守方
-的特性在它自己的换人/残留效果上触发，不会进入攻击方的那一轮），并且残留效果
-（状态、携带道具、天气）在战斗者自己的行动之后触发——在换人/物品回合中只有
-敌人的残留效果运行，与状态相同。
+对于数据表技能和 RON 招式，特性或携带道具的钩子默认使用 `holder: Attacker`，
+在持有者使用技能时触发。设为 `holder: Defender` 后，钩子会在持有者受到招式时触发。
+例如，`Hook(on: "ModifyDamage", holder: Defender, do: [ScaleRelay(num: 1, den: 2)])`
+会将受到的伤害减半。双方的钩子按同一事件顺序结算，其中 `Source` 指攻击者，`Target` 指防守者。
+
+状态、携带道具和天气在持有者的技能行动后结算。玩家换人或使用物品会消耗回合，
+该回合只有敌人执行技能行动。`InflictVolatile` 的正数 `amount` 按持有者随后
+执行的技能行动计数，未命中或被阻止的行动也计数。省略该值或设为零时，效果持续到换人或战斗结束。
 
 ## 回合循环
 
@@ -250,9 +250,8 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 `"Aria used Potion!"`）；随后行动方的状态残留效果触发。敌人 0 HP 时派出队列中
 的下一个敌人（encounters）或战斗以胜利结束；当前成员 0 HP 时，只要队伍还有
 存活成员就强制换人，否则战斗判负；成功逃跑立刻结束战斗：场景以 `"win"`、
-`"lose"` 或 `"run"` 恢复。这个循环是运行器自己的阶段机，不是引擎的
-`StackDriver`；RON 钩子 按事件经由效果栈解释器触发（`collect_handlers` +
-`run_event`），即 minimon/wuxia harness 模式。
+`"lose"` 或 `"run"` 恢复。引擎的 `StackDriver` 调度行动和残留效果。若强制换人打断回合，
+尚未行动的敌人会对替补成员执行原定行动。同一事件中的 RON 钩子按顺序共同结算。
 
 ## 场景集成
 
@@ -266,7 +265,7 @@ Fight 回合中较快的一方（有效速度）先行动，平局时玩家先�
 （见上方 **Abilities, held items & weather**）。**没有** `battle` 区块的项目会
 警告并以 `"win"` 自动完成（保持不败继续，与任何未实现的命令一样）。战败把
 `"lose"` 返回给场景（播放它的战败文本），然后触发 **game-over whiteout**（见
-[游戏结束](project-manifest.md#game-over)）：队伍回复，玩家回到入口出生点。
+[游戏结束](project-manifest.md#game-over)）：队伍回复，玩家回到最近的[回复点](glossary.md#battle-gameplay)，没有记录时回到入口出生点。
 
 ## 无场景战斗（随机 encounters）
 
@@ -280,13 +279,8 @@ EXP/升级/trainer 金钱和队伍状态/背包的收割与场景战斗结束后
 
 ## 剩余限制
 
-现在每种 RON `EffectKind` 都会触发（Move / Status / Ability / Item / Weather）；
-剩余的部分：volatiles 仅支持安装与读取（`InflictVolatile` 安装、`HasVolatile`
-读取——没有东西会清除它们）；RON 技能的 HP/MP 被限制在引擎的 `u16` 池中；
-物品只能治疗（没有解状态/复活/战斗专属效果），携带道具从不消耗；防守方的
-特性/携带道具 钩子 不加入攻击方的每次行动；天气只能由场景预置（没有战斗中
-的 op 可以设置）。后续 PR：迁移到 `StackDriver`、回复点系统（whiteout 总是在
-入口出生点重生）。
+RON 行动的 HP 和 MP 池使用 16 位整数。消耗品可为存活成员回复 HP，携带道具
+会在战斗后保留。场景可为下一场战斗设置或清除天气。
 
 ## `dotzuki check` 的校验
 

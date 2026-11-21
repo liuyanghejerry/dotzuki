@@ -15,13 +15,13 @@ const search = ref('')
 const filteredFiles = computed(() => {
   const q = search.value.toLowerCase().trim()
   if (!q) return files.value
-  return files.value.filter(f => f.name.toLowerCase().includes(q))
+  return files.value.filter(f => f.path.toLowerCase().includes(q))
 })
 
 function displayName(file: ScriptFile): string {
   // Use the path so nested per-map scripts are distinguishable, and collapse a
   // trailing "/script" (the `<Map>/script.scene` convention) to the map name.
-  const noExt = file.path.replace(/\.[^./]+$/, '')
+  const noExt = file.displayPath.replace(/\.[^./]+$/, '')
   return noExt.replace(/\/script$/, '') || file.name
 }
 
@@ -29,13 +29,14 @@ function isActive(file: ScriptFile): boolean {
   return file.path === activeFile.value
 }
 
-function handleSelect(path: string) {
-  if (store.dirty && store.activeFile && store.activeFile !== path) {
+async function handleSelect(path: string) {
+  if (store.activeFile === path || store.saving) return
+  if (store.dirty && store.activeFile) {
     if (confirm(t('script.confirmSwitch'))) {
-      store.saveFile(store.activeFile, store.content)
+      if (!await store.saveFile(store.activeFile, store.content)) return
     }
   }
-  store.loadFile(path)
+  await store.loadFile(path)
 }
 </script>
 

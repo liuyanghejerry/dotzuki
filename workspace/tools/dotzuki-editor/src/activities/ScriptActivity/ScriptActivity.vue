@@ -1,31 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 
-const { t } = useI18n()
-import { useProjectStore } from '@/stores/project'
-import { useEditorStore } from '@/stores/editor'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { javascript } from '@codemirror/lang-javascript'
 import { lightCodeTheme } from '@/composables/codeTheme'
 import { basicSetup } from 'codemirror'
-import type { ScriptActivityConfig } from '@/types'
 import { useScriptActivity } from '@/composables/useScriptActivity'
 import { useAiGenerate } from '@/composables/useAiGenerate'
 import AiKeyPrompt from '@/activities/StoryActivity/AiKeyPrompt.vue'
 
-const project = useProjectStore()
-const editor = useEditorStore()
+const { t } = useI18n()
 const aiGen = useAiGenerate()
 
-const activityId = editor.activeActivity
-const activity = project.getActivity(activityId)
-const cfg = activity?.config as ScriptActivityConfig | undefined
-
 const store = useScriptActivity()
-store.configure(cfg?.scriptsDir ?? 'scripts', cfg?.extension ?? '.js')
 
 const {
   files,
@@ -41,6 +31,7 @@ const {
 
 const editorContainer = ref<HTMLElement | null>(null)
 let cmView: EditorView | null = null
+let disposed = false
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 function createEditor(doc: string) {
@@ -91,7 +82,6 @@ function destroyEditor() {
 async function handleSave() {
   if (!activeFile.value || saving.value) return
   await store.saveFile(activeFile.value, content.value)
-  runLint()
 }
 
 // ── AI: NL → .scene snippet inserted at the cursor (grounded-control by real scenes) ──
@@ -123,33 +113,56 @@ async function generateSnippet() {
   } catch { /* surfaced via aiGen.error */ }
 }
 
-// ── Deterministic DSL lint (flags + game.* API), debounced ──
-interface LintFinding { line: number; severity: 'warn' | 'info'; message: string; flag?: string }
+// Compile the unsaved scene and lint flag/API usage after edits settle.
+interface LintFinding { line: number; col?: number; severity: 'warn' | 'info'; message: string; flag?: string }
 const lintFindings = ref<LintFinding[]>([])
 const showLint = ref(false)
+const isScene = computed(() => activeFile.value.endsWith('.scene'))
+const fileLabel = computed(() => files.value.find(f => f.path === activeFile.value)?.displayPath || activeFile.value)
+const diagnosticState = ref<'pending' | 'compile' | 'lint' | 'failed'>('pending')
+let diagnosticRequest = 0
 let lintTimer: ReturnType<typeof setTimeout> | null = null
 
 async function runLint() {
-  if (!activeFile.value) { lintFindings.value = []; return }
+  if (!activeFile.value) return
+  const request = ++diagnosticRequest
+  const file = activeFile.value
+  const draft = content.value
+  const current = () => request === diagnosticRequest && file === activeFile.value && draft === content.value
+  diagnosticState.value = 'pending'
   try {
     const resp = await fetch('api/scene-lint', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: content.value }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: draft, compile: isScene.value }),
     })
+    if (!resp.ok) throw new Error(String(resp.status))
     const data = await resp.json()
-    lintFindings.value = resp.ok ? (data.findings || []) : []
-  } catch { lintFindings.value = [] }
+    if (current()) {
+      lintFindings.value = data.findings
+      diagnosticState.value = data.source
+    }
+  } catch {
+    if (current()) diagnosticState.value = 'failed'
+  }
 }
 
-function scheduleLint() { if (lintTimer) clearTimeout(lintTimer); lintTimer = setTimeout(runLint, 1000) }
+function scheduleLint() {
+  ++diagnosticRequest
+  diagnosticState.value = 'pending'
+  lintFindings.value = []
+  if (lintTimer) clearTimeout(lintTimer)
+  lintTimer = setTimeout(runLint, 500)
+}
 
-function jumpToLine(n: number) {
+function jumpToLine(n: number, col = 1) {
   if (!cmView) return
   const line = cmView.state.doc.line(Math.max(1, Math.min(n, cmView.state.doc.lines)))
-  cmView.dispatch({ selection: { anchor: line.from }, scrollIntoView: true })
+  const offset = Array.from(line.text).slice(0, Math.max(0, col - 1)).join('').length
+  cmView.dispatch({ selection: { anchor: line.from + offset }, scrollIntoView: true })
   cmView.focus()
 }
 
-watch(content, scheduleLint)
+watch([content, activeFile], scheduleLint)
 
 function handleKeydown(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -161,11 +174,12 @@ function handleKeydown(e: KeyboardEvent) {
 async function pollExternalChanges() {
   if (!activeFile.value || dirty.value) return
   try {
-    // scriptsDir is applied server-side; the URL is the path relative to it.
-    const url = `api/scripts/${activeFile.value}`.replace(/\/+/g, '/')
+    const file = activeFile.value
+    const url = store.apiUrl(file)
     const resp = await fetch(url, { cache: 'no-cache' })
     if (!resp.ok) return
     const text = await resp.text()
+    if (file !== activeFile.value || dirty.value) return
     if (text !== originalContent.value && text !== content.value) {
       originalContent.value = text
       content.value = text
@@ -176,36 +190,37 @@ async function pollExternalChanges() {
   }
 }
 
-// Push file content into CodeMirror whenever a different file is opened.
-// loadFile() updates the store's content/activeFile; without this watcher the
-// editor would keep showing the first file opened (only the header changed),
-// since the editor view is created once and never re-synced on selection.
+// A new file gets its own undo history.
 watch(activeFile, async () => {
   await nextTick()
-  if (!editorContainer.value) return
-  if (cmView) setEditorContent(content.value)
-  else createEditor(content.value)
-  runLint()
+  if (!disposed) createEditor(content.value)
 })
 
 onMounted(async () => {
   aiGen.ensure()
   document.addEventListener('keydown', handleKeydown)
   await store.fetchFiles()
-  if (files.value.length > 0) {
-    // A cross-activity jump (e.g. from a quest's "implementedBy") can request a
-    // specific file via store.pendingFile; otherwise open the first.
-    const want = store.pendingFile && files.value.some(f => f.path === store.pendingFile)
-      ? store.pendingFile
-      : files.value[0].path
-    store.pendingFile = ''
-    await store.loadFile(want)
+  if (disposed) return
+  const pending = store.pendingFile
+  const exact = files.value.find(f => f.path === pending || f.displayPath === pending)
+  const matches = pending ? files.value.filter(f => f.path.endsWith('/' + pending)) : []
+  const previous = files.value.find(f => f.path === activeFile.value)
+  const wanted = exact ?? (matches.length === 1 ? matches[0] : previous ?? files.value[0])
+  store.pendingFile = ''
+  if (wanted) {
+    if (wanted.path !== activeFile.value || !dirty.value) await store.loadFile(wanted.path)
+    if (disposed) return
+    if (!cmView) createEditor(content.value)
+    scheduleLint()
   }
   pollTimer = setInterval(pollExternalChanges, 3000)
 })
 
 onUnmounted(() => {
+  disposed = true
   document.removeEventListener('keydown', handleKeydown)
+  ++diagnosticRequest
+  if (lintTimer) clearTimeout(lintTimer)
   destroyEditor()
   if (pollTimer) {
     clearInterval(pollTimer)
@@ -219,7 +234,7 @@ onUnmounted(() => {
     <div class="flex items-center justify-between px-3 py-2 bg-surface/80 border-b border-border shrink-0">
       <div class="flex items-center gap-3 min-w-0">
         <span class="text-xs font-mono text-ink-muted truncate">
-          {{ activeFile || $t('script.noFileSelected') }}
+          {{ fileLabel || $t('script.noFileSelected') }}
         </span>
         <span
           v-if="dirty"
@@ -243,7 +258,7 @@ onUnmounted(() => {
           class="px-2.5 py-1 text-xs rounded-control shrink-0"
           :class="showLint ? 'bg-accent text-white' : 'bg-raised text-ink-body hover:bg-overlay'"
           @click="showLint = !showLint"
-        >🔍 {{ $t('script.lint') }}<span v-if="lintFindings.length" class="ml-1 px-1 rounded-control bg-warning/30 text-warning-ink-strong text-micro">{{ lintFindings.length }}</span></button>
+        >🔍 {{ isScene ? $t('script.diagnostics') : $t('script.lint') }}<span v-if="lintFindings.length" class="ml-1 px-1 rounded-control bg-warning/30 text-warning-ink-strong text-micro">{{ lintFindings.length }}</span></button>
         <button
           v-if="activeFile"
           class="px-2.5 py-1 text-xs rounded-control shrink-0"
@@ -285,10 +300,13 @@ onUnmounted(() => {
 
     <!-- Lint findings -->
     <div v-if="showLint && activeFile" class="px-3 py-2 bg-surface-deep border-b border-border shrink-0 max-h-40 overflow-y-auto">
-      <p v-if="!lintFindings.length" class="text-tiny text-ink-faint">{{ $t('script.lintClean') }}</p>
-      <button v-for="(f, i) in lintFindings" :key="i" @click="jumpToLine(f.line)"
+      <p v-if="diagnosticState === 'pending'" class="text-tiny text-ink-faint">{{ $t('script.checking') }}</p>
+      <p v-else-if="diagnosticState === 'failed'" class="text-tiny text-danger-ink">{{ $t('script.checkFailed') }}</p>
+      <p v-else-if="isScene && diagnosticState === 'lint'" class="text-tiny text-warning-ink">{{ $t('script.lintOnly') }}</p>
+      <p v-else-if="!lintFindings.length" class="text-tiny text-ink-faint">{{ $t('script.lintClean') }}</p>
+      <button v-for="(f, i) in lintFindings" :key="i" @click="jumpToLine(f.line, f.col)"
         class="w-full text-left flex items-start gap-2 px-1 py-0.5 text-tiny hover:bg-surface rounded-control">
-        <span class="shrink-0 tabular-nums" :class="f.severity === 'warn' ? 'text-warning-ink' : 'text-ink-faint'">{{ f.severity === 'warn' ? '⚠' : 'ℹ' }} L{{ f.line }}</span>
+        <span class="shrink-0 tabular-nums" :class="f.severity === 'warn' ? 'text-warning-ink' : 'text-ink-faint'">{{ f.severity === 'warn' ? '⚠' : 'ℹ' }} L{{ f.line }}{{ f.col ? ':' + f.col : '' }}</span>
         <span class="text-ink-body">{{ f.message }}</span>
       </button>
     </div>

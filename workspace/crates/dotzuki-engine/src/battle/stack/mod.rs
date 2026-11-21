@@ -30,7 +30,7 @@ pub mod log;
 
 pub use ctx::{BattleCtx, EffectHost, EffectProvider, EffectState, MoveContext};
 pub use dispatch::{collect_handlers, compare, run_event, run_event_checked, CollectedHandler};
-pub use driver::{FirstMover, StackDriver, StackTurnResult};
+pub use driver::{FirstMover, StackDriver, StackTurnResult, TurnPhase};
 pub use event::{
     Effect, EffectId, EffectType, Event, EventHook, HandlerFn, HandlerResult, HookScope, RelayVar,
 };

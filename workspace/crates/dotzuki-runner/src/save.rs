@@ -90,6 +90,14 @@ fn is_zero(v: &u32) -> bool {
     *v == 0
 }
 
+/// Last on-map healing location, including facing and elevation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealPoint {
+    pub map: String,
+    #[serde(flatten)]
+    pub player: PlayerSave,
+}
+
 /// A `dotzuki run` save file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameSave {
@@ -100,6 +108,9 @@ pub struct GameSave {
     pub map: Option<String>,
     /// Player tile + facing.
     pub player: PlayerSave,
+    /// Last healing location. Older saves respawn at the entry map.
+    #[serde(default, rename = "healPoint", skip_serializing_if = "Option::is_none")]
+    pub heal_point: Option<HealPoint>,
     /// Persistent story flags (cross-scene truth), restored verbatim.
     #[serde(default)]
     pub flags: HashMap<String, bool>,
@@ -225,6 +236,7 @@ mod tests {
             party: None,
             inventory: None,
             money: None,
+            heal_point: None,
         }
     }
 

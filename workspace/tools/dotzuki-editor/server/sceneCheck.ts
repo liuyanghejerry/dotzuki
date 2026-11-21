@@ -21,8 +21,9 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
+import { fileURLToPath } from 'url'
 import type { ProjectContext } from './context/projectContext'
+import { createRequire } from 'node:module'
 import { lintScene, type LintFinding } from './sceneLint'
 
 export interface SceneCheckResult {
@@ -65,12 +66,13 @@ function wasmNodeRoot(): string {
     : path.resolve(EDITOR_ROOT, '../../crates/dotzuki-web/pkg-node')
 }
 
-async function loadWasmCompiler(): Promise<WasmSceneCompiler | null> {
+function loadWasmCompiler(): WasmSceneCompiler | null {
   if (wasmCompiler !== undefined) return wasmCompiler
   try {
     const entry = path.join(wasmNodeRoot(), 'dotzuki_web.js')
-    const mod = await import(/* @vite-ignore */ pathToFileURL(entry).href)
-    wasmCompiler = (mod.default ?? mod) as WasmSceneCompiler
+    // wasm-pack's nodejs target ships CommonJS next to its .wasm binary.
+    // Load it through Node even when Vite has finished evaluating its config.
+    wasmCompiler = createRequire(entry)(entry) as WasmSceneCompiler
   } catch (e) {
     console.warn(
       `[sceneCheck] dotzuki-web nodejs WASM pkg not loadable (${(e as Error).message}); ` +
@@ -87,8 +89,8 @@ export function _resetWasmCompilerForTests(): void {
 }
 
 /** Run the WASM compiler; null when the pkg is unavailable (lint-only mode). */
-async function compileSceneWasm(content: string): Promise<WasmCompileFail | null> {
-  const wasm = await loadWasmCompiler()
+function compileSceneWasm(content: string): WasmCompileFail | null {
+  const wasm = loadWasmCompiler()
   if (!wasm) return null
   try {
     const res = JSON.parse(wasm.compile_scene(content))
@@ -113,15 +115,25 @@ function lintReport(findings: LintFinding[]): string {
  * to a single warn finding at the reported position; lint findings pass through.
  */
 export async function checkSceneFindings(project: ProjectContext, content: string): Promise<LintFinding[]> {
-  const fail = await compileSceneWasm(content)
+  return (await sceneDiagnostics(project, content)).findings
+}
+
+export async function sceneDiagnostics(project: ProjectContext, content: string): Promise<{
+  source: 'compile' | 'lint'; findings: LintFinding[]
+}> {
+  const fail = compileSceneWasm(content)
   if (fail) {
-    return [{
+    // Located DSL errors use zero-based Unicode character columns. Present
+    // a one-based position in the editor. Unlocated errors anchor at 1:1.
+    const column = /^\d+:\d+:/.test(fail.raw) ? fail.col + 1 : 1
+    return { source: 'compile', findings: [{
       line: fail.line || 1,
+      col: column,
       severity: 'warn',
-      message: `Compile error at ${fail.line}:${fail.col}: ${fail.error}`,
-    }]
+      message: `Compile error: ${fail.error}`,
+    }] }
   }
-  return lintScene(project, content)
+  return { source: loadWasmCompiler() ? 'compile' : 'lint', findings: lintScene(project, content) }
 }
 
 /**
@@ -155,12 +167,12 @@ export async function checkScene(project: ProjectContext, sceneName: string, con
   // Default: real compile via the dotzuki-web WASM compiler, then layer the lint
   // on top (the single-file compile does not check cross-scene flag usage or
   // game.* command names — lint catches those).
-  const fail = await compileSceneWasm(content)
+  const fail = compileSceneWasm(content)
   if (fail) {
     const report = `compile FAIL at ${fail.line}:${fail.col}: ${fail.error}${fail.raw && fail.raw !== fail.error ? `\n${fail.raw}` : ''}`
     return { ok: false, source: 'compile', output: report.slice(0, CAP) }
   }
-  if (await loadWasmCompiler()) {
+  if (loadWasmCompiler()) {
     const findings = lintScene(project, content)
     const hasErr = findings.some(f => f.severity === 'warn')
     return {

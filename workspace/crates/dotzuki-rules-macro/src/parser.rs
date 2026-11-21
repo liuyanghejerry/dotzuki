@@ -85,9 +85,18 @@ pub struct ResourceCostInput {
     pub amount: u16,
 }
 
+#[derive(Debug, Default, Deserialize)]
+pub enum HookHolderInput {
+    #[default]
+    Attacker,
+    Defender,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename = "Hook")]
 pub struct HookRecordInput {
+    #[serde(default)]
+    pub holder: HookHolderInput,
     pub on: String,
     #[serde(default = "default_order")]
     pub order: u32,

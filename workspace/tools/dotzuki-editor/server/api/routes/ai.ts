@@ -12,7 +12,7 @@ import { testImageProvider } from '../../spriteSheet/generate'
 import { getProjectContext } from '../../context/projectContext'
 import { getAction, runAction, legacyEmit, applyChange, streamChat } from '../../actions'
 import { sanitizeAssistantSettings } from '../../actions/assistantSettings'
-import { checkScene } from '../../sceneCheck'
+import { checkScene, sceneDiagnostics } from '../../sceneCheck'
 
 export function registerAi(server: any) {
   // ── Fallthrough ──
@@ -192,14 +192,15 @@ export function registerAi(server: any) {
     }
   })
 
-  // ── POST /api/scene-lint — deterministic .scene lint (flags + game.* API).
+  // ── POST /api/scene-lint — draft diagnostics with optional WASM scene compilation.
   //    (Distinct path; /api/scripts/* is the file read/write route.) ──
   server.middlewares.use('/api/scene-lint', async (req, res) => {
     if (req.method !== 'POST') return nextMiddleware(req, res)
     try {
-      const { content } = JSON.parse(await readBody(req))
+      const { content, compile } = JSON.parse(await readBody(req))
+      if (compile === true) return sendJson(res, await sceneDiagnostics(getProjectContext(), String(content ?? '')))
       const { lintScene } = await import('../../sceneLint')
-      sendJson(res, { findings: lintScene(getProjectContext(), String(content ?? '')) })
+      sendJson(res, { source: 'lint', findings: lintScene(getProjectContext(), String(content ?? '')) })
     } catch (e) {
       sendError(res, (e as Error).message, 500)
     }

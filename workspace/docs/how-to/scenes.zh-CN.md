@@ -2,13 +2,13 @@
 
 如何编写 `.scene` 剧情文件：NPC 对话、进图过场、选项、flag、场景内战斗，以及编写-检查循环。
 
-> 本文是 `how-to/scenes.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `how-to/scenes.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 [语法参考](../reference/dsl/scene.md)是每个语法构造的权威——本页是任务视角：编写时随手查阅的配方，外加把它们接到地图上的 runner 契约。如果还没有接好地图与其场景，先从[你的第一个游戏](../tutorials/your-first-game.md)开始。
 
@@ -124,8 +124,11 @@ game_scene Hometown {
 
 ## 编写-检查循环
 
-1. 编写或修改 `.scene` 文件。
-2. 运行 `dotzuki check` —— 它编译所有场景（以及布局、主题、样式）并输出诊断；退出码 0 表示场景全部通过编译。
-3. 运行 `dotzuki run` 走一遍剧情线；走路走不到的分支（胜负路径）用临时 flag 或 trigger 验证最方便。
+1. 打开**脚本**并选择场景。侧栏列出各脚本活动、故事活动所配置目录中的文件，以及
+   `game.scenesDir`（默认 `assets/scenes`）中的文件。同名文件可用路径区分。
+2. 编辑草稿时，**诊断**面板会编译当前 `.scene` 内容。点击诊断可跳到对应位置。
+   编辑器提示 WASM 编译器不可用时仍会显示 lint 结果。先保存场景，再检查整个项目。
+3. 运行 `dotzuki check` —— 它编译所有场景（以及布局、主题、样式）并输出诊断；退出码 0 表示场景全部通过编译。
+4. 运行 `dotzuki run` 走一遍剧情线；走路走不到的分支（胜负路径）用临时 flag 或 trigger 验证最方便。
 
 同一 (map, npc) 路由没有 `after` 链会在编译期告警为冲突；措辞与完整 trigger 表见[语法参考](../reference/dsl/scene.md)。

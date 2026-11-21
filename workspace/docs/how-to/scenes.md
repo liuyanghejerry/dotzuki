@@ -6,7 +6,7 @@ choices, flags, battles from scenes, and the edit-check loop.
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 The [syntax reference](../reference/dsl/scene.md) is the authority on every
 construct — this page is the task view: the recipes you reach for while
@@ -156,10 +156,16 @@ The recipe and runtime rules are in [Bilingual Text (i18n)](./i18n.md).
 
 ## The edit-check loop
 
-1. Write or edit the `.scene` file.
-2. Run `dotzuki check` — it compiles every scene (plus layouts, themes, and
+1. Open **Scripts** and select the scene. The sidebar lists files from every
+   configured script and story activity, plus `game.scenesDir` (default
+   `assets/scenes`). Paths distinguish files with the same name.
+2. Edit the draft. **Diagnostics** compiles the current `.scene` buffer as
+   you type. Select a finding to move the cursor to its location. If the
+   editor reports that its WASM compiler is unavailable, lint findings still
+   appear. Save the scene before checking the whole project.
+3. Run `dotzuki check` — it compiles every scene (plus layouts, themes, and
    styles) and prints diagnostics; exit code 0 means the scenes compile.
-3. Run `dotzuki run` and walk through the storyline. Branches that walking
+4. Run `dotzuki run` and walk through the storyline. Branches that walking
    cannot reach (win/lose paths) are easiest to verify with temporary
    flags or triggers.
 

@@ -16,9 +16,8 @@
 //!   test harness stays isolated) the zero-capture `interpret` bridge reads.
 //! * [`HookState`] — the per-battle mirror: both combatants as engine
 //!   [`BattlerState`]s (1v1: side 0 = player, side 1 = enemy), the effect
-//!   arena, and the per-action scratch. The runner's own turn loop (v1,
-//!   unchanged) fires the event sequence per action through
-//!   `collect_handlers` + `run_event`; it does **not** use `StackDriver`.
+//!   arena, and per-action scratch. The engine turn driver sequences actions
+//!   and residuals. RON hooks resolve through `collect_handlers` and `run_event`.
 //!
 //! Naming conventions (documented in `docs/reference/project-manifest.md`):
 //!
@@ -77,7 +76,7 @@ pub struct TypeId(pub u16);
 pub struct VolatileKind {
     /// The volatile's RON name.
     pub name: String,
-    /// The resolved numeric parameter (turns / counter seed).
+    /// Remaining skill actions of the holder. Zero lasts until switch or battle end.
     pub amount: u16,
 }
 
@@ -485,6 +484,19 @@ impl HookState {
         } else {
             &self.state.opponent_battlers[r.slot as usize]
         }
+    }
+
+    /// Select compiled effects in registry order before mutating the battle.
+    pub(super) fn matching_effects(
+        &self,
+        matches: impl Fn(&dotzuki_rules::CompiledHook) -> bool,
+    ) -> Vec<&'static Effect<GenericProvider>> {
+        let host = GenericProvider::rules_host().expect("hook state requires a rules host");
+        self.registry
+            .iter()
+            .copied()
+            .filter(|effect| host.compiled.hook(effect.id).is_some_and(&matches))
+            .collect()
     }
 
     /// Whether the skill's RON record subscribes to `event` (used to decide

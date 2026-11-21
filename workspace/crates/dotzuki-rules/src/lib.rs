@@ -96,8 +96,8 @@ pub use bindings::RuleBindings;
 pub use interp::{interpret, run_ops};
 pub use model::{
     parse_event, parse_kind, AmountSpec, DamageValue, EffectKind, EffectRecord, FinalHitRider,
-    FractionOf, HitCount, HookRecord, LoadError, Op, Predicate, Rational, ResourceCost, Ruleset,
-    Selector, StatRef, TypeChartEntry, TypeName,
+    FractionOf, HitCount, HookHolder, HookRecord, LoadError, Op, Predicate, Rational, ResourceCost,
+    Ruleset, Selector, StatRef, TypeChartEntry, TypeName,
 };
 pub use registry::{CompiledHook, CompiledRuleset, ResolverKind, RulesHost, RulesProvider};
 pub use source::RuleSource;

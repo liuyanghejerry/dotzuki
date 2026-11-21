@@ -29,6 +29,14 @@ with a migration guide under `migration/` (created per release).
   catch-up, and FPS based on completed renders. Escape only exits native windows.
   See [game shell](../reference/game-shell.md#runtime-behavior).
 
+- Zero-Rust battles run through the shared turn driver. Ability and held-item
+  hooks can react to incoming skills and volatiles can expire after a set
+  number of actions. A scene's `heal` records the player's respawn point in
+  an optional v3 save field. [Battle rules](../reference/battle-rules.md)
+- The editor's **Scripts** activity lists global scenes and every configured
+  script and story directory. It compiles unsaved scene edits and links
+  diagnostics to their source locations. The browser welcome screen can open
+  projects using a folder picker.
 
 - Add [click to move](../how-to/maps.md#click-to-move) to the runner and pointer-enabled hosts.
 - Add `dotzuki_mobile_pointer_click` and `dotzuki_mobile_cancel_pointer_input` to the mobile
@@ -38,6 +46,10 @@ with a migration guide under `migration/` (created per release).
   default pointer callbacks, and the button contract remains unchanged.
 
 Breaking Rust API change:
+
+- When constructing `HookRecord` or `CompiledHook` with a Rust struct literal,
+  supply `holder: HookHolder::Attacker` for the existing behavior. A `GameSave`
+  literal can use `heal_point: None`. Existing RON and save files load as written.
 
 - Add `NpcRuntimeState::step_direction: Option<Direction>`. Add `step_direction: None` to
   idle NPC struct literals. Manual walking-state fixtures must retain their movement direction

@@ -8,7 +8,7 @@ current design.
 > - **Audience**: battle authors, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 > **Scope.** This page covers the design of **`dotzuki_engine::battle::stack`** —
 > the Showdown-style **effect-stack** battle engine — and why it is shaped the
@@ -633,11 +633,6 @@ sketch is optimistic on this point; see the "one nit" in §10.
 - **Doubles / multi-target.** A `redirect_target` seam exists but is **defaulted,
   inert, and unproven**; minimon is 1v1. Follow Me / Lightning Rod redirection
   (`TryHit` + redirect) is expressible-in-principle, not exercised.
-- **Full content tables / multi-hit / accuracy / crit RNG.** minimon authors **2
-  moves** with a deterministic `power*atk/def` formula (no rolls) so outcomes are
-  hand-checkable. `Accuracy`, `ModifyCritRatio`, `ModifyMove` (multi-hit), and
-  many Group D/E/F events are present as **subscription seams** but not yet fired
-  by a shipped driver.
 - **Wiring into pokered's production loop is staged, not done.** Gen-1 fidelity
   remains a **regression credential** (the 88 slices via the legacy
   `battle::driver`), not a production swap on the new stack. AI, switching policy,

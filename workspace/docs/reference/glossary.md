@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only
@@ -201,12 +201,12 @@ original form in Chinese text.
 - **switch**（换人）— replacing the active battler; fires `SwitchIn`.
 - **residual**（残留效果）— the end-of-action / end-of-turn tick (status
   chip, held-item recovery, weather).
-- **whiteout** — the post-loss flow: party healed, player respawns at the
-  entry spawn; kept in English in Chinese text.
+- **whiteout** — the post-loss sequence that heals the party and returns the player to
+  their last heal point, falling back to the entry spawn.
 - **turn loop**（回合循环）— the per-round phase machine (Fight / Party /
   Item / Run → resolution → residuals).
-- **heal point**（回复点）— the planned whiteout-respawn alternative on
-  maps.
+- **heal point**（回复点）— the map, tile, facing, and elevation recorded when a scene calls
+  `heal`. The player returns here after a whiteout.
 
 ## Maps
 

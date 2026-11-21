@@ -13,7 +13,7 @@ test.describe('script activity', () => {
     // Sidebar buttons show the path without extension ("intro" / "town").
     await expect(page.getByRole('button', { name: 'intro', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'town', exact: true })).toBeVisible()
-    await expect(page.getByText('2 files')).toBeVisible()
+    await expect(page.getByText('3 files')).toBeVisible()
 
     // First file (alphabetical) loads automatically: header + CodeMirror.
     // (exact match — the file's own comment line also contains "intro.scene")
@@ -31,6 +31,29 @@ test.describe('script activity', () => {
     const cm = page.locator('.cm-content')
     await expect(cm).toContainText('game_scene HomeTownAmbience')
     await expect(cm).not.toContainText('game_scene Intro')
+  })
+
+  test('opens a global scene with the same filename and shows compiler locations for unsaved edits', async ({ page, request }) => {
+    await page.goto('/#/edit/scripts')
+    await page.getByRole('button', { name: 'assets/scenes/intro', exact: true }).click()
+    const cm = page.locator('.cm-content')
+    await expect(cm).toContainText('game_scene GlobalIntro')
+    await page.getByRole('button', { name: 'Diagnostics' }).click()
+    await cm.click()
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.insertText('game_scene Intro {\n    @storylines {\n        "😺" %%\n    }\n}')
+    const error = page.getByRole('button', { name: /L3:13.*Unexpected character/i })
+    await expect(error).toBeVisible()
+    await error.click()
+    await expect(cm).toBeFocused()
+    await page.keyboard.insertText('X')
+    await expect(cm).toContainText('"😺" X%%')
+
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.insertText('// draft\ngame_scene Intro:')
+    await expect(page.getByRole('button', { name: /L2:17.*expected one of/i })).toBeVisible()
+    const original = await request.get('/api/scripts?scope=project&file=assets%2Fscenes%2Fintro.scene')
+    expect(await original.text()).toContain('game_scene GlobalIntro')
   })
 
   test('editing and saving a script persists it to disk', async ({ page, request }) => {
