@@ -279,8 +279,8 @@ the scene. Item records are read through the `battle.items` table.
 
 ### Game-over
 
-Use `@command("heal")` in a scene to restore the party's HP and MP, clear
-status, and record the current map, tile, facing and elevation as a
+Use `@command("heal")` in a scene to restore the party's HP and MP, remove status
+conditions, and record the current map, tile, facing, and elevation as a
 [heal point](glossary.md#battle-gameplay). Each call replaces the previous point.
 
 After a losing scene finishes its dialogue, the runner shows a brief blackout
@@ -288,7 +288,7 @@ and a collapse message, heals the party, and returns the player to that point.
 Without a recorded point, or if its map is gone, the player returns to the
 entry map's spawn. If the recorded tile is blocked, the runner chooses a
 ground-level spawn on the same map. A map-less project heals the party in
-place. Flags, inventory and money carry over.
+place. Flags, inventory, and money carry over.
 
 ### Audio
 
@@ -317,10 +317,11 @@ once a battle has completed — see [the battle rules](battle-rules.md); party m
 carry optional `level`/`exp` fields when the battle has a `levels` block —
 absent ⇒ level 1 / 0 EXP; `money` is always written; `player.level` is the
 map elevation level, absent ⇒ 0). The optional `healPoint` contains
-`{map, x, y, facing, level?}`. Existing saves without it use the entry spawn. Saves are written only from **stable** states — after a completed
-warp transition and when a scene finishes into the overworld — never
-mid-scene or mid-warp (a suspended scene engine can't resume), so closing
-the window mid-dialogue keeps the last stable point. The Start menu's
+`{map, x, y, facing, level?}`. Existing saves without it use the entry spawn.
+
+The runner saves from **stable** states, after a completed warp transition and when a scene
+finishes into the overworld — never mid-scene or mid-warp (a suspended scene engine can't resume),
+so closing the window mid-dialogue keeps the last stable point. The Start menu's
 **Save** entry writes the same file on demand (always allowed, even in
 headless runs). On boot a valid save resumes: flags are restored, the saved
 map loads, the player is placed at the saved tile (spawn-scan fallback if it

@@ -140,10 +140,9 @@ The player's party is **every record of the party table**
 rebuilt from the records at every battle start, but each member's **current
 HP/MP and status persist between battles** — the runner owns that party
 state, harvests it at the end of every battle (win, lose AND run), and
-carries it
-in the save file (`party`). A scene's `heal` command or a whiteout revives fainted members. The first LIVING member leads;
-a party with no living member loses on the spot. In battle the root menu
-offers **Fight** (the skill menu), **Party** (the member list with HP and
+carries it in the save file (`party`). A scene's `heal` command or a whiteout revives
+fainted members. The first living member leads. A party with no living member loses on the spot.
+In battle the root menu offers **Fight** (the skill menu), **Party** (the member list with HP and
 status — switching to a living, non-active member consumes the player's
 turn, and the enemy's action then resolves against the NEW member),
 **Item** (when configured), and **Run** — in a WILD battle Run always
@@ -254,7 +253,8 @@ by record fields and a scene command — no manifest changes:
   encounter send-out) on the `SwitchIn` event — benched members' abilities
   are inert. A switch-in fire narrates an intro line (`"Aria's
   Intimidate!"` — the record id prettified, since records carry no display
-  name) before the usual diff lines (`"Slime's Attack fell!"`). Ability hooks can also participate in move resolution.
+  name) before the usual diff lines (`"Slime's Attack fell!"`). Ability hooks also participate
+  in move resolution.
 - **Held items** (`kind: Item` records, named by a combatant record's
   optional `heldItem` field). They participate in move resolution. Their
   `Residual` hooks run after the holder's skill actions (a Leftovers-style
@@ -280,7 +280,7 @@ On table skills and RON moves, an ability or held-item hook defaults to
 halves incoming damage. Both roles share the same ordered event fold.
 `Source` names the attacker and `Target` names the defender in either role.
 
-Status, held-item and weather residuals tick after the holder's skill action.
+Status, held-item, and weather residuals tick after the holder's skill action.
 Switching and using an item spend the player's turn. Only the enemy takes a
 skill action on those rounds. For `InflictVolatile`, a positive `amount`
 counts the affected holder's subsequent skill actions, including misses and
@@ -305,8 +305,8 @@ sends out the next queued enemy (encounters) or ends the battle in a win;
 the active member at 0 HP forces a replacement
 while the party has living members, else the battle is lost; a successful
 Run ends it on the spot: the scene
-resumes with `"win"`, `"lose"` or `"run"`. The engine's `StackDriver` orders actions and their residuals. When a forced
-switch interrupts a round, an opponent that still has an action takes it
+resumes with `"win"`, `"lose"`, or `"run"`. The engine's `StackDriver` orders actions and their
+residuals. When a forced switch interrupts a round, an opponent that still has an action takes it
 against the replacement. RON handlers run together in event order.
 
 ## Scene integration

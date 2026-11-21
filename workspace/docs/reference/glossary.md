@@ -205,7 +205,7 @@ original form in Chinese text.
   their last heal point, falling back to the entry spawn.
 - **turn loop**（回合循环）— the per-round phase machine (Fight / Party /
   Item / Run → resolution → residuals).
-- **heal point**（回复点）— the map, tile, facing and elevation recorded when a scene calls
+- **heal point**（回复点）— the map, tile, facing, and elevation recorded when a scene calls
   `heal`. The player returns here after a whiteout.
 
 ## Maps

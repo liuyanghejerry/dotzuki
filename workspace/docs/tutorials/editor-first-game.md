@@ -133,8 +133,8 @@ dotzuki check ~/dotzuki-projects/<your-game>
   actions, and a scene can arm the seeded `sandstorm` with
   `setWeather("sandstorm")` before `startBattle`); held items are never
   consumed, weather is battle-local (scene-armed only), and a lost battle
-  heals the party and returns you to the last heal point. A scene can set
-  one with `@command("heal")`. The entry spawn is the default. Other battle
+  heals the party and returns you to the last [heal point](../reference/glossary.md#battle-gameplay).
+  A scene records one with `@command("heal")`. The entry spawn is the default. Other battle
   options include enemy parties (the `encounters` table —
   queued send-outs, summed EXP), trainer battles (Run blocked, money on a
   win), a wild-only Run action (the scene sees a third outcome, `"run"`), and
