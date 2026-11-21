@@ -610,7 +610,7 @@ fn load_library(files: &dyn ProjectFiles, prefix: &str) -> anyhow::Result<AudioL
         if path.rsplit('.').next() != Some("json") {
             continue;
         }
-        let bytes = files.read(&path)?;
+        let bytes = files.read_bytes(&path)?;
         let track: TrackDef =
             serde_json::from_slice(&bytes).map_err(|e| anyhow::anyhow!("{path}: {e}"))?;
         lib.insert(track);

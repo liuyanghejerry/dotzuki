@@ -93,6 +93,10 @@ impl PngTileset {
         }
     }
 
+    pub(crate) fn pixel_bytes(&self) -> usize {
+        self.pixels.capacity() * std::mem::size_of::<Rgba>()
+    }
+
     /// Number of tiles in the atlas.
     #[inline]
     pub fn tile_count(&self) -> usize {

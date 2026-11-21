@@ -22,7 +22,7 @@ use dotzuki_engine_dsl::loader::register_compiled;
 use dotzuki_engine_script::loader::ScriptLoader;
 
 use crate::manifest::Manifest;
-use crate::map::RuntimeMap;
+use crate::map::{MapCache, RuntimeMap};
 use crate::vfs::{join_path, DiskFiles, ProjectFiles};
 
 /// Default maps directory under `dataRoot` when no `map` activity configures
@@ -34,6 +34,7 @@ const MANIFEST_FILE: &str = ".dotzuki-editor.json";
 
 /// A fully loaded zero-Rust game project.
 pub struct LoadedProject {
+    map_cache: std::sync::Mutex<MapCache>,
     pub(crate) battle_rules: std::sync::Mutex<Option<crate::battle::CachedRules>>,
     /// The file backend every project read goes through.
     files: Arc<dyn ProjectFiles>,
@@ -76,7 +77,7 @@ impl LoadedProject {
     /// Fails on a missing/unparseable manifest or any DSL diagnostic.
     pub fn load_with_files(files: Arc<dyn ProjectFiles>) -> Result<Self> {
         let root: PathBuf = files.root().map(Path::to_path_buf).unwrap_or_default();
-        let bytes = files.read(MANIFEST_FILE).map_err(|_| {
+        let bytes = files.read_bytes(MANIFEST_FILE).map_err(|_| {
             anyhow::anyhow!(
                 "no {MANIFEST_FILE} found in {} — not a jrpg game project",
                 if root.as_os_str().is_empty() {
@@ -87,8 +88,8 @@ impl LoadedProject {
             )
         })?;
         let text =
-            String::from_utf8(bytes).with_context(|| format!("{MANIFEST_FILE} is not UTF-8"))?;
-        let manifest: Manifest = serde_json::from_str(&text)
+            std::str::from_utf8(&bytes).with_context(|| format!("{MANIFEST_FILE} is not UTF-8"))?;
+        let manifest: Manifest = serde_json::from_str(text)
             .with_context(|| format!("failed to parse {MANIFEST_FILE}"))?;
 
         let data_root_rel = join_path("", &manifest.data_root);
@@ -111,6 +112,7 @@ impl LoadedProject {
         let (stem_to_name, name_to_stem) = stem_indexes(&report);
 
         Ok(Self {
+            map_cache: Default::default(),
             battle_rules: Default::default(),
             files,
             root,
@@ -329,7 +331,27 @@ impl LoadedProject {
 
     /// Load a map by id from this project's maps dir.
     pub fn load_map(&self, map_id: &str) -> Result<RuntimeMap> {
-        RuntimeMap::load_with_files(self.files.as_ref(), &self.maps_dir_rel(), map_id)
+        self.map_cache
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .load(self.files.as_ref(), &self.maps_dir_rel(), map_id)
+    }
+
+    /// Set the decoded map cache budget in bytes. Zero disables retention.
+    /// Existing map handles stay valid when the cache evicts their entries.
+    pub fn set_map_cache_budget(&mut self, bytes: usize) {
+        self.map_cache
+            .get_mut()
+            .unwrap_or_else(|e| e.into_inner())
+            .set_budget(bytes);
+    }
+
+    /// Forget a cached map so the next load decodes the current source.
+    pub fn invalidate_map(&self, id: &str) {
+        self.map_cache
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .invalidate(id);
     }
 
     /// Directory holding the records of data table `table_id` (a table id

@@ -91,8 +91,7 @@ pub fn encode_pack(files: &BTreeMap<String, Vec<u8>>, dotzuki_meta: serde_json::
 
 /// A `.dzpk` pack held in memory, read through [`ProjectFiles`].
 ///
-/// `read` slices the data section — no per-file decode, no copies beyond the
-/// returned `Vec`.
+/// `read_bytes` borrows a file directly from the data section.
 pub struct PackFiles {
     bytes: Vec<u8>,
     /// Absolute offset of the data section within `bytes`.
@@ -165,12 +164,22 @@ impl std::fmt::Debug for PackFiles {
 
 impl ProjectFiles for PackFiles {
     fn read(&self, path: &str) -> Result<Vec<u8>> {
+        Ok(self.read_bytes(path)?.into_owned())
+    }
+
+    fn is_immutable(&self) -> bool {
+        true
+    }
+
+    fn read_bytes(&self, path: &str) -> Result<std::borrow::Cow<'_, [u8]>> {
         let (offset, size) = self
             .entries
             .get(path)
             .with_context(|| format!("no such file '{path}'"))?;
         let start = self.data_start + *offset as usize;
-        Ok(self.bytes[start..start + *size as usize].to_vec())
+        Ok(std::borrow::Cow::Borrowed(
+            &self.bytes[start..start + *size as usize],
+        ))
     }
 
     fn list(&self, prefix: &str) -> Vec<String> {
@@ -205,6 +214,23 @@ mod tests {
             &sample_files(),
             serde_json::json!({"tool": "test", "version": "0.0.0"}),
         )
+    }
+
+    #[test]
+    fn resident_reads_borrow_pack_storage_including_empty_files() {
+        use std::borrow::Cow;
+        let mut files = sample_files();
+        files.insert("empty".into(), vec![]);
+        let pack = PackFiles::from_bytes(encode_pack(&files, serde_json::Value::Null)).unwrap();
+        for (path, expected) in files {
+            let Cow::Borrowed(bytes) = pack.read_bytes(&path).unwrap() else {
+                panic!("copied {path}")
+            };
+            let start = pack.data_start + pack.entries[&path].0 as usize;
+            assert_eq!(bytes.as_ptr(), pack.bytes[start..].as_ptr());
+            assert_eq!(bytes, expected);
+        }
+        assert!(pack.read_bytes("missing").is_err());
     }
 
     #[test]

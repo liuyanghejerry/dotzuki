@@ -39,7 +39,6 @@ fn blob_u32(off: usize) -> u32 {
 
 struct GlyphInfo {
     width: u32,
-    height: u32,
     x_off: i32,
     y_off: i32,
     advance: u32,
@@ -84,7 +83,6 @@ fn lookup_glyph(ch: char) -> Option<GlyphInfo> {
     let rows = &GLYPH_BLOB[off + 7..off + 7 + nrows * 2];
     Some(GlyphInfo {
         width,
-        height: nrows as u32,
         x_off,
         y_off,
         advance,
@@ -127,110 +125,99 @@ const GLYPH_CURSOR_DOWN: [u8; 8] = [
     0b00000000, 0b00000000, 0b01111110, 0b01111110, 0b00111100, 0b00011000, 0b00000000, 0b00000000,
 ];
 
-/// Extra vertical offset for the ▶ fallback (see the comment on
-/// [`GLYPH_CURSOR_RIGHT`]). Applied per scale step in `draw_char_scaled`.
-const CURSOR_RIGHT_DY: u32 = 1;
-
-// ── Public Drawing API ────────────────────────────────────────────
-
-fn draw_glyph_pixel(x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
-    if x < fb.width() && y < fb.height() {
-        fb.set_pixel(x, y, color);
+/// Store the fallback rows in the same little-endian format as the font blob.
+const fn cursor_rows(rows: [u8; 8]) -> [u8; 16] {
+    let mut bytes = [0; 16];
+    let mut i = 0;
+    while i < rows.len() {
+        bytes[i * 2] = rows[i];
+        i += 1;
     }
+    bytes
+}
+const RIGHT_ROWS: [u8; 16] = cursor_rows(GLYPH_CURSOR_RIGHT);
+const DOWN_ROWS: [u8; 16] = cursor_rows(GLYPH_CURSOR_DOWN);
+
+fn drawing_glyph(ch: char) -> Option<GlyphInfo> {
+    let (rows, top) = match ch {
+        '▶' => (&RIGHT_ROWS, 1),
+        '▼' => (&DOWN_ROWS, 0),
+        _ => return lookup_glyph(ch),
+    };
+    Some(GlyphInfo {
+        width: 8,
+        x_off: 0,
+        y_off: top - CJK_BASELINE,
+        advance: 10,
+        rows,
+    })
 }
 
-/// Draw a single character at pixel (x, y). Returns advance width for cursor positioning.
-/// Latin (half-width): returns 5. CJK (full-width): returns 10. Unknown: returns 0.
-pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
-    let fb_h = fb.height();
-    // Fallback for cursor arrows (not in BDF)
-    if ch == '▶' {
-        let y = y + CURSOR_RIGHT_DY;
-        for row in 0..8u32 {
-            let py = y + row;
-            if py >= fb_h {
-                break;
+impl GlyphInfo {
+    fn draw(
+        &self,
+        x: u32,
+        y: u32,
+        scale: u32,
+        size: (u32, u32),
+        write: &mut impl FnMut(u32, u32, u16, u32),
+    ) {
+        if scale == 1 {
+            let left = i64::from(x) + i64::from(self.x_off);
+            let width = (i64::from(self.width) + left.min(0)).max(0) as u32;
+            if width == 0 || left >= i64::from(size.0) {
+                return;
             }
-            let byte = GLYPH_CURSOR_RIGHT[row as usize];
-            for col in 0..8u32 {
-                if byte & (0x80 >> col) != 0 {
-                    draw_glyph_pixel(x + col, py, color, fb);
+            let left = left.max(0) as u32;
+            let top = i64::from(y) + i64::from(self.y_off + CJK_BASELINE);
+            let first = (-top).max(0) as usize;
+            let end = (i64::from(size.1) - top).clamp(0, (self.rows.len() / 2) as i64) as usize;
+            if first < end {
+                let mut py = (top + first as i64) as u32;
+                for bytes in self.rows[first * 2..end * 2].chunks_exact(2) {
+                    let bits = u16::from_le_bytes([bytes[0], bytes[1]]);
+                    if bits != 0 {
+                        write(left, py, bits, width);
+                    }
+                    py += 1;
                 }
             }
+            return;
         }
-        return 10;
-    }
-    if ch == '▼' {
-        for row in 0..8u32 {
-            let py = y + row;
-            if py >= fb_h {
-                break;
-            }
-            let byte = GLYPH_CURSOR_DOWN[row as usize];
-            for col in 0..8u32 {
-                if byte & (0x80 >> col) != 0 {
-                    draw_glyph_pixel(x + col, py, color, fb);
+        let scale = i64::from(scale);
+        for (row, bytes) in self.rows.chunks_exact(2).enumerate() {
+            let bits = u16::from_le_bytes([bytes[0], bytes[1]]);
+            let top = i64::from(y) + (row as i64 + i64::from(self.y_off + CJK_BASELINE)) * scale;
+            for col in 0..self.width {
+                if bits & (1 << (self.width - 1 - col)) == 0 {
+                    continue;
                 }
-            }
-        }
-        return 10;
-    }
-
-    if let Some(g) = lookup_glyph(ch) {
-        let start_y = y as i32 + CJK_BASELINE + g.y_off;
-        for ri in 0..g.height as usize {
-            let row = u16::from_le_bytes([g.rows[ri * 2], g.rows[ri * 2 + 1]]);
-            let py = start_y + ri as i32;
-            if py < 0 || py >= fb_h as i32 {
-                continue;
-            }
-            for ci in 0..g.width {
-                if row & (1 << (g.width - 1 - ci)) != 0 {
-                    let px = x + ci + g.x_off as u32;
-                    if px < fb.width() {
-                        fb.set_pixel(px, py as u32, color);
+                let left = i64::from(x) + (i64::from(self.x_off) + i64::from(col)) * scale;
+                let end = (left + scale).min(i64::from(size.0));
+                for py in top.max(0)..(top + scale).min(i64::from(size.1)) {
+                    let mut px = left.max(0);
+                    while px < end {
+                        let len = (end - px).min(16);
+                        write(px as u32, py as u32, u16::MAX, len as u32);
+                        px += len;
                     }
                 }
             }
         }
-        return g.advance;
-    }
-    0
-}
-
-/// Draw text at pixel (x, y). Auto-dispatches Latin (5px half-width) vs CJK (10px full-width).
-/// Cursor position is tracked in pixels. Text wraps at framebuffer width.
-pub fn draw_text(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
-    let fb_w = fb.width();
-    for ch in text.chars() {
-        if x >= fb_w {
-            break;
-        }
-        let adv = draw_char(ch, x, y, color, fb);
-        x += adv;
     }
 }
 
-/// Fill a `scale × scale` block of one glyph pixel (clipped to the framebuffer).
-fn fill_glyph_block(x: i32, y: i32, scale: u32, color: Rgba, fb: &mut impl FbSurface) {
-    for dy in 0..scale as i32 {
-        let py = y + dy;
-        if py < 0 || py >= fb.height() as i32 {
-            continue;
-        }
-        for dx in 0..scale as i32 {
-            let px = x + dx;
-            if px < 0 || px >= fb.width() as i32 {
-                continue;
-            }
-            fb.set_pixel(px as u32, py as u32, color);
-        }
-    }
+/// Draw a single character. Returns its advance in pixels (zero for a missing glyph).
+pub fn draw_char(ch: char, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) -> u32 {
+    draw_char_scaled(ch, x, y, 1, color, fb)
 }
 
-/// Draw a single character scaled by an integer factor: every source glyph pixel
-/// becomes a `scale × scale` block. `scale == 1` is identical to [`draw_char`].
-/// Returns the *scaled* advance width (`char_advance(ch) * scale`).
+/// Draw a line of text at pixel (x, y), clipped to the framebuffer width.
+pub fn draw_text(text: &str, x: u32, y: u32, color: Rgba, fb: &mut impl FbSurface) {
+    draw_text_scaled(text, x, y, 1, color, fb);
+}
+
+/// Draw one character at integer scale and return its scaled advance.
 pub fn draw_char_scaled(
     ch: char,
     x: u32,
@@ -239,54 +226,16 @@ pub fn draw_char_scaled(
     color: Rgba,
     fb: &mut impl FbSurface,
 ) -> u32 {
+    let Some(glyph) = drawing_glyph(ch) else {
+        return 0;
+    };
     let scale = scale.max(1);
-    if scale == 1 {
-        return draw_char(ch, x, y, color, fb);
-    }
-    let s = scale as i32;
-    // Cursor-arrow fallbacks (not in the BDF blob) — 8×8 bitmaps, 10px advance.
-    if ch == '▶' || ch == '▼' {
-        let (bmp, dy) = if ch == '▶' {
-            (&GLYPH_CURSOR_RIGHT, CURSOR_RIGHT_DY as i32)
-        } else {
-            (&GLYPH_CURSOR_DOWN, 0)
-        };
-        for row in 0..8i32 {
-            let byte = bmp[row as usize];
-            for col in 0..8i32 {
-                if byte & (0x80 >> col) != 0 {
-                    fill_glyph_block(
-                        x as i32 + col * s,
-                        y as i32 + (row + dy) * s,
-                        scale,
-                        color,
-                        fb,
-                    );
-                }
-            }
-        }
-        return 10 * scale;
-    }
-    if let Some(g) = lookup_glyph(ch) {
-        let start_y = y as i32 + (CJK_BASELINE + g.y_off) * s;
-        for ri in 0..g.height as usize {
-            let row = u16::from_le_bytes([g.rows[ri * 2], g.rows[ri * 2 + 1]]);
-            let py = start_y + ri as i32 * s;
-            for ci in 0..g.width {
-                if row & (1 << (g.width - 1 - ci)) != 0 {
-                    let px = x as i32 + (ci as i32 + g.x_off) * s;
-                    fill_glyph_block(px, py, scale, color, fb);
-                }
-            }
-        }
-        return g.advance * scale;
-    }
-    0
+    let size = (fb.width(), fb.height());
+    glyph.draw(x, y, scale, size, &mut fb.glyph_row_writer(color));
+    glyph.advance.saturating_mul(scale)
 }
 
-/// Draw text scaled by an integer factor (see [`draw_char_scaled`]). Advances the
-/// cursor by the scaled per-glyph width. No wrapping (a title/heading is a single
-/// measured line — use [`measure_text_scaled`] to centre it).
+/// Draw a line at integer scale. Indexed surfaces quantize the text color once per line.
 pub fn draw_text_scaled(
     text: &str,
     mut x: u32,
@@ -295,8 +244,17 @@ pub fn draw_text_scaled(
     color: Rgba,
     fb: &mut impl FbSurface,
 ) {
+    let scale = scale.max(1);
+    let size = (fb.width(), fb.height());
+    let mut write = fb.glyph_row_writer(color);
     for ch in text.chars() {
-        x += draw_char_scaled(ch, x, y, scale, color, fb);
+        if x >= size.0 {
+            break;
+        }
+        if let Some(glyph) = drawing_glyph(ch) {
+            glyph.draw(x, y, scale, size, &mut write);
+            x = x.saturating_add(glyph.advance.saturating_mul(scale));
+        }
     }
 }
 
@@ -482,6 +440,56 @@ mod tests {
     use super::*;
     use crate::FrameBuffer;
     use dotzuki_engine::render_config::RenderConfig;
+
+    #[test]
+    fn indexed_dialogue_matches_rgba_ink_during_a_palette_fade() {
+        use crate::palette::{ColorIndex, GbColor, GbaColor, Palette};
+        use crate::{quantize, DefaultPalette, RgbaIndexedFrameBuffer};
+
+        fn check<C: ColorIndex + DefaultPalette, const LINEAR: bool>(base: Palette<C>) {
+            let config = RenderConfig::new(95, 17);
+            let ink = Rgba::rgb(49, 36, 61);
+            let blank = Rgba::rgb(255, 240, 222);
+            let text = "A你▶好▼🦀 桥Lv12 道具";
+            let mut mask = FrameBuffer::new(config, Rgba::WHITE);
+            draw_text(text, 0, 0, Rgba::BLACK, &mut mask);
+            let (foreground, background) = (quantize(&base, ink), quantize(&base, blank));
+            assert_ne!(foreground, background);
+            for scale in [1, 2, 3] {
+                let mut fb = RgbaIndexedFrameBuffer::<C, LINEAR>::with_palette(config, blank, base);
+                fb.scale_shades(0.0);
+                draw_text_scaled(text, 2, 3, scale, ink, &mut fb);
+                for y in 0..17 {
+                    for x in 0..95 {
+                        let covered = x >= 2
+                            && y >= 3
+                            && mask.get_pixel((x - 2) / scale, (y - 3) / scale)
+                                == Some(Rgba::BLACK);
+                        let index = if covered { foreground } else { background };
+                        assert_eq!(
+                            fb.get_index(x, y),
+                            Some(index),
+                            "at ({x},{y}), scale {scale}"
+                        );
+                        assert_eq!(fb.get_pixel(x, y), Some(Rgba::BLACK));
+                    }
+                }
+            }
+        }
+        let four = [
+            Rgba::rgb(255, 240, 222),
+            Rgba::rgb(200, 187, 145),
+            Rgba::rgb(97, 104, 93),
+            Rgba::rgb(38, 31, 49),
+        ];
+        check::<GbColor, false>(Palette::new(&four));
+        check::<GbColor, true>(Palette::new(&four));
+        let sixteen = core::array::from_fn::<_, 16, _>(|i| {
+            Rgba::rgb((17 * i) as u8, (13 * i) as u8, (11 * i) as u8)
+        });
+        check::<GbaColor, false>(Palette::new(&sixteen));
+        check::<GbaColor, true>(Palette::new(&sixteen));
+    }
 
     #[test]
     fn draw_text_does_not_panic() {

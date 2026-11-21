@@ -5,7 +5,7 @@ How to define maps: Tiled JSON, tileset, `objects.json` sidecar, levels, and enc
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.10.0
+> - **Last verified**: v0.11.0 (unreleased changes)
 
 Before you start, read [the project manifest](../reference/project-manifest.md),
 which defines the map directories and the runner contract these files plug
@@ -22,6 +22,20 @@ objects sidecar — `objects.json` (editor-written) with
 dialogue) and an optional `encounters` block (below)
 (the runner reads legacy `map.json` as a fallback). Walking onto a warp tile fades to
 the destination map.
+
+### Revisiting and editing maps
+
+The runner reuses decoded maps when you warp back to them. By default each
+project retains up to 8 MiB of map data and evicts the least recently used map
+first. An oversized map still loads. Rust hosts can change the budget with
+`LoadedProject::set_map_cache_budget(bytes)`, including zero to disable retention.
+The budget covers decoded layers, tilesets, collision grids and objects, plus
+source bytes retained to detect edits on writable backends.
+
+Packed web and mobile games borrow map inputs directly from the `.dzpk` and
+reuse a cached map without reading the pack again. On disk, the next visit
+picks up edits to the Tiled JSON, tileset PNG or object sidecar. Reloading the
+current map in the editor or watched player also refreshes the active map.
 
 ## Elevation levels
 
