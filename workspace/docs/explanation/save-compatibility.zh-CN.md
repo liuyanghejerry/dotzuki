@@ -1,6 +1,6 @@
 # 存档兼容性
 
-> 本文是 `explanation/save-compatibility.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `explanation/save-compatibility.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 存档版本机制、向前/向后兼容规则，以及每个工具都必须遵守的兼容性规则。
@@ -8,17 +8,19 @@
 > - **Audience**: game authors, rust developers
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 游戏保存到 `<project>/.dotzuki-save.json`（可用 `--save-file` 覆盖）——带存档版本
 的 JSON：`{version, map, player: {x, y, facing, level?}, flags, lang, party?,
-inventory?, money?}`（v3）。运行器侧的存档/读取契约见
+inventory?, money?, healPoint?}`（v3）。运行器侧的存档/读取契约见
 [Save/load](../reference/project-manifest.md#saveload)。
 
 - 战斗完成后，`party`/`inventory` 才会出现。
 - 当战斗带有 `levels` 块时，队伍成员可携带可选的 `level`/`exp` 字段——缺失 ⇒ 等级
   1 / 0 经验。
 - `money` 总是被写入。
+- `healPoint` 以 `{map, x, y, facing, level?}` 记录场景上一次调用 `heal` 的位置。
+  旧存档缺少此字段时，whiteout 会将玩家送回入口出生点。
 - `player.level` 是地图海拔层，缺失 ⇒ 0。
 
 ## 何时写入存档

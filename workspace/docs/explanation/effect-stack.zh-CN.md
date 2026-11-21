@@ -1,6 +1,6 @@
 # 效果栈战斗引擎
 
-> 本文是 `explanation/effect-stack.md` 的中文翻译，同步至引擎版本 v0.1.0（源文档 commit 3133fb419ae3bc6e5c08bbbcd43ac7fa0289e44f）。
+> 本文是 `explanation/effect-stack.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 83d853ad7bf599dfe54413a44f87d58191adb280）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 本页解释 `dotzuki_engine::battle::stack` 的设计——这个 Showdown 风格的效果栈战斗
@@ -9,7 +9,7 @@
 > - **Audience**: battle authors, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.1.0
+> - **Last verified**: v0.10.1 (unreleased)
 
 > **范围。** 本页介绍 **`dotzuki_engine::battle::stack`** 的设计——这个 Showdown 风格
 > 的**效果栈**战斗引擎——以及它为什么是这个形态。编写的那一半——声明事件、效果与
@@ -589,10 +589,6 @@ pokered 案例研究在 pokered 游戏仓库（分拆后），而不在本仓库
 - **双打 / 多目标。** `redirect_target` 接缝存在，但**带默认值、惰性且未经验证**；
   minimon 是 1v1。Follow Me / Lightning Rod 的重定向（`TryHit` + 重定向）原则上可
   表达，但尚未演练。
-- **完整内容表 / 多段攻击 / 命中率 / 暴击 RNG。** minimon 用确定性的
-  `power*atk/def` 公式编写了 **2 个招式**（无掷骰），因此结果可以手工核对。
-  `Accuracy`、`ModifyCritRatio`、`ModifyMove`（多段攻击）以及许多 D/E/F 组事件以
-  **订阅接缝**的形式存在，但尚无发布的驱动器触发它们。
 - **接入 pokered 生产循环是分阶段的，尚未完成。** Gen-1 忠实度仍是**回归凭证**
   （经由旧版 `battle::driver` 的 88 个切片），而不是新栈上的生产替换。AI、换人策略
   与 RNG 驱动的追加效果尚未在栈上演练。
