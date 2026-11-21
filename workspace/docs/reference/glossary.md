@@ -3,7 +3,7 @@
 > - **Audience**: all readers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 Canonical definitions of dotzuki terms. Link to an entry here the first time
 you use a term in a document (doc-standard §4.2); this page is the only

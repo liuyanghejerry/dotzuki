@@ -1,13 +1,13 @@
 # 变更日志
 
-> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）
->（源文档 commit 07d4601429b9bd183ff00476d7fec3452191d978）。
+> 本文是 `release-notes/changelog.md` 的中文翻译，同步至引擎版本 v0.11.0
+>（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1
+> - **Last verified**: v0.11.0
 
 引擎版本历史。版本号跟随 workspace 版本（`workspace/Cargo.toml`，所有
 `dotzuki-*` crate 共享）；每个 release 都附带一份 `migration/` 目录下的迁移指
@@ -19,47 +19,40 @@
   的新增与修复。
 - 文档正文不提及 "since vX.Y"——本页是版本历史的唯一所在（doc-standard §10）。
 
-## 未发布
+## v0.11.0
 
-- 新增 `overworld::navigation::find_route_matching`，用于寻找最近可达的交互位置，
-  复用既有确定性 BFS、碰撞提供方和节点上限。
+### Rust API 不兼容变更
 
-- 将十键 `u16` 掩码、独立按下通道和原生短按缓冲收敛到共享 renderer。Q/E 对应 L/R。
-  **Rust API 不兼容变更：** `set_from_bitmask` 参数及 `bit_mask`／`raw_current`／
-  `raw_previous` 返回值改为 `u16`；既有 8 位桥使用 `u16::from(mask)`。
-  位 0–7 和移动／Web ABI 保持不变。
-- 浏览器游戏外壳使用动画帧驱动固定模拟时钟，限制补帧，并按完成渲染统计 FPS。
-  Escape 仅退出原生窗口。参见[游戏外壳](../reference/game-shell.zh-CN.md#运行时行为)。
+- 输入掩码改用 `u16`，`GbButton::ALL` 包含十个按键。Q 和 E 分别映射到 L 和 R。
+- `NpcRuntimeState` 保存当前步子的移动方向。`HookRecord` 和 `CompiledHook` 指定钩子持有者。
+  `GameSave` 可以保存[回复点](../reference/glossary.md#battle-gameplay)。
+- `init_pitch_slide` 返回起音时写入寄存器的值。`ChannelState` 记录定时休止状态。
 
-- 零 Rust 战斗接入共享回合驱动器。特性和携带道具可响应来袭技能，易变状态可按行动
-  次数到期。场景调用 `heal` 会将玩家的重生点写入 v3 存档的可选字段。[战斗规则](../reference/battle-rules.zh-CN.md)
-- 编辑器的**脚本**活动会列出全局场景及所有已配置的脚本和故事目录。编辑草稿时会自动
-  编译场景，点击诊断可跳到对应位置。浏览器欢迎页支持选择文件夹打开项目。
+Rust 适配器和移动外壳的更新步骤见[迁移指南](migration/v0.11.0.zh-CN.md)。
 
-- 为运行器及支持指针输入的宿主添加[点击移动](../how-to/maps.zh-CN.md#点击移动)。
-- 为移动端 C ABI 添加 `dotzuki_mobile_pointer_click` 和
-  `dotzuki_mobile_cancel_pointer_input`，ABI 版本仍为 1。此前的 ABI v1 库未导出这些符号。
-  更新支持指针输入的外壳时，请重新构建 Rust 运行时；仅检查 ABI 版本无法确认符号是否存在。
-  现有 `MobileGame` 实现保留默认指针回调，按键契约保持不变。
+### 游戏机制与编辑器
 
-Rust API 破坏性变更：
+- 零 Rust 战斗使用共享回合驱动器。强制换人后，对手剩余的行动会作用于新上场的成员。
+  特性和携带道具钩子可以响应来袭技能，[易变状态](../reference/glossary.md#battle-stack)
+  可以在持有者执行指定次数的技能行动后到期。多段攻击在目标倒下时停止，`TwoToFive`
+  使用修正后的随机数抽取顺序。参见[战斗规则](../reference/battle-rules.zh-CN.md)。
+- 场景调用 `heal()` 时记录玩家的地图、格子、朝向和海拔层，供重生使用。
+  加载缺少该字段的 v3 存档时，入口出生点是默认回复点。
+- 编辑器的**脚本**活动列出全局场景以及所有已配置脚本目录、故事目录中的场景。
+  它会编译未保存的草稿，点击诊断可跳转至源码位置。浏览器欢迎页支持通过文件夹选择器打开项目。
 
-- 用 Rust 结构体字面量构造 `HookRecord` 或 `CompiledHook` 时，填入
-  `holder: HookHolder::Attacker` 可保持原有行为。构造 `GameSave` 可填
-  `heal_point: None`。已有 RON 文件和存档可直接加载。
+### 输入、移动与播放
 
-- `NpcRuntimeState` 新增 `step_direction: Option<Direction>`。空闲 NPC 结构体字面量
-  需补上 `step_direction: None`。手工构造行走状态的测试需在此字段保存移动方向。
-  二进制存档适配器需处理新增字段。
-
-NPC 移动修复：
-
-- 自动行走和脚本行走的每一步均在开始时保存方向。步子进行中修改 `facing`，
-  不再改变剩余移动或其占用的目的格。
-- 移动偏移和碰撞预测使用 `NpcRuntimeState::walking_direction()`；
-  角色图像朝向继续使用 `facing`。
-- JSON 快照保留已保存的移动方向。缺少 `step_direction` 的旧 JSON 会加载为 `None`，
-  并使用其保存的朝向。步子完成后移除已保存方向；连续脚本步子独立保存下一步方向。
+- 支持指针输入的宿主可以使用[点击移动](../how-to/maps.zh-CN.md#点击移动)。
+  `find_route_matching` 按现有碰撞规则和搜索上限寻找最近可达的交互位置。
+  移动端 ABI 1 新增指针点击和取消回调。
+- 原生宿主缓冲短按。浏览器外壳按动画帧驱动固定模拟时钟、限制补帧，并按已渲染帧数计算 FPS。
+  Escape 仅退出原生窗口。参见[游戏外壳参考](../reference/game-shell.zh-CN.md#运行时行为)。
+- NPC 在迈步途中转身时保留该步的移动方向，JSON 快照也会保存这个方向。
+  游戏可观察和自定义单个 NPC 的移动决策。
+- 音频播放可恢复[音序器](../reference/glossary.md#audio)和 APU 的状态，在音乐暂停时推进音效，
+  也可在不输出音频时推进逻辑帧。滑音、噪声位宽和立体声声道分配按音轨指令工作。
+- 渲染器向消费方提供共用的图块调色板转换，并修正图块动画计数器。
 
 ## v0.10.1
 

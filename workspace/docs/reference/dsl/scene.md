@@ -7,7 +7,7 @@ and compiled by `dotzuki-engine-dsl`.
 > - **Audience**: DSL authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 This page describes the [Game DSL](../glossary.md) `.scene` file as the code
 implements it; where code and older documents disagree, the code wins.

@@ -5,7 +5,7 @@ Save versioning, forward/backward save rules, and the compatibility rules every 
 > - **Audience**: game authors, rust developers
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 The game saves to `<project>/.dotzuki-save.json` (override with
 `--save-file`) — versioned JSON: `{version, map, player: {x, y, facing, level?},

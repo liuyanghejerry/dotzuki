@@ -1,6 +1,6 @@
 # 战斗
 
-> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.10.1（未发布）（源文档 commit 74d05a369df5a7ad900efaa5edb476e6bdb4682a）。
+> 本文是 `reference/battle-rules.md` 的中文翻译，同步至引擎版本 v0.11.0（源文档 commit d2e9ad14ba71685405b0d22fb9b3207a214f4eee）。
 > 内容以英文源为准；发现不一致请更新英文源再同步翻译。
 
 `battle` 项目清单区块：配置、rules.ron 钩子、回合循环与 `check` 校验。
@@ -8,7 +8,7 @@
 > - **Audience**: game authors, rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 项目通过顶层 `battle` 区块加入通用、数据驱动的战斗系统（队伍 + 战斗可用物品）
 （所有键均可选；默认值如下）：
