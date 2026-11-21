@@ -10,8 +10,9 @@ the authoritative API reference, the pages below are the prose
 counterpart.
 
 The `dotzuki-*` crates share a release version on crates.io. Use the docs.rs version selector
-to read the API for your dependency. The [changelog](../release-notes/changelog.md) lists
-the releases and their migration guides. To build a local copy, run
+to read the API for a library dependency. For the `dotzuki-cli` executable, consult the
+[CLI reference](cli.md) or run `dotzuki --help`. The [changelog](../release-notes/changelog.md)
+lists the releases and their migration guides. To build a local copy, run
 
 ```bash
 cd workspace
@@ -37,7 +38,7 @@ cargo doc --workspace --no-deps --open
 | `dotzuki-runner-web` | WASM build of the runner (editor Play) | [docs.rs](https://docs.rs/dotzuki-runner-web) | [publishing guide](../how-to/publishing.md) |
 | `dotzuki-mobile` | Game-independent mobile runtime: `MobileGame` trait, opaque runtime handle, PCM queue, `export_mobile_abi!` | [docs.rs](https://docs.rs/dotzuki-mobile) | [mobile architecture](../explanation/mobile-architecture.md) |
 | `dotzuki-runner-mobile` | C ABI mobile host for the zero-Rust runner (`RunnerGame` + `.dzpk`) | [docs.rs](https://docs.rs/dotzuki-runner-mobile) | [mobile architecture](../explanation/mobile-architecture.md), [Android export](../how-to/export-android.md), [HarmonyOS export](../how-to/export-harmonyos.md) |
-| `dotzuki-cli` | The `dotzuki` binary: `new` / `check` / `run` / `export` | [docs.rs](https://docs.rs/dotzuki-cli) | [CLI reference](cli.md) |
+| `dotzuki-cli` | The `dotzuki` binary: `new` / `check` / `run` / `export` | `dotzuki --help` | [CLI reference](cli.md) |
 | `dotzuki-web` | WASM bridges: editor layout preview, game shell (`game-shell` feature), BroadcastChannel link transport (`link` feature) | [docs.rs](https://docs.rs/dotzuki-web) | [game shell](game-shell.md), [link play](link-play.md) |
 
 Tools outside the crates.io set:
