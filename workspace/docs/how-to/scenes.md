@@ -6,7 +6,7 @@ choices, flags, battles from scenes, and the edit-check loop.
 > - **Audience**: game authors
 > - **Type**: how-to
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 The [syntax reference](../reference/dsl/scene.md) is the authority on every
 construct — this page is the task view: the recipes you reach for while

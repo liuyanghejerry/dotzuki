@@ -3,7 +3,7 @@
 > - **Audience**: game authors
 > - **Type**: tutorial
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 A guided tour from an empty machine to a JRPG project you can click around
 in — no Rust, no code required.

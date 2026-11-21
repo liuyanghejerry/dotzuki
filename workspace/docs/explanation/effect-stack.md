@@ -8,7 +8,7 @@ current design.
 > - **Audience**: battle authors, engine contributors
 > - **Type**: explanation
 > - **Status**: active
-> - **Last verified**: v0.10.1 (unreleased)
+> - **Last verified**: v0.11.0
 
 > **Scope.** This page covers the design of **`dotzuki_engine::battle::stack`** —
 > the Showdown-style **effect-stack** battle engine — and why it is shaped the

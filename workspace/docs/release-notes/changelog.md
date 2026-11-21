@@ -3,7 +3,7 @@
 > - **Audience**: rust developers, game authors
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.10.1
+> - **Last verified**: v0.11.0
 
 Engine version history. Version numbers follow the workspace version
 (`workspace/Cargo.toml`, shared by every `dotzuki-*` crate); each release ships
@@ -16,54 +16,44 @@ with a migration guide under `migration/` (created per release).
 - Doc bodies do not mention "since vX.Y" — this page is the single place for
   version history (doc-standard §10).
 
-## Unreleased
+## v0.11.0
 
-- Add `overworld::navigation::find_route_matching` for nearest reachable interaction
-  positions. It shares the existing deterministic BFS, collision provider, and node limit.
+### Breaking Rust API changes
 
-- Move ten-button `u16` input masks, explicit press channels, and native tap buffering into
-  the shared renderer. Q/E map to L/R. **Breaking Rust API:** widen masks passed to
-  `set_from_bitmask` and stored from `bit_mask` / `raw_current` / `raw_previous` to `u16`;
-  use `u16::from(mask)` at existing 8-bit bridges. Bits 0–7 and mobile/Web ABIs are unchanged.
-- Drive the browser game shell from animation frames with fixed simulation ticks, bounded
-  catch-up, and FPS based on completed renders. Escape only exits native windows.
-  See [game shell](../reference/game-shell.md#runtime-behavior).
+- Input masks now use `u16`, and `GbButton::ALL` contains ten buttons. Q and E map to L and R.
+- `NpcRuntimeState` stores the current step's direction. `HookRecord` and `CompiledHook`
+  identify the hook holder, and `GameSave` can store a [heal point](../reference/glossary.md#battle-gameplay).
+- `init_pitch_slide` returns the onset register value. `ChannelState` records timed rests.
 
-- Zero-Rust battles run through the shared turn driver. Ability and held-item
-  hooks can react to incoming skills and volatiles can expire after a set
-  number of actions. A scene's `heal` records the player's respawn point in
-  an optional v3 save field. [Battle rules](../reference/battle-rules.md)
-- The editor's **Scripts** activity lists global scenes and every configured
-  script and story directory. It compiles unsaved scene edits and links
-  diagnostics to their source locations. The browser welcome screen can open
-  projects using a folder picker.
+See the [migration guide](migration/v0.11.0.md) for Rust adapters and mobile shell updates.
 
-- Add [click to move](../how-to/maps.md#click-to-move) to the runner and pointer-enabled hosts.
-- Add `dotzuki_mobile_pointer_click` and `dotzuki_mobile_cancel_pointer_input` to the mobile
-  C ABI without changing ABI version 1. Earlier ABI v1 libraries do not export these symbols.
-  Rebuild the Rust runtime when updating a pointer-enabled shell; the ABI version check alone
-  does not establish symbol availability. Existing `MobileGame` implementations keep their
-  default pointer callbacks, and the button contract remains unchanged.
+### Gameplay and authoring
 
-Breaking Rust API change:
+- Zero-Rust battles use the shared turn driver. After a forced switch, the opponent takes any
+  pending action against the replacement. Ability and held-item hooks can respond to incoming
+  skills, and [volatiles](../reference/glossary.md#battle-stack) can expire after a specified
+  number of the holder's skill actions. Multi-hit skills stop when the target faints, and
+  `TwoToFive` uses the corrected random draw sequence. See [battle rules](../reference/battle-rules.md).
+- A scene's `heal()` records the player's map, tile, facing, and elevation for respawn.
+  Existing version 3 saves load with the entry spawn as their default heal point.
+- The editor's **Scripts** activity lists global scenes and scenes from every configured script
+  and story directory. It compiles unsaved drafts and opens the source location for a diagnostic.
+  The browser welcome screen can open a project with a folder picker.
 
-- When constructing `HookRecord` or `CompiledHook` with a Rust struct literal,
-  supply `holder: HookHolder::Attacker` for the existing behavior. A `GameSave`
-  literal can use `heal_point: None`. Existing RON and save files load as written.
+### Input, movement, and playback
 
-- Add `NpcRuntimeState::step_direction: Option<Direction>`. Add `step_direction: None` to
-  idle NPC struct literals. Manual walking-state fixtures must retain their movement direction
-  in this field. Binary save adapters must account for the additional field.
-
-NPC movement fixes:
-
-- Capture the direction when each autonomous or scripted step starts. A change to `facing`
-  during that step no longer redirects the remaining movement or its occupied destination.
-- Use `NpcRuntimeState::walking_direction()` for movement offsets and collision predictions;
-  keep `facing` for the sprite's orientation.
-- Preserve the captured direction in JSON snapshots. Legacy JSON without `step_direction`
-  loads with `None` and falls back to its saved facing. Completed steps remove the captured
-  direction; consecutive scripted steps capture their next direction independently.
+- Pointer-enabled hosts support [click to move](../how-to/maps.md#click-to-move).
+  `find_route_matching` finds the nearest reachable interaction position with the existing
+  collision and search limits. Mobile ABI 1 adds pointer-click and cancellation callbacks.
+- Native hosts buffer short taps. The browser shell runs fixed simulation ticks on animation
+  frames, bounds catch-up, and counts rendered frames for FPS. Escape exits native windows only.
+  See the [game shell reference](../reference/game-shell.md#runtime-behavior).
+- NPCs keep their step direction when turning mid-step, including across JSON snapshots.
+  Games can observe and customize individual NPC movement decisions.
+- Audio playback can restore [sequencer](../reference/glossary.md#audio) and APU state, advance
+  sound effects while music is paused, and advance logical frames without audio output.
+  Pitch slides, noise width, and stereo routing now follow the track commands.
+- The renderer shares tile palette conversion across consumers and fixes tile animation counters.
 
 ## v0.10.1
 
