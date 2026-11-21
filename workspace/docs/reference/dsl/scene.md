@@ -375,7 +375,7 @@ game_scene StartTown {
 ```
 
 In a zero-Rust project, `heal()` restores the party and records the player's
-[heal point](../project-manifest.md#game-over).
+[heal point](../glossary.md#battle-gameplay).
 
 A sync query's return value in bare-command position is discarded
 (interpreter.rs:543-566); assign the call when the result matters.
