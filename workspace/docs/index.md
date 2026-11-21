@@ -86,7 +86,7 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
 
 ## Release notes
 
-- [Changelog](./release-notes/changelog.md) and [v0.11.0 migration guide](./release-notes/migration/v0.11.0.md).
+- [Changelog](./release-notes/changelog.md) and [v0.12.0 migration guide](./release-notes/migration/v0.12.0.md).
   Earlier migration guides cover [v0.1.0](./release-notes/migration/v0.1.0.md),
   [v0.5.4](./release-notes/migration/v0.5.4.md),
   [v0.7.0](./release-notes/migration/v0.7.0.md),
@@ -96,8 +96,9 @@ the 「中文（zh-CN）」 group; the English source is authoritative (doc-stan
   [v0.8.2](./release-notes/migration/v0.8.2.md),
   [v0.9.0](./release-notes/migration/v0.9.0.md),
   [v0.9.1](./release-notes/migration/v0.9.1.md),
-  [v0.10.0](./release-notes/migration/v0.10.0.md), and
-  [v0.10.1](./release-notes/migration/v0.10.1.md).
+  [v0.10.0](./release-notes/migration/v0.10.0.md),
+  [v0.10.1](./release-notes/migration/v0.10.1.md), and
+  [v0.11.0](./release-notes/migration/v0.11.0.md).
 
 ## Archive
 

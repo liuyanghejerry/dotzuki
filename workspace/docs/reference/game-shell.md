@@ -3,7 +3,7 @@
 > - **Audience**: rust developers
 > - **Type**: reference
 > - **Status**: active
-> - **Last verified**: v0.11.0 (unreleased changes)
+> - **Last verified**: v0.12.0
 
 The [game shell](./glossary.md) (`dotzuki_web::game_shell`, source
 `crates/dotzuki-web/src/game_shell.rs`) runs a `GameLoop` game in a browser
