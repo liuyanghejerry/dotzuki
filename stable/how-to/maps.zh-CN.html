@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
+            window.path_to_searchindex_js = "../searchindex-d1b73e41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="地图"><a class="header" href="#地图">地图</a></h1>
 <blockquote>
-<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.10.0（源文档 commit db361944364d45440dd6997bb268859cbcd85a7c）。
+<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>如何定义地图：Tiled JSON、tileset、<code>objects.json</code> 伴生文件、海拔与 encounters。</p>
@@ -191,7 +191,7 @@
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>开始前，请先阅读<a href="../reference/project-manifest.html">项目清单</a>——它定义了地图目录以及
@@ -204,6 +204,14 @@
 <code>signs: [{x,y,text}]</code>（面向告示牌 tile 并按 A，以分页对话的形式读出其文本），以及一
 个可选的 <code>encounters</code> 块（见下文）（旧版 <code>map.json</code> 作为后备读取）。走上 warp tile
 （传送点）会淡出切换到目标地图。</p>
+<h3 id="再次进入地图与编辑地图"><a class="header" href="#再次进入地图与编辑地图">再次进入地图与编辑地图</a></h3>
+<p>传送回刚去过的地图时，运行器会复用解码结果。每个项目默认最多缓存 8 MiB 的地图数据，
+空间不足时先淘汰最久未使用的地图。单张地图超过预算仍可加载。Rust 宿主可通过
+<code>LoadedProject::set_map_cache_budget(bytes)</code> 调整预算，传入零可关闭缓存。
+预算计入图层、图集、碰撞网格和对象，以及可写文件后端为检查变化而保留的源文件字节。</p>
+<p>Web 和移动端打包游戏直接借用 <code>.dzpk</code> 中的地图数据，命中缓存时无需再次读取资源包。
+在磁盘项目中，修改 Tiled JSON、图集 PNG 或对象伴生文件后，下次进入地图即可看到变化。
+在编辑器或启用了文件监听的播放器中重载当前地图，也会刷新正在显示的地图。</p>
 <h2 id="海拔层级"><a class="header" href="#海拔层级">海拔层级</a></h2>
 <p>地图可以是多层的（既能在地面行走，<em>也能</em>在墙顶行走）。每层的碰撞：名为 <code>collision</code>
 （第 0 层）、<code>collision1</code>、<code>collision2</code>、…… 的图层——该层中非零 GID 即为实心；这些图

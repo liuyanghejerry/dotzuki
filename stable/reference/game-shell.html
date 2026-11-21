@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d7b8d862.js";
+            window.path_to_searchindex_js = "../searchindex-d1b73e41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-22ddc87d.js"></script>
@@ -368,6 +368,13 @@ viewport. Inventory, party and shop screens also use the full draw path. A
 host that replaces or edits the output buffer calls <code>RunnerGame::draw</code> for a
 complete frame. The web <code>tick</code> and mobile RGBA copy interfaces still deliver
 a complete image to their callers.</p>
+<h3 id="indexed-dialogue-text"><a class="header" href="#indexed-dialogue-text">Indexed dialogue text</a></h3>
+<p><code>dotzuki_renderer::embedded_font::draw_text</code> and <code>draw_text_scaled</code> resolve
+the ink color against the framebuffer’s base palette once per string. Both
+packed and linear indexed surfaces write those indices through the full Fusion
+Pixel font, including Latin, CJK and the two cursor arrows (▶ and ▼). A palette
+fade or remap therefore applies to newly drawn dialogue in the same way it
+applies to text already on screen.</p>
 <h3 id="four-colour-battle-transition-snapshots"><a class="header" href="#four-colour-battle-transition-snapshots">Four-colour battle transition snapshots</a></h3>
 <p><code>dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture</code>
 captures a <code>LinearRgbaIndexedFrameBuffer&lt;GbColor&gt;</code>. It stores four pixel

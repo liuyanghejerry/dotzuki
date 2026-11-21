@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d7b8d862.js";
+            window.path_to_searchindex_js = "searchindex-d1b73e41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-22ddc87d.js"></script>
@@ -1275,7 +1275,7 @@ for the rule formats.</li>
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0 (unreleased changes)</li>
 </ul>
 </blockquote>
 <p>Before you start, read <a href="#game-project-spec--zero-rust-dotzuki-engine-projects">the project manifest</a>,
@@ -1291,6 +1291,17 @@ objects sidecar — <code>objects.json</code> (editor-written) with
 dialogue) and an optional <code>encounters</code> block (below)
 (the runner reads legacy <code>map.json</code> as a fallback). Walking onto a warp tile fades to
 the destination map.</p>
+<h3 id="revisiting-and-editing-maps"><a class="header" href="#revisiting-and-editing-maps">Revisiting and editing maps</a></h3>
+<p>The runner reuses decoded maps when you warp back to them. By default each
+project retains up to 8 MiB of map data and evicts the least recently used map
+first. An oversized map still loads. Rust hosts can change the budget with
+<code>LoadedProject::set_map_cache_budget(bytes)</code>, including zero to disable retention.
+The budget covers decoded layers, tilesets, collision grids and objects, plus
+source bytes retained to detect edits on writable backends.</p>
+<p>Packed web and mobile games borrow map inputs directly from the <code>.dzpk</code> and
+reuse a cached map without reading the pack again. On disk, the next visit
+picks up edits to the Tiled JSON, tileset PNG or object sidecar. Reloading the
+current map in the editor or watched player also refreshes the active map.</p>
 <h2 id="elevation-levels"><a class="header" href="#elevation-levels">Elevation levels</a></h2>
 <p>Maps may be multi-level (walk on the ground <em>and</em> on
 wall tops). Collision per level: layers named <code>collision</code> (level 0),
@@ -7821,6 +7832,13 @@ viewport. Inventory, party and shop screens also use the full draw path. A
 host that replaces or edits the output buffer calls <code>RunnerGame::draw</code> for a
 complete frame. The web <code>tick</code> and mobile RGBA copy interfaces still deliver
 a complete image to their callers.</p>
+<h3 id="indexed-dialogue-text"><a class="header" href="#indexed-dialogue-text">Indexed dialogue text</a></h3>
+<p><code>dotzuki_renderer::embedded_font::draw_text</code> and <code>draw_text_scaled</code> resolve
+the ink color against the framebuffer’s base palette once per string. Both
+packed and linear indexed surfaces write those indices through the full Fusion
+Pixel font, including Latin, CJK and the two cursor arrows (▶ and ▼). A palette
+fade or remap therefore applies to newly drawn dialogue in the same way it
+applies to text already on screen.</p>
 <h3 id="four-colour-battle-transition-snapshots"><a class="header" href="#four-colour-battle-transition-snapshots">Four-colour battle transition snapshots</a></h3>
 <p><code>dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture</code>
 captures a <code>LinearRgbaIndexedFrameBuffer&lt;GbColor&gt;</code>. It stores four pixel
@@ -15118,7 +15136,7 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="地图"><a class="header" href="#地图">地图</a></h1>
 <blockquote>
-<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.10.0（源文档 commit db361944364d45440dd6997bb268859cbcd85a7c）。
+<p>本文是 <code>how-to/maps.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <p>如何定义地图：Tiled JSON、tileset、<code>objects.json</code> 伴生文件、海拔与 encounters。</p>
@@ -15127,7 +15145,7 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <li><strong>Audience</strong>: game authors</li>
 <li><strong>Type</strong>: how-to</li>
 <li><strong>Status</strong>: active</li>
-<li><strong>Last verified</strong>: v0.10.0</li>
+<li><strong>Last verified</strong>: v0.11.0（含未发布变更）</li>
 </ul>
 </blockquote>
 <p>开始前，请先阅读<a href="#game-project-spec--zero-rust-dotzuki-engine-projects">项目清单</a>——它定义了地图目录以及
@@ -15140,6 +15158,14 @@ hooks —— 预置的 <code>venom-sting</code> + <code>poison</code> 展示了�
 <code>signs: [{x,y,text}]</code>（面向告示牌 tile 并按 A，以分页对话的形式读出其文本），以及一
 个可选的 <code>encounters</code> 块（见下文）（旧版 <code>map.json</code> 作为后备读取）。走上 warp tile
 （传送点）会淡出切换到目标地图。</p>
+<h3 id="再次进入地图与编辑地图"><a class="header" href="#再次进入地图与编辑地图">再次进入地图与编辑地图</a></h3>
+<p>传送回刚去过的地图时，运行器会复用解码结果。每个项目默认最多缓存 8 MiB 的地图数据，
+空间不足时先淘汰最久未使用的地图。单张地图超过预算仍可加载。Rust 宿主可通过
+<code>LoadedProject::set_map_cache_budget(bytes)</code> 调整预算，传入零可关闭缓存。
+预算计入图层、图集、碰撞网格和对象，以及可写文件后端为检查变化而保留的源文件字节。</p>
+<p>Web 和移动端打包游戏直接借用 <code>.dzpk</code> 中的地图数据，命中缓存时无需再次读取资源包。
+在磁盘项目中，修改 Tiled JSON、图集 PNG 或对象伴生文件后，下次进入地图即可看到变化。
+在编辑器或启用了文件监听的播放器中重载当前地图，也会刷新正在显示的地图。</p>
 <h2 id="海拔层级"><a class="header" href="#海拔层级">海拔层级</a></h2>
 <p>地图可以是多层的（既能在地面行走，<em>也能</em>在墙顶行走）。每层的碰撞：名为 <code>collision</code>
 （第 0 层）、<code>collision1</code>、<code>collision2</code>、…… 的图层——该层中非零 GID 即为实心；这些图
@@ -18990,7 +19016,7 @@ assert_eq!(mgr.cache_size(), 0);
 <h1 id="游戏外壳参考"><a class="header" href="#游戏外壳参考">游戏外壳参考</a></h1>
 <blockquote>
 <p>本文是 <code>reference/game-shell.md</code> 的中文翻译，同步至引擎版本 v0.11.0（含未发布变更）
-（源文档 commit 3d71de444d26e25666125e0b9ae09f64824e3391）。
+（源文档 commit f9ed3f46c499e5b5d3874299b9672bafd7b0adcf）。
 内容以英文源为准；发现不一致请更新英文源再同步翻译。</p>
 </blockquote>
 <blockquote>
@@ -19169,6 +19195,11 @@ GBA 分辨率为 240×160）。</li>
 <p>镜头移动、海拔变化、地图重新加载、淡入淡出和战斗都会重绘整个视口。物品栏、队伍和商店
 界面也使用全量绘制。宿主在替换或改写输出缓冲后调用 <code>RunnerGame::draw</code> 绘制完整帧。
 Web 的 <code>tick</code> 和移动端的 RGBA 复制接口仍向调用方提供完整画面。</p>
+<h3 id="索引帧缓冲上的对话文字"><a class="header" href="#索引帧缓冲上的对话文字">索引帧缓冲上的对话文字</a></h3>
+<p><code>dotzuki_renderer::embedded_font::draw_text</code> 和 <code>draw_text_scaled</code> 绘制一个字符串时，
+只用基础调色板匹配一次文字颜色。平面打包和线性存储的索引帧缓冲都直接写入这个索引。
+可用字形包括完整 Fusion Pixel 字库里的拉丁字母和中日韩字符，以及两个光标箭头（▶ 和 ▼）。
+淡入淡出或重映射调色板时，新画的对话和屏幕上已有的文字会呈现相同的效果。</p>
 <h3 id="四色战斗转场快照"><a class="header" href="#四色战斗转场快照">四色战斗转场快照</a></h3>
 <p><code>dotzuki_renderer::battle_transition::CompactTransitionSnapshot::capture</code> 从
 <code>LinearRgbaIndexedFrameBuffer&lt;GbColor&gt;</code> 捕获当前显示调色板和像素索引，每字节保存四个
